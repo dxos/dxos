@@ -122,7 +122,7 @@ export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObjec
  */
 // TODO(burdon): Option to return mutable object.
 // TODO(dmaretskyi): Deep mutability.
-export const object: {
+export const create: {
   <T extends {}>(obj: T): ReactiveObject<T>;
   <T extends {}>(schema: typeof Expando, obj: T): ReactiveObject<Expando>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>): ReactiveObject<T>;

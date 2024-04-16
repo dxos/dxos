@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Container, RecordType, Task, Todo } from './schema';
 import { getAutomergeObjectCore } from '../automerge';
-import * as E from '../effect/reactive';
+import { create, Expando, getMeta, getSchema, typeOf } from '../effect/reactive';
 import { Hypergraph } from '../hypergraph';
 import { clone } from '../object';
 import { Filter } from '../query';
@@ -20,12 +20,12 @@ describe('database', () => {
   test('creating objects', async () => {
     const { db: database } = await createDbWithTypes();
 
-    const task = E.object(Task, { title: 'test' });
+    const task = create(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
     expect(() => getAutomergeObjectCore(task)).to.throw();
-    expect(E.getSchema(task)?.ast).to.eq(Task.ast);
-    expect(E.typeOf(task)?.itemId).to.eq('example.test.Task');
+    expect(getSchema(task)?.ast).to.eq(Task.ast);
+    expect(typeOf(task)?.itemId).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();
@@ -40,7 +40,7 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { records: [{ type: RecordType.WORK }] });
+      const container = create(Container, { records: [{ type: RecordType.WORK }] });
       await database.add(container);
     }
 
@@ -56,7 +56,7 @@ describe('database', () => {
     test('text objects are auto-created on schema', async () => {
       // const { db: database } = await createDbWithTypes();
       //
-      // const task = E.object(Task, { description: E.object(TextCompatibilitySchema, { content: '' }) });
+      // const task = create(Task, { description: create(TextCompatibilitySchema, { content: '' }) });
       // expect(task.description instanceof TextCompatibilitySchema).to.be.true;
       //
       // database.add(task);
@@ -72,12 +72,12 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { objects: [] });
+      const container = create(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.objects!.push(E.object(E.Expando, { foo: 100 }));
-      container.objects!.push(E.object(E.Expando, { bar: 200 }));
+      container.objects!.push(create(Expando, { foo: 100 }));
+      container.objects!.push(create(Expando, { bar: 200 }));
     }
 
     {
@@ -93,39 +93,39 @@ describe('database', () => {
     const { db: database } = await createDbWithTypes();
 
     {
-      const container = E.object(Container, { objects: [] });
+      const container = create(Container, { objects: [] });
       database.add(container);
       await database.flush();
 
-      container.objects!.push(E.object(Task, {}));
-      container.objects!.push(E.object(Contact, {}));
+      container.objects!.push(create(Task, {}));
+      container.objects!.push(create(Contact, {}));
     }
 
     {
       const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(E.typeOf(container.objects![0])?.itemId).to.equal(Task.typename);
-      expect(E.typeOf(container.objects![1])?.itemId).to.equal(Contact.typename);
+      expect(typeOf(container.objects![0])?.itemId).to.equal(Task.typename);
+      expect(typeOf(container.objects![1])?.itemId).to.equal(Contact.typename);
     }
   });
 
   test('object fields', async () => {
-    const task = E.object(Task, {});
+    const task = create(Task, {});
 
     task.title = 'test';
     expect(task.title).to.eq('test');
-    expect(E.getMeta(task).keys).to.have.length(0);
+    expect(getMeta(task).keys).to.have.length(0);
 
-    E.getMeta(task).keys.push({ source: 'example', id: 'test' });
-    expect(E.getMeta(task).keys).to.have.length(1);
+    getMeta(task).keys.push({ source: 'example', id: 'test' });
+    expect(getMeta(task).keys).to.have.length(1);
   });
 
   test('clone', async () => {
     const { db: db1 } = await createDbWithTypes();
     const { db: db2 } = await createDbWithTypes();
 
-    const task1 = E.object(Task, { title: 'Main task' });
+    const task1 = create(Task, { title: 'Main task' });
     db1.add(task1);
     await db1.flush();
 
@@ -145,9 +145,9 @@ describe('database', () => {
   test('operator-based filters', async () => {
     const { db: database } = await createDbWithTypes();
 
-    database.add(E.object(Task, { title: 'foo 1' }));
-    database.add(E.object(Task, { title: 'foo 2' }));
-    database.add(E.object(Task, { title: 'bar 3' }));
+    database.add(create(Task, { title: 'foo 1' }));
+    database.add(create(Task, { title: 'foo 2' }));
+    database.add(create(Task, { title: 'bar 3' }));
 
     expect(database.query(Filter.schema(Task, (task) => task.title?.startsWith('foo'))).objects).to.have.length(2);
   });
@@ -155,14 +155,14 @@ describe('database', () => {
   test('typenames of nested objects', async () => {
     const { db: database } = await createDbWithTypes();
 
-    const task = E.object(Task, {
+    const task = create(Task, {
       title: 'Main task',
-      todos: [E.object(Todo, { name: 'Sub task' })],
+      todos: [create(Todo, { name: 'Sub task' })],
     });
     database.add(task);
 
     console.log(task.todos![0]);
-    expect(E.typeOf(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
+    expect(typeOf(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
     expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
   });
 });

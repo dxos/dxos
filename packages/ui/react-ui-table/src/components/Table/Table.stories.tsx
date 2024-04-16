@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { AnchoredOverflow, DensityProvider } from '@dxos/react-ui';
@@ -35,7 +35,7 @@ faker.seed(911);
 const createItems = (count: number) =>
   range(count).map(
     () =>
-      E.object<Item>({
+      create<Item>({
         publicKey: PublicKey.random(),
         name: faker.commerce.productName(),
         count: faker.datatype.boolean({ probability: 0.9 }) ? faker.number.int({ min: 0, max: 10_000 }) : undefined,

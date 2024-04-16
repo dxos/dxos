@@ -6,8 +6,7 @@ import { join } from 'node:path';
 
 import { ThreadType, MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
-import { Filter, loadObjectReferences } from '@dxos/echo-schema';
+import { Filter, loadObjectReferences, create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 
 import { RequestProcessor } from './processor';
@@ -54,14 +53,14 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     await Promise.all(
       Array.from(activeThreads).map(async (thread) => {
         const message = thread.messages[thread.messages.length - 1];
-        if (message && E.getMeta(message).keys.length === 0) {
+        if (message && getMeta(message).keys.length === 0) {
           const blocks = await processor.processThread(space, thread, message);
           if (blocks?.length) {
-            const newMessage = E.object(MessageType, {
+            const newMessage = create(MessageType, {
               from: { identityKey: resources.identityKey },
               blocks,
             });
-            E.getMeta(newMessage).keys.push({ source: 'openai.com' }); // TODO(burdon): Get from chain resources.
+            getMeta(newMessage).keys.push({ source: 'openai.com' }); // TODO(burdon): Get from chain resources.
             thread.messages.push(newMessage);
           }
         }

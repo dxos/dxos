@@ -6,7 +6,7 @@ import get from 'lodash.get';
 
 import { next as A, type Prop } from '@dxos/automerge/automerge';
 import { type EchoReactiveObject, type IDocHandle, createDocAccessor } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 import { DocumentType, TextV0Type, ThreadType } from '../../schema';
@@ -65,7 +65,7 @@ export const serializer: TypedObjectSerializer = {
       (existingDoc.content as any)[(existingDoc.content as any).field] = text;
       return existingDoc;
     } else {
-      return E.object(DocumentType, { content: E.object(TextV0Type, { content: text }), comments: [] });
+      return create(DocumentType, { content: create(TextV0Type, { content: text }), comments: [] });
     }
   },
 };

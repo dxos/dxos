@@ -3,8 +3,7 @@
 //
 
 import { type TableType } from '@braneframe/types';
-import { AST, S } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { AST, fieldMeta, S, ref } from '@dxos/echo-schema';
 import { type EchoObjectAnnotation, getFieldMetaAnnotation, ReferenceAnnotation } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/react-client';
 import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
@@ -45,12 +44,12 @@ export const getSchema = (
   let schema: S.Schema<any>;
   if (type === 'ref') {
     const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
-    schema = referencedSchema ? E.ref(referencedSchema) : S.string;
+    schema = referencedSchema ? ref(referencedSchema) : S.string;
   } else {
     schema = (type && typeToSchema[type]) ?? S.string;
   }
   return schema.pipe(
-    E.fieldMeta(FIELD_META_NAMESPACE, {
+    fieldMeta(FIELD_META_NAMESPACE, {
       refProp: options.refProp,
       digits: options.digits,
     }),

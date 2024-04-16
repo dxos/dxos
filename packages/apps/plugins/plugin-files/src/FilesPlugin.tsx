@@ -18,7 +18,7 @@ import {
   parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
@@ -40,7 +40,7 @@ import {
 
 export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, MarkdownExtensionProvides> => {
   let onFilesUpdate: ((node?: Node<LocalEntity>) => void) | undefined;
-  const state = E.object<{ files: LocalEntity[]; current: LocalFile | undefined }>({
+  const state = create<{ files: LocalEntity[]; current: LocalFile | undefined }>({
     files: [],
     current: undefined,
   });

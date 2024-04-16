@@ -15,7 +15,7 @@ import {
   type SpaceDoc,
   type MyLevel,
 } from '@dxos/echo-pipeline';
-import * as E from '@dxos/echo-schema';
+import { getTypeReference } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -383,7 +383,7 @@ export class ClientServicesHost {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(E.getTypeReference(Properties)!),
+        type: encodeReference(getTypeReference(Properties)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),

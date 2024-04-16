@@ -11,7 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { MapType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 
 import { MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
@@ -62,7 +62,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
               );
 
               // Add all maps to the graph.
-              const query = space.db.query(E.Filter.schema(MapType));
+              const query = space.db.query(Filter.schema(MapType));
               let previousObjects: MapType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -131,7 +131,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MapAction.CREATE: {
-              return { data: E.object(MapType, {}) };
+              return { data: create(MapType, {}) };
             }
           }
         },

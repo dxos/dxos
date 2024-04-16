@@ -11,7 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
 import { KanbanMain } from './components';
@@ -109,7 +109,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { data: E.object(KanbanType, { columns: [] }) };
+              return { data: create(KanbanType, { columns: [] }) };
             }
           }
         },

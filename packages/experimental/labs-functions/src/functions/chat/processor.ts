@@ -21,8 +21,8 @@ import {
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
-import * as E from '@dxos/echo-schema';
 import { Filter, type JsonSchema, loadObjectReferences } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -78,7 +78,7 @@ export class RequestProcessor {
       blocks = [
         {
           timestamp: new Date().toISOString(),
-          content: E.object(TextV0Type, { content: 'Error generating response.' }),
+          content: create(TextV0Type, { content: 'Error generating response.' }),
         },
       ];
     } finally {

@@ -208,10 +208,10 @@ const main = async () => {
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
-          const { object } = await import('@dxos/echo-schema');
+          const { create } = await import('@dxos/echo-schema');
           const { DocumentType, TextV0Type } = await import('@braneframe/types');
-          const content = object(TextV0Type, { content: INITIAL_CONTENT });
-          const document = object(DocumentType, { title: INITIAL_TITLE, content });
+          const content = create(TextV0Type, { content: INITIAL_CONTENT });
+          const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
             action: NavigationAction.ACTIVATE,

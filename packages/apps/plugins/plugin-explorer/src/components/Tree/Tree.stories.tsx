@@ -8,7 +8,7 @@ import React, { type FC, useEffect, useState } from 'react';
 
 import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
 import { range } from '@dxos/echo-generator';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
@@ -22,7 +22,7 @@ import { Tree, type TreeComponentProps } from './Tree';
 faker.seed(1);
 
 const makeTreeItems = <T extends number>(count: T, items: TreeItemType[] = []) => {
-  return range(() => E.object(TreeItemType, { text: E.object(TextV0Type, { content: '' }), items }), count);
+  return range(() => create(TreeItemType, { text: create(TextV0Type, { content: '' }), items }), count);
 };
 
 const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {}) => {
@@ -31,7 +31,7 @@ const Story: FC<{ type?: TreeComponentProps<any>['variant'] }> = ({ type } = {})
   const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {
-      const tree = E.object(TreeType, {
+      const tree = create(TreeType, {
         root: makeTreeItems(1, [
           ...makeTreeItems(7),
           ...makeTreeItems(1, [

@@ -3,9 +3,8 @@
 //
 
 import { TextV0Type } from '@braneframe/types';
-import type { S } from '@dxos/echo-schema';
+import { getSchema, type S } from '@dxos/echo-schema';
 import { AST } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
 
 // TODO(burdon): Type name registry linked to schema?
 const getIcon = (schema: S.Schema<any> | undefined): string | undefined => {
@@ -59,7 +58,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
 
         results.push({
           id: object.id,
-          type: getIcon(E.getSchema(object)),
+          type: getIcon(getSchema(object)),
           label,
           match,
           // TODO(burdon): Truncate.

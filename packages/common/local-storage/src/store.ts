@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import { type ReactiveObject, create } from '@dxos/echo-schema/schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
@@ -105,14 +105,14 @@ export class LocalStorageStore<T extends object> {
 
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
-  public readonly values: E.ReactiveObject<T>;
+  public readonly values: ReactiveObject<T>;
 
   constructor(
     private readonly _prefix: string,
     defaults?: T,
   ) {
     registerSignalRuntime();
-    this.values = E.object(defaults ?? ({} as T));
+    this.values = create(defaults ?? ({} as T));
   }
 
   // TODO(burdon): Reset method (keep track of binders).

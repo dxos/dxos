@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Expando, getAutomergeObjectCore, getTypeRef, type ReactiveObject } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { create, Expando, getAutomergeObjectCore, getMeta, getTypeRef, type ReactiveObject } from '@dxos/echo-schema';
 import { createEchoReactiveObject } from '@dxos/echo-schema';
 
 export type Filename = { name?: string; extension: string };
@@ -69,11 +68,11 @@ const deserializeEchoObject = (parsed: any): Expando => {
 
   const deserializedObject: ReactiveObject<Expando> = createEchoReactiveObject(
     // TODO(burdon): Move to ECHO? Remove test for '@' properties.
-    E.object(Expando, Object.fromEntries(entries)),
+    create(Expando, Object.fromEntries(entries)),
   );
 
   // TODO(burdon): Should be immutable?
-  E.getMeta(deserializedObject).keys = meta?.keys ?? E.getMeta(deserializedObject).keys;
+  getMeta(deserializedObject).keys = meta?.keys ?? getMeta(deserializedObject).keys;
   const core = getAutomergeObjectCore(deserializedObject);
   core.id = id;
   const typeRef = getTypeRef(type);

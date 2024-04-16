@@ -18,8 +18,7 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter, create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
@@ -55,7 +54,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = E.object<MarkdownPluginState>({ extensions: [] });
+  const state = create<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
@@ -306,10 +305,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               return {
-                data: E.object(DocumentType, {
-                  content: E.object(TextV0Type, { content: '' }),
+                data: create(DocumentType, {
+                  content: create(TextV0Type, { content: '' }),
                   comments: [],
-                }) satisfies E.ReactiveObject<DocumentType>,
+                }) satisfies ReactiveObject<DocumentType>,
               };
             }
 

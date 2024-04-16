@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
-import * as E from '@dxos/echo-schema';
+import { typeOf } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -30,7 +30,7 @@ describe('TestObjectGenerator', () => {
 
     // Create org object.
     const organization = generator.createObject({ types: [TestSchemaType.organization] });
-    expect(E.typeOf(organization)).to.exist;
+    expect(typeOf(organization)).to.exist;
 
     // Expect at least one person object with a linked org reference.
     const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
@@ -46,14 +46,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(E.typeOf(organization)!.itemId);
+      schemaId.push(typeOf(organization)!.itemId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
       const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(E.typeOf(organization)!.itemId);
+      schemaId.push(typeOf(organization)!.itemId);
     }
 
     expect(schemaId[0]).not.to.be.undefined;

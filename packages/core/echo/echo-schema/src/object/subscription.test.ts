@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
-import * as E from '../effect/reactive';
-import { type Expando, type ReactiveObject } from '../effect/reactive';
+import { Expando, type ReactiveObject } from '../effect/reactive';
+import { create } from '../effect/reactive';
 import { createDatabase } from '../testing';
 
 describe('create subscription', () => {
@@ -175,5 +175,5 @@ const createUpdateCounter = (object: any) => {
 };
 
 const createExpando = <T extends Record<string, any>>(props: T = {} as T): ReactiveObject<Expando> => {
-  return E.object(E.Expando, props);
+  return create(Expando, props);
 };
