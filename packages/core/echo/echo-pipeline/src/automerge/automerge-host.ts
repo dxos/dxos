@@ -85,6 +85,7 @@ export class AutomergeHost {
       db: this._db,
       callbacks: { beforeSave: (params) => this._beforeSave(params) },
     });
+    await this._storage.open?.();
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
     this._meshNetwork = new MeshNetworkAdapter();
