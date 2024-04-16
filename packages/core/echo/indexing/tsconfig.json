@@ -53,6 +53,9 @@
       "path": "../automerge"
     },
     {
+      "path": "../echo-db"
+    },
+    {
       "path": "../echo-pipeline"
     },
     {

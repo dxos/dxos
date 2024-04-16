@@ -5,13 +5,15 @@
 import { expect } from 'chai';
 
 import { type Filter } from '@dxos/echo-schema';
-import { describe, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 
 describe('IndexSchema', () => {
   test('basic', async () => {
     const index = new IndexSchema();
+    await index.open();
+    afterTest(() => index.close());
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [

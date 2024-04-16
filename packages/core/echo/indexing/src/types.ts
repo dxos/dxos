@@ -3,22 +3,24 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type Filter } from '@dxos/echo-schema';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-
-export type ObjectType = Record<string, any>;
 
 export interface Index {
   identifier: string;
   kind: IndexKind;
   updated: Event;
 
+  open(): Promise<Index>;
+  close(): Promise<Index>;
+
   /**
    * @returns {Promise<boolean>} true if the object was updated, false otherwise.
    */
-  update: (id: string, object: ObjectType) => Promise<boolean>;
-  remove: (id: string) => Promise<void>;
-  find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
+  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
+  remove(id: string): Promise<void>;
+  find(filter: Filter): Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }

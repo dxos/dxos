@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { type Filter } from '@dxos/echo-schema';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
@@ -19,6 +19,8 @@ describe('IndexStore', () => {
     const store = new IndexStore({ directory });
 
     const index = new IndexSchema();
+    await index.open();
+    afterTest(() => index.close());
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
@@ -52,6 +54,8 @@ describe('IndexStore', () => {
     const store = new IndexStore({ directory });
 
     const index = new IndexSchema();
+    await index.open();
+    afterTest(() => index.close());
 
     const schemaURI = '@example.org/schema/Contact';
     const objects = [
