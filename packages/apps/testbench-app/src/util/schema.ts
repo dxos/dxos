@@ -5,7 +5,9 @@
 import { AST } from '@effect/schema';
 import type * as S from '@effect/schema/Schema';
 
-import { type ColumnType } from './types';
+// TODO(burdon): Reconcile with react-ui-table.
+
+export type ColumnType = 'number' | 'boolean' | 'date' | 'string' | 'ref';
 
 export type ClassifiedColumnType = ColumnType | 'display';
 

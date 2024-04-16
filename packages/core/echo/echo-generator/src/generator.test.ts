@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
-import { debug } from '@dxos/client/echo';
 import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { afterTest, describe, test } from '@dxos/test';
@@ -59,10 +58,6 @@ describe('TestObjectGenerator', () => {
 
     expect(schemaId[0]).not.to.be.undefined;
     expect(schemaId[0]).to.eq(schemaId[1]);
-
-    {
-      console.log(space.db.objects.map((object) => object[debug]));
-    }
   });
 
   const setupTest = async () => {

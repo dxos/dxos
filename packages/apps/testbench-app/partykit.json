@@ -1,0 +1,8 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "compatibilityDate": "2024-04-01",
+  "domain": "signaling.dxos.network",
+  // "team": "dxos", // Requires white-list from partykit.
+  "name": "signaling-server",
+  "main": "src/webrtc/server/signaling-server.ts"
+}
