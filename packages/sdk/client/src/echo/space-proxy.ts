@@ -114,9 +114,6 @@ export class SpaceProxy implements Space {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
-      get db(): never {
-        throw new Error('Use space.db instead');
-      },
       get data() {
         return self._data;
       },

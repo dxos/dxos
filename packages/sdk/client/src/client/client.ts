@@ -12,6 +12,8 @@ import {
   STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
+  type Echo,
+  type Halo,
 } from '@dxos/client-protocol';
 import { DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -30,9 +32,8 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { IndexKind, type SpaceList, type TypeCollection } from '../echo';
-import type { HaloProxy } from '../halo';
-import type { MeshProxy } from '../mesh';
+import { IndexKind, type TypeCollection } from '../echo';
+import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
@@ -179,7 +180,7 @@ export class Client {
     return this._status;
   }
 
-  get spaces(): SpaceList {
+  get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
   }
@@ -187,7 +188,7 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo(): HaloProxy {
+  get halo(): Halo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.halo;
   }
@@ -295,6 +296,7 @@ export class Client {
       : undefined;
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     await this._open();
+    invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
@@ -302,7 +304,7 @@ export class Client {
       mountDevtoolsHooks({ client: this });
     }
 
-    await this.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
@@ -311,9 +313,9 @@ export class Client {
   private async _open() {
     log('opening...');
     invariant(this._services);
-    const { SpaceList } = await import('../echo');
-    const { HaloProxy } = await import('../halo');
-    const { MeshProxy } = await import('../mesh');
+    const { SpaceList } = await import('../echo/space-list');
+    const { HaloProxy } = await import('../halo/halo-proxy');
+    const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
     await this._services.open(this._ctx);
