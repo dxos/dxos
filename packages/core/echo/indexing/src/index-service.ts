@@ -37,7 +37,7 @@ export class IndexServiceImpl implements IndexService {
 
   find(request: QueryRequest): Stream<QueryResponse> {
     const filter = Filter.fromProto(request.filter);
-    return new Stream(({ next, close, ctx }) => {
+    return new Stream(({ next, ctx }) => {
       let currentCtx: Context;
       // Previous id-s.
       let previousResults: string[] = [];
@@ -99,13 +99,9 @@ export class IndexServiceImpl implements IndexService {
         }
       });
 
-      const unsub = this._params.indexer.indexed.on(() => updateTask.schedule());
+      this._params.indexer.indexed.on(ctx, () => updateTask.schedule());
 
       updateTask.schedule();
-
-      return () => {
-        unsub();
-      };
     });
   }
 
