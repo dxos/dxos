@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { DeferredTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
@@ -36,16 +37,12 @@ export class IndexServiceImpl implements IndexService {
 
   find(request: QueryRequest): Stream<QueryResponse> {
     const filter = Filter.fromProto(request.filter);
-    return new Stream(({ next, close }) => {
-      let currentCtx: Context;
+    return new Stream(({ next, ctx }) => {
       // Previous id-s.
       let previousResults: string[] = [];
 
-      const update = async () => {
+      const updateTask = new DeferredTask(ctx, async () => {
         try {
-          await currentCtx?.dispose();
-          const ctx = new Context();
-          currentCtx = ctx;
           const results = await this._params.indexer.find(filter);
           const response: QueryResponse = {
             queryId: request.queryId,
@@ -55,7 +52,7 @@ export class IndexServiceImpl implements IndexService {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
                   await handle.whenReady();
-                  if (this._ctx.disposed || currentCtx.disposed) {
+                  if (this._ctx.disposed || ctx.disposed) {
                     return;
                   }
                   const spaceKey = getSpaceKeyFromDoc(handle.docSync());
@@ -96,15 +93,11 @@ export class IndexServiceImpl implements IndexService {
         } catch (error) {
           log.catch(error);
         }
-      };
+      });
 
-      const unsub = this._params.indexer.indexed.on(update);
+      this._params.indexer.indexed.on(ctx, () => updateTask.schedule());
 
-      void update();
-
-      return () => {
-        unsub();
-      };
+      updateTask.schedule();
     });
   }
 
