@@ -10,8 +10,7 @@ import { type ObjectStructure, encodeReference } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Filter } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
@@ -19,18 +18,15 @@ import { Indexer, type ObjectSnapshot } from './indexer';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
     const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
+    await openAndClose(level);
 
     const documents: ObjectSnapshot[] = [];
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
+      indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
       loadDocuments: async function* (ids) {
         yield documents.filter((doc) => ids.includes(doc.id));
@@ -69,11 +65,8 @@ describe('Indexer', () => {
   });
 
   test('objects are indexed for first time', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
     const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
+    await openAndClose(level);
 
     const documents: ObjectSnapshot[] = [];
 
@@ -89,7 +82,7 @@ describe('Indexer', () => {
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('IndexStore') }),
+      indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
       loadDocuments: async function* () {},
       getAllDocuments: async function* () {
