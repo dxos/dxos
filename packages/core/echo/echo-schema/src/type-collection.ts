@@ -9,7 +9,7 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StoredEchoSchema } from './effect/dynamic/stored-schema';
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
 import { TypedObject } from './effect/echo-object-class';
-import * as E from './effect/reactive';
+import { echoObject, ref } from './effect/reactive';
 import { LEGACY_TEXT_TYPE } from './text';
 
 /**
@@ -118,7 +118,7 @@ const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
       type: S.enums(LegacySchemaPropType),
       typename: S.string,
       refName: S.string,
-      ref: S.suspend(() => E.ref(LegacySchemaTypeSchema)),
+      ref: S.suspend(() => ref(LegacySchemaTypeSchema)),
       refModelType: S.string,
       repeated: S.boolean,
       props: S.suspend(() => S.mutable(S.array(LegacySchemaPropSchema))),
@@ -137,4 +137,4 @@ const LegacySchemaTypeSchema = S.partial(
     typename: S.string,
     props: S.mutable(S.array(LegacySchemaPropSchema)),
   }),
-).pipe(E.echoObject(LEGACY_SCHEMA_TYPE, '0.1.0'));
+).pipe(echoObject(LEGACY_SCHEMA_TYPE, '0.1.0'));

@@ -11,14 +11,14 @@ import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
-import * as E from '../effect/reactive';
-import { type EchoReactiveObject, Expando } from '../effect/reactive';
+import { Expando, create } from '../effect/reactive';
+import { type EchoReactiveObject } from '../effect/reactive';
 import { TestBuilder, createDatabase } from '../testing';
 import { Contact } from '../tests/schema';
 import { TextCompatibilitySchema } from '../type-collection';
 
 const createTestObject = (idx: number, label?: string) => {
-  return E.create(Expando, { idx, title: `Task ${idx}`, label });
+  return create(Expando, { idx, title: `Task ${idx}`, label });
 };
 
 describe('Queries', () => {
@@ -185,9 +185,9 @@ test.skip('query with model filters', async () => {
   const peer = await testBuilder.createPeer();
 
   const obj = peer.db.add(
-    E.create(Expando, {
+    create(Expando, {
       title: 'title',
-      description: E.create(TextCompatibilitySchema, { content: 'description' }),
+      description: create(TextCompatibilitySchema, { content: 'description' }),
     }),
   );
 
@@ -202,7 +202,7 @@ describe('Queries with types', () => {
     const testBuilder = new TestBuilder();
     testBuilder.graph.types.registerEffectSchema(Contact);
     const peer = await testBuilder.createPeer();
-    const contact = peer.db.add(E.create(Contact, {}));
+    const contact = peer.db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
 
     const query = peer.db.query(Filter.typename('example.test.Contact'));
@@ -222,7 +222,7 @@ describe('Queries with types', () => {
     afterTest(() => unsub());
 
     contact.name = name;
-    peer.db.add(E.create(Contact, {}));
+    peer.db.add(create(Contact, {}));
 
     await asyncTimeout(nameUpdate.wait(), 1000);
     await asyncTimeout(anotherContactAdded.wait(), 1000);
@@ -233,7 +233,7 @@ describe('Queries with types', () => {
     testBuilder.graph.types.registerEffectSchema(Contact);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
-    const contact = E.create(Contact, { name });
+    const contact = create(Contact, { name });
     peer.db.add(contact);
     expect(contact instanceof Contact).to.be.true;
 
@@ -250,7 +250,7 @@ test('map over refs in query result', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
-  const folder = peer.db.add(E.create(Expando, { name: 'folder', objects: [] as any[] }));
+  const folder = peer.db.add(create(Expando, { name: 'folder', objects: [] as any[] }));
   const objects = range(3).map((idx) => createTestObject(idx));
   for (const object of objects) {
     folder.objects.push(object);

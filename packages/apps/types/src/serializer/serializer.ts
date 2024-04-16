@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Expando, getAutomergeObjectCore, getTypeRef } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
-import { createEchoReactiveObject } from '@dxos/echo-schema';
+import { type Expando, getAutomergeObjectCore, getMeta, getTypeRef } from '@dxos/echo-schema';
+import { createEchoReactiveObject, create } from '@dxos/echo-schema';
 
 export type Filename = { name?: string; extension: string };
 
@@ -45,11 +44,11 @@ export const jsonSerializer: TypedObjectSerializer = {
     if (!object) {
       const deserializedObject = createEchoReactiveObject(
         // TODO(burdon): Move to ECHO? Remove test for '@' properties.
-        E.object(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')))),
+        create(Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')))),
       );
 
       // TODO(burdon): Should be immutable?
-      E.getMeta(deserializedObject).keys = meta?.keys ?? E.getMeta(deserializedObject).keys;
+      getMeta(deserializedObject).keys = meta?.keys ?? getMeta(deserializedObject).keys;
       const core = getAutomergeObjectCore(deserializedObject);
       core.id = id;
       const typeRef = getTypeRef(type);

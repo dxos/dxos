@@ -6,8 +6,7 @@ import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { filterObjects, type SearchResult } from '@braneframe/plugin-search';
 import { type Space } from '@dxos/client/echo';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { type EchoReactiveObject, typeOf } from '@dxos/echo-schema';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph as GraphComponent, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-ui-theme';
@@ -108,7 +107,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             attributes={{
               node: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
                 let className: string | undefined;
-                const typename = E.typeOf(node.data)?.itemId;
+                const typename = typeOf(node.data)?.itemId;
                 if (typename) {
                   className = colorMap.get(typename);
                   if (!className) {

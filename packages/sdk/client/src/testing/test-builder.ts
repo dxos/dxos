@@ -11,8 +11,7 @@ import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type MyLevel } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import * as E from '@dxos/echo-schema';
-import { Expando } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -174,12 +173,12 @@ export class TestBuilder {
   }
 }
 
-export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
-  const object = E.object(Expando, {});
+export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+  const object = create(Expando, {});
 
-  create.add(object);
+  createDb.add(object);
 
-  await check.automerge.loadObjectById(object.id, { timeout: 1000 });
+  await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };

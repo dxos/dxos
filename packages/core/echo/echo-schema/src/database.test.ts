@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 
 import { describe, test } from '@dxos/test';
 
-import * as E from './effect/reactive';
+import { create, Expando, getMeta } from './effect/reactive';
 import { createDatabase, TestBuilder } from './testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
@@ -16,17 +16,17 @@ describe('Database', () => {
   test('flush with test builder', async () => {
     const testBuilder = new TestBuilder();
     const peer = await testBuilder.createPeer();
-    peer.db.add(E.create(E.Expando, { str: 'test' }));
+    peer.db.add(create(Expando, { str: 'test' }));
     await testBuilder.flushAll();
   });
 
   test('inspect', async () => {
     const { db } = await createDatabase();
 
-    const task = E.create(E.Expando, {
+    const task = create(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      assignee: E.create(E.Expando, { name: 'Bob' }),
+      assignee: create(Expando, { name: 'Bob' }),
     });
     db.add(task);
     await db.flush();
@@ -40,7 +40,7 @@ describe('Database', () => {
 
     const n = 10;
     for (const _ of Array.from({ length: n })) {
-      const obj = E.create(E.Expando, {});
+      const obj = create(Expando, {});
       db.add(obj);
     }
     await db.flush();
@@ -62,15 +62,15 @@ describe('Database', () => {
   test('meta', async () => {
     const { db } = await createDatabase();
 
-    const obj = E.create(E.Expando, {});
-    expectObjects(E.getMeta(obj).keys, []);
-    E.getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
-    expectObjects(E.getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    const obj = create(Expando, {});
+    expectObjects(getMeta(obj).keys, []);
+    getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
+    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
 
     db.add(obj);
     await db.flush();
 
-    expectObjects(E.getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
     // TODO(mykola): Implement in automerge.
     // expect(obj[data]).toEqual({
     //   '@id': obj.id,

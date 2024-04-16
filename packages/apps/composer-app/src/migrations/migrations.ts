@@ -3,7 +3,7 @@
 //
 
 import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
 
@@ -20,7 +20,7 @@ export const migrations: Migration[] = [
       if (objects.length > 0) {
         setSpaceProperty(space, FolderType.typename, objects[0]);
       } else {
-        setSpaceProperty(space, FolderType.typename, E.object(FolderType, { name: space.key.toHex(), objects: [] }));
+        setSpaceProperty(space, FolderType.typename, create(FolderType, { name: space.key.toHex(), objects: [] }));
       }
     },
     down: () => {},

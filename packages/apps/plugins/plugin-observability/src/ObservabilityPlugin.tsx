@@ -22,7 +22,7 @@ import {
   parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,
@@ -58,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   namespace: string;
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
-  const settings = E.object<ObservabilitySettingsProps>({});
+  const settings = create<ObservabilitySettingsProps>({});
   const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN);
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;

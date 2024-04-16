@@ -14,8 +14,7 @@ import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
-import * as E from '../effect/reactive';
-import { type EchoReactiveObject, type Expando } from '../effect/reactive';
+import { Expando, type EchoReactiveObject, create } from '../effect/reactive';
 import { TestBuilder, type TestPeer } from '../testing';
 import { TextCompatibilitySchema } from '../type-collection';
 
@@ -420,11 +419,11 @@ const createPeerInSpaceWithObject = async (
 };
 
 const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
-  return E.create(E.Expando, props);
+  return create(Expando, props);
 };
 
 const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
-  return E.create(TextCompatibilitySchema, { content });
+  return create(TextCompatibilitySchema, { content });
 };
 
 interface DocumentHandles {

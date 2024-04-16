@@ -9,8 +9,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -165,15 +164,15 @@ describe('Client', () => {
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(E.object(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(create(ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      E.object(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: E.object(TextV0Type, { content: text }) }],
+      create(MessageType, {
+        blocks: [{ timestamp: new Date().toISOString(), content: create(TextV0Type, { content: text }) }],
       }),
     );
     thread2.messages.push(message);
