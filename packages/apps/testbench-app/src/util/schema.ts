@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST } from '@effect/schema';
-import type * as S from '@effect/schema/Schema';
+import { AST } from '@dxos/echo-schema';
+import type { S } from '@dxos/echo-schema';
 
 // TODO(burdon): Reconcile with react-ui-table.
 

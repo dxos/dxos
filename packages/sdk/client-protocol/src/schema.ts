@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
+import { S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 
 const _Properties = S.struct({ name: S.optional(S.string) }, { key: S.string, value: S.any }).pipe(

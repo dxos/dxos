@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
+import { S, TypedObject } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 

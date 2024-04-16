@@ -4,8 +4,7 @@
 
 // TODO(burdon): Reconcile with @dxos/echo-generator.
 
-import type * as S from '@effect/schema/Schema';
-
+import type { S } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
