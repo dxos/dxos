@@ -95,7 +95,7 @@ export class IndexServiceImpl implements IndexService {
         }
       });
 
-      this._params.indexer.indexed.on(ctx, () => updateTask.schedule());
+      this._params.indexer.updated.on(ctx, () => updateTask.schedule());
 
       updateTask.schedule();
     });
