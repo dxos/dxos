@@ -24,7 +24,7 @@ import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { ContactType, TestBuilder } from '../testing';
 
-describe.only('Index queries', () => {
+describe('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
     builder.storage = createStorage({ type: StorageType.RAM });
