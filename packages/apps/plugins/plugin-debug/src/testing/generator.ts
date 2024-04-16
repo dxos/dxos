@@ -5,8 +5,7 @@
 import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, createDocAccessor } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter, createDocAccessor, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
@@ -51,7 +50,7 @@ export class Generator {
   createTables() {
     return tableDefs.map(({ type, title, props }) => {
       const schema = this._generator.getSchema(type);
-      return this._space.db.add(E.object(TableType, { title, schema, props: props ?? [] }));
+      return this._space.db.add(create(TableType, { title, schema, props: props ?? [] }));
     });
   }
 
@@ -65,7 +64,7 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    return this._space.db.add(E.object(DocumentType, { title, content: E.object(TextV0Type, { content }) }));
+    return this._space.db.add(create(DocumentType, { title, content: create(TextV0Type, { content }) }));
   }
 
   updateDocument() {

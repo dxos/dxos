@@ -7,8 +7,7 @@ import '@dxosTheme';
 import React, { type FC, useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
@@ -37,7 +36,7 @@ faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(E.object(TextV0Type, { content }));
+  const [text] = useState(create(TextV0Type, { content }));
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(() => {
     return {

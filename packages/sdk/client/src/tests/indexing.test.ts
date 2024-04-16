@@ -9,8 +9,7 @@ import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -71,7 +70,7 @@ describe('Index queries', () => {
     {
       await space.waitUntilReady();
 
-      const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
+      const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
       space.db.add(contact);
       await space.db.flush();
     }
@@ -97,7 +96,7 @@ describe('Index queries', () => {
     {
       await space.waitUntilReady();
 
-      const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
+      const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
       space.db.add(contact);
       await space.db.flush();
     }
@@ -129,7 +128,7 @@ describe('Index queries', () => {
         await space.waitUntilReady();
         spaceKey = space.key;
 
-        const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
+        const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
         space.db.add(contact);
         await space.db.flush();
       }
@@ -176,7 +175,7 @@ describe('Index queries', () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
 
-    const contact = E.object(ContactType, { name: 'John Doe', identifiers: [] });
+    const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
     space.db.add(contact);
     await space.db.flush();
 

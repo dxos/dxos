@@ -11,7 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { MailboxType, AddressBookType, CalendarType } from '@braneframe/types';
 import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain, Mailbox } from './components';
@@ -200,13 +200,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE_MAILBOX: {
-              return { data: E.object(MailboxType, { messages: [] }) };
+              return { data: create(MailboxType, { messages: [] }) };
             }
             case InboxAction.CREATE_ADDRESSBOOK: {
-              return { data: E.object(AddressBookType, {}) };
+              return { data: create(AddressBookType, {}) };
             }
             case InboxAction.CREATE_CALENDAR: {
-              return { data: E.object(CalendarType, {}) };
+              return { data: create(CalendarType, {}) };
             }
           }
         },

@@ -9,7 +9,7 @@ import {
   parseMetadataRecordsPlugin,
   type MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 
 import meta from './meta';
 
@@ -17,7 +17,7 @@ import meta from './meta';
  * Plugin for collecting and resolving type metadata.
  */
 export const MetadataPlugin = (): PluginDefinition<MetadataResolverProvides> => {
-  const state = E.object<MetadataRecordsProvides['metadata']>({ records: {} });
+  const state = create<MetadataRecordsProvides['metadata']>({ records: {} });
 
   return {
     meta,

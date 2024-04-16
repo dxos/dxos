@@ -11,8 +11,8 @@ import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import * as E from '@dxos/echo-schema';
-import { type Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
+import { Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -531,12 +531,12 @@ describe('Spaces', () => {
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {
-    return E.object(DocumentType, {
-      content: E.object(TextV0Type, { content: '' }),
+    return create(DocumentType, {
+      content: create(TextV0Type, { content: '' }),
     });
   };
 
   const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
-    return E.object(E.Expando, props);
+    return create(Expando, props);
   };
 });

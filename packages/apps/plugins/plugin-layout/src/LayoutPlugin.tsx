@@ -29,7 +29,7 @@ import {
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -85,7 +85,7 @@ export const LayoutPlugin = ({
     toasts: [],
   });
 
-  const location = E.object<NavigationState>({
+  const location = create<NavigationState>({
     active: undefined,
     previous: undefined,
 

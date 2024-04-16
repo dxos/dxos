@@ -13,8 +13,7 @@ import {
   TableType,
 } from '@braneframe/types';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
@@ -36,17 +35,17 @@ const upgrade035 = () => {
     const personalSpaceFolderSelector = { name: defaultSpace.key.toHex() };
     let personalSpaceFolder = defaultSpace.db.query(Filter.schema(FolderType, personalSpaceFolderSelector)).objects[0];
     if (!personalSpaceFolder) {
-      personalSpaceFolder = E.object(FolderType, { ...personalSpaceFolderSelector, objects: [] });
+      personalSpaceFolder = create(FolderType, { ...personalSpaceFolderSelector, objects: [] });
     }
 
     let sharedSpacesFolder = defaultSpace.db.query(Filter.schema(FolderType, { name: 'shared-spaces' })).objects[0];
     if (!sharedSpacesFolder) {
-      sharedSpacesFolder = E.object(FolderType, { name: 'shared-spaces', objects: [] });
+      sharedSpacesFolder = create(FolderType, { name: 'shared-spaces', objects: [] });
     }
 
     let rootFolder = defaultSpace.db.query(Filter.schema(FolderType, { name: 'root' })).objects[0];
     if (!rootFolder) {
-      rootFolder = E.object(FolderType, { name: 'root', objects: [personalSpaceFolder, sharedSpacesFolder] });
+      rootFolder = create(FolderType, { name: 'root', objects: [personalSpaceFolder, sharedSpacesFolder] });
       defaultSpace.db.add(rootFolder);
     }
 
@@ -65,7 +64,7 @@ const upgrade035 = () => {
         return;
       } else if (!spaceFolder) {
         spaceFolder = space.db.add(
-          E.object(FolderType, {
+          create(FolderType, {
             name: space.key.toHex(),
             objects: queries.flatMap((query) => query.objects),
           }),

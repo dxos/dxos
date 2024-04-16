@@ -3,7 +3,7 @@
 //
 
 import { ThreadType, MessageType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 
@@ -13,10 +13,10 @@ export const createInbox = (count = 10) => {
   // const now = new Date();
 
   // TODO(burdon): Timestamp.
-  return E.object(ThreadType, {
+  return create(ThreadType, {
     messages: faker.helpers.multiple(
       () =>
-        E.object(MessageType, {
+        create(MessageType, {
           from: {
             identityKey: PublicKey.random().toHex(),
           },

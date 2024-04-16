@@ -39,7 +39,7 @@ const noop = (...args: any[]) => {};
 
 describe('reactive', () => {
   test('untyped', () => {
-    const person = R.object({ name: 'Satoshi', age: 42 });
+    const person = R.create({ name: 'Satoshi', age: 42 });
     expect(person.age).to.equal(42);
 
     {
@@ -70,7 +70,7 @@ describe('reactive', () => {
       number?: string;
     }
 
-    const person = R.object({
+    const person = R.create({
       name: 'Satoshi',
       age: 42,
       address: {
@@ -114,7 +114,7 @@ describe('reactive', () => {
 
     type Contact = S.Schema.Type<typeof Contact>;
 
-    const person: Contact = R.object(Contact, {
+    const person: Contact = R.create(Contact, {
       name: 'Satoshi',
       age: 42,
       address: {
@@ -183,7 +183,7 @@ describe('reactive', () => {
     type Contact = S.Schema.Type<typeof Contact>;
     const ContactPretty = Pretty.make(Contact);
 
-    const person: Mutable<Contact> = R.object(Contact, {
+    const person: Mutable<Contact> = R.create(Contact, {
       timestamp: new Date(),
       key1: PublicKey.random().toHex(),
       key2: PublicKey.random(),
@@ -211,11 +211,11 @@ describe('reactive', () => {
       employer: S.optional(Organization),
     });
 
-    const org = R.object(Organization, {
+    const org = R.create(Organization, {
       name: 'DXOS',
     });
 
-    const person = R.object(Contact, {
+    const person = R.create(Contact, {
       name: 'Satoshi',
       employer: org,
     });
@@ -232,7 +232,7 @@ describe('reactive', () => {
       name: S.string.pipe(S.identifier('name')),
     });
 
-    const person = R.object(Contact, {
+    const person = R.create(Contact, {
       name: 'Satoshi',
     });
 
@@ -248,7 +248,7 @@ describe('reactive', () => {
 
     const ContactPretty = Pretty.make(Contact);
 
-    const person = R.object(Contact, {
+    const person = R.create(Contact, {
       name: 'Satoshi',
     });
 
@@ -322,7 +322,7 @@ describe('reactive', () => {
     expect(properties.map(({ path }) => path)).to.deep.eq(['name', 'address.city']);
 
     {
-      const person = R.object(Contact, {
+      const person = R.create(Contact, {
         publicKey: PublicKey.random().toHex(),
         name: 'Satoshi',
         address: {

@@ -19,7 +19,7 @@ registerSignalRuntime();
 
 for (const schema of [undefined, TestSchemaWithClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveObject<TestSchemaWithClass> => {
-    return schema == null ? (R.object(props) as TestSchemaWithClass) : R.object(schema, props);
+    return schema == null ? (R.create(props) as TestSchemaWithClass) : R.create(schema, props);
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -96,7 +96,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 describe('getters', () => {
   test('add getter to object', () => {
     let value = 'foo';
-    const obj = R.object({
+    const obj = R.create({
       get getter() {
         return value;
       },
@@ -108,11 +108,11 @@ describe('getters', () => {
   });
 
   test('signal updates', () => {
-    const innerObj = R.object({
+    const innerObj = R.create({
       string: 'bar',
     });
 
-    const obj = R.object({
+    const obj = R.create({
       field: 1,
       get getter() {
         return innerObj.string;
@@ -133,7 +133,7 @@ describe('getters', () => {
 
   test('getter for array', () => {
     const value = [1];
-    const obj = R.object({
+    const obj = R.create({
       get getter() {
         return value;
       },

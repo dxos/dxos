@@ -18,7 +18,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -96,20 +96,20 @@ describe('RequestProcessor', () => {
     // Add prompts.
     {
       space.db.add(
-        E.object(ChainType, {
+        create(ChainType, {
           prompts: [
-            E.object(ChainPromptType, {
+            create(ChainPromptType, {
               command: 'translate',
-              source: E.object(TextV0Type, {
+              source: create(TextV0Type, {
                 content: ['Translate the following into {language}:', '---', '{input}'].join('\n'),
               }),
               inputs: [
-                E.object(ChainInput, {
+                create(ChainInput, {
                   name: 'language',
                   type: ChainInputType.VALUE,
                   value: 'japanese',
                 }),
-                E.object(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
               ],
             }),
           ],
@@ -119,12 +119,12 @@ describe('RequestProcessor', () => {
 
     {
       const thread = new ThreadType();
-      const message = E.object(MessageType, {
+      const message = create(MessageType, {
         from: {},
         blocks: [
           {
             timestamp: new Date().toISOString(),
-            content: E.object(TextV0Type, { content: '/translate hello world!' }),
+            content: create(TextV0Type, { content: '/translate hello world!' }),
           },
         ],
       });
@@ -148,11 +148,11 @@ describe('RequestProcessor', () => {
     // Add prompts.
     {
       space.db.add(
-        E.object(ChainType, {
+        create(ChainType, {
           prompts: [
-            E.object(ChainPromptType, {
+            create(ChainPromptType, {
               command: 'extract',
-              source: E.object(TextV0Type, {
+              source: create(TextV0Type, {
                 content: [
                   'List all people and companies mentioned in the content section below.',
                   '',
@@ -168,13 +168,13 @@ describe('RequestProcessor', () => {
               }),
               inputs: [
                 //
-                E.object(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
-                E.object(ChainInput, {
+                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+                create(ChainInput, {
                   name: 'company',
                   type: ChainInputType.SCHEMA,
                   value: 'example.com/schema/organization',
                 }),
-                E.object(ChainInput, {
+                create(ChainInput, {
                   name: 'contact',
                   type: ChainInputType.SCHEMA,
                   value: 'example.com/schema/contact',
@@ -194,13 +194,13 @@ describe('RequestProcessor', () => {
         'Nadella worked at Sun Microsystems as a member of its technology staff before joining Microsoft in 1992.',
       ].join('\n');
 
-      const thread = E.object(ThreadType, { messages: [] });
-      const message = E.object(MessageType, {
+      const thread = create(ThreadType, { messages: [] });
+      const message = create(MessageType, {
         from: {},
         blocks: [
           {
             timestamp: new Date().toISOString(),
-            content: E.object(TextV0Type, { content: `/extract "${text}"` }),
+            content: create(TextV0Type, { content: `/extract "${text}"` }),
           },
         ],
       });
