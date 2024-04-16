@@ -2,12 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
-
 import { FolderType } from '@braneframe/types';
+import type { S } from '@dxos/echo-schema';
+import { AST, DynamicEchoSchema, StoredEchoSchema, SchemaValidator } from '@dxos/echo-schema';
 import * as E from '@dxos/echo-schema';
-import { DynamicEchoSchema, StoredEchoSchema, SchemaValidator } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { type Subscription, type Space, type EchoReactiveObject } from '@dxos/react-client/echo';

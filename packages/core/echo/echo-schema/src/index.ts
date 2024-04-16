@@ -24,4 +24,7 @@ export * from './effect/reactive';
 export { SchemaValidator } from './effect/schema-validator';
 export * from './text';
 
+export * as S from '@effect/schema/Schema';
+export * as AST from '@effect/schema/AST';
+
 // This comment is here to bust NX cache. Remove it after the code changes.
