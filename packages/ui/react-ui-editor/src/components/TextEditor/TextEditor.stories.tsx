@@ -11,7 +11,7 @@ import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useSta
 import { createRoot } from 'react-dom/client';
 
 import { TextV0Type } from '@braneframe/types';
-import { createDocAccessor, create } from '@dxos/echo-schema';
+import { createDocAccessor, create, createEchoReactiveObject } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -252,7 +252,7 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const [object] = useState(create(TextV0Type, { content: text ?? '' }));
+  const [object] = useState(createEchoReactiveObject(create(TextV0Type, { content: text ?? '' })));
 
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);
