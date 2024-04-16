@@ -19,6 +19,7 @@ import { getFullPath } from './utils';
  * https://github.com/random-access-storage
  * https://github.com/random-access-storage/random-access-storage
  */
+// TODO(dmaretskyi): Remove this class.
 export abstract class AbstractStorage implements Storage {
   protected readonly _files = new Map<string, File>();
 
@@ -128,7 +129,7 @@ export abstract class AbstractStorage implements Storage {
     );
   }
 
-  private async _closeFilesInPath(path: string): Promise<void> {
+  protected async _closeFilesInPath(path: string): Promise<void> {
     await Promise.all(
       Array.from((await this._getFiles(path)).values()).map((file) => file.close().catch((err: any) => log.catch(err))),
     );
