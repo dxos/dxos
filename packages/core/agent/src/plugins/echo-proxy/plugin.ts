@@ -5,7 +5,7 @@
 import express from 'express';
 
 import { PublicKey } from '@dxos/client';
-import * as E from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Config } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
@@ -72,7 +72,7 @@ export class EchoProxyPlugin extends Plugin {
           const objects = req.body;
           Object.assign(result, {
             objects: objects.map(async (data: any) => {
-              const object = space.db.add(E.object(data));
+              const object = space.db.add(create(data));
               return object.id;
             }),
           });

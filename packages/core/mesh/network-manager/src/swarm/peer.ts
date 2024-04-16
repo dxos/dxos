@@ -90,7 +90,6 @@ export class Peer {
 
   public readonly connectionDisplaced = new Event<Connection>();
 
-  // TODO(burdon): Convert to map?
   constructor(
     public readonly id: PublicKey,
     public readonly topic: PublicKey,

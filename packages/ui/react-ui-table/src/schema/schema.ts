@@ -2,26 +2,54 @@
 // Copyright 2024 DXOS.org
 //
 
-import { AST } from '@effect/schema';
+import * as AST from '@effect/schema/AST';
 import type * as S from '@effect/schema/Schema';
 
 import { type ColumnType } from './types';
 
 export type ClassifiedColumnType = ColumnType | 'display';
 
+// TODO(burdon): Rename getX? and return typed array?
+export const classifySchemaProperties = (schema: S.Schema<any, any>): [string, ClassifiedColumnType][] => {
+  const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
+    const properties = AST.getPropertySignatures(node);
+    properties.forEach((prop) => {
+      const propName = prop.name.toString();
+
+      if (prop.isOptional) {
+        const unwrappedAst = unwrapOptionProperty(prop);
+        if (isStruct(unwrappedAst)) {
+          return recurse(unwrappedAst, [...path, propName], acc);
+        }
+      }
+
+      if (isStruct(prop.type)) {
+        recurse(prop.type, [...path, propName], acc);
+      } else {
+        acc.push([path.concat(propName).join('.'), propertyToColumn(prop)]);
+      }
+    });
+
+    return acc;
+  };
+
+  return recurse(schema.ast, [], []);
+};
+
+const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
+
 const isOptionalUnion = (prop: AST.PropertySignature) => AST.isUnion(prop.type) && prop.isOptional;
 
 const unwrapOptionProperty = (prop: AST.PropertySignature) => {
   if (!isOptionalUnion(prop)) {
-    throw new Error('Not an optional property');
+    throw new Error(`Not an optional property: ${String(prop.name)}`);
   }
 
   if (!AST.isUnion(prop.type)) {
-    throw new Error('Not a union type');
+    throw new Error(`Not a union type: ${String(prop.name)}`);
   }
 
   const [type, _undefinedCase] = prop.type.types;
-
   return type;
 };
 
@@ -54,40 +82,11 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
   return 'display';
 };
 
-const propertyToColumn = (property: AST.PropertySignature): ClassifiedColumnType => {
-  let type = property.type;
-
-  if (property.isOptional) {
-    type = unwrapOptionProperty(property);
+const propertyToColumn = (prop: AST.PropertySignature): ClassifiedColumnType => {
+  let type = prop.type;
+  if (prop.isOptional) {
+    type = unwrapOptionProperty(prop);
   }
 
   return typeToColumn(type);
-};
-
-const isStruct = (node: AST.AST) => AST.isTypeLiteral(node);
-
-export const classifySchemaProperties = (schema: S.Schema<any, any>) => {
-  const recurse = (node: AST.AST, path: string[], acc: [string, ClassifiedColumnType][]) => {
-    const properties = AST.getPropertySignatures(node);
-    properties.forEach((prop) => {
-      const propName = prop.name.toString();
-
-      if (prop.isOptional) {
-        const unwrappedAst = unwrapOptionProperty(prop);
-        if (isStruct(unwrappedAst)) {
-          return recurse(unwrappedAst, [...path, propName], acc);
-        }
-      }
-
-      if (isStruct(prop.type)) {
-        recurse(prop.type, [...path, propName], acc);
-      } else {
-        acc.push([path.concat(propName).join('.'), propertyToColumn(prop)]);
-      }
-    });
-
-    return acc;
-  };
-
-  return recurse(schema.ast, [], []);
 };

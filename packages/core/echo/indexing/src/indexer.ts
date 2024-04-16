@@ -6,6 +6,7 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -16,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type ObjectType, type Index } from './types';
+import { type Index } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -28,7 +29,7 @@ export type ObjectSnapshot = {
    * Index ID.
    */
   id: string;
-  object: ObjectType;
+  object: Partial<ObjectStructure>;
   currentHash: string;
 };
 
@@ -39,16 +40,6 @@ export type IndexerParams = {
   loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
 
   getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
-
-  /**
-   * Amount of updates to save indexes after.
-   */
-  saveAfterUpdates?: number;
-
-  /**
-   * Amount of time in [ms] to save indexes after.
-   */
-  saveAfterTime?: number;
 };
 
 @trace.resource()
@@ -62,10 +53,7 @@ export class Indexer {
   private _initialized = false;
   private readonly _newIndexes: Index[] = [];
 
-  private _updatesAfterSave = 0;
-  private _lastSave = Date.now();
-
-  public readonly indexed = new Event<void>();
+  public readonly updated = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
@@ -83,23 +71,12 @@ export class Indexer {
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
   private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
-  private readonly _saveAfterUpdates: number;
-  private readonly _saveAfterTime: number;
 
-  constructor({
-    metadataStore,
-    indexStore,
-    loadDocuments,
-    getAllDocuments,
-    saveAfterUpdates = 100,
-    saveAfterTime = 30_000,
-  }: IndexerParams) {
+  constructor({ metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
     this._loadDocuments = loadDocuments;
     this._getAllDocuments = getAllDocuments;
-    this._saveAfterUpdates = saveAfterUpdates;
-    this._saveAfterTime = saveAfterTime;
   }
 
   get initialized() {
@@ -159,6 +136,7 @@ export class Indexer {
         this._newIndexes.push(new IndexConstructor(kind));
       }
     }
+    await Promise.all(this._newIndexes.map((index) => index.open()));
 
     if (this._indexConfig?.enabled === true) {
       this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
@@ -168,10 +146,10 @@ export class Indexer {
     this._initialized = true;
   }
 
-  // TODO(mykola): `Find` should use junctions and conjunctions of ID sets.
+  @synchronized
   async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
-      return [];
+      throw new Error('Indexer is not initialized or not enabled');
     }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
@@ -188,7 +166,7 @@ export class Indexer {
     this._newIndexes.forEach((index) => this._indexes.set(index.kind, index));
     this._newIndexes.length = 0; // Clear new indexes.
     await this._saveIndexes();
-    this.indexed.emit();
+    this.updated.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -209,11 +187,12 @@ export class Indexer {
       );
     };
 
+    const updates: boolean[] = [];
     for await (const documents of this._loadDocuments(ids)) {
       if (this._ctx.disposed) {
         return;
       }
-      await this._updateIndexes(Array.from(this._indexes.values()), documents);
+      updates.push(...(await this._updateIndexes(Array.from(this._indexes.values()), documents)));
       documentsUpdated.push(...documents);
       if (documentsUpdated.length >= INDEX_UPDATE_BATCH_SIZE) {
         await saveIndexChanges();
@@ -221,35 +200,34 @@ export class Indexer {
       }
     }
     await saveIndexChanges();
-    this.indexed.emit();
+    if (updates.some(Boolean)) {
+      this.updated.emit();
+    }
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]) {
+  private async _updateIndexes(indexes: Index[], documents: ObjectSnapshot[]): Promise<boolean[]> {
+    const updates: boolean[] = [];
     for (const index of indexes) {
       if (this._ctx.disposed) {
-        return;
+        return updates;
       }
       switch (index.kind.kind) {
         case IndexKind.Kind.FIELD_MATCH:
           invariant(index.kind.field, 'Field match index kind should have a field');
-          await updateIndexWithObjects(
-            index,
-            documents.filter((document) => index.kind.field! in document.object),
+          updates.push(
+            ...(await updateIndexWithObjects(
+              index,
+              documents.filter((document) => index.kind.field! in document.object),
+            )),
           );
           break;
         case IndexKind.Kind.SCHEMA_MATCH:
-          await updateIndexWithObjects(index, documents);
+          updates.push(...(await updateIndexWithObjects(index, documents)));
           break;
       }
     }
-  }
-
-  private async _maybeSaveIndexes() {
-    this._updatesAfterSave++;
-    if (this._updatesAfterSave >= this._saveAfterUpdates || Date.now() - this._lastSave >= this._saveAfterTime) {
-      await this._saveIndexes();
-    }
+    return updates;
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -261,8 +239,6 @@ export class Indexer {
       }
       await this._indexStore.save(index);
     }
-    this._updatesAfterSave = 0;
-    this._lastSave = Date.now();
   }
 
   async destroy() {

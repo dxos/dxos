@@ -11,7 +11,7 @@ export {
   hasType,
   Filter,
   Query,
-  getRawDoc,
+  createDocAccessor,
   getTextInRange,
   fromCursor,
   toCursor,
@@ -20,8 +20,8 @@ export {
   getSchema,
   typeOf,
   isEchoReactiveObject,
-  object,
-  ExpandoType,
+  Expando,
+  create,
   TextCompatibilitySchema,
   type EchoReactiveObject,
   type ReactiveObject,
@@ -35,7 +35,6 @@ export {
   type SubscriptionHandle,
 
   // TODO(burdon): Deprecated.
-  createDocAccessor,
   TypeCollection,
 } from '@dxos/echo-schema';
 

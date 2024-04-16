@@ -12,21 +12,30 @@ import { DynamicEchoSchema } from './dynamic-schema';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
 import { TypedObject } from '../echo-object-class';
-import * as E from '../reactive';
-import { EchoObjectAnnotationId, getEchoObjectAnnotation, getFieldMetaAnnotation, getTypeReference } from '../reactive';
+import {
+  create,
+  EchoObjectAnnotationId,
+  fieldMeta,
+  getEchoObjectAnnotation,
+  getFieldMetaAnnotation,
+  getSchema,
+  getTypeReference,
+  ref,
+  typeOf,
+} from '../reactive';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
 class GeneratedEmptySchema extends TypedObject(generatedType)({}) {}
 
 class ClassWithSchemaField extends TypedObject({ typename: 'SchemaHolder', version: '1.0.0' })({
-  schema: S.optional(E.ref(DynamicEchoSchema)),
+  schema: S.optional(ref(DynamicEchoSchema)),
 }) {}
 
 describe('dynamic schema', () => {
   test('set DynamicSchema as echo object field', async () => {
     const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, {}));
+    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
     class GeneratedSchema extends TypedObject(generatedType)({
       field: S.string,
     }) {}
@@ -46,7 +55,7 @@ describe('dynamic schema', () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject(generatedType)({ field: S.string }) {}
     const schema = db.schemaRegistry.add(GeneratedSchema);
-    const instanceWithSchemaRef = db.add(E.object(ClassWithSchemaField, { schema }));
+    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
 
     const schemaWithId = GeneratedSchema.annotations({
       [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
@@ -57,7 +66,7 @@ describe('dynamic schema', () => {
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
     const schema = db.schemaRegistry.add(GeneratedEmptySchema);
-    const object = E.object(schema, {});
+    const object = create(schema, {});
     schema.addColumns({ field1: S.string });
     object.field1 = 'works';
     object.field1 = undefined;
@@ -68,8 +77,8 @@ describe('dynamic schema', () => {
       object.field2 = false;
     }).to.throw();
 
-    expect(E.getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(E.typeOf(object)?.itemId).to.be.eq(schema.id);
+    expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
+    expect(typeOf(object)?.itemId).to.be.eq(schema.id);
 
     db.add(object);
     const queried = db.query(Filter.schema(schema)).objects;
@@ -145,7 +154,7 @@ describe('dynamic schema', () => {
     const metaInfo = { maxLength: 10 };
     const registered = db.schemaRegistry.add(GeneratedEmptySchema);
     registered.addColumns({
-      field1: S.string.pipe(E.fieldMeta(meteNamespace, metaInfo)),
+      field1: S.string.pipe(fieldMeta(meteNamespace, metaInfo)),
       field2: S.string,
     });
     registered.addColumns({ field3: S.string });

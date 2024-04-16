@@ -4,13 +4,13 @@
 
 import '@dxosTheme';
 
-import type * as S from '@effect/schema/Schema';
 import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { TextV0Type, DocumentType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import type { S } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client, ClientContext } from '@dxos/react-client';
@@ -55,8 +55,8 @@ const main = async () => {
     types: [DocumentType, TextV0Type],
     onCreateSpace: (space) => {
       space.db.add(
-        E.object(DocumentType, {
-          content: E.object(TextV0Type, { content: '## Type here...\n\ntry the airplane mode switch.' }),
+        create(DocumentType, {
+          content: create(TextV0Type, { content: '## Type here...\n\ntry the airplane mode switch.' }),
         }),
       );
     },

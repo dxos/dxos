@@ -6,7 +6,7 @@ import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with ec
 import { Plus } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
+import { create, Filter } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -14,6 +14,7 @@ import { Input, Toolbar } from '@dxos/react-ui';
 
 import { ItemList } from './ItemList';
 import { ItemType } from '../data';
+// TODO(burdon): [API]: Import syntax?
 
 export const Root = () => {
   const client = useClient();
@@ -23,14 +24,14 @@ export const Root = () => {
   const [filter, setFilter] = useState<string>();
   const objects = useQuery<ItemType>(
     space,
-    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
+    Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
   );
 
   const [num, setNum] = useState(10);
 
   const handleAdd = (n = num) => {
     Array.from({ length: n }).forEach(() => {
-      space.db.add(E.object(ItemType, { content: randSentence() }));
+      space.db.add(create(ItemType, { content: randSentence() }));
     });
   };
 

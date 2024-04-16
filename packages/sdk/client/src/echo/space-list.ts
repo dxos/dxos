@@ -17,9 +17,9 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import * as E from '@dxos/echo-schema';
 import {
   AutomergeContext,
+  create,
   type FilterSource,
   type Hypergraph,
   type Query,
@@ -252,7 +252,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(E.object(Properties, meta ?? {}));
+    spaceProxy.db.add(create(Properties, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

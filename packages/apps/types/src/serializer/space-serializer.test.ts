@@ -6,8 +6,7 @@ import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import * as E from '@dxos/echo-schema';
-import { getTextContent } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSerializer } from './object-serializer';
@@ -18,7 +17,7 @@ import { DocumentType, FolderType, TextV0Type } from '../schema';
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
   await space.waitUntilReady();
-  setSpaceProperty(space, FolderType.typename, E.object(FolderType, { objects: [] }));
+  setSpaceProperty(space, FolderType.typename, create(FolderType, { objects: [] }));
   await space.db.flush();
   return space;
 };
@@ -41,7 +40,7 @@ describe('Serialization', () => {
     {
       const space1 = await createSpace(client, 'test-1');
       const { objects } = getSpaceProperty<FolderType>(space1, FolderType.typename)!;
-      objects.push(E.object(DocumentType, { content: E.object(TextV0Type, { content }) }));
+      objects.push(create(DocumentType, { content: create(TextV0Type, { content }) }));
 
       serialized = await serializer.serializeSpace(space1);
       expect(serialized.metadata.name).to.equal('test-1');
@@ -56,7 +55,7 @@ describe('Serialization', () => {
 
       const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;
-      expect(getTextContent(object.content)).to.equal(content);
+      expect(object.content.content).to.equal(content);
 
       // TODO(burdon): Object ID is not preserved (refs?)
       expect(object.id).to.not.equal(serialized.objects[0].id);

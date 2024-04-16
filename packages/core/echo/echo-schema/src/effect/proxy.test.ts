@@ -30,7 +30,7 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
       const testSchema =
         useDatabase && schema === TestSchema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
-      const obj = testSchema == null ? (R.object(props) as TestSchema) : R.object(testSchema as any, props);
+      const obj = testSchema == null ? (R.create(props) as TestSchema) : R.create(testSchema as any, props);
       if (!useDatabase) {
         return obj as any;
       }

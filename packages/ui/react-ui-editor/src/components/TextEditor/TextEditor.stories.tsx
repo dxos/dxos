@@ -11,7 +11,7 @@ import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useSta
 import { createRoot } from 'react-dom/client';
 
 import { TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { createDocAccessor, create } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -241,7 +241,7 @@ type StoryProps = {
   comments?: Comment[];
   readonly?: boolean;
   placeholder?: string;
-} & Pick<TextEditorProps, 'extensions'>;
+} & Pick<TextEditorProps, 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
@@ -252,8 +252,7 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const [object] = useState(E.object(TextV0Type, { content: text ?? '' }));
-  const accessor = E.getRawDoc(object, ['content']);
+  const [object] = useState(create(TextV0Type, { content: text ?? '' }));
 
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);
@@ -269,10 +268,10 @@ const Story = ({
           editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
         },
       }),
-      createDataExtensions({ id, text: accessor }),
+      createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
       _extensions,
     ],
-    [_extensions],
+    [_extensions, object],
   );
 
   return (
@@ -294,6 +293,8 @@ export default {
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
+
+// TODO(burdon): Test invalid inputs (e.g., selection).
 
 const defaults = [
   autocomplete({

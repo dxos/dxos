@@ -18,6 +18,7 @@ export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   readonly typename: string;
 }
 
+// TODO(burdon): Not a good name for schema.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
     Options extends EchoClassOptions,
@@ -35,6 +36,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
     });
+
     return class {
       static readonly typename = args.typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
@@ -47,7 +49,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('use E.object(MyClass, fields) to instantiate an object');
+        throw new Error('use create(MyClass, fields) to instantiate an object');
       }
     } as any;
   };

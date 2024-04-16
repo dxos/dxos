@@ -5,7 +5,7 @@
 import md5 from 'md5';
 
 import { type Space } from '@dxos/client/echo';
-import * as E from '@dxos/echo-schema';
+import { create, getEchoObjectAnnotation, getSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { jsonSerializer } from './serializer';
@@ -69,12 +69,12 @@ export class ObjectSerializer {
         continue;
       }
 
-      const schema = E.getSchema(child);
+      const schema = getSchema(child);
       if (!schema) {
         continue;
       }
 
-      const typename = E.getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
+      const typename = getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
       const serializer = serializers[typename] ?? jsonSerializer;
 
       const filename = serializer.filename(child);
@@ -107,7 +107,7 @@ export class ObjectSerializer {
         switch (object.type) {
           case 'folder': {
             if (!child) {
-              child = E.object(FolderType, { name: object.name, objects: [] });
+              child = create(FolderType, { name: object.name, objects: [] });
 
               // TODO(dmaretskyi): This won't work.
               // child[base]._id = object.id;
@@ -120,7 +120,7 @@ export class ObjectSerializer {
 
           case 'file': {
             const child = folder.objects.find((item) => item?.id === object.id);
-            const serializer = serializers[object.typename] ?? serializers.default;
+            const serializer = serializers[object.typename] ?? jsonSerializer;
             const deserialized = await serializer.deserialize(object.content!, child, serializers);
 
             if (!child) {

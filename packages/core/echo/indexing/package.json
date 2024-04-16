@@ -6,29 +6,11 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "exports": {
-    ".": {
-      "browser": "./dist/lib/browser/index.mjs",
-      "import": "./dist/lib/browser/index.mjs",
-      "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
-    },
-    "./testing": {
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "import": "./dist/lib/browser/testing/index.mjs",
-      "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
-    }
-  },
   "main": "dist/lib/node/index.cjs",
-  "types": "dist/types/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ]
-    }
+  "browser": {
+    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
   },
+  "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
     "src"
@@ -39,6 +21,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -49,15 +32,12 @@
     "@dxos/random-access-storage": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "0.64.7",
     "@orama/orama": "^2.0.8",
     "abstract-level": "^1.0.2",
-    "effect": "2.4.9",
     "level": "^8.0.1",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
     "@types/lodash.isequal": "^4.5.0",
     "fast-check": "^3.15.1",
     "wait-for-expect": "^3.0.2"

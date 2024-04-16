@@ -9,8 +9,9 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import * as E from '@dxos/echo-schema';
-import { ExpandoType } from '@dxos/echo-schema';
+import { type MyLevel } from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -53,6 +54,7 @@ export class TestBuilder {
 
   public config: Config;
   public storage?: Storage;
+  public level?: MyLevel;
 
   _transport: TransportKind;
 
@@ -113,13 +115,18 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
+    const level = this.level ?? createTestLevel();
     const services = new ClientServicesHost({
       config: this.config,
       storage: this.storage,
+      level,
       runtimeParams,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await level.close();
+      await services.close();
+    });
     return services;
   }
 
@@ -127,12 +134,17 @@ export class TestBuilder {
    * Create local services host.
    */
   createLocal() {
+    const level = this.level ?? createTestLevel();
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
+      level,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await level.close();
+      await services.close();
+    });
     return services;
   }
 
@@ -155,17 +167,18 @@ export class TestBuilder {
     return [client, server];
   }
 
-  destroy() {
+  async destroy() {
     void this._ctx.dispose();
+    await this.level?.close();
   }
 }
 
-export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
-  const object = E.object(ExpandoType, {});
+export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+  const object = create(Expando, {});
 
-  create.add(object);
+  createDb.add(object);
 
-  await check.automerge.loadObjectById(object.id, { timeout: 1000 });
+  await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };

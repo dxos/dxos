@@ -6,9 +6,7 @@
 
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import * as S from '@effect/schema/Schema';
-
-import * as E from '@dxos/echo-schema';
+import { S, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 // TODO(burdon): Util.
@@ -25,7 +23,7 @@ type ObjectDataGenerator = {
   createData: () => any;
 };
 
-type ObjectFactory<T extends E.EchoReactiveObject<any>> = {
+type ObjectFactory<T extends EchoReactiveObject<any>> = {
   schema?: S.Schema<any>; // TODO(burdon): Support both typed and expando schema.
   createObject: () => T;
 };
@@ -36,7 +34,7 @@ const createFactory = ({ createSchema, createData }: ObjectDataGenerator) => {
   const schema = createSchema?.();
   return {
     schema,
-    createObject: () => (schema ? E.object(schema, createData()) : E.object(createData())),
+    createObject: () => (schema ? create(schema, createData()) : create(createData())),
   };
 };
 

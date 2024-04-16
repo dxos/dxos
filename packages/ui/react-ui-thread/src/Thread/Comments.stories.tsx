@@ -8,7 +8,7 @@ import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MessageType, TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { createDocAccessor, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -63,16 +63,14 @@ const Editor: FC<{
   const [selected, setSelected] = useState<string>();
 
   const { themeMode } = useThemeContext();
-  const doc = item.content;
-  const accessor = E.getRawDoc(item, ['content']);
   const { parentRef, view } = useTextEditor(
     () => ({
       id,
-      doc,
+      doc: item.content,
       extensions: [
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
-        automerge(accessor),
+        automerge(createDocAccessor(item, ['content'])),
         comments({
           onCreate: onCreateComment,
           onDelete: onDeleteComment,
@@ -81,7 +79,7 @@ const Editor: FC<{
         }),
       ],
     }),
-    [doc, accessor, themeMode],
+    [id, item, themeMode],
   );
   useComments(view, id, commentRanges);
   useEffect(() => {
@@ -111,7 +109,7 @@ type StoryCommentThread = {
 const StoryMessageBlock = (props: MessageBlockProps<{ content?: TextV0Type }>) => {
   const { themeMode } = useThemeContext();
   const doc = props.block.content?.content;
-  const accessor = E.getRawDoc(props.block.content!, ['content']);
+  const accessor = createDocAccessor(props.block.content!, ['content']);
   const { parentRef } = useTextEditor(
     () => ({
       doc,
@@ -162,12 +160,12 @@ const StoryThread: FC<{
 
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
-      const message = E.object(MessageType, {
+      const message = create(MessageType, {
         from: { identityKey: authorId },
         blocks: [
           {
             timestamp: new Date().toISOString(),
-            content: E.object(TextV0Type, { content: messageRef.current }),
+            content: create(TextV0Type, { content: messageRef.current }),
           },
         ],
       });
@@ -253,7 +251,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(E.object(TextV0Type, { content: text ?? '' }));
+  const [item] = useState(create(TextV0Type, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -279,7 +277,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
                 blocks: [
                   {
                     timestamp: new Date().toISOString(),
-                    content: E.object(TextV0Type, { content: faker.lorem.sentence() }),
+                    content: create(TextV0Type, { content: faker.lorem.sentence() }),
                   },
                 ],
               }),

@@ -6,7 +6,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { ChainPromptType, ChainType, TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
@@ -26,9 +26,9 @@ const source = [
 const Story = () => {
   // TODO(burdon): How to test reactivity?
   const [chain] = useState(
-    E.object(ChainType, {
+    create(ChainType, {
       prompts: [
-        E.object(ChainPromptType, { command: 'test', source: E.object(TextV0Type, { content: source }), inputs: [] }),
+        create(ChainPromptType, { command: 'test', source: create(TextV0Type, { content: source }), inputs: [] }),
       ],
     }),
   );

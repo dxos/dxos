@@ -105,14 +105,14 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace() {
+  async createSpace(timeout = 5_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
-    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
+    await this.page.getByTestId('spacePlugin.main').waitFor({ timeout });
   }
 
   async joinSpace() {
     await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
-    return this.page.getByTestId('spacePlugin.joinSpace').click();
+    await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
   waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {

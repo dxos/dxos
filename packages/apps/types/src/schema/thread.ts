@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
-import * as E from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
@@ -33,15 +30,15 @@ const _RecipientSchema = S.mutable(
     identityKey: S.optional(S.string),
     email: S.optional(S.string),
     name: S.optional(S.string),
-    contact: S.optional(E.ref(ContactType)),
+    contact: S.optional(ref(ContactType)),
   }),
 );
 export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
-  content: S.optional(E.ref(TextV0Type)),
-  object: S.optional(E.ref(E.ExpandoType)),
+  content: S.optional(ref(TextV0Type)),
+  object: S.optional(ref(Expando)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
@@ -53,7 +50,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   cc: S.optional(S.array(_RecipientSchema)),
   subject: S.optional(S.string),
   blocks: S.mutable(S.array(_BlockSchema)),
-  links: S.optional(S.array(E.ref(E.ExpandoType))),
+  links: S.optional(S.array(ref(Expando))),
   state: S.optional(S.enums(MessageState)),
   read: S.optional(S.boolean),
   context: S.optional(
@@ -72,7 +69,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
 //   It also makes the simple cases much more complex than they need to be.
 export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.mutable(S.array(E.ref(MessageType))),
+  messages: S.mutable(S.array(ref(MessageType))),
   // TODO(burdon): Reconcile with Message.Context.
   context: S.optional(
     S.struct({
@@ -86,7 +83,7 @@ export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', ver
 // TODO(burdon): Reconcile with Thread?
 export class MailboxType extends TypedObject({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.mutable(S.array(E.ref(MessageType))),
+  messages: S.mutable(S.array(ref(MessageType))),
 }) {}
 
 export class EventType extends TypedObject({ typename: 'braneframe.Event', version: '0.1.0' })({
@@ -94,7 +91,7 @@ export class EventType extends TypedObject({ typename: 'braneframe.Event', versi
   owner: _RecipientSchema,
   attendees: S.mutable(S.array(_RecipientSchema)),
   startDate: S.string,
-  links: S.mutable(S.array(E.ref(E.ExpandoType))),
+  links: S.mutable(S.array(ref(Expando))),
 }) {}
 
 export class AddressBookType extends TypedObject({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}

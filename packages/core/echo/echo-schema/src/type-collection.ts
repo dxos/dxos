@@ -9,9 +9,12 @@ import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StoredEchoSchema } from './effect/dynamic/stored-schema';
 import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
 import { TypedObject } from './effect/echo-object-class';
-import * as E from './effect/reactive';
+import { echoObject, ref } from './effect/reactive';
 import { LEGACY_TEXT_TYPE } from './text';
 
+/**
+ * @deprecated
+ */
 const LEGACY_SCHEMA_TYPE = 'dxos.schema.Schema';
 
 /**
@@ -79,6 +82,9 @@ export class TypeCollection {
 
 const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
 
+/**
+ * @deprecated
+ */
 export class TextCompatibilitySchema extends TypedObject({ typename: LEGACY_TEXT_TYPE, version: '0.1.0' })(
   {
     kind: S.enums(TextKind),
@@ -88,6 +94,9 @@ export class TextCompatibilitySchema extends TypedObject({ typename: LEGACY_TEXT
   { partial: true },
 ) {}
 
+/**
+ * @deprecated
+ */
 enum LegacySchemaPropType {
   NONE = 0,
   STRING = 1,
@@ -99,6 +108,9 @@ enum LegacySchemaPropType {
   ENUM = 7,
 }
 
+/**
+ * @deprecated
+ */
 const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
   S.partial(
     S.struct({
@@ -106,7 +118,7 @@ const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
       type: S.enums(LegacySchemaPropType),
       typename: S.string,
       refName: S.string,
-      ref: S.suspend(() => E.ref(LegacySchemaTypeSchema)),
+      ref: S.suspend(() => ref(LegacySchemaTypeSchema)),
       refModelType: S.string,
       repeated: S.boolean,
       props: S.suspend(() => S.mutable(S.array(LegacySchemaPropSchema))),
@@ -117,9 +129,12 @@ const LegacySchemaPropSchema: S.Schema<any> = S.mutable(
   ),
 );
 
+/**
+ * @deprecated
+ */
 const LegacySchemaTypeSchema = S.partial(
   S.struct({
     typename: S.string,
     props: S.mutable(S.array(LegacySchemaPropSchema)),
   }),
-).pipe(E.echoObject(LEGACY_SCHEMA_TYPE, '0.1.0'));
+).pipe(echoObject(LEGACY_SCHEMA_TYPE, '0.1.0'));

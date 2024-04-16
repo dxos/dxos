@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 
 import { TextV0Type, TreeItemType, type TreeType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -35,7 +35,7 @@ const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
             isTasklist={tree.checkbox}
             root={tree.root}
             onCreate={(text?: string) =>
-              E.object(TreeItemType, { text: E.object(TextV0Type, { content: text ?? '' }), items: [] })
+              create(TreeItemType, { text: create(TextV0Type, { content: text ?? '' }), items: [] })
             }
             onDelete={({ id }) => {
               const item = space.db.getObjectById(id);

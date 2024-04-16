@@ -5,8 +5,7 @@
 import * as S from '@effect/schema/Schema';
 
 import { TypedObject } from '../effect/echo-object-class';
-import * as E from '../effect/reactive';
-import { ExpandoType, type Ref, ref } from '../effect/reactive';
+import { Expando, type Ref, ref } from '../effect/reactive';
 
 export class Contact extends TypedObject({
   typename: 'example.test.Contact',
@@ -16,7 +15,7 @@ export class Contact extends TypedObject({
     name: S.string,
     username: S.string,
     email: S.string,
-    tasks: S.suspend((): S.Schema<Ref<Task>[]> => S.mutable(S.array(E.ref(Task)))),
+    tasks: S.suspend((): S.Schema<Ref<Task>[]> => S.mutable(S.array(ref(Task)))),
     address: S.struct({
       city: S.optional(S.string),
       state: S.optional(S.string),
@@ -61,14 +60,14 @@ export class Container extends TypedObject({
   version: '0.1.0',
 })(
   {
-    objects: S.mutable(S.array(E.ref(ExpandoType))),
+    objects: S.mutable(S.array(ref(Expando))),
     records: S.mutable(
       S.array(
         S.partial(
           S.struct({
             title: S.string,
             description: S.string,
-            contacts: S.mutable(S.array(E.ref(Contact))),
+            contacts: S.mutable(S.array(ref(Contact))),
             type: S.enums(RecordType),
           }),
         ),

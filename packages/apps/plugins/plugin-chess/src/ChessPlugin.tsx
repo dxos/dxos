@@ -11,8 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { GameType } from '@dxos/chess-app';
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -112,7 +111,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { data: E.object(GameType, {}) };
+              return { data: create(GameType, {}) };
             }
           }
         },

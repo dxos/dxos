@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
 import React, { useMemo, useRef } from 'react';
 
-import { type OpaqueEchoObject } from '@dxos/echo-schema';
+import type { S, OpaqueEchoObject } from '@dxos/echo-schema';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
@@ -21,8 +20,10 @@ export const ItemTable = <T extends OpaqueEchoObject>({ schema, objects = [] }: 
     return [
       {
         ...id,
+        // TODO(burdon): Sizes are not respected.
         size: 60,
         minSize: 60,
+        maxSize: 60,
         cell: (cell) => <span className='px-2 font-mono'>{cell.getValue().slice(0, 8)}</span>,
       },
       ...rest,

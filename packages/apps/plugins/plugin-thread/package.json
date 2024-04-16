@@ -41,10 +41,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "0.64.7",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",
-    "effect": "2.4.9",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {

@@ -13,8 +13,8 @@ import { getAutomergeObjectCore } from '../../automerge';
 import { type EchoDatabase } from '../../database';
 import { Filter } from '../../query';
 import { effectToJsonSchema } from '../json-schema';
-import * as E from '../reactive';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '../reactive';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation, typeOf } from '../reactive';
+import { create } from '../reactive';
 
 export class DynamicSchemaRegistry {
   private readonly _schemaById: Map<string, DynamicEchoSchema> = new Map();
@@ -37,7 +37,7 @@ export class DynamicSchemaRegistry {
     if (typeObject == null) {
       return undefined;
     }
-    if (E.typeOf(typeObject)?.itemId === 'dxos.schema.Schema') {
+    if (typeOf(typeObject)?.itemId === 'dxos.schema.Schema') {
       // TODO: compatibility with old dynamic schema
       return undefined;
     }
@@ -62,8 +62,8 @@ export class DynamicSchemaRegistry {
 
   public add(schema: S.Schema<any>): DynamicEchoSchema {
     const typeAnnotation = getEchoObjectAnnotation(schema);
-    invariant(typeAnnotation, 'use S.struct({}).pipe(E.echoObject(...)) or class syntax to create a valid schema');
-    const schemaToStore = E.object(StoredEchoSchema, {
+    invariant(typeAnnotation, 'use S.struct({}).pipe(echoObject(...)) or class syntax to create a valid schema');
+    const schemaToStore = create(StoredEchoSchema, {
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,
       jsonSchema: {},

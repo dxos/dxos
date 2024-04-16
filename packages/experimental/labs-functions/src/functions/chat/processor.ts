@@ -20,8 +20,9 @@ import {
   type ThreadType,
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import * as E from '@dxos/echo-schema';
-import { Filter, type JsonSchema } from '@dxos/echo-schema';
+import { todo } from '@dxos/debug';
+import { Filter, type JsonSchema, loadObjectReferences } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';
@@ -30,7 +31,6 @@ import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
-import { todo } from '@dxos/debug';
 
 export type SequenceOptions = {
   prompt?: string;
@@ -60,7 +60,7 @@ export class RequestProcessor {
 
         const prompt = match[1];
         const content = match[2];
-        const context = createContext(space, message, thread);
+        const context = await createContext(space, message, thread);
 
         log.info('processing', { prompt, content });
         const sequence = await this.createSequence(space, context, { prompt });
@@ -78,7 +78,7 @@ export class RequestProcessor {
       blocks = [
         {
           timestamp: new Date().toISOString(),
-          content: E.object(TextV0Type, { content: 'Error generating response.' }),
+          content: create(TextV0Type, { content: 'Error generating response.' }),
         },
       ];
     } finally {
@@ -102,11 +102,10 @@ export class RequestProcessor {
 
     // Find suitable prompt.
     const { objects: chains = [] } = space.db.query(Filter.schema(ChainType));
-    for (const chain of chains) {
-      for (const prompt of chain.prompts) {
-        if (prompt.command === options.prompt) {
-          return await this.createSequenceFromPrompt(space, prompt, context);
-        }
+    const allPrompts = (await loadObjectReferences(chains, (c) => c.prompts)).flatMap((p) => p);
+    for (const prompt of allPrompts) {
+      if (prompt.command === options.prompt) {
+        return await this.createSequenceFromPrompt(space, prompt, context);
       }
     }
 
@@ -122,7 +121,7 @@ export class RequestProcessor {
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-    for (const input of prompt.inputs) {
+    for (const input of await loadObjectReferences(prompt, (p) => p.inputs)) {
       inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
@@ -156,9 +155,10 @@ export class RequestProcessor {
       return input;
     };
 
+    const promptTemplate = await loadObjectReferences(prompt, (p) => p.source);
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(prompt.source!.content),
+      PromptTemplate.fromTemplate(promptTemplate!.content),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
@@ -222,7 +222,7 @@ export class RequestProcessor {
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
-          const fields = todo() as any[]; //schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
+          const fields = todo() as any[]; // schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }
 

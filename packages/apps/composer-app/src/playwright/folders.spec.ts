@@ -77,8 +77,6 @@ test.describe('Folder tests', () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
 
-      // Folder must be collapsed for playwright to click in the right place.
-      await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
       await waitForExpect(async () => {
@@ -98,8 +96,6 @@ test.describe('Folder tests', () => {
         expect(await host.getObjectsCount()).to.equal(4);
       });
 
-      // Folder must be collapsed for playwright to click in the right place.
-      await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
       await waitForExpect(async () => {

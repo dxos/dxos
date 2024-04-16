@@ -2,12 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-import type * as S from '@effect/schema/Schema';
-
 import { FolderType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { DynamicEchoSchema, StoredEchoSchema, SchemaValidator } from '@dxos/echo-schema';
+import { getSchema, type S, typeOf } from '@dxos/echo-schema';
+import { AST, DynamicEchoSchema, StoredEchoSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { type Subscription, type Space, type EchoReactiveObject } from '@dxos/react-client/echo';
@@ -69,8 +66,8 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           return { type: 'echo-object', id: object.id, object };
         });
         this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
-          const objectSchema = E.getSchema(object);
-          const typename = E.typeOf(object)?.itemId;
+          const objectSchema = getSchema(object);
+          const typename = typeOf(object)?.itemId;
           if (objectSchema == null || typename == null) {
             log.info('no schema for object:', { id: object.id.slice(0, 8) });
             return links;
@@ -98,7 +95,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
 
           // Parse schema to follow referenced objects.
           AST.getPropertySignatures(objectSchema.ast).forEach((prop) => {
-            if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), E.ReferenceAnnotation)) {
+            if (!SchemaValidator.hasTypeAnnotation(objectSchema, prop.name.toString(), ReferenceAnnotation)) {
               return;
             }
             const value = object[String(prop.name)];
