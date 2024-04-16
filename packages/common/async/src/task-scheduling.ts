@@ -10,6 +10,13 @@ import { trackResource } from './track-leaks';
 
 export type ClearCallback = () => void;
 
+export enum TaskPriority {
+  Immediate = 0,
+  High = 10,
+  Normal = 20,
+  Low = 30,
+}
+
 /**
  * A task that can be scheduled to run in the next event loop iteration.
  * Could be triggered multiple times, but only runs once.
@@ -67,6 +74,25 @@ export const scheduleMicroTask = (ctx: Context, fn: () => MaybePromise<void>) =>
     }
     await runInContextAsync(ctx, fn);
   });
+};
+
+export type ScheduleMacroTaskOptions = {
+  priority?: TaskPriority;
+};
+
+export const scheduleMacroTask = (ctx: Context, fn: () => MaybePromise<void>, options?: ScheduleMacroTaskOptions) => {
+  const task = () => {
+    if (ctx.disposed) {
+      return;
+    }
+    void runInContextAsync(ctx, fn);
+  };
+
+  if (options?.priority !== undefined) {
+    TASK_QUEUE.enqueue(new Task(task, options.priority));
+  } else {
+    scheduleTaskWithMessageChannel(task);
+  }
 };
 
 export const scheduleTask = (ctx: Context, fn: () => MaybePromise<void>, afterMs?: number) => {
@@ -141,3 +167,55 @@ export const scheduleExponentialBackoffTaskInterval = (
     clearTimeout(timeoutId);
   });
 };
+
+/**
+ * Runs before timers.
+ * Is not throttled by the event loop (setTimeout runs at least 4ms after the previous one).
+ */
+const scheduleTaskWithMessageChannel = (task: () => void) => {
+  const channel = new MessageChannel();
+  const port = channel.port2;
+  const runTask = () => {
+    channel.port2.close();
+    task();
+  };
+  port.onmessage = runTask;
+  channel.port1.postMessage(null);
+};
+
+class Task {
+  constructor(
+    public readonly task: () => void,
+    public readonly priority: TaskPriority,
+  ) {}
+}
+
+class TaskScheduler {
+  // TODO(dmaretskyi): Make into priority queue.
+  queue: Task[] = [];
+
+  enqueue(task: Task) {
+    const index = this.queue.findIndex((t) => t.priority > task.priority);
+    if (index === -1) {
+      this.queue.push(task);
+    } else {
+      this.queue.splice(index, 0, task);
+    }
+
+    // Number of scheduled tasks in the event loop should be equal to the number of tasks in the queue.
+    scheduleTaskWithMessageChannel(this.runNextTask);
+  }
+
+  runNextTask = () => {
+    if (this.queue.length === 0) {
+      return;
+    }
+
+    const task = this.queue.shift();
+    if (task) {
+      task.task();
+    }
+  };
+}
+
+const TASK_QUEUE = new TaskScheduler();
