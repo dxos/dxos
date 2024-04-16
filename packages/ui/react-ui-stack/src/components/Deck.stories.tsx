@@ -8,7 +8,7 @@ import { BookBookmark, StackSimple } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck } from '@dxos/react-ui-deck';
+import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck as NaturalDeck } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -73,13 +73,13 @@ const DemoStackPlank = ({ toolbar }: { toolbar?: boolean }) => {
 };
 
 export default {
-  title: 'react-ui-stack/StackDeck',
-  component: Deck.Root,
+  title: 'react-ui-stack/Deck',
+  component: NaturalDeck.Root,
   decorators: [withTheme],
   args: {},
 };
 
-export const Simple = {
+export const Deck = {
   args: {},
   render: () => {
     const [attended] = useState(new Set());
@@ -87,29 +87,29 @@ export const Simple = {
       <Mosaic.Root>
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
-          <Deck.Root>
-            <Deck.Plank>
+          <NaturalDeck.Root>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-            <Deck.Plank>
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
               <DemoStackPlank />
-            </Deck.Plank>
-          </Deck.Root>
+            </NaturalDeck.Plank>
+          </NaturalDeck.Root>
         </AttentionProvider>
       </Mosaic.Root>
     );
