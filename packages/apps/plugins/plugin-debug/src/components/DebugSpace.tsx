@@ -100,8 +100,9 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
 
   const handleCreateInvitation = () => {
     const invitation = space.share({
-      type: Invitation.Type.MULTIUSE,
+      type: Invitation.Type.INTERACTIVE,
       authMethod: Invitation.AuthMethod.NONE,
+      multiUse: true,
     });
 
     // TODO(burdon): Refactor.
