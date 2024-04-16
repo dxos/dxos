@@ -55,11 +55,10 @@ export default class Share extends BaseCommand<typeof Share> {
       const space = await this.getSpace(client, key);
 
       // TODO(burdon): Timeout error not propagated.
-      const type = this.flags.multiple ? Invitation.Type.MULTIUSE : undefined;
       const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
       const observable = space!.share({
-        type,
         authMethod,
+        multiUse: this.flags.multiple,
         timeout: this.flags.timeout,
         persistent: this.flags.persistent,
         lifetime: this.flags.lifetime,
