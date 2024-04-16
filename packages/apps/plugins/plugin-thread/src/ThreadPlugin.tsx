@@ -21,8 +21,8 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
@@ -53,7 +53,7 @@ const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = E.object<ThreadState>({ threads: {} });
+  const state = create<ThreadState>({ threads: {} });
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -293,7 +293,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: E.object(ThreadType, { messages: [] }) };
+              return { data: create(ThreadType, { messages: [] }) };
             }
 
             case ThreadAction.SELECT: {
@@ -366,7 +366,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
                 const title = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
-                const thread = space.db.add(E.object(ThreadType, { title, messages: [], context: { object: doc.id } }));
+                const thread = space.db.add(create(ThreadType, { title, messages: [], context: { object: doc.id } }));
                 if (doc.comments) {
                   doc.comments.push({ thread, cursor });
                 } else {

@@ -6,8 +6,7 @@ import React, { type FC, useEffect, useMemo, useState, useCallback } from 'react
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
 import { TableType, type TableTypeProp } from '@braneframe/types';
-import { S } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { S, create } from '@dxos/echo-schema';
 import { TypedObject, type EchoReactiveObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
@@ -85,7 +84,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
         object[prop] = value;
         if (object === newObject) {
           // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(E.object(table.schema!, { ...newObject }));
+          space!.db.add(create(table.schema!, { ...newObject }));
           setNewObject({});
         }
       },

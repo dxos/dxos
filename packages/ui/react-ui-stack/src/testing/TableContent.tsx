@@ -4,7 +4,7 @@
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React from 'react';
 
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import {
@@ -97,7 +97,7 @@ export const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<
 export const createItems = (count: number) =>
   [...Array(count)].map(
     () =>
-      E.object<Item>({
+      create<Item>({
         publicKey: PublicKey.random(),
         name: faker.commerce.productName(),
         company: faker.commerce.productName(),

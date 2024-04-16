@@ -12,8 +12,7 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter, create } from '@dxos/echo-schema';
 import { ClientProvider, useShell } from '@dxos/react-client';
 import { useSpace, useQuery } from '@dxos/react-client/echo';
 
@@ -40,7 +39,7 @@ export const TaskListContainer = () => {
         // void shell.shareSpace({ spaceKey: space?.key, invitationUrl: (invitationCode) => `/space/${space.key}?spaceInvitationCode=${invitationCode}` });
       }}
       onTaskCreate={(newTaskTitle) => {
-        const task = E.object(TaskType, { title: newTaskTitle, completed: false });
+        const task = create(TaskType, { title: newTaskTitle, completed: false });
         space?.db.add(task);
       }}
       onTaskRemove={(task) => {

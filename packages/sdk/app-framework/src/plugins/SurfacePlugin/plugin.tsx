@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';
@@ -16,7 +16,7 @@ import { filterPlugins } from '../helpers';
  * Provides a registry of surface components.
  */
 const SurfacePlugin = (): PluginDefinition<SurfacePluginProvides> => {
-  const state = E.object<SurfaceRootContext>({ components: {} });
+  const state = create<SurfaceRootContext>({ components: {} });
 
   return {
     meta: SurfaceMeta,

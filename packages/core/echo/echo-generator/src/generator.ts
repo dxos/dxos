@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type DynamicEchoSchema, Filter, type ReactiveObject } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { type TestSchemaType } from './data';
@@ -39,7 +39,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
     const data = this._generators[type](this._provider);
     const schema = this.getSchema(type);
-    return schema ? E.object(schema, data) : E.object(data);
+    return schema ? create(schema, data) : create(data);
   }
 
   // TODO(burdon): Create batch.

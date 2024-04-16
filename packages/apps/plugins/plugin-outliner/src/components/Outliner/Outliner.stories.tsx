@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { TextV0Type, TreeItemType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
 import { attentionSurface } from '@dxos/react-ui-theme';
@@ -23,9 +23,9 @@ const Story = ({
   data,
 }: Pick<OutlinerRootProps, 'isTasklist'> & { count?: number; data?: 'words' | 'sentences' }) => {
   const [root] = useState<TreeItemType>(
-    E.object<TreeItemType>({
+    create<TreeItemType>({
       id: 'root',
-      text: E.object(TextV0Type, { content: '' }),
+      text: create(TextV0Type, { content: '' }),
       items: faker.helpers.multiple(
         () => {
           let text = '';
@@ -43,8 +43,8 @@ const Story = ({
             }
           }
 
-          return E.object(TreeItemType, {
-            text: E.object(TextV0Type, { content: text }),
+          return create(TreeItemType, {
+            text: create(TextV0Type, { content: text }),
             items: [],
           });
         },
@@ -54,8 +54,8 @@ const Story = ({
   );
 
   const handleCreate = (text = '') =>
-    E.object(TreeItemType, {
-      text: E.object(TextV0Type, { content: text }),
+    create(TreeItemType, {
+      text: create(TextV0Type, { content: text }),
       items: [],
     });
 

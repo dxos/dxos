@@ -70,7 +70,7 @@ export interface EchoObject {
 export type ForeignKey = {
   /**
    * Name of the foreign database/system.
-   * E.g. `github.com`.
+   * g. `github.com`.
    */
   source?: string;
 

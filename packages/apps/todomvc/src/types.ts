@@ -1,8 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-import * as E from '@dxos/echo-schema';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class TodoType extends TypedObject({ typename: 'dxos.app.todomvc.Todo', version: '0.1.0' })({
   title: S.string,
@@ -10,5 +9,5 @@ export class TodoType extends TypedObject({ typename: 'dxos.app.todomvc.Todo', v
 }) {}
 
 export class TodoListType extends TypedObject({ typename: 'dxos.app.todomvc.TodoList', version: '0.1.0' })({
-  todos: S.mutable(S.array(E.ref(TodoType))),
+  todos: S.mutable(S.array(ref(TodoType))),
 }) {}

@@ -23,14 +23,16 @@ import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNode
 import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
 import {
   EchoDatabaseImpl,
   Filter,
   LEGACY_TEXT_TYPE,
   type OpaqueEchoObject,
   type EchoReactiveObject,
+  isEchoReactiveObject,
+  typeOf,
 } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
@@ -64,7 +66,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      folder.objects = nextOrder.filter(E.isEchoReactiveObject);
+      folder.objects = nextOrder.filter(isEchoReactiveObject);
     },
     onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -194,7 +196,7 @@ export const updateGraphWithSpace = ({
               dispatch({
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: E.object(FolderType, { objects: [] }) },
+                data: { target: folder, object: create(FolderType, { objects: [] }) },
               }),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
@@ -327,7 +329,7 @@ export const updateGraphWithSpace = ({
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
   const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (E.typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
+    if (typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
       return false;
     }
 
@@ -424,7 +426,7 @@ export const updateGraphWithSpace = ({
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: object, object: E.object(FolderType, { objects: [] }) },
+                  data: { target: object, object: create(FolderType, { objects: [] }) },
                 },
                 {
                   action: NavigationAction.ACTIVATE,
@@ -602,7 +604,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !E.isEchoReactiveObject(node.data)) {
+  if (!node || !isEchoReactiveObject(node.data)) {
     return;
   }
 

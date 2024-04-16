@@ -5,7 +5,7 @@
 import path from 'node:path';
 
 import { Client } from '@dxos/client';
-import * as E from '@dxos/client/echo';
+import { TextCompatibilitySchema, create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
@@ -48,7 +48,7 @@ const main = async () => {
     // await space.waitUntilReady();
 
     // TODO(burdon): Add properties (mutations).
-    space.db.add(E.object(data.space.expando));
+    space.db.add(create(data.space.expando));
     // await space.db.flush();
 
     // Generate epoch.
@@ -56,7 +56,7 @@ const main = async () => {
     // await space.internal.createEpoch();
 
     // TODO(burdon): Add mutations.
-    space.db.add(E.object(E.TextCompatibilitySchema, { content: data.space.text.content }));
+    space.db.add(create(TextCompatibilitySchema, { content: data.space.text.content }));
     await space.db.flush();
   }
 

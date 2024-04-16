@@ -13,16 +13,16 @@ import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
 import { TypedObject } from '../echo-object-class';
 import { effectToJsonSchema } from '../json-schema';
-import * as E from '../reactive';
 import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '../reactive';
+import { create } from '../reactive';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [
-  E.object(StoredEchoSchema, {
+  create(StoredEchoSchema, {
     ...testType,
     jsonSchema: effectToJsonSchema(S.struct({ field: S.string })),
   }),
-  E.object(StoredEchoSchema, {
+  create(StoredEchoSchema, {
     ...testType,
     typename: testType.typename + '2',
     jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
@@ -72,7 +72,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = E.object(StoredEchoSchema, {
+    const schemaToStore = create(StoredEchoSchema, {
       ...testType,
       jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
     });
@@ -83,7 +83,7 @@ describe('schema registry', () => {
 
   test("can't register schema if not stored in db", async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = E.object(StoredEchoSchema, {
+    const schemaToStore = create(StoredEchoSchema, {
       ...testType,
       jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
     });
