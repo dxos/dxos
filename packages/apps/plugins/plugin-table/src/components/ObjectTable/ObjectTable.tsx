@@ -4,69 +4,22 @@
 
 import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
-import { type TableType, type TableTypeProp } from '@braneframe/types';
+import { type TableType } from '@braneframe/types';
 import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { type Space, getSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
-import { type ColumnProps, Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
+import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
-// TODO(burdon): Remove deps.
 import { useObjects, useTables } from './hooks';
-import { getSchema, schemaPropMapper, createColumnsFromTableDef } from '../../schema';
+import { createColumns, updateTableProp } from './utils';
+import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
   table: TableType;
 };
 
-// Mutable updates table properties
-export const updateTableProp = (props: TableTypeProp[], oldId: string, update: TableTypeProp) => {
-  const idx = props.findIndex((prop) => prop.id === oldId);
-
-  if (idx !== -1) {
-    const current = props![idx];
-    props.splice(idx, 1, { ...current, ...update });
-  } else {
-    props.push(update);
-  }
-};
-
-const createColumns = (
-  space: Space | undefined,
-  tables: TableType[],
-  table: TableType,
-  onColumnUpdate: (oldId: string, column: ColumnProps) => void,
-  onColumnDelete: (id: string) => void,
-  onRowUpdate: (object: any, prop: string, value: any) => void,
-  onRowDelete: (object: any) => void,
-) => {
-  const tableDefs: TableDef[] = tables
-    .filter((table) => table.schema)
-    .map((table) => ({
-      id: table.schema!.id,
-      name: table.title ?? table.schema?.typename,
-      columns: table.schema!.getProperties().map(schemaPropMapper(table)),
-    }));
-
-  const tableDef = tableDefs.find((tableDef) => tableDef.id === table.schema?.id);
-
-  if (!tableDef || !space) {
-    return [];
-  }
-
-  return createColumnsFromTableDef({
-    tableDef,
-    tablesToReference: tableDefs,
-    space,
-    onColumnUpdate,
-    onColumnDelete,
-    onRowUpdate,
-    onRowDelete,
-  });
-};
-
-// TODO(Zan): Better name.
 const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
@@ -128,8 +81,7 @@ const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, get
     [updateTableProp],
   );
 
-  // TODO(Zan): Set this back to false before merge
-  const debug = true;
+  const debug = false;
 
   if (!space) {
     return null;
