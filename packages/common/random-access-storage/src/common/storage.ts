@@ -9,6 +9,9 @@ export enum StorageType {
   RAM = 'ram',
   IDB = 'idb',
   CHROME = 'chrome',
+  /**
+   * @deprecated
+   */
   FIREFOX = 'firefox',
   NODE = 'node',
   WEBFS = 'webfs',

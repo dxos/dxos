@@ -18,6 +18,8 @@ export const createMethodLogDecorator =
     const methodName = propertyKey as string;
     descriptor.value = function (this: any, ...args: any) {
       const combinedMeta = {
+        F: '',
+        L: 0,
         ...(meta ?? {}),
         S: this as any,
       } as CallMetadata;
