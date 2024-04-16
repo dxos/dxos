@@ -15,6 +15,7 @@ import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
+import { DeferredTask } from '@dxos/async';
 
 export type IndexServiceParams = {
   indexer: Indexer;
@@ -36,12 +37,12 @@ export class IndexServiceImpl implements IndexService {
 
   find(request: QueryRequest): Stream<QueryResponse> {
     const filter = Filter.fromProto(request.filter);
-    return new Stream(({ next, close }) => {
+    return new Stream(({ next, close, ctx }) => {
       let currentCtx: Context;
       // Previous id-s.
       let previousResults: string[] = [];
 
-      const update = async () => {
+      const updateTask = new DeferredTask(ctx, async () => {
         try {
           await currentCtx?.dispose();
           const ctx = new Context();
@@ -96,11 +97,11 @@ export class IndexServiceImpl implements IndexService {
         } catch (error) {
           log.catch(error);
         }
-      };
+      });
 
-      const unsub = this._params.indexer.indexed.on(update);
+      const unsub = this._params.indexer.indexed.on(() => updateTask.schedule());
 
-      void update();
+      updateTask.schedule();
 
       return () => {
         unsub();
