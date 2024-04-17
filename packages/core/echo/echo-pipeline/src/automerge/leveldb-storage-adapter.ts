@@ -6,7 +6,6 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
-import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { type BatchLevel, type SubLevelDB } from './types';
@@ -31,7 +30,8 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     try {
       if (this._lifecycleState !== LifecycleState.OPEN) {
-        throw new Error('Storage is not open');
+        // TODO(mykola): this should be an error.
+        return undefined;
       }
       return await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
     } catch (err: any) {
@@ -44,7 +44,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
     if (this._lifecycleState !== LifecycleState.OPEN) {
-      throw new Error('Storage is not open');
+      return undefined;
     }
     const batch = this._params.db.batch();
 
@@ -59,14 +59,14 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
 
   async remove(keyArray: StorageKey): Promise<void> {
     if (this._lifecycleState !== LifecycleState.OPEN) {
-      throw new Error('Storage is not open');
+      return undefined;
     }
     await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     if (this._lifecycleState !== LifecycleState.OPEN) {
-      throw new Error('Storage is not open');
+      return [];
     }
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
@@ -84,7 +84,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
     if (this._lifecycleState !== LifecycleState.OPEN) {
-      throw new Error('Storage is not open');
+      return undefined;
     }
     const batch = this._params.db.batch();
 
