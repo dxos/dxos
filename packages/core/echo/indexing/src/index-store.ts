@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { type MySublevel } from '@dxos/echo-pipeline';
+import { type SubLevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -20,11 +20,11 @@ type IndexHeader = {
 };
 
 export type IndexStoreParams = {
-  db: MySublevel;
+  db: SubLevelDB;
 };
 
 export class IndexStore {
-  private readonly _db: MySublevel;
+  private readonly _db: SubLevelDB;
   constructor({ db }: IndexStoreParams) {
     this._db = db;
   }

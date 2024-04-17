@@ -6,6 +6,6 @@ import { Level } from 'level';
 
 import { PublicKey } from '@dxos/keys';
 
-import { type LevelDb } from '../automerge/types';
+import { type LevelDB } from '../automerge/types';
 
-export const createTestLevel = (): LevelDb => new Level<string, string>(`/tmp/dxos-${PublicKey.random().toHex()}`);
+export const createTestLevel = (): LevelDB => new Level<string, string>(`/tmp/dxos-${PublicKey.random().toHex()}`);
