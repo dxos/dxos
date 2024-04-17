@@ -11,7 +11,7 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
-import { useObjects } from './hooks';
+import { useTableObjects } from './hooks';
 import { createColumns, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
@@ -70,7 +70,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
-  const objects = useObjects(space, table.schema);
+  const objects = useTableObjects(space, table.schema);
   const tables = useQuery<TableType>(space, Filter.schema(TableType));
 
   const newObject = useRef({});

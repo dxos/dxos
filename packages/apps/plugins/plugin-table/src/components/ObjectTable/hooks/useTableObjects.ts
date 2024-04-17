@@ -14,7 +14,15 @@ const Stable = {
   },
 };
 
-export const useObjects = (space?: Space, schema?: S.Schema<any>) => {
+/**
+ * Retrieves objects for a given schema and filters them using a global filter.
+ *
+ * @param {Space} space - The space to query objects from.
+ * @param {S.Schema<any>} schema - The schema to filter objects by. If not provided, no objects will be returned.
+ *
+ * @returns {EchoReactiveObject<any>[]} - The filtered objects.
+ */
+export const useTableObjects = (space?: Space, schema?: S.Schema<any>) => {
   const objects = useQuery<EchoReactiveObject<any>>(
     space,
     schema ? Filter.schema(schema) : () => false,
