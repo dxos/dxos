@@ -18,6 +18,7 @@ import { ItemType } from '../data';
 
 export const Root = () => {
   const client = useClient();
+  // TODO(burdon): Wait for ready.
   const space = client.spaces.default;
   const identity = useIdentity();
 
