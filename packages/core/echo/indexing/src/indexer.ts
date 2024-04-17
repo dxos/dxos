@@ -85,7 +85,10 @@ export class Indexer {
 
   @synchronized
   setIndexConfig(config: IndexConfig) {
-    invariant(!this._indexConfig, 'Index config is already set');
+    if (!this._indexConfig) {
+      log.warn('Index config is already set');
+      return;
+    }
     this._indexConfig = config;
     if (this._initialized) {
       for (const kind of this._indexes.keys()) {

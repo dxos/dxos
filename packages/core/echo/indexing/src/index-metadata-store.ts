@@ -3,14 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { type SubLevelDB, type BatchLevel, type LevelDB } from '@dxos/echo-pipeline';
+import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
-  db: LevelDB;
+  db: SubLevelDB;
 };
 
 export type DocumentMetadata = {
