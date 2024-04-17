@@ -23,6 +23,7 @@ export type IndexStoreParams = {
   db: SubLevelDB;
 };
 
+// TODO(mykola): Delete header from storage codec.
 export class IndexStore {
   private readonly _db: SubLevelDB;
   constructor({ db }: IndexStoreParams) {
