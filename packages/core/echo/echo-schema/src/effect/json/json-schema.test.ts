@@ -7,9 +7,9 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { TypedObject } from './echo-object-class';
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { type EchoObjectAnnotation, fieldMeta, ref } from './reactive';
+import { type EchoObjectAnnotation, fieldMeta, ref } from '../annotations';
+import { TypedObject } from '../typed-object-class';
 
 const testSchema: EchoObjectAnnotation = { typename: 'Test', version: '0.1.0' };
 

@@ -7,8 +7,10 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { TypedObject } from './echo-object-class';
-import { create, getSchema, ref } from './reactive';
+import { ref } from './annotations';
+import { getSchema } from './getter';
+import { create } from './handler';
+import { TypedObject } from './typed-object-class';
 import { Filter } from '../query';
 import { createDatabase } from '../testing';
 

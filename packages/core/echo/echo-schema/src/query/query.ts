@@ -11,7 +11,7 @@ import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
-import { type EchoReactiveObject } from '../effect/reactive';
+import { type EchoReactiveObject } from '../effect';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.

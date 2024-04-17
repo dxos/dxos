@@ -8,9 +8,9 @@ import * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { StoredEchoSchema } from './stored-schema';
-import { effectToJsonSchema, jsonToEffectSchema } from '../json-schema';
-import { type Identifiable } from '../reactive';
-import { schemaVariance } from '../utils';
+import { schemaVariance } from '../ast';
+import { effectToJsonSchema, jsonToEffectSchema } from '../json';
+import { type Identifiable } from '../types';
 
 export interface DynamicSchemaConstructor extends S.Schema<DynamicEchoSchema> {
   new (): Identifiable;

@@ -4,8 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
-import { StoredEchoSchema } from './effect/dynamic/stored-schema';
-import { getSchemaTypeRefOrThrow } from './effect/echo-handler';
+import { requireTypeReference, StoredEchoSchema } from './effect';
 
 export class RuntimeSchemaRegistry {
   private readonly _schemaDefinitions = new Map<string, S.Schema<any>>();
@@ -36,4 +35,4 @@ export class RuntimeSchemaRegistry {
   }
 }
 
-const getTypenameOrThrow = (schema: S.Schema<any>): string => getSchemaTypeRefOrThrow(schema).itemId;
+const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;

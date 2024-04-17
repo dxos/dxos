@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { type EchoObject } from './types';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { type EchoReactiveObject, isEchoObject } from '../effect/reactive';
+import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../effect';
 
 export type CloneOptions = {
   /**
@@ -73,8 +73,7 @@ export const clone = <T extends {}>(
 const cloneInner = (core: AutomergeObjectCore, id: string): EchoReactiveObject<any> => {
   const coreClone = new AutomergeObjectCore();
   coreClone.id = id;
-  const initEchoHandler = requireEchoHandlerInitializer();
-  initEchoHandler(coreClone);
+  initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
   coreClone.change((doc: any) => {
     for (const key of Object.keys(automergeSnapshot)) {
@@ -91,7 +90,3 @@ const getObjectDoc = (core: AutomergeObjectCore): any => {
   }
   return value;
 };
-
-// Circular deps.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const requireEchoHandlerInitializer = () => require('../effect/echo-handler').initEchoReactiveObjectRootProxy;

@@ -11,18 +11,16 @@ import { describe, test } from '@dxos/test';
 import { DynamicEchoSchema } from './dynamic-schema';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
-import { TypedObject } from '../echo-object-class';
 import {
-  create,
   EchoObjectAnnotationId,
   fieldMeta,
   getEchoObjectAnnotation,
   getFieldMetaAnnotation,
-  getSchema,
-  getTypeReference,
   ref,
-  getType,
-} from '../reactive';
+} from '../annotations';
+import { getSchema, getTypeReference, getType } from '../getter';
+import { create } from '../handler';
+import { TypedObject } from '../typed-object-class';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 

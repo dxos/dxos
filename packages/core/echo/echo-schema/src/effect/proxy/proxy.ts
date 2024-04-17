@@ -4,8 +4,9 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type ReactiveObject } from './reactive';
 import { ReactiveArray } from './reactive-array';
+import { type ReactiveHandler } from './types';
+import { type ReactiveObject } from '../types';
 
 export const symbolIsProxy = Symbol('isProxy');
 
@@ -41,18 +42,6 @@ export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHa
   handler._proxyMap.set(target, proxy);
   return proxy;
 };
-
-export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
-  /**
-   * Target to Proxy mapping.
-   */
-  readonly _proxyMap: WeakMap<object, any>;
-
-  /**
-   * Called when a proxy is created for this target.
-   */
-  _init(target: T): void;
-}
 
 /**
  * Passed as the handler to the Proxy constructor.
@@ -111,7 +100,6 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
     }
   }
 }
-
 export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
 
 export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {

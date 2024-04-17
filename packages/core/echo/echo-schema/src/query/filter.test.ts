@@ -11,8 +11,7 @@ import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { TypedObject } from '../effect/echo-object-class';
-import { create } from '../effect/reactive';
+import { TypedObject, create } from '../effect';
 import { createDatabase } from '../testing';
 
 describe('Filter', () => {

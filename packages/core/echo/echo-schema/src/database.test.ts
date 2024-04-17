@@ -9,7 +9,7 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge';
-import { create, Expando, getMeta, getSchema, getType, type ReactiveObject } from './effect/reactive';
+import { create, Expando, getMeta, getSchema, getType, type ReactiveObject } from './effect';
 import { Hypergraph } from './hypergraph';
 import { clone } from './object';
 import { Filter } from './query';

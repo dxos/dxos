@@ -9,11 +9,10 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { getProxyHandlerSlot } from './proxy';
-import * as R from './reactive';
-import { TEST_OBJECT, TestSchema, TestSchemaClass } from './testing/schema';
-import { updateCounter } from './testutils';
-import { Hypergraph } from '../hypergraph';
-import { createDatabase } from '../testing';
+import { Hypergraph } from '../../hypergraph';
+import { createDatabase, updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '../../testing';
+import { echoObject } from '../annotations';
+import { create } from '../handler';
 
 registerSignalRuntime();
 
@@ -28,9 +27,8 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
     const objectsHaveId = useDatabase;
 
     const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
-      const testSchema =
-        useDatabase && schema === TestSchema ? schema.pipe(R.echoObject('TestSchema', '1.0.0')) : schema;
-      const obj = testSchema == null ? (R.create(props) as TestSchema) : R.create(testSchema as any, props);
+      const testSchema = useDatabase && schema === TestSchema ? schema.pipe(echoObject('TestSchema', '1.0.0')) : schema;
+      const obj = testSchema == null ? (create(props) as TestSchema) : create(testSchema as any, props);
       if (!useDatabase) {
         return obj as any;
       }

@@ -6,14 +6,13 @@ import { Reference } from '@dxos/echo-db';
 
 import { type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
-import type * as echoHandlerModule from '../effect/echo-handler';
-import { getProxyHandlerSlot } from '../effect/proxy';
-import { isEchoObject, type EchoReactiveObject, type ReactiveObject } from '../effect/reactive';
+import { isEchoObject, getProxyHandlerSlot } from '../effect';
+import { type EchoReactiveObject, type ReactiveObject } from '../effect';
+import { getObjectCoreFromEchoTarget } from '../effect/echo/echo-handler';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (isEchoObject(obj)) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
     const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
     return core?.database?._dbApi;
   }

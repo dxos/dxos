@@ -14,14 +14,7 @@ export { RuntimeSchemaRegistry } from './runtime-schema-registry';
 export * from './util';
 
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
-export * from './effect/dynamic/dynamic-schema';
-export * from './effect/dynamic/stored-schema';
-export { createEchoObject } from './effect/echo-handler';
-export * from './effect/echo-object-class';
-export * from './effect/json-schema';
-export { isReactiveObject } from './effect/proxy';
-export * from './effect/reactive';
-export { SchemaValidator } from './effect/schema-validator';
+export * from './schema';
 export * from './text';
 
 export * as S from '@effect/schema/Schema';

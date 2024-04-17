@@ -24,8 +24,8 @@ import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
-import { isReactiveObject } from '../effect/proxy';
-import { isEchoObject, type EchoReactiveObject } from '../effect/reactive';
+import { isEchoObject, type EchoReactiveObject } from '../effect';
+import { isReactiveObject } from '../effect';
 import { type Hypergraph } from '../hypergraph';
 import { type EchoObject } from '../object';
 

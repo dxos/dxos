@@ -8,97 +8,30 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { Reference } from '@dxos/echo-db';
 import { encodeReference } from '@dxos/echo-pipeline';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { assignDeep, ComplexMap, defaultMap, getDeep } from '@dxos/util';
+import { assignDeep, defaultMap, getDeep } from '@dxos/util';
 
-import { DynamicEchoSchema } from './dynamic/dynamic-schema';
-import { StoredEchoSchema } from './dynamic/stored-schema';
+import { EchoArrayTwoPointO } from './echo-array';
 import {
-  createReactiveProxy,
-  getProxyHandlerSlot,
-  isReactiveObject,
-  symbolIsProxy,
-  type ReactiveHandler,
-} from './proxy';
-import { getSchema, getTypeReference, type EchoReactiveObject, EchoReactiveHandler } from './reactive';
-import { getTargetMeta } from './reactive-meta-handler';
-import { SchemaValidator } from './schema-validator';
-import { AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
-import { type KeyPath } from '../automerge/key-path';
-import { data, type ObjectMeta } from '../object';
-import { defineHiddenProperty } from '../util/property';
-
-const symbolPath = Symbol('path');
-const symbolNamespace = Symbol('namespace');
-const symbolHandler = Symbol('handler');
-const symbolInternals = Symbol('internals');
-
-/**
- * Generic proxy target type for ECHO handler.
- * Targets can either be objects or arrays (instances of `EchoArrayTwoPointO`).
- * Every targets holds a set of hidden properties on symbols.
- */
-type ProxyTarget = {
-  [symbolInternals]: ObjectInternals;
-  /**
-   * `data` or `meta` namespace.
-   */
-  [symbolNamespace]: string;
-
-  /**
-   * Path within the namespace.
-   *
-   * Root objects have an empty path: `[]`.
-   */
-  [symbolPath]: KeyPath;
-
-  /**
-   * Reference to the handler.
-   */
-  // TODO(dmaretskyi): Can be removed.
-  [symbolHandler]?: EchoReactiveHandler;
-} & ({ [key: keyof any]: any } | EchoArrayTwoPointO<any>);
+  type ProxyTarget,
+  symbolInternals,
+  symbolNamespace,
+  symbolPath,
+  symbolHandler,
+  type ObjectInternals,
+} from './echo-proxy-target';
+import { type AutomergeObjectCore, META_NAMESPACE } from '../../automerge/automerge-object-core';
+import { type KeyPath } from '../../automerge/key-path';
+import { data, type ObjectMeta } from '../../object';
+import { defineHiddenProperty } from '../../util/property';
+import { SchemaValidator } from '../ast';
+import { DynamicEchoSchema, StoredEchoSchema } from '../dynamic';
+import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from '../proxy';
 
 /**
  * Extends the native array with methods overrides for automerge.
  */
 // TODO(dmaretskyi): Rename once the original AutomergeArray gets deleted.
-class EchoArrayTwoPointO<T> extends Array<T> {
-  static get [Symbol.species]() {
-    return Array;
-  }
-
-  // Will be initialize when the proxy is created.
-  [symbolInternals]: ObjectInternals = null as any;
-  [symbolPath]: KeyPath = null as any;
-  [symbolNamespace]: string = null as any;
-  [symbolHandler]: EchoReactiveHandler = null as any;
-
-  static {
-    /**
-     * These methods will trigger proxy traps like `set` and `defineProperty` and emit signal notifications.
-     * We wrap them in a batch to avoid unnecessary signal notifications.
-     */
-    const BATCHED_METHODS = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'] as const;
-
-    for (const method of BATCHED_METHODS) {
-      const handlerMethodName = `array${method.slice(0, 1).toUpperCase()}${method.slice(1)}`;
-
-      Object.defineProperty(this.prototype, method, {
-        enumerable: false,
-        value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
-          let result!: any;
-          compositeRuntime.batch(() => {
-            const handler = this[symbolHandler] as any;
-            result = (handler[handlerMethodName] as any).apply(handler, [this, this[symbolPath], ...args]);
-          });
-          return result;
-        },
-      });
-    }
-  }
-}
 
 /**
  * For tracking proxy targets in the `targetsMap`.
@@ -122,30 +55,15 @@ const TargetKey = {
   hash: (key: TargetKey): string => JSON.stringify(key),
 };
 
-type ObjectInternals = {
-  core: AutomergeObjectCore;
-
-  /**
-   * Caching targets based on key path.
-   * Only used for records and arrays.
-   */
-  // TODO(dmaretskyi): We need to include data type in the map key. it's safe for typed objects since fields cannot change from record to array and vice versa, but its gonna be a bug for untyped objects.
-  targetsMap: ComplexMap<KeyPath, ProxyTarget>;
-};
-
 const PROPERTY_ID = 'id';
 
-const DATA_NAMESPACE = 'data';
+export const DATA_NAMESPACE = 'data';
 
 /**
  * Shared for all targets within one ECHO object.
  */
-export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new EchoReactiveHandlerImpl();
-
-  private constructor() {
-    super();
-  }
+export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
+  public static instance = new EchoReactiveHandler();
 
   _proxyMap = new WeakMap<object, any>();
 
@@ -365,7 +283,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
 
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
-    } else if (validatedValue !== null && validatedValue[symbolHandler] instanceof EchoReactiveHandlerImpl) {
+    } else if (validatedValue !== null && validatedValue[symbolHandler] instanceof EchoReactiveHandler) {
       const link = this._linkReactiveHandler(target, validatedValue, validatedValue[symbolInternals]);
       target[symbolInternals].core.set(fullPath, encodeReference(link));
     } else {
@@ -445,6 +363,10 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
       return undefined;
     }
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+  }
+
+  isObjectDeleted(target: any): boolean {
+    return target[symbolInternals].core.isDeleted();
   }
 
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
@@ -604,7 +526,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     options: InspectOptionsStylized,
     inspectFn: (value: any, options?: InspectOptionsStylized) => string,
   ) {
-    const handler = this[symbolHandler] as EchoReactiveHandlerImpl;
+    const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = !!this[symbolInternals].core.getType();
     const proxy = handler.getReified(this);
     invariant(proxy, '_proxyMap corrupted');
@@ -649,90 +571,6 @@ const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (typeof value === 'object' && proto !== Object.prototype) {
     throw new Error(`class instances are not supported: setting ${proto} on ${String(prop)}`);
   }
-};
-
-// TODO(dmaretskyi): Read schema from typed in-memory objects.
-// TODO(dmaretskyi): Review whether we can expose this.
-export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
-  const schema = getSchema(init);
-  if (schema != null) {
-    validateSchema(schema);
-  }
-
-  if (isReactiveObject(init)) {
-    const proxy = init as any;
-
-    const slot = getProxyHandlerSlot(proxy);
-    const meta = getProxyHandlerSlot<ObjectMeta>(getTargetMeta(slot.target)).target!;
-
-    const core = new AutomergeObjectCore();
-    core.rootProxy = proxy;
-
-    slot.handler = EchoReactiveHandlerImpl.instance;
-    const target = slot.target as ProxyTarget;
-
-    target[symbolInternals] = {
-      core,
-      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-    };
-    target[symbolPath] = [];
-    target[symbolNamespace] = DATA_NAMESPACE;
-    slot.handler._proxyMap.set(target, proxy);
-    slot.handler._init(target);
-    saveTypeInAutomerge(target[symbolInternals], schema);
-    if (meta.keys.length > 0) {
-      target[symbolInternals].core.setMeta(meta);
-    }
-    return proxy;
-  } else {
-    const core = new AutomergeObjectCore();
-    const target: ProxyTarget = {
-      [symbolInternals]: {
-        core,
-        targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-      },
-      [symbolPath]: [],
-      [symbolNamespace]: DATA_NAMESPACE,
-      ...(init as any),
-    };
-    const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandlerImpl.instance) as any;
-    core.rootProxy = proxy;
-    saveTypeInAutomerge(target[symbolInternals], schema);
-    return proxy;
-  }
-};
-
-export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
-  const target: ProxyTarget = {
-    [symbolInternals]: {
-      core,
-      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-    },
-    [symbolPath]: [],
-    [symbolNamespace]: DATA_NAMESPACE,
-  };
-  core.rootProxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandlerImpl.instance) as any;
-};
-
-const validateSchema = (schema: S.Schema<any>) => {
-  getSchemaTypeRefOrThrow(schema);
-  SchemaValidator.validateSchema(schema);
-};
-
-const saveTypeInAutomerge = (internals: ObjectInternals, schema: S.Schema<any> | undefined) => {
-  if (schema != null) {
-    internals.core.setType(getSchemaTypeRefOrThrow(schema));
-  }
-};
-
-export const getSchemaTypeRefOrThrow = (schema: S.Schema<any>): Reference => {
-  const typeReference = getTypeReference(schema);
-  if (typeReference == null) {
-    throw new Error(
-      'EchoObject schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))',
-    );
-  }
-  return typeReference;
 };
 
 export const getObjectCoreFromEchoTarget = (target: ProxyTarget): AutomergeObjectCore => target[symbolInternals].core;

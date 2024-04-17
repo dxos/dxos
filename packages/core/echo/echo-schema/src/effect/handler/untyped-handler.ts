@@ -2,17 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
-import { inspect, type InspectOptionsStylized } from 'node:util';
-
-import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
+import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from './proxy';
-import { ReactiveArray } from './reactive-array';
-import { SchemaValidator, symbolSchema } from './schema-validator';
-import { data } from '../object';
-import { defineHiddenProperty } from '../util/property';
+import { getTargetMeta } from './handler-meta';
+import { data, type ObjectMeta } from '../../object';
+import { defineHiddenProperty } from '../../util/property';
+import { ReactiveArray, createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
@@ -28,23 +24,23 @@ type ProxyTarget = {
    * For modifying the structure of the object.
    */
   [symbolPropertySignal]: GenericSignal;
-
-  /**
-   * Schema for the root.
-   */
-  [symbolSchema]: S.Schema<any>;
 } & ({ [key: keyof any]: any } | any[]);
 
-export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new TypedReactiveHandler();
+/**
+ * Untyped in-memory reactive store.
+ *
+ * Target can be an array or object with any type of values including other reactive proxies.
+ */
+export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
+  public static instance = new UntypedReactiveHandler();
 
   private constructor() {}
 
+  // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
   _proxyMap = new WeakMap<object, any>();
 
   _init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
-    invariant(symbolSchema in target, 'Schema is not defined for the target');
 
     if (!(symbolSignal in target)) {
       defineHiddenProperty(target, symbolSignal, compositeRuntime.createSignal());
@@ -58,20 +54,13 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         continue;
       }
 
-      // Array reactivity is already handled by the schema validator.
-    }
-
-    if (inspect.custom) {
-      defineHiddenProperty(target, inspect.custom, this._inspect.bind(target));
+      if (Array.isArray(target[key as any]) && !(target[key as any] instanceof ReactiveArray)) {
+        target[key as any] = ReactiveArray.from(target[key as any]);
+      }
     }
   }
 
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
-    if (prop === data) {
-      target[symbolSignal].notifyRead();
-      return toJSON(target);
-    }
-
     // Handle getter properties. Will not subscribe the value signal.
     if (Object.getOwnPropertyDescriptor(target, prop)?.get) {
       target[symbolPropertySignal].notifyRead();
@@ -83,8 +72,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     target[symbolSignal].notifyRead();
     target[symbolPropertySignal].notifyRead();
 
-    const value = Reflect.get(target, prop, receiver);
+    if (prop === data) {
+      return toJSON(target);
+    }
+
+    const value = Reflect.get(target, prop);
+
     if (isValidProxyTarget(value)) {
+      // Note: Need to pass in `this` instance to createReactiveProxy to ensure that the same proxy is used for target.
       return createReactiveProxy(value, this);
     }
 
@@ -97,39 +92,30 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       value = ReactiveArray.from(value);
     }
 
-    let result: boolean = false;
-    compositeRuntime.batch(() => {
-      const validatedValue = SchemaValidator.validateValue(target, prop, value);
-      result = Reflect.set(target, prop, validatedValue, receiver);
-      target[symbolSignal].notifyWrite();
-    });
+    const result = Reflect.set(target, prop, value);
+    target[symbolSignal].notifyWrite();
     return result;
   }
 
   defineProperty(target: ProxyTarget, property: string | symbol, attributes: PropertyDescriptor): boolean {
-    const validatedValue = SchemaValidator.validateValue(target, property, attributes.value);
-    const result = Reflect.defineProperty(target, property, {
-      ...attributes,
-      value: validatedValue,
-    });
+    const result = Reflect.defineProperty(target, property, attributes);
     target[symbolPropertySignal].notifyWrite();
     return result;
   }
 
-  private _inspect(
-    _: number,
-    options: InspectOptionsStylized,
-    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-  ) {
-    return `Typed ${inspectFn(this, {
-      ...options,
-      compact: true,
-      showHidden: false,
-      customInspect: false,
-    })}`;
+  isObjectDeleted(): boolean {
+    return false;
+  }
+
+  getSchema() {
+    return undefined;
+  }
+
+  getMeta(target: any): ObjectMeta {
+    return getTargetMeta(target);
   }
 }
 
-const toJSON = (target: ProxyTarget): any => {
-  return { '@type': 'TypedReactiveObject', ...target };
+const toJSON = (target: any): any => {
+  return { '@type': 'ReactiveObject', ...target };
 };

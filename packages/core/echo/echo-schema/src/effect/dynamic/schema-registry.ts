@@ -12,9 +12,9 @@ import { StoredEchoSchema } from './stored-schema';
 import { getAutomergeObjectCore } from '../../automerge';
 import { type EchoDatabase } from '../../database';
 import { Filter } from '../../query';
-import { effectToJsonSchema } from '../json-schema';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '../reactive';
-import { create } from '../reactive';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '../annotations';
+import { create } from '../handler';
+import { effectToJsonSchema } from '../json';
 
 export class DynamicSchemaRegistry {
   private readonly _schemaById: Map<string, DynamicEchoSchema> = new Map();

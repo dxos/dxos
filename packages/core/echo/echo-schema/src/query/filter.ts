@@ -12,9 +12,8 @@ import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type AutomergeObjectCore } from '../automerge';
-import { DynamicEchoSchema } from '../effect/dynamic/dynamic-schema';
-import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
-import { getSchema, type EchoReactiveObject } from '../effect/reactive';
+import { DynamicEchoSchema, requireTypeReference } from '../effect';
+import { getSchema, type EchoReactiveObject } from '../effect';
 import { getReferenceWithSpaceKey, type EchoObject } from '../object';
 
 export const hasType =
@@ -86,7 +85,7 @@ export class Filter<T extends {} = any> {
   ): Filter<Mutable<T>>;
 
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
-    const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
+    const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);
   }

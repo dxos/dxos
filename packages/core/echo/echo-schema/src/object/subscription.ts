@@ -6,7 +6,7 @@ import { type UnsubscribeCallback } from '@dxos/async';
 
 import { type EchoObject } from './types';
 import { getAutomergeObjectCore } from '../automerge';
-import { isEchoObject } from '../effect/reactive';
+import { isEchoObject } from '../effect';
 
 export type Selection = any[];
 

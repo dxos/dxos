@@ -4,7 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { TypedObject } from '../echo-object-class';
+import { TypedObject } from '../typed-object-class';
 
 export class StoredEchoSchema extends TypedObject({ typename: 'dxos.echo.StoredSchema', version: '0.1.0' })({
   typename: S.string,

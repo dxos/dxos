@@ -25,8 +25,7 @@ import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isReactiveObject } from '../effect/proxy';
-import { isEchoObject, type EchoReactiveObject } from '../effect/reactive';
+import { isEchoObject, type EchoReactiveObject, isReactiveObject } from '../effect';
 import { type EchoObject, type ObjectMeta } from '../object';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.

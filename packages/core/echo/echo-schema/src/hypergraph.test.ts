@@ -8,7 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { getAutomergeObjectCore } from './automerge';
-import { create, Expando } from './effect/reactive';
+import { create, Expando } from './effect';
 import { TestBuilder } from './testing';
 
 describe('HyperGraph', () => {

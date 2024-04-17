@@ -9,17 +9,16 @@ import { inspect } from 'util';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import * as R from './reactive';
-import { type ReactiveObject } from './reactive';
-import { TEST_OBJECT, TestClass, TestSchemaWithClass } from './testing/schema';
-import { updateCounter } from './testutils';
-import { data } from '../object';
+import { create } from './create';
+import { data } from '../../object';
+import { updateCounter, TEST_OBJECT, TestClass, TestSchemaWithClass } from '../../testing';
+import { type ReactiveObject } from '../types';
 
 registerSignalRuntime();
 
 for (const schema of [undefined, TestSchemaWithClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): ReactiveObject<TestSchemaWithClass> => {
-    return schema == null ? (R.create(props) as TestSchemaWithClass) : R.create(schema, props);
+    return schema == null ? (create(props) as TestSchemaWithClass) : create(schema, props);
   };
 
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -96,7 +95,7 @@ for (const schema of [undefined, TestSchemaWithClass]) {
 describe('getters', () => {
   test('add getter to object', () => {
     let value = 'foo';
-    const obj = R.create({
+    const obj = create({
       get getter() {
         return value;
       },
@@ -108,11 +107,11 @@ describe('getters', () => {
   });
 
   test('signal updates', () => {
-    const innerObj = R.create({
+    const innerObj = create({
       string: 'bar',
     });
 
-    const obj = R.create({
+    const obj = create({
       field: 1,
       get getter() {
         return innerObj.string;
@@ -133,7 +132,7 @@ describe('getters', () => {
 
   test('getter for array', () => {
     const value = [1];
-    const obj = R.create({
+    const obj = create({
       get getter() {
         return value;
       },

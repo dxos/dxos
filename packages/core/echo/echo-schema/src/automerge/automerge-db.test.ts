@@ -14,7 +14,7 @@ import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
-import { Expando, type EchoReactiveObject, create } from '../effect/reactive';
+import { Expando, type EchoReactiveObject, create } from '../effect';
 import { TestBuilder, type TestPeer } from '../testing';
 
 describe('AutomergeDb', () => {

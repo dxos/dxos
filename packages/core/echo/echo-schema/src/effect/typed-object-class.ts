@@ -5,8 +5,9 @@
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 import * as S from '@effect/schema/Schema';
 
-import { getSchema, getTypeReference, type EchoObjectAnnotation, EchoObjectAnnotationId } from './reactive';
-import { schemaVariance } from './utils';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
+import { schemaVariance } from './ast';
+import { getSchema, getTypeReference } from './getter';
 
 type EchoClassOptions = {
   partial?: true;

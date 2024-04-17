@@ -11,10 +11,10 @@ import { DynamicEchoSchema } from './dynamic-schema';
 import { StoredEchoSchema } from './stored-schema';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
-import { TypedObject } from '../echo-object-class';
-import { effectToJsonSchema } from '../json-schema';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '../reactive';
-import { create } from '../reactive';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '../annotations';
+import { create } from '../handler';
+import { effectToJsonSchema } from '../json';
+import { TypedObject } from '../typed-object-class';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [

@@ -17,7 +17,7 @@ import {
   type EchoObjectFieldMetaAnnotation,
   EchoObjectFieldMetaAnnotationId,
   ReferenceAnnotation,
-} from './reactive';
+} from '../annotations';
 
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {

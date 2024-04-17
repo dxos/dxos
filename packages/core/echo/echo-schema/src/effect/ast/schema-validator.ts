@@ -8,24 +8,9 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { isValidProxyTarget } from './proxy';
-import { ReactiveArray } from './reactive-array';
-import { type KeyPath } from '../automerge/key-path';
-import { defineHiddenProperty } from '../util/property';
-
 export const symbolSchema = Symbol.for('@dxos/schema');
 
 export class SchemaValidator {
-  public static prepareTarget<T>(target: T, schema: S.Schema<T>) {
-    if (!isTypeLiteral(schema.ast)) {
-      throw new Error('schema has to describe an object type');
-    }
-    this.validateSchema(schema);
-    const _ = S.asserts(schema)(target);
-    this.makeArraysReactive(target);
-    setSchemaProperties(target, schema);
-  }
-
   /**
    * Recursively check that schema specifies constructions we can handle.
    * Validates there are no ambiguous discriminated union types.
@@ -46,18 +31,6 @@ export class SchemaValidator {
     } else if (AST.isTypeLiteral(schema.ast)) {
       visitAll(AST.getPropertySignatures(schema.ast).map((p) => p.type));
     }
-  }
-
-  public static validateValue(target: any, prop: string | symbol, value: any) {
-    const schema = getTargetPropertySchema(target, prop);
-    const _ = S.asserts(schema)(value);
-    if (Array.isArray(value)) {
-      value = new ReactiveArray(...value);
-    }
-    if (isValidProxyTarget(value)) {
-      setSchemaProperties(value, schema);
-    }
-    return value;
   }
 
   public static hasTypeAnnotation(rootObjectSchema: S.Schema<any>, property: string, annotation: symbol): boolean {
@@ -94,15 +67,16 @@ export class SchemaValidator {
     return schema;
   }
 
-  private static makeArraysReactive(target: any) {
-    for (const key in target) {
-      if (Array.isArray(target[key])) {
-        target[key] = ReactiveArray.from(target[key]);
-      }
-      if (typeof target[key] === 'object') {
-        this.makeArraysReactive(target[key]);
-      }
+  public static getTargetPropertySchema(target: any, prop: string | symbol): S.Schema<any> {
+    const schema: S.Schema<any> | undefined = (target as any)[symbolSchema];
+    invariant(schema, 'target has no schema');
+    const arrayAst = unwrapArray(schema.ast);
+    if (arrayAst != null) {
+      return getArrayElementSchema(arrayAst, prop);
     }
+    const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
+    invariant(propertyType, `invalid property: ${prop.toString()}`);
+    return S.make(propertyType);
   }
 }
 
@@ -183,18 +157,6 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
   return discriminatorPropCandidates;
 };
 
-const getTargetPropertySchema = (target: any, prop: string | symbol): S.Schema<any> => {
-  const schema: S.Schema<any> | undefined = (target as any)[symbolSchema];
-  invariant(schema, 'target has no schema');
-  const arrayAst = unwrapArray(schema.ast);
-  if (arrayAst != null) {
-    return getArrayElementSchema(arrayAst, prop);
-  }
-  const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
-  invariant(propertyType, `invalid property: ${prop.toString()}`);
-  return S.make(propertyType);
-};
-
 const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST.AST | null => {
   let ast: AST.AST | undefined = rootAst;
   while (ast != null) {
@@ -219,21 +181,6 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
-/**
- * Recursively set AST on all potential proxy targets.
- */
-export const setSchemaProperties = (obj: any, schema: S.Schema<any>) => {
-  defineHiddenProperty(obj, symbolSchema, schema);
-  for (const key in obj) {
-    if (isValidProxyTarget(obj[key])) {
-      const elementSchema = getTargetPropertySchema(obj, key);
-      if (elementSchema != null) {
-        setSchemaProperties(obj[key], elementSchema);
-      }
-    }
-  }
-};
-
 export const validateIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
   invariant(isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
@@ -241,3 +188,5 @@ export const validateIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) =>
     throw new Error('"id" property name is reserved');
   }
 };
+
+type KeyPath = readonly (string | number)[];
