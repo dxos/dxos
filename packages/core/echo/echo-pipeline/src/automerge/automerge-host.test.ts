@@ -42,6 +42,7 @@ describe('AutomergeHost', () => {
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
+    await host.repo.flush();
     expect(handle.docSync().text).toEqual('Hello world');
   });
 
@@ -52,7 +53,6 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({ db: level.sublevel('automerge') });
     await host.open();
-    afterTest(() => host.close());
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
@@ -60,6 +60,7 @@ describe('AutomergeHost', () => {
     const url = handle.url;
 
     await host.repo.flush();
+    await host.close();
 
     const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
     await host2.open();
@@ -67,6 +68,7 @@ describe('AutomergeHost', () => {
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
+    await host2.repo.flush();
   });
 
   test('basic networking', async () => {

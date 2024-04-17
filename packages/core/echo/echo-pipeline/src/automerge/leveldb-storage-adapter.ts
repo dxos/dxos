@@ -6,6 +6,7 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
+import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { type BatchLevel, type SubLevelDB } from './types';
@@ -113,4 +114,4 @@ export const encodingOptions = {
   valueEncoding: 'buffer',
 };
 
-const isLevelDbNotFoundError = (err: any): boolean => err.code === 'ERR_NOT_FOUND';
+const isLevelDbNotFoundError = (err: any): boolean => err.code === 'LEVEL_NOT_FOUND';
