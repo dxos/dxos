@@ -33,6 +33,7 @@ import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
 import { type MySublevel } from './types';
+import { asyncTimeout } from '@dxos/async';
 
 export type { DocumentId };
 
@@ -246,10 +247,15 @@ export class AutomergeHost {
   // Methods for client-services.
   //
 
+  @log.method()
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
-    await this._repo.flush(documentIds as DocumentId[]);
+    try {
+      await asyncTimeout(this._repo.flush(documentIds as DocumentId[]), 500);
+    } catch (err) {
+      log.warn('flush error', { documentIds, err });
+    }
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
