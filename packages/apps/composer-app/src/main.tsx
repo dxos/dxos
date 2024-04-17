@@ -243,7 +243,7 @@ const main = async () => {
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
-      // ThemeMeta.id,
+      ThemeMeta.id,
       WildcardMeta.id,
     ],
     defaults: [
