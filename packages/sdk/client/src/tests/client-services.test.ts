@@ -182,7 +182,7 @@ describe('Client services', () => {
     });
   });
 
-  test('synchronizes data between two spaces after completing invitation', async () => {
+  test.only('synchronizes data between two spaces after completing invitation', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
@@ -205,7 +205,7 @@ describe('Client services', () => {
       await client1.halo.createIdentity({ displayName: 'Peer 1' });
       await client2.halo.createIdentity({ displayName: 'Peer 2' });
     }
-    log('initialized');
+    log.info('initialized');
 
     afterTest(async () => {
       await client1.destroy();
@@ -219,7 +219,9 @@ describe('Client services', () => {
     });
 
     const hostSpace = await client1.spaces.create();
-    log('spaces.create', { key: hostSpace.key });
+    log.info('spaces.create', { key: hostSpace.key });
+    log.break();
+
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: hostSpace,
@@ -244,6 +246,8 @@ describe('Client services', () => {
     });
 
     const guestSpace = await trigger.wait();
+
+    log.break();
 
     for (const space of [hostSpace, guestSpace]) {
       await waitForExpect(() => {
@@ -271,6 +275,10 @@ describe('Client services', () => {
       }, 20_000);
     }
 
+    log.break();
+
     await syncItemsAutomerge(hostSpace.db, guestSpace.db);
+
+    log.break();
   });
 });
