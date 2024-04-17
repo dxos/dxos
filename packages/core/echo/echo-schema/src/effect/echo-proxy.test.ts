@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
-import { createEchoReactiveObject } from './echo-handler';
+import { createEchoObject } from './echo-handler';
 import {
   getTypeReference,
   create,
@@ -41,12 +41,12 @@ const TypedObject = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
-  expect(() => createEchoReactiveObject(create(invalidSchema, { id: 42 }))).to.throw();
+  expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
 for (const schema of [undefined, TypedObject, TestSchemaClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoReactiveObject(schema ? create(schema as any, props) : create(props));
+    return createEchoObject(schema ? create(schema as any, props) : create(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
