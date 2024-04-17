@@ -17,10 +17,10 @@ export type LevelDBStorageAdapterParams = {
 
 export type BeforeSaveParams = { path: StorageKey; batch: BatchLevel };
 
-export type StorageCallbacks = {
-  beforeSave?: (params: BeforeSaveParams) => MaybePromise<void>;
-  afterSave?: (path: StorageKey) => MaybePromise<void>;
-};
+export interface StorageCallbacks {
+  beforeSave(params: BeforeSaveParams): MaybePromise<void>;
+  afterSave(path: StorageKey): MaybePromise<void>;
+}
 
 export class LevelDBStorageAdapter extends Resource implements StorageAdapterInterface {
   constructor(private readonly _params: LevelDBStorageAdapterParams) {
@@ -34,8 +34,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
       }
       return await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
     } catch (err: any) {
-      // Key not found. Automerge expects undefined in this case.
-      if (err.code !== 'ERR_NOT_FOUND') {
+      if (isLevelDbNotFoundError(err)) {
         return undefined;
       }
       throw err;
@@ -113,3 +112,5 @@ export const encodingOptions = {
   keyEncoding: keyEncoder,
   valueEncoding: 'buffer',
 };
+
+const isLevelDbNotFoundError = (err: any): boolean => err.code === 'ERR_NOT_FOUND';

@@ -59,8 +59,7 @@ describe('AutomergeHost', () => {
     });
     const url = handle.url;
 
-    // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
-    await sleep(100);
+    await host.repo.flush();
 
     const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
     await host2.open();
@@ -182,7 +181,6 @@ describe('AutomergeHost', () => {
     const secondHandle = host.create();
     secondHandle.change((doc: any) => (doc.text = 'Hello world'));
     await host.find(secondHandle.url).whenReady();
-    // await sleep(100);
     allowedDocs.push(secondHandle.documentId);
 
     {

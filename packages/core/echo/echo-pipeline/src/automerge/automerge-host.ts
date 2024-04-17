@@ -2,19 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge, getHeads } from '@dxos/automerge/automerge';
-import {
-  Repo,
-  type PeerId,
-  type DocumentId,
-  type StorageKey,
-  type StorageAdapterInterface,
-} from '@dxos/automerge/automerge-repo';
+import { next as automerge } from '@dxos/automerge/automerge';
+import { Repo, type PeerId, type DocumentId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { idCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
   type HostInfo,
@@ -26,18 +19,13 @@ import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-rep
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type SpaceDoc, type BatchLevel, type SubLevelDB } from './types';
+import { type SubLevelDB } from './types';
 
 export type { DocumentId };
-
-export interface MetadataMethods {
-  markDirty(idToLastHash: Map<string, string>, batch: BatchLevel): Promise<void>;
-  afterMarkDirty(): Promise<void>;
-}
 
 export type AutomergeHostParams = {
   db: SubLevelDB;
@@ -45,7 +33,7 @@ export type AutomergeHostParams = {
    * For migration purposes.
    */
   directory?: Directory;
-  metadata?: MetadataMethods;
+  storageCallbacks?: StorageCallbacks;
 };
 
 @trace.resource()
@@ -53,7 +41,7 @@ export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
   private readonly _db: SubLevelDB;
-  private readonly _metadata?: MetadataMethods;
+  private readonly _storageCallbacks?: StorageCallbacks;
 
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
@@ -68,14 +56,12 @@ export class AutomergeHost {
    */
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
-  private readonly _updatingMetadata = new Map<string, Promise<void>>();
-
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, db, metadata }: AutomergeHostParams) {
+  constructor({ directory, db, storageCallbacks }: AutomergeHostParams) {
     this._directory = directory;
     this._db = db;
-    this._metadata = metadata;
+    this._storageCallbacks = storageCallbacks;
   }
 
   async open() {
@@ -83,10 +69,7 @@ export class AutomergeHost {
     this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
       db: this._db,
-      callbacks: {
-        beforeSave: (params) => this._beforeSave(params),
-        afterSave: () => this._afterSave(),
-      },
+      callbacks: this._storageCallbacks,
     });
     await this._storage.open?.();
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
@@ -163,32 +146,6 @@ export class AutomergeHost {
 
   get repo(): Repo {
     return this._repo;
-  }
-
-  private async _beforeSave({ path, batch }: BeforeSaveParams) {
-    const getDocumentIdFromPath = (path: StorageKey): DocumentId => path[0] as DocumentId;
-    const handle = this._repo.handles[getDocumentIdFromPath(path)];
-    if (!handle) {
-      return;
-    }
-    const doc = handle.docSync();
-    if (!doc) {
-      return;
-    }
-
-    const heads = getHeads(doc);
-    const lastAvailableHash = heads.join('');
-
-    const getDocumentObjects = (doc: SpaceDoc): string[] => Object.keys(doc.objects ?? {});
-
-    const objectIds = getDocumentObjects(doc);
-    const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: handle.documentId, objectId }));
-    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
-    await this._metadata?.markDirty(idToLastHash, batch);
-  }
-
-  private async _afterSave() {
-    await this._metadata?.afterMarkDirty();
   }
 
   @trace.info({ depth: null })

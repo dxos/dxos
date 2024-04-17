@@ -10,7 +10,7 @@ import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credenti
 import { failUndefined } from '@dxos/debug';
 import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
+import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -125,7 +125,7 @@ export class ServiceContext extends Resource {
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
       db: level.sublevel('automerge'),
-      metadata: this.indexMetadata,
+      storageCallbacks: createStorageCallbacks({ host: () => this.automergeHost, metadata: this.indexMetadata }),
     });
 
     this.indexer = new Indexer({
