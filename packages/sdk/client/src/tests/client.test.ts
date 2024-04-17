@@ -15,6 +15,7 @@ import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
 import { MessageType, TextV0Type, ThreadType, TestBuilder, performInvitation } from '../testing';
+import { Context } from '@dxos/context';
 
 chai.use(chaiAsPromised);
 
@@ -182,5 +183,18 @@ describe('Client', () => {
       expect(thread1.messages.length).to.eq(1);
       expect(thread1.messages[0]!.blocks[0].content?.content).to.eq(text);
     }, 1000);
+  });
+
+  test('reset & create space', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.reset();
+
+    await client.halo.createIdentity();
+    await client.spaces.create();
   });
 });
