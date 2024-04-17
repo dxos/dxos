@@ -9,7 +9,7 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { type OpaqueEchoObject } from './object';
+import { type EchoReactiveObject } from './effect/reactive';
 import { Filter } from './query';
 
 /**
@@ -133,7 +133,7 @@ export class Serializer {
     }
   }
 
-  exportObject(object: OpaqueEchoObject): SerializedObject {
+  exportObject(object: EchoReactiveObject<any>): SerializedObject {
     const core = getAutomergeObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.

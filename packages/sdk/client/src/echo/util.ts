@@ -4,11 +4,11 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, type OpaqueEchoObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getDatabaseFromObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
 
-export const getSpace = (object: OpaqueEchoObject): Space | undefined => {
+export const getSpace = (object: EchoReactiveObject<any>): Space | undefined => {
   const db = getDatabaseFromObject(object);
   const key = db?.spaceKey;
   if (key) {
