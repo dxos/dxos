@@ -56,6 +56,9 @@ describe('Level', () => {
     batch.put(key, value, { sublevel: second });
     await batch.write();
 
+    expect(() => first.get(key)).to.throw;
     expect(await level.sublevel('second').get(key)).to.equal(value);
+    expect(await second.get(key)).to.equal(value);
+    expect(await second.iterator().all()).to.deep.equal([[key, value]]);
   });
 });
