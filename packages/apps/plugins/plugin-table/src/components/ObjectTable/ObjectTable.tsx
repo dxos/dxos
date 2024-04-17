@@ -4,14 +4,14 @@
 
 import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
-import { type TableType } from '@braneframe/types';
-import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
+import { TableType } from '@braneframe/types';
+import { type DynamicEchoSchema, S, create, TypedObject, Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
-import { useObjects, useTables } from './hooks';
+import { useObjects } from './hooks';
 import { createColumns, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
@@ -62,16 +62,16 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
     return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   } else {
     return (
-      <ObjectTableTable table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
+      <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
     );
   }
 };
 
-const ObjectTableTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
   const space = getSpace(table);
 
   const objects = useObjects(space, table.schema);
-  const tables = useTables(space);
+  const tables = useQuery<TableType>(space, Filter.schema(TableType));
 
   const newObject = useRef({});
   const newObjectKey = '__new';

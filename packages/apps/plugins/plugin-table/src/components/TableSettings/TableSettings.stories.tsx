@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import * as E from '@dxos/echo-schema';
+import { type DynamicEchoSchema, create } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -22,7 +22,7 @@ const Story = () => {
   const client = useClient();
   const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
-  const [schemas, setSchemas] = useState<E.DynamicEchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
 
   useEffect(() => {
     const generator = createSpaceObjectGenerator(space);
@@ -33,7 +33,7 @@ const Story = () => {
       (client as any)._graph.types.registerEffectSchema(TableType);
     }
 
-    setTable(space.db.add(E.create(TableType, { title: 'Table', props: [] })));
+    setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
 
     setSchemas(space.db.schemaRegistry.getAll());
   }, []);
