@@ -18,7 +18,7 @@ export {
   DocAccessor,
   getMeta,
   getSchema,
-  typeOf,
+  getType,
   isEchoReactiveObject,
   Expando,
   create,

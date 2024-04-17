@@ -290,7 +290,7 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
   }
 };
 
-export const typeOf = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
+export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
 

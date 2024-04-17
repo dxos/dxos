@@ -16,7 +16,7 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, Filter, isReactiveProxy, typeOf } from '@dxos/echo-schema';
+import { create, Filter, isReactiveProxy, getType } from '@dxos/echo-schema';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
@@ -50,7 +50,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => object)
     .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(typeOf(object!)?.itemId ?? 'never');
+      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
       return { id, object: object as SectionType, ...rest };
     });
   const space = getSpace(stack);

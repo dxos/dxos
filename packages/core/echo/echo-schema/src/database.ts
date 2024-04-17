@@ -9,7 +9,7 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
 import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
-import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
+import { createEchoObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
 import { type EchoReactiveObject, getSchema, isEchoReactiveObject, type ReactiveObject } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject } from './object';
@@ -114,7 +114,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
           throw createSchemaNotRegisteredError();
         }
       }
-      const echoObj = createEchoReactiveObject(obj);
+      const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;
     }
