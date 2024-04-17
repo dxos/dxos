@@ -16,7 +16,6 @@ import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
 import { Expando, type EchoReactiveObject, create } from '../effect/reactive';
 import { TestBuilder, type TestPeer } from '../testing';
-import { TextCompatibilitySchema } from '../type-collection';
 
 describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
@@ -422,8 +421,8 @@ const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
   return create(Expando, props);
 };
 
-const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
-  return create(TextCompatibilitySchema, { content });
+const createTextObject = (content: string = ''): EchoReactiveObject<{ content: string }> => {
+  return create(Expando, { content }) as EchoReactiveObject<{ content: string }>;
 };
 
 interface DocumentHandles {

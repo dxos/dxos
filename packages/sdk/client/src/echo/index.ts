@@ -22,7 +22,7 @@ export {
   isEchoReactiveObject,
   Expando,
   create,
-  TextCompatibilitySchema,
+  RuntimeSchemaRegistry,
   type EchoReactiveObject,
   type ReactiveObject,
   type EchoDatabase,
@@ -33,9 +33,6 @@ export {
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-
-  // TODO(burdon): Deprecated.
-  TypeCollection,
 } from '@dxos/echo-schema';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';

@@ -84,7 +84,7 @@ const newTask = () => create(Task, { subTasks: [] });
 
 const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
   const graph = new Hypergraph();
-  graph.types.registerEffectSchema(Task, Container, Contact);
+  graph.runtimeSchemaRegistry.registerSchema(Task, Container, Contact);
   const { db } = await createDatabase(graph);
   db.add(obj);
   await db.flush();

@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { FilterSource, Query, TypeCollection } from '@dxos/echo-schema';
+import type { FilterSource, Query } from '@dxos/echo-schema';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -65,10 +65,4 @@ export interface Echo extends MulticastObservable<Space[]> {
    * @param options
    */
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T>;
-
-  /**
-   * Adds a schema to ECHO.
-   */
-  // TODO(dmaretskyi): Rename `addTypes`.
-  addSchema(schema: TypeCollection): void;
 }
