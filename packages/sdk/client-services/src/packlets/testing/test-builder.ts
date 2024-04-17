@@ -9,7 +9,7 @@ import { failUndefined } from '@dxos/debug';
 import {
   AutomergeHost,
   MetadataStore,
-  type MyLevel,
+  type LevelDB,
   SnapshotStore,
   SpaceManager,
   valueEncoding,
@@ -21,7 +21,6 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { type MaybePromise } from '@dxos/util';
 
 import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
@@ -94,7 +93,7 @@ export type TestPeerOpts = {
 
 export type TestPeerProps = {
   storage?: Storage;
-  level?: MaybePromise<MyLevel>;
+  level?: LevelDB;
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
@@ -178,7 +177,7 @@ export class TestPeer {
 
   get automergeHost() {
     return (this._props.automergeHost ??= new AutomergeHost({
-      db: Promise.resolve(this.level).then((level) => level.sublevel('automerge')),
+      db: this.level.sublevel('automerge'),
     }));
   }
 
@@ -198,6 +197,7 @@ export class TestPeer {
   }
 
   async destroy() {
+    await this.level.close();
     await this.storage.reset();
   }
 }

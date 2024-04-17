@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AbstractSublevel } from 'abstract-level';
+import { type AbstractChainedBatch, type AbstractSublevel } from 'abstract-level';
 import { type Level } from 'level';
 
 import { type EncodedReferenceObject } from './reference';
@@ -81,5 +81,6 @@ export type ObjectSystem = {
   type?: EncodedReferenceObject;
 };
 
-export type MyLevel = Level<string, string>;
-export type MySublevel = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
+export type LevelDB = Level<string, string>;
+export type SubLevelDB = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
+export type BatchLevel = AbstractChainedBatch<any, string, string>;

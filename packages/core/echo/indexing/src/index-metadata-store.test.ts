@@ -21,7 +21,9 @@ describe('IndexMetadataStore', () => {
 
     const ids = ['1', '2', '3'];
     const dirtyMap = new Map(ids.map((id) => [id, `hash-${id}`]));
-    await metadataStore.markDirty(dirtyMap);
+    const batch = level.batch();
+    metadataStore.markDirty(dirtyMap, batch);
+    await batch.write();
     expect(await metadataStore.getDirtyDocuments()).to.deep.equal(ids);
 
     await metadataStore.markClean('1', 'hash-1');
