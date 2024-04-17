@@ -36,7 +36,7 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
 
   /**
    * Called by `Repo` to connect to the network.
-   * 
+   *
    * @param peerId Our peer Id.
    */
   override connect(peerId: PeerId): void {
