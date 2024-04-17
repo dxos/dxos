@@ -3,20 +3,14 @@
 //
 
 import { Plus, Trash, UserPlus } from '@phosphor-icons/react';
-import React, { type Dispatch, type SetStateAction, useEffect, useState } from 'react';
+import React from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, Toolbar } from '@dxos/react-ui';
 
-// TODO(burdon): Factor out.
-export const useControlledValue = <T,>(_value: T, onChange?: (value: T) => void): [T, Dispatch<SetStateAction<T>>] => {
-  const [value, setValue] = useState<T>(_value);
-  useEffect(() => setValue(_value), [_value]);
-  useEffect(() => onChange?.(_value), [value]);
-  return [value, setValue];
-};
+import { useControlledValue } from '../hooks';
 
 export type SpaceToolbarProps = {
   spaceKey?: PublicKey;

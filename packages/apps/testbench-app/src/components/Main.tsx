@@ -129,9 +129,7 @@ export const Main = () => {
   };
 
   const handleSpaceCreate = async () => {
-    console.log('===1');
-    const space = await client.spaces.create(); // TODO(burdon): Not returning.
-    console.log('===2', space.key.truncate());
+    const space = await client.spaces.create();
     setSpace(space);
   };
 
