@@ -8,12 +8,12 @@ import { type AutomergeObjectCore } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import type * as echoHandlerModule from '../effect/echo-handler'; // Keep as type-only import.
-import { getProxyHandlerSlot, isReactiveProxy } from '../effect/proxy';
+import { getProxyHandlerSlot, isReactiveObject } from '../effect/proxy';
 import { type EchoReactiveObject } from '../effect/reactive';
 
 // TODO(wittjosiah): `path` should be `keyof T`.
 export const createDocAccessor = <T>(obj: EchoReactiveObject<T>, path: KeyPath): DocAccessor => {
-  invariant(isReactiveProxy(obj));
+  invariant(isReactiveObject(obj));
   invariant(path === undefined || isValidKeyPath(path));
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires

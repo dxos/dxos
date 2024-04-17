@@ -5,7 +5,7 @@
 import { Plus, X } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type EchoReactiveObject, typeOf } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { type EchoDatabase, type Space } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import {
@@ -180,7 +180,7 @@ class QueryModel implements SearchListQueryModel<EchoReactiveObject<any>> {
         return null;
       }
 
-      if (typeOf(object)?.itemId !== this._schemaId) {
+      if (getType(object)?.itemId !== this._schemaId) {
         return false;
       }
 

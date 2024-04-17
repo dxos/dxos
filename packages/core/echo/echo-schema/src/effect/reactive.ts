@@ -16,7 +16,7 @@ import {
   type ReactiveHandler,
   createReactiveProxy,
   isValidProxyTarget,
-  isReactiveProxy,
+  isReactiveObject,
   getProxyHandlerSlot,
 } from './proxy';
 import { getTargetMeta, initMeta } from './reactive-meta-handler';
@@ -113,8 +113,8 @@ export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
-export const isEchoReactiveObject = (value: unknown): value is EchoReactiveObject<any> =>
-  isReactiveProxy(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
+export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
+  isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 /**
  * Creates a reactive object from a plain Javascript object.
@@ -242,7 +242,7 @@ export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any>
   if (obj == null) {
     return undefined;
   }
-  if (isReactiveProxy(obj)) {
+  if (isReactiveObject(obj)) {
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
       return proxyHandlerSlot.handler.getSchema(proxyHandlerSlot.target);
@@ -290,7 +290,7 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
   }
 };
 
-export const typeOf = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
+export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
 
 export type PropertyVisitor<T> = (property: AST.PropertySignature, path: PropertyKey[]) => T;
 

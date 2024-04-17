@@ -25,8 +25,8 @@ import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isReactiveProxy } from '../effect/proxy';
-import { isEchoReactiveObject, type EchoReactiveObject } from '../effect/reactive';
+import { isReactiveObject } from '../effect/proxy';
+import { isEchoObject, type EchoReactiveObject } from '../effect/reactive';
 import { type EchoObject, type ObjectMeta } from '../object';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -266,7 +266,7 @@ export class AutomergeObjectCore {
   linkObject(obj: EchoReactiveObject<any>): Reference {
     if (this.database) {
       // TODO(dmaretskyi): Fix this.
-      if (isReactiveProxy(obj) && !isEchoReactiveObject(obj)) {
+      if (isReactiveObject(obj) && !isEchoObject(obj)) {
         invariant(this.database, 'BUG');
         this.database._dbApi.add(obj);
       }
@@ -321,7 +321,7 @@ export class AutomergeObjectCore {
       return null;
     }
     // TODO(dmaretskyi): Move proxy handling out of this class.
-    if (isReactiveProxy(value) as boolean) {
+    if (isReactiveObject(value) as boolean) {
       if (!allowLinks) {
         throw new TypeError('Linking is not allowed');
       }

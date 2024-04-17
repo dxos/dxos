@@ -6,7 +6,7 @@ import React, { forwardRef, type FC } from 'react';
 
 import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, isEchoObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -72,7 +72,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     } else if (over.position) {
       const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
       const object = parseData ? parseData(active.item, 'object') : undefined;
-      isEchoReactiveObject(object) && grid.items.push(create(GridItemType, { object, position: over.position }));
+      isEchoObject(object) && grid.items.push(create(GridItemType, { object, position: over.position }));
     }
   };
 

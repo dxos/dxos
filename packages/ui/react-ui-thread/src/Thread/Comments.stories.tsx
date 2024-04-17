@@ -8,7 +8,7 @@ import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MessageType, TextV0Type } from '@braneframe/types';
-import { createDocAccessor, create, createEchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor, create, createEchoObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -252,7 +252,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createEchoReactiveObject(create(TextV0Type, { content: text ?? '' })));
+  const [item] = useState(createEchoObject(create(TextV0Type, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 

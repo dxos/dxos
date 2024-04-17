@@ -21,7 +21,7 @@ import {
   getSchema,
   getTypeReference,
   ref,
-  typeOf,
+  getType,
 } from '../reactive';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
@@ -78,7 +78,7 @@ describe('dynamic schema', () => {
     }).to.throw();
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(typeOf(object)?.itemId).to.be.eq(schema.id);
+    expect(getType(object)?.itemId).to.be.eq(schema.id);
 
     db.add(object);
     const queried = db.query(Filter.schema(schema)).objects;

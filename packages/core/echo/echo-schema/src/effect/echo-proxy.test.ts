@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
-import { createEchoReactiveObject } from './echo-handler';
+import { createEchoObject } from './echo-handler';
 import {
   getTypeReference,
   create,
@@ -23,7 +23,7 @@ import {
   isDeleted,
   Expando,
   type EchoReactiveObject,
-  isEchoReactiveObject,
+  isEchoObject,
   getSchema,
 } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from './testing/schema';
@@ -41,12 +41,12 @@ const TypedObject = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.struct({ id: S.number });
-  expect(() => createEchoReactiveObject(create(invalidSchema, { id: 42 }))).to.throw();
+  expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
 for (const schema of [undefined, TypedObject, TestSchemaClass]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
-    return createEchoReactiveObject(schema ? create(schema as any, props) : create(props));
+    return createEchoObject(schema ? create(schema as any, props) : create(props));
   };
 
   describe(`Echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
@@ -83,9 +83,9 @@ for (const schema of [undefined, TypedObject, TestSchemaClass]) {
       expect(obj).to.deep.eq({ id: obj.id });
     });
 
-    test('isEchoReactiveObject', () => {
+    test('isEchoObject', () => {
       const obj = createObject({ string: 'bar' });
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
     });
   });
 }
@@ -145,7 +145,7 @@ describe('Reactive Object with ECHO database', () => {
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
@@ -176,7 +176,7 @@ describe('Reactive Object with ECHO database', () => {
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 

@@ -3,7 +3,7 @@
 //
 
 import { create, Expando, getAutomergeObjectCore, getMeta, getTypeRef, type ReactiveObject } from '@dxos/echo-schema';
-import { createEchoReactiveObject } from '@dxos/echo-schema';
+import { createEchoObject } from '@dxos/echo-schema';
 
 export type Filename = { name?: string; extension: string };
 
@@ -66,7 +66,7 @@ const deserializeEchoObject = (parsed: any): Expando => {
       return [key, value];
     });
 
-  const deserializedObject: ReactiveObject<Expando> = createEchoReactiveObject(
+  const deserializedObject: ReactiveObject<Expando> = createEchoObject(
     // TODO(burdon): Move to ECHO? Remove test for '@' properties.
     create(Expando, Object.fromEntries(entries)),
   );

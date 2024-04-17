@@ -8,10 +8,10 @@ import { type ForeignKey } from './types';
 import type { EchoDatabase } from '../database';
 import type * as echoHandlerModule from '../effect/echo-handler';
 import { getProxyHandlerSlot } from '../effect/proxy';
-import { isEchoReactiveObject, type EchoReactiveObject } from '../effect/reactive';
+import { isEchoObject, type EchoReactiveObject, type ReactiveObject } from '../effect/reactive';
 
-export const getDatabaseFromObject = (obj: EchoReactiveObject<any>): EchoDatabase | undefined => {
-  if (isEchoReactiveObject(obj)) {
+export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
+  if (isEchoObject(obj)) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { getObjectCoreFromEchoTarget }: typeof echoHandlerModule = require('../effect/echo-handler');
     const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
