@@ -5,6 +5,7 @@
 import type WebSocket from 'isomorphic-ws';
 import { mkdirSync, rmSync } from 'node:fs';
 import * as http from 'node:http';
+import { type Socket } from 'node:net';
 import { dirname } from 'node:path';
 
 import { Trigger } from '@dxos/async';
@@ -18,8 +19,9 @@ import {
   createSimplePeerTransportFactory,
   type TransportFactory,
 } from '@dxos/network-manager';
+import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { tracer } from '@dxos/util';
-import { WebsocketRpcServer } from '@dxos/websocket-rpc';
+import { WebsocketRpcServer, authenticateRequestWithTokenAuth } from '@dxos/websocket-rpc';
 
 import { getPluginConfig, type Plugin } from './plugins';
 import { lockFilePath, parseAddress } from './util';
@@ -38,7 +40,10 @@ export type AgentOptions = {
     socket: string;
     webSocket?: number;
   };
+  http?: AgentHttpParams;
 };
+
+export type AgentHttpParams = { port: number; authenticationToken: string; wsAuthenticationToken: string };
 
 /**
  * The remote agent exposes Client services via multiple transports.
@@ -128,6 +133,12 @@ export class Agent {
       log.info('listening', { port });
     }
 
+    // TODO(nf): move this, and all other listeners to agent CLI?
+    if (this._options.http) {
+      const httpServer = await createHttpServer(this._clientServices, this._client, this._options.http);
+      this._services.push(httpServer);
+    }
+
     // Open plugins.
     // TODO(burdon): Spawn new process for each plugin?
     for (const plugin of this._plugins) {
@@ -173,6 +184,8 @@ export class Agent {
   }
 }
 
+// create dedicated WS server for internal, unauthenticated access to ClientServices.
+// TODO: default listening on localhost to avoid accidental exposure.
 const createServer = (clientServices: ClientServicesProvider, options: WebSocket.ServerOptions) => {
   return new WebsocketRpcServer<{}, ClientServices>({
     ...options,
@@ -193,4 +206,72 @@ const createServer = (clientServices: ClientServicesProvider, options: WebSocket
       };
     },
   });
+};
+
+export type agentHttpServerOptions = {
+  port: number;
+  authenticationToken: string;
+  wsAuthenticationToken: string;
+};
+
+// create multipurpose HTTP server to expose agent functionality to external clients.
+const createHttpServer = async (
+  clientServices: ClientServicesProvider,
+  client: Client,
+  options: agentHttpServerOptions,
+) => {
+  const server = http.createServer();
+  const socketServer = createServer(clientServices, { noServer: true });
+  await socketServer.open();
+
+  server.listen(options.port);
+
+  server.on('upgrade', (request, socket: Socket, head) => {
+    log('upgrade', {
+      path: request.url,
+      authorization: request.headers.authorization,
+      wsprotoheaders: request.headers['sec-websocket-protocol'],
+    });
+
+    authenticateRequestWithTokenAuth(request, socket, head, options.wsAuthenticationToken, (request, socket, head) =>
+      socketServer.handleUpgrade(request, socket, head),
+    );
+  });
+  server.on('error', (err) => {
+    log('HTTP server error', { err });
+  });
+  server.on('request', (request, response) => {
+    if (request.headers.authorization !== options.authenticationToken) {
+      log('unauthorized', { authorization: request.headers.authorization, foo: options.authenticationToken });
+      response.writeHead(401);
+      response.end('Unauthorized');
+      return;
+    }
+
+    const reqUrl = request.url;
+    // TODO(nf): '/.well-known' URL?
+    if (reqUrl === '/status') {
+      handleStatus(request, response, client);
+    } else {
+      response.writeHead(404);
+      response.end('Not found');
+    }
+  });
+  server.on('listening', () => {
+    log.info('HTTP server listening', { port: options.port });
+  });
+
+  return socketServer;
+};
+
+// TODO: extend and better assess health?
+const handleStatus = (request: http.IncomingMessage, response: http.ServerResponse, client: Client) => {
+  const status = client.status.get();
+  if (status === SystemStatus.ACTIVE) {
+    response.writeHead(200);
+    response.end('SystemStatus is active');
+  } else {
+    response.writeHead(503);
+    response.end('SystemStatus is not active');
+  }
 };

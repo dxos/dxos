@@ -35,6 +35,7 @@ export type IFrameClientServicesHostOptions = {
 @trace.resource()
 export class IFrameClientServicesHost implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
+  readonly fatal = new Event<Error>();
   /**
    * @internal
    */

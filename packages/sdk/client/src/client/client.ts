@@ -341,6 +341,15 @@ export class Client {
     const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
+    const trigger = new Trigger<Error | undefined>();
+
+    this._services.fatal.on((error) => {
+      log.error('fatal', { error });
+      // TODO: Unclear how consumers would like to handle fatal errors.
+      trigger.wake(error);
+      throw error;
+    });
+
     await this._services.open(this._ctx);
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -374,7 +383,6 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    const trigger = new Trigger<Error | undefined>();
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(

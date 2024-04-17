@@ -38,6 +38,7 @@ export type WorkerClientServicesParams = {
 @trace.resource()
 export class WorkerClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
+  readonly fatal = new Event<Error>();
   readonly joinedSpace = new Event<PublicKey>();
 
   @trace.info()
