@@ -9,7 +9,7 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type MyLevel } from '@dxos/echo-pipeline';
+import { type LevelDb } from '@dxos/echo-pipeline';
 import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -53,7 +53,7 @@ export class TestBuilder {
 
   public config: Config;
   public storage?: Storage;
-  public level?: MyLevel;
+  public level?: LevelDb;
 
   _transport: TransportKind;
 

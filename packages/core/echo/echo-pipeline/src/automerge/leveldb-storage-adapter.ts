@@ -8,14 +8,14 @@ import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos
 import { LifecycleState, Resource } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { type MyLevelBatch, type MySublevel } from './types';
+import { type BatchLevel, type SubLevelDB } from './types';
 
 export type LevelDBStorageAdapterParams = {
-  db: MySublevel;
+  db: SubLevelDB;
   callbacks?: StorageCallbacks;
 };
 
-export type BeforeSaveParams = { path: StorageKey; batch: MyLevelBatch };
+export type BeforeSaveParams = { path: StorageKey; batch: BatchLevel };
 
 export type StorageCallbacks = {
   beforeSave?: (params: BeforeSaveParams) => MaybePromise<void>;

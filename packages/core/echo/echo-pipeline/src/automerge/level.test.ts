@@ -8,7 +8,7 @@ import { Level } from 'level';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { type MySublevel } from './types';
+import { type SubLevelDB } from './types';
 import { createTestLevel } from '../testing';
 
 describe('Level', () => {
@@ -46,8 +46,8 @@ describe('Level', () => {
     const level = createTestLevel();
     await openAndClose(level);
 
-    const first: MySublevel = level.sublevel('first');
-    const second: MySublevel = level.sublevel('second');
+    const first: SubLevelDB = level.sublevel('first');
+    const second: SubLevelDB = level.sublevel('second');
 
     const batch = first.batch();
 

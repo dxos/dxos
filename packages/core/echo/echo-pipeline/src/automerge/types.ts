@@ -81,6 +81,6 @@ export type ObjectSystem = {
   type?: EncodedReferenceObject;
 };
 
-export type MyLevel = Level<string, string>;
-export type MySublevel = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
-export type MyLevelBatch = AbstractChainedBatch<any, string, string>;
+export type LevelDB = Level<string, string>;
+export type SubLevelDB = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
+export type BatchLevel = AbstractChainedBatch<any, string, string>;

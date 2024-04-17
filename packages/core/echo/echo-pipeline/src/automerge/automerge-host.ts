@@ -8,7 +8,6 @@ import {
   type PeerId,
   type DocumentId,
   type StorageKey,
-  type DocHandleChangePayload,
   type StorageAdapterInterface,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
@@ -31,17 +30,17 @@ import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type SpaceDoc, type MyLevelBatch, type MySublevel } from './types';
+import { type SpaceDoc, type BatchLevel, type SubLevelDB } from './types';
 
 export type { DocumentId };
 
 export interface MetadataMethods {
-  markDirty(idToLastHash: Map<string, string>, batch: MyLevelBatch): Promise<void>;
+  markDirty(idToLastHash: Map<string, string>, batch: BatchLevel): Promise<void>;
   afterMarkDirty(): Promise<void>;
 }
 
 export type AutomergeHostParams = {
-  db: MySublevel;
+  db: SubLevelDB;
   /**
    * For migration purposes.
    */
@@ -53,7 +52,7 @@ export type AutomergeHostParams = {
 export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
-  private readonly _db: MySublevel;
+  private readonly _db: SubLevelDB;
   private readonly _metadata?: MetadataMethods;
 
   private _repo!: Repo;
@@ -258,24 +257,6 @@ export class AutomergeHost {
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }
-
-// TODO(mykola): Reconcile with `getInlineAndLinkChanges` in AutomergeDB.
-const getInlineChanges = (event: DocHandleChangePayload<any>) => {
-  const inlineChangedObjectIds = new Set<string>();
-  for (const { path } of event.patches) {
-    if (path.length < 2) {
-      continue;
-    }
-    switch (path[0]) {
-      case 'objects':
-        if (path.length >= 2) {
-          inlineChangedObjectIds.add(path[1]);
-        }
-        break;
-    }
-  }
-  return [...inlineChangedObjectIds];
-};
 
 export const getSpaceKeyFromDoc = (doc: any): string | null => {
   // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey

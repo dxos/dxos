@@ -9,7 +9,7 @@ import { failUndefined } from '@dxos/debug';
 import {
   AutomergeHost,
   MetadataStore,
-  type MyLevel,
+  type LevelDb,
   SnapshotStore,
   SpaceManager,
   valueEncoding,
@@ -93,7 +93,7 @@ export type TestPeerOpts = {
 
 export type TestPeerProps = {
   storage?: Storage;
-  level?: MyLevel;
+  level?: LevelDb;
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
