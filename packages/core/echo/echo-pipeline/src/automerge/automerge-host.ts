@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type PeerId, type DocumentId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
+import { Repo, type DocumentId, type PeerId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
@@ -186,7 +187,13 @@ export class AutomergeHost {
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
-    await this._repo.flush(documentIds as DocumentId[]);
+
+    // TODO(dmaretskyi): Workaround until the flush issue gets resolved.
+    try {
+      await asyncTimeout(this._repo.flush(documentIds as DocumentId[]), 500);
+    } catch (err) {
+      log.warn('flush error', { documentIds, err });
+    }
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {

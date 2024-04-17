@@ -292,8 +292,6 @@ export class Client {
       mountDevtoolsHooks({ client: this });
     }
 
-    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
   }
@@ -390,6 +388,9 @@ export class Client {
 
       await this._shellClientProxy.open();
     }
+
+    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+
     log('opened');
   }
 
