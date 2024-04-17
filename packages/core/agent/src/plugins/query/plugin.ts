@@ -7,7 +7,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { type EchoObject, Filter, base } from '@dxos/echo-schema';
+import { Filter, type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
@@ -71,9 +71,8 @@ export class QueryPlugin extends Plugin {
   }
 }
 
-const createSnapshot = (object: EchoObject): EchoObjectProto => {
+const createSnapshot = (item: EchoReactiveObject<any>): EchoObjectProto => {
   // const item = getEchoObjectItem(object[base] as any)!;
-  const item = object[base] as any;
   let model: WithTypeUrl<Any> | undefined;
   // if (!item?.modelMeta?.snapshotCodec) {
   //   log.warn('No snapshot codec for model.');
@@ -82,7 +81,7 @@ const createSnapshot = (object: EchoObject): EchoObjectProto => {
   // }
 
   return {
-    objectId: object.id,
+    objectId: item.id,
     genesis: {
       modelType: item.modelType,
     },

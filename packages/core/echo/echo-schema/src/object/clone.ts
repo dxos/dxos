@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type EchoObject, type OpaqueEchoObject } from './types';
+import { type EchoObject } from './types';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { type EchoReactiveObject, isEchoReactiveObject } from '../effect/reactive';
 
@@ -21,7 +21,7 @@ export type CloneOptions = {
   additional?: (EchoObject | undefined)[];
 };
 
-const requireAutomergeCore = (obj: OpaqueEchoObject) => {
+const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
   const core = getAutomergeObjectCore(obj);
   invariant(core, 'object is not an EchoObject');
   return core;
@@ -41,9 +41,9 @@ export const clone = <T extends {}>(
 
   const core = requireAutomergeCore(obj);
 
-  const clone = cloneInner(core, retainId ? obj.id : PublicKey.random().toHex()) as T;
+  const clone = cloneInner(core, retainId ? obj.id : PublicKey.random().toHex());
 
-  const clones: OpaqueEchoObject[] = [clone];
+  const clones: EchoReactiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
       const innerCore = requireAutomergeCore(innerObj);
@@ -70,7 +70,7 @@ export const clone = <T extends {}>(
   return clone;
 };
 
-const cloneInner = (core: AutomergeObjectCore, id: string): OpaqueEchoObject => {
+const cloneInner = (core: AutomergeObjectCore, id: string): EchoReactiveObject<any> => {
   const coreClone = new AutomergeObjectCore();
   coreClone.id = id;
   const initEchoHandler = requireEchoHandlerInitializer();
