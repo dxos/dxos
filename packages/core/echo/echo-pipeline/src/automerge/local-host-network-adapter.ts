@@ -6,7 +6,6 @@ import { Trigger } from '@dxos/async';
 import { NetworkAdapter, type Message, type PeerId, cbor } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
 
 type ClientSyncState = {
@@ -32,7 +31,8 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
     });
   }
 
-  private _connected = new Trigger();
+  private readonly _connected = new Trigger();
+  private _isConnected: boolean = false;
 
   /**
    * Called by `Repo` to connect to the network.
@@ -41,6 +41,7 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
    */
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
+    this._isConnected = true;
     this._connected.wake();
     // No-op. Client always connects first
   }
@@ -59,6 +60,10 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
   override disconnect(): void {
     // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
     // No-op
+  }
+
+  async whenConnected(): Promise<void> {
+    await this._connected.wait({ timeout: 10_000 });
   }
 
   syncRepo({ id, syncMessage }: SyncRepoRequest): Stream<SyncRepoResponse> {
@@ -82,26 +87,22 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
         },
       });
 
-      this._connected
-        .wait({ timeout: 1_000 })
-        .then(() => {
-          this.emit('peer-candidate', {
-            peerMetadata: {},
-            peerId,
-          });
-        })
-        .catch((err) => log.catch(err));
+      invariant(this._isConnected);
+      this.emit('peer-candidate', {
+        peerMetadata: {},
+        peerId,
+      });
     });
   }
 
   async sendSyncMessage({ id, syncMessage }: SyncRepoRequest): Promise<void> {
-    await this._connected.wait({ timeout: 1_000 });
+    invariant(this._isConnected);
     const message = cbor.decode(syncMessage!) as Message;
     this.emit('message', message);
   }
 
   async getHostInfo(): Promise<HostInfo> {
-    await this._connected.wait({ timeout: 1_000 });
+    invariant(this._isConnected);
     invariant(this.peerId, 'Peer id not set.');
     return {
       peerId: this.peerId,
