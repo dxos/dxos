@@ -28,6 +28,16 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
+    // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
+    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    if (!(client as any)._graph.types.isEffectSchemaRegistered(TableType)) {
+      (client as any)._graph.types.registerEffectSchema(TableType);
+    }
+
+    // We need a table to reference
+    // TODO(zan): Workout how to get this to not double add in debug.
+    space.db.add(create(TableType, { title: 'Other table', props: [], schema: generator.schemas[3] }));
+
     const table = space.db.add(create(TableType, { title: '', props: [] }));
     setTable(table);
   }, []);
