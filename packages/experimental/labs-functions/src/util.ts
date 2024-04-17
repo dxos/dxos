@@ -17,6 +17,7 @@ import {
   DocumentType,
   SectionType,
   ContactType,
+  TextV0Type,
 } from '@braneframe/types';
 import { GameType } from '@dxos/chess-app/types';
 import { type Space } from '@dxos/client/echo';
@@ -77,6 +78,7 @@ export const registerTypes = (space: Space | undefined) => {
     EventType,
     FileType,
     ContactType,
+    TextV0Type,
   ];
   for (const type of schemaList) {
     if (!registry.isSchemaRegistered(type)) {
