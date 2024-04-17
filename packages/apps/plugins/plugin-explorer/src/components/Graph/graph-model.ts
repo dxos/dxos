@@ -3,7 +3,7 @@
 //
 
 import { FolderType } from '@braneframe/types';
-import { getSchema, type S, typeOf } from '@dxos/echo-schema';
+import { getSchema, type S, getType } from '@dxos/echo-schema';
 import { AST, DynamicEchoSchema, StoredEchoSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
@@ -67,7 +67,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
         });
         this._graph.links = objects.reduce<GraphLink[]>((links, object) => {
           const objectSchema = getSchema(object);
-          const typename = typeOf(object)?.itemId;
+          const typename = getType(object)?.itemId;
           if (objectSchema == null || typename == null) {
             log.info('no schema for object:', { id: object.id.slice(0, 8) });
             return links;

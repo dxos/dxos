@@ -112,7 +112,7 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
   }
 }
 
-export const isReactiveProxy = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
+export const isReactiveObject = (value: unknown): value is ReactiveObject<any> => !!(value as any)?.[symbolIsProxy];
 
 export const getProxyHandlerSlot = <T extends object>(proxy: ReactiveObject<any>): ProxyHandlerSlot<T> => {
   const value = (proxy as any)[symbolIsProxy];

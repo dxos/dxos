@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useMemo, type FC } from 'react';
 
-import { createDocAccessor, createEchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
 import { Tooltip } from '@dxos/react-ui';
 import { automerge } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
@@ -17,7 +17,7 @@ const Story: FC<{
   content: string;
   toolbar?: boolean;
 }> = ({ content = '# Test', toolbar }) => {
-  const doc = useMemo(() => createEchoReactiveObject({ content }), [content]);
+  const doc = useMemo(() => createEchoObject({ content }), [content]);
   const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
