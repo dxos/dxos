@@ -22,6 +22,8 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { RPC_TIMEOUT } from '../common';
+
 /**
  * Create an observable from an RPC stream.
  */
@@ -96,7 +98,7 @@ export class InvitationsProxy implements Invitations {
     // TODO(nf): actually needed?
     const initialAcceptedReceived = new Trigger();
 
-    const stream = this._invitationsService.queryInvitations();
+    const stream = this._invitationsService.queryInvitations(undefined, { timeout: RPC_TIMEOUT });
     stream.subscribe(({ action, type, invitations, existing }: QueryInvitationsResponse) => {
       switch (action) {
         case QueryInvitationsResponse.Action.ADDED: {
