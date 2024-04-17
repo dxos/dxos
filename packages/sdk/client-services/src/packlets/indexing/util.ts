@@ -7,7 +7,7 @@ import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
 import { type ObjectSnapshot } from '@dxos/indexing';
-import { idCodec } from '@dxos/protocols';
+import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
 
 /**
  * Factory for `loadDocuments` iterator.
@@ -18,7 +18,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
    * @param ids
    */
   // TODO(mykola): Unload automerge handles after usage.
-  async function* loadDocuments(ids: string[]) {
+  async function* loadDocuments(ids: ObjectPointerEncoded[]) {
     for (const id of ids) {
       const { documentId, objectId } = idCodec.decode(id);
       const handle = automergeHost.repo.find(documentId as any);

@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
@@ -61,7 +62,7 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToLastHash: Map<string, string>, batch: BatchLevel) {
+  markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
     idToLastHash.forEach((lastAvailableHash, id) => {
       batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
     });

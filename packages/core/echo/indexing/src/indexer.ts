@@ -10,6 +10,7 @@ import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
@@ -28,7 +29,7 @@ export type ObjectSnapshot = {
   /**
    * Index ID.
    */
-  id: string;
+  id: ObjectPointerEncoded;
   object: Partial<ObjectStructure>;
   currentHash: string;
 };
@@ -37,7 +38,7 @@ export type IndexerParams = {
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
 
-  loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
+  loadDocuments: (ids: ObjectPointerEncoded[]) => AsyncGenerator<ObjectSnapshot[]>;
 
   getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 };
