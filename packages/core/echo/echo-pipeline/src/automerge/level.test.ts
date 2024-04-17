@@ -6,14 +6,15 @@ import { expect } from 'chai';
 import { Level } from 'level';
 
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 
+import { type SubLevelDB } from './types';
 import { createTestLevel } from '../testing';
 
 describe('Level', () => {
   test('missing keys', async () => {
     const level = createTestLevel();
-    await level.open();
+    await openAndClose(level);
 
     expect(() => level.get('missing')).to.throw;
   });
@@ -39,5 +40,25 @@ describe('Level', () => {
       await level.clear();
       expect(() => level.get(key)).to.throw;
     }
+  });
+
+  test('batch different sublevels', async () => {
+    const level = createTestLevel();
+    await openAndClose(level);
+
+    const first: SubLevelDB = level.sublevel('first');
+    const second: SubLevelDB = level.sublevel('second');
+
+    const batch = first.batch();
+
+    const key = 'key';
+    const value = 'first-level-value';
+    batch.put(key, value, { sublevel: second });
+    await batch.write();
+
+    expect(() => first.get(key)).to.throw;
+    expect(await level.sublevel('second').get(key)).to.equal(value);
+    expect(await second.get(key)).to.equal(value);
+    expect(await second.iterator().all()).to.deep.equal([[key, value]]);
   });
 });

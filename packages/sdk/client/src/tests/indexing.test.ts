@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { QueryOptions } from '../echo';
@@ -26,10 +26,9 @@ import { ContactType, TestBuilder } from '../testing';
 describe('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
-    builder.storage = createStorage({ type: StorageType.RAM });
-    afterTest(async () => {
-      await builder.destroy();
-    });
+    builder.level = createTestLevel();
+    await openAndClose(builder.level);
+
     const services = builder.createLocal();
     const client = new Client({ services });
     afterTest(() => client.destroy());
@@ -41,7 +40,7 @@ describe('Index queries', () => {
     await client.halo.createIdentity();
 
     const indexer = new Indexer({
-      indexStore: new IndexStore({ directory: builder.storage!.createDirectory('index-store') }),
+      indexStore: new IndexStore({ db: builder.level!.sublevel('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
       loadDocuments: async function* (ids: string[]) {
         for (const id of ids) {

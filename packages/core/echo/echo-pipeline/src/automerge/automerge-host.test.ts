@@ -42,6 +42,7 @@ describe('AutomergeHost', () => {
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
+    await host.repo.flush();
     expect(handle.docSync().text).toEqual('Hello world');
   });
 
@@ -52,15 +53,14 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({ db: level.sublevel('automerge') });
     await host.open();
-    afterTest(() => host.close());
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     const url = handle.url;
 
-    // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
-    await sleep(100);
+    await host.repo.flush();
+    await host.close();
 
     const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
     await host2.open();
@@ -68,6 +68,7 @@ describe('AutomergeHost', () => {
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
+    await host2.repo.flush();
   });
 
   test('basic networking', async () => {
@@ -182,7 +183,6 @@ describe('AutomergeHost', () => {
     const secondHandle = host.create();
     secondHandle.change((doc: any) => (doc.text = 'Hello world'));
     await host.find(secondHandle.url).whenReady();
-    // await sleep(100);
     allowedDocs.push(secondHandle.documentId);
 
     {

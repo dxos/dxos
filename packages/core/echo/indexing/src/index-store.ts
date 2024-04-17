@@ -4,13 +4,12 @@
 
 import isEqual from 'lodash.isequal';
 
+import { type SubLevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type File, type Directory } from '@dxos/random-access-storage';
 
 import { IndexConstructors } from './index-constructors';
 import { type Index } from './types';
-import { overrideFile } from './util';
 
 const RESERVED_SIZE = 4; // 4 bytes
 const HEADER_VERSION = 1;
@@ -21,13 +20,14 @@ type IndexHeader = {
 };
 
 export type IndexStoreParams = {
-  directory: Directory;
+  db: SubLevelDB;
 };
 
+// TODO(mykola): Delete header from storage codec.
 export class IndexStore {
-  private readonly _directory: Directory;
-  constructor({ directory }: IndexStoreParams) {
-    this._directory = directory;
+  private readonly _db: SubLevelDB;
+  constructor({ db }: IndexStoreParams) {
+    this._db = db;
   }
 
   async save(index: Index) {
@@ -38,14 +38,14 @@ export class IndexStore {
     metadata.writeInt32LE(header.length, 0);
     const data = Buffer.concat([metadata, header, serialized]);
 
-    await overrideFile({ path: index.identifier, directory: this._directory, content: data });
+    await this._db.put<string, Buffer>(index.identifier, data, encodings);
   }
 
   async load(identifier: string): Promise<Index> {
-    const file = this._directory.getOrCreateFile(identifier);
-    const { size } = await file.stat();
+    const data = await this._db.get<string, Buffer>(identifier, encodings);
+    const size = data.length;
 
-    const { header, headerSize } = await getHeader(file);
+    const { header, headerSize } = await getHeader(data);
 
     const kind = headerCodec.decode(header);
     const IndexConstructor = IndexConstructors[kind.kind];
@@ -54,13 +54,12 @@ export class IndexStore {
     const offset = RESERVED_SIZE + headerSize;
     invariant(size > offset, `Index file ${identifier} is too small`);
 
-    const serialized = (await file.read(offset, size - offset)).toString();
+    const serialized = data.subarray(offset).toString();
     return IndexConstructor.load({ serialized, indexKind: kind, identifier });
   }
 
   async remove(identifier: string) {
-    const file = this._directory.getOrCreateFile(identifier);
-    await file.destroy();
+    await this._db.del(identifier, encodings);
   }
 
   /**
@@ -68,18 +67,17 @@ export class IndexStore {
    * @returns Map of index identifiers vs their kinds.
    */
   async loadIndexKindsFromDisk(): Promise<Map<string, IndexKind>> {
-    const identifiers = await this._directory.list();
     const headers = new Map<string, IndexKind>();
 
-    await Promise.all(
-      identifiers.map(async (identifier) => {
-        const file = this._directory.getOrCreateFile(identifier);
-        const header = await getHeader(file).catch(() => {});
-        if (header) {
-          headers.set(identifier, headerCodec.decode(header.header));
-        }
-      }),
-    );
+    for await (const [identifier, data] of this._db.iterator<string, Buffer>({
+      keyEncoding: 'utf8',
+      valueEncoding: 'buffer',
+    })) {
+      const header = getHeader(data);
+      if (header) {
+        headers.set(identifier, headerCodec.decode(header.header));
+      }
+    }
 
     // Delete all indexes that are colliding with the same kind.
     {
@@ -105,6 +103,8 @@ export class IndexStore {
   }
 }
 
+const encodings = { keyEncoding: 'utf8', valueEncoding: 'buffer' };
+
 const headerCodec = {
   encode: (kind: IndexKind): IndexHeader => {
     return {
@@ -118,15 +118,13 @@ const headerCodec = {
   },
 };
 
-const getHeader = async (file: File): Promise<{ header: IndexHeader; headerSize: number }> => {
-  const { size } = await file.stat();
+const getHeader = (data: Buffer): { header: IndexHeader; headerSize: number } => {
+  invariant(data.length > RESERVED_SIZE, 'Index file is too small');
 
-  invariant(size > RESERVED_SIZE, 'Index file is too small');
+  const headerSize = fromBytesInt32(data.subarray(0, RESERVED_SIZE));
+  invariant(data.length > RESERVED_SIZE + headerSize, 'Index file is too small');
 
-  const headerSize = fromBytesInt32(await file.read(0, 4));
-  invariant(size > RESERVED_SIZE + headerSize, 'Index file is too small');
-
-  return { header: JSON.parse((await file.read(RESERVED_SIZE, headerSize)).toString()), headerSize };
+  return { header: JSON.parse(data.subarray(RESERVED_SIZE, RESERVED_SIZE + headerSize).toString()), headerSize };
 };
 
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);

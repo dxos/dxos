@@ -5,53 +5,67 @@
 import { type MixedEncoding } from 'level-transcoder';
 
 import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
+import { LifecycleState, Resource } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { type MySublevel } from './types';
+import { type BatchLevel, type SubLevelDB } from './types';
 
 export type LevelDBStorageAdapterParams = {
-  db: MySublevel;
+  db: SubLevelDB;
   callbacks?: StorageCallbacks;
 };
 
-export type StorageCallbacks = {
-  beforeSave?: (path: StorageKey) => MaybePromise<void>;
-  afterSave?: (path: StorageKey) => MaybePromise<void>;
-};
+export type BeforeSaveParams = { path: StorageKey; batch: BatchLevel };
 
-export class LevelDBStorageAdapter implements StorageAdapterInterface {
-  private _state: 'opened' | 'closed' = 'opened';
-  constructor(private readonly _params: LevelDBStorageAdapterParams) {}
+export interface StorageCallbacks {
+  beforeSave(params: BeforeSaveParams): MaybePromise<void>;
+  afterSave(path: StorageKey): MaybePromise<void>;
+}
+
+export class LevelDBStorageAdapter extends Resource implements StorageAdapterInterface {
+  constructor(private readonly _params: LevelDBStorageAdapterParams) {
+    super();
+  }
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
-    if (this._state !== 'opened') {
-      return undefined;
+    try {
+      if (this._lifecycleState !== LifecycleState.OPEN) {
+        // TODO(mykola): this should be an error.
+        return undefined;
+      }
+      return await this._params.db.get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions });
+    } catch (err: any) {
+      if (isLevelDbNotFoundError(err)) {
+        return undefined;
+      }
+      throw err;
     }
-    return this._params.db
-      .get<StorageKey, Uint8Array>(keyArray, { ...encodingOptions })
-      .catch((err) => (err.code === 'LEVEL_NOT_FOUND' ? undefined : Promise.reject(err)));
   }
 
   async save(keyArray: StorageKey, binary: Uint8Array): Promise<void> {
-    if (this._state !== 'opened') {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
       return undefined;
     }
-    await this._params.callbacks?.beforeSave?.(keyArray);
-    await this._params.db.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
+    const batch = this._params.db.batch();
+
+    await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
+    batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
       ...encodingOptions,
     });
+    await batch.write();
+
     await this._params.callbacks?.afterSave?.(keyArray);
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
-    if (this._state !== 'opened') {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
       return undefined;
     }
     await this._params.db.del<StorageKey>(keyArray, { ...encodingOptions });
   }
 
   async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
-    if (this._state !== 'opened') {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
       return [];
     }
     const result: Chunk[] = [];
@@ -69,7 +83,7 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
   }
 
   async removeRange(keyPrefix: StorageKey): Promise<void> {
-    if (this._state !== 'opened') {
+    if (this._lifecycleState !== LifecycleState.OPEN) {
       return undefined;
     }
     const batch = this._params.db.batch();
@@ -82,10 +96,6 @@ export class LevelDBStorageAdapter implements StorageAdapterInterface {
       batch.del<StorageKey>(key, { ...encodingOptions });
     }
     await batch.write();
-  }
-
-  close() {
-    this._state = 'closed';
   }
 }
 
@@ -103,3 +113,5 @@ export const encodingOptions = {
   keyEncoding: keyEncoder,
   valueEncoding: 'buffer',
 };
+
+const isLevelDbNotFoundError = (err: any): boolean => err.code === 'LEVEL_NOT_FOUND';
