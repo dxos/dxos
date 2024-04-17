@@ -184,7 +184,6 @@ export class AutomergeHost {
   // Methods for client-services.
   //
 
-  @log.method()
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
