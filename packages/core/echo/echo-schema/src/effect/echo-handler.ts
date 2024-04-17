@@ -17,7 +17,7 @@ import { StoredEchoSchema } from './dynamic/stored-schema';
 import {
   createReactiveProxy,
   getProxyHandlerSlot,
-  isReactiveProxy,
+  isReactiveObject,
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
@@ -653,13 +653,13 @@ const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
 
 // TODO(dmaretskyi): Read schema from typed in-memory objects.
 // TODO(dmaretskyi): Review whether we can expose this.
-export const createEchoReactiveObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
   const schema = getSchema(init);
   if (schema != null) {
     validateSchema(schema);
   }
 
-  if (isReactiveProxy(init)) {
+  if (isReactiveObject(init)) {
     const proxy = init as any;
 
     const slot = getProxyHandlerSlot(proxy);

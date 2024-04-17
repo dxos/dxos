@@ -8,7 +8,7 @@ import { describe, test } from '@dxos/test';
 
 import { Contact, Container, RecordType, Task, Todo } from './schema';
 import { getAutomergeObjectCore } from '../automerge';
-import { create, Expando, getMeta, getSchema, typeOf } from '../effect/reactive';
+import { create, Expando, getMeta, getSchema, getType } from '../effect/reactive';
 import { Hypergraph } from '../hypergraph';
 import { clone } from '../object';
 import { Filter } from '../query';
@@ -25,7 +25,7 @@ describe('database', () => {
     expect(task.id).to.exist;
     expect(() => getAutomergeObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Task.ast);
-    expect(typeOf(task)?.itemId).to.eq('example.test.Task');
+    expect(getType(task)?.itemId).to.eq('example.test.Task');
 
     database.add(task);
     await database.flush();
@@ -89,8 +89,8 @@ describe('database', () => {
       const { objects } = database.query(Filter.schema(Container));
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(typeOf(container.objects![0])?.itemId).to.equal(Task.typename);
-      expect(typeOf(container.objects![1])?.itemId).to.equal(Contact.typename);
+      expect(getType(container.objects![0])?.itemId).to.equal(Task.typename);
+      expect(getType(container.objects![1])?.itemId).to.equal(Contact.typename);
     }
   });
 
@@ -146,7 +146,7 @@ describe('database', () => {
     database.add(task);
 
     console.log(task.todos![0]);
-    expect(typeOf(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
+    expect(getType(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
     expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
   });
 });

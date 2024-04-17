@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { createDocAccessor, createEchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
@@ -30,7 +30,7 @@ const code = [
 const Story = () => {
   const client = useClient();
   // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
-  const object = useMemo(() => createEchoReactiveObject({ content: code }), [code]);
+  const object = useMemo(() => createEchoObject({ content: code }), [code]);
   const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
