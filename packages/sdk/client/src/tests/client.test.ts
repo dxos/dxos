@@ -183,4 +183,17 @@ describe('Client', () => {
       expect(thread1.messages[0]!.blocks[0].content?.content).to.eq(text);
     }, 1000);
   });
+
+  test('reset & create space', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.reset();
+
+    await client.halo.createIdentity();
+    await client.spaces.create();
+  });
 });
