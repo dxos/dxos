@@ -4,12 +4,7 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { next as automerge } from '@dxos/automerge/automerge';
-import {
-  Repo,
-  type DocumentId,
-  type PeerId,
-  type StorageAdapterInterface
-} from '@dxos/automerge/automerge-repo';
+import { Repo, type DocumentId, type PeerId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
