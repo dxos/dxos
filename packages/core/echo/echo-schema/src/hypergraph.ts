@@ -25,7 +25,7 @@ import {
   type QueryResult,
   type QuerySource,
 } from './query';
-import { TypeCollection } from './type-collection';
+import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
 /**
  * Manages cross-space database interactions.
@@ -34,19 +34,14 @@ export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
   // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
-  private readonly _types = new TypeCollection();
+  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<OpaqueEchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get types(): TypeCollection {
-    return this._types;
-  }
-
-  addTypes(types: TypeCollection) {
-    this._types.mergeSchema(types);
-    return this;
+  get schemaRegistry(): RuntimeSchemaRegistry {
+    return this._schemaRegistry;
   }
 
   /**

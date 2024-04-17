@@ -166,7 +166,7 @@ describe('dynamic schema', () => {
 
   const setupTest = async () => {
     const { db, graph } = await createDatabase();
-    graph.types.registerEffectSchema(ClassWithSchemaField);
+    graph.schemaRegistry.registerSchema(ClassWithSchemaField);
     return { db };
   };
 });

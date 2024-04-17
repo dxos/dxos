@@ -32,7 +32,7 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { IndexKind, type TypeCollection } from '../echo';
+import { IndexKind, type RuntimeSchemaRegistry } from '../echo';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -48,8 +48,6 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. @deprecated */
   modelFactory?: any;
-  /** Types. @deprecated Use effect schema */
-  types?: TypeCollection;
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -128,11 +126,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    if (this._options.types) {
-      this.addTypes(this._options.types);
-    }
-
-    this._graph.types.registerEffectSchema(Properties);
+    this._graph.schemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -223,18 +217,12 @@ export class Client {
     };
   }
 
-  /**
-   * @deprecated Replaced by addSchema.
-   */
-  addTypes(types: TypeCollection) {
-    this._graph.addTypes(types);
-    return this;
-  }
-
   // TODO(dmaretskyi): Expose `graph` directly?
-  // TODO(burdon): Make idempotent.
-  addSchema(...schemaList: Parameters<TypeCollection['registerEffectSchema']>) {
-    this._graph.types.registerEffectSchema(...schemaList);
+  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+    const notRegistered = schemaList.filter((s) => !this._graph.schemaRegistry.isSchemaRegistered(s));
+    if (notRegistered.length > 0) {
+      this._graph.schemaRegistry.registerSchema(...notRegistered);
+    }
     return this;
   }
 

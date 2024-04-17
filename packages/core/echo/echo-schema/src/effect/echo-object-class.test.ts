@@ -21,7 +21,7 @@ const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'FooCorp' };
 describe('EchoObject class dsl', () => {
   const setupDatabase = async () => {
     const result = await createDatabase();
-    result.graph.types.registerEffectSchema(Organization);
+    result.graph.schemaRegistry.registerSchema(Organization);
     return result;
   };
 
@@ -42,7 +42,7 @@ describe('EchoObject class dsl', () => {
 
   test('can register schema in hypergraph', async () => {
     const { graph } = await setupDatabase();
-    expect(graph.types.isEffectSchemaRegistered(Organization)).to.be.true;
+    expect(graph.schemaRegistry.isSchemaRegistered(Organization)).to.be.true;
   });
 
   test('objects can be added to the database', async () => {
@@ -73,7 +73,7 @@ describe('EchoObject class dsl', () => {
 
     test('references', async () => {
       const { db, graph } = await setupDatabase();
-      graph.types.registerEffectSchema(Person);
+      graph.schemaRegistry.registerSchema(Person);
       const org = db.add(create(Organization, { ...DEFAULT_ORG }));
       const person = db.add(create(Person, { name: 'John', worksAt: org }));
       expect(person.worksAt).to.eq(org);
@@ -81,7 +81,7 @@ describe('EchoObject class dsl', () => {
 
     test('adding nested structures to DB', async () => {
       const { db, graph } = await setupDatabase();
-      graph.types.registerEffectSchema(Person);
+      graph.schemaRegistry.registerSchema(Person);
       const person = db.add(create(Person, { name: 'John', worksAt: create(Organization, { ...DEFAULT_ORG }) }));
       expect(person.worksAt?.name).to.eq(DEFAULT_ORG.name);
       expect(person.worksAt?.id).to.be.a('string');
@@ -98,7 +98,7 @@ describe('EchoObject class dsl', () => {
 
     test('can assign undefined to partial fields', async () => {
       const { db, graph } = await setupDatabase();
-      graph.types.registerEffectSchema(Person);
+      graph.schemaRegistry.registerSchema(Person);
       const person = db.add(create(Person, { name: 'John' }));
       person.name = undefined;
       expect(person.name).to.be.undefined;

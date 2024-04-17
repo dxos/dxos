@@ -35,8 +35,8 @@ for (const schema of [undefined, TestSchema, TestSchemaClass]) {
         return obj as any;
       }
       const { db, graph } = await testSetup!;
-      if (testSchema && !graph.types.isEffectSchemaRegistered(testSchema as any)) {
-        graph.types.registerEffectSchema(testSchema as any);
+      if (testSchema && !graph.schemaRegistry.isSchemaRegistered(testSchema as any)) {
+        graph.schemaRegistry.registerSchema(testSchema as any);
       }
       return db.add(obj) as any;
     };

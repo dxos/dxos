@@ -8,15 +8,9 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { TextV0Type } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
-import {
-  Filter,
-  DocAccessor,
-  TextCompatibilitySchema,
-  create,
-  createDocAccessor,
-  type Expando,
-} from '@dxos/echo-schema';
+import { Filter, DocAccessor, create, createDocAccessor, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -133,7 +127,7 @@ export const WithEcho = {
           space.db.add(
             create({
               type: 'test',
-              content: create(TextCompatibilitySchema, { content: initialContent }),
+              content: create(TextV0Type, { content: initialContent }),
             }),
           );
         }}

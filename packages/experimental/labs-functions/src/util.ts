@@ -65,7 +65,7 @@ export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;
   }
-  const types = space.db.graph.types;
+  const registry = space.db.graph.schemaRegistry;
   const schemaList: S.Schema<any>[] = [
     MessageType,
     MailboxType,
@@ -79,8 +79,8 @@ export const registerTypes = (space: Space | undefined) => {
     ContactType,
   ];
   for (const type of schemaList) {
-    if (!types.isEffectSchemaRegistered(type)) {
-      types.registerEffectSchema(type);
+    if (!registry.isSchemaRegistered(type)) {
+      registry.registerSchema(type);
     }
   }
 };

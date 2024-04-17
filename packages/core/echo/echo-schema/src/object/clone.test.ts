@@ -9,7 +9,6 @@ import { describe, test } from '@dxos/test';
 import { clone } from './clone';
 import { create, Expando } from '../effect/reactive';
 import { createDatabase } from '../testing';
-import { TextCompatibilitySchema } from '../type-collection';
 
 describe('clone', () => {
   test('clone to a different database', async () => {
@@ -95,7 +94,7 @@ describe('clone', () => {
     const task1 = create(Expando, {
       title: 'Main task',
       tags: ['red', 'green'],
-      details: create(TextCompatibilitySchema, { content: 'Some details' }),
+      details: create(Expando, { content: 'Some details' }),
     });
     db1.add(task1);
     await db1.flush();

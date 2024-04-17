@@ -5,7 +5,8 @@
 import path from 'node:path';
 
 import { Client } from '@dxos/client';
-import { TextCompatibilitySchema, create } from '@dxos/client/echo';
+import { TextV0Type } from '@dxos/client/dist/types/src/testing';
+import { create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
@@ -56,7 +57,7 @@ const main = async () => {
     // await space.internal.createEpoch();
 
     // TODO(burdon): Add mutations.
-    space.db.add(create(TextCompatibilitySchema, { content: data.space.text.content }));
+    space.db.add(create(TextV0Type, { content: data.space.text.content }));
     await space.db.flush();
   }
 

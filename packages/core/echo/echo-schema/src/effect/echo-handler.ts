@@ -435,7 +435,7 @@ export class EchoReactiveHandlerImpl extends EchoReactiveHandler implements Reac
     if (typeReference == null) {
       return undefined;
     }
-    const staticSchema = target[symbolInternals].core.database.graph.types.getEffectSchema(typeReference.itemId);
+    const staticSchema = target[symbolInternals].core.database.graph.schemaRegistry.getSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
     }
