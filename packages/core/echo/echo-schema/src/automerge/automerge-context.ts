@@ -20,6 +20,8 @@ import { mapValues } from '@dxos/util';
 
 exposeModule('@automerge/automerge', automerge);
 
+const RPC_TIMEOUT = 20_000;
+
 /**
  * Shared context for all spaces in the client.
  * Hosts the automerege repo.
@@ -67,7 +69,7 @@ export class AutomergeContext {
    *       so this method sends a RPC call to the AutomergeHost.
    */
   async flush(request: FlushRequest): Promise<void> {
-    await this._dataService?.flush(request);
+    await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   @trace.info({ depth: null })
@@ -144,7 +146,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       {
         id: peerId,
       },
-      { timeout: 20_000 },
+      { timeout: RPC_TIMEOUT },
     ); // TODO(dmaretskyi): Set global timeout instead.
     this._stream.subscribe(
       (msg) => {
@@ -165,7 +167,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
     );
 
     this._dataService
-      .getHostInfo(undefined, { timeout: 20_000 }) // TODO(dmaretskyi): Set global timeout instead.
+      .getHostInfo(undefined, { timeout: RPC_TIMEOUT }) // TODO(dmaretskyi): Set global timeout instead.
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
         this.emit('peer-candidate', {
@@ -186,7 +188,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
           id: this.peerId,
           syncMessage: cbor.encode(message),
         },
-        { timeout: 20_000 }, // TODO(dmaretskyi): Set global timeout instead.
+        { timeout: RPC_TIMEOUT }, // TODO(dmaretskyi): Set global timeout instead.
       )
       .catch((err) => {
         log.catch(err);
