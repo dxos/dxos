@@ -29,7 +29,7 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    const graph = client._graph as any as Hypergraph;
+    const graph = (client as any)._graph as Hypergraph;
 
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.

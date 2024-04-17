@@ -28,7 +28,7 @@ const Story = () => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    const graph = client._graph as any as Hypergraph;
+    const graph = (client as any)._graph as Hypergraph;
 
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
