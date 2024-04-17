@@ -187,6 +187,8 @@ export class AutomergeHost {
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+
+    // TODO(dmaretskyi): Workaround until the flush issue gets resolved.
     try {
       await asyncTimeout(this._repo.flush(documentIds as DocumentId[]), 500);
     } catch (err) {
