@@ -23,7 +23,7 @@ import {
   isDeleted,
   Expando,
   type EchoReactiveObject,
-  isEchoReactiveObject,
+  isEchoObject,
   getSchema,
 } from './reactive';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from './testing/schema';
@@ -83,9 +83,9 @@ for (const schema of [undefined, TypedObject, TestSchemaClass]) {
       expect(obj).to.deep.eq({ id: obj.id });
     });
 
-    test('isEchoReactiveObject', () => {
+    test('isEchoObject', () => {
       const obj = createObject({ string: 'bar' });
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
     });
   });
 }
@@ -145,7 +145,7 @@ describe('Reactive Object with ECHO database', () => {
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
@@ -176,7 +176,7 @@ describe('Reactive Object with ECHO database', () => {
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
-      expect(isEchoReactiveObject(obj)).to.be.true;
+      expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 

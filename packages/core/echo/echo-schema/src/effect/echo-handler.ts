@@ -17,7 +17,7 @@ import { StoredEchoSchema } from './dynamic/stored-schema';
 import {
   createReactiveProxy,
   getProxyHandlerSlot,
-  isReactiveProxy,
+  isReactiveObject,
   symbolIsProxy,
   type ReactiveHandler,
 } from './proxy';
@@ -659,7 +659,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     validateSchema(schema);
   }
 
-  if (isReactiveProxy(init)) {
+  if (isReactiveObject(init)) {
     const proxy = init as any;
 
     const slot = getProxyHandlerSlot(proxy);

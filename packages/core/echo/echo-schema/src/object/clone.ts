@@ -7,7 +7,7 @@ import { PublicKey } from '@dxos/keys';
 
 import { type EchoObject } from './types';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { type EchoReactiveObject, isEchoReactiveObject } from '../effect/reactive';
+import { type EchoReactiveObject, isEchoObject } from '../effect/reactive';
 
 export type CloneOptions = {
   /**
@@ -54,7 +54,7 @@ export const clone = <T extends {}>(
   // Update links.
   // Ensures references work before the object is bound.
   for (const clone of clones) {
-    if (!isEchoReactiveObject(clone)) {
+    if (!isEchoObject(clone)) {
       continue;
     }
 

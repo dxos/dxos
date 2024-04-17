@@ -23,7 +23,7 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isEchoReactiveObject, isReactiveProxy } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isEchoObject, isReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -286,14 +286,14 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return <PopoverRenameSpace space={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                isEchoReactiveObject(data.subject)
+                isReactiveObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
                 data.subject &&
                 typeof data.subject === 'object' &&
-                isReactiveProxy((data.subject as Record<string, any>)?.object)
+                isReactiveObject((data.subject as Record<string, any>)?.object)
               ) {
                 return (
                   <PopoverRemoveObject
@@ -305,7 +305,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
             case 'presence--glyph': {
-              return isReactiveProxy(data.object) ? (
+              return isReactiveObject(data.object) ? (
                 <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
               ) : (
                 <SmallPresence count={0} />
@@ -313,13 +313,13 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
             case 'navbar-start': {
               const space =
-                isGraphNode(data.activeNode) && isEchoReactiveObject(data.activeNode.data)
+                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
                   ? getSpace(data.activeNode.data)
                   : undefined;
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
             case 'navbar-end': {
-              if (!isEchoReactiveObject(data.object)) {
+              if (!isEchoObject(data.object)) {
                 return null;
               }
 
@@ -625,7 +625,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              if (!isReactiveProxy(object)) {
+              if (!isReactiveObject(object)) {
                 return;
               }
 
@@ -650,7 +650,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (isReactiveProxy(object) && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -676,7 +676,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.RENAME_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (isReactiveProxy(object) && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -698,7 +698,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
-              if (!isEchoReactiveObject(originalObject)) {
+              if (!isEchoObject(originalObject)) {
                 return;
               }
 

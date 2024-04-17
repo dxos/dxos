@@ -10,7 +10,7 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
 import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
-import { type EchoReactiveObject, getSchema, isEchoReactiveObject, type ReactiveObject } from './effect/reactive';
+import { type EchoReactiveObject, getSchema, isEchoObject, type ReactiveObject } from './effect/reactive';
 import { type Hypergraph } from './hypergraph';
 import { type EchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
@@ -104,7 +104,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    if (isEchoReactiveObject(obj)) {
+    if (isEchoObject(obj)) {
       this._automerge.add(obj);
       return obj as any;
     } else {
@@ -121,7 +121,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
-    invariant(isEchoReactiveObject(obj));
+    invariant(isEchoObject(obj));
     return this._automerge.remove(obj);
   }
 

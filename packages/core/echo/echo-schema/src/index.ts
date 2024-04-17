@@ -19,7 +19,7 @@ export * from './effect/dynamic/stored-schema';
 export { createEchoObject } from './effect/echo-handler';
 export * from './effect/echo-object-class';
 export * from './effect/json-schema';
-export { isReactiveProxy } from './effect/proxy';
+export { isReactiveObject } from './effect/proxy';
 export * from './effect/reactive';
 export { SchemaValidator } from './effect/schema-validator';
 export * from './text';

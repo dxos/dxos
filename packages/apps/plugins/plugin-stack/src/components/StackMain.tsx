@@ -16,7 +16,7 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, Filter, isReactiveProxy, getType } from '@dxos/echo-schema';
+import { create, Filter, isReactiveObject, getType } from '@dxos/echo-schema';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
@@ -64,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveProxy(data) || data instanceof StackType) {
+    if (!isReactiveObject(data) || data instanceof StackType) {
       return 'reject';
     }
 
