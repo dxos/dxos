@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import { type TableType } from '@braneframe/types';
 import { type DynamicEchoSchema } from '@dxos/echo-schema';
@@ -21,9 +21,13 @@ export type TableSettingsProps = {
 
 export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSettingsProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
-  const handleValueChange = (id: string) => {
-    table.schema = schemas.find((schema) => schema.id === id) as any; // TODO(burdon): Allow set to undefined.
-  };
+
+  const handleValueChange = useCallback(
+    (id: string) => {
+      table.schema = schemas.find((schema) => schema.id === id) as any; // TODO(burdon): Allow set to undefined.
+    },
+    [table, schemas],
+  );
 
   return (
     <SettingsDialog title={t('settings title')} open={open} onClose={onClose}>
