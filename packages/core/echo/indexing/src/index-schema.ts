@@ -10,6 +10,7 @@ import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
 
 import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
 
@@ -27,6 +28,7 @@ type OramaSchemaType = orama.Orama<
   orama.IDocumentsStore<orama.components.documentsStore.DocumentsStore>
 >;
 
+@trace.resource()
 @staticImplements<IndexStaticProps>()
 export class IndexSchema extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
@@ -51,6 +53,7 @@ export class IndexSchema extends Resource implements Index {
     return this._identifier;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async update(id: string, object: Partial<ObjectStructure>) {
     invariant(this._orama, 'Index is not initialized');
     const entry = await orama.getByID(this._orama, id);
@@ -67,6 +70,7 @@ export class IndexSchema extends Resource implements Index {
   }
 
   // TODO(mykola): Fix Filter type with new Reactive API.
+  @trace.span({ showInBrowserTimeline: true })
   async find(filter: Filter) {
     invariant(this._orama, 'Index is not initialized');
     let results: orama.Results<Partial<ObjectStructure>>;
@@ -88,11 +92,13 @@ export class IndexSchema extends Resource implements Index {
     return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async serialize(): Promise<string> {
     invariant(this._orama, 'Index is not initialized');
     return JSON.stringify(await orama.save(this._orama), null, 2);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
     const deserialized = JSON.parse(serialized);
 
