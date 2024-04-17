@@ -34,6 +34,11 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
 
   private _connected = new Trigger();
 
+  /**
+   * Called by `Repo` to connect to the network.
+   * 
+   * @param peerId Our peer Id.
+   */
   override connect(peerId: PeerId): void {
     this.peerId = peerId;
     this._connected.wake();
