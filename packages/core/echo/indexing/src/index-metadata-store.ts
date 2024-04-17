@@ -68,6 +68,9 @@ export class IndexMetadataStore {
     });
   }
 
+  /**
+   * Called after leveldb batch commit.
+   */
   async afterMarkDirty() {
     this.dirty.emit();
   }
