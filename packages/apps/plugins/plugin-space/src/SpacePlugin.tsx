@@ -313,7 +313,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
             case 'navbar-start': {
               const space =
-                isGraphNode(data.activeNode) && isReactiveProxy(data.activeNode.data)
+                isGraphNode(data.activeNode) && isEchoReactiveObject(data.activeNode.data)
                   ? getSpace(data.activeNode.data)
                   : undefined;
               return space ? <PersistenceStatus db={space.db} /> : null;

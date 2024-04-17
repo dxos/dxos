@@ -284,7 +284,7 @@ export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
 export const isDeleted = <T extends {}>(obj: T): boolean => {
   const proxyHandlerSlot = getProxyHandlerSlot(obj);
   if (proxyHandlerSlot.handler instanceof EchoReactiveHandler) {
-    return getAutomergeObjectCore(obj).isDeleted();
+    return getAutomergeObjectCore(obj as EchoReactiveObject<any>).isDeleted();
   } else {
     return false;
   }

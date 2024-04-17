@@ -3,7 +3,6 @@
 //
 
 import type { EchoDatabase } from '../database';
-import { type ReactiveObject } from '../effect/reactive';
 
 // TODO(burdon): Don't export symbols outside of package?
 
@@ -25,13 +24,6 @@ export const db = Symbol.for('dxos.echo.db');
 export const subscribe = Symbol.for('dxos.echo-object.subscribe');
 
 /**
- * Only needed while we're transitioning from TypedObject to ReactiveObject APIs.
- * To be removed afterwards.
- */
-// TODO(dmaretskyi): REMOVE.
-export type OpaqueEchoObject = EchoObject | ReactiveObject<any>;
-
-/**
  * Shared interface of all echo objects.
  * May be behind a proxy for key-value documents.
  */
@@ -48,7 +40,7 @@ export interface EchoObject {
    * Returns the underlying object.
    * Same as `this` for non-proxied objects.
    */
-  [base]: OpaqueEchoObject;
+  [base]: EchoObject;
 
   /**
    * The database this object belongs to.
