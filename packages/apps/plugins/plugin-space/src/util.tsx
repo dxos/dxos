@@ -23,7 +23,7 @@ import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNode
 import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { Filter, type OpaqueEchoObject, type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
+import { Filter, type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
@@ -314,7 +314,7 @@ export const updateGraphWithSpace = ({
 
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj: OpaqueEchoObject) => {
+  const query = space.db.query((obj: EchoReactiveObject<any>) => {
     if (obj instanceof TextV0Type) {
       return false;
     }

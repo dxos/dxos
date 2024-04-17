@@ -15,7 +15,7 @@ import { type AutomergeObjectCore } from '../automerge';
 import { DynamicEchoSchema } from '../effect/dynamic/dynamic-schema';
 import { getSchemaTypeRefOrThrow } from '../effect/echo-handler';
 import { getSchema, type EchoReactiveObject } from '../effect/reactive';
-import { getReferenceWithSpaceKey, type EchoObject, type OpaqueEchoObject } from '../object';
+import { getReferenceWithSpaceKey, type EchoObject } from '../object';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
@@ -25,17 +25,13 @@ export const hasType =
 // TODO(burdon): Operators (EQ, NE, GT, LT, IN, etc.)
 export type PropertyFilter = Record<string, any>;
 
-export type OperatorFilter<T extends OpaqueEchoObject> = (object: T) => boolean;
+export type OperatorFilter<T extends {} = any> = (object: T) => boolean;
 
-export type FilterSource<T extends OpaqueEchoObject = EchoObject> =
-  | PropertyFilter
-  | OperatorFilter<T>
-  | Filter<T>
-  | string;
+export type FilterSource<T extends {} = any> = PropertyFilter | OperatorFilter<T> | Filter<T> | string;
 
 // TODO(burdon): Remove class.
 // TODO(burdon): Disambiguate if multiple are defined (i.e., AND/OR).
-export type FilterParams<T extends OpaqueEchoObject> = {
+export type FilterParams<T extends {} = any> = {
   type?: Reference;
   properties?: Record<string, any>;
   text?: string;
@@ -45,8 +41,8 @@ export type FilterParams<T extends OpaqueEchoObject> = {
   or?: Filter[];
 };
 
-export class Filter<T extends OpaqueEchoObject = EchoObject> {
-  static from<T extends EchoReactiveObject<{}>>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
+export class Filter<T extends {} = any> {
+  static from<T extends {}>(source?: FilterSource<T>, options?: QueryOptions): Filter<T> {
     if (source === undefined || source === null) {
       return new Filter({}, options);
     } else if (source instanceof Filter) {
@@ -84,12 +80,12 @@ export class Filter<T extends OpaqueEchoObject = EchoObject> {
     }
   }
 
-  static schema<T extends OpaqueEchoObject>(
+  static schema<T extends {} = any>(
     schema: S.Schema<T>,
     filter?: Record<string, any> | OperatorFilter<T>,
-  ): Filter<EchoReactiveObject<Mutable<T>>>;
+  ): Filter<Mutable<T>>;
 
-  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter<any>): Filter<OpaqueEchoObject> {
+  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
     const typeReference = S.isSchema(schema) ? getSchemaTypeRefOrThrow(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);
