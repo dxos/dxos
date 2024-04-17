@@ -10,7 +10,7 @@ export type ObjectPointerDecoded = {
 export type ObjectPointerEncoded = string;
 
 export const idCodec = {
-  encode: ({ documentId, objectId }: ObjectPointerDecoded) => `${documentId}|${objectId}`,
+  encode: ({ documentId, objectId }: ObjectPointerDecoded): ObjectPointerEncoded => `${documentId}|${objectId}`,
   decode: (id: ObjectPointerEncoded): ObjectPointerDecoded => {
     const [documentId, objectId] = id.split('|');
     return { documentId, objectId };

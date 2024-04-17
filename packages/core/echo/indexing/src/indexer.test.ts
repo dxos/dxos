@@ -55,6 +55,7 @@ describe('Indexer', () => {
       const batch = level.batch();
       metadataStore.markDirty(dirtyMap, batch);
       await batch.write();
+      metadataStore.afterMarkDirty();
     }
 
     await asyncTimeout(doneIndexing, 1000);

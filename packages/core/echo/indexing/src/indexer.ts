@@ -86,7 +86,7 @@ export class Indexer {
 
   @synchronized
   setIndexConfig(config: IndexConfig) {
-    if (!this._indexConfig) {
+    if (this._indexConfig) {
       log.warn('Index config is already set');
       return;
     }
