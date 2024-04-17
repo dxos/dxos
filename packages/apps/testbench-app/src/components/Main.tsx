@@ -73,7 +73,7 @@ export const Main = () => {
     return () => clearTimeout(t);
   }, []);
 
-  const handleAdd = (n = 1) => {
+  const handleObjectCreate = (n = 1) => {
     if (!space) {
       return;
     }
@@ -116,7 +116,7 @@ export const Main = () => {
     );
   };
 
-  const handleDelete = (id: string) => {
+  const handleObjectDelete = (id: string) => {
     if (!space) {
       return;
     }
@@ -129,8 +129,10 @@ export const Main = () => {
   };
 
   const handleSpaceCreate = async () => {
-    const space = await client.spaces.create();
-    return space.key;
+    console.log('===1');
+    const space = await client.spaces.create(); // TODO(burdon): Not returning.
+    console.log('===2', space.key.truncate());
+    setSpace(space);
   };
 
   const handleSpaceClose = async (spaceKey: PublicKey) => {
@@ -163,6 +165,7 @@ export const Main = () => {
       />
 
       <SpaceToolbar
+        spaceKey={space?.key}
         onCreate={handleSpaceCreate}
         onClose={handleSpaceClose}
         onSelect={handleSpaceSelect}
@@ -174,15 +177,15 @@ export const Main = () => {
           <>
             <DataToolbar
               types={Array.from(typeMap.keys())}
-              onAdd={handleAdd}
+              onAdd={handleObjectCreate}
               onTypeChange={(type) => setType(type)}
               onFilterChange={setFilter}
               onViewChange={(view) => setView(view)}
             />
 
             {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
-            {view === 'list' && <ItemList objects={objects} onDelete={handleDelete} />}
-            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleDelete} />}
+            {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
           </>
         )}
       </div>
