@@ -8,11 +8,6 @@ import { next as A } from '@dxos/automerge/automerge';
 
 import { type DocAccessor } from './automerge';
 
-/**
- * @deprecated
- */
-export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
-
 export const toCursor = (accessor: DocAccessor, pos: number) => {
   const doc = accessor.handle.docSync();
   if (!doc) {

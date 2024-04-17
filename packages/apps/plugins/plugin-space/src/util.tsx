@@ -20,17 +20,10 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import {
-  Filter,
-  LEGACY_TEXT_TYPE,
-  type OpaqueEchoObject,
-  type EchoReactiveObject,
-  isEchoReactiveObject,
-  typeOf,
-} from '@dxos/echo-schema';
+import { Filter, type OpaqueEchoObject, type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
@@ -322,7 +315,7 @@ export const updateGraphWithSpace = ({
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
   const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
+    if (obj instanceof TextV0Type) {
       return false;
     }
 
