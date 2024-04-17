@@ -1,0 +1,26 @@
+@layer components {
+  :root {
+    --can-scroll: initial;
+  }
+
+  @keyframes detect-scroll {
+    from,
+    to {
+      --can-scroll: ;
+    }
+  }
+
+  .justify-center-if-no-scroll {
+    justify-content: start;
+  }
+
+  @supports (animation-timeline: scroll(inline self)) {
+    .justify-center-if-no-scroll {
+      animation: detect-scroll linear;
+      animation-timeline: scroll(inline self);
+      --justify-if-no-scroll: center;
+      --justify-if-can-scroll: var(--can-scroll) start;
+      justify-content: var(--justify-if-can-scroll, var(--justify-if-no-scroll));
+    }
+  }
+}
