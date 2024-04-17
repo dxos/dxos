@@ -15,7 +15,6 @@ import { isNode } from '@dxos/util';
 
 import { Client } from '../client';
 import { MessageType, TextV0Type, ThreadType, TestBuilder, performInvitation } from '../testing';
-import { Context } from '@dxos/context';
 
 chai.use(chaiAsPromised);
 

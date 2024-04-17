@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import { next as automerge, getHeads } from '@dxos/automerge/automerge';
 import {
   Repo,
@@ -33,7 +34,6 @@ import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
 import { type MySublevel } from './types';
-import { asyncTimeout } from '@dxos/async';
 
 export type { DocumentId };
 
