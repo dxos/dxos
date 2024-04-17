@@ -15,8 +15,10 @@ export type LevelDBStorageAdapterParams = {
   callbacks?: StorageCallbacks;
 };
 
+export type BeforeSaveParams = { path: StorageKey; batch: MyLevelBatch };
+
 export type StorageCallbacks = {
-  beforeSave?: (path: StorageKey, batch: MyLevelBatch) => MaybePromise<void>;
+  beforeSave?: (params: BeforeSaveParams) => MaybePromise<void>;
   afterSave?: (path: StorageKey) => MaybePromise<void>;
 };
 
@@ -46,7 +48,7 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     }
     const batch = this._params.db.batch();
 
-    await this._params.callbacks?.beforeSave?.(keyArray, batch);
+    await this._params.callbacks?.beforeSave?.({ path: keyArray, batch });
     batch.put<StorageKey, Uint8Array>(keyArray, Buffer.from(binary), {
       ...encodingOptions,
     });

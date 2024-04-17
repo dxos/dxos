@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { type MySublevel, type MetadataMethods } from '@dxos/echo-pipeline';
+import { type MySublevel, type MetadataMethods, type MyLevelBatch } from '@dxos/echo-pipeline';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
@@ -62,15 +62,21 @@ export class IndexMetadataStore implements MetadataMethods {
 
   @trace.span({ showInBrowserTimeline: true })
   @synchronized
-  async markDirty(idToLastHash: Map<string, string>) {
-    const batch = this._lastIndexed.batch();
+  async markDirty(idToLastHash: Map<string, string>, outerBatch?: MyLevelBatch) {
+    const batch = outerBatch ?? this._lastIndexed.batch();
 
     for (const [id, lastAvailableHash] of idToLastHash.entries()) {
-      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json' });
+      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
     }
 
-    await batch.write();
+    // Commit the batch if it was created here.
+    if (!outerBatch) {
+      await batch.write();
+      await this.afterMarkDirty();
+    }
+  }
 
+  async afterMarkDirty() {
     this.dirty.emit();
   }
 
