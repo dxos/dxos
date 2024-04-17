@@ -15,6 +15,7 @@ import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { type IFrameManager } from './iframe-manager';
+import { RPC_TIMEOUT } from '../common';
 
 const shellStyles = Object.entries({
   display: 'none',
@@ -50,7 +51,7 @@ export class ShellManager {
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
     this.contextUpdate.emit({ display: this._display });
-    await this._shellRpc?.rpc.ShellService.setLayout(request);
+    await this._shellRpc?.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
   }
 
   async open() {
