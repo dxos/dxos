@@ -153,6 +153,6 @@ describe('database', () => {
 
 const createDbWithTypes = async () => {
   const graph = new Hypergraph();
-  graph.schemaRegistry.registerSchema(Task, Contact, Container, Todo);
+  graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
   return createDatabase(graph);
 };

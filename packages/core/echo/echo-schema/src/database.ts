@@ -110,7 +110,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
     } else {
       const schema = getSchema(obj);
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.schemaRegistry.isSchemaRegistered(schema)) {
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.isSchemaRegistered(schema)) {
           throw createSchemaNotRegisteredError();
         }
       }

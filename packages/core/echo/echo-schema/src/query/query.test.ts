@@ -199,7 +199,7 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.schemaRegistry.registerSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
     const peer = await testBuilder.createPeer();
     const contact = peer.db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
@@ -229,7 +229,7 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.schemaRegistry.registerSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
     const contact = create(Contact, { name });

@@ -66,7 +66,7 @@ export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;
   }
-  const registry = space.db.graph.schemaRegistry;
+  const registry = space.db.graph.runtimeSchemaRegistry;
   const schemaList: S.Schema<any>[] = [
     MessageType,
     MailboxType,

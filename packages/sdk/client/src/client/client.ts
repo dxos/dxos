@@ -126,7 +126,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._graph.schemaRegistry.registerSchema(Properties);
+    this._graph.runtimeSchemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -219,9 +219,9 @@ export class Client {
 
   // TODO(dmaretskyi): Expose `graph` directly?
   addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
-    const notRegistered = schemaList.filter((s) => !this._graph.schemaRegistry.isSchemaRegistered(s));
+    const notRegistered = schemaList.filter((s) => !this._graph.runtimeSchemaRegistry.isSchemaRegistered(s));
     if (notRegistered.length > 0) {
-      this._graph.schemaRegistry.registerSchema(...notRegistered);
+      this._graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }
     return this;
   }

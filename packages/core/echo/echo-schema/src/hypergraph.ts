@@ -34,14 +34,14 @@ export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
   // TODO(burdon): Rename.
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
-  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
+  private readonly _runtimeSchemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<OpaqueEchoObject>>>(PublicKey.hash);
   private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get schemaRegistry(): RuntimeSchemaRegistry {
-    return this._schemaRegistry;
+  get runtimeSchemaRegistry(): RuntimeSchemaRegistry {
+    return this._runtimeSchemaRegistry;
   }
 
   /**
