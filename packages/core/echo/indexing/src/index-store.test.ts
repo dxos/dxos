@@ -6,19 +6,18 @@ import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-db';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Filter } from '@dxos/echo-schema';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
 
 describe('IndexStore', () => {
   test('basic', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
-    const directory = storage.createDirectory('IndexStore');
-    const store = new IndexStore({ directory });
+    const db = createTestLevel();
+    await openAndClose(db);
+    const store = new IndexStore({ db: db.sublevel('index-store') });
 
     const index = new IndexSchema();
     await index.open();
@@ -53,10 +52,9 @@ describe('IndexStore', () => {
   });
 
   test('update loaded index', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
-    const directory = storage.createDirectory('IndexStore');
-    const store = new IndexStore({ directory });
+    const db = createTestLevel();
+    await openAndClose(db);
+    const store = new IndexStore({ db: db.sublevel('index-store') });
 
     const index = new IndexSchema();
     await index.open();
