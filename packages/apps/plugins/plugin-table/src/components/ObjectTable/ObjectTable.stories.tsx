@@ -33,7 +33,7 @@ const Story = () => {
 
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
-    if (graph.runtimeSchemaRegistry.isSchemaRegistered(TableType)) {
+    if (!graph.runtimeSchemaRegistry.isSchemaRegistered(TableType)) {
       graph.runtimeSchemaRegistry.registerSchema(TableType);
     }
 
