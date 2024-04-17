@@ -34,6 +34,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
 
+import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
@@ -368,11 +369,14 @@ export class SpaceProxy implements Space {
    */
   async postMessage(channel: string, message: any) {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
-    await this._clientServices.services.SpacesService.postMessage({
-      spaceKey: this.key,
-      channel,
-      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
-    });
+    await this._clientServices.services.SpacesService.postMessage(
+      {
+        spaceKey: this.key,
+        channel,
+        message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**
@@ -380,7 +384,10 @@ export class SpaceProxy implements Space {
    */
   listen(channel: string, callback: (message: GossipMessage) => void) {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
-    const stream = this._clientServices.services.SpacesService.subscribeMessages({ spaceKey: this.key, channel });
+    const stream = this._clientServices.services.SpacesService.subscribeMessages(
+      { spaceKey: this.key, channel },
+      { timeout: RPC_TIMEOUT },
+    );
     stream.subscribe(callback);
     return () => stream.close();
   }

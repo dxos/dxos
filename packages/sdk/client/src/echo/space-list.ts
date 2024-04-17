@@ -31,6 +31,7 @@ import { trace } from '@dxos/tracing';
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
+import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
@@ -108,7 +109,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     // Subscribe to spaces and create proxies.
     const gotInitialUpdate = new Trigger();
 
-    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces();
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
@@ -237,7 +238,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
-    const space = await this._serviceProvider.services.SpacesService.createSpace();
+    const space = await this._serviceProvider.services.SpacesService.createSpace(undefined, { timeout: RPC_TIMEOUT });
 
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(space.spaceKey));
