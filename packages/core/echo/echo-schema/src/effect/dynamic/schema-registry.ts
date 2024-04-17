@@ -13,7 +13,7 @@ import { getAutomergeObjectCore } from '../../automerge';
 import { type EchoDatabase } from '../../database';
 import { Filter } from '../../query';
 import { effectToJsonSchema } from '../json-schema';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation, typeOf } from '../reactive';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '../reactive';
 import { create } from '../reactive';
 
 export class DynamicSchemaRegistry {
@@ -35,10 +35,6 @@ export class DynamicSchemaRegistry {
     }
     const typeObject = this.db.getObjectById(id);
     if (typeObject == null) {
-      return undefined;
-    }
-    if (typeOf(typeObject)?.itemId === 'dxos.schema.Schema') {
-      // TODO: compatibility with old dynamic schema
       return undefined;
     }
     if (!(typeObject instanceof StoredEchoSchema)) {

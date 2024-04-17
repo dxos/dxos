@@ -20,20 +20,11 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import {
-  EchoDatabaseImpl,
-  Filter,
-  LEGACY_TEXT_TYPE,
-  type OpaqueEchoObject,
-  type EchoReactiveObject,
-  isEchoReactiveObject,
-  typeOf,
-} from '@dxos/echo-schema';
+import { Filter, type OpaqueEchoObject, type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
@@ -43,11 +34,6 @@ import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
-
-export const isSpace = (data: unknown): data is Space =>
-  data && typeof data === 'object'
-    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabaseImpl // TODO(dmaretskyi): No doing duck typing.
-    : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
@@ -329,7 +315,7 @@ export const updateGraphWithSpace = ({
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
   const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
+    if (obj instanceof TextV0Type) {
       return false;
     }
 

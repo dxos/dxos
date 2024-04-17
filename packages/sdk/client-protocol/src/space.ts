@@ -17,11 +17,6 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
-  /**
-   * @deprecated
-   */
-  get db(): never;
-
   get data(): SpaceData;
 
   /**
@@ -73,6 +68,10 @@ export interface Space {
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get members(): MulticastObservable<SpaceMember[]>;
 
+  /**
+   * @deprecated
+   */
+  // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
   open(): Promise<void>;

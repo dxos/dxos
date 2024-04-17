@@ -15,7 +15,6 @@ import { Expando, create } from '../effect/reactive';
 import { type EchoReactiveObject } from '../effect/reactive';
 import { TestBuilder, createDatabase } from '../testing';
 import { Contact } from '../tests/schema';
-import { TextCompatibilitySchema } from '../type-collection';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
@@ -187,7 +186,7 @@ test.skip('query with model filters', async () => {
   const obj = peer.db.add(
     create(Expando, {
       title: 'title',
-      description: create(TextCompatibilitySchema, { content: 'description' }),
+      description: create(Expando, { content: 'description' }),
     }),
   );
 
@@ -200,7 +199,7 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.types.registerEffectSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
     const peer = await testBuilder.createPeer();
     const contact = peer.db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
@@ -230,7 +229,7 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.types.registerEffectSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
     const contact = create(Contact, { name });

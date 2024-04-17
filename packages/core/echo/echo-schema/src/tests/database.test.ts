@@ -52,22 +52,6 @@ describe('database', () => {
     }
   });
 
-  describe('dxos.schema.Text', () => {
-    test('text objects are auto-created on schema', async () => {
-      // const { db: database } = await createDbWithTypes();
-      //
-      // const task = create(Task, { description: create(TextCompatibilitySchema, { content: '' }) });
-      // expect(task.description instanceof TextCompatibilitySchema).to.be.true;
-      //
-      // database.add(task);
-      // await database.flush();
-      // expect(task.description instanceof TextCompatibilitySchema).to.be.true;
-      //
-      // (task.description as any).content = 'test';
-      // expect(getTextContent(task.description)).to.eq('test');
-    });
-  });
-
   test('dxos.schema.Expando', async () => {
     const { db: database } = await createDbWithTypes();
 
@@ -169,6 +153,6 @@ describe('database', () => {
 
 const createDbWithTypes = async () => {
   const graph = new Hypergraph();
-  graph.types.registerEffectSchema(Task, Contact, Container, Todo);
+  graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
   return createDatabase(graph);
 };

@@ -17,6 +17,7 @@ import {
   DocumentType,
   SectionType,
   ContactType,
+  TextV0Type,
 } from '@braneframe/types';
 import { GameType } from '@dxos/chess-app/types';
 import { type Space } from '@dxos/client/echo';
@@ -65,7 +66,7 @@ export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;
   }
-  const types = space.db.graph.types;
+  const registry = space.db.graph.runtimeSchemaRegistry;
   const schemaList: S.Schema<any>[] = [
     MessageType,
     MailboxType,
@@ -77,10 +78,11 @@ export const registerTypes = (space: Space | undefined) => {
     EventType,
     FileType,
     ContactType,
+    TextV0Type,
   ];
   for (const type of schemaList) {
-    if (!types.isEffectSchemaRegistered(type)) {
-      types.registerEffectSchema(type);
+    if (!registry.isSchemaRegistered(type)) {
+      registry.registerSchema(type);
     }
   }
 };

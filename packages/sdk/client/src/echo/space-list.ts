@@ -17,14 +17,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import {
-  AutomergeContext,
-  create,
-  type FilterSource,
-  type Hypergraph,
-  type Query,
-  type TypeCollection,
-} from '@dxos/echo-schema';
+import { AutomergeContext, create, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -178,7 +171,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
 
       this._graph.registerQuerySourceProvider(
-        new IndexQuerySourceProvider({ spaceList: this, service: this._serviceProvider.services.IndexService! }),
+        new IndexQuerySourceProvider({ echo: this, service: this._serviceProvider.services.IndexService! }),
       );
       subscription.unsubscribe();
     });
@@ -288,13 +281,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
     log('accept invitation', invitation);
     return this._invitationProxy.join(invitation);
-  }
-
-  /**
-   * @deprecated use client.addSchema
-   */
-  addSchema(schema: TypeCollection) {
-    this._graph.addTypes(schema);
   }
 
   /**

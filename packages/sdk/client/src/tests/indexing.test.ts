@@ -34,8 +34,8 @@ describe('Index queries', () => {
     const client = new Client({ services });
     afterTest(() => client.destroy());
     await client.initialize();
-    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-      client._graph.types.registerEffectSchema(ContactType);
+    if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+      client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
     }
 
     await client.halo.createIdentity();
@@ -63,7 +63,7 @@ describe('Index queries', () => {
     const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
     const indexQuerySourceProvider = new IndexQuerySourceProvider({
       service,
-      spaceList: client.spaces,
+      echo: client.spaces,
     });
     client._graph.registerQuerySourceProvider(indexQuerySourceProvider);
     const space = await client.spaces.create();
@@ -86,8 +86,8 @@ describe('Index queries', () => {
     const client = new Client({ services: builder.createLocal() });
     afterTest(() => client.destroy());
     await client.initialize();
-    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-      client._graph.types.registerEffectSchema(ContactType);
+    if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+      client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
     }
 
     await client.halo.createIdentity();
@@ -118,8 +118,8 @@ describe('Index queries', () => {
     {
       const client = new Client({ services: builder.createLocal() });
       await client.initialize();
-      if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-        client._graph.types.registerEffectSchema(ContactType);
+      if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+        client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
       }
       await client.halo.createIdentity();
 
@@ -142,8 +142,8 @@ describe('Index queries', () => {
     {
       const client = new Client({ services: builder.createLocal() });
       await client.initialize();
-      if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-        client._graph.types.registerEffectSchema(ContactType);
+      if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+        client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
       }
       afterTest(() => client.destroy());
 
@@ -165,8 +165,8 @@ describe('Index queries', () => {
     });
     const client = new Client({ services: builder.createLocal() });
     await client.initialize();
-    if (!client._graph.types.isEffectSchemaRegistered(ContactType)) {
-      client._graph.types.registerEffectSchema(ContactType);
+    if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+      client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
     }
     afterTest(() => client.destroy());
 

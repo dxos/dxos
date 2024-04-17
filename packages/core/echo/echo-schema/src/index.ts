@@ -10,7 +10,7 @@ export * from './hypergraph';
 export * from './object';
 export * from './query';
 export * from './serializer';
-export { TextCompatibilitySchema, TypeCollection } from './type-collection';
+export { RuntimeSchemaRegistry } from './runtime-schema-registry';
 export * from './util';
 
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
