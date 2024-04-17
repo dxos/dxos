@@ -32,8 +32,7 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { data } from '../object';
 import { Filter } from '../query';
-import { createDatabase, TestBuilder } from '../testing';
-import { Contact, Task } from '../tests/schema';
+import { createDatabase, TestBuilder, Contact, Task } from '../testing';
 
 registerSignalRuntime();
 

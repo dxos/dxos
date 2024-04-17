@@ -3,3 +3,4 @@
 //
 
 export * from './testing';
+export * from './schema';

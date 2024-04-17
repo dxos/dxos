@@ -10,8 +10,7 @@ import { Expando } from './effect/reactive';
 import { Filter } from './query';
 import { getSchema, create } from './schema';
 import { Serializer, type SerializedSpace } from './serializer';
-import { createDatabase } from './testing';
-import { Contact } from './tests/schema';
+import { createDatabase, Contact } from './testing';
 
 describe('Serializer', () => {
   // TODO(dmaretskyi): Test with unloaded objects.
