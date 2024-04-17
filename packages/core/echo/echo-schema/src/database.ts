@@ -111,12 +111,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.types.isEffectSchemaRegistered(schema)) {
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.isSchemaRegistered(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
 
-      const echoObj = createEchoReactiveObject(obj);
+      const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;
     }
