@@ -156,6 +156,8 @@ export class AutomergeHost {
         Object.values(this._repo.handles).forEach((handle) => handle.off('change'));
       });
     }
+
+    await this._clientNetwork.whenConnected();
   }
 
   async close() {
