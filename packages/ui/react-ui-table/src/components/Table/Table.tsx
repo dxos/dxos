@@ -14,6 +14,7 @@ import {
   type RowSelectionState,
   getGroupedRowModel,
   getExpandedRowModel,
+  type Row,
 } from '@tanstack/react-table';
 import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
@@ -177,12 +178,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
-  const { table } = useTableContext();
-
-  const centerRows = table.getCenterRows();
-  const bottomRows = table.getBottomRows();
-
-  const rows = [...centerRows, ...bottomRows];
+  const { table } = useTableContext<TData>();
 
   if (debug) {
     return (
@@ -211,7 +207,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
             <VirtualizedTableContent getScrollElement={getScrollElement} />
           )
         ) : (
-          <TableBody rows={rows} />
+          <UnvirtualizedTableContent />
         )
       ) : (
         <GroupedTableContent />
@@ -222,13 +218,32 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
   );
 };
 
+const UnvirtualizedTableContent = () => {
+  const { table } = useTableContext();
+
+  const centerRows = table.getCenterRows();
+  const pinnedRows = table.getBottomRows();
+
+  const rows = [...centerRows, ...pinnedRows];
+
+  return <TableBody rows={rows} />;
+};
+
 const VirtualizedTableContent = ({
   getScrollElement,
 }: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
   const { table } = useTableContext();
 
   const centerRows = table.getCenterRows();
-  const pinnedRows = table.getBottomRows();
+  let pinnedRows = [] as Row<unknown>[];
+
+  try {
+    // TODO(zan): Work out how to sync the row pinning with rendering
+    // This is a hack because the first call to this function after a row is deleted will throw an error
+    // because the row index is no longer in the table
+    // The pin last row hook updates the pinned row key after the row is deleted
+    pinnedRows = table.getBottomRows();
+  } catch (_) {} // Ignore error
 
   const { getTotalSize, getVirtualItems } = useVirtualizer({
     getScrollElement,
