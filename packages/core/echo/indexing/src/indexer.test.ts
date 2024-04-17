@@ -52,7 +52,9 @@ describe('Indexer', () => {
 
     {
       const dirtyMap = new Map(objects.map((_, index) => [String(index), 'hash']));
-      await metadataStore.markDirty(dirtyMap);
+      const batch = level.batch();
+      metadataStore.markDirty(dirtyMap, batch);
+      await batch.write();
     }
 
     await asyncTimeout(doneIndexing, 1000);

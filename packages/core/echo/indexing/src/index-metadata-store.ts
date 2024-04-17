@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
-import { type MySublevel, type MetadataMethods, type BatchLevel } from '@dxos/echo-pipeline';
+import { Event } from '@dxos/async';
+import { type SubLevelDB, type BatchLevel, type LevelDB } from '@dxos/echo-pipeline';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
-  db: MySublevel;
+  db: LevelDB;
 };
 
 export type DocumentMetadata = {
@@ -23,16 +23,16 @@ export type DocumentMetadata = {
 };
 
 @trace.resource()
-export class IndexMetadataStore implements MetadataMethods {
+export class IndexMetadataStore {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
-  private readonly _lastSeen: MySublevel;
-  private readonly _lastIndexed: MySublevel;
+  private readonly _lastSeen: SubLevelDB;
+  private readonly _lastIndexed: SubLevelDB;
 
   constructor({ db }: IndexMetadataStoreParams) {
-    this._lastSeen = db.sublevel('clean');
-    this._lastIndexed = db.sublevel('dirty');
+    this._lastSeen = db.sublevel('last-seen');
+    this._lastIndexed = db.sublevel('last-indexed');
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -61,19 +61,10 @@ export class IndexMetadataStore implements MetadataMethods {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  @synchronized
-  async markDirty(idToLastHash: Map<string, string>, outerBatch?: BatchLevel) {
-    const batch = outerBatch ?? this._lastIndexed.batch();
-
-    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
+  markDirty(idToLastHash: Map<string, string>, batch: BatchLevel) {
+    idToLastHash.forEach((lastAvailableHash, id) => {
       batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
-    }
-
-    // Commit the batch if it was created here.
-    if (!outerBatch) {
-      await batch.write();
-      await this.afterMarkDirty();
-    }
+    });
   }
 
   async afterMarkDirty() {
@@ -81,7 +72,7 @@ export class IndexMetadataStore implements MetadataMethods {
   }
 
   async markClean(id: string, lastIndexedHash: string) {
-    await this._lastSeen.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
+    await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
     this.clean.emit();
   }
 }
