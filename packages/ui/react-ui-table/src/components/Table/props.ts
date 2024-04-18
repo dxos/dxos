@@ -53,6 +53,7 @@ export type TableProps<
       // `table` element props
       classNames: ClassNameValue;
       pinLastRow: boolean;
+      estimatedRowHeight: number;
     } & Pick<VirtualizerOptions<ScrollElement, ItemElement>, 'getScrollElement'>
   >;
 
@@ -60,7 +61,7 @@ export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 
 export type TableContextValue<TData> = TableFlags &
   TableCurrent<TData> &
-  Pick<TableProps<TData>, 'keyAccessor'> & {
+  Pick<TableProps<TData>, 'keyAccessor' | 'estimatedRowHeight'> & {
     table: Table<TData>;
     isGrid: boolean;
   };

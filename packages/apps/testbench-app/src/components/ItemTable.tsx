@@ -42,6 +42,7 @@ export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects =
         stickyHeader
         border
         getScrollElement={() => containerRef.current}
+        estimatedRowHeight={29}
       />
     </div>
   );

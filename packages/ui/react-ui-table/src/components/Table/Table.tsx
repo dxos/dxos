@@ -232,7 +232,7 @@ const UnvirtualizedTableContent = () => {
 const VirtualizedTableContent = ({
   getScrollElement,
 }: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
-  const { table } = useTableContext();
+  const { table, estimatedRowHeight } = useTableContext();
 
   const centerRows = table.getCenterRows();
   let pinnedRows = [] as Row<unknown>[];
@@ -249,7 +249,7 @@ const VirtualizedTableContent = ({
     getScrollElement,
     count: centerRows.length,
     overscan: 8,
-    estimateSize: () => 40,
+    estimateSize: () => estimatedRowHeight ?? 40,
   });
 
   const virtualRows = getVirtualItems();
