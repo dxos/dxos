@@ -69,6 +69,7 @@ export default async (options: EsbuildExecutorOptions, context: ExecutorContext)
         // watch: options.watch,
         alias: options.alias,
         platform,
+        external: ['@dxos/test', '@dxos/test/testutils'],
         // https://esbuild.github.io/api/#log-override
         logOverride: {
           // The log transform was generating this warning.

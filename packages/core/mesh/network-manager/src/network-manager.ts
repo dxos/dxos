@@ -17,6 +17,7 @@ import { Swarm, SwarmMapper, ConnectionLimiter } from './swarm';
 import { type Topology } from './topology';
 import { type TransportFactory } from './transport';
 import { type WireProtocolProvider } from './wire-protocol';
+import { waitForDebugger } from '@dxos/test/testutils';
 /**
  * Represents a single connection to a remote peer.
  */
@@ -154,6 +155,7 @@ export class NetworkManager {
     protocolProvider: protocol,
     label,
   }: SwarmOptions): Promise<SwarmConnection> {
+    await waitForDebugger();
     invariant(PublicKey.isPublicKey(topic));
     invariant(PublicKey.isPublicKey(peerId));
     invariant(topology);

@@ -25,6 +25,11 @@ const createNodeConfig = () =>
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
       include: ['**/src/**/*.test.ts', '!**/src/**/*.browser.test.ts'],
+      poolOptions: {
+        threads: {
+          singleThread: isDebug,
+        },
+      },
     },
   });
 
