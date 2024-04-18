@@ -4,9 +4,6 @@
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export {
-  base,
-  debug,
-  subscribe,
   createSubscription,
   hasType,
   Filter,
@@ -26,7 +23,6 @@ export {
   type EchoReactiveObject,
   type ReactiveObject,
   type EchoDatabase,
-  type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
   type ObjectMeta,
   type Selection,
