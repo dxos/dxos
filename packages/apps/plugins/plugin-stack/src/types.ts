@@ -6,6 +6,7 @@ import type { IconProps } from '@phosphor-icons/react';
 import type { FC } from 'react';
 
 import { type SchemaProvides } from '@braneframe/plugin-client';
+import { type StackView } from '@braneframe/types';
 import type {
   Intent,
   MetadataRecordsProvides,
@@ -35,6 +36,7 @@ export type StackProvides = {
 
 export type StackState = {
   creators: StackSectionCreator[];
+  stacks: StackView[];
 };
 
 export type StackSettingsProps = { separation: boolean };

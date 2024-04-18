@@ -6,7 +6,6 @@ import {
   Database,
   FloppyDisk,
   FolderOpen,
-  FolderPlus,
   type IconProps,
   PencilSimpleLine,
   Planet,
@@ -16,6 +15,7 @@ import {
   X,
   ClockCounterClockwise,
 } from '@phosphor-icons/react';
+import { CardsThree } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -194,8 +194,8 @@ export const updateGraphWithSpace = ({
               }),
             properties: {
               label: ['create collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderPlus {...props} />,
-              testId: 'spacePlugin.createFolder',
+              icon: (props: IconProps) => <CardsThree {...props} />,
+              testId: 'spacePlugin.createCollection',
             },
             edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
           },
@@ -374,7 +374,7 @@ export const updateGraphWithSpace = ({
               label: object.name ||
                 // TODO(wittjosiah): This is here for backwards compatibility.
                 (object as any).title || ['unnamed collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderOpen {...props} />,
+              icon: (props: IconProps) => <CardsThree {...props} />,
               testId: 'spacePlugin.object',
               persistenceClass: 'echo',
               persistenceKey: space.key.toHex(),
@@ -428,8 +428,8 @@ export const updateGraphWithSpace = ({
               ]),
             properties: {
               label: ['create collection label', { ns: SPACE_PLUGIN }],
-              icon: (props: IconProps) => <FolderPlus {...props} />,
-              testId: 'spacePlugin.createFolder',
+              icon: (props: IconProps) => <CardsThree {...props} />,
+              testId: 'spacePlugin.createCollection',
             },
             edges: [[getId(SpaceAction.ADD_OBJECT), 'inbound']],
           });
