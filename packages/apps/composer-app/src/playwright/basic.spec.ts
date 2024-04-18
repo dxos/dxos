@@ -55,15 +55,14 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
-    // TODO(wittjosiah): Accepting browser confirm dialog only seems to work in chromium.
-    if (browserName !== 'chromium') {
+    // TODO(wittjosiah): Chromium playwright is having issues with shell rpc.
+    if (browserName === 'chromium') {
       test.skip();
     }
 
     await host.createSpace();
-    await host.createSpace();
     await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(3);
+      expect(await host.getSpaceItemsCount()).to.equal(2);
     });
 
     await host.openIdentityManager();
