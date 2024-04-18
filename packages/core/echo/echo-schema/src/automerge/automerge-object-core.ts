@@ -25,9 +25,8 @@ import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isReactiveObject } from '../effect/proxy';
-import { isEchoObject, type EchoReactiveObject } from '../effect/reactive';
-import { type EchoObject, type ObjectMeta } from '../object';
+import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '../ddl';
+import { isEchoObject } from '../echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -290,7 +289,7 @@ export class AutomergeObjectCore {
       // TODO(dmaretskyi): Add better validation.
       invariant(obj.id != null);
 
-      this.linkCache.set(obj.id, obj as EchoObject);
+      this.linkCache.set(obj.id, obj as EchoReactiveObject<any>);
       return new Reference(obj.id);
     }
   }

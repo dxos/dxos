@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, refArray, ref } from '@dxos/echo-schema';
+import { S, TypedObject, ref } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
@@ -26,10 +26,10 @@ export class ChainInput extends TypedObject({ typename: 'braneframe.Chain.Input'
 export class ChainPromptType extends TypedObject({ typename: 'braneframe.Chain.Prompt', version: '0.1.0' })({
   command: S.string,
   source: ref(TextV0Type),
-  inputs: S.mutable(refArray(ChainInput)),
+  inputs: S.mutable(S.array(ref(ChainInput))),
 }) {}
 
 export class ChainType extends TypedObject({ typename: 'braneframe.Chain', version: '0.1.0' })({
   title: S.optional(S.string),
-  prompts: S.mutable(refArray(ChainPromptType)),
+  prompts: S.mutable(S.array(ref(ChainPromptType))),
 }) {}
