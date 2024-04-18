@@ -4,7 +4,7 @@
 
 import { TestStream } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { afterTest, describe, test } from '@dxos/test';
+import { onTestFinished, describe, test } from 'vitest'
 import { range } from '@dxos/util';
 
 import { MemoryTransport } from './memory-transport';
@@ -28,8 +28,8 @@ const createPair = async () => {
     initiator: true,
   });
 
-  afterTest(() => connection1.close());
-  afterTest(() => connection1.errors.assertNoUnhandledErrors());
+  onTestFinished(() => connection1.close());
+  onTestFinished(() => connection1.errors.assertNoUnhandledErrors());
 
   const stream2 = new TestStream();
   const connection2 = new MemoryTransport({
@@ -40,8 +40,8 @@ const createPair = async () => {
     initiator: false,
   });
 
-  afterTest(() => connection2.close());
-  afterTest(() => connection2.errors.assertNoUnhandledErrors());
+  onTestFinished(() => connection2.close());
+  onTestFinished(() => connection2.errors.assertNoUnhandledErrors());
 
   await connection1.open();
   await connection2.open();

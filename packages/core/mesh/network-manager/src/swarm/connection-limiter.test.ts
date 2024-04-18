@@ -6,7 +6,7 @@ import chaiAsPromised from 'chai-as-promised';
 
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest'
 
 import { ConnectionLimiter } from './connection-limiter';
 

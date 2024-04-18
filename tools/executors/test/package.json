@@ -9,13 +9,17 @@
   "exports": {
     ".": "./dist/src/index.js",
     "./package.json": "./package.json",
-    "./playwright": "./dist/src/playwright.js"
+    "./playwright": "./dist/src/playwright.js",
+    "./testutils": "./dist/src/testutils/index.js"
   },
   "types": "index.d.ts",
   "typesVersions": {
     "*": {
       "playwright": [
         "dist/src/playwright.d.ts"
+      ],
+      "testutils": [
+        "dist/src/testutils/index.d.ts"
       ]
     }
   },

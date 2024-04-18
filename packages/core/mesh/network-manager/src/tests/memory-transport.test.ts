@@ -5,7 +5,7 @@
 import { randomBytes } from 'crypto';
 
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/test';
+import { test } from 'vitest';
 import { range } from '@dxos/util';
 
 import { basicTestSuite } from './basic-test-suite';
@@ -17,8 +17,9 @@ describe('Memory transport', () => {
   const testBuilder = new TestBuilder();
   basicTestSuite(testBuilder);
 
-  test
-    .skip('load', async () => {
+  test.skip(
+    'load',
+    async () => {
       const NUM_PAIRS = 100;
       const NUM_ROUNDS = 10_000;
       const PACKET_SIZE = 1_000;
@@ -58,6 +59,7 @@ describe('Memory transport', () => {
           await leaveSwarm([peer1, peer2], topic);
         }),
       );
-    })
-    .timeout(1_000_000);
+    },
+    { timeout: 1_000_000 },
+  );
 });

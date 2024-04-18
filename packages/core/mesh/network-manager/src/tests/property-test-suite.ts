@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
-import { test } from '@dxos/test';
+import { test } from 'vitest'
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
 import { type NetworkManager } from '../network-manager';

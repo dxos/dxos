@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, onTestFinished, beforeAll, describe, test } from 'vitest'
 
 import { type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
@@ -29,13 +29,13 @@ describe('Signal Integration Test', () => {
   const setupPeer = async ({ peerId, topic = PublicKey.random() }: { peerId: PublicKey; topic?: PublicKey }) => {
     const signalManager = new WebsocketSignalManager([{ server: broker.url() }]);
     await signalManager.open();
-    afterTest(() => signalManager.close());
+    onTestFinished(() => signalManager.close());
 
     const messenger = new Messenger({
       signalManager,
     });
     messenger.open();
-    afterTest(() => messenger.close());
+    onTestFinished(() => messenger.close());
     await messenger.listen({
       peerId,
       onMessage: async (message) => await messageRouter.receiveMessage(message),

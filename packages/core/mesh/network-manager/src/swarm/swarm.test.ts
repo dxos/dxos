@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, Messenger, type SignalManager } from '@dxos/messaging';
-import { afterTest, describe, test } from '@dxos/test';
+import { onTestFinished, describe, test } from 'vitest'
 import { ComplexSet } from '@dxos/util';
 
 import { ConnectionState } from './connection';
@@ -55,7 +55,7 @@ describe('Swarm', () => {
       initiationDelay,
     );
 
-    afterTest(async () => {
+    onTestFinished(async () => {
       await swarm.destroy();
       await signalManager.close();
     });
@@ -67,60 +67,60 @@ describe('Swarm', () => {
 
   test('connects two peers in a swarm', async () => {
     const topic = PublicKey.random();
-
+  
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
-
+  
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
-
+  
     await connectSwarms(peer1, peer2);
-  }).timeout(5_000);
+  }, { timeout: 5_000 });
 
   test('two peers try to originate connections to each other simultaneously', async () => {
     const topic = PublicKey.random();
-
+  
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
-
+  
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
-
+  
     await connectSwarms(peer1, peer2);
-  }).timeout(5_000);
+  }, { timeout: 5_000 });
 
   test('with simultaneous connections one of the peers drops initiated connection', async () => {
     const topic = PublicKey.random();
-
+  
     const peerId1 = PublicKey.fromHex('39ba0e42');
     const peerId2 = PublicKey.fromHex('7d2bc6ab');
-
+  
     const peer1 = await setupSwarm({ peerId: peerId1, topic, initiationDelay: 0 });
     const peer2 = await setupSwarm({ peerId: peerId2, topic, initiationDelay: 0 });
-
+  
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
-
+  
     const connectionDisplaced = peer2.swarm._peers.get(peerId1)?.connectionDisplaced.waitForCount(1);
-
+  
     await connectSwarms(peer1, peer2);
     await asyncTimeout(connectionDisplaced!, 1000);
-  }).timeout(5_000);
+  }, { timeout: 5_000 });
 
   test('second peer discovered after delay', async () => {
     const topic = PublicKey.random();
-
+  
     const peer1 = await setupSwarm({ topic });
     const peer2 = await setupSwarm({ topic });
-
+  
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
-
+  
     expect(peer1.swarm.connections.length).to.equal(0);
     expect(peer2.swarm.connections.length).to.equal(0);
-
+  
     await connectSwarms(peer1, peer2, () => sleep(15));
-  }).timeout(10_000);
+  }, { timeout: 10_000 });
 
   test('connection limiter', async () => {
     // remotePeer1 <--> peer (connectionLimiter: max = 1) <--> remotePeer2

@@ -8,7 +8,8 @@ import waitForExpect from 'wait-for-expect';
 import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { afterTest, test } from '@dxos/test';
+import { onTestFinished, test } from 'vitest';
+import { tagEnabled } from '@dxos/test/testutils';
 import { range } from '@dxos/util';
 
 import { exchangeMessages, joinSwarm, leaveSwarm, openAndCloseAfterTest } from './utils';
@@ -25,7 +26,7 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     return;
   }
 
-  test('joins swarm, sends messages, and cleanly exits', async () => {
+  test.runIf(tagEnabled('flaky'))('joins swarm, sends messages, and cleanly exits', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -34,24 +35,24 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new FullyConnectedTopology());
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Test with more peers (configure and test messaging).
-  test('joins swarm with star topology', async () => {
+  test.runIf(tagEnabled('flaky'))('joins swarm with star topology', async () => {
     const peer1 = testBuilder.createPeer();
-    afterTest(() => peer1.close());
+    onTestFinished(() => peer1.close());
     const peer2 = testBuilder.createPeer();
-    afterTest(() => peer2.close());
+    onTestFinished(() => peer2.close());
     await openAndCloseAfterTest([peer1, peer2]);
 
     const topic = PublicKey.random();
     const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic, () => new StarTopology(peer1.peerId)); // NOTE: Same peer.
     await exchangeMessages(swarm1, swarm2);
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
   // TODO(burdon): Fails when trying to reconnect to same topic.
-  test('joins swarm multiple times', async () => {
+  test.runIf(tagEnabled('flaky'))('joins swarm multiple times', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -75,9 +76,9 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       await exchangeMessages(swarm1, swarm2);
       await leaveSwarm([peer1, peer2], topic2);
     }
-  }).tag('flaky');
+  });
 
-  test('joins multiple swarms', async () => {
+  test.runIf(tagEnabled('flaky'))('joins multiple swarms', async () => {
     // TODO(burdon): N peers.
     // TODO(burdon): Merge with test below.
     const peer1 = testBuilder.createPeer();
@@ -87,9 +88,9 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     const numSwarms = 5;
     const topics = Array.from(Array(numSwarms)).map(() => PublicKey.random());
     expect(topics).to.have.length(numSwarms);
-  }).tag('flaky');
+  });
 
-  test('joins multiple swarms concurrently', async () => {
+  test.runIf(tagEnabled('flaky'))('joins multiple swarms concurrently', async () => {
     const createSwarm = async () => {
       const topicA = PublicKey.random();
       const peer1a = testBuilder.createPeer();
@@ -109,9 +110,9 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
       test1.swarm1a.protocol.testConnection(test1.peer2a.peerId),
       test2.swarm1a.protocol.testConnection(test2.peer2a.peerId),
     ]);
-  }).tag('flaky');
+  });
 
-  test('peers reconnect after and error in connection', async () => {
+  test.runIf(tagEnabled('flaky'))('peers reconnect after and error in connection', async () => {
     const peer1 = testBuilder.createPeer();
     const peer2 = testBuilder.createPeer();
     await openAndCloseAfterTest([peer1, peer2]);
@@ -131,52 +132,54 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     await exchangeMessages(swarm1, swarm2);
 
     await leaveSwarm([peer1, peer2], topic);
-  }).tag('flaky');
+  });
 
-  test('going offline and back online', async () => {
-    const peer1 = testBuilder.createPeer();
-    const peer2 = testBuilder.createPeer();
-    await openAndCloseAfterTest([peer1, peer2]);
+  test.runIf(tagEnabled('flaky'))(
+    'going offline and back online',
+    async () => {
+      const peer1 = testBuilder.createPeer();
+      const peer2 = testBuilder.createPeer();
+      await openAndCloseAfterTest([peer1, peer2]);
 
-    const topic = PublicKey.random();
-    const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
-    await exchangeMessages(swarm1, swarm2);
+      const topic = PublicKey.random();
+      const [swarm1, swarm2] = await joinSwarm([peer1, peer2], topic);
+      await exchangeMessages(swarm1, swarm2);
 
-    //
-    // Going offline and back online
-    //
-    const connectionDropped = peer2._networkManager
-      .getSwarm(topic)
-      ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
+      //
+      // Going offline and back online
+      //
+      const connectionDropped = peer2._networkManager
+        .getSwarm(topic)
+        ?.disconnected.waitFor((peerId) => peerId.equals(peer1.peerId));
 
-    const peerLeft = peer2._signalManager.swarmEvent.waitFor(
-      (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer),
-    );
+      const peerLeft = peer2._signalManager.swarmEvent.waitFor(
+        (event) => !!event.swarmEvent.peerLeft && peer1.peerId.equals(event.swarmEvent.peerLeft?.peer),
+      );
 
-    await peer1.goOffline();
-    await connectionDropped;
-    await peerLeft;
+      await peer1.goOffline();
+      await connectionDropped;
+      await peerLeft;
 
-    // Wait for peer to be removed from the swarm.
-    await waitForExpect(() => {
-      expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
-    }, 1_000);
+      // Wait for peer to be removed from the swarm.
+      await waitForExpect(() => {
+        expect(!!peer2._networkManager.getSwarm(topic)!._peers.get(peer1.peerId)?.advertizing).to.be.false;
+      }, 1_000);
 
-    await peer1.goOnline();
+      await peer1.goOnline();
 
-    await waitForExpect(() => {
-      expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
-      expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
-    }, 2_000);
+      await waitForExpect(() => {
+        expect(peer1._networkManager.getSwarm(topic)?._peers.get(peer2.peerId)?.advertizing).to.be.true;
+        expect(peer2._networkManager.getSwarm(topic)?._peers.get(peer1.peerId)?.advertizing).to.be.true;
+      }, 2_000);
 
-    await exchangeMessages(swarm1, swarm2);
-    await leaveSwarm([peer1, peer2], topic);
-  })
-    .tag('flaky')
-    .timeout(2_000);
+      await exchangeMessages(swarm1, swarm2);
+      await leaveSwarm([peer1, peer2], topic);
+    },
+    { timeout: 2_000 },
+  );
 
   // TODO(mykola): Fails with large amount of peers ~10.
-  test('many peers and connections', async () => {
+  test.runIf(tagEnabled('stress'))('many peers and connections', async () => {
     const numTopics = 2;
     const peersPerTopic = 3;
     const swarmsAllPeersConnected: Promise<any>[] = [];
@@ -204,5 +207,5 @@ export const basicTestSuite = (testBuilder: TestBuilder, runTests = true) => {
     );
 
     await asyncTimeout(Promise.all(swarmsAllPeersConnected), 2_000);
-  }).tag('stress');
+  });
 };

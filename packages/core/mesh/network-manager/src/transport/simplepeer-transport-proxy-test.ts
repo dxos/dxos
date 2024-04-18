@@ -9,7 +9,7 @@ import { schema } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
+import { afterAll, onTestFinished, beforeAll, describe, test } from 'vitest'
 
 import { SimplePeerTransportProxy } from './simplepeer-transport-proxy';
 import { SimplePeerTransportService } from './simplepeer-transport-service';
@@ -43,7 +43,7 @@ describe('SimplePeerTransportProxy', () => {
       },
     });
     await rpcService.open();
-    afterTest(() => rpcService.close());
+    onTestFinished(() => rpcService.close());
 
     // Starting RPC client
     const rpcClient = createProtoRpcPeer({
@@ -57,7 +57,7 @@ describe('SimplePeerTransportProxy', () => {
       },
     });
     await rpcClient.open();
-    afterTest(() => rpcClient.close());
+    onTestFinished(() => rpcClient.close());
 
     const simplePeerTransportProxy = new SimplePeerTransportProxy({
       initiator,
@@ -66,7 +66,7 @@ describe('SimplePeerTransportProxy', () => {
       bridgeService: rpcClient.rpc.BridgeService,
     });
     await simplePeerTransportProxy.open();
-    afterTest(async () => await simplePeerTransportProxy.close());
+    onTestFinished(async () => await simplePeerTransportProxy.close());
 
     return { simplePeerService: rpcService, SimplePeerTransportProxy: simplePeerTransportProxy };
   };
@@ -74,11 +74,11 @@ describe('SimplePeerTransportProxy', () => {
   // This doesn't clean up correctly and crashes with SIGSEGV / SIGABRT at the end. Probably an issue with wrtc package.
   test('open and close', async () => {
     const { SimplePeerTransportProxy: connection } = await setupProxy();
-
+  
     const wait = connection.closed.waitForCount(1);
     await connection.close();
     await wait;
-  }).timeout(1_000);
+  }, { timeout: 1_000 });
 
   test('establish connection and send data through with protocol', async () => {
     const stream1 = new TestStream();
@@ -89,8 +89,8 @@ describe('SimplePeerTransportProxy', () => {
         await connection2.onSignal(signal);
       },
     });
-    afterTest(() => connection1.errors.assertNoUnhandledErrors());
-
+    onTestFinished(() => connection1.errors.assertNoUnhandledErrors());
+  
     const stream2 = new TestStream();
     const { SimplePeerTransportProxy: connection2 } = await setupProxy({
       initiator: false,
@@ -99,10 +99,10 @@ describe('SimplePeerTransportProxy', () => {
         await connection1.onSignal(signal);
       },
     });
-    afterTest(() => connection2.errors.assertNoUnhandledErrors());
-
+    onTestFinished(() => connection2.errors.assertNoUnhandledErrors());
+  
     await TestStream.assertConnectivity(stream1, stream2);
-  }).timeout(2_000);
+  }, { timeout: 2_000 });
 
   describe('Multiplexing', () => {
     let service: any;
@@ -153,11 +153,11 @@ describe('SimplePeerTransportProxy', () => {
         },
         bridgeService: rpcClient.rpc.BridgeService,
       });
-      afterTest(async () => {
+      onTestFinished(async () => {
         proxy1.errors.assertNoUnhandledErrors();
         await proxy1.close();
       });
-
+    
       const stream2 = new TestStream();
       const proxy2 = new SimplePeerTransportProxy({
         initiator: false,
@@ -167,15 +167,15 @@ describe('SimplePeerTransportProxy', () => {
         },
         bridgeService: rpcClient.rpc.BridgeService,
       });
-      afterTest(async () => {
+      onTestFinished(async () => {
         proxy2.errors.assertNoUnhandledErrors();
         await proxy2.close();
       });
-
+    
       await proxy1.open();
       await proxy2.open();
-
+    
       await TestStream.assertConnectivity(stream1, stream2);
-    }).timeout(3_000);
+    }, { timeout: 3_000 });
   });
 });

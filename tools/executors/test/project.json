@@ -9,16 +9,11 @@
       "options": {
         "main": "tools/executors/test/src/main.ts",
         "outputPath": "tools/executors/test/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
+        "transformers": ["@dxos/log-hook/transformer"],
         "tsConfig": "tools/executors/test/tsconfig.json"
       }
     },
     "lint": {}
   },
-  "implicitDependencies": [
-    "esbuild-plugins",
-    "log-hook"
-  ]
+  "implicitDependencies": ["esbuild-plugins", "log-hook"]
 }
