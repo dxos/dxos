@@ -4,4 +4,3 @@
 
 export * from './dynamic-schema';
 export * from './stored-schema';
-export * from './schema-registry';

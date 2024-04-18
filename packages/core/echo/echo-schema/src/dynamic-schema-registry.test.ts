@@ -7,14 +7,14 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { DynamicEchoSchema } from './dynamic-schema';
-import { StoredEchoSchema } from './stored-schema';
-import { Filter } from '../../query';
-import { createDatabase } from '../../testing';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '../annotations';
-import { create } from '../handler';
-import { effectToJsonSchema } from '../json';
-import { TypedObject } from '../typed-object-class';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './effect/annotations';
+import { DynamicEchoSchema } from './effect/dynamic/dynamic-schema';
+import { StoredEchoSchema } from './effect/dynamic/stored-schema';
+import { create } from './effect/handler';
+import { effectToJsonSchema } from './effect/json';
+import { TypedObject } from './effect/typed-object-class';
+import { Filter } from './query';
+import { createDatabase } from './testing';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [

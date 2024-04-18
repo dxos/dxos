@@ -7,14 +7,11 @@ import type * as S from '@effect/schema/Schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { DynamicEchoSchema } from './dynamic-schema';
-import { StoredEchoSchema } from './stored-schema';
-import { getAutomergeObjectCore } from '../../automerge';
-import { type EchoDatabase } from '../../database';
-import { Filter } from '../../query';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '../annotations';
-import { create } from '../handler';
-import { effectToJsonSchema } from '../json';
+import { getAutomergeObjectCore } from './automerge';
+import { type EchoDatabase } from './database';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './effect';
+import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from './effect';
+import { Filter } from './query';
 
 export class DynamicSchemaRegistry {
   private readonly _schemaById: Map<string, DynamicEchoSchema> = new Map();
