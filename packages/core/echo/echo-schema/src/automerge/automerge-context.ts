@@ -20,6 +20,8 @@ import { mapValues } from '@dxos/util';
 
 exposeModule('@automerge/automerge', automerge);
 
+const RPC_TIMEOUT = 20_000;
+
 /**
  * Shared context for all spaces in the client.
  * Hosts the automerege repo.
@@ -67,7 +69,7 @@ export class AutomergeContext {
    *       so this method sends a RPC call to the AutomergeHost.
    */
   async flush(request: FlushRequest): Promise<void> {
-    await this._dataService?.flush(request);
+    await this._dataService?.flush(request, { timeout: RPC_TIMEOUT }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   @trace.info({ depth: null })
@@ -111,6 +113,8 @@ export class AutomergeContext {
  */
 @trace.resource()
 class LocalClientNetworkAdapter extends NetworkAdapter {
+  private _isClosed = false;
+
   /**
    * Own peer id given by automerge repo.
    */
@@ -128,6 +132,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
    * Emits `ready` event. That signals to `Repo` that it can start using the adapter.
    */
   ready() {
+    invariant(!this._isClosed);
     // NOTE: Emitting `ready` event in NetworkAdapter`s constructor causes a race condition
     //       because `Repo` waits for `ready` event (which it never receives) before it starts using the adapter.
     this.emit('ready', {
@@ -137,6 +142,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
 
   override connect(peerId: PeerId): void {
     // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
+    invariant(!this._isClosed);
     invariant(!this._stream);
 
     this.peerId = peerId;
@@ -144,7 +150,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       {
         id: peerId,
       },
-      { timeout: 20_000 },
+      { timeout: RPC_TIMEOUT },
     ); // TODO(dmaretskyi): Set global timeout instead.
     this._stream.subscribe(
       (msg) => {
@@ -152,7 +158,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       },
       (err) => {
         // TODO(mykola): Add connection retry?
-        if (err) {
+        if (err && !this._isClosed) {
           log.catch(err);
         }
         if (this._hostInfo) {
@@ -160,12 +166,14 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
             peerId: this._hostInfo.peerId as PeerId,
           });
         }
-        void this.close().catch((err) => log.catch(err));
+        if (!this._isClosed) {
+          void this.close().catch((err) => log.catch(err));
+        }
       },
     );
 
     this._dataService
-      .getHostInfo(undefined, { timeout: 20_000 }) // TODO(dmaretskyi): Set global timeout instead.
+      .getHostInfo(undefined, { timeout: RPC_TIMEOUT }) // TODO(dmaretskyi): Set global timeout instead.
       .then((hostInfo) => {
         this._hostInfo = hostInfo;
         this.emit('peer-candidate', {
@@ -180,13 +188,14 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
 
   override send(message: Message): void {
     invariant(this.peerId);
+    invariant(!this._isClosed);
     void this._dataService
       .sendSyncMessage(
         {
           id: this.peerId,
           syncMessage: cbor.encode(message),
         },
-        { timeout: 20_000 }, // TODO(dmaretskyi): Set global timeout instead.
+        { timeout: RPC_TIMEOUT }, // TODO(dmaretskyi): Set global timeout instead.
       )
       .catch((err) => {
         log.catch(err);
@@ -194,6 +203,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   async close() {
+    this._isClosed = true;
     await this._stream?.close();
     this._stream = undefined;
     this.emit('close');

@@ -3,7 +3,7 @@
 //
 
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Filter, type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
@@ -34,7 +34,7 @@ export const Main = () => {
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
-  const flushingPromise = React.useRef<Promise<void>>();
+  const flushingPromise = useRef<Promise<void>>();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
@@ -73,7 +73,7 @@ export const Main = () => {
     return () => clearTimeout(t);
   }, []);
 
-  const handleAdd = (n = 1) => {
+  const handleObjectCreate = (n = 1) => {
     if (!space) {
       return;
     }
@@ -116,7 +116,7 @@ export const Main = () => {
     );
   };
 
-  const handleDelete = (id: string) => {
+  const handleObjectDelete = (id: string) => {
     if (!space) {
       return;
     }
@@ -130,7 +130,7 @@ export const Main = () => {
 
   const handleSpaceCreate = async () => {
     const space = await client.spaces.create();
-    return space.key;
+    setSpace(space);
   };
 
   const handleSpaceClose = async (spaceKey: PublicKey) => {
@@ -163,6 +163,7 @@ export const Main = () => {
       />
 
       <SpaceToolbar
+        spaceKey={space?.key}
         onCreate={handleSpaceCreate}
         onClose={handleSpaceClose}
         onSelect={handleSpaceSelect}
@@ -174,15 +175,15 @@ export const Main = () => {
           <>
             <DataToolbar
               types={Array.from(typeMap.keys())}
-              onAdd={handleAdd}
+              onAdd={handleObjectCreate}
               onTypeChange={(type) => setType(type)}
               onFilterChange={setFilter}
               onViewChange={(view) => setView(view)}
             />
 
             {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
-            {view === 'list' && <ItemList objects={objects} onDelete={handleDelete} />}
-            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleDelete} />}
+            {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
           </>
         )}
       </div>

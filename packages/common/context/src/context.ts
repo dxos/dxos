@@ -108,45 +108,35 @@ export class Context {
 
   /**
    * Runs all dispose callbacks.
-   * Sync callbacks are run in the reverse order they were added.
-   * Async callbacks are run in parallel.
+   * Callbacks are run in the reverse order they were added.
    * This function never throws.
    * It is safe to ignore the returned promise if the caller does not wish to wait for callbacks to complete.
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    */
-  dispose(): Promise<void> {
+  async dispose(): Promise<void> {
     if (this._disposePromise) {
       return this._disposePromise;
     }
     this._isDisposed = true;
 
     // Set the promise before running the callbacks.
-    let resolveDispose: () => void;
+    let resolveDispose!: () => void;
     this._disposePromise = new Promise<void>((resolve) => {
       resolveDispose = resolve;
     });
 
-    const promises = [];
     // Clone the array so that any mutations to the original array don't affect the dispose process.
     const callbacks = Array.from(this._disposeCallbacks).reverse();
-    for (const callback of callbacks) {
-      promises.push(
-        (async () => {
-          try {
-            await callback();
-          } catch (error: any) {
-            log.catch(error);
-          }
-        })(),
-      );
-    }
     this._disposeCallbacks.length = 0;
 
-    void Promise.all(promises).then(() => {
-      resolveDispose();
-    });
-
-    return this._disposePromise;
+    for (const callback of callbacks) {
+      try {
+        await callback();
+      } catch (error: any) {
+        log.catch(error);
+      }
+    }
+    resolveDispose();
   }
 
   /**

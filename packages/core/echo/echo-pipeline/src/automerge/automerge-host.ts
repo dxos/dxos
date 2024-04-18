@@ -2,21 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge, getHeads } from '@dxos/automerge/automerge';
-import {
-  Repo,
-  type PeerId,
-  type DocumentId,
-  type StorageKey,
-  type DocHandle,
-  type DocHandleChangePayload,
-  type StorageAdapterInterface,
-} from '@dxos/automerge/automerge-repo';
+import { asyncTimeout } from '@dxos/async';
+import { next as automerge } from '@dxos/automerge/automerge';
+import { Repo, type DocumentId, type PeerId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, type Lifecycle } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { idCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
   type HostInfo,
@@ -26,40 +18,36 @@ import {
 import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, type MaybePromise, defaultMap, mapValues } from '@dxos/util';
+import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type MySublevel } from './types';
+import { type SubLevelDB } from './types';
 
 export type { DocumentId };
 
-export interface MetadataMethods {
-  markDirty(idToLastHash: Map<string, string>): Promise<void>;
-}
-
 export type AutomergeHostParams = {
-  db: MaybePromise<MySublevel>;
+  db: SubLevelDB;
   /**
    * For migration purposes.
    */
   directory?: Directory;
-  metadata?: MetadataMethods;
+  storageCallbacks?: StorageCallbacks;
 };
 
 @trace.resource()
 export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
-  private readonly _db: MaybePromise<MySublevel>;
-  private readonly _metadata?: MetadataMethods;
+  private readonly _db: SubLevelDB;
+  private readonly _storageCallbacks?: StorageCallbacks;
 
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
   private _clientNetwork!: LocalHostNetworkAdapter;
-  private _storage!: StorageAdapterInterface & { close?: () => void };
+  private _storage!: StorageAdapterInterface & Lifecycle;
 
   @trace.info()
   private _peerId!: string;
@@ -69,22 +57,22 @@ export class AutomergeHost {
    */
   private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
-  private readonly _updatingMetadata = new Map<string, Promise<void>>();
-
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, db, metadata }: AutomergeHostParams) {
+  constructor({ directory, db, storageCallbacks }: AutomergeHostParams) {
     this._directory = directory;
     this._db = db;
-    this._metadata = metadata;
+    this._storageCallbacks = storageCallbacks;
   }
 
   async open() {
-    this._directory && (await levelMigration({ db: await this._db, directory: this._directory }));
+    // TODO(mykola): remove this before 0.6 release.
+    this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
-      db: await this._db,
-      callbacks: { beforeSave: (params) => this._beforeSave(params) },
+      db: this._db,
+      callbacks: this._storageCallbacks,
     });
+    await this._storage.open?.();
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
     this._meshNetwork = new MeshNetworkAdapter();
@@ -148,65 +136,17 @@ export class AutomergeHost {
     this._clientNetwork.ready();
     this._meshNetwork.ready();
 
-    {
-      const listener = ({ handle }: { handle: DocHandle<any> }) => this._onDocument(handle);
-      this._repo.on('document', listener);
-      this._ctx.onDispose(() => {
-        this._repo.off('document', listener);
-        Object.values(this._repo.handles).forEach((handle) => handle.off('change'));
-      });
-    }
+    await this._clientNetwork.whenConnected();
   }
 
   async close() {
-    this._storage.close?.();
+    await this._storage.close?.();
     await this._clientNetwork.close();
     await this._ctx.dispose();
   }
 
   get repo(): Repo {
     return this._repo;
-  }
-
-  private async _beforeSave(path: StorageKey) {
-    const id = path[0];
-    if (this._updatingMetadata.has(id)) {
-      return this._updatingMetadata.get(id);
-    }
-  }
-
-  private _onDocument(handle: DocHandle<any>) {
-    const listener = (event: DocHandleChangePayload<any>) => this._onUpdate(event);
-    handle.on('change', listener);
-  }
-
-  private _onUpdate(event: DocHandleChangePayload<any>) {
-    if (this._metadata == null) {
-      return;
-    }
-
-    const objectIds = getInlineChanges(event);
-    if (objectIds.length === 0) {
-      return;
-    }
-
-    const heads = getHeads(event.doc);
-    const lastAvailableHash = heads.join('');
-    if (!lastAvailableHash) {
-      return;
-    }
-
-    const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: event.handle.documentId, objectId }));
-    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
-    const markingDirtyPromise = this._metadata
-      .markDirty(idToLastHash)
-      .then(() => {
-        this._updatingMetadata.delete(event.handle.documentId);
-      })
-      .catch((err: Error) => {
-        this._ctx.disposed && log.catch(err);
-      });
-    this._updatingMetadata.set(event.handle.documentId, markingDirtyPromise);
   }
 
   @trace.info({ depth: null })
@@ -247,7 +187,13 @@ export class AutomergeHost {
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
-    await this._repo.flush(documentIds as DocumentId[]);
+
+    // TODO(dmaretskyi): Workaround until the flush issue gets resolved.
+    try {
+      await asyncTimeout(this._repo.flush(documentIds as DocumentId[]), 500);
+    } catch (err) {
+      log.warn('flush error', { documentIds, err });
+    }
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
@@ -275,24 +221,6 @@ export class AutomergeHost {
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }
-
-// TODO(mykola): Reconcile with `getInlineAndLinkChanges` in AutomergeDB.
-const getInlineChanges = (event: DocHandleChangePayload<any>) => {
-  const inlineChangedObjectIds = new Set<string>();
-  for (const { path } of event.patches) {
-    if (path.length < 2) {
-      continue;
-    }
-    switch (path[0]) {
-      case 'objects':
-        if (path.length >= 2) {
-          inlineChangedObjectIds.add(path[1]);
-        }
-        break;
-    }
-  }
-  return [...inlineChangedObjectIds];
-};
 
 export const getSpaceKeyFromDoc = (doc: any): string | null => {
   // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey

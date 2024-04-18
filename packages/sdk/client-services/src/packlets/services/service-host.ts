@@ -13,7 +13,7 @@ import {
   type ObjectStructure,
   encodeReference,
   type SpaceDoc,
-  type MyLevel,
+  type LevelDB,
 } from '@dxos/echo-pipeline';
 import { getTypeReference } from '@dxos/echo-schema';
 import { IndexServiceImpl } from '@dxos/indexing';
@@ -56,7 +56,7 @@ export type ClientServicesHostParams = {
   signalManager?: SignalManager;
   connectionLog?: boolean;
   storage?: Storage;
-  level?: MyLevel;
+  level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
   runtimeParams?: ServiceContextRuntimeParams;

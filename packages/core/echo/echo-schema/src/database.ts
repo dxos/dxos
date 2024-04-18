@@ -108,11 +108,13 @@ export class EchoDatabaseImpl implements EchoDatabase {
       return obj as any;
     } else {
       const schema = getSchema(obj);
+
       if (schema != null) {
         if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.isSchemaRegistered(schema)) {
-          throw createSchemaNotRegisteredError();
+          throw createSchemaNotRegisteredError(schema);
         }
       }
+
       const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;
@@ -165,6 +167,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 }
 
-const createSchemaNotRegisteredError = () => {
-  return new Error('Schema not registered in Hypergraph: call registerEffectSchema before adding an object');
+const createSchemaNotRegisteredError = (schema?: any) => {
+  const message = 'Schema not registered in Hypergraph. Call registerEffectSchema before adding an object.';
+
+  if (schema?.typename) {
+    return new Error(`${message} Schema: ${schema.typename}`);
+  }
+
+  return new Error(message);
 };

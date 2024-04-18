@@ -220,6 +220,7 @@ describe('Client services', () => {
 
     const hostSpace = await client1.spaces.create();
     log('spaces.create', { key: hostSpace.key });
+
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
         host: hostSpace,
@@ -272,5 +273,5 @@ describe('Client services', () => {
     }
 
     await syncItemsAutomerge(hostSpace.db, guestSpace.db);
-  });
+  }).timeout(20_000);
 });

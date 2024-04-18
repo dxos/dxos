@@ -10,6 +10,7 @@ import React from 'react';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ColumnMenu } from './ColumnMenu';
+import { type ColumnSettingsFormProps } from './ColumnSettingsForm';
 import { type ColumnProps } from '../../schema';
 
 export default {
@@ -18,12 +19,41 @@ export default {
   decorators: [withTheme],
 };
 
+const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tableDefs'> = {
+  tableDef: {
+    id: '1',
+    name: 'table 1',
+    columns: [{ id: 'col-1', prop: 'one-foo', type: 'string' }],
+  },
+  tableDefs: [
+    {
+      id: '1',
+      name: 'table 1',
+      columns: [{ id: 'col-1', prop: 'one-foo', type: 'string' }],
+    },
+    {
+      id: '2',
+      name: 'table 2',
+      columns: [{ id: 'col-1', prop: 'two-foo', type: 'string' }],
+    },
+  ],
+};
+
+const funcs: Pick<ColumnSettingsFormProps, 'onUpdate' | 'onDelete'> = {
+  onUpdate: (...args: any) => console.log('onUpdate args', args),
+  onDelete: (...args: any) => console.log('onDelete args', args),
+};
+
 export const Default = {
   args: {
     column: {
       id: 'test',
       label: 'test',
     } as ColumnProps,
+
+    ...defs,
+    ...funcs,
+
     context: {
       header: {
         column: {
