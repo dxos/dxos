@@ -10,10 +10,10 @@ import waitForExpect from 'wait-for-expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
+import { describe, test } from 'vitest';
 
-import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
+import { TestAgentBuilder, TestFeedBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
 // TODO(burdon): Config.
 // Signal server will be started by the setup script.
@@ -21,9 +21,11 @@ const port = process.env.SIGNAL_PORT ?? 4000;
 const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space/space-protocol', () => {
-  test('two peers discover each other', async () => {
+  test('two peers discover each other', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -48,9 +50,11 @@ describe('space/space-protocol', () => {
     });
   });
 
-  test('replicates a feed', async () => {
+  test('replicates a feed', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -91,12 +95,14 @@ describe('space/space-protocol', () => {
     await builder.close();
   });
 
-  test('replicates a feed through a webrtc connection', async () => {
+  test('replicates a feed through a webrtc connection', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const keyring = new Keyring();
     const topic = await keyring.createKey();
@@ -132,7 +138,7 @@ describe('space/space-protocol', () => {
     });
 
     await builder.close();
-  })
-    .skipEnvironments('webkit')
-    .tag('flaky'); // Some storage drivers may break when there are multiple storage instances.
+  });
+  // .skipEnvironments('webkit')
+  // .tag('flaky'); // Some storage drivers may break when there are multiple storage instances.
 });

@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessageBlock } from '@dxos/protocols';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { describe, test } from 'vitest'
+import { describe, test } from 'vitest';
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
 
@@ -24,8 +24,9 @@ const NUM_MESSAGES = 10;
 
 // TODO(burdon): Describe test.
 describe('pipeline/stress test', () => {
-  test
-    .skip('stress', async () => {
+  test.skip(
+    'stress',
+    async () => {
       const builder = new TestFeedBuilder();
 
       const agentIds = range(NUM_AGENTS).map(() => PublicKey.random().toHex().slice(0, 8));
@@ -69,8 +70,9 @@ describe('pipeline/stress test', () => {
       ];
 
       await fc.assert(model, { examples });
-    })
-    .timeout(60_000);
+    },
+    { timeout: 60_000 },
+  );
 });
 
 class Agent {

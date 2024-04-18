@@ -10,16 +10,18 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { describe, test, afterTest } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
+import { describe, test } from 'vitest';
 
-import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 import { TestAgentBuilder, TestFeedBuilder } from '../testing';
+import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  test('two peers discover each other via presence', async () => {
+  test('two peers discover each other via presence', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -44,7 +46,7 @@ describe('space/space-protocol', () => {
     }, 1_000);
   });
 
-  test('failing authentication', async () => {
+  test('failing authentication', async ({ onTestFinished }) => {
     const [topic, peerId1, peerId2] = PublicKey.randomSequence();
     const signalContext = new MemorySignalManagerContext();
 
@@ -87,9 +89,11 @@ describe('space/space-protocol', () => {
     });
   });
 
-  test('replicates a feed', async () => {
+  test('replicates a feed', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const topic = PublicKey.random();
 

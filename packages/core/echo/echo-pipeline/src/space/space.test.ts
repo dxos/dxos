@@ -6,7 +6,7 @@ import expect from 'expect';
 
 import { Context } from '@dxos/context';
 import { CredentialGenerator } from '@dxos/credentials';
-import { afterTest, describe, test } from 'vitest'
+import { describe, test } from 'vitest';
 
 import { TestAgentBuilder } from '../testing';
 
@@ -14,15 +14,19 @@ import { TestAgentBuilder } from '../testing';
 const run = <T>(cb: () => Promise<T>): Promise<T> => cb();
 
 describe('space/space', () => {
-  test('creates a database with object model', async () => {
+  test('creates a database with object model', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
 
     await space.open(Context.default());
     expect(space.isOpen).toBeTruthy();
-    onTestFinished(() => space.close());
+    onTestFinished(async () => {
+      await space.close();
+    });
 
     await agent.spaceGenesis(space);
 
@@ -32,9 +36,11 @@ describe('space/space', () => {
     expect(space.isOpen).toBeFalsy();
   });
 
-  test('two spaces replicating', async () => {
+  test('two spaces replicating', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     //
     // Agent 1
@@ -45,7 +51,9 @@ describe('space/space', () => {
 
       await space.open(Context.default());
       expect(space.isOpen).toBeTruthy();
-      onTestFinished(() => space.close());
+      onTestFinished(async () => {
+        await space.close();
+      });
 
       await agent.spaceGenesis(space);
 
@@ -64,7 +72,9 @@ describe('space/space', () => {
 
       await space.open(Context.default());
       expect(space.isOpen).toBeTruthy();
-      onTestFinished(() => space.close());
+      onTestFinished(async () => {
+        await space.close();
+      });
 
       return [agent, space];
     });
@@ -108,15 +118,19 @@ describe('space/space', () => {
     expect(space2.isOpen).toBeFalsy();
   });
 
-  test('open & close', async () => {
+  test('open & close', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const agent = await builder.createPeer();
     const space1 = await agent.createSpace();
 
     await space1.open(Context.default());
     expect(space1.isOpen).toBeTruthy();
-    onTestFinished(() => space1.close());
+    onTestFinished(async () => {
+      await space1.close();
+    });
 
     await agent.spaceGenesis(space1);
 
@@ -132,15 +146,19 @@ describe('space/space', () => {
     await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
   });
 
-  test('re-open', async () => {
+  test('re-open', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder();
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
     const agent = await builder.createPeer();
     const space = await agent.createSpace();
 
     {
       await space.open(Context.default());
-      onTestFinished(() => space.close());
+      onTestFinished(async () => {
+        await space.close();
+      });
       expect(space.isOpen).toBeTruthy();
 
       await agent.spaceGenesis(space);

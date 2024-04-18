@@ -11,16 +11,16 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from 'vitest'
+import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
+import { describe, test } from 'vitest';
 
-import { ControlPipeline } from './control-pipeline';
 import { valueEncoding } from '../common';
 import { MetadataStore } from '../metadata';
+import { ControlPipeline } from './control-pipeline';
 
 describe('space/control-pipeline', () => {
-  test('admits feeds', async () => {
+  test('admits feeds', async ({ onTestFinished }) => {
     const keyring = new Keyring();
     const spaceKey = await keyring.createKey();
     const identityKey = await keyring.createKey();

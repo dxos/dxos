@@ -5,7 +5,7 @@
 // @dxos/test platform=browser
 
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from 'vitest'
+import { describe, test } from 'vitest';
 
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
 
@@ -15,12 +15,14 @@ const port = process.env.SIGNAL_PORT ?? 4000;
 const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 
 describe('space-manager', () => {
-  test.skip('invitations', async () => {
+  test.skip('invitations', async ({ onTestFinished }) => {
     const builder = new TestAgentBuilder({
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
-    onTestFinished(async () => await builder.close());
+    onTestFinished(async () => {
+      await builder.close();
+    });
 
     const peer1 = await builder.createPeer();
     const spaceManager1 = peer1.spaceManager;
@@ -40,6 +42,6 @@ describe('space-manager', () => {
     // TODO(burdon): Need to factor out DataInvitations from services.
 
     // const space2 = await spaceManager2.acceptSpace();
-    // expect(space2.key).not.to.be.undefined;
+    // expect(space2.key).not.to.be.undefined; });
   });
 });

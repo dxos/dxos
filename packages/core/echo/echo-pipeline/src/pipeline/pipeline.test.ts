@@ -6,12 +6,12 @@ import expect from 'expect';
 
 import { Event, sleep } from '@dxos/async';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { describe, test, afterTest } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
 import { range } from '@dxos/util';
+import { describe, test } from 'vitest';
 
-import { Pipeline } from './pipeline';
 import { TestFeedBuilder } from '../testing';
+import { Pipeline } from './pipeline';
 
 const TEST_MESSAGE: FeedMessage = {
   timeframe: new Timeframe(),
@@ -60,7 +60,7 @@ describe('pipeline/Pipeline', () => {
     }
   });
 
-  test('reading and writing with cursor changes', async () => {
+  test('reading and writing with cursor changes', async ({ onTestFinished }) => {
     const pipeline = new Pipeline();
     onTestFinished(() => pipeline.stop());
 
@@ -103,7 +103,7 @@ describe('pipeline/Pipeline', () => {
     expect(processedSequenceNumbers).toEqual(expectedSequenceNumbers);
   });
 
-  test('cursor change while polling', async () => {
+  test('cursor change while polling', async ({ onTestFinished }) => {
     const pipeline = new Pipeline();
     onTestFinished(() => pipeline.stop());
 
