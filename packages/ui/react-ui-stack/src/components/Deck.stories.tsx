@@ -4,10 +4,11 @@
 
 import '@dxosTheme';
 
-import { BookBookmark, StackSimple } from '@phosphor-icons/react';
+import { BookBookmark, CaretLeft, CaretRight, SidebarSimple, StackSimple } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { Button, Main } from '@dxos/react-ui';
 import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck as NaturalDeck } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
@@ -73,13 +74,14 @@ const DemoStackPlank = ({ toolbar }: { toolbar?: boolean }) => {
 };
 
 export default {
-  title: 'react-ui-stack/Deck',
+  // NOTE(thure): This is intentionally organized under `react-ui-deck` so that related stories appear together in Storybook despite needing to live in separate packages based on dependencies.
+  title: 'react-ui-deck/Deck',
   component: NaturalDeck.Root,
   decorators: [withTheme],
   args: {},
 };
 
-export const Deck = {
+export const StaticBasicStacks = {
   args: {},
   render: () => {
     const [attended] = useState(new Set());
@@ -114,4 +116,51 @@ export const Deck = {
       </Mosaic.Root>
     );
   },
+};
+
+export const DynamicBasicStacks = () => {
+  const [attended] = useState(new Set());
+  const [navOpen, setNavOpen] = useState(true);
+  const [c11yOpen, setC11yOpen] = useState(true);
+  return (
+    <Mosaic.Root>
+      <AttentionProvider attended={attended}>
+        <Main.Root complementarySidebarOpen={c11yOpen} navigationSidebarOpen={navOpen}>
+          <Main.Overlay />
+          <Mosaic.DragOverlay />
+          <Main.Notch>
+            <Button variant='ghost' classNames='p-1'>
+              <SidebarSimple />
+            </Button>
+            <Button variant='ghost' classNames='p-1'>
+              <CaretLeft />
+            </Button>
+            <Button variant='ghost' classNames='p-1'>
+              <CaretRight />
+            </Button>
+            <Button variant='ghost' classNames='p-1'>
+              <SidebarSimple mirrored />
+            </Button>
+          </Main.Notch>
+          <Main.NavigationSidebar>
+            <DemoStackPlank />
+          </Main.NavigationSidebar>
+          <NaturalDeck.Root>
+            <NaturalDeck.Plank>
+              <DemoStackPlank />
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
+              <DemoStackPlank />
+            </NaturalDeck.Plank>
+            <NaturalDeck.Plank>
+              <DemoStackPlank />
+            </NaturalDeck.Plank>
+          </NaturalDeck.Root>
+          <Main.ComplementarySidebar>
+            <DemoStackPlank />
+          </Main.ComplementarySidebar>
+        </Main.Root>
+      </AttentionProvider>
+    </Mosaic.Root>
+  );
 };

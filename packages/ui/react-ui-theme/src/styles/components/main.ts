@@ -19,14 +19,16 @@ const sidebarSlots = {
   start: {
     width: 'sm:data-[side=is]:is-[270px]',
     sidebar: 'sm:data-[side=is]:-inline-start-[270px]',
-    content: 'lg:data-[sidebar-inline-start-state=open]:pis-[270px]',
+    content:
+      'lg:data-[sidebar-inline-start-state=open]:pis-[270px] lg:data-[sidebar-inline-start-state=open]:scroll-ps-[270px]',
     notch: 'max-is-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
     width: 'sm:data-[side=ie]:is-[360px]',
     sidebar: 'sm:data-[side=ie]:-inline-end-[360px]',
-    content: 'lg:data-[sidebar-inline-end-state=open]:pie-[360px]',
+    content:
+      'lg:data-[sidebar-inline-end-state=open]:pie-[360px] lg:data-[sidebar-inline-end-state=open]:scroll-pe-[360px]',
   },
 };
 
