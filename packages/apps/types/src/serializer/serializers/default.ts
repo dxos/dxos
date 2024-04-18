@@ -5,20 +5,23 @@
 import { create, Expando, getAutomergeObjectCore, getMeta, getTypeRef, type ReactiveObject } from '@dxos/echo-schema';
 import { createEchoObject } from '@dxos/echo-schema';
 
+import { type SerializedObject } from '../types';
+
 export type Filename = { name?: string; extension: string };
 
-export interface TypedObjectSerializer {
+export interface TypedObjectSerializer<T extends Expando = Expando> {
   // TODO(burdon): Get filename from object.meta.keys.
   filename(object: Expando): Filename;
 
-  serialize(object: Expando, serializers: SerializerMap): Promise<string>;
+  serialize(params: { object: T; serializers: SerializerMap }): Promise<string>;
 
   /**
-   * @param content
-   * @param object Deserializing into an existing object. If not provided, a new object is created.
-   * @param serializers
+   * @param params.content
+   * @param params.object Deserializing into an existing object. If not provided, a new object is created.
+   * @param params.file File metadata.
+   * @param params.serializers
    */
-  deserialize(content: string, object: Expando | undefined, serializers: SerializerMap): Promise<Expando>;
+  deserialize(params: { content: string; file?: SerializedObject; object?: T; serializers: SerializerMap }): Promise<T>;
 }
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
@@ -35,12 +38,12 @@ export const jsonSerializer: TypedObjectSerializer = {
   },
 
   // TODO(burdon): Should we assume Expando?
-  serialize: async (object: Expando) => {
+  serialize: async ({ object }) => {
     return JSON.stringify(object.toJSON(), null, 2);
   },
 
-  deserialize: async (text: string, object?: Expando) => {
-    const parsed = JSON.parse(text);
+  deserialize: async ({ content, object }) => {
+    const parsed = JSON.parse(content);
     if (!object) {
       return deserializeEchoObject(parsed);
     } else {
