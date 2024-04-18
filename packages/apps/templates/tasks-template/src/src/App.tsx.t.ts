@@ -1,8 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.script({
-  content: plate /* javascript */ `
+  content: plate/* javascript */ `
   import React, { useEffect } from 'react';
   import {
     Navigate,
@@ -17,7 +21,7 @@ export default template.define.script({
   import { useSpace, useQuery } from '@dxos/react-client/echo';
   
   import { TaskList } from './TaskList';
-  import { Task, types } from './proto';
+  import { Task } from './schema';
   
   // Dynamics allows configuration to be supplied by the hosting KUBE.
   const config = async () => new Config(await Dynamics(), Local(), Defaults());
@@ -102,7 +106,7 @@ export default template.define.script({
       <ClientProvider
         config={config}
         onInitialized={async (client) => {
-          client.addTypes(types);
+          client.addSchema(Task);
           const searchParams = new URLSearchParams(location.search);
           if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
             await client.halo.createIdentity();
