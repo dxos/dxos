@@ -64,7 +64,7 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
         <PlankHeading.Button>
           <StackSimple {...plankHeadingIconProps} />
         </PlankHeading.Button>
-        <PlankHeading.Label>{label}</PlankHeading.Label>
+        <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
         {children}
       </PlankHeading.Root>
       <Stack
