@@ -21,49 +21,37 @@ import { getSize } from '@dxos/react-ui-theme';
 
 import { createUniqueProp } from './types';
 
-type TableColumnBuilderOptions = {
+type ColumnCreationOptions = {
   onColumnUpdate?: (id: string, column: ColumnProps) => void;
   onColumnDelete?: (id: string) => void;
   onRowUpdate?: (object: any, key: string, value: any) => void;
   onRowDelete?: (object: any) => void;
 };
 
-/**
- *
- */
-export class TableColumnBuilder {
-  private readonly _tableDef?: TableDef;
+export const createColumnsFromTableDef = ({
+  space,
+  tableDef,
+  tablesToReference,
+  ...options
+}: {
+  space: Space;
+  tableDef: TableDef;
+  tablesToReference: TableDef[];
+} & ColumnCreationOptions): TableColumnDef<any>[] => {
+  const dataColumns = createColumns(tableDef, tablesToReference, space, options);
+  const actionColumn = createActionColumn(tableDef, options);
 
-  // prettier-ignore
-  constructor(
-    private readonly _tableDefs: TableDef[],
-    tableId: string,
-    private readonly _space: Space,
-    private readonly _options: TableColumnBuilderOptions
-  ) {
-    this._tableDef = this._tableDefs.find((def) => def.id === tableId);
-  }
-
-  createColumns(): TableColumnDef<any>[] {
-    if (!this._tableDef) {
-      return [];
-    }
-
-    const dataColumns = createColumns(this._tableDefs, this._tableDef, this._space, this._options);
-    const actionColumn = createActionColumn(this._tableDef, this._options);
-
-    return [...dataColumns, actionColumn];
-  }
-}
+  return [...dataColumns, actionColumn];
+};
 
 /**
  * Create column definitions from schema metadata.
  */
 export const createColumns = (
-  tableDefs: TableDef[],
   tableDef: TableDef,
+  tablesToReference: TableDef[],
   space: Space,
-  { onRowUpdate, onColumnUpdate, onColumnDelete }: TableColumnBuilderOptions = {},
+  { onRowUpdate, onColumnUpdate, onColumnDelete }: ColumnCreationOptions = {},
 ): TableColumnDef<any>[] => {
   const { helper, builder } = createColumnBuilder<any>();
   return tableDef.columns.map((column) => {
@@ -78,7 +66,7 @@ export const createColumns = (
         : (context) => (
             <ColumnMenu<any, any>
               context={context}
-              tableDefs={tableDefs}
+              tableDefs={tablesToReference}
               tableDef={tableDef}
               column={column}
               onUpdate={onColumnUpdate}
@@ -112,7 +100,7 @@ export const createColumns = (
  */
 export const createActionColumn = (
   tableDef: TableDef,
-  { onColumnUpdate, onRowDelete }: TableColumnBuilderOptions = {},
+  { onColumnUpdate, onRowDelete }: ColumnCreationOptions = {},
 ): TableColumnDef<EchoReactiveObject<any>> => {
   const { helper } = createColumnBuilder<EchoReactiveObject<any>>();
 
