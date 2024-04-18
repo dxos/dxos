@@ -285,7 +285,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Load or create config file from defaults.
    * @private
    */
-  private async _loadConfigFromFile() {
+  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]) {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
