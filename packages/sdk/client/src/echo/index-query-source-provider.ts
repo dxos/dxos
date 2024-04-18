@@ -8,7 +8,6 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
   type QuerySourceProvider,
-  type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
@@ -41,16 +40,16 @@ export type IndexQuerySourceParams = {
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
-  private _results?: QueryResult<EchoObject>[] = [];
+  private _results?: QueryResult[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
-  getResults(): QueryResult<EchoObject>[] {
+  getResults(): QueryResult[] {
     return this._results ?? [];
   }
 
-  update(filter: Filter<EchoObject>): void {
+  update(filter: Filter): void {
     if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
       return;
     }
@@ -73,7 +72,7 @@ export class IndexQuerySource implements QuerySource {
         return [];
       }
 
-      const results: QueryResult<EchoObject>[] = (
+      const results: QueryResult[] = (
         await Promise.all(
           response.results!.map(async (result) => {
             const space = this._params.echo.get(result.spaceKey);
@@ -93,7 +92,7 @@ export class IndexQuerySource implements QuerySource {
 
             const core = getAutomergeObjectCore(object);
 
-            const queryResult: QueryResult<EchoObject> = {
+            const queryResult: QueryResult = {
               id: object.id,
               spaceKey: core.database!.spaceKey,
               object,

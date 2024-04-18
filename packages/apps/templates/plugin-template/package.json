@@ -30,7 +30,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.merge": "^4.6.6",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",

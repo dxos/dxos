@@ -719,8 +719,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@sentry/vite-plugin':
         specifier: ^2.14.0
         version: 2.14.0
@@ -946,8 +946,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1013,8 +1013,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1058,8 +1058,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/react-ui
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -1192,8 +1192,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1292,8 +1292,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -1368,8 +1368,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -1459,8 +1459,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/dompurify':
         specifier: ^3.0.2
         version: 3.0.2
@@ -1544,8 +1544,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1666,8 +1666,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
@@ -1733,8 +1733,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1812,8 +1812,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1876,8 +1876,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -1955,8 +1955,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2025,8 +2025,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2092,8 +2092,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/leaflet':
         specifier: ^1.9.0
         version: 1.9.0
@@ -2192,8 +2192,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2250,8 +2250,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -2388,8 +2388,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2461,8 +2461,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2531,8 +2531,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -2622,8 +2622,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -2665,8 +2665,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2720,8 +2720,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2856,8 +2856,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -2917,8 +2917,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -2954,8 +2954,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3042,8 +3042,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3160,8 +3160,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -3251,8 +3251,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3324,8 +3324,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3376,8 +3376,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3522,8 +3522,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -3571,8 +3571,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -3607,8 +3607,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -3752,8 +3752,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/shell
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.merge':
         specifier: ^4.6.6
         version: 4.6.7
@@ -3855,8 +3855,8 @@ importers:
         specifier: ^0.44.0
         version: 0.44.0(@opentelemetry/api@1.8.0)
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.1.4(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@sentry/react':
         specifier: ^7.100.1
         version: 7.101.0(react@18.2.0)
@@ -5374,7 +5374,7 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^1.2.1
-        version: 1.2.1(preact@10.19.2)
+        version: 1.2.1(preact@10.20.2)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5384,7 +5384,7 @@ importers:
     optionalDependencies:
       preact:
         specifier: ^10.11.0
-        version: 10.19.2
+        version: 10.20.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -6373,8 +6373,8 @@ importers:
         specifier: ^2.3.31
         version: 2.3.31(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/cli-progress':
         specifier: ^3.11.0
         version: 3.11.0
@@ -6489,8 +6489,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-tabs':
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -6874,8 +6874,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui-theme
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       chess.js:
         specifier: 1.0.0-alpha.0
         version: 1.0.0-alpha.0
@@ -7295,8 +7295,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       assert:
         specifier: ^2.0.0
         version: 2.0.0
@@ -7767,8 +7767,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -7823,8 +7823,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8208,8 +8208,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8388,7 +8388,7 @@ importers:
         version: link:../../common/random
       yjs:
         specifier: ^13.6.10
-        version: 13.6.10
+        version: 13.6.14
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8521,8 +8521,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8560,8 +8560,8 @@ importers:
         specifier: ^5.0.18
         version: 5.0.18
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@storybook/addons':
         specifier: ^7.0.6
         version: 7.0.7(react-dom@18.2.0)(react@18.2.0)
@@ -8801,8 +8801,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8853,8 +8853,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -8926,8 +8926,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -9095,8 +9095,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@preact/signals-react':
         specifier: ^1.3.8
         version: 1.3.8(react@18.2.0)
@@ -9240,8 +9240,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/d3':
         specifier: ^7.4.2
         version: 7.4.2
@@ -9319,8 +9319,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -9371,8 +9371,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -9452,12 +9452,9 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../storybook-utils
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -9541,8 +9538,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.1.4(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -9672,8 +9669,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-utils
       '@phosphor-icons/react':
-        specifier: ^2.0.5
-        version: 2.0.5(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -13198,43 +13195,43 @@ packages:
     resolution: {integrity: sha512-Tbsj02wXCbqGmzdnXNk0SOF19ChhRU70BsroIi4Pm6Ehp56in6vch94mfbdQ17DozxkL3BAVjbZ4Qc1a0HFRAg==}
     dev: false
 
-  /@cbor-extract/cbor-extract-darwin-arm64@2.1.1:
-    resolution: {integrity: sha512-blVBy5MXz6m36Vx0DfLd7PChOQKEs8lK2bD1WJn/vVgG4FXZiZmZb2GECHFvVPA5T7OnODd9xZiL3nMCv6QUhA==}
+  /@cbor-extract/cbor-extract-darwin-arm64@2.2.0:
+    resolution: {integrity: sha512-P7swiOAdF7aSi0H+tHtHtr6zrpF3aAq/W9FXx5HektRvLTM2O89xCyXF3pk7pLc7QpaY7AoaE8UowVf9QBdh3w==}
     cpu: [arm64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /@cbor-extract/cbor-extract-darwin-x64@2.1.1:
-    resolution: {integrity: sha512-h6KFOzqk8jXTvkOftyRIWGrd7sKQzQv2jVdTL9nKSf3D2drCvQB/LHUxAOpPXo3pv2clDtKs3xnHalpEh3rDsw==}
+  /@cbor-extract/cbor-extract-darwin-x64@2.2.0:
+    resolution: {integrity: sha512-1liF6fgowph0JxBbYnAS7ZlqNYLf000Qnj4KjqPNW4GViKrEql2MgZnAsExhY9LSy8dnvA4C0qHEBgPrll0z0w==}
     cpu: [x64]
     os: [darwin]
     requiresBuild: true
     optional: true
 
-  /@cbor-extract/cbor-extract-linux-arm64@2.1.1:
-    resolution: {integrity: sha512-SxAaRcYf8S0QHaMc7gvRSiTSr7nUYMqbUdErBEu+HYA4Q6UNydx1VwFE68hGcp1qvxcy9yT5U7gA+a5XikfwSQ==}
+  /@cbor-extract/cbor-extract-linux-arm64@2.2.0:
+    resolution: {integrity: sha512-rQvhNmDuhjTVXSPFLolmQ47/ydGOFXtbR7+wgkSY0bdOxCFept1hvg59uiLPT2fVDuJFuEy16EImo5tE2x3RsQ==}
     cpu: [arm64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@cbor-extract/cbor-extract-linux-arm@2.1.1:
-    resolution: {integrity: sha512-ds0uikdcIGUjPyraV4oJqyVE5gl/qYBpa/Wnh6l6xLE2lj/hwnjT2XcZCChdXwW/YFZ1LUHs6waoYN8PmK0nKQ==}
+  /@cbor-extract/cbor-extract-linux-arm@2.2.0:
+    resolution: {integrity: sha512-QeBcBXk964zOytiedMPQNZr7sg0TNavZeuUCD6ON4vEOU/25+pLhNN6EDIKJ9VLTKaZ7K7EaAriyYQ1NQ05s/Q==}
     cpu: [arm]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@cbor-extract/cbor-extract-linux-x64@2.1.1:
-    resolution: {integrity: sha512-GVK+8fNIE9lJQHAlhOROYiI0Yd4bAZ4u++C2ZjlkS3YmO6hi+FUxe6Dqm+OKWTcMpL/l71N6CQAmaRcb4zyJuA==}
+  /@cbor-extract/cbor-extract-linux-x64@2.2.0:
+    resolution: {integrity: sha512-cWLAWtT3kNLHSvP4RKDzSTX9o0wvQEEAj4SKvhWuOVZxiDAeQazr9A+PSiRILK1VYMLeDml89ohxCnUNQNQNCw==}
     cpu: [x64]
     os: [linux]
     requiresBuild: true
     optional: true
 
-  /@cbor-extract/cbor-extract-win32-x64@2.1.1:
-    resolution: {integrity: sha512-2Niq1C41dCRIDeD8LddiH+mxGlO7HJ612Ll3D/E73ZWBmycued+8ghTr/Ho3CMOWPUEr08XtyBMVXAjqF+TcKw==}
+  /@cbor-extract/cbor-extract-win32-x64@2.2.0:
+    resolution: {integrity: sha512-l2M+Z8DO2vbvADOBNLbbh9y5ST1RY5sqkWOg/58GkUPBYou/cuNZ68SGQ644f1CvZ8kcOxyZtw06+dxWHIoN/w==}
     cpu: [x64]
     os: [win32]
     requiresBuild: true
@@ -15024,7 +15021,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       jest-message-util: 28.1.3
       jest-util: 28.1.3
@@ -15036,7 +15033,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       jest-message-util: 29.5.0
       jest-util: 29.5.0
@@ -15092,7 +15089,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-mock: 28.1.3
     dev: true
 
@@ -15102,7 +15099,7 @@ packages:
     dependencies:
       '@jest/fake-timers': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-mock: 29.5.0
     dev: true
 
@@ -15146,7 +15143,7 @@ packages:
     dependencies:
       '@jest/types': 28.1.3
       '@sinonjs/fake-timers': 9.1.2
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-message-util: 28.1.3
       jest-mock: 28.1.3
       jest-util: 28.1.3
@@ -15158,7 +15155,7 @@ packages:
     dependencies:
       '@jest/types': 29.5.0
       '@sinonjs/fake-timers': 10.2.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-message-util: 29.5.0
       jest-mock: 29.5.0
       jest-util: 29.5.0
@@ -15202,7 +15199,7 @@ packages:
       '@jest/transform': 28.1.3
       '@jest/types': 28.1.3
       '@jridgewell/trace-mapping': 0.3.17
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       collect-v8-coverage: 1.0.1
       exit: 0.1.2
@@ -15421,7 +15418,7 @@ packages:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       '@types/yargs': 17.0.13
       chalk: 4.1.2
     dev: true
@@ -16057,7 +16054,7 @@ packages:
     resolution: {integrity: sha512-4ySo4CjzStuprMwk35H5pPbkymjv1SF3jGLj6rAHp/xT/RF7TL7bd9CTm1xDY49K2qF7jmR/g7k+SkLETP6opA==}
     hasBin: true
     dependencies:
-      detect-libc: 2.0.1
+      detect-libc: 2.0.3
       https-proxy-agent: 5.0.1
       make-dir: 3.1.0
       node-fetch: 2.7.0
@@ -16075,7 +16072,7 @@ packages:
     resolution: {integrity: sha512-aDF3S3rK9Q2gey/WAttUlISduDItz5BU3306M9Eyv6/oS40aMprnopshtlKTykxRNIBEZuRMaZAnbrQ4QtKGyw==}
     hasBin: true
     dependencies:
-      detect-libc: 2.0.1
+      detect-libc: 2.0.3
       https-proxy-agent: 5.0.1
       make-dir: 3.1.0
       node-fetch: 2.7.0
@@ -18830,18 +18827,8 @@ packages:
       typescript: 5.3.3
     dev: true
 
-  /@phosphor-icons/react@2.0.5(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-Ghohi+Dk+Y0RoI1vra3jH2QC3sO6C16a/Km0gfy05ONIsC62Vwn1SK2Qaim77VPyn1FS7qjMxocdi9kx6btvXg==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: '>= 16.8'
-      react-dom: '>= 16.8'
-    dependencies:
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-
-  /@phosphor-icons/react@2.1.4(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-EeNwgcg1aeK5vG/JYVTullnZzk5zjftOrjLb1iYetyhn5ImFFREc+xG0FAB/dAY277DGDSF8pNdNbqG1SUKIxQ==}
+  /@phosphor-icons/react@2.1.5(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-B7vRm/w+P/+eavWZP5CB5Ul0ffK4Y7fpd/auWKuGvm+8pVgAJzbOK8O0s+DqzR+TwWkh5pHtJTuoAtaSvgCPzg==}
     engines: {node: '>=10'}
     peerDependencies:
       react: '>= 16.8'
@@ -18907,13 +18894,13 @@ packages:
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
 
-  /@preact/signals@1.2.1(preact@10.19.2):
+  /@preact/signals@1.2.1(preact@10.20.2):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.6.0
-      preact: 10.19.2
+      preact: 10.20.2
     dev: false
 
   /@protobufjs/aspromise@1.1.2:
@@ -23811,7 +23798,7 @@ packages:
   /@types/graceful-fs@4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
 
   /@types/hapi__catbox@10.2.6:
@@ -23893,7 +23880,7 @@ packages:
   /@types/ioredis@4.28.10:
     resolution: {integrity: sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 20.12.7
     dev: false
 
   /@types/isomorphic-fetch@0.0.36:
@@ -23945,13 +23932,13 @@ packages:
   /@types/jsonfile@6.1.1:
     resolution: {integrity: sha512-GSgiRCVeapDN+3pqA35IkQwasaCh/0YFH5dEF6S88iDvEn901DjOeH3/QPY+XYP1DFzDZPvIvfeEgk+7br5png==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
 
   /@types/jsonwebtoken@9.0.1:
     resolution: {integrity: sha512-c5ltxazpWabia/4UzhIoaDcIza4KViOQhdbjRlfcIGVnsE3c3brkz9Z+F/EeJIECOQP7W7US2hNE930cWWkPiw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 20.12.7
     dev: false
 
   /@types/katex@0.16.7:
@@ -24285,6 +24272,11 @@ packages:
       undici-types: 5.26.5
     dev: true
 
+  /@types/node@20.12.7:
+    resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
+    dependencies:
+      undici-types: 5.26.5
+
   /@types/normalize-package-data@2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
 
@@ -24423,7 +24415,7 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 20.12.7
     dev: true
 
   /@types/resolve@1.20.6:
@@ -24448,7 +24440,7 @@ packages:
   /@types/sax@1.2.4:
     resolution: {integrity: sha512-pSAff4IAxJjfAXUG6tFkO7dsSbTmf8CtUpfhhZ5VhkRpC4628tJhh3+V6H1E+/Gs9piSzYKT5yzHO5M4GG9jkw==}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
 
   /@types/scheduler@0.16.2:
@@ -24603,7 +24595,7 @@ packages:
     resolution: {integrity: sha512-ayJ0iOCDNHnKpKTgBG6Q6JOnHTj9zFta+3j2b8Ejza0e4cvRyMn0ZoLEmbPrTHe5YYRlDYPvPWVdV4cTaRyH7g==}
     dependencies:
       '@types/expect': 1.20.4
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
 
   /@types/web-bluetooth@0.0.20:
@@ -24671,7 +24663,7 @@ packages:
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
     requiresBuild: true
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
     optional: true
 
@@ -27364,7 +27356,7 @@ packages:
     hasBin: true
     optionalDependencies:
       dtrace-provider: 0.8.8
-      moment: 2.29.4
+      moment: 2.30.1
       mv: 2.1.1
       safe-json-stringify: 1.2.0
     dev: true
@@ -27635,25 +27627,25 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
-  /cbor-extract@2.1.1:
-    resolution: {integrity: sha512-1UX977+L+zOJHsp0mWFG13GLwO6ucKgSmSW6JTl8B9GUvACvHeIVpFqhU92299Z6PfD09aTXDell5p+lp1rUFA==}
+  /cbor-extract@2.2.0:
+    resolution: {integrity: sha512-Ig1zM66BjLfTXpNgKpvBePq271BPOvu8MR0Jl080yG7Jsl+wAZunfrwiwA+9ruzm/WEdIV5QF/bjDZTqyAIVHA==}
     hasBin: true
     requiresBuild: true
     dependencies:
-      node-gyp-build-optional-packages: 5.0.3
+      node-gyp-build-optional-packages: 5.1.1
     optionalDependencies:
-      '@cbor-extract/cbor-extract-darwin-arm64': 2.1.1
-      '@cbor-extract/cbor-extract-darwin-x64': 2.1.1
-      '@cbor-extract/cbor-extract-linux-arm': 2.1.1
-      '@cbor-extract/cbor-extract-linux-arm64': 2.1.1
-      '@cbor-extract/cbor-extract-linux-x64': 2.1.1
-      '@cbor-extract/cbor-extract-win32-x64': 2.1.1
+      '@cbor-extract/cbor-extract-darwin-arm64': 2.2.0
+      '@cbor-extract/cbor-extract-darwin-x64': 2.2.0
+      '@cbor-extract/cbor-extract-linux-arm': 2.2.0
+      '@cbor-extract/cbor-extract-linux-arm64': 2.2.0
+      '@cbor-extract/cbor-extract-linux-x64': 2.2.0
+      '@cbor-extract/cbor-extract-win32-x64': 2.2.0
     optional: true
 
   /cbor-x@1.5.4:
     resolution: {integrity: sha512-PVKILDn+Rf6MRhhcyzGXi5eizn1i0i3F8Fe6UMMxXBnWkalq9+C5+VTmlIjAYM4iF2IYF2N+zToqAfYOp+3rfw==}
     optionalDependencies:
-      cbor-extract: 2.1.1
+      cbor-extract: 2.2.0
 
   /cborg@4.0.9:
     resolution: {integrity: sha512-xAuZbCDUOZxCe/ZJuIrnlG1Bk1R0qhwCXdnPYxVmqBSqm9M3BeE3G6Qoj5Zq+8epas36bT3vjiInDTJ6BVH6Rg==}
@@ -29807,10 +29799,9 @@ packages:
     hasBin: true
     dev: true
 
-  /detect-libc@2.0.1:
-    resolution: {integrity: sha512-463v3ZeIrcWtdgIg6vI6XUncguvr2TnGl4SzDXinkt9mSLpBJKXT3mW6xT3VQdDN11+WVs29pgvivTc4Lp8v+w==}
+  /detect-libc@2.0.3:
+    resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
-    dev: false
 
   /detect-newline@3.1.0:
     resolution: {integrity: sha512-TLz+x/vEXm/Y7P7wn1EJFNLxYpUD4TgMosxY6fAVJUnJMbupHBOncxyWUG9OpTaH9EBD7uFI5LfEgmMOc54DsA==}
@@ -35171,7 +35162,7 @@ packages:
       '@jest/expect': 28.1.3
       '@jest/test-result': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -35198,7 +35189,7 @@ packages:
       '@jest/expect': 29.5.0
       '@jest/test-result': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       co: 4.6.0
       dedent: 0.7.0
@@ -35449,7 +35440,7 @@ packages:
       '@jest/environment': 28.1.3
       '@jest/fake-timers': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-mock: 28.1.3
       jest-util: 28.1.3
     dev: true
@@ -35461,7 +35452,7 @@ packages:
       '@jest/environment': 29.5.0
       '@jest/fake-timers': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-mock: 29.5.0
       jest-util: 29.5.0
     dev: true
@@ -35515,7 +35506,7 @@ packages:
     dependencies:
       '@jest/types': 28.1.3
       '@types/graceful-fs': 4.1.5
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -35534,7 +35525,7 @@ packages:
     dependencies:
       '@jest/types': 29.5.0
       '@types/graceful-fs': 4.1.5
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       anymatch: 3.1.3
       fb-watchman: 2.0.2
       graceful-fs: 4.2.10
@@ -35676,7 +35667,7 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
     dev: true
 
   /jest-mock@29.5.0:
@@ -35684,7 +35675,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-util: 29.5.0
     dev: true
 
@@ -35802,7 +35793,7 @@ packages:
       '@jest/test-result': 28.1.3
       '@jest/transform': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       emittery: 0.10.2
       graceful-fs: 4.2.10
@@ -35831,7 +35822,7 @@ packages:
       '@jest/test-result': 29.5.0
       '@jest/transform': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.10
@@ -35892,7 +35883,7 @@ packages:
       '@jest/test-result': 29.5.0
       '@jest/transform': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       cjs-module-lexer: 1.2.2
       collect-v8-coverage: 1.0.1
@@ -35915,7 +35906,7 @@ packages:
     resolution: {integrity: sha512-S5wqyz0DXnNJPd/xfIzZ5Xnp1HrJWBczg8mMfMpN78OJ5eDxXyf+Ygld9wX1DnUWbIbhM1YDY95NjR4CBXkb2g==}
     engines: {node: '>= 10.14.2'}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       graceful-fs: 4.2.10
     dev: true
 
@@ -36010,7 +36001,7 @@ packages:
     engines: {node: '>= 10.14.2'}
     dependencies:
       '@jest/types': 26.6.2
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       chalk: 4.1.2
       graceful-fs: 4.2.10
       is-ci: 2.0.0
@@ -36071,7 +36062,7 @@ packages:
     dependencies:
       '@jest/test-result': 28.1.3
       '@jest/types': 28.1.3
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.10.2
@@ -36085,7 +36076,7 @@ packages:
     dependencies:
       '@jest/test-result': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       ansi-escapes: 4.3.2
       chalk: 4.1.2
       emittery: 0.13.1
@@ -36097,7 +36088,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 20.12.7
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: true
@@ -36115,7 +36106,7 @@ packages:
     resolution: {integrity: sha512-CqRA220YV/6jCo8VWvAt1KKx6eek1VIHMPeLEbpcfSfkEeWyBNppynM/o6q+Wmw+sOhos2ml34wZbSX3G13//g==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true
@@ -36124,7 +36115,7 @@ packages:
     resolution: {integrity: sha512-NcrQnevGoSp4b5kg+akIpthoAFHxPBcb5P6mYPY0fUNT+sSvmtu6jlkEle3anczUKIKEbMxFimk9oTP/tpIPgA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
-      '@types/node': 18.18.9
+      '@types/node': 18.11.9
       jest-util: 29.5.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -39076,8 +39067,8 @@ packages:
     engines: {node: '>=10'}
     dev: false
 
-  /moment@2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
+  /moment@2.30.1:
+    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
     requiresBuild: true
     dev: true
     optional: true
@@ -39425,10 +39416,12 @@ packages:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
 
-  /node-gyp-build-optional-packages@5.0.3:
-    resolution: {integrity: sha512-k75jcVzk5wnnc/FMxsf4udAoTEUv2jY3ycfdSd3yWu6Cnd1oee6/CfZJApyscA4FJOmdoixWwiwOyf16RzD5JA==}
+  /node-gyp-build-optional-packages@5.1.1:
+    resolution: {integrity: sha512-+P72GAjVAbTxjjwUmwjVrqrdZROD4nf8KgpBoDxqXXTiYZZt/ud60dE5yvCSr9lRO8e8yv6kgJIC0K0PfZFVQw==}
     hasBin: true
     requiresBuild: true
+    dependencies:
+      detect-libc: 2.0.3
     optional: true
 
   /node-gyp-build@4.1.1:
@@ -41130,8 +41123,8 @@ packages:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
     dev: false
 
-  /preact@10.19.2:
-    resolution: {integrity: sha512-UA9DX/OJwv6YwP9Vn7Ti/vF80XL+YA5H2l7BpCtUr3ya8LWHFzpiO5R+N7dN16ujpIxhekRFuOOF82bXX7K/lg==}
+  /preact@10.20.2:
+    resolution: {integrity: sha512-S1d1ernz3KQ+Y2awUxKakpfOg2CEmJmwOP+6igPx6dgr6pgDvenqYviyokWso2rhHvGtTlWWnJDa7RaPbQerTg==}
     requiresBuild: true
     dev: false
 
@@ -41162,7 +41155,7 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      detect-libc: 2.0.1
+      detect-libc: 2.0.3
       expand-template: 2.0.3
       github-from-package: 0.0.0
       minimist: 1.2.8
@@ -41430,7 +41423,7 @@ packages:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.18.9
+      '@types/node': 20.12.7
       long: 5.2.1
     dev: false
 
@@ -48999,6 +48992,15 @@ packages:
     requiresBuild: true
     dependencies:
       lib0: 0.2.87
+
+  /yjs@13.6.14:
+    resolution: {integrity: sha512-D+7KcUr0j+vBCUSKXXEWfA+bG4UQBviAwP3gYBhkstkgwy5+8diOPMx0iqLIOxNo/HxaREUimZRxqHGAHCL2BQ==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    requiresBuild: true
+    dependencies:
+      lib0: 0.2.87
+    dev: false
+    optional: true
 
   /yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

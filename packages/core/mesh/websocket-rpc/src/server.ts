@@ -4,6 +4,7 @@
 
 import { type IncomingMessage } from 'http';
 import WebSocket from 'isomorphic-ws';
+import { type Socket } from 'node:net';
 
 import { log } from '@dxos/log';
 import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
@@ -25,6 +26,11 @@ export class WebsocketRpcServer<C, S> {
   private _server?: WebSocket.Server;
 
   constructor(private readonly _params: WebsocketRpcServerParams<C, S>) {}
+  handleUpgrade(request: IncomingMessage, socket: Socket, head: Buffer) {
+    this._server?.handleUpgrade(request, socket, head, (ws) => {
+      this._server?.emit('connection', ws, request);
+    });
+  }
 
   async open() {
     this._server = new WebSocket.Server({
