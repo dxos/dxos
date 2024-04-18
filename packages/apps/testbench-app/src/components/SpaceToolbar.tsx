@@ -11,35 +11,36 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
-  onCreate: () => Promise<PublicKey>;
+  spaceKey?: PublicKey;
+  onCreate: () => void;
   onClose: (space: PublicKey) => void;
   onSelect: (space: PublicKey | undefined) => void;
   onInvite: (space: PublicKey) => void;
 };
 
-export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
+export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
   const client = useClient();
   const spaces = useSpaces().filter((space) => space !== client.spaces.default);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>();
-  useEffect(() => {
-    onSelect(spaceKey);
-  }, [spaceKey]);
+  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(_spaceKey ?? spaces[0]?.key);
 
-  const handleCreate = async () => {
-    const key = await onCreate();
-    setSpaceKey(key);
+  useEffect(() => {
+    if (_spaceKey) {
+      setSpaceKey(_spaceKey);
+    }
+  }, [_spaceKey]);
+
+  const handleChange = (value: string) => {
+    const key = spaces.find((space) => space.key.toHex() === value)?.key;
+    onSelect(key);
   };
 
   return (
     <Toolbar.Root classNames='p-1'>
-      <Toolbar.Button onClick={handleCreate} title='Create space.'>
+      <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
         <Plus />
       </Toolbar.Button>
       <div className='flex w-32'>
-        <Select.Root
-          value={spaceKey?.toHex()}
-          onValueChange={(value) => setSpaceKey(spaces.find((space) => space.key.toHex() === value)?.key)}
-        >
+        <Select.Root value={spaceKey?.toHex()} onValueChange={handleChange}>
           <Select.TriggerButton classNames='is-full' />
           <Select.Portal>
             <Select.Content>
@@ -54,7 +55,10 @@ export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToo
           </Select.Portal>
         </Select.Root>
       </div>
-      <div>{spaces.length}</div>
+      <div className='flex gap-1'>
+        <span>{spaces.length}</span>
+        <span>Space(s)</span>
+      </div>
       <div className='grow' />
       {spaceKey && (
         <>

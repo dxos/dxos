@@ -6,8 +6,8 @@ import React, { forwardRef, type FC } from 'react';
 
 import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, isEchoObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -72,12 +72,12 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
     } else if (over.position) {
       const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
       const object = parseData ? parseData(active.item, 'object') : undefined;
-      E.isEchoReactiveObject(object) && grid.items.push(E.object(GridItemType, { object, position: over.position }));
+      isEchoObject(object) && grid.items.push(create(GridItemType, { object, position: over.position }));
     }
   };
 
   const handleCreate = (position: Position) => {
-    grid.items.push(E.object(GridItemType, { object: new DocumentType(), position }));
+    grid.items.push(create(GridItemType, { object: new DocumentType(), position }));
   };
 
   // TODO(burdon): Accessor to get card values.

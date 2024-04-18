@@ -8,9 +8,9 @@ import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-networ
 import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { TextV0Type } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { Filter, DocAccessor, TextCompatibilitySchema } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter, DocAccessor, create, createDocAccessor, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -98,9 +98,9 @@ const EchoStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   // const identity = useIdentity();
   const space = useSpace(spaceKey);
   const source = useMemo<DocAccessor | undefined>(() => {
-    const { objects = [] } = space?.db.query<E.Expando>(Filter.from({ type: 'test' })) ?? {};
+    const { objects = [] } = space?.db.query<Expando>(Filter.from({ type: 'test' })) ?? {};
     if (objects.length) {
-      return E.createDocAccessor(objects[0].content, ['content']);
+      return createDocAccessor(objects[0].content, ['content']);
     }
   }, [space]);
 
@@ -125,9 +125,9 @@ export const WithEcho = {
         createSpace
         onCreateSpace={async (space) => {
           space.db.add(
-            E.object({
+            create({
               type: 'test',
-              content: E.object(TextCompatibilitySchema, { content: initialContent }),
+              content: create(TextV0Type, { content: initialContent }),
             }),
           );
         }}

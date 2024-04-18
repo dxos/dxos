@@ -11,14 +11,13 @@ import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
-import { type EchoReactiveObject } from '../effect/reactive';
+import { type EchoReactiveObject } from '../ddl';
 import { prohibitSignalActions } from '../guarded-scope';
-import { type OpaqueEchoObject, type EchoObject } from '../object';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
 // TODO(burdon): Multi-sort option.
-export type Sort<T extends OpaqueEchoObject> = (a: T, b: T) => -1 | 0 | 1;
+export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1;
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
@@ -26,14 +25,14 @@ export type Subscription = () => void;
 // TODO(burdon): Fix garbage collection.
 const queries: Query<any>[] = [];
 
-export type QueryResult<T extends OpaqueEchoObject = EchoReactiveObject<any>> = {
+export type QueryResult<T extends {} = any> = {
   id: string;
   spaceKey: PublicKey;
 
   /**
    * May not be present for remote results.
    */
-  object?: T;
+  object?: EchoReactiveObject<T>;
 
   match?: {
     // TODO(dmaretskyi): text positional info.
@@ -64,7 +63,7 @@ export type QueryResult<T extends OpaqueEchoObject = EchoReactiveObject<any>> = 
  * Each query has a separate instance.
  */
 export interface QuerySource {
-  getResults(): QueryResult<EchoObject>[];
+  getResults(): QueryResult[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -90,7 +89,7 @@ export interface QueryContext {
 /**
  * Predicate based query.
  */
-export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
+export class Query<T extends {} = any> {
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -103,7 +102,7 @@ export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
   private readonly _event = new Event<Query<T>>();
 
   private _resultCache: QueryResult<T>[] | undefined = undefined;
-  private _objectCache: T[] | undefined = undefined;
+  private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
 
   constructor(
     private readonly _queryContext: QueryContext,
@@ -143,7 +142,7 @@ export class Query<T extends OpaqueEchoObject = EchoReactiveObject<any>> {
     return this._resultCache!;
   }
 
-  get objects(): T[] {
+  get objects(): EchoReactiveObject<T>[] {
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;

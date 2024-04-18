@@ -8,7 +8,7 @@ import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/type
 import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import * as E from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
 import { migrations } from './migrations';
@@ -21,7 +21,7 @@ describe('Composer migrations', () => {
 
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocal() });
-    client.addSchema(FolderType, E.Expando);
+    client.addSchema(FolderType, Expando);
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -43,15 +43,15 @@ describe('Composer migrations', () => {
   });
 
   test(migrations[1].version.toString(), async () => {
-    const folder1 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
-    const folder2 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
-    const folder3 = space.db.add(E.object(FolderType, { name: space.key.toHex(), objects: [] }));
+    const folder1 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
+    const folder2 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
+    const folder3 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
     setSpaceProperty(space, FolderType.typename, folder3);
 
     const keys = [...Array(9)].map(() => PublicKey.random().toHex());
-    folder1.objects = keys.slice(0, 3).map((key) => E.object(E.Expando, { key }));
-    folder2.objects = keys.slice(3, 6).map((key) => E.object(E.Expando, { key }));
-    folder3.objects = keys.slice(6, 9).map((key) => E.object(E.Expando, { key }));
+    folder1.objects = keys.slice(0, 3).map((key) => create(Expando, { key }));
+    folder2.objects = keys.slice(3, 6).map((key) => create(Expando, { key }));
+    folder3.objects = keys.slice(6, 9).map((key) => create(Expando, { key }));
 
     const query = space.db.query(Filter.schema(FolderType));
     expect(query.objects).to.have.lengthOf(3);

@@ -10,7 +10,7 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { MessageType, type RecipientType, TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create, getMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -91,7 +91,7 @@ export class ImapProcessor {
       return;
     }
 
-    const message = E.object(MessageType, {
+    const message = create(MessageType, {
       type: 'email',
       date: date.toISOString(),
       from: toRecipient(from.value[0]),
@@ -100,7 +100,7 @@ export class ImapProcessor {
       subject,
       blocks: [],
     });
-    E.getMeta(message).keys.push({ source: this._id, id: messageId });
+    getMeta(message).keys.push({ source: this._id, id: messageId });
 
     // Skip bulk mail.
     const ignoreMatchingEmail = [/noreply/, /no-reply/, /notifications/, /billing/, /support/];
@@ -118,7 +118,7 @@ export class ImapProcessor {
     message.blocks = [
       {
         timestamp: new Date().toISOString(),
-        content: E.object(TextV0Type, { content: body }),
+        content: create(TextV0Type, { content: body }),
       },
     ];
     return message;

@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, synchronized } from '@dxos/async';
-import { type MetadataMethods } from '@dxos/echo-pipeline';
+import { Event } from '@dxos/async';
+import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type MySublevel, type ConcatenatedHeadHashes } from './types';
+import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
-  db: MySublevel;
+  db: SubLevelDB;
 };
 
 export type DocumentMetadata = {
@@ -23,16 +24,16 @@ export type DocumentMetadata = {
 };
 
 @trace.resource()
-export class IndexMetadataStore implements MetadataMethods {
+export class IndexMetadataStore {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
-  private readonly _lastSeen: MySublevel;
-  private readonly _lastIndexed: MySublevel;
+  private readonly _lastSeen: SubLevelDB;
+  private readonly _lastIndexed: SubLevelDB;
 
   constructor({ db }: IndexMetadataStoreParams) {
-    this._lastSeen = db.sublevel('clean');
-    this._lastIndexed = db.sublevel('dirty');
+    this._lastSeen = db.sublevel('last-seen');
+    this._lastIndexed = db.sublevel('last-indexed');
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -61,21 +62,21 @@ export class IndexMetadataStore implements MetadataMethods {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  @synchronized
-  async markDirty(idToLastHash: Map<string, string>) {
-    const batch = this._lastIndexed.batch();
+  markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
+    idToLastHash.forEach((lastAvailableHash, id) => {
+      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
+    });
+  }
 
-    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
-      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json' });
-    }
-
-    await batch.write();
-
+  /**
+   * Called after leveldb batch commit.
+   */
+  afterMarkDirty() {
     this.dirty.emit();
   }
 
   async markClean(id: string, lastIndexedHash: string) {
-    await this._lastSeen.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
+    await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
     this.clean.emit();
   }
 }

@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
-import * as E from '@dxos/echo-schema';
-import { TypedObject } from '@dxos/echo-schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class GridItemType extends TypedObject({ typename: 'braneframe.Grid.Item', version: '0.1.0' })({
-  object: E.ref(E.Expando),
+  object: ref(Expando),
   position: S.mutable(
     S.struct({
       x: S.number,
@@ -20,5 +17,5 @@ export class GridItemType extends TypedObject({ typename: 'braneframe.Grid.Item'
 
 export class GridType extends TypedObject({ typename: 'braneframe.Grid', version: '0.1.0' })({
   title: S.string,
-  items: S.mutable(S.array(E.ref(GridItemType))),
+  items: S.mutable(S.array(ref(GridItemType))),
 }) {}

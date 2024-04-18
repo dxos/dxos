@@ -10,7 +10,7 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/react-client/echo';
+import { type EchoReactiveObject, create } from '@dxos/react-client/echo';
 
 import { TemplateMain } from './components';
 import meta, { TEMPLATE_PLUGIN } from './meta';
@@ -60,7 +60,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
               // Add all documents to the graph.
               const query = space.db.query({ type: typename });
-              let previousObjects: E.EchoReactiveObject<any>[] = [];
+              let previousObjects: EchoReactiveObject<any>[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -107,7 +107,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
           switch (intent.action) {
             case TemplateAction.CREATE: {
               // TODO(burdon): Set typename.
-              return { data: E.object({ type: 'template' }) };
+              return { data: create({ type: 'template' }) };
             }
           }
         },

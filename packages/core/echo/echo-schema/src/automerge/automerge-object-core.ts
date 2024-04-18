@@ -25,9 +25,8 @@ import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isReactiveProxy } from '../effect/proxy';
-import { isEchoReactiveObject } from '../effect/reactive';
-import { type EchoObject, type ObjectMeta, type OpaqueEchoObject } from '../object';
+import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '../ddl';
+import { isEchoObject } from '../echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -74,7 +73,7 @@ export class AutomergeObjectCore {
    * Set only when the object is not bound to a database.
    */
   // TODO(dmaretskyi): Change to object core.
-  public linkCache?: Map<string, OpaqueEchoObject> = new Map<string, OpaqueEchoObject>();
+  public linkCache?: Map<string, EchoReactiveObject<any>> = new Map<string, EchoReactiveObject<any>>();
 
   /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
@@ -263,10 +262,10 @@ export class AutomergeObjectCore {
   /**
    * Store referenced object.
    */
-  linkObject(obj: OpaqueEchoObject): Reference {
+  linkObject(obj: EchoReactiveObject<any>): Reference {
     if (this.database) {
       // TODO(dmaretskyi): Fix this.
-      if (isReactiveProxy(obj) && !isEchoReactiveObject(obj)) {
+      if (isReactiveObject(obj) && !isEchoObject(obj)) {
         invariant(this.database, 'BUG');
         this.database._dbApi.add(obj);
       }
@@ -290,7 +289,7 @@ export class AutomergeObjectCore {
       // TODO(dmaretskyi): Add better validation.
       invariant(obj.id != null);
 
-      this.linkCache.set(obj.id, obj as EchoObject);
+      this.linkCache.set(obj.id, obj as EchoReactiveObject<any>);
       return new Reference(obj.id);
     }
   }
@@ -298,7 +297,7 @@ export class AutomergeObjectCore {
   /**
    * Lookup referenced object.
    */
-  lookupLink(ref: Reference): OpaqueEchoObject | undefined {
+  lookupLink(ref: Reference): EchoReactiveObject<any> | undefined {
     if (this.database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
       return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);
@@ -321,12 +320,12 @@ export class AutomergeObjectCore {
       return null;
     }
     // TODO(dmaretskyi): Move proxy handling out of this class.
-    if (isReactiveProxy(value) as boolean) {
+    if (isReactiveObject(value) as boolean) {
       if (!allowLinks) {
         throw new TypeError('Linking is not allowed');
       }
 
-      const reference = this.linkObject(value as OpaqueEchoObject);
+      const reference = this.linkObject(value as EchoReactiveObject<any>);
       return encodeReference(reference);
     }
     if (value instanceof Reference) {

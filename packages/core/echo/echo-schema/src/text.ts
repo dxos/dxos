@@ -6,21 +6,9 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { createDocAccessor } from './automerge';
-import { type EchoReactiveObject } from './effect/reactive';
+import { type DocAccessor } from './automerge';
 
-/**
- * @deprecated
- */
-export const LEGACY_TEXT_TYPE = 'dxos.Text.v0';
-
-// TODO(burdon): Reconcile with cursorConverter.
-
-// TODO(wittjosiah): Path shouldn't be hardcoded.
-const path = ['content'];
-
-export const toCursor = <T>(object: EchoReactiveObject<T>, pos: number) => {
-  const accessor = createDocAccessor(object, path);
+export const toCursor = (accessor: DocAccessor, pos: number) => {
   const doc = accessor.handle.docSync();
   if (!doc) {
     return '';
@@ -35,12 +23,11 @@ export const toCursor = <T>(object: EchoReactiveObject<T>, pos: number) => {
   return A.getCursor(doc, accessor.path.slice(), pos);
 };
 
-export const fromCursor = <T>(object: EchoReactiveObject<T>, cursor: string) => {
+export const fromCursor = (accessor: DocAccessor, cursor: string) => {
   if (cursor === '') {
     return 0;
   }
 
-  const accessor = createDocAccessor(object, path);
   const doc = accessor.handle.docSync();
   if (!doc) {
     return 0;
@@ -59,18 +46,14 @@ export const fromCursor = <T>(object: EchoReactiveObject<T>, cursor: string) => 
   return A.getCursorPosition(doc, accessor.path.slice(), cursor);
 };
 
-/**
- * TODO(dima?): This API will change.
- */
-export const getTextInRange = (
-  object: EchoReactiveObject<{ content: string }> | undefined,
-  begin: string,
-  end: string,
-) => {
-  if (object == null) {
+export const getTextInRange = (accessor: DocAccessor, start: string, end: string) => {
+  const doc = accessor.handle.docSync();
+  const value = get(doc, accessor.path);
+  const beginIdx = fromCursor(accessor, start);
+  const endIdx = fromCursor(accessor, end);
+  if (typeof value === 'string') {
+    return value.slice(beginIdx, endIdx);
+  } else {
     return '';
   }
-  const beginIdx = fromCursor(object, begin);
-  const endIdx = fromCursor(object, end);
-  return (object.content as string).slice(beginIdx, endIdx);
 };

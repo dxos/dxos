@@ -8,7 +8,8 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import * as E from '@dxos/echo-schema/schema';
+import { type Hypergraph } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema/schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
@@ -28,7 +29,19 @@ const Story = () => {
     generator.addSchemas();
     generator.createObjects({ [TestSchemaType.project]: 6 });
 
-    const table = space.db.add(E.object(TableType, { title: '', props: [] }));
+    const graph = (client as any)._graph as Hypergraph;
+
+    // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
+    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    if (!graph.runtimeSchemaRegistry.isSchemaRegistered(TableType)) {
+      graph.runtimeSchemaRegistry.registerSchema(TableType);
+    }
+
+    // We need a table to reference
+    // TODO(zan): Workout how to get this to not double add in debug.
+    space.db.add(create(TableType, { title: 'Other table', props: [], schema: generator.schemas[3] }));
+
+    const table = space.db.add(create(TableType, { title: '', props: [] }));
     setTable(table);
   }, []);
 

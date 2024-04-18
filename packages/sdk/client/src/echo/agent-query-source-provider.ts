@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
 import {
-  type EchoObject,
+  type EchoReactiveObject,
   type Filter,
   type QueryResult,
   type QuerySource,
@@ -97,7 +97,7 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 export class AgentQuerySource implements QuerySource {
   public changed = new Event<void>();
   private _cancelPreviousRequest?: () => void = undefined;
-  private _results?: QueryResult<EchoObject>[] = [];
+  private _results?: QueryResult[] = [];
 
   constructor(
     private readonly _params: {
@@ -105,11 +105,11 @@ export class AgentQuerySource implements QuerySource {
     },
   ) {}
 
-  getResults(): QueryResult<EchoObject>[] {
+  getResults(): QueryResult[] {
     return this._results ?? [];
   }
 
-  update(filter: Filter<EchoObject>): void {
+  update(filter: Filter): void {
     if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
       return;
@@ -148,7 +148,7 @@ export class AgentQuerySource implements QuerySource {
   }
 }
 
-const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoObject | undefined => {
+const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoReactiveObject<any> | undefined => {
   invariant(objSnapshot.genesis, 'Genesis is undefined.');
   invariant(objSnapshot.snapshot, 'Genesis model type is undefined.');
 

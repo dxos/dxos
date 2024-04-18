@@ -11,7 +11,7 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 import { GameType } from '@dxos/chess-app';
-import { isReactiveProxy } from '@dxos/echo-schema';
+import { isReactiveObject } from '@dxos/echo-schema';
 
 import { CHESS_PLUGIN } from './meta';
 
@@ -31,5 +31,5 @@ export type ChessPluginProvides = SurfaceProvides &
   SchemaProvides;
 
 export const isObject = (object: unknown): object is GameType => {
-  return isReactiveProxy(object) && object instanceof GameType;
+  return isReactiveObject(object) && object instanceof GameType;
 };

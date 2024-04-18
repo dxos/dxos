@@ -11,7 +11,7 @@ import { StackType, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema/schema';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
@@ -27,7 +27,7 @@ type PresenterState = {
 
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
-  const state = E.object<PresenterState>({ presenting: false });
+  const state = create<PresenterState>({ presenting: false });
 
   return {
     meta,

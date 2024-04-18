@@ -6,12 +6,10 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { Expando } from './effect/reactive';
+import { getSchema, create, Expando } from './ddl';
 import { Filter } from './query';
-import { getSchema, object } from './schema';
 import { Serializer, type SerializedSpace } from './serializer';
-import { createDatabase } from './testing';
-import { Contact } from './tests/schema';
+import { createDatabase, Contact } from './testing';
 
 describe('Serializer', () => {
   // TODO(dmaretskyi): Test with unloaded objects.
@@ -22,7 +20,7 @@ describe('Serializer', () => {
 
     {
       const { db } = await createDatabase();
-      const obj = object({} as any);
+      const obj = create({} as any);
       obj.title = 'Test';
       db.add(obj);
       await db.flush();
@@ -54,17 +52,17 @@ describe('Serializer', () => {
 
     {
       const { db } = await createDatabase();
-      const obj = object({
+      const obj = create({
         title: 'Main task',
         subtasks: [
-          object(Expando, {
+          create(Expando, {
             title: 'Subtask 1',
           }),
-          object(Expando, {
+          create(Expando, {
             title: 'Subtask 2',
           }),
         ],
-        previous: object(Expando, {
+        previous: create(Expando, {
           title: 'Previous task',
         }),
       });
@@ -96,8 +94,8 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await createDatabase();
-      graph.types.registerEffectSchema(Contact);
-      const contact = object(Contact, { name });
+      graph.runtimeSchemaRegistry.registerSchema(Contact);
+      const contact = create(Contact, { name });
       db.add(contact);
       await db.flush();
       data = await new Serializer().export(db);
@@ -105,7 +103,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await createDatabase();
-      graph.types.registerEffectSchema(Contact);
+      graph.runtimeSchemaRegistry.registerSchema(Contact);
 
       await new Serializer().import(db, data);
       expect(db.objects).to.have.length(1);

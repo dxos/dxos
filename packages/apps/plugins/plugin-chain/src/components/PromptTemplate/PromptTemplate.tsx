@@ -5,8 +5,7 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor, create } from '@dxos/echo-schema';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -87,7 +86,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(E.object(ChainInput, { name }));
+        prompt.inputs.push(create(ChainInput, { name }));
       }
     });
 

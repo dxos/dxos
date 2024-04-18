@@ -3,8 +3,7 @@
 //
 
 import { ContactType, MessageType, type RecipientType } from '@braneframe/types';
-import { Filter, hasType } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter, hasType, create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -29,7 +28,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
       );
 
     if (!contact) {
-      contact = E.object(ContactType, {
+      contact = create(ContactType, {
         name: recipient.name,
         identifiers: [{ type: 'email', value: recipient.email }],
       });

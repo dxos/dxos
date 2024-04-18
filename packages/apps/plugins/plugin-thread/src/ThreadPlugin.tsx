@@ -21,10 +21,10 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, Filter, isSpace } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -53,7 +53,7 @@ const isMinSm = () => window.matchMedia('(min-width:768px)').matches;
 
 export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const settings = new LocalStorageStore<ThreadSettingsProps>(THREAD_PLUGIN);
-  const state = E.object<ThreadState>({ threads: {} });
+  const state = create<ThreadState>({ threads: {} });
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
@@ -73,11 +73,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       unsubscribe = effect(() => {
         const active = navigationPlugin?.provides.location.active;
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-        const space = activeNode
-          ? activeNode.data instanceof SpaceProxy
-            ? activeNode.data
-            : getSpace(activeNode.data)
-          : undefined;
+        const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
           if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
@@ -293,7 +289,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: E.object(ThreadType, { messages: [] }) };
+              return { data: create(ThreadType, { messages: [] }) };
             }
 
             case ThreadAction.SELECT: {
@@ -305,7 +301,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case ThreadAction.DELETE: {
               const { document: doc, thread, cursor } = intent.data ?? {};
-              if (!(doc instanceof DocumentType) || !doc.comments || !(thread instanceof ThreadType)) {
+              const space = getSpace(thread);
+              if (!(doc instanceof DocumentType) || !doc.comments || !(thread instanceof ThreadType) || !space) {
                 return;
               }
 
@@ -316,6 +313,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments?.splice(index, 1);
                 }
 
+                // TODO(wittjosiah): Deleting the thread entirely here causes an error when undoing.
+                // space.db.remove(thread);
+
                 return {
                   undoable: {
                     message: translations[0]['en-US'][THREAD_PLUGIN]['thread deleted label'],
@@ -323,7 +323,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments?.push({ thread, cursor });
+                doc.comments.push({ thread, cursor });
                 return { data: true };
               }
             }
@@ -344,8 +344,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 doc.comments?.forEach(({ thread, cursor }) => {
                   if (thread instanceof ThreadType && cursor) {
                     const [start, end] = cursor.split(':');
-                    // TODO(wittjosiah): Don't cast.
-                    const title = getTextInRange(doc.content, start, end);
+                    const title =
+                      doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                     // TODO(burdon): This seems unsafe; review.
                     // Only update if the title has changed, otherwise this will cause an infinite loop.
                     // Skip if the title is empty - this means comment text was deleted, but thread title should remain.
@@ -357,13 +357,12 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             comments({
-              id: doc.content?.id,
+              id: doc.id,
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
-                // TODO(wittjosiah): Don't cast.
-                const title = getTextInRange(doc.content, start, end);
-                const thread = space.db.add(E.object(ThreadType, { title, messages: [], context: { object: doc.id } }));
+                const title = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
+                const thread = space.db.add(create(ThreadType, { title, messages: [], context: { object: doc.id } }));
                 if (doc.comments) {
                   doc.comments.push({ thread, cursor });
                 } else {
@@ -394,9 +393,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
               onUpdate: ({ id, cursor }) => {
                 const comment = doc.comments?.find(({ thread }) => thread?.id === id);
-                if (comment && comment.thread) {
+                if (comment && comment.thread instanceof ThreadType) {
                   const [start, end] = cursor.split(':');
-                  (comment.thread as ThreadType).title = getTextInRange(doc.content, start, end);
+                  comment.thread.title =
+                    doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                   comment.cursor = cursor;
                 }
               },

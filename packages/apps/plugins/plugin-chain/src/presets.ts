@@ -3,7 +3,7 @@
 //
 
 import { ChainInput, ChainInputType, ChainPromptType, TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 
 export const str = (...text: (string | undefined | boolean)[]): string =>
   text
@@ -22,9 +22,9 @@ export const presets = [
     id: 'dxos.org/prompt/translate',
     title: 'Translate',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'say',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'Translate the following into {language}:',
@@ -36,12 +36,12 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, {
+          create(ChainInput, {
             name: 'language',
             type: ChainInputType.VALUE,
             value: 'japanese',
           }),
-          E.object(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+          create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
         ],
       }),
   },
@@ -49,9 +49,9 @@ export const presets = [
     id: 'dxos.org/prompt/chess',
     title: 'Chess',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'hint',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'You are a machine that is an expert chess player.',
@@ -63,7 +63,7 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, {
+          create(ChainInput, {
             name: 'history',
             type: ChainInputType.CONTEXT,
             value: 'object.pgn',
@@ -75,9 +75,9 @@ export const presets = [
     id: 'dxos.org/prompt/mermaid',
     title: 'Mermaid',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'draw',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'Create a simplified mermaid graph representing the text below.',
@@ -90,7 +90,7 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+          create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
         ],
       }),
   },
@@ -98,9 +98,9 @@ export const presets = [
     id: 'dxos.org/prompt/list',
     title: 'List',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'list',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
@@ -117,12 +117,12 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, {
+          create(ChainInput, {
             type: ChainInputType.SCHEMA,
             name: 'schema',
             value: 'example.com/schema/project',
           }),
-          E.object(ChainInput, { name: 'question', type: ChainInputType.PASS_THROUGH }),
+          create(ChainInput, { name: 'question', type: ChainInputType.PASS_THROUGH }),
         ],
       }),
   },
@@ -130,9 +130,9 @@ export const presets = [
     id: 'dxos.org/prompt/base',
     title: 'Base',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'base',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             "Very briefly answer the question based only on the following context and say if you don't know the answer.",
@@ -147,8 +147,8 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, { name: 'context', type: ChainInputType.RETRIEVER }),
-          E.object(ChainInput, { name: 'question', type: ChainInputType.PASS_THROUGH }),
+          create(ChainInput, { name: 'context', type: ChainInputType.RETRIEVER }),
+          create(ChainInput, { name: 'question', type: ChainInputType.PASS_THROUGH }),
         ],
       }),
   },
@@ -156,9 +156,9 @@ export const presets = [
     id: 'dxos.org/prompt/lookup',
     title: 'Lookup',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'lookup',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'Lookup and very briefly summarize the following topic in one or two sentences:',
@@ -170,7 +170,7 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, { name: 'input', type: ChainInputType.CONTEXT, value: 'text' }),
+          create(ChainInput, { name: 'input', type: ChainInputType.CONTEXT, value: 'text' }),
         ],
       }),
   },
@@ -178,9 +178,9 @@ export const presets = [
     id: 'dxos.org/prompt/extract',
     title: 'Extract',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'extract',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'List all people and companies mentioned in the text below.',
@@ -198,17 +198,17 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, {
+          create(ChainInput, {
             type: ChainInputType.SCHEMA,
             name: 'contact',
             value: 'example.com/schema/contact',
           }),
-          E.object(ChainInput, {
+          create(ChainInput, {
             type: ChainInputType.SCHEMA,
             name: 'company',
             value: 'example.com/schema/organization',
           }),
-          E.object(ChainInput, { name: 'input', type: ChainInputType.CONTEXT, value: 'text' }),
+          create(ChainInput, { name: 'input', type: ChainInputType.CONTEXT, value: 'text' }),
         ],
       }),
   },
@@ -216,9 +216,9 @@ export const presets = [
     id: 'dxos.org/prompt/discord',
     title: 'Summarize',
     prompt: () =>
-      E.object(ChainPromptType, {
+      create(ChainPromptType, {
         command: 'summarize',
-        source: E.object(TextV0Type, {
+        source: create(TextV0Type, {
           content: str(
             // prettier-ignore
             'Summarize what the team is working on and format it as a markdown table without any explanation.',
@@ -230,7 +230,7 @@ export const presets = [
         }),
         inputs: [
           // prettier-ignore
-          E.object(ChainInput, {
+          create(ChainInput, {
             name: 'context',
             type: ChainInputType.RESOLVER,
             value: 'discord.messages.recent',

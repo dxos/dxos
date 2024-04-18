@@ -89,8 +89,9 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
       icon: UsersThree,
       onClick: useCallback(() => {
         space.share?.({
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.NONE,
+          multiUse: true,
         });
       }, [space]),
     },

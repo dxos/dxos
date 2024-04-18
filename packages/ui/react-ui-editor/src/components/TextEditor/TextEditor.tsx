@@ -52,6 +52,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
   (
     {
       id,
+      // TODO(wittjosiah): Rename initialText?
       doc,
       selection,
       extensions,
@@ -92,10 +93,10 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
       //
       // EditorState
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       //
       const state = EditorState.create({
         doc,
-        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): NOTE: Doesn't catch errors in keymap functions.
@@ -152,7 +153,7 @@ export const TextEditor = forwardRef<EditorView | null, TextEditorProps>(
         log('destroy', { id, instanceId });
         view?.destroy();
       };
-    }, [doc, selection, extensions]);
+    }, [id, selection, scrollTo, editorMode, extensions]);
 
     // Focus editor on Enter (e.g., when tabbing to this component).
     const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as S from '@effect/schema/Schema';
 import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
@@ -14,10 +15,8 @@ import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
-import * as E from '../effect/reactive';
-import { type EchoReactiveObject, type Expando } from '../effect/reactive';
+import { Expando, type EchoReactiveObject, create, TypedObject, ref } from '../ddl';
 import { TestBuilder, type TestPeer } from '../testing';
-import { TextCompatibilitySchema } from '../type-collection';
 
 describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
@@ -395,6 +394,26 @@ describe('AutomergeDb', () => {
         expect(threw).to.be.true;
       });
     });
+
+    test('loads as array of non-nullable items', async () => {
+      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.number }) {}
+
+      class TestSchema extends TypedObject({ typename: 'Test', version: '1.0.0' })({
+        nested: S.mutable(S.array(ref(Nested))),
+      }) {}
+
+      const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+      const testPeer = await testBuilder.createPeer();
+      const object = create(TestSchema, { nested: [create(Nested, { value: 42 })] });
+      testPeer.db.graph.runtimeSchemaRegistry.registerSchema(TestSchema, Nested);
+      testPeer.db.add(object);
+
+      const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
+      const loaded = await restartedPeer.db.automerge.loadObjectById<TestSchema>(object.id);
+      const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
+      const value: number = loadedNested[0].value;
+      expect(value).to.eq(42);
+    });
   });
 });
 
@@ -420,11 +439,11 @@ const createPeerInSpaceWithObject = async (
 };
 
 const createExpando = (props: any = {}): EchoReactiveObject<Expando> => {
-  return E.object(E.Expando, props);
+  return create(Expando, props);
 };
 
-const createTextObject = (content: string = ''): EchoReactiveObject<TextCompatibilitySchema> => {
-  return E.object(TextCompatibilitySchema, { content });
+const createTextObject = (content: string = ''): EchoReactiveObject<{ content: string }> => {
+  return create(Expando, { content }) as EchoReactiveObject<{ content: string }>;
 };
 
 interface DocumentHandles {

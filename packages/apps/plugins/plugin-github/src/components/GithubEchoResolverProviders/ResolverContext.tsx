@@ -13,7 +13,7 @@ import React, {
 } from 'react';
 
 import { DocumentType, TextV0Type } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
 import { type Space, SpaceState, useQuery, useSpaces, getMeta } from '@dxos/react-client/echo';
@@ -92,8 +92,8 @@ const DocumentResolverProviderImpl = ({
       }
 
       if (event.data.type === 'initial-data') {
-        const nextDocument = E.object(DocumentType, {
-          content: E.object(TextV0Type, { content: event.data.content }),
+        const nextDocument = create(DocumentType, {
+          content: create(TextV0Type, { content: event.data.content }),
           title: defaultDisplayName,
         });
         getMeta(nextDocument).keys = [{ source, id }];

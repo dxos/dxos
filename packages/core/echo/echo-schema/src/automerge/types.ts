@@ -4,7 +4,7 @@
 
 import { type Reference } from '@dxos/echo-db';
 
-import { type OpaqueEchoObject } from '../object';
+import { type EchoReactiveObject } from '../ddl';
 
 export type DecodedAutomergePrimaryValue =
   | undefined
@@ -26,4 +26,4 @@ export type DecodedAutomergeValue =
   | DecodedAutomergeValue[]
   | { [key: string]: DecodedAutomergeValue }
   | Reference
-  | OpaqueEchoObject;
+  | EchoReactiveObject<any>;

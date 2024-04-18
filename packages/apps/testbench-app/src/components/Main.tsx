@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import React, { useEffect, useState } from 'react';
+import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import * as E from '@dxos/echo-schema'; // TODO(burdon): [API]: Import syntax?
+import { Filter, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -16,8 +17,9 @@ import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
-import { ItemType } from '../data';
+import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
+// TODO(burdon): [API]: Import syntax?
 
 // const dateRange = {
 //   from: new Date(),
@@ -29,17 +31,28 @@ export const Main = () => {
   const [space, setSpace] = useState<Space>();
 
   const [view, setView] = useState<DataView>();
+  const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
-  const flushingPromise = React.useRef<Promise<void>>();
+  const flushingPromise = useRef<Promise<void>>();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
-  const objects = useQuery<ItemType>(
+  const typeMap = useMemo(
+    () =>
+      [ItemType, DocumentType].reduce((map, type) => {
+        map.set(type.typename, type);
+        return map;
+      }, new Map<string, S.Schema<any>>()),
+    [],
+  );
+  const getSchema = (type: string | undefined) => typeMap.get(type ?? ItemType.typename) ?? ItemType;
+
+  const objects = useQuery(
     space,
-    E.Filter.schema(ItemType, (object: ItemType) => match(filter, object.content)),
+    Filter.schema(getSchema(type), (object: ItemType) => match(filter, object.content)),
     {},
-    [filter],
+    [type, filter],
   );
 
   // Handle invitation.
@@ -60,19 +73,32 @@ export const Main = () => {
     return () => clearTimeout(t);
   }, []);
 
-  const handleAdd = (n = 1) => {
+  const handleObjectCreate = (n = 1) => {
     if (!space) {
       return;
     }
 
+    // TODO(burdon): Migrate generator from DebugPlugin.
     Array.from({ length: n }).forEach(() => {
-      // TODO(burdon): Migrate generator from DebugPlugin.
-      space.db.add(
-        E.object(ItemType, {
-          content: randSentence(),
-          // due: randBetweenDate(dateRange)
-        }),
-      );
+      let object: ReactiveObject<any>;
+      switch (type) {
+        case DocumentType.typename:
+          object = create(DocumentType, {
+            title: randWord(),
+            content: randSentence(),
+          });
+          break;
+
+        case ItemType.typename:
+        default:
+          object = create(ItemType, {
+            content: randSentence(),
+            // due: randBetweenDate(dateRange)
+          });
+          break;
+      }
+
+      space.db.add(object);
     });
 
     setFlushing(true);
@@ -90,7 +116,7 @@ export const Main = () => {
     );
   };
 
-  const handleDelete = (id: string) => {
+  const handleObjectDelete = (id: string) => {
     if (!space) {
       return;
     }
@@ -104,7 +130,7 @@ export const Main = () => {
 
   const handleSpaceCreate = async () => {
     const space = await client.spaces.create();
-    return space.key;
+    setSpace(space);
   };
 
   const handleSpaceClose = async (spaceKey: PublicKey) => {
@@ -128,7 +154,7 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[40rem] shadow-lg bg-white dark:bg-black divide-y'>
+    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black divide-y'>
       <AppToolbar
         onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
@@ -137,6 +163,7 @@ export const Main = () => {
       />
 
       <SpaceToolbar
+        spaceKey={space?.key}
         onCreate={handleSpaceCreate}
         onClose={handleSpaceClose}
         onSelect={handleSpaceSelect}
@@ -146,11 +173,17 @@ export const Main = () => {
       <div className='flex flex-col grow overflow-hidden'>
         {space && (
           <>
-            <DataToolbar onAdd={handleAdd} onFilterChange={setFilter} onViewChange={(view) => setView(view)} />
+            <DataToolbar
+              types={Array.from(typeMap.keys())}
+              onAdd={handleObjectCreate}
+              onTypeChange={(type) => setType(type)}
+              onFilterChange={setFilter}
+              onViewChange={(view) => setView(view)}
+            />
 
-            {view === 'list' && <ItemList objects={objects} onDelete={handleDelete} />}
-            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleDelete} />}
-            {view === 'table' && <ItemTable schema={ItemType} objects={objects} />}
+            {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
+            {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+            {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
           </>
         )}
       </div>

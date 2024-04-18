@@ -6,7 +6,7 @@ import { Args, Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import * as E from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
 import { BaseCommand } from '../../base-command';
@@ -56,7 +56,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
-        space?.db.add(E.object({ type, title: faker.lorem.word() }));
+        space?.db.add(create({ type, title: faker.lorem.word() }));
         await space.db.flush();
         await pause();
       }

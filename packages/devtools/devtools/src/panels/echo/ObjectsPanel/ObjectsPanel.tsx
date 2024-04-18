@@ -4,9 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { typeOf } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { type OpaqueEchoObject, useQuery, QueryOptions } from '@dxos/react-client/echo';
+import { useQuery, QueryOptions } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
@@ -21,18 +21,18 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: OpaqueEchoObject) => {
+  return (item: EchoReactiveObject<any>) => {
     let match = false;
-    match ||= !!typeOf(item)?.itemId.match(matcher);
+    match ||= !!getType(item)?.itemId.match(matcher);
     match ||= !!String((item as any).title ?? '').match(matcher);
     return match;
   };
 };
 
-const { helper, builder } = createColumnBuilder<OpaqueEchoObject>();
-const columns: TableColumnDef<OpaqueEchoObject, any>[] = [
+const { helper, builder } = createColumnBuilder<EchoReactiveObject<any>>();
+const columns: TableColumnDef<EchoReactiveObject<any>, any>[] = [
   helper.accessor((item) => PublicKey.from(item.id), { id: 'id', ...builder.key({ tooltip: true }) }),
-  helper.accessor((item) => typeOf(item)?.itemId, {
+  helper.accessor((item) => getType(item)?.itemId, {
     id: 'type',
     meta: { cell: { classNames: textPadding } },
     size: 220,
@@ -60,7 +60,7 @@ export const ObjectsPanel = () => {
         </Toolbar.Root>
       }
     >
-      <MasterDetailTable<OpaqueEchoObject>
+      <MasterDetailTable<EchoReactiveObject<any>>
         columns={columns}
         data={items.filter(textFilter(filter))}
         widths={['is-1/3 shrink-0', '']}

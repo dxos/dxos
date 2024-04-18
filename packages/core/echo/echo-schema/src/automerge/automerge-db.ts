@@ -24,10 +24,9 @@ import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
-import { isReactiveProxy } from '../effect/proxy';
-import { isEchoReactiveObject } from '../effect/reactive';
+import { isReactiveObject, type EchoReactiveObject } from '../ddl';
+import { isEchoObject } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject, type OpaqueEchoObject } from '../object';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -128,8 +127,8 @@ export class AutomergeDb {
    * @deprecated
    * Return only loaded objects.
    */
-  allObjects(): EchoObject[] {
-    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
+  allObjects(): EchoReactiveObject<any>[] {
+    return this.allObjectCores().map((core) => core.rootProxy as EchoReactiveObject<any>);
   }
 
   /**
@@ -187,22 +186,22 @@ export class AutomergeDb {
     return objCore;
   }
 
-  getObjectById(id: string): EchoObject | undefined {
+  getObjectById(id: string): EchoReactiveObject<any> | undefined {
     const objCore = this.getObjectCoreById(id);
     if (!objCore) {
       return undefined;
     }
 
     const root = objCore.rootProxy;
-    invariant(isReactiveProxy(root));
+    invariant(isReactiveObject(root));
     return root as any;
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(
+  async loadObjectById<T = any>(
     objectId: string,
     { timeout = 5000 }: { timeout?: number } = {},
-  ): Promise<EchoObject | undefined> {
+  ): Promise<EchoReactiveObject<T> | undefined> {
     // Check if deleted.
     if (this._objects.get(objectId)?.isDeleted()) {
       return Promise.resolve(undefined);
@@ -212,6 +211,7 @@ export class AutomergeDb {
     if (obj) {
       return Promise.resolve(obj);
     }
+    this._automergeDocLoader.loadObjectDocument(objectId);
 
     return asyncTimeout(
       this._updateEvent
@@ -255,13 +255,13 @@ export class AutomergeDb {
     }
   }
 
-  add(obj: OpaqueEchoObject) {
+  add(obj: EchoReactiveObject<any>) {
     const core = getAutomergeObjectCore(obj);
     this.addCore(core);
     return obj;
   }
 
-  remove(obj: OpaqueEchoObject) {
+  remove(obj: EchoReactiveObject<any>) {
     const core = getAutomergeObjectCore(obj);
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
@@ -458,7 +458,7 @@ export interface ItemsUpdatedEvent {
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
-  if (isEchoReactiveObject(core.rootProxy)) {
+  if (isEchoObject(core.rootProxy)) {
     // NOTE: We need to store properties in the root document since space-list initialization
     //  expects it to be loaded as space become available.
     if (core.getType()?.itemId === TYPE_PROPERTIES) {
@@ -478,11 +478,15 @@ export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => 
  *                        otherwise the method exits when valueAccessor is not null.
  * @param timeout - loading timeout, defaults to 5s.
  */
-export const loadObjectReferences = async <T extends OpaqueEchoObject, U>(
+export const loadObjectReferences = async <
+  T extends EchoReactiveObject<any>,
+  RefType,
+  DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
+>(
   objOrArray: T | T[],
-  valueAccessor: (obj: T) => U,
+  valueAccessor: (obj: T) => RefType,
   { timeout }: { timeout: number } = { timeout: 5000 },
-): Promise<T extends T[] ? Array<NonNullable<U>> : NonNullable<U>> => {
+): Promise<T extends T[] ? Array<DerefType> : DerefType> => {
   const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
   const tasks = objectArray.map((obj) => {
     const core = getAutomergeObjectCore(obj);

@@ -8,11 +8,10 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
-import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
-import { createEchoReactiveObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
-import { type EchoReactiveObject, getSchema, isEchoReactiveObject, type ReactiveObject } from './effect/reactive';
+import { type EchoReactiveObject, getSchema, type ReactiveObject } from './ddl';
+import { DynamicSchemaRegistry } from './dynamic-schema-registry';
+import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
-import { type EchoObject, type OpaqueEchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -25,11 +24,11 @@ export interface EchoDatabase {
    * All loaded objects.
    * @deprecated Use query instead.
    */
-  get objects(): EchoObject[];
+  get objects(): EchoReactiveObject<any>[];
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined;
+  getObjectById<T extends {} = any>(id: string): EchoReactiveObject<T> | undefined;
 
   /**
    * Adds object to the database.
@@ -39,14 +38,14 @@ export interface EchoDatabase {
   /**
    * Removes object from the database.
    */
-  remove<T extends OpaqueEchoObject>(obj: T): void;
+  remove<T extends EchoReactiveObject<any>>(obj: T): void;
 
   /**
    * Query objects.
    */
-  query(): Query<EchoReactiveObject<any>>;
-  query<T extends OpaqueEchoObject>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
-  query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<EchoReactiveObject<any>>;
+  query(): Query;
+  query<T extends {} = any>(filter?: Filter<T> | undefined, options?: QueryOptions | undefined): Query<T>;
+  query<T extends {} = any>(filter?: T | undefined, options?: QueryOptions | undefined): Query;
 
   /**
    * Wait for all pending changes to be saved to disk.
@@ -99,40 +98,42 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
-  getObjectById<T extends OpaqueEchoObject>(id: string): T | undefined {
+  getObjectById<T extends EchoReactiveObject<any>>(id: string): T | undefined {
     return this._automerge.getObjectById(id) as T | undefined;
   }
 
-  add<T extends OpaqueEchoObject>(obj: T): T extends EchoObject ? T : EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    if (isEchoReactiveObject(obj)) {
+  add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
+    if (isEchoObject(obj)) {
       this._automerge.add(obj);
       return obj as any;
     } else {
       const schema = getSchema(obj);
+
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.types.isEffectSchemaRegistered(schema)) {
-          throw createSchemaNotRegisteredError();
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.isSchemaRegistered(schema)) {
+          throw createSchemaNotRegisteredError(schema);
         }
       }
-      const echoObj = createEchoReactiveObject(obj);
+
+      const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
       return echoObj as any;
     }
   }
 
-  remove<T extends OpaqueEchoObject>(obj: T): void {
-    invariant(isEchoReactiveObject(obj));
+  remove<T extends EchoReactiveObject<any>>(obj: T): void {
+    invariant(isEchoObject(obj));
     return this._automerge.remove(obj);
   }
 
   query(): Query<EchoReactiveObject<any>>;
-  query<T extends OpaqueEchoObject = EchoReactiveObject<any>>(
+  query<T extends EchoReactiveObject<any> = EchoReactiveObject<any>>(
     filter?: Filter<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T>;
 
   query<T extends {}>(filter?: T | undefined, options?: QueryOptions | undefined): Query<EchoReactiveObject<any> & T>;
-  query<T extends OpaqueEchoObject>(
+  query<T extends EchoReactiveObject<any>>(
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T> {
@@ -149,7 +150,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   /**
    * @deprecated
    */
-  get objects(): EchoObject[] {
+  get objects(): EchoReactiveObject<any>[] {
     return this._automerge.allObjects();
   }
 
@@ -166,6 +167,12 @@ export class EchoDatabaseImpl implements EchoDatabase {
   }
 }
 
-const createSchemaNotRegisteredError = () => {
-  return new Error('Schema not registered in Hypergraph: call registerEffectSchema before adding an object');
+const createSchemaNotRegisteredError = (schema?: any) => {
+  const message = 'Schema not registered in Hypergraph. Call registerEffectSchema before adding an object.';
+
+  if (schema?.typename) {
+    return new Error(`${message} Schema: ${schema.typename}`);
+  }
+
+  return new Error(message);
 };

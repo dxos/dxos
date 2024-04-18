@@ -7,8 +7,7 @@ import type { Config as ImapConfig } from 'imap';
 import { MessageType, MailboxType } from '@braneframe/types';
 import { getSpace } from '@dxos/client/echo';
 import { type Space } from '@dxos/client/echo';
-import { Filter, hasType, matchKeys } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter, getMeta, hasType, matchKeys } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -75,7 +74,7 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   // console.log(messages.map((message) => message[debug]));
   let added = 0;
   for (const message of messages) {
-    const exists = current.find((m) => matchKeys(E.getMeta(m).keys, E.getMeta(message).keys));
+    const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
       mailbox.messages.push(message);
       added++;

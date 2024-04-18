@@ -10,7 +10,7 @@ import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credenti
 import { failUndefined } from '@dxos/debug';
 import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
+import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -124,11 +124,12 @@ export class ServiceContext extends Resource {
 
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
-      metadata: this.indexMetadata,
+      db: level.sublevel('automerge'),
+      storageCallbacks: createStorageCallbacks({ host: () => this.automergeHost, metadata: this.indexMetadata }),
     });
 
     this.indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
+      indexStore: new IndexStore({ db: level.sublevel('index-storage') }),
       metadataStore: this.indexMetadata,
       loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
       getAllDocuments: createDocumentsIterator(this.automergeHost),
@@ -158,6 +159,7 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
+    await this.automergeHost.open();
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);

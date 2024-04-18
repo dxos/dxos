@@ -6,9 +6,16 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import {
+  AutomergeHost,
+  MetadataStore,
+  type LevelDB,
+  SnapshotStore,
+  SpaceManager,
+  valueEncoding,
+} from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { createTestLevel } from '@dxos/indexing/testing';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
@@ -42,7 +49,8 @@ export const createServiceContext = async ({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
-  const level = await createTestLevel();
+  const level = createTestLevel();
+  await level.open();
 
   return new ServiceContext(storage, level, networkManager, signalManager);
 };
@@ -85,6 +93,7 @@ export type TestPeerOpts = {
 
 export type TestPeerProps = {
   storage?: Storage;
+  level?: LevelDB;
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
@@ -115,6 +124,10 @@ export class TestPeer {
 
   get keyring() {
     return (this._props.keyring ??= new Keyring(this.storage.createDirectory('keyring')));
+  }
+
+  get level() {
+    return (this._props.level ??= createTestLevel());
   }
 
   get feedStore() {
@@ -163,7 +176,9 @@ export class TestPeer {
   }
 
   get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost({ directory: this.storage.createDirectory('automerge') }));
+    return (this._props.automergeHost ??= new AutomergeHost({
+      db: this.level.sublevel('automerge'),
+    }));
   }
 
   get dataSpaceManager() {
@@ -182,6 +197,7 @@ export class TestPeer {
   }
 
   async destroy() {
+    await this.level.close();
     await this.storage.reset();
   }
 }

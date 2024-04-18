@@ -11,8 +11,7 @@ import { describe, test } from '@dxos/test';
 
 import { compareType, Filter, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { TypedObject } from '../effect/echo-object-class';
-import * as E from '../effect/reactive';
+import { TypedObject, create } from '../ddl';
 import { createDatabase } from '../testing';
 
 describe('Filter', () => {
@@ -105,7 +104,7 @@ describe('Filter', () => {
     const { db } = await createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);
 
-    const obj = db.add(E.object(schema, { title: 'test' }));
+    const obj = db.add(create(schema, { title: 'test' }));
 
     const filter = Filter.typename(schema.id);
     expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;

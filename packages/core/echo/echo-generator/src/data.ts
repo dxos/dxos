@@ -5,11 +5,8 @@
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import * as S from '@effect/schema/Schema';
-
 import { type Space } from '@dxos/client/echo';
-import * as E from '@dxos/echo-schema';
-import { DynamicEchoSchema, effectToJsonSchema, StoredEchoSchema } from '@dxos/echo-schema';
+import { S, DynamicEchoSchema, effectToJsonSchema, StoredEchoSchema, create, ref, echoObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -27,9 +24,9 @@ export enum TestSchemaType {
 }
 
 const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicEchoSchema => {
-  const typeSchema = S.partial(S.struct(fields)).pipe(E.echoObject(typename, '1.0.0'));
+  const typeSchema = S.partial(S.struct(fields)).pipe(echoObject(typename, '1.0.0'));
   return new DynamicEchoSchema(
-    E.object(StoredEchoSchema, {
+    create(StoredEchoSchema, {
       typename,
       version: '1.0.0',
       jsonSchema: effectToJsonSchema(typeSchema),
@@ -52,7 +49,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const contact = createDynamicSchema(TestSchemaType.contact, {
     name: S.string.pipe(S.description('name of the person')),
     email: S.string,
-    org: E.ref(organization),
+    org: ref(organization),
     lat: S.number,
     lng: S.number,
   });
@@ -65,7 +62,7 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
     status: S.string,
     priority: S.number,
     active: S.boolean,
-    org: E.ref(organization),
+    org: ref(organization),
   });
 
   return {

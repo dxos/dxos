@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
-
 import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import * as E from '@dxos/echo-schema';
+import { AST, create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -26,7 +24,7 @@ export class ResponseBuilder {
     log('build', { result });
 
     if (pre) {
-      blocks.push({ timestamp, content: E.object(TextV0Type, { content: pre }) });
+      blocks.push({ timestamp, content: create(TextV0Type, { content: pre }) });
     }
 
     const processed = this.processResult(result);
@@ -35,7 +33,7 @@ export class ResponseBuilder {
     }
 
     if (post) {
-      blocks.push({ timestamp, content: E.object(TextV0Type, { content: post }) });
+      blocks.push({ timestamp, content: create(TextV0Type, { content: post }) });
     }
 
     return blocks;
@@ -63,9 +61,9 @@ export class ResponseBuilder {
           : content;
 
       this._context.object.sections.push(
-        E.object(SectionType, {
-          object: E.object(DocumentType, {
-            content: E.object(TextV0Type, { content: formattedContent }),
+        create(SectionType, {
+          object: create(DocumentType, {
+            content: create(TextV0Type, { content: formattedContent }),
           }),
         }),
       );
@@ -87,11 +85,11 @@ export class ResponseBuilder {
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
-                data[name.toString()] = E.object(TextV0Type, { content: value });
+                data[name.toString()] = create(TextV0Type, { content: value });
               }
             }
 
-            const object = E.object(schema.schema, data);
+            const object = create(schema.schema, data);
             blocks.push({ timestamp, object });
           }
         }
@@ -108,7 +106,7 @@ export class ResponseBuilder {
     return [
       {
         timestamp,
-        content: E.object(TextV0Type, { content }),
+        content: create(TextV0Type, { content }),
       },
     ];
   }

@@ -3,11 +3,11 @@
 //
 
 import { Event } from '@dxos/async';
+import { type Echo } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
   type QuerySourceProvider,
-  type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
@@ -15,41 +15,45 @@ import {
 } from '@dxos/echo-schema';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { nonNullable } from '@dxos/util';
 
-import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
   service: IndexService;
-  spaceList: SpaceList;
+  echo: Echo;
 };
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
   create(): QuerySource {
-    return new IndexQuerySource({ service: this._params.service, spaceList: this._params.spaceList });
+    return new IndexQuerySource({ service: this._params.service, echo: this._params.echo });
   }
 }
 
 export type IndexQuerySourceParams = {
   service: IndexService;
-  spaceList: SpaceList;
+  echo: Echo;
 };
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
-  private _results?: QueryResult<EchoObject>[] = [];
+  private _results?: QueryResult[] = [];
   private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
-  getResults(): QueryResult<EchoObject>[] {
+  getResults(): QueryResult[] {
     return this._results ?? [];
   }
 
-  update(filter: Filter<EchoObject>): void {
+  update(filter: Filter): void {
+    if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
+      return;
+    }
+
     if (this._stream) {
       void this._stream.close();
       this._stream = undefined;
@@ -68,10 +72,10 @@ export class IndexQuerySource implements QuerySource {
         return [];
       }
 
-      const results: QueryResult<EchoObject>[] = (
+      const results: QueryResult[] = (
         await Promise.all(
           response.results!.map(async (result) => {
-            const space = this._params.spaceList.get(result.spaceKey);
+            const space = this._params.echo.get(result.spaceKey);
             if (!space) {
               return;
             }
@@ -88,7 +92,7 @@ export class IndexQuerySource implements QuerySource {
 
             const core = getAutomergeObjectCore(object);
 
-            const queryResult: QueryResult<EchoObject> = {
+            const queryResult: QueryResult = {
               id: object.id,
               spaceKey: core.database!.spaceKey,
               object,

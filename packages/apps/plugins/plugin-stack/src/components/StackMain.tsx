@@ -16,7 +16,7 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema';
+import { create, Filter, isReactiveObject, getType } from '@dxos/echo-schema';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
@@ -50,11 +50,11 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => object)
     .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(E.typeOf(object!)?.itemId ?? 'never');
+      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
       return { id, object: object as SectionType, ...rest };
     });
   const space = getSpace(stack);
-  const [folder] = useQuery(space, E.Filter.schema(FolderType));
+  const [folder] = useQuery(space, Filter.schema(FolderType));
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
@@ -64,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!E.isReactiveProxy(data) || data instanceof StackType) {
+    if (!isReactiveObject(data) || data instanceof StackType) {
       return 'reject';
     }
 
@@ -88,9 +88,9 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, E.object(SectionType, { object }));
+      stack.sections.splice(over.position!, 0, create(SectionType, { object }));
     } else if (object && over.path === id) {
-      stack.sections.push(E.object(SectionType, { object }));
+      stack.sections.push(create(SectionType, { object }));
     }
   };
 
@@ -103,7 +103,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleAdd = useCallback(
     (sectionObject: SectionType['object']) => {
-      stack.sections.push(E.object(SectionType, { object: sectionObject }));
+      stack.sections.push(create(SectionType, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
@@ -116,7 +116,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         const filename = file.name.split('.')[0];
         const info = await fileManagerPlugin.provides.file.upload?.(file);
         if (info) {
-          const obj = E.object(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
           handleAdd(obj);
         }
       }
