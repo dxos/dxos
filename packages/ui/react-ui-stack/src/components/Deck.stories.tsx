@@ -4,8 +4,8 @@
 
 import '@dxosTheme';
 
-import { BookBookmark, CaretLeft, CaretRight, SidebarSimple, StackSimple } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { BookBookmark, CaretLeft, CaretRight, SidebarSimple, StackSimple, X } from '@phosphor-icons/react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
@@ -49,28 +49,37 @@ const rollItems = (n: number): StackSectionItem[] => {
   }));
 };
 
-const DemoStackPlank = ({ toolbar }: { toolbar?: boolean }) => {
-  const [items] = useState(rollItems(12));
+type PlankProps = { items: StackSectionItem[]; label: string; id: string };
+
+const rollStackPlank = (n: number): PlankProps => ({
+  items: rollItems(n),
+  id: faker.string.uuid(),
+  label: faker.lorem.words(3),
+});
+
+const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps>) => {
   return (
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
           <StackSimple {...plankHeadingIconProps} />
         </PlankHeading.Button>
-        <PlankHeading.Label>{faker.lorem.words(3)}</PlankHeading.Label>
+        <PlankHeading.Label>{label}</PlankHeading.Label>
+        {children}
       </PlankHeading.Root>
-      {toolbar && <Toolbar />}
       <Stack
         items={items}
         SectionContent={SimpleContent}
-        id={faker.string.uuid()}
-        classNames={[
-          'p-px overflow-y-auto row-end-[content-end]',
-          toolbar ? 'row-start-[content-start]' : 'row-start-[toolbar-start]',
-        ]}
+        id={id}
+        classNames='p-px overflow-y-auto row-end-[content-end] row-start-[toolbar-start]'
       />
     </>
   );
+};
+
+const DemoStackPlank = () => {
+  const [props] = useState(rollStackPlank(12));
+  return <StackPlank {...props} />;
 };
 
 export default {
@@ -121,7 +130,19 @@ export const StaticBasicStacks = {
 export const DynamicBasicStacks = () => {
   const [attended] = useState(new Set());
   const [navOpen, setNavOpen] = useState(true);
-  const [c11yOpen, setC11yOpen] = useState(true);
+  const [c11yOpen, setC11yOpen] = useState(false);
+  const [planks] = useState(
+    [...Array(12)]
+      .map(() => rollStackPlank(12))
+      .reduce((acc: Record<string, PlankProps>, plank) => {
+        acc[plank.id] = plank;
+        return acc;
+      }, {}),
+  );
+  const [openPlanks, setOpenPlanks] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    console.log('[openPlanks]', openPlanks);
+  }, [openPlanks]);
   return (
     <Mosaic.Root>
       <AttentionProvider attended={attended}>
@@ -142,22 +163,51 @@ export const DynamicBasicStacks = () => {
               <SidebarSimple mirrored />
             </Button>
           </Main.Notch>
-          <Main.NavigationSidebar>
-            <DemoStackPlank />
+          <Main.NavigationSidebar classNames='p-2'>
+            {Object.values(planks).map(({ label, id }) => {
+              return (
+                <Button
+                  key={id}
+                  variant={openPlanks.has(id) ? 'primary' : 'default'}
+                  classNames='truncate is-full block mlb-2'
+                  onClick={() =>
+                    setOpenPlanks((prev) => {
+                      prev.has(id) ? prev.delete(id) : prev.add(id);
+                      console.log('[click]', prev);
+                      return new Set(Array.from(prev));
+                    })
+                  }
+                >
+                  {label}
+                </Button>
+              );
+            })}
           </Main.NavigationSidebar>
           <NaturalDeck.Root>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
+            {Array.from(openPlanks).map((id) => {
+              const plank = planks[id];
+              return (
+                <NaturalDeck.Plank key={plank.id}>
+                  <StackPlank {...plank}>
+                    <Button
+                      variant='ghost'
+                      classNames='p-1'
+                      onClick={() =>
+                        setOpenPlanks((prev) => {
+                          prev.delete(plank.id);
+                          return new Set(Array.from(prev));
+                        })
+                      }
+                    >
+                      <X />
+                    </Button>
+                  </StackPlank>
+                </NaturalDeck.Plank>
+              );
+            })}
           </NaturalDeck.Root>
           <Main.ComplementarySidebar>
-            <DemoStackPlank />
+            <span>To do.</span>
           </Main.ComplementarySidebar>
         </Main.Root>
       </AttentionProvider>
