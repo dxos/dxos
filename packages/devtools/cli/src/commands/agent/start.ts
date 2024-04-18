@@ -103,8 +103,8 @@ export default class Start extends BaseCommand<typeof Start> {
       protocol: {
         socketPath: socket,
         webSocket: this.flags.ws,
+        ...(httpParams ? { http: httpParams } : {}),
       },
-      ...(httpParams ? { http: httpParams } : {}),
       plugins: [
         new ChainPlugin(),
         new DashboardPlugin(),
