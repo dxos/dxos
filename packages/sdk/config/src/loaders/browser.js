@@ -54,3 +54,27 @@ export const Storage = async () => {
   }
   return {};
 };
+
+export const Remote = (target, authenticationToken) => {
+  if (!target) {
+    return {};
+  }
+
+  try {
+    const url = new URL(target);
+    const protocol = url.protocol.slice(0, -1);
+
+    return {
+      runtime: {
+        client: {
+          // TODO(burdon): Remove vault.html.
+          remoteSource: url.origin + (protocol.startsWith('http') ? '/vault.html' : ''),
+          remoteSourceAuthenticationToken: authenticationToken,
+        },
+      },
+    };
+  } catch (err) {
+    log.catch(err);
+    return {};
+  }
+};
