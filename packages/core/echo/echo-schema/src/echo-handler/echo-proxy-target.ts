@@ -4,10 +4,10 @@
 
 import type { ComplexMap } from '@dxos/util';
 
-import { type EchoArrayTwoPointO } from './echo-array';
+import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
-import type { AutomergeObjectCore } from '../../automerge';
-import type { KeyPath } from '../../automerge/key-path';
+import type { AutomergeObjectCore } from '../automerge';
+import type { KeyPath } from '../automerge/key-path';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -49,4 +49,4 @@ export type ProxyTarget = {
    */
   // TODO(dmaretskyi): Can be removed.
   [symbolHandler]?: EchoReactiveHandler;
-} & ({ [key: keyof any]: any } | EchoArrayTwoPointO<any>);
+} & ({ [key: keyof any]: any } | EchoArray<any>);

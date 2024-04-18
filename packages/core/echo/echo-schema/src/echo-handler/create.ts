@@ -14,12 +14,18 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { AutomergeObjectCore } from '../../automerge';
-import { type ObjectMeta } from '../../object';
-import { SchemaValidator } from '../ast';
-import { getMeta, getSchema, requireTypeReference } from '../getter';
-import { createReactiveProxy, getProxyHandlerSlot, isReactiveObject } from '../proxy';
-import type { EchoReactiveObject } from '../types';
+import { AutomergeObjectCore } from '../automerge';
+import {
+  SchemaValidator,
+  getMeta,
+  getSchema,
+  requireTypeReference,
+  createReactiveProxy,
+  getProxyHandlerSlot,
+  isReactiveObject,
+} from '../effect';
+import type { EchoReactiveObject } from '../effect';
+import { type ObjectMeta } from '../object';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;

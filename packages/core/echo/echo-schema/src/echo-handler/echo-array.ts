@@ -6,9 +6,9 @@ import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 import { type EchoReactiveHandler } from './echo-handler';
 import { type ObjectInternals, symbolHandler, symbolInternals, symbolNamespace, symbolPath } from './echo-proxy-target';
-import type { KeyPath } from '../../automerge/key-path';
+import type { KeyPath } from '../automerge/key-path';
 
-export class EchoArrayTwoPointO<T> extends Array<T> {
+export class EchoArray<T> extends Array<T> {
   static get [Symbol.species]() {
     return Array;
   }
@@ -31,7 +31,7 @@ export class EchoArrayTwoPointO<T> extends Array<T> {
 
       Object.defineProperty(this.prototype, method, {
         enumerable: false,
-        value: function (this: EchoArrayTwoPointO<any>, ...args: any[]) {
+        value: function (this: EchoArray<any>, ...args: any[]) {
           let result!: any;
           compositeRuntime.batch(() => {
             const handler = this[symbolHandler] as any;

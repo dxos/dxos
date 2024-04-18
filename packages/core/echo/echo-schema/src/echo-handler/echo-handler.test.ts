@@ -14,6 +14,8 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject } from './create';
+import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
+import { EchoDatabaseImpl } from '../database';
 import {
   getTypeReference,
   create,
@@ -25,13 +27,11 @@ import {
   type EchoReactiveObject,
   isEchoObject,
   getSchema,
-} from '..';
-import { AutomergeContext, getAutomergeObjectCore } from '../../automerge';
-import { EchoDatabaseImpl } from '../../database';
-import { Hypergraph } from '../../hypergraph';
-import { Filter } from '../../query';
-import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from '../../testing';
-import { createDatabase, TestBuilder, Contact, Task } from '../../testing';
+} from '../effect';
+import { Hypergraph } from '../hypergraph';
+import { Filter } from '../query';
+import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from '../testing';
+import { createDatabase, TestBuilder, Contact, Task } from '../testing';
 
 registerSignalRuntime();
 

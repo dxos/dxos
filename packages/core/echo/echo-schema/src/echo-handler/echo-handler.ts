@@ -11,7 +11,7 @@ import { encodeReference } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, defaultMap, getDeep } from '@dxos/util';
 
-import { EchoArrayTwoPointO } from './echo-array';
+import { EchoArray } from './echo-array';
 import {
   type ProxyTarget,
   symbolInternals,
@@ -20,13 +20,12 @@ import {
   symbolHandler,
   type ObjectInternals,
 } from './echo-proxy-target';
-import { type AutomergeObjectCore, META_NAMESPACE } from '../../automerge/automerge-object-core';
-import { type KeyPath } from '../../automerge/key-path';
-import { type ObjectMeta } from '../../object';
-import { defineHiddenProperty } from '../../util/property';
-import { SchemaValidator } from '../ast';
-import { DynamicEchoSchema, StoredEchoSchema } from '../dynamic';
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from '../proxy';
+import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
+import { type KeyPath } from '../automerge/key-path';
+import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema } from '../effect';
+import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from '../effect';
+import { type ObjectMeta } from '../object';
+import { defineHiddenProperty } from '../util/property';
 
 /**
  * Extends the native array with methods overrides for automerge.
@@ -149,7 +148,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return Reflect.get(target, prop);
     }
 
-    if (target instanceof EchoArrayTwoPointO) {
+    if (target instanceof EchoArray) {
       return this._arrayGet(target, prop);
     }
 
@@ -185,7 +184,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
     if (Array.isArray(decoded)) {
       const newTarget = defaultMap(target[symbolInternals].targetsMap, dataPath, (): ProxyTarget => {
-        const array = new EchoArrayTwoPointO();
+        const array = new EchoArray();
         array[symbolInternals] = target[symbolInternals];
         array[symbolPath] = dataPath;
         array[symbolNamespace] = namespace;
@@ -220,7 +219,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   has(target: ProxyTarget, p: string | symbol): boolean {
-    if (target instanceof EchoArrayTwoPointO) {
+    if (target instanceof EchoArray) {
       return this._arrayHas(target, p);
     }
     const { value } = this.getDecodedValueAtPath(target);
@@ -242,7 +241,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _arrayGet(target: ProxyTarget, prop: string) {
-    invariant(target instanceof EchoArrayTwoPointO);
+    invariant(target instanceof EchoArray);
     if (prop === 'constructor') {
       return Array.prototype.constructor;
     }
@@ -254,7 +253,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _arrayHas(target: ProxyTarget, prop: string | symbol) {
-    invariant(target instanceof EchoArrayTwoPointO);
+    invariant(target instanceof EchoArray);
     if (typeof prop === 'string') {
       const parsedIndex = parseInt(prop);
       const { value: length } = this.getDecodedValueAtPath(target, 'length');
@@ -270,7 +269,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(Array.isArray(target[symbolPath]));
     invariant(typeof prop === 'string');
 
-    if (target instanceof EchoArrayTwoPointO && prop === 'length') {
+    if (target instanceof EchoArray && prop === 'length') {
       this._arraySetLength(target, target[symbolPath], value);
       return true;
     }
@@ -460,7 +459,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, sortedArray);
     });
 
-    return target as EchoArrayTwoPointO<any>;
+    return target as EchoArray<any>;
   }
 
   arrayReverse(target: ProxyTarget, path: KeyPath): any[] {
@@ -473,7 +472,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       assignDeep(doc, fullPath, reversedArray);
     });
 
-    return target as EchoArrayTwoPointO<any>;
+    return target as EchoArray<any>;
   }
 
   getMeta(target: ProxyTarget): ObjectMeta {
