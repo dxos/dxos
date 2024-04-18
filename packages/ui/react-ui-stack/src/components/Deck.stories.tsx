@@ -12,6 +12,7 @@ import { Button, Main } from '@dxos/react-ui';
 import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck as NaturalDeck } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
+import { arrayMove } from '@dxos/util';
 
 import { SectionToolbar, type StackSectionItem } from './Section';
 import { Stack } from './Stack';
@@ -184,11 +185,35 @@ export const DynamicBasicStacks = () => {
             })}
           </Main.NavigationSidebar>
           <NaturalDeck.Root>
-            {Array.from(openPlanks).map((id) => {
+            {Array.from(openPlanks).map((id, index, arr) => {
               const plank = planks[id];
               return (
                 <NaturalDeck.Plank key={plank.id}>
                   <StackPlank {...plank}>
+                    <Button
+                      disabled={index < 1}
+                      variant='ghost'
+                      classNames='p-1'
+                      onClick={() =>
+                        setOpenPlanks((prev) => {
+                          return new Set(arrayMove(Array.from(prev), index, index - 1));
+                        })
+                      }
+                    >
+                      <CaretLeft />
+                    </Button>
+                    <Button
+                      disabled={index > arr.length - 2}
+                      variant='ghost'
+                      classNames='p-1'
+                      onClick={() =>
+                        setOpenPlanks((prev) => {
+                          return new Set(arrayMove(Array.from(prev), index, index + 1));
+                        })
+                      }
+                    >
+                      <CaretRight />
+                    </Button>
                     <Button
                       variant='ghost'
                       classNames='p-1'

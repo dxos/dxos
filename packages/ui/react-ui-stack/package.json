@@ -44,6 +44,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
