@@ -212,10 +212,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     if (this.flags.target) {
       this.log('Using remote target:', this.flags.target);
-      this._clientConfig = new Config(
-        Remote(this.flags.target, process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN),
-        Defaults(),
-      );
+      await this._loadConfigFromFile(Remote(this.flags.target, process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN));
     } else {
       // Load user config file.
       await this._loadConfigFromFile();
