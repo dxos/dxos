@@ -71,7 +71,7 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
         items={items}
         SectionContent={SimpleContent}
         id={id}
-        classNames='p-px overflow-y-auto row-end-[content-end] row-start-[toolbar-start]'
+        classNames='p-px overflow-y-auto row-end-[content-end] row-start-[toolbar-start] mbs-0 mbe-0'
       />
     </>
   );
