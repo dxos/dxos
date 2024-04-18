@@ -12,7 +12,7 @@ import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
 import { type Daemon, PhoenixDaemon, SystemDaemon, LaunchctlRunner, SystemctlRunner } from '@dxos/agent';
-import { Client, Config, Defaults } from '@dxos/client';
+import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import {
