@@ -9,7 +9,7 @@ import { stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { type EchoReactiveObject } from './effect/reactive';
+import { type EchoReactiveObject } from './ddl';
 import { Filter } from './query';
 
 /**

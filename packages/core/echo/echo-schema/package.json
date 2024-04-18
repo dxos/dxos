@@ -13,12 +13,6 @@
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
     },
-    "./testing": {
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "import": "./dist/lib/browser/testing/index.mjs",
-      "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
-    },
     "./schema": {
       "browser": "./dist/lib/browser/schema.mjs",
       "import": "./dist/lib/browser/schema.mjs",
@@ -29,17 +23,12 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "testing": [
-        "dist/types/src/testing/index.d.ts"
-      ],
       "schema": [
         "dist/types/src/schema.d.ts"
       ]
     }
   },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],

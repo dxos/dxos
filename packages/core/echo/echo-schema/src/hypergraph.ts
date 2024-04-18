@@ -14,9 +14,8 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
-import { type EchoReactiveObject } from './effect/reactive';
+import { type EchoReactiveObject } from './ddl';
 import { prohibitSignalActions } from './guarded-scope';
-import { type EchoObject } from './object';
 import {
   Filter,
   Query,
@@ -202,7 +201,7 @@ class SpaceQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
   private _filter: Filter | undefined = undefined;
-  private _results?: QueryResult<EchoObject>[] = undefined;
+  private _results?: QueryResult<EchoReactiveObject<any>>[] = undefined;
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
@@ -233,7 +232,7 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
-  getResults(): QueryResult<EchoObject>[] {
+  getResults(): QueryResult<EchoReactiveObject<any>>[] {
     if (!this._filter) {
       return [];
     }
@@ -247,7 +246,7 @@ class SpaceQuerySource implements QuerySource {
           .map((core) => ({
             id: core.id,
             spaceKey: this.spaceKey,
-            object: core.rootProxy as EchoObject,
+            object: core.rootProxy as EchoReactiveObject<any>,
             resolution: {
               source: 'local',
               time: 0,
@@ -259,7 +258,7 @@ class SpaceQuerySource implements QuerySource {
     return this._results!;
   }
 
-  update(filter: Filter<EchoObject>): void {
+  update(filter: Filter<EchoReactiveObject<any>>): void {
     if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
       this._filter = undefined;

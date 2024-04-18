@@ -8,11 +8,10 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
-import { DynamicSchemaRegistry } from './effect/dynamic/schema-registry';
-import { createEchoObject, initEchoReactiveObjectRootProxy } from './effect/echo-handler';
-import { type EchoReactiveObject, getSchema, isEchoObject, type ReactiveObject } from './effect/reactive';
+import { type EchoReactiveObject, getSchema, type ReactiveObject } from './ddl';
+import { DynamicSchemaRegistry } from './dynamic-schema-registry';
+import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
-import { type EchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -25,7 +24,7 @@ export interface EchoDatabase {
    * All loaded objects.
    * @deprecated Use query instead.
    */
-  get objects(): EchoObject[];
+  get objects(): EchoReactiveObject<any>[];
 
   get graph(): Hypergraph;
 
@@ -151,7 +150,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   /**
    * @deprecated
    */
-  get objects(): EchoObject[] {
+  get objects(): EchoReactiveObject<any>[] {
     return this._automerge.allObjects();
   }
 
