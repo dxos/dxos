@@ -11,7 +11,6 @@ import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type Init
 import { DynamicSchemaRegistry, createEchoObject, initEchoReactiveObjectRootProxy } from './effect';
 import { type EchoReactiveObject, getSchema, isEchoObject, type ReactiveObject } from './effect';
 import { type Hypergraph } from './hypergraph';
-import { type EchoObject } from './object';
 import { type Filter, type FilterSource, type Query } from './query';
 
 export interface EchoDatabase {
@@ -24,7 +23,7 @@ export interface EchoDatabase {
    * All loaded objects.
    * @deprecated Use query instead.
    */
-  get objects(): EchoObject[];
+  get objects(): EchoReactiveObject<any>[];
 
   get graph(): Hypergraph;
 
@@ -148,7 +147,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
   /**
    * @deprecated
    */
-  get objects(): EchoObject[] {
+  get objects(): EchoReactiveObject<any>[] {
     return this._automerge.allObjects();
   }
 

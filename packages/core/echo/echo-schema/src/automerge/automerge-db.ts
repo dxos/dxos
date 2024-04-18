@@ -27,7 +27,6 @@ import { type EchoDatabase } from '../database';
 import { isEchoObject, type EchoReactiveObject } from '../effect';
 import { isReactiveObject } from '../effect';
 import { type Hypergraph } from '../hypergraph';
-import { type EchoObject } from '../object';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -128,8 +127,8 @@ export class AutomergeDb {
    * @deprecated
    * Return only loaded objects.
    */
-  allObjects(): EchoObject[] {
-    return this.allObjectCores().map((core) => core.rootProxy as EchoObject);
+  allObjects(): EchoReactiveObject<any>[] {
+    return this.allObjectCores().map((core) => core.rootProxy as EchoReactiveObject<any>);
   }
 
   /**
@@ -187,7 +186,7 @@ export class AutomergeDb {
     return objCore;
   }
 
-  getObjectById(id: string): EchoObject | undefined {
+  getObjectById(id: string): EchoReactiveObject<any> | undefined {
     const objCore = this.getObjectCoreById(id);
     if (!objCore) {
       return undefined;
@@ -202,7 +201,7 @@ export class AutomergeDb {
   async loadObjectById(
     objectId: string,
     { timeout = 5000 }: { timeout?: number } = {},
-  ): Promise<EchoObject | undefined> {
+  ): Promise<EchoReactiveObject<any> | undefined> {
     // Check if deleted.
     if (this._objects.get(objectId)?.isDeleted()) {
       return Promise.resolve(undefined);

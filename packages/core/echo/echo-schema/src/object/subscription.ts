@@ -4,7 +4,6 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { type EchoObject } from './types';
 import { getAutomergeObjectCore } from '../automerge';
 import { isEchoObject } from '../effect';
 
@@ -41,7 +40,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
 
   const handle = {
     update: (selection: Selection) => {
-      const newSelected = new Set(selection.filter((item): item is EchoObject => isEchoObject(item)));
+      const newSelected = new Set(selection.filter(isEchoObject));
       const removed = [...handle.selected].filter((item) => !newSelected.has(item));
       const added = [...newSelected].filter((item) => !handle.selected.has(item));
       handle.selected = newSelected;

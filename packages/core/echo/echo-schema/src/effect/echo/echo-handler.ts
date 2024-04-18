@@ -22,7 +22,7 @@ import {
 } from './echo-proxy-target';
 import { type AutomergeObjectCore, META_NAMESPACE } from '../../automerge/automerge-object-core';
 import { type KeyPath } from '../../automerge/key-path';
-import { data, type ObjectMeta } from '../../object';
+import { type ObjectMeta } from '../../object';
 import { defineHiddenProperty } from '../../util/property';
 import { SchemaValidator } from '../ast';
 import { DynamicEchoSchema, StoredEchoSchema } from '../dynamic';
@@ -158,9 +158,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
-    if (prop === data) {
-      return this._toJSON(target);
-    }
     if (prop === 'toJSON') {
       return () => this._toJSON(target);
     }

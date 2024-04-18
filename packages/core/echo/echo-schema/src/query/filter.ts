@@ -14,7 +14,7 @@ import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/
 import { type AutomergeObjectCore } from '../automerge';
 import { DynamicEchoSchema, requireTypeReference } from '../effect';
 import { getSchema, type EchoReactiveObject } from '../effect';
-import { getReferenceWithSpaceKey, type EchoObject } from '../object';
+import { getReferenceWithSpaceKey } from '../object';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
@@ -108,17 +108,17 @@ export class Filter<T extends {} = any> {
     }
   }
 
-  static not<T extends EchoObject>(source: Filter<T>): Filter<T> {
+  static not<T extends {} = any>(source: Filter<T>): Filter<T> {
     return new Filter({ ...source, not: !source.not }, source.options);
   }
 
-  static and<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
+  static and<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       and: filters.map((filter) => Filter.from(filter)),
     });
   }
 
-  static or<T extends EchoObject>(...filters: FilterSource<T>[]): Filter<T> {
+  static or<T extends {} = any>(...filters: FilterSource<T>[]): Filter<T> {
     return new Filter({
       or: filters.map((filter) => Filter.from(filter)),
     });

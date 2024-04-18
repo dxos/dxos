@@ -29,7 +29,6 @@ import {
 import { AutomergeContext, getAutomergeObjectCore } from '../../automerge';
 import { EchoDatabaseImpl } from '../../database';
 import { Hypergraph } from '../../hypergraph';
-import { data } from '../../object';
 import { Filter } from '../../query';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from '../../testing';
 import { createDatabase, TestBuilder, Contact, Task } from '../../testing';
@@ -217,7 +216,7 @@ describe('Reactive Object with ECHO database', () => {
       db.add(create(TestSchemaClass, { ...TEST_OBJECT })),
     ];
     for (const obj of objects) {
-      const objData: any = (obj as any)[data];
+      const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },

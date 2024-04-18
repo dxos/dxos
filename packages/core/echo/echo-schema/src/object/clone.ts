@@ -5,7 +5,6 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type EchoObject } from './types';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../effect';
 
@@ -18,7 +17,7 @@ export type CloneOptions = {
   /**
    * Additional list of objects to clone preserving references.
    */
-  additional?: (EchoObject | undefined)[];
+  additional?: (EchoReactiveObject<any> | undefined)[];
 };
 
 const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
