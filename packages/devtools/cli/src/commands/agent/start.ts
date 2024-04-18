@@ -101,7 +101,7 @@ export default class Start extends BaseCommand<typeof Start> {
       profile: this.flags.profile,
       metrics: this.flags.metrics,
       protocol: {
-        socket,
+        socketPath: socket,
         webSocket: this.flags.ws,
       },
       ...(httpParams ? { http: httpParams } : {}),
