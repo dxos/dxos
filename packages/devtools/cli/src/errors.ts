@@ -42,3 +42,15 @@ export class IdentityWaitTimeoutError extends FriendlyError {
     return 'Error while connecting to kube publisher.';
   }
 }
+
+export class ClientInitializationError extends FriendlyError {
+  private readonly _message: string;
+  constructor(message: string, error: Error) {
+    super(`Error while initializing client: ${message}: ${error.message}`);
+    this._message = message;
+  }
+
+  get friendlyMessage() {
+    return 'Error while initializing client: ' + this._message;
+  }
+}
