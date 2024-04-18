@@ -43,7 +43,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   _proxyMap = new WeakMap<object, any>();
 
-  _init(target: ProxyTarget): void {
+  init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
     invariant(symbolSchema in target, 'Schema is not defined for the target');
 

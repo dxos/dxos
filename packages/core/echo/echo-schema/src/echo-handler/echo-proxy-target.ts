@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Brand } from 'effect';
+
 import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
@@ -14,6 +16,28 @@ export const symbolNamespace = Symbol('namespace');
 export const symbolHandler = Symbol('handler');
 export const symbolInternals = Symbol('internals');
 
+/**
+ * For tracking proxy targets in the `targetsMap`.
+ */
+type TargetKey = {
+  path: KeyPath;
+  namespace: string;
+  type: 'record' | 'array';
+} & Brand.Brand<'TargetKey'>;
+
+export const TargetKey = {
+  /**
+   * Constructor function forces the order of the fields.
+   */
+  new: (path: KeyPath, namespace: string, type: 'record' | 'array'): TargetKey =>
+    ({
+      path,
+      namespace,
+      type,
+    }) as TargetKey,
+  hash: (key: TargetKey): string => JSON.stringify(key),
+};
+
 export type ObjectInternals = {
   core: AutomergeObjectCore;
 
@@ -21,8 +45,7 @@ export type ObjectInternals = {
    * Caching targets based on key path.
    * Only used for records and arrays.
    */
-  // TODO(dmaretskyi): We need to include data type in the map key. it's safe for typed objects since fields cannot change from record to array and vice versa, but its gonna be a bug for untyped objects.
-  targetsMap: ComplexMap<KeyPath, ProxyTarget>;
+  targetsMap: ComplexMap<TargetKey, ProxyTarget>;
 };
 
 /**

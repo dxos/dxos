@@ -15,7 +15,7 @@ export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**
    * Called when a proxy is created for this target.
    */
-  _init(target: T): void;
+  init(target: T): void;
 
   isObjectDeleted(target: T): boolean;
 

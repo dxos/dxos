@@ -72,6 +72,7 @@ export const clone = <T extends {}>(
 
 const cloneInner = (core: AutomergeObjectCore, id: string): EchoReactiveObject<any> => {
   const coreClone = new AutomergeObjectCore();
+  coreClone.initNewObject();
   coreClone.id = id;
   initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
