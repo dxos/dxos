@@ -17,7 +17,6 @@ import { trace } from '@dxos/tracing';
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  readonly fatal = new Event<Error>();
   private _proxy?: ProtoRpcPeer<ClientServices>;
 
   constructor(

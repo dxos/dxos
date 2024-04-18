@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
 import { log } from '@dxos/log';
+import { ApiError } from '@dxos/protocols';
 import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 /**
@@ -12,16 +13,11 @@ import type { WebsocketRpcClient } from '@dxos/websocket-rpc';
  */
 export const fromSocket = async (url: string, authenticationToken?: string): Promise<ClientServicesProvider> => {
   const closed = new Event<Error | undefined>();
-  const fatal = new Event<Error>();
   let dxRpcClient!: WebsocketRpcClient<ClientServices, {}>;
 
   return {
     get closed() {
       return closed;
-    },
-
-    get fatal() {
-      return fatal;
     },
 
     get descriptors() {
@@ -48,7 +44,7 @@ export const fromSocket = async (url: string, authenticationToken?: string): Pro
         if (error.message.includes('401')) {
           log.warn('websocket authentication failed');
         }
-        fatal.emit(error);
+        closed.emit(new ApiError('websocket error'));
       });
       await dxRpcClient.open();
     },

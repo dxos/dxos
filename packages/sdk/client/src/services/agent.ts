@@ -38,7 +38,6 @@ export const fromAgent = ({
 export class AgentClientServiceProvider implements ClientServicesProvider {
   // TODO(wittjosiah): Fire an event if the socket disconnects.
   readonly closed = new Event<Error | undefined>();
-  readonly fatal = new Event<Error>();
   private _client?: WebsocketRpcClient<ClientServices, {}>;
 
   constructor(private readonly _profile: string) {}

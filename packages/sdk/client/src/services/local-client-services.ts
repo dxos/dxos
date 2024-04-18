@@ -88,7 +88,6 @@ const setupNetworking = async (
 @trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  readonly fatal = new Event<Error>();
   private readonly _ctx = new Context();
   private readonly _params: ClientServicesHostParams;
   private _host?: ClientServicesHost;

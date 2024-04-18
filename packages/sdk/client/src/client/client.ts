@@ -342,23 +342,19 @@ export class Client {
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
     const trigger = new Trigger<Error | undefined>();
-
-    this._services.fatal.on((error) => {
-      log.error('fatal', { error });
-      // TODO: Unclear how consumers would like to handle fatal errors.
-      trigger.wake(error);
-      throw error;
-    });
-
-    await this._services.open(this._ctx);
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
+      if (error instanceof ApiError) {
+        log.error('fatal', { error });
+        trigger.wake(error);
+      }
       if (!this._resetting) {
         await this._close();
         await this._open();
         this.reloaded.emit();
       }
     });
+    await this._services.open(this._ctx);
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);

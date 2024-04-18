@@ -43,7 +43,6 @@ export type IFrameClientServicesProxyOptions = {
 @trace.resource()
 export class IFrameClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  readonly fatal = new Event<Error>();
   /**
    * @internal
    */
