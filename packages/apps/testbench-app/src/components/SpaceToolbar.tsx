@@ -3,36 +3,36 @@
 //
 
 import { Plus, Trash, UserPlus } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Select, Toolbar } from '@dxos/react-ui';
 
+import { useControlledValue } from '../hooks';
+
 export type SpaceToolbarProps = {
-  onCreate: () => Promise<PublicKey>;
+  spaceKey?: PublicKey;
+  onCreate: () => void;
   onClose: (space: PublicKey) => void;
   onSelect: (space: PublicKey | undefined) => void;
   onInvite: (space: PublicKey) => void;
 };
 
-export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
+export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
   const client = useClient();
   const spaces = useSpaces().filter((space) => space !== client.spaces.default);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>();
+  const [spaceKey, setSpaceKey] = useControlledValue<PublicKey | undefined>(_spaceKey, onSelect);
   useEffect(() => {
-    onSelect(spaceKey);
-  }, [spaceKey]);
-
-  const handleCreate = async () => {
-    const key = await onCreate();
-    setSpaceKey(key);
-  };
+    if (!_spaceKey && spaces.length) {
+      setSpaceKey(spaces[0].key);
+    }
+  }, []);
 
   return (
     <Toolbar.Root classNames='p-1'>
-      <Toolbar.Button onClick={handleCreate} title='Create space.'>
+      <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
         <Plus />
       </Toolbar.Button>
       <div className='flex w-32'>
@@ -54,7 +54,10 @@ export const SpaceToolbar = ({ onCreate, onClose, onSelect, onInvite }: SpaceToo
           </Select.Portal>
         </Select.Root>
       </div>
-      <div>{spaces.length}</div>
+      <div className='flex gap-1'>
+        <span>{spaces.length}</span>
+        <span>Space(s)</span>
+      </div>
       <div className='grow' />
       {spaceKey && (
         <>
