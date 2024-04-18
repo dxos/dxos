@@ -198,10 +198,10 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById(
+  async loadObjectById<T = any>(
     objectId: string,
     { timeout = 5000 }: { timeout?: number } = {},
-  ): Promise<EchoReactiveObject<any> | undefined> {
+  ): Promise<EchoReactiveObject<T> | undefined> {
     // Check if deleted.
     if (this._objects.get(objectId)?.isDeleted()) {
       return Promise.resolve(undefined);
@@ -478,11 +478,15 @@ export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => 
  *                        otherwise the method exits when valueAccessor is not null.
  * @param timeout - loading timeout, defaults to 5s.
  */
-export const loadObjectReferences = async <T extends EchoReactiveObject<any>, U>(
+export const loadObjectReferences = async <
+  T extends EchoReactiveObject<any>,
+  RefType,
+  DerefType = RefType extends Array<infer U> ? Array<NonNullable<U>> : NonNullable<RefType>,
+>(
   objOrArray: T | T[],
-  valueAccessor: (obj: T) => U,
+  valueAccessor: (obj: T) => RefType,
   { timeout }: { timeout: number } = { timeout: 5000 },
-): Promise<T extends T[] ? Array<NonNullable<U>> : NonNullable<U>> => {
+): Promise<T extends T[] ? Array<DerefType> : DerefType> => {
   const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
   const tasks = objectArray.map((obj) => {
     const core = getAutomergeObjectCore(obj);

@@ -16,6 +16,7 @@ export * from './util';
 // TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
 export * from './schema';
 export * from './text';
+export * from './effect';
 
 export * as S from '@effect/schema/Schema';
 export * as AST from '@effect/schema/AST';
