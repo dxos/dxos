@@ -10,9 +10,11 @@ export * from './hypergraph';
 export * from './query';
 export * from './serializer';
 export * from './runtime-schema-registry';
+export * from './dynamic-schema-registry';
 export * from './util';
 export * from './text';
 export * from './ddl';
+export * from './echo-handler';
 
 export * as S from '@effect/schema/Schema';
 export * as AST from '@effect/schema/AST';
