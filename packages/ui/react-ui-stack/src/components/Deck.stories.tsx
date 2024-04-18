@@ -129,7 +129,7 @@ export const DynamicBasicStacks = () => {
           <Main.Overlay />
           <Mosaic.DragOverlay />
           <Main.Notch>
-            <Button variant='ghost' classNames='p-1'>
+            <Button variant='ghost' classNames='p-1' onClick={() => setNavOpen(!navOpen)}>
               <SidebarSimple />
             </Button>
             <Button variant='ghost' classNames='p-1'>
@@ -138,7 +138,7 @@ export const DynamicBasicStacks = () => {
             <Button variant='ghost' classNames='p-1'>
               <CaretRight />
             </Button>
-            <Button variant='ghost' classNames='p-1'>
+            <Button variant='ghost' classNames='p-1' onClick={() => setC11yOpen(!c11yOpen)}>
               <SidebarSimple mirrored />
             </Button>
           </Main.Notch>
