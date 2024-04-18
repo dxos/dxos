@@ -57,10 +57,6 @@ export interface ClientServicesProvider {
    * This should fire if the services disconnect unexpectedly or during a client reset.
    */
   closed: Event<Error | undefined>;
-  /**
-   * The connection to the services provider suffered an unrecoverable error.
-   */
-  fatal: Event<Error>;
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
 
