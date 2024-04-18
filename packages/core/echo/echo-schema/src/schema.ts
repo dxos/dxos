@@ -6,4 +6,4 @@
  * Entry point for non-echo proxies and schema.
  */
 
-export { create, type ReactiveObject, getSchema } from './effect';
+export { create, type ReactiveObject, getSchema } from './ddl';

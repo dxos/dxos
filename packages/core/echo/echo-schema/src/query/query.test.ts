@@ -11,8 +11,8 @@ import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
-import { Expando, create } from '../effect';
-import { type EchoReactiveObject } from '../effect';
+import { Expando, create } from '../ddl';
+import { type EchoReactiveObject } from '../ddl';
 import { Contact, TestBuilder, createDatabase } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {

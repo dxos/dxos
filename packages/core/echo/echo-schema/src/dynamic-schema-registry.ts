@@ -9,8 +9,8 @@ import { log } from '@dxos/log';
 
 import { getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './effect';
-import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from './effect';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from './ddl';
+import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from './ddl';
 import { Filter } from './query';
 
 export class DynamicSchemaRegistry {

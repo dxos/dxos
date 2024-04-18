@@ -6,9 +6,9 @@ import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './handler-meta';
-import { data, type ObjectMeta } from '../../object';
 import { defineHiddenProperty } from '../../util/property';
 import { ReactiveArray, createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { data, type ObjectMeta } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');

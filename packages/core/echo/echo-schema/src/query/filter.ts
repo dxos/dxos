@@ -12,9 +12,9 @@ import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type AutomergeObjectCore } from '../automerge';
-import { DynamicEchoSchema, requireTypeReference } from '../effect';
-import { getSchema, type EchoReactiveObject } from '../effect';
-import { getReferenceWithSpaceKey } from '../object';
+import { DynamicEchoSchema, requireTypeReference } from '../ddl';
+import { getSchema, type EchoReactiveObject } from '../ddl';
+import { getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>

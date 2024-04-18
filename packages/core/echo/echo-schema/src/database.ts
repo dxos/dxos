@@ -8,8 +8,9 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
-import { DynamicSchemaRegistry, createEchoObject, initEchoReactiveObjectRootProxy } from './effect';
-import { type EchoReactiveObject, getSchema, isEchoObject, type ReactiveObject } from './effect';
+import { type EchoReactiveObject, getSchema, type ReactiveObject } from './ddl';
+import { DynamicSchemaRegistry } from './dynamic-schema-registry';
+import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
 

@@ -14,7 +14,7 @@ import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
-import { type EchoReactiveObject } from './effect';
+import { type EchoReactiveObject } from './ddl';
 import { prohibitSignalActions } from './guarded-scope';
 import {
   Filter,

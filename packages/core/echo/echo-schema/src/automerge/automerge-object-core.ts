@@ -25,8 +25,8 @@ import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isEchoObject, type EchoReactiveObject, isReactiveObject } from '../effect';
-import { type ObjectMeta } from '../object';
+import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '../ddl';
+import { isEchoObject } from '../echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.

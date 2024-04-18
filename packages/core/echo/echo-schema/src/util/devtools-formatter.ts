@@ -4,7 +4,7 @@
 
 import { type JsonML } from '@dxos/debug';
 
-import { data } from '../object';
+import { data } from '../ddl';
 
 // TODO(dmaretskyi): Fix those to work with the new reactive API.
 

@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
-import { create, Expando } from '../effect';
+import { create, Expando } from '../ddl';
 import { createDatabase } from '../testing';
 
 describe('clone', () => {

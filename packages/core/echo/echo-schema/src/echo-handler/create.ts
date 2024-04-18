@@ -23,9 +23,8 @@ import {
   createReactiveProxy,
   getProxyHandlerSlot,
   isReactiveObject,
-} from '../effect';
-import type { EchoReactiveObject } from '../effect';
-import { type ObjectMeta } from '../object';
+} from '../ddl';
+import type { EchoReactiveObject, ObjectMeta } from '../ddl';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;

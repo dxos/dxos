@@ -4,7 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
-import { type ObjectMeta } from '../../object';
+import { type ObjectMeta } from '../types';
 
 export interface ReactiveHandler<T extends object> extends ProxyHandler<T> {
   /**

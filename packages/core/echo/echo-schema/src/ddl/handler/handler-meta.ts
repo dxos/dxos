@@ -5,9 +5,9 @@
 import * as S from '@effect/schema/Schema';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
-import { type ObjectMeta } from '../../object';
 import { defineHiddenProperty } from '../../util/property';
 import { createReactiveProxy } from '../proxy';
+import { type ObjectMeta } from '../types';
 
 const symbolTargetMeta = Symbol.for('@dxos/meta');
 

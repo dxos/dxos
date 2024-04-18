@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
 import { createSubscription } from './subscription';
-import { Expando, create } from '../effect';
-import { type ReactiveObject } from '../effect';
+import { Expando, create } from '../ddl';
+import { type ReactiveObject } from '../ddl';
 import { createDatabase } from '../testing';
 
 describe('create subscription', () => {

@@ -9,9 +9,9 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge';
-import { create, Expando, getMeta, getSchema, getType, type ReactiveObject } from './effect';
+import { create, Expando, getMeta, getSchema, getType, type ReactiveObject } from './ddl';
+import { clone } from './echo-handler';
 import { Hypergraph } from './hypergraph';
-import { clone } from './object';
 import { Filter } from './query';
 import { createDatabase, TestBuilder, Contact, Container, RecordType, Task, Todo } from './testing';
 

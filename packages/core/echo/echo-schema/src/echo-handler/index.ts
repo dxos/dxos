@@ -3,3 +3,5 @@
 //
 
 export { createEchoObject, isEchoObject, initEchoReactiveObjectRootProxy } from './create';
+export * from './util';
+export * from './clone';

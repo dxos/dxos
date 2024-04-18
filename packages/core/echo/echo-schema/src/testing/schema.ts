@@ -4,7 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
-import { Expando, type Ref, ref, TypedObject } from '../effect';
+import { Expando, type Ref, ref, TypedObject } from '../ddl';
 
 export class Contact extends TypedObject({
   typename: 'example.test.Contact',

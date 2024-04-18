@@ -5,8 +5,9 @@
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
+import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { type EchoReactiveObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../effect';
+import { type EchoReactiveObject } from '../ddl';
 
 export type CloneOptions = {
   /**

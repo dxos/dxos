@@ -3,8 +3,8 @@
 //
 
 import { getTargetMeta } from './handler-meta';
-import type { ObjectMeta } from '../../object';
 import { type ReactiveHandler } from '../proxy';
+import type { ObjectMeta } from '../types';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');

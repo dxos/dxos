@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
-import { createEchoObject } from './create';
+import { createEchoObject, isEchoObject } from './create';
 import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import {
@@ -25,9 +25,8 @@ import {
   isDeleted,
   Expando,
   type EchoReactiveObject,
-  isEchoObject,
   getSchema,
-} from '../effect';
+} from '../ddl';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
 import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from '../testing';

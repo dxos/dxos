@@ -22,9 +22,8 @@ import {
 } from './echo-proxy-target';
 import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema } from '../effect';
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler } from '../effect';
-import { type ObjectMeta } from '../object';
+import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema } from '../ddl';
+import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '../ddl';
 import { defineHiddenProperty } from '../util/property';
 
 /**

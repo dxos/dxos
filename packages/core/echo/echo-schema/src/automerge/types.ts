@@ -4,7 +4,7 @@
 
 import { type Reference } from '@dxos/echo-db';
 
-import { type EchoReactiveObject } from '../effect';
+import { type EchoReactiveObject } from '../ddl';
 
 export type DecodedAutomergePrimaryValue =
   | undefined

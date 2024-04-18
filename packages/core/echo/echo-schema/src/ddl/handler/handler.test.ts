@@ -10,8 +10,8 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { create } from './create';
-import { data } from '../../object';
 import { updateCounter, TEST_OBJECT, TestClass, TestSchemaWithClass } from '../../testing';
+import { data } from '../types';
 import { type ReactiveObject } from '../types';
 
 registerSignalRuntime();

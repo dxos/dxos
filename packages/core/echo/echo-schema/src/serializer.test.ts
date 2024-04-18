@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { getSchema, create, Expando } from './effect';
+import { getSchema, create, Expando } from './ddl';
 import { Filter } from './query';
 import { Serializer, type SerializedSpace } from './serializer';
 import { createDatabase, Contact } from './testing';

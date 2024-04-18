@@ -7,12 +7,12 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './effect/annotations';
-import { DynamicEchoSchema } from './effect/dynamic/dynamic-schema';
-import { StoredEchoSchema } from './effect/dynamic/stored-schema';
-import { create } from './effect/handler';
-import { effectToJsonSchema } from './effect/json';
-import { TypedObject } from './effect/typed-object-class';
+import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './ddl/annotations';
+import { DynamicEchoSchema } from './ddl/dynamic/dynamic-schema';
+import { StoredEchoSchema } from './ddl/dynamic/stored-schema';
+import { create } from './ddl/handler';
+import { effectToJsonSchema } from './ddl/json';
+import { TypedObject } from './ddl/typed-object-class';
 import { Filter } from './query';
 import { createDatabase } from './testing';
 

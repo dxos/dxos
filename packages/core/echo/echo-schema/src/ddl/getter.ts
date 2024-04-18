@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 
 import { getEchoObjectAnnotation } from './annotations';
 import { isReactiveObject, getProxyHandlerSlot } from './proxy';
-import { type ObjectMeta } from '../object';
+import { type ObjectMeta } from '../ddl';
 
 /**
  * Returns the schema for the given object if one is defined.

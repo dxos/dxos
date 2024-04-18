@@ -10,10 +10,10 @@ import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './handler-meta';
-import { data, type ObjectMeta } from '../../object';
 import { defineHiddenProperty } from '../../util/property';
 import { SchemaValidator, symbolSchema } from '../ast';
 import { ReactiveArray, type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from '../proxy';
+import { data, type ObjectMeta } from '../types';
 
 const symbolSignal = Symbol('signal');
 const symbolPropertySignal = Symbol('property-signal');
