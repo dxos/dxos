@@ -20,18 +20,12 @@ export type DataToolbarProps = {
 
 export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onViewChange }: DataToolbarProps) => {
   const [view, setView] = useState<DataView>('table');
-  const [count, setCount] = useState(3);
+  const [count, setCount] = useState(10);
   const [type, setType] = useState<string>(types?.[0] ?? '');
   const [filter, setFilter] = useState<string>();
-  useEffect(() => {
-    onTypeChange?.(type);
-  }, [type]);
-  useEffect(() => {
-    onFilterChange?.(filter);
-  }, [filter]);
-  useEffect(() => {
-    onViewChange?.(view);
-  }, [view]);
+  useEffect(() => onTypeChange?.(type), [type]);
+  useEffect(() => onFilterChange?.(filter), [filter]);
+  useEffect(() => onViewChange?.(view), [view]);
 
   return (
     <Toolbar.Root classNames='p-1'>
