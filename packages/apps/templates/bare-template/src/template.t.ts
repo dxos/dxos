@@ -21,7 +21,7 @@ export default interactiveDirectory({
       tailwind: z.boolean().describe('Include tailwind (https://tailwindcss.com)').default(true),
       storybook: z.boolean().describe('Include a Storybook component sandbox (https://storybook.js.org)').default(true),
       pwa: z.boolean().describe('Include PWA support').default(false),
-      proto: z.boolean().describe('Include protobuf codegen for typed ECHO objects').default(false),
+      schema: z.boolean().describe('Include Effect Schema for typed ECHO objects').default(false),
       monorepo: z
         .boolean()
         .describe('Assume generated output is within the DXOS monorepo')
@@ -32,10 +32,10 @@ export default interactiveDirectory({
   inputQuestions: {
     dxosUi: { when: ({ react }) => react, default: ({ react }) => react },
     tailwind: { when: ({ react, dxosUi }) => !react || !dxosUi },
-    storybook: { when: ({ react }) => react, default: ({ react }) => react }
+    storybook: { when: ({ react }) => react, default: ({ react }) => react },
   },
   options({ input, outputDirectory, ...rest }) {
-    const { name, createFolder } = {...input};
+    const { name, createFolder } = { ...input };
     return {
       input,
       outputDirectory: createFolder ? path.resolve(outputDirectory, sanitize(name ?? '')) : outputDirectory,
