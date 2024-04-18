@@ -39,7 +39,7 @@
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@radix-ui/react-tabs": "^1.0.4",
     "@types/bytes": "^3.1.1",
     "bytes": "^3.1.2",

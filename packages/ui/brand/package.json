@@ -16,7 +16,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@fontsource/k2d": "^5.0.18",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@storybook/addons": "^7.0.6",
     "@storybook/api": "^7.0.6",
     "@storybook/components": "^7.0.6",
