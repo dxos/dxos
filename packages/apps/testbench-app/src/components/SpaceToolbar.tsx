@@ -3,7 +3,7 @@
 //
 
 import { Plus, Trash, UserPlus } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { type PublicKey } from '@dxos/client';
 import { useClient } from '@dxos/react-client';
@@ -24,6 +24,11 @@ export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect,
   const client = useClient();
   const spaces = useSpaces().filter((space) => space !== client.spaces.default);
   const [spaceKey, setSpaceKey] = useControlledValue<PublicKey | undefined>(_spaceKey, onSelect);
+  useEffect(() => {
+    if (!_spaceKey && spaces.length) {
+      setSpaceKey(spaces[0].key);
+    }
+  }, []);
 
   return (
     <Toolbar.Root classNames='p-1'>
@@ -49,7 +54,10 @@ export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect,
           </Select.Portal>
         </Select.Root>
       </div>
-      <div>{spaces.length}</div>
+      <div className='flex gap-1'>
+        <span>{spaces.length}</span>
+        <span>Space(s)</span>
+      </div>
       <div className='grow' />
       {spaceKey && (
         <>
