@@ -7,7 +7,7 @@ import expect from 'expect';
 import { PublicKey } from '@dxos/keys';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
 
 import { SnapshotStore } from './snapshot-store';

@@ -5,7 +5,7 @@
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest'
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 

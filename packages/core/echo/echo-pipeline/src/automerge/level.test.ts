@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import { Level } from 'level';
 
 import { PublicKey } from '@dxos/keys';
-import { describe, openAndClose, test } from '@dxos/test';
+import { describe, openAndClose, test } from 'vitest'
 
 import { type SubLevelDB } from './types';
 import { createTestLevel } from '../testing';

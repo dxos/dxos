@@ -19,7 +19,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, test } from 'vitest'
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
@@ -31,12 +31,12 @@ describe('AutomergeHost', () => {
   test('can create documents', async () => {
     const level = createTestLevel();
     await level.open();
-    afterTest(() => level.close());
+    onTestFinished(() => level.close());
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
     });
     await host.open();
-    afterTest(() => host.close());
+    onTestFinished(() => host.close());
 
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -49,7 +49,7 @@ describe('AutomergeHost', () => {
   test('changes are preserved in storage', async () => {
     const level = createTestLevel();
     await level.open();
-    afterTest(() => level.close());
+    onTestFinished(() => level.close());
 
     const host = new AutomergeHost({ db: level.sublevel('automerge') });
     await host.open();
@@ -64,7 +64,7 @@ describe('AutomergeHost', () => {
 
     const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
     await host2.open();
-    afterTest(() => host2.close());
+    onTestFinished(() => host2.close());
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
@@ -273,7 +273,7 @@ describe('AutomergeHost', () => {
     const handle = peer1.repo.create();
 
     const teleportBuilder = new TeleportBuilder();
-    afterTest(() => teleportBuilder.destroy());
+    onTestFinished(() => teleportBuilder.destroy());
 
     const [teleportPeer1, teleportPeer2] = teleportBuilder.createPeers({ factory: () => new TeleportPeer() });
     {

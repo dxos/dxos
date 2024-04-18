@@ -10,7 +10,7 @@ import waitForExpect from 'wait-for-expect';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
+import { describe, test, afterTest } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
 
 import { TestFeedBuilder, TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
@@ -23,7 +23,7 @@ const SIGNAL_URL = `ws://localhost:${port}/.well-known/dx/signal`;
 describe('space/space-protocol', () => {
   test('two peers discover each other', async () => {
     const builder = new TestAgentBuilder();
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -39,8 +39,8 @@ describe('space/space-protocol', () => {
     await protocol1.start();
     await protocol2.start();
 
-    afterTest(() => protocol1.stop());
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop());
+    onTestFinished(() => protocol2.stop());
 
     await waitForExpect(() => {
       expect(presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey))).toBeTruthy();
@@ -50,7 +50,7 @@ describe('space/space-protocol', () => {
 
   test('replicates a feed', async () => {
     const builder = new TestAgentBuilder();
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => await builder.close());
     const topic = PublicKey.random();
 
     const peer1 = await builder.createPeer();
@@ -62,8 +62,8 @@ describe('space/space-protocol', () => {
     await protocol1.start();
     await protocol2.start();
 
-    afterTest(() => protocol1.stop());
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop());
+    onTestFinished(() => protocol2.stop());
 
     const builder1 = new TestFeedBuilder();
     const feedStore1 = builder1.createFeedStore();
@@ -96,7 +96,7 @@ describe('space/space-protocol', () => {
       storage: createStorage(),
       networkManagerProvider: WebsocketNetworkManagerProvider(SIGNAL_URL),
     });
-    afterTest(async () => await builder.close());
+    onTestFinished(async () => await builder.close());
 
     const keyring = new Keyring();
     const topic = await keyring.createKey();
@@ -110,8 +110,8 @@ describe('space/space-protocol', () => {
     await protocol1.start();
     await protocol2.start();
 
-    afterTest(() => protocol1.stop());
-    afterTest(() => protocol2.stop());
+    onTestFinished(() => protocol1.stop());
+    onTestFinished(() => protocol2.stop());
 
     const feedKey = await peer1.keyring.createKey();
 

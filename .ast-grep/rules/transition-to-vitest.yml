@@ -1,0 +1,9 @@
+id: transition-to-vitest
+language: TypeScript
+rule:
+  pattern: async () => { $$$A }
+  has: # inside another node
+    pattern: onTestFinished($X)
+    stopBy: end
+
+fix: async ({ onTestFinished }) => { $$$A }

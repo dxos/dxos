@@ -11,7 +11,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest'
 import { Timeframe } from '@dxos/timeframe';
 
 import { valueEncoding } from '../common';
