@@ -37,10 +37,10 @@ export type AgentOptions = {
   plugins?: Plugin[];
   metrics?: boolean;
   protocol?: {
-    socket: string;
+    socketPath: string;
     webSocket?: number;
+    http?: AgentHttpParams;
   };
-  http?: AgentHttpParams;
 };
 
 export type AgentHttpParams = { port: number; authenticationToken: string; wsAuthenticationToken: string };
@@ -54,7 +54,7 @@ export class Agent {
   private _client?: Client;
   private _clientServices?: ClientServicesProvider;
   private _services: Service[] = [];
-  private _httpServer?: http.Server;
+  private _httpServers: http.Server[] = [];
 
   constructor(private readonly _options: AgentOptions) {
     invariant(this._options);
@@ -109,15 +109,16 @@ export class Agent {
     // Unix socket (accessed via CLI).
     // TODO(burdon): Configure ClientServices plugin with multiple endpoints.
     //
-    if (this._options.protocol?.socket) {
-      const { path } = parseAddress(this._options.protocol.socket);
+    if (this._options.protocol?.socketPath) {
+      const { path } = parseAddress(this._options.protocol.socketPath);
       mkdirSync(dirname(path), { recursive: true });
       rmSync(path, { force: true });
-      this._httpServer = http.createServer();
-      this._httpServer.listen(path);
-      const socketServer = createServer(this._clientServices, { server: this._httpServer });
+      const unixSocketServer = http.createServer();
+      unixSocketServer.listen(path);
+      const socketServer = createServer(this._clientServices, { server: unixSocketServer });
       await socketServer.open();
       this._services.push(socketServer);
+      this._httpServers.push(unixSocketServer);
       log.info('listening', { path });
     }
 
@@ -127,16 +128,20 @@ export class Agent {
     //
     if (this._options.protocol?.webSocket) {
       const port = this._options.protocol.webSocket;
-      const socketServer = createServer(this._clientServices, { port });
+
+      const websocketServer = http.createServer();
+      websocketServer.listen(port);
+
+      const socketServer = createServer(this._clientServices, { server: websocketServer });
       await socketServer.open();
       this._services.push(socketServer);
+      this._httpServers.push(websocketServer);
       log.info('listening', { port });
     }
 
     // TODO(nf): move this, and all other listeners to agent CLI?
-    if (this._options.http) {
-      const httpServer = await createHttpServer(this._clientServices, this._client, this._options.http);
-      this._services.push(httpServer);
+    if (this._options.protocol?.http) {
+      await this.createHttpServer(this._options.protocol.http);
     }
 
     // Open plugins.
@@ -174,13 +179,57 @@ export class Agent {
     await this._clientServices?.close(new Context());
     this._client = undefined;
     this._clientServices = undefined;
-    if (this._httpServer) {
-      const httpServerClosed = new Trigger();
-      this._httpServer.close(() => httpServerClosed.wake());
-      await httpServerClosed.wait({ timeout: 5_000 });
-    }
-
+    await Promise.all(
+      this._httpServers.map(async (server) => {
+        const httpServerClosed = new Trigger();
+        server.close(() => httpServerClosed.wake());
+        await httpServerClosed.wait({ timeout: 5_000 });
+      }),
+    );
     log('stopped');
+  }
+
+  // create multipurpose HTTP server to expose agent functionality to external clients.
+  // TODO: extract to separate class, e.g. extend WebsocketRpcServer?
+  async createHttpServer(options: agentHttpServerOptions) {
+    invariant(this._clientServices);
+    const server = http.createServer();
+    const socketServer = createServer(this._clientServices, { noServer: true });
+    await socketServer.open();
+
+    server.listen(options.port);
+
+    server.on('upgrade', (request, socket: Socket, head) => {
+      authenticateRequestWithTokenAuth(request, socket, head, options.wsAuthenticationToken, (request, socket, head) =>
+        socketServer.handleUpgrade(request, socket, head),
+      );
+    });
+    server.on('error', (err) => {
+      log('HTTP server error', { err });
+    });
+    server.on('request', (request, response) => {
+      if (request.headers.authorization !== options.authenticationToken) {
+        log('unauthorized', { authorization: request.headers.authorization, foo: options.authenticationToken });
+        response.writeHead(401);
+        response.end('Unauthorized');
+        return;
+      }
+
+      const reqUrl = request.url;
+      // TODO(nf): '/.well-known' URL?
+      if (reqUrl === '/status') {
+        handleStatus(request, response, this._client);
+      } else {
+        response.writeHead(404);
+        response.end('Not found');
+      }
+    });
+    server.on('listening', () => {
+      log.info('HTTP server listening', { port: options.port });
+    });
+
+    this._services.push(socketServer);
+    this._httpServers.push(server);
   }
 }
 
@@ -214,58 +263,13 @@ export type agentHttpServerOptions = {
   wsAuthenticationToken: string;
 };
 
-// create multipurpose HTTP server to expose agent functionality to external clients.
-const createHttpServer = async (
-  clientServices: ClientServicesProvider,
-  client: Client,
-  options: agentHttpServerOptions,
-) => {
-  const server = http.createServer();
-  const socketServer = createServer(clientServices, { noServer: true });
-  await socketServer.open();
-
-  server.listen(options.port);
-
-  server.on('upgrade', (request, socket: Socket, head) => {
-    log('upgrade', {
-      path: request.url,
-      authorization: request.headers.authorization,
-      wsprotoheaders: request.headers['sec-websocket-protocol'],
-    });
-
-    authenticateRequestWithTokenAuth(request, socket, head, options.wsAuthenticationToken, (request, socket, head) =>
-      socketServer.handleUpgrade(request, socket, head),
-    );
-  });
-  server.on('error', (err) => {
-    log('HTTP server error', { err });
-  });
-  server.on('request', (request, response) => {
-    if (request.headers.authorization !== options.authenticationToken) {
-      log('unauthorized', { authorization: request.headers.authorization, foo: options.authenticationToken });
-      response.writeHead(401);
-      response.end('Unauthorized');
-      return;
-    }
-
-    const reqUrl = request.url;
-    // TODO(nf): '/.well-known' URL?
-    if (reqUrl === '/status') {
-      handleStatus(request, response, client);
-    } else {
-      response.writeHead(404);
-      response.end('Not found');
-    }
-  });
-  server.on('listening', () => {
-    log.info('HTTP server listening', { port: options.port });
-  });
-
-  return socketServer;
-};
-
 // TODO: extend and better assess health?
-const handleStatus = (request: http.IncomingMessage, response: http.ServerResponse, client: Client) => {
+const handleStatus = (request: http.IncomingMessage, response: http.ServerResponse, client?: Client) => {
+  if (!client) {
+    response.writeHead(503);
+    response.end('Client not available');
+    return;
+  }
   const status = client.status.get();
   if (status === SystemStatus.ACTIVE) {
     response.writeHead(200);
