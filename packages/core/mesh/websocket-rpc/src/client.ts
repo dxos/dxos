@@ -77,7 +77,7 @@ export class WebsocketRpcClient<C, S> {
 
     this._socket.onerror = (event: WebSocket.ErrorEvent) => {
       // Browsers do not include the error message in the event object, so we cannot discern 401 errors from other errors.
-      log.error(event.message ?? 'Socket error', { url: this._params.url, event });
+      log.error(event.message ?? 'Socket error', { url: this._params.url });
       const error = event.error ?? new Error(event.message);
       this.error.emit(error);
       this._connectTrigger.throw(error);
