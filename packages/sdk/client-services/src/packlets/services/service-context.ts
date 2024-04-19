@@ -129,7 +129,7 @@ export class ServiceContext extends Resource {
     });
 
     this.indexer = new Indexer({
-      indexStore: new IndexStore({ db: level.sublevel('index-store') }),
+      indexStore: new IndexStore({ db: level.sublevel('index-storage') }),
       metadataStore: this.indexMetadata,
       loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
       getAllDocuments: createDocumentsIterator(this.automergeHost),

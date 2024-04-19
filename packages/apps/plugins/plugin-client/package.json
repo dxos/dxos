@@ -50,7 +50,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5"
+    "@phosphor-icons/react": "^2.1.5"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

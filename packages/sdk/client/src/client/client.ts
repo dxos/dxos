@@ -15,9 +15,9 @@ import {
   type Echo,
   type Halo,
 } from '@dxos/client-protocol';
-import { DiagnosticsCollector } from '@dxos/client-services';
+import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
-import { Config } from '@dxos/config';
+import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Hypergraph } from '@dxos/echo-schema';
@@ -239,26 +239,63 @@ export class Client {
    */
   async repair(): Promise<any> {
     // TODO(burdon): Factor out.
-    const spaces = this.spaces.get();
-    const docs = spaces
-      .map((space) =>
-        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
-      )
-      .filter(Boolean);
+    const repairSummary: any = {};
 
-    let removed = 0;
-    if (typeof navigator !== 'undefined' && navigator.storage) {
-      const dir = await navigator.storage.getDirectory();
-      for await (const filename of (dir as any)?.keys()) {
-        if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
-          await dir.removeEntry(filename);
-          removed++;
+    {
+      // Cleanup OPFS.
+      const spaces = this.spaces.get();
+      const docs = spaces
+        .map((space) =>
+          (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+        )
+        .filter(Boolean);
+
+      repairSummary.OPFSRemovedFiles = 0;
+      if (typeof navigator !== 'undefined' && navigator.storage) {
+        const dir = await navigator.storage.getDirectory();
+        for await (const filename of (dir as any)?.keys()) {
+          if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+            await dir.removeEntry(filename);
+            repairSummary.OPFSRemovedFiles++;
+          }
         }
       }
     }
 
-    log.info('Repair succeeded', { removed });
-    return { removed };
+    {
+      // Fix storage config.
+      const config = {
+        runtime: {
+          client: {
+            storage: {
+              dataStore: this.config.values.runtime?.client?.storage?.dataStore,
+            },
+          },
+        },
+      };
+      await SaveConfig(config);
+
+      repairSummary.storageConfig = config;
+    }
+
+    {
+      repairSummary.levelDBRemovedEntries = 0;
+      // Cleanup old index-data from level db.
+      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
+      const sublevelsToCleanup = [
+        level.sublevel('index-store'),
+        level.sublevel('index-metadata').sublevel('clean'),
+        level.sublevel('index-metadata').sublevel('dirty'),
+      ];
+
+      for (const sublevel of sublevelsToCleanup) {
+        repairSummary.levelDBRemovedEntries += (await sublevel.keys().all()).length;
+        await sublevel.clear();
+      }
+    }
+
+    log.info('Repair succeeded', { repairSummary });
+    return repairSummary;
   }
 
   /**
@@ -304,15 +341,20 @@ export class Client {
     const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
-    await this._services.open(this._ctx);
+    const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
+      if (error instanceof ApiError) {
+        log.error('fatal', { error });
+        trigger.wake(error);
+      }
       if (!this._resetting) {
         await this._close();
         await this._open();
         this.reloaded.emit();
       }
     });
+    await this._services.open(this._ctx);
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
@@ -337,7 +379,6 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    const trigger = new Trigger<Error | undefined>();
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(

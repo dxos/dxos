@@ -8,12 +8,12 @@ export default template.define
   })
   .script({
     content: ({ input, slots, imports }) => {
-      const { react, pwa, dxosUi, name, proto } = input;
+      const { react, pwa, dxosUi, name, schema } = input;
       const { ClientProvider, Config, Defaults, Local } = imports.use(
         ['ClientProvider', 'Config', 'Dynamics', 'Defaults', 'Local'],
         '@dxos/react-client',
       );
-      const { Status, ThemeProvider }  = imports.use(['Status', 'ThemeProvider'], '@dxos/react-ui');
+      const { Status, ThemeProvider } = imports.use(['Status', 'ThemeProvider'], '@dxos/react-ui');
       const defaultTx = imports.use('defaultTx', '@dxos/react-ui-theme');
       const useRegisterSW = imports.use('useRegisterSW', 'virtual:pwa-register/react');
 
@@ -30,10 +30,10 @@ export default template.define
         <${ClientProvider}
           config={config}
           createWorker={createWorker}
-          shell='./shell.html'${dxosUi ? plate`
-          fallback={Loader}` : ''}
+          shell='./shell.html'
+          ${dxosUi ? plate`fallback={Loader}` : ''}
           onInitialized={async (client) => {
-            ${proto && plate`client.addSchema(${types});`}
+            ${schema && plate`// client.addSchema(Task);`}
             const searchParams = new URLSearchParams(location.search);
             if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
               await client.halo.createIdentity();
@@ -67,21 +67,27 @@ export default template.define
             name: 'dxos-client-worker',
           });
 
-        ${dxosUi && plate`
+        ${
+          dxosUi &&
+          plate`
         const Loader = () => (
           <div className='flex bs-[100dvh] justify-center items-center'>
             <${Status} indeterminate aria-label='Initializing' />
           </div>
-        );`}
+        );`
+        }
 
         export const App = () => {
-          ${pwa && plate`
+          ${
+            pwa &&
+            plate`
           const {
             needRefresh: [needRefresh],
             offlineReady: [offlineReady],
             updateServiceWorker,
           } = ${useRegisterSW}();
-          const variant = needRefresh ? 'needRefresh' : offlineReady ? 'offlineReady' : undefined;`}
+          const variant = needRefresh ? 'needRefresh' : offlineReady ? 'offlineReady' : undefined;`
+          }
 
           return (
             ${dxosUi ? themeProvider(coreContent) : coreContent}
