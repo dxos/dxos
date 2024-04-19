@@ -13,6 +13,8 @@ import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
 import { type EchoReactiveObject } from '../ddl';
 import { prohibitSignalActions } from '../guarded-scope';
+import { UndefinedKeyword } from '@effect/schema/AST';
+import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
@@ -21,9 +23,6 @@ export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1
 
 // TODO(burdon): Change to SubscriptionHandle.
 export type Subscription = () => void;
-
-// TODO(burdon): Fix garbage collection.
-const queries: Query<any>[] = [];
 
 export type QueryResult<T extends {} = any> = {
   id: string;
@@ -80,11 +79,27 @@ export interface QueryContext {
 
   /**
    * Start creating query sources and firing events.
+   *
+   * `start` and `stop` are re-entrant.
    */
+  // TODO(dmaretskyi): Make async.
   start(): void;
 
-  // Deliberately no stop() method so that query contexts can be garbage collected automatically.
+  /**
+   * Clear any resources associated with the query.
+   *
+   * `start` and `stop` are re-entrant.
+   */
+  // TODO(dmaretskyi): Make async.
+  stop(): void;
 }
+
+export type QuerySubscriptionOptions = {
+  /**
+   * Fire the callback immediately.
+   */
+  fire?: boolean;
+};
 
 /**
  * Predicate based query.
@@ -103,6 +118,8 @@ export class Query<T extends {} = any> {
 
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
+  private _subscribers: number = 0;
+  private _isRunning = false;
 
   constructor(
     private readonly _queryContext: QueryContext,
@@ -184,20 +201,41 @@ export class Query<T extends {} = any> {
     }
   }
 
-  // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback: (query: Query<T>) => void, fire = false): Subscription {
-    queries.push(this);
-    log('subscribe', queries.length); // TODO(burdon): Assign id?
+  private _handleQueryLifecycle() {
+    if (this._subscribers === 0 && this._isRunning) {
+      this._queryContext.stop();
+    } else if (this._subscribers > 0 && !this._isRunning) {
+      this._queryContext.start();
+    }
+  }
 
-    const subscription = this._event.on(callback);
-    if (fire) {
-      callback(this);
+  /**
+   * Subscribe to query results.
+   * Queries that have at least one subscriber are updated reactively when the underlying data changes.
+   */
+  // TODO(burdon): Change to SubscriptionHandle (make uniform).
+  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
+    invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
+
+    this._subscribers++;
+    const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
+    this._handleQueryLifecycle();
+
+    const unsubscribe = () => {
+      this._subscribers--;
+      unsubscribeFromEvent?.();
+      this._handleQueryLifecycle();
+    };
+
+    if (callback && opts?.fire) {
+      try {
+        callback(this);
+      } catch (err) {
+        unsubscribe();
+        throw err;
+      }
     }
 
-    return () => {
-      queries.splice(queries.indexOf(this), 1);
-      log('unsubscribe', queries.length);
-      subscription();
-    };
+    return unsubscribe;
   }
 }

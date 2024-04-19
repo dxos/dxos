@@ -40,7 +40,7 @@ export class Hypergraph {
     PublicKey.hash,
   );
 
-  private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
+  private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get runtimeSchemaRegistry(): RuntimeSchemaRegistry {
@@ -164,15 +164,18 @@ export class Hypergraph {
   }
 
   private _createQueryContext(): QueryContext {
-    const context = new GraphQueryContext(async () => {
-      for (const database of this._databases.values()) {
-        context.addQuerySource(new SpaceQuerySource(database));
-      }
-      for (const provider of this._querySourceProviders) {
-        context.addQuerySource(provider.create());
-      }
+    const context = new GraphQueryContext({
+      onStart: () => {
+        for (const database of this._databases.values()) {
+          context.addQuerySource(new SpaceQuerySource(database));
+        }
+        for (const provider of this._querySourceProviders) {
+          context.addQuerySource(provider.create());
+        }
+      },
+      onStop: () => {},
     });
-    this._queryContexts.set({}, context);
+    this._queryContexts.add(context);
 
     return context;
   }
@@ -182,14 +185,25 @@ export interface QuerySourceProvider {
   create(): QuerySource;
 }
 
+export type GraphQueryContextParams = {
+  // TODO(dmaretskyi): Make async.
+  onStart: () => void;
+  // TODO(dmaretskyi): Make async.
+  onStop: () => void;
+};
+
 export class GraphQueryContext implements QueryContext {
   public added = new Event<QuerySource>();
   public removed = new Event<QuerySource>();
 
-  constructor(private _onStart: () => void) {}
+  constructor(private readonly _params: GraphQueryContextParams) {}
 
   start() {
-    this._onStart();
+    this._params.onStart();
+  }
+
+  stop() {
+    this._params.onStop();
   }
 
   addQuerySource(querySource: QuerySource) {
