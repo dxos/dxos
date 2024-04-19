@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "labs-workers",
+  "sourceRoot": "packages/experimental/labs-workers/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/experimental/labs-workers/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ]
+      }
+    }
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}
