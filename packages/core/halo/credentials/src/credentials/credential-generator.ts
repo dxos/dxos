@@ -13,6 +13,7 @@ import {
   type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createCredential, type CredentialSigner } from './credential-factory';
@@ -224,4 +225,25 @@ export const createAdmissionCredentials = async (
   return credentials.map((credential) => ({
     credential: { credential },
   }));
+};
+
+export const createDelegatedSpaceInvitationCredential = async (
+  signer: CredentialSigner,
+  subject: PublicKey,
+  invitation: DelegateSpaceInvitation,
+): Promise<FeedMessage.Payload> => {
+  const credential = await signer.createCredential({
+    subject,
+    assertion: {
+      '@type': 'dxos.halo.invitations.DelegateSpaceInvitation',
+      invitationId: invitation.invitationId,
+      authMethod: invitation.authMethod,
+      swarmKey: invitation.swarmKey,
+      role: invitation.role,
+      guestKey: invitation.guestKey,
+      expiresOn: invitation.expiresOn,
+      multiUse: invitation.multiUse,
+    },
+  });
+  return { credential: { credential } };
 };
