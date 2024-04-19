@@ -49,13 +49,6 @@ type StackMainProps = {
   separation?: boolean;
 };
 
-// find or create stack view
-// create computed utility to map stack view + collection + other data into stack schema
-//   - this will resolve the fallback title issue
-//   - this will resolve the custom actions issue (pull custom actions from metadata plugin)
-//   - provide record in stack section schema for arbitrary view data
-// how do mutations map back to echo?
-
 const StackMain = ({ collection, separation }: StackMainProps) => {
   const { dispatch } = useIntent();
   const { graph } = useGraph();
