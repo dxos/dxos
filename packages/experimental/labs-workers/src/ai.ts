@@ -4,17 +4,38 @@
 
 import { type Ai } from '@cloudflare/ai';
 
-// TODO(burdon): Stream via modelfusion API.
+export type ChatRequest = {
+  messages: {
+    role?: 'user' | 'system';
+    content: string;
+  }[];
+};
+
 // https://playground.ai.cloudflare.com/
 // https://developers.cloudflare.com/workers-ai/
 // https://developers.cloudflare.com/workers-ai/tutorials/build-a-retrieval-augmented-generation-ai/#3-adding-the-ai-binding
 
-export const chat = async (ai: Ai) => {
-  const answer = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
-    // stream: true,
-    // max_tokens: 256,
-    messages: [{ role: 'user', content: 'What is the square root of 9?' }],
+// https://developers.cloudflare.com/workers-ai/models/
+// const model = '@cf/hermes-2-pro-mistral-7b'; // TODO(burdon): JSON.
+const model = '@cf/mistral/mistral-7b-instruct-v0.1';
+
+export const chat = async (ai: Ai, { messages }: ChatRequest) => {
+  console.log(messages);
+  const result = await ai.run(model, {
+    max_tokens: 256,
+    messages: messages.map(({ role = 'user', content }) => ({ role, content })),
   });
 
-  return answer;
+  return result;
+};
+
+// TODO(burdon): Interrupt.
+export const chatStream = async (ai: Ai, { messages }: ChatRequest): Promise<ReadableStream> => {
+  const result = (await ai.run(model, {
+    stream: true,
+    max_tokens: 256,
+    messages: messages.map(({ role = 'user', content }) => ({ role, content })),
+  })) as ReadableStream; // TODO(burdon): ???
+
+  return result;
 };
