@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
+import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
@@ -113,11 +113,11 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
-      // Create root folder structure.
+      // Create root collection structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = create(Collection, { objects: [] });
-        setSpaceProperty(defaultSpace, Collection.typename, personalSpaceFolder);
+        const personalSpaceCollection = create(Collection, { objects: [], views: {} });
+        setSpaceProperty(defaultSpace, Collection.typename, personalSpaceCollection);
         if (Migrations.versionProperty) {
           setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
         }
@@ -227,8 +227,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       metadata: {
         records: {
           [Collection.typename]: {
-            placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <FolderIcon {...props} />,
+            placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <CardsThree {...props} />,
           },
         },
       },
@@ -243,7 +243,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               return isSpace(data.active) ? (
                 <SpaceMain space={data.active} />
               ) : data.active instanceof Collection ? (
-                <CollectionMain collection={data.active} />
+                { node: <CollectionMain collection={data.active} />, disposition: 'fallback' }
               ) : typeof data.active === 'string' && data.active.length === 64 ? (
                 <MissingObject id={data.active} />
               ) : null;
@@ -482,15 +482,15 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               }
               const defaultSpace = client.spaces.default;
               const {
-                objects: [sharedSpacesFolder],
+                objects: [sharedSpacesCollection],
               } = defaultSpace.db.query({ key: SHARED });
               const space = await client.spaces.create(intent.data as PropertiesProps);
 
-              const folder = create(Collection, { objects: [] });
-              setSpaceProperty(space, Collection.typename, folder);
+              const collection = create(Collection, { objects: [], views: {} });
+              setSpaceProperty(space, Collection.typename, collection);
               await space.waitUntilReady();
 
-              sharedSpacesFolder?.objects.push(folder);
+              sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }

@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, ref } from '@dxos/echo-schema';
-
-import { Collection } from './collection';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.
@@ -16,6 +14,5 @@ export class Section extends S.Class<Section>('dxos.StackView.Section')({
 }) {}
 
 export class StackView extends TypedObject({ typename: 'dxos.StackView', version: '0.1.0' })({
-  collection: ref(Collection),
   sections: S.mutable(S.record(S.string, Section)),
 }) {}

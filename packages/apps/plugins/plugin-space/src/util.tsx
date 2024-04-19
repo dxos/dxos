@@ -190,7 +190,7 @@ export const updateGraphWithSpace = ({
               dispatch({
                 plugin: SPACE_PLUGIN,
                 action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(Collection, { objects: [] }) },
+                data: { target: collection, object: create(Collection, { objects: [], views: {} }) },
               }),
             properties: {
               label: ['create collection label', { ns: SPACE_PLUGIN }],
@@ -420,7 +420,7 @@ export const updateGraphWithSpace = ({
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: object, object: create(Collection, { objects: [] }) },
+                  data: { target: object, object: create(Collection, { objects: [], views: {} }) },
                 },
                 {
                   action: NavigationAction.ACTIVATE,

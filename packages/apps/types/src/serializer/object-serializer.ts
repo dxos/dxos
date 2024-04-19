@@ -106,7 +106,7 @@ export class ObjectSerializer {
         switch (file.type) {
           case 'folder': {
             if (!child) {
-              child = create(Collection, { name: file.name, objects: [] });
+              child = create(Collection, { name: object.name, objects: [], views: {} });
               collection.objects.push(child);
             }
 

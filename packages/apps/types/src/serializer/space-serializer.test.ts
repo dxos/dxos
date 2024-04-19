@@ -17,7 +17,7 @@ import { DocumentType, Collection, TextV0Type } from '../schema';
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
   await space.waitUntilReady();
-  setSpaceProperty(space, Collection.typename, create(Collection, { objects: [] }));
+  setSpaceProperty(space, Collection.typename, create(Collection, { objects: [], views: {} }));
   await space.db.flush();
   return space;
 };

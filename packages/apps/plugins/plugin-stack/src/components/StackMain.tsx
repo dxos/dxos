@@ -3,9 +3,9 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { type FC, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { FileType, Section, StackView } from '@braneframe/types';
+import { type Collection, FileType, StackView, Section } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -17,7 +17,6 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -38,20 +37,40 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
 };
 
-const StackMain: FC<{ stack: StackView; separation?: boolean }> = ({ stack, separation }) => {
+type StackMainProps = {
+  collection: Collection;
+  separation?: boolean;
+};
+
+// find or create stack view
+// create computed utility to map stack view + collection + other data into stack schema
+//   - this will resolve the fallback title issue
+//   - this will resolve the custom actions issue (pull custom actions from metadata plugin)
+//   - provide record in stack section schema for arbitrary view data
+// how do mutations map back to echo?
+
+const StackMain = ({ collection, separation }: StackMainProps) => {
   const { dispatch } = useIntent();
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
+  const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
 
-  const id = `stack-${stack.id}`;
+  useEffect(() => {
+    if (!collection.views[StackView.typename]) {
+      collection.views[StackView.typename] = stack;
+    }
+  }, [collection, stack]);
+
+  const id = `stack-${collection.id}`;
   const items =
-    stack.collection?.objects
+    collection.objects
       // TODO(wittjosiah): Should the database handle this differently?
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
       .filter(nonNullable)
       .map((object) => {
-        const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
-        return { id, object, ...rest };
+        const rest = metadataPlugin?.provides.metadata.resolver(getType(object)?.itemId ?? 'never');
+        return { id: object.id, object, ...rest };
       }) ?? [];
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
@@ -75,44 +94,40 @@ const StackMain: FC<{ stack: StackView; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    invariant(stack.collection, 'Referenced collection is missing.');
-
     if (
       (active.path === Path.create(id, active.item.id) || active.path === id) &&
       (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
     ) {
-      stack.collection.objects.splice(active.position!, 1);
+      collection.objects.splice(active.position!, 1);
       delete stack.sections[active.item.id];
     }
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.collection.objects.splice(over.position!, 0, object);
+      collection.objects.splice(over.position!, 0, object);
     } else if (object && over.path === id) {
-      stack.collection.objects.push(object);
+      collection.objects.push(object);
     }
 
     if (!stack.sections[object.id]) {
-      stack.sections[object.id] = {};
+      // TODO(wittjosiah): Throws.
+      // stack.sections[object.id] = {};
     }
   };
 
   const handleDelete = (path: string) => {
-    invariant(stack.collection, 'Referenced collection is missing.');
-
-    const index = stack.collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
+    const index = collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
-      stack.collection.objects.splice(index, 1);
+      collection.objects.splice(index, 1);
       delete stack.sections[Path.last(path)];
     }
   };
 
   const handleAdd = (sectionObject: EchoReactiveObject<any>) => {
-    invariant(stack.collection, 'Referenced collection is missing.');
-
-    stack.collection.objects.push(sectionObject);
-    stack.sections[sectionObject.id] = {};
+    collection.objects.push(sectionObject);
+    // TODO(wittjosiah): Throws.
+    // stack.sections[sectionObject.id] = {};
   };
 
   // TODO(wittjosiah): Factor out.
@@ -145,7 +160,7 @@ const StackMain: FC<{ stack: StackView; separation?: boolean }> = ({ stack, sepa
       data: {
         element: 'dialog',
         component: `${STACK_PLUGIN}/AddSectionDialog`,
-        subject: { path, position, stack },
+        subject: { path, position, collection },
       },
     });
   };
@@ -180,7 +195,7 @@ const StackMain: FC<{ stack: StackView; separation?: boolean }> = ({ stack, sepa
                 data: {
                   element: 'dialog',
                   component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', stack },
+                  subject: { position: 'afterAll', collection },
                 },
               })
             }

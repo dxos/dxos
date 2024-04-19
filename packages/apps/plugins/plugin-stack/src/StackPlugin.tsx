@@ -5,11 +5,10 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
 import { Collection, Section, StackView } from '@braneframe/types';
-import { resolvePlugin, type Plugin, type PluginDefinition } from '@dxos/app-framework';
+import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { Filter, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
@@ -20,7 +19,7 @@ import { type StackPluginProvides, type StackProvides, type StackState, type Sta
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-  const stackState = create<StackState>({ creators: [], stacks: [] });
+  const stackState = create<StackState>({ creators: [] });
   let subscription: UnsubscribeCallback;
 
   return {
@@ -37,14 +36,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
       }
-
-      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-      if (client) {
-        const query = client.spaces.query(Filter.schema(StackView));
-        subscription = query.subscribe(({ objects }) => {
-          stackState.stacks.splice(0, stackState.stacks.length, ...objects);
-        });
-      }
     },
     unload: async () => {
       subscription?.();
@@ -58,13 +49,15 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
           [Section.identifier]: {
-            parse: (object: EchoReactiveObject<any>, type: string) => {
+            parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.
-                  return { id: object.id, label: object.title, data: object };
+                  return { id: section.object.id, label: section.object.title, data: section.object };
                 case 'object':
-                  return object;
+                  return section.object;
+                case 'view-object':
+                  return section;
               }
             },
           },
@@ -81,18 +74,10 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
           }
           switch (role) {
-            case 'main': {
-              const collection = data.active instanceof Collection ? data.active : null;
-              const stack = stackState.stacks.find((stack) => stack.collection?.id === collection?.id);
-              console.log({ stack, collection: collection?.id, stacks: stackState.stacks.map((stack) => stack.id) });
-              // find or create stack view
-              // create computed utility to map stack view + collection + other data into stack schema
-              //   - this will resolve the fallback title issue
-              //   - this will resolve the custom actions issue (pull custom actions from metadata plugin)
-              //   - provide record in stack section schema for arbitrary view data
-              // how do mutations map back to echo?
-              return stack ? <StackMain stack={stack} separation={settings.values.separation} /> : null;
-            }
+            case 'main':
+              return data.active instanceof Collection ? (
+                <StackMain collection={data.active} separation={settings.values.separation} />
+              ) : null;
             case 'settings': {
               return data.plugin === meta.id ? <StackSettings settings={settings.values} /> : null;
             }
