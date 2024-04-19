@@ -21,11 +21,16 @@ https://labs-workers.dxos.workers.dev
 npx wragler deploy
 ```
 
+WARNING: THE FOLLOWING WITH DROP THE REMOTE DATABASE.
+
 ```bash
 npx wrangler d1 execute dev-users --remote --file=./sql/schema.sql
 npx wrangler d1 execute dev-users --remote --command="SELECT * FROM Users"
 
-curl -s https://labs-workers.dxos.workers.dev/api/users | jq
+# Secrets management
+npx wrangler secret put API_KEY
+
+curl -s -v -H "X-API-KEY: xxx" http://localhost:8787/api/users | jq
 ```
 
 ## Design

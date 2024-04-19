@@ -19,6 +19,7 @@ const mapRecord = ({ UserId, Created, Status, Email }: Record<string, unknown>) 
     email: Email as string,
   }) satisfies User;
 
+// TODO(burdon): Backup database.
 // https://developers.cloudflare.com/d1/build-with-d1/d1-client-api
 
 export const getUsers = async (db: D1Database): Promise<User[]> => {

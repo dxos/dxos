@@ -44,7 +44,7 @@ const auth = (req: HonoRequest, apiKey: string) => {
 // Users
 //
 
-// curl -s -v -H "X-API-KEY: xxx" http://localhost:8787/api/users
+// curl -s -v -H "X-API-KEY: test-key" http://localhost:8787/api/users
 app.get('/api/users', async (context) => {
   auth(context.req, context.env.API_KEY);
   const result = await getUsers(context.env.DB);
