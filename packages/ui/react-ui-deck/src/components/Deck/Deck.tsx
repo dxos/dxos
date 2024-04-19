@@ -12,9 +12,13 @@ import { translationKey } from '../../translations';
 
 type DeckRootProps = MainProps;
 
+const deckGrid =
+  'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
+
 // TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way. Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
 const deckLayout =
-  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)] justify-center-if-no-scroll';
+  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity justify-center-if-no-scroll ' +
+  deckGrid;
 
 const resizeButtonStyles = mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3');
 
@@ -101,7 +105,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
   },
 );
 
-export { DeckRoot, DeckPlank };
+export { DeckRoot, DeckPlank, deckGrid };
 
 export const Deck = {
   Root: DeckRoot,

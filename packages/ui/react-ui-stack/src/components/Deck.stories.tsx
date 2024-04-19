@@ -4,8 +4,18 @@
 
 import '@dxosTheme';
 
-import { BookBookmark, CaretLeft, CaretRight, SidebarSimple, StackSimple, X } from '@phosphor-icons/react';
-import React, { type PropsWithChildren, useEffect, useState } from 'react';
+import {
+  Books,
+  CardsThree,
+  CaretLeft,
+  CaretLineLeft,
+  CaretLineRight,
+  CaretRight,
+  SidebarSimple,
+  TextAa,
+  X,
+} from '@phosphor-icons/react';
+import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
@@ -40,7 +50,7 @@ const SimpleContent = ({ data }: { data: { title?: string; body?: string } }) =>
 const rollItems = (n: number): StackSectionItem[] => {
   return [...Array(n)].map(() => ({
     id: faker.string.uuid(),
-    icon: BookBookmark,
+    icon: TextAa,
     isResizable: true,
     object: {
       id: faker.string.uuid(),
@@ -59,11 +69,12 @@ const rollStackPlank = (n: number): PlankProps => ({
 });
 
 const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps>) => {
+  console.log('[stackplank]', items);
   return (
     <>
       <PlankHeading.Root classNames='pli-px'>
         <PlankHeading.Button>
-          <StackSimple {...plankHeadingIconProps} />
+          <CardsThree {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
         {children}
@@ -128,10 +139,86 @@ export const StaticBasicStacks = {
   },
 };
 
+const DynamicPlank = ({
+  plank,
+  index,
+  deckSize,
+  setOpenPlanks,
+  setNavContent,
+  setC11yContent,
+}: {
+  plank: PlankProps;
+  index?: number;
+  deckSize?: number;
+  setOpenPlanks?: Dispatch<SetStateAction<Set<string>>>;
+  setNavContent?: Dispatch<SetStateAction<string | null>>;
+  setC11yContent?: Dispatch<SetStateAction<string | null>>;
+}) => {
+  return (
+    <StackPlank {...plank}>
+      {(typeof index === 'number' &&
+        typeof deckSize === 'number' &&
+        setOpenPlanks &&
+        setC11yContent &&
+        setNavContent && (
+          <>
+            <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(plank.id)}>
+              <CaretLineLeft />
+            </Button>
+            <Button
+              disabled={index < 1}
+              variant='ghost'
+              classNames='p-1'
+              onClick={() =>
+                setOpenPlanks((prev) => {
+                  return new Set(arrayMove(Array.from(prev), index, index - 1));
+                })
+              }
+            >
+              <CaretLeft />
+            </Button>
+            <Button
+              disabled={index > deckSize - 2}
+              variant='ghost'
+              classNames='p-1'
+              onClick={() =>
+                setOpenPlanks((prev) => {
+                  return new Set(arrayMove(Array.from(prev), index, index + 1));
+                })
+              }
+            >
+              <CaretRight />
+            </Button>
+            <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(plank.id)}>
+              <CaretLineRight />
+            </Button>
+            <Button
+              variant='ghost'
+              classNames='p-1'
+              onClick={() =>
+                setOpenPlanks((prev) => {
+                  prev.delete(plank.id);
+                  return new Set(Array.from(prev));
+                })
+              }
+            >
+              <X />
+            </Button>
+          </>
+        )) ??
+        null}
+    </StackPlank>
+  );
+};
+
+const MENU = 'menu';
+
 export const DynamicBasicStacks = () => {
   const [attended] = useState(new Set());
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
+  const [navContent, setNavContent] = useState<string | null>(MENU);
+  const [c11yContent, setC11yContent] = useState<string | null>(null);
   const [planks] = useState(
     [...Array(12)]
       .map(() => rollStackPlank(12))
@@ -140,10 +227,53 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [openPlanks, setOpenPlanks] = useState<Set<string>>(new Set());
+  const [openPlanks, setOpenPlanks] = useState<Set<string>>(new Set([MENU]));
+
   useEffect(() => {
-    console.log('[openPlanks]', openPlanks);
-  }, [openPlanks]);
+    setNavOpen(!!navContent);
+  }, [navContent]);
+  useEffect(() => {
+    setC11yOpen(!!c11yContent);
+  }, [c11yContent]);
+
+  const menuChildren = (
+    <div role='none' className='p-1'>
+      <PlankHeading.Root classNames='pli-px'>
+        <PlankHeading.Button>
+          <Books {...plankHeadingIconProps} />
+        </PlankHeading.Button>
+        <PlankHeading.Label classNames='grow'>Menu</PlankHeading.Label>
+        {c11yContent === 'menu' && (
+          <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(null)}>
+            <CaretLineLeft />
+          </Button>
+        )}
+        {navContent === 'menu' && (
+          <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(null)}>
+            <CaretLineRight />
+          </Button>
+        )}
+      </PlankHeading.Root>
+      {Object.values(planks).map(({ label, id }) => {
+        return (
+          <Button
+            key={id}
+            variant={openPlanks.has(id) ? 'primary' : 'default'}
+            classNames='truncate is-full block mlb-2'
+            onClick={() =>
+              setOpenPlanks((prev) => {
+                prev.has(id) ? prev.delete(id) : prev.add(id);
+                return new Set(Array.from(prev));
+              })
+            }
+          >
+            {label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+
   return (
     <Mosaic.Root>
       <AttentionProvider attended={attended}>
@@ -154,85 +284,36 @@ export const DynamicBasicStacks = () => {
             <Button variant='ghost' classNames='p-1' onClick={() => setNavOpen(!navOpen)}>
               <SidebarSimple />
             </Button>
-            <Button variant='ghost' classNames='p-1'>
-              <CaretLeft />
-            </Button>
-            <Button variant='ghost' classNames='p-1'>
-              <CaretRight />
-            </Button>
             <Button variant='ghost' classNames='p-1' onClick={() => setC11yOpen(!c11yOpen)}>
               <SidebarSimple mirrored />
             </Button>
           </Main.Notch>
-          <Main.NavigationSidebar classNames='p-2'>
-            {Object.values(planks).map(({ label, id }) => {
-              return (
-                <Button
-                  key={id}
-                  variant={openPlanks.has(id) ? 'primary' : 'default'}
-                  classNames='truncate is-full block mlb-2'
-                  onClick={() =>
-                    setOpenPlanks((prev) => {
-                      prev.has(id) ? prev.delete(id) : prev.add(id);
-                      console.log('[click]', prev);
-                      return new Set(Array.from(prev));
-                    })
-                  }
-                >
-                  {label}
-                </Button>
-              );
-            })}
+          <Main.NavigationSidebar>
+            {navContent && (navContent === MENU ? menuChildren : <DynamicPlank plank={planks[navContent]} />)}
           </Main.NavigationSidebar>
           <NaturalDeck.Root>
-            {Array.from(openPlanks).map((id, index, arr) => {
-              const plank = planks[id];
-              return (
-                <NaturalDeck.Plank key={plank.id}>
-                  <StackPlank {...plank}>
-                    <Button
-                      disabled={index < 1}
-                      variant='ghost'
-                      classNames='p-1'
-                      onClick={() =>
-                        setOpenPlanks((prev) => {
-                          return new Set(arrayMove(Array.from(prev), index, index - 1));
-                        })
-                      }
-                    >
-                      <CaretLeft />
-                    </Button>
-                    <Button
-                      disabled={index > arr.length - 2}
-                      variant='ghost'
-                      classNames='p-1'
-                      onClick={() =>
-                        setOpenPlanks((prev) => {
-                          return new Set(arrayMove(Array.from(prev), index, index + 1));
-                        })
-                      }
-                    >
-                      <CaretRight />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      classNames='p-1'
-                      onClick={() =>
-                        setOpenPlanks((prev) => {
-                          prev.delete(plank.id);
-                          return new Set(Array.from(prev));
-                        })
-                      }
-                    >
-                      <X />
-                    </Button>
-                  </StackPlank>
-                </NaturalDeck.Plank>
-              );
-            })}
+            {Array.from(openPlanks)
+              .filter((id) => ![navContent, c11yContent].includes(id))
+              .map((id, index, arr) =>
+                id === MENU ? (
+                  <NaturalDeck.Plank key={MENU}>{menuChildren}</NaturalDeck.Plank>
+                ) : (
+                  <NaturalDeck.Plank key={id}>
+                    <DynamicPlank
+                      key={id}
+                      plank={planks[id]}
+                      index={index}
+                      setOpenPlanks={setOpenPlanks}
+                      setC11yContent={setC11yContent}
+                      setNavContent={setNavContent}
+                      deckSize={arr.length}
+                    />
+                  </NaturalDeck.Plank>
+                ),
+              )}
           </NaturalDeck.Root>
           <Main.ComplementarySidebar>
-            <span>To do.</span>
+            {c11yContent && (c11yContent === MENU ? menuChildren : <DynamicPlank plank={planks[c11yContent]} />)}
           </Main.ComplementarySidebar>
         </Main.Root>
       </AttentionProvider>
