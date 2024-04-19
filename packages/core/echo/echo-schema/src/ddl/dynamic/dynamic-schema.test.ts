@@ -21,6 +21,9 @@ import {
 import { getSchema, getTypeReference, getType } from '../getter';
 import { create } from '../handler';
 import { TypedObject } from '../typed-object-class';
+import { Expando } from '../expando';
+import { DynamicSchemaRegistry } from '../../dynamic-schema-registry';
+import { PublicKey } from '@dxos/keys';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
@@ -160,6 +163,47 @@ describe('dynamic schema', () => {
     registered.removeColumns(['field2']);
     expect(getEchoObjectAnnotation(registered)).to.deep.contain(generatedType);
     expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
+  });
+
+  test('create table schema', async () => {
+    const { db } = await setupTest();
+
+    class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
+      object: ref(Expando),
+    }) {}
+
+    const TableTypePropSchema = S.partial(
+      S.mutable(
+        S.struct({
+          id: S.string,
+          prop: S.string,
+          label: S.string,
+          ref: S.string,
+          refProp: S.string,
+          size: S.number,
+        }),
+      ),
+    );
+    type TableTypeProp = S.Schema.Type<typeof TableTypePropSchema>;
+
+    class TableType extends TypedObject({ typename: 'braneframe.Table', version: '0.1.0' })({
+      title: S.string,
+      schema: S.optional(ref(DynamicEchoSchema)),
+      props: S.mutable(S.array(TableTypePropSchema)),
+    }) {}
+
+    // TODO: Registry needs a db
+    const registry = new DynamicSchemaRegistry(db);
+
+    const object = create(TableType, { title: '', props: [] });
+
+    object.schema = registry.add(
+      TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+        title: S.optional(S.string),
+      }),
+    );
+
+    expect(() => create(SectionType, { object })).to.not.throw();
   });
 
   const setupTest = async () => {
