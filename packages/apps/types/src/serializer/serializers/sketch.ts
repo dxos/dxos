@@ -2,27 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { nonNullable } from '@dxos/util';
+import { type TypedObjectSerializer, validFilename } from './default';
+import { type SketchType } from '../../schema';
 
-import { type ThreadType } from '../../schema';
-import { type TypedObjectSerializer, validFilename } from '../serializer';
-
-export const serializer: TypedObjectSerializer = {
-  filename: (object: ThreadType) => ({
+export const serializer: TypedObjectSerializer<SketchType> = {
+  filename: (object) => ({
     name: validFilename(object.title),
     extension: 'json',
   }),
 
-  serialize: async (object: ThreadType): Promise<string> => {
-    return (
-      object.messages
-        .filter(nonNullable)
-        .map((message) => message.blocks.map((block) => `${(block.content as any)?.text}`).join(' - '))
-        .join(' | ') ?? ''
-    );
+  serialize: async ({ object }): Promise<string> => {
+    throw new Error('Not implemented.');
   },
 
-  deserialize: async (text: string) => {
+  deserialize: async ({ content }) => {
     throw new Error('Not implemented.');
   },
 };
