@@ -33,6 +33,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
+  async delegate(invitation: Invitation): Promise<void> {
+    throw new Error('delegation not supported');
+  }
+
   async admit(request: AdmissionRequest): Promise<AdmissionResponse> {
     invariant(request.device);
     const identity = this._getIdentity();

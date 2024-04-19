@@ -33,6 +33,11 @@ export interface InvitationProtocol {
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
+  delegate(invitation: Invitation): Promise<void>;
+
+  /**
+   * Once authentication is successful, the host can admit the guest to the requested resource.
+   */
   admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
 
   //
