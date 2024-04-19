@@ -57,3 +57,12 @@ export const getTextInRange = (accessor: DocAccessor, start: string, end: string
     return '';
   }
 };
+
+export const getRangeFromCursor = (accessor: DocAccessor, cursor: string) => {
+  const [start, end] = cursor.split(':');
+  if (start === undefined || end === undefined) {
+    return undefined;
+  }
+
+  return { start: fromCursor(accessor, start), end: fromCursor(accessor, end) };
+};

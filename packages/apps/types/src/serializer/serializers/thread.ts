@@ -4,17 +4,17 @@
 
 import { nonNullable } from '@dxos/util';
 
+import { type TypedObjectSerializer, validFilename } from './default';
 import { type ThreadType } from '../../schema';
-import { type TypedObjectSerializer, validFilename } from '../serializer';
 
 // TODO(burdon): Implement.
-export const serializer: TypedObjectSerializer = {
-  filename: (object: ThreadType) => ({
+export const serializer: TypedObjectSerializer<ThreadType> = {
+  filename: (object) => ({
     name: validFilename(object.title),
     extension: 'md',
   }),
 
-  serialize: async (object: ThreadType): Promise<string> => {
+  serialize: async ({ object }): Promise<string> => {
     return (
       object.messages
         .filter(nonNullable)
@@ -23,7 +23,7 @@ export const serializer: TypedObjectSerializer = {
     );
   },
 
-  deserialize: async (text: string) => {
+  deserialize: async ({ content }) => {
     throw new Error('Not implemented.');
   },
 };
