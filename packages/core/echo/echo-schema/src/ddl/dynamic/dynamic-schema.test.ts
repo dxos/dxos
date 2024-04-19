@@ -166,11 +166,17 @@ describe('dynamic schema', () => {
   });
 
   test('create table schema', async function () {
-    this.timeout(50);
+    this.timeout(100);
+
     const { db } = await setupTest();
 
     class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
       object: ref(Expando),
+    }) {}
+
+    class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
+      title: S.optional(S.string),
+      sections: S.mutable(S.array(ref(SectionType))),
     }) {}
 
     const TableTypePropSchema = S.partial(
@@ -233,7 +239,12 @@ describe('dynamic schema', () => {
       ),
     });
 
-    expect(() => create(SectionType, { object: table })).to.not.throw();
+    table.schema.updatePropertyName({ before: 'newProp', after: 'newPropUpdated' });
+
+    const stack = create(StackType, { title: 'Stack', sections: [] });
+
+    stack.sections.push(create(SectionType, { object: table }));
+    stack.sections.splice(0, 0, create(SectionType, { object: table }));
   });
 
   const setupTest = async () => {
