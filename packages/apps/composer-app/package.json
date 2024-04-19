@@ -83,7 +83,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@sentry/vite-plugin": "^2.14.0",
     "@socketsupply/socket": "^0.5.4",
     "@types/react": "^18.0.21",

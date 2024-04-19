@@ -341,15 +341,20 @@ export class Client {
     const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
-    await this._services.open(this._ctx);
+    const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
+      if (error instanceof ApiError) {
+        log.error('fatal', { error });
+        trigger.wake(error);
+      }
       if (!this._resetting) {
         await this._close();
         await this._open();
         this.reloaded.emit();
       }
     });
+    await this._services.open(this._ctx);
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
@@ -374,7 +379,6 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    const trigger = new Trigger<Error | undefined>();
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
