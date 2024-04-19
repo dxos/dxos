@@ -19,7 +19,13 @@ import {
 import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
+import {
+  Stack,
+  type StackProps,
+  type CollapsedSections,
+  type AddSectionPosition,
+  type StackSectionItem,
+} from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -55,6 +61,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
   const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
+  const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   useEffect(() => {
     if (!collection.views[StackView.typename]) {
@@ -69,11 +76,15 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
       .filter(nonNullable)
       .map((object) => {
-        const rest = metadataPlugin?.provides.metadata.resolver(getType(object)?.itemId ?? 'never');
-        return { id: object.id, object, ...rest };
+        const metadata = metadataPlugin?.provides.metadata.resolver(
+          getType(object)?.itemId ?? 'never',
+        ) as StackSectionItem['metadata'];
+        const view = {
+          ...stack.sections[object.id],
+          collapsed: collapsedSections[object.id],
+        } as StackSectionItem['view'];
+        return { id: object.id, object, metadata, view };
       }) ?? [];
-
-  const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -165,6 +176,10 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     });
   };
 
+  const handleCollapseSection = (id: string, collapsed: boolean) => {
+    setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
+  };
+
   return (
     <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
@@ -180,8 +195,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
         onAddSection={handleAddSection}
-        collapsedSections={collapsedSections}
-        onChangeCollapsedSections={onChangeCollapsedSections}
+        onCollapseSection={handleCollapseSection}
       />
 
       <div role='none' className='flex justify-center mbs-4 pbe-4'>
