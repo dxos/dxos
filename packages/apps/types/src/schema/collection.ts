@@ -7,7 +7,9 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 export class Collection extends TypedObject({ typename: 'dxos.Collection', version: '0.1.0' })({
   name: S.optional(S.string),
   objects: S.mutable(S.array(ref(Expando))),
-  // Where key is the typename of the view schema.
+  // Key is schema typename and value is reference to a view object of the associated schema.
+  // Having collection reference the views rather than vice versa ensures that the state converges to a single view per key (i.e. type).
+  // This also leaves open a future where this key could be changed to allow for multiple stack views per section.
   // TODO(wittjosiah): Any way to make this more type safe?
   views: S.mutable(S.record(S.string, ref(Expando))),
 }) {}
