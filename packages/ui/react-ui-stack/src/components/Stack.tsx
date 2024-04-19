@@ -66,7 +66,10 @@ export const Stack = ({
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
   const getOverlayStyle = useCallback(() => ({ width }), [width]);
-  const getOverlayProps = useCallback(() => ({ itemContext: { SectionContent } }), [SectionContent]);
+  const getOverlayProps = useCallback(
+    () => ({ itemContext: { transform, SectionContent } }),
+    [transform, SectionContent],
+  );
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
   //  in particular is not yet known, so this solution may may backfire in unforeseeable cases.

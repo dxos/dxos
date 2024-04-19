@@ -80,11 +80,11 @@ export type StackItem = MosaicDataItem & {
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
-  view: {
+  view?: {
     size?: SectionSize;
     collapsed?: boolean;
   };
-  metadata: {
+  metadata?: {
     icon?: FC<IconProps>;
     placeholder?: string | [string, Parameters<TFunction>[1]];
   };
@@ -105,8 +105,8 @@ export type SectionProps = PropsWithChildren<
     'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
   > &
     Pick<StackContextValue, 'separation' | 'isResizable' | 'onCollapseSection'> &
-    Pick<StackSectionItem['view'], 'collapsed' | 'size'> &
-    Pick<StackSectionItem['metadata'], 'icon'>
+    Pick<Required<StackSectionItem>['view'], 'collapsed' | 'size'> &
+    Pick<Required<StackSectionItem>['metadata'], 'icon'>
 >;
 
 const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
@@ -318,16 +318,13 @@ export const SectionTile: MosaicTileComponent<
       )
     : item;
 
-  // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
-  const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
-
   const title =
-    itemObject?.title ??
+    transformedItem.object?.title ??
     // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
-    ((typeof transformedItem.metadata.placeholder === 'string'
-      ? transformedItem.metadata.placeholder
-      : transformedItem.metadata.placeholder
-        ? t(...transformedItem.metadata.placeholder)
+    ((typeof transformedItem.metadata?.placeholder === 'string'
+      ? transformedItem.metadata?.placeholder
+      : transformedItem.metadata?.placeholder
+        ? t(...transformedItem.metadata?.placeholder)
         : t('untitled section title')) as string);
 
   const section = (
@@ -335,9 +332,9 @@ export const SectionTile: MosaicTileComponent<
       ref={forwardedRef}
       title={title}
       id={transformedItem.id}
-      size={transformedItem.view.size}
-      icon={transformedItem.metadata.icon}
-      collapsed={transformedItem.view.collapsed}
+      size={transformedItem.view?.size}
+      icon={transformedItem.metadata?.icon}
+      collapsed={transformedItem.view?.collapsed}
       separation={separation}
       active={active}
       draggableProps={draggableProps}
@@ -345,11 +342,11 @@ export const SectionTile: MosaicTileComponent<
       onCollapseSection={onCollapseSection}
       isResizable={isResizable}
       onDelete={() => onDeleteSection?.(path)}
-      onNavigate={() => onNavigateToSection?.(itemObject.id)}
+      onNavigate={() => onNavigateToSection?.(transformedItem.id)}
       onAddAfter={() => onAddSection?.(path, 'after')}
       onAddBefore={() => onAddSection?.(path, 'before')}
     >
-      {SectionContent && <SectionContent data={itemObject} />}
+      {SectionContent && <SectionContent data={transformedItem.object} />}
     </Section>
   );
 
