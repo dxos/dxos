@@ -30,9 +30,10 @@ import {
   ListItem,
   Toolbar,
   useTranslation,
-  type TFunction,
   type ThemedClassName,
   ScrollArea,
+  toLocalizedString,
+  type Label,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -80,14 +81,26 @@ export type StackItem = MosaicDataItem & {
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
+  // TODO(wittjosiah): Use effect schema? Share schema with echo.
   view?: {
+    title?: string;
     size?: SectionSize;
+    height?: number;
     collapsed?: boolean;
+    custom?: Record<string, any>;
   };
+  // TODO(wittjosiah): Common type? Factor out?
   metadata?: {
     icon?: FC<IconProps>;
-    placeholder?: string | [string, Parameters<TFunction>[1]];
+    placeholder?: Label;
+    viewActions?: (item: StackSectionItem) => StackAction;
   };
+};
+
+export type StackAction = {
+  icon: FC<IconProps>;
+  label: Label;
+  onClick: () => void;
 };
 
 export type SectionSize = 'intrinsic' | 'extrinsic';
@@ -318,14 +331,8 @@ export const SectionTile: MosaicTileComponent<
       )
     : item;
 
-  const title =
-    transformedItem.object?.title ??
-    // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
-    ((typeof transformedItem.metadata?.placeholder === 'string'
-      ? transformedItem.metadata?.placeholder
-      : transformedItem.metadata?.placeholder
-        ? t(...transformedItem.metadata?.placeholder)
-        : t('untitled section title')) as string);
+  const placeholder = transformedItem.metadata?.placeholder ?? ['untitled section title', { ns: translationKey }];
+  const title = transformedItem.view?.title ?? toLocalizedString(placeholder, t);
 
   const section = (
     <Section

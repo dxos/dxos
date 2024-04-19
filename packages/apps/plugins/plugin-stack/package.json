@@ -43,6 +43,7 @@
   "devDependencies": {
     "@babel/core": "^7.18.13",
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -58,6 +59,7 @@
   "peerDependencies": {
     "@babel/core": "^7.18.13",
     "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/plugin-graph": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",

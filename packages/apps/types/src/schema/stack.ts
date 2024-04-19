@@ -11,6 +11,9 @@ import { S, TypedObject } from '@dxos/echo-schema';
 
 export class Section extends S.Class<Section>('dxos.StackView.Section')({
   height: S.optional(S.number),
+  // Space for data that isn't stack-specific but is specific to this view instance.
+  //  e.g. cover/fill for an image
+  custom: S.optional(S.record(S.string, S.any)),
 }) {}
 
 export class StackView extends TypedObject({ typename: 'dxos.StackView', version: '0.1.0' })({

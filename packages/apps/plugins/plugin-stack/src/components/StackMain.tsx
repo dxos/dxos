@@ -5,6 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { useGraph } from '@braneframe/plugin-graph';
 import { type Collection, FileType, StackView, Section } from '@braneframe/types';
 import {
   LayoutAction,
@@ -17,7 +18,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
-import { Main, Button, ButtonGroup } from '@dxos/react-ui';
+import { Main, Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
   Stack,
@@ -57,6 +58,8 @@ type StackMainProps = {
 
 const StackMain = ({ collection, separation }: StackMainProps) => {
   const { dispatch } = useIntent();
+  const { graph } = useGraph();
+  const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
@@ -82,6 +85,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         const view = {
           ...stack.sections[object.id],
           collapsed: collapsedSections[object.id],
+          title: object.title ?? toLocalizedString(graph.findNode(object.id)?.properties.label, t),
         } as StackSectionItem['view'];
         return { id: object.id, object, metadata, view };
       }) ?? [];
