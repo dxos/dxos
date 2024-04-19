@@ -6,9 +6,11 @@ import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { DynamicEchoSchema } from './dynamic-schema';
+import { DynamicSchemaRegistry } from '../../dynamic-schema-registry';
 import { Filter } from '../../query';
 import { createDatabase } from '../../testing';
 import {
@@ -18,12 +20,10 @@ import {
   getFieldMetaAnnotation,
   ref,
 } from '../annotations';
+import { Expando } from '../expando';
 import { getSchema, getTypeReference, getType } from '../getter';
 import { create } from '../handler';
 import { TypedObject } from '../typed-object-class';
-import { Expando } from '../expando';
-import { DynamicSchemaRegistry } from '../../dynamic-schema-registry';
-import { PublicKey } from '@dxos/keys';
 
 const generatedType = { typename: 'generated', version: '1.0.0' };
 
@@ -165,7 +165,8 @@ describe('dynamic schema', () => {
     expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
   });
 
-  test('create table schema', async () => {
+  test('create table schema', async function () {
+    this.timeout(50);
     const { db } = await setupTest();
 
     class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
@@ -184,7 +185,19 @@ describe('dynamic schema', () => {
         }),
       ),
     );
+
     type TableTypeProp = S.Schema.Type<typeof TableTypePropSchema>;
+
+    const updateTableProp = (props: TableTypeProp[], oldId: string, update: TableTypeProp) => {
+      const idx = props.findIndex((prop) => prop.id === oldId);
+
+      if (idx !== -1) {
+        const current = props![idx];
+        props.splice(idx, 1, { ...current, ...update });
+      } else {
+        props.push(update);
+      }
+    };
 
     class TableType extends TypedObject({ typename: 'braneframe.Table', version: '0.1.0' })({
       title: S.string,
@@ -195,15 +208,32 @@ describe('dynamic schema', () => {
     // TODO: Registry needs a db
     const registry = new DynamicSchemaRegistry(db);
 
-    const object = create(TableType, { title: '', props: [] });
+    const table = create(TableType, { title: '', props: [] });
 
-    object.schema = registry.add(
+    table.schema = registry.add(
       TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
         title: S.optional(S.string),
       }),
     );
 
-    expect(() => create(SectionType, { object })).to.not.throw();
+    updateTableProp(table.props, 'newProp', {
+      id: 'newProp',
+      prop: 'prop',
+      label: 'Label',
+    });
+
+    const FIELD_META_NAMESPACE = 'plugin-table';
+
+    table.schema.updateColumns({
+      newProp: S.string.pipe(
+        fieldMeta(FIELD_META_NAMESPACE, {
+          refProp: undefined,
+          digits: 1,
+        }),
+      ),
+    });
+
+    expect(() => create(SectionType, { object: table })).to.not.throw();
   });
 
   const setupTest = async () => {
