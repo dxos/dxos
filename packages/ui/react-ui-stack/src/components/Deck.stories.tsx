@@ -243,15 +243,23 @@ export const DynamicBasicStacks = () => {
           <Books {...plankHeadingIconProps} />
         </PlankHeading.Button>
         <PlankHeading.Label classNames='grow'>Menu</PlankHeading.Label>
-        {c11yContent === 'menu' && (
+        {c11yContent === 'menu' ? (
           <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(null)}>
             <CaretLineLeft />
           </Button>
-        )}
-        {navContent === 'menu' && (
+        ) : navContent === 'menu' ? (
           <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(null)}>
             <CaretLineRight />
           </Button>
+        ) : (
+          <>
+            <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(MENU)}>
+              <CaretLineLeft />
+            </Button>
+            <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(MENU)}>
+              <CaretLineRight />
+            </Button>
+          </>
         )}
       </PlankHeading.Root>
       {Object.values(planks).map(({ label, id }) => {
