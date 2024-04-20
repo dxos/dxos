@@ -270,6 +270,10 @@ export const semanticColors = {
     light: '#ffffff',
     dark: '#ffffff',
   },
+  transparent: {
+    light: 'transparent',
+    dark: 'transparent',
+  },
   unavailable: {
     light: physicalColors.neutral['100'],
     dark: physicalColors.neutral['600'],
