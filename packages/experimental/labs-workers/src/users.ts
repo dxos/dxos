@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+/* eslint-disable camelcase */
+
 import * as EmailValidator from 'email-validator';
 import { HTTPException } from 'hono/http-exception';
 
@@ -29,14 +31,14 @@ export type User = {
   status: string; // TODO(burdon): Enum.
 };
 
-const mapRecord = ({ UserId, IdentityKey, AccessToken, Created, Status, Email }: Record<string, unknown>) =>
+const mapRecord = ({ user_id, identity_key, access_token, created, status, email }: Record<string, unknown>) =>
   ({
-    id: UserId as number,
-    identityKey: IdentityKey as string | null,
-    accessToken: AccessToken as string | null,
-    created: new Date(Created as number),
-    email: Email as string,
-    status: Status as string,
+    id: user_id as number,
+    identityKey: identity_key as string | null,
+    accessToken: access_token as string | null,
+    created: new Date(created as number),
+    email: email as string,
+    status: status as string,
   }) satisfies User;
 
 // TODO(burdon): Backup database (admin tool/scheduled?)
@@ -57,7 +59,7 @@ export class UserManager {
 
   async getUsersByDate(n = 10): Promise<User[]> {
     const { results } = await this.db
-      .prepare('SELECT * FROM Users WHERE Status = ? ORDER BY Created')
+      .prepare('SELECT * FROM Users WHERE status = ? ORDER BY created')
       .bind(Status.WAITING)
       .all();
     return results.map(mapRecord);
@@ -65,7 +67,7 @@ export class UserManager {
 
   async getUsersById(userIds: number[]): Promise<User[]> {
     const { results } = await this.db
-      .prepare(str('SELECT * FROM Users', `WHERE UserId IN (${userIds.join(',')})`))
+      .prepare(str('SELECT * FROM Users', `WHERE user_id IN (${userIds.join(',')})`))
       .all();
 
     return results.filter(nonNullable).map(mapRecord);
@@ -78,7 +80,7 @@ export class UserManager {
 
     try {
       await this.db
-        .prepare(str('INSERT INTO Users (Created, Email, Status)', 'VALUES (?1, ?2, ?3)'))
+        .prepare(str('INSERT INTO Users (created, email, status)', 'VALUES (?1, ?2, ?3)'))
         .bind(Date.now(), email, Status.WAITING)
         .all();
     } catch (err) {
@@ -91,11 +93,11 @@ export class UserManager {
   }
 
   async updateUser(userId: number, status: string) {
-    await this.db.prepare('UPDATE Users SET Status = ?1 WHERE UserId = ?2').bind(status, userId).all();
+    await this.db.prepare('UPDATE Users SET Status = ?1 WHERE user_id = ?2').bind(status, userId).all();
   }
 
   async deleteUser(userId: string) {
-    const { results } = await this.db.prepare('DELETE FROM Users WHERE UserId = ?1').bind(userId).all();
+    const { results } = await this.db.prepare('DELETE FROM Users WHERE user_id = ?1').bind(userId).all();
     invariant(results.length === 0);
   }
 
@@ -109,7 +111,7 @@ export class UserManager {
     // Create and update tokens.
     const batch = users.filter(nonNullable).map(({ id }) => {
       return this.db
-        .prepare('UPDATE Users SET Status = ?1, AccessToken = ?2 WHERE UserId = ?3')
+        .prepare('UPDATE Users SET status = ?1, access_token = ?2 WHERE user_id = ?3')
         .bind(Status.AUTHORIZED, PublicKey.random().toHex(), id);
     });
 

@@ -8,11 +8,11 @@
 DROP TABLE IF EXISTS Users;
 
 CREATE TABLE IF NOT EXISTS Users (
-  UserId INTEGER PRIMARY KEY,
-  IdentityKey TEXT,
-  AccessToken TEXT,
-  Created NUMBER,
-  Name TEXT,
-  Email TEXT UNIQUE,
-  Status CHAR
+  user_id INTEGER PRIMARY KEY,
+  identity_key TEXT,
+  access_token TEXT,
+  created NUMBER,
+  name TEXT,
+  email TEXT UNIQUE,
+  status CHAR
 );
