@@ -9,6 +9,9 @@ npx wrangler whoami
 
 ```bash
 npx wrangler d1 create dev-users
+```
+
+```bash
 npx wrangler d1 execute dev-users --local --file=./sql/schema.sql
 npx wrangler d1 execute dev-users --local --command="SELECT * FROM Users"
 ```
@@ -18,7 +21,8 @@ https://labs-workers.dxos.workers.dev
 ## Production
 
 ```bash
-npx wragler deploy
+npx wrangler deploy
+npx wrangler tail
 ```
 
 WARNING: THE FOLLOWING WITH DROP THE REMOTE DATABASE.

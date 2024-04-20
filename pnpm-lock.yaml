@@ -7261,6 +7261,9 @@ importers:
       '@cloudflare/ai':
         specifier: ^1.1.0
         version: 1.1.0
+      '@cloudflare/pages-plugin-mailchannels':
+        specifier: ^0.1.3
+        version: 0.1.3
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
@@ -13313,6 +13316,10 @@ packages:
     dependencies:
       mime: 3.0.0
     dev: true
+
+  /@cloudflare/pages-plugin-mailchannels@0.1.3:
+    resolution: {integrity: sha512-vo7WgLYSyjh7EehngdvcLM2LmCzQ2Nmp6Ng8kU8H2obERfIycz1xuonqWH2u5vtNQTtkZbucqMvvg5QLvCtf9A==}
+    dev: false
 
   /@cloudflare/workerd-darwin-64@1.20240320.1:
     resolution: {integrity: sha512-ioG5k2M17xyiAlK/k3L21NZLMVeSHMjwlmGtZyCyzSLL5/zGINcgZ5yPLV0UuWiysw07/6Jjzm5Sx94hzMVybg==}

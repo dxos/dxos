@@ -7,10 +7,10 @@ import { Hono, type HonoRequest } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
 import { chat, type ChatRequest, chatStream } from './ai';
-import { authUsers, getUsers, upsertUser, type User } from './users';
+import { UserManager, type User } from './users';
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
-// TODO(burdon): Logging/baselime?
+// TODO(burdon): Logging/Baselime?
 
 // TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
 
@@ -46,6 +46,8 @@ const auth = (req: HonoRequest, apiKey: string) => {
 // App
 //
 
+// TODO(burdon): Test admin/submission form.
+
 app.get('/app/:email/:accessToken', async (context) => {
   // TODO(burdon): Check for token.
   // TODO(burdon): Signed token (e.g., has credential to login and use agent).
@@ -59,40 +61,101 @@ app.get('/app/:email/:accessToken', async (context) => {
 // Users
 //
 
-// curl -s -v -H "X-API-KEY: test-key" http://localhost:8787/api/users
+/***
+ * ```bash
+ * curl -s -v -H "X-API-KEY: test-key" http://localhost:8787/api/users
+ * ```
+ */
 app.get('/api/users', async (context) => {
   auth(context.req, context.env.API_KEY);
-  const result = await getUsers(context.env.DB);
+  const result = await new UserManager(context.env.DB).getUsers();
   return context.json(result);
 });
 
-// curl -s -v -H "X-API-KEY: test-key" -X POST -H "Content-Type: application/json" http://localhost:8787/api/users --data '{ "email": "rich.burdon@gmail.com" }'
+/**
+ * ```bash
+ *  curl -s -v -H "X-API-KEY: test-key" -X POST -H "Content-Type: application/json" http://localhost:8787/api/users --data '{ "email": "rich@dxos.org" }'
+ * ```
+ */
 app.post('/api/users', async (context) => {
   auth(context.req, context.env.API_KEY);
   const user = await context.req.json<User>();
-  const result = await upsertUser(context.env.DB, user);
+  const result = await new UserManager(context.env.DB).upsertUser(user);
   return context.json(result);
 });
 
-// curl -s -v -X POST -H "Content-Type: application/json" -H "X-API-KEY: test-key" http://localhost:8787/api/users/authorize --data '{ "userIds": [1, 2] }' | jq
+/**
+ *
+ */
+app.delete('/api/users/:userId', async (context) => {
+  auth(context.req, context.env.API_KEY);
+  await new UserManager(context.env.DB).deleteUser(context.req.param('userId'));
+  return new Response();
+});
+
+/**
+ * ```bash
+ * curl -s -v -X POST -H "Content-Type: application/json" -H "X-API-KEY: test-key" http://localhost:8787/api/users/authorize --data '{ "userIds": [1, 2] }' | jq
+ * ```
+ */
 app.post('/api/users/authorize', async (context) => {
   auth(context.req, context.env.API_KEY);
   const { userIds } = await context.req.json<{ userIds: string[] }>();
-  const result = await authUsers(context.env.DB, userIds);
+  const result = await new UserManager(context.env.DB).authorizeUsers(userIds);
   return context.json(result);
+});
+
+// https://developers.cloudflare.com/workers/runtime-apis/request
+app.get('/api/users/email', async (context) => {
+  const request = new Request('https://api.mailchannels.net/tx/v1/send', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      personalizations: [
+        {
+          to: [{ email: 'rich@dxos.org', name: 'RB' }],
+        },
+      ],
+      from: {
+        email: 'sender@example.com',
+        name: 'Workers - MailChannels integration',
+      },
+      subject: 'Hello from DXOS!',
+      content: [
+        {
+          type: 'text/plain',
+          value: 'And no email service accounts and all for free too!',
+        },
+      ],
+    }),
+  });
+
+  const result = await fetch(request);
+  console.log(JSON.stringify(result));
+
+  return new Response();
 });
 
 //
 // AI
 //
 
-// curl -s -v -H "X-API-KEY: test-key" -X POST -H "Content-Type: application/json" http://localhost:8787/api/users --data '{ "messages": [{ "content": "hello" }] }'
+/**
+ * ```bash
+ * curl -s -v -H "X-API-KEY: test-key" -X POST -H "Content-Type: application/json" http://localhost:8787/api/users --data '{ "messages": [{ "content": "hello" }] }'
+ * ```
+ */
 app.post('/api/chat', async (context) => {
   const request = await context.req.json<ChatRequest>();
   const result = await chat(context.env.AI, request);
   return context.json(result);
 });
 
+/**
+ *
+ */
 app.post('/api/chat/stream', async (context) => {
   const request = await context.req.json<ChatRequest>();
   const stream = await chatStream(context.env.AI, request);

@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
 // TODO(burdon): Zod schema.
 // TODO(burdon): Validate email.
 import { PublicKey } from '@dxos/keys';
@@ -30,38 +31,56 @@ const mapRecord = ({ UserId, IdentityKey, AccessToken, Created, Status, Email }:
 
 // https://developers.cloudflare.com/d1/build-with-d1/d1-client-api
 
-export const getUsers = async (db: D1Database): Promise<User[]> => {
-  const { results } = await db.prepare('SELECT * FROM Users').all();
-  return results.map(mapRecord);
-};
+export class UserManager {
+  constructor(private db: D1Database) {}
 
-export const upsertUser = async (db: D1Database, { email }: Partial<User>): Promise<User[]> => {
-  const { results } = await db
-    .prepare(str('INSERT INTO Users (Created, Email, Status)', 'VALUES (?1, ?2, ?3)'))
-    .bind(Date.now(), email, 'N')
-    .all();
+  async getUsers(): Promise<User[]> {
+    const { results } = await this.db.prepare('SELECT * FROM Users').all();
+    return results.map(mapRecord);
+  }
 
-  return results.map(mapRecord);
-};
+  async getUsersById(userIds: string[]) {
+    const { results } = await this.db
+      .prepare(str('SELECT * FROM Users', `WHERE UserId IN (${userIds.join(',')})`))
+      .all();
+    return results.map(mapRecord);
+  }
 
-const getUsersById = async (db: D1Database, userIds: string[]) => {
-  const { results } = await db.prepare(str('SELECT * FROM Users', `WHERE UserId IN (${userIds.join(',')})`)).all();
-  return results.map(mapRecord);
-};
+  async upsertUser({ email }: Partial<User>): Promise<User[]> {
+    const { results } = await this.db
+      .prepare(str('INSERT INTO Users (Created, Email, Status)', 'VALUES (?1, ?2, ?3)'))
+      .bind(Date.now(), email, 'N')
+      .all();
 
-export const authUsers = async (db: D1Database, userIds: string[]) => {
-  const users = await getUsersById(db, userIds);
+    return results.map(mapRecord);
+  }
 
-  // Create and update tokens.
-  const batch = users.map(({ id }) => {
-    return db
-      .prepare('UPDATE Users SET Status = ?1, AccessToken = ?2 WHERE UserId = ?3')
-      .bind('A', PublicKey.random().toHex(), id);
-  });
+  async deleteUser(userId: string) {
+    const { results } = await this.db.prepare('DELETE FROM Users WHERE UserId = ?1').bind(userId).all();
+    invariant(results.length === 0);
+  }
 
-  await db.batch(batch);
+  // TODO(burdon): Auth next N users.
+  async authorizeUsers(userIds: string[]): Promise<User[]> {
+    if (userIds.length === 0) {
+      return [];
+    }
 
-  return await getUsersById(db, userIds);
-};
+    const users = await this.getUsersById(userIds);
+
+    // Create and update tokens.
+    const batch = users.map(({ id }) => {
+      return this.db
+        .prepare('UPDATE Users SET Status = ?1, AccessToken = ?2 WHERE UserId = ?3')
+        .bind('A', PublicKey.random().toHex(), id);
+    });
+
+    // Validate result.
+    const result = await this.db.batch(batch);
+    invariant(!result.some(({ success }) => !success));
+
+    return await this.getUsersById(userIds);
+  }
+}
 
 const str = (...text: string[]) => text.join(' ');
