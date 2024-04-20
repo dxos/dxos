@@ -38,7 +38,7 @@ const app = new Hono<Env>();
 
 // https://hono.dev/api/exception#handling-httpexception
 app.onError((err) => {
-  const response = err instanceof HTTPException ? err.getResponse() : Response.error();
+  const response = err instanceof HTTPException ? err.getResponse() : new Response('Request failed', { status: 500 });
   if (response.status >= 500) {
     log.error('request failed', { err });
   } else {
@@ -101,8 +101,8 @@ app.post('/api/users', async (context) => {
   const user = await context.req.json<User>();
   await new UserManager(context.env.DB).upsertUser(user);
 
-  const results = await sendEmail([user], messages.signup);
-  if (results.some((result) => result.errors?.length)) {
+  const [result] = await sendEmail([user], messages.signup);
+  if (result.error) {
     throw new HTTPException(502, { message: 'Error sending email.' });
   }
 
@@ -122,20 +122,33 @@ app.delete('/api/users/:userId', async (context) => {
 
 /**
  * ```bash
- * curl -s -v -X POST -H "Content-Type: application/json" -H "X-API-KEY: test-key" http://localhost:8787/api/users/authorize --data '{ "userIds": [1, 2] }' | jq
+ * curl -s -v -X POST -H "Content-Type: application/json" -H "X-API-KEY: test-key" http://localhost:8787/api/users/authorize --data '{ "next": 1 }' | jq
  * ```
  */
 app.post('/api/users/authorize', async (context) => {
   auth(context.req, context.env.API_KEY);
-  const { userIds } = await context.req.json<{ userIds: string[] }>();
-  const users = await new UserManager(context.env.DB).authorizeUsers(userIds);
-
-  const results = await sendEmail(users, messages.welcome);
-  if (results.some((result) => result.errors?.length)) {
-    throw new HTTPException(502, { message: 'Error sending email.' });
+  const userManager = new UserManager(context.env.DB);
+  let { next, userIds } = await context.req.json<{ next?: number; userIds?: number[] }>();
+  if (next) {
+    userIds = (await userManager.getUsersByDate(next)).map((user) => user.id);
   }
 
-  return context.json(users);
+  if (!userIds?.length) {
+    return context.json([]);
+  }
+
+  const users = await userManager.authorizeUsers(userIds);
+  const results = await sendEmail(users, messages.welcome);
+  for (const { userId, error } of results) {
+    if (error) {
+      await userManager.updateUser(userId, 'E');
+    }
+  }
+  if (results.some((result) => result.error)) {
+    throw new HTTPException(502, { message: 'Error sending email' });
+  }
+
+  return context.json(results);
 });
 
 //

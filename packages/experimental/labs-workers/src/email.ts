@@ -16,8 +16,8 @@ export type MailRequest = {
 };
 
 export type MailResponse = {
-  userId?: number;
-  errors?: string[];
+  userId: number;
+  error?: string;
 };
 
 // TODO(burdon/nf): Eval security concerns that have been flagged for MailChannels. Assess if lockdown resolves the issue:
@@ -59,7 +59,6 @@ export const sendEmail = async (users: User[], message: MailRequest): Promise<Ma
     users.map(async (user) => {
       log.info('sending email', { email: user.email });
 
-      // TODO(burdon): Error handling (update database if correctly sent/or error).
       const request = new Request('https://api.mailchannels.net/tx/v1/send', {
         method: 'POST',
         headers: {
@@ -73,9 +72,8 @@ export const sendEmail = async (users: User[], message: MailRequest): Promise<Ma
         }),
       });
 
-      const result = await fetch(request);
-      const data = await result.json<MailResponse>();
-      return { userId: user.id, ...data } satisfies MailResponse;
+      const { status, statusText } = await fetch(request);
+      return { userId: user.id, error: status === 200 ? undefined : statusText } satisfies MailResponse;
     }),
   );
 };
