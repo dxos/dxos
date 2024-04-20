@@ -7,6 +7,7 @@ import { Hono, type HonoRequest } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
 import { chat, type ChatRequest, chatStream } from './ai';
+import { sendEmail } from './email';
 import { UserManager, type User } from './users';
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
@@ -27,7 +28,10 @@ export type Env = {
 };
 
 // https://hono.dev/getting-started/cloudflare-workers
+// https://developers.cloudflare.com/workers/runtime-apis/request
+
 // TODO(burdon): Static content (e.g., Web app).
+
 const app = new Hono<Env>();
 
 // TODO(burdon): Auth middleware?
@@ -85,7 +89,9 @@ app.post('/api/users', async (context) => {
 });
 
 /**
- *
+ * ```bash
+ * curl -s -v -H "X-API-KEY: test-key" -X DELETE http://localhost:8787/api/users/1
+ * ```
  */
 app.delete('/api/users/:userId', async (context) => {
   auth(context.req, context.env.API_KEY);
@@ -105,35 +111,23 @@ app.post('/api/users/authorize', async (context) => {
   return context.json(result);
 });
 
-// https://developers.cloudflare.com/workers/runtime-apis/request
-app.get('/api/users/email', async (context) => {
-  const request = new Request('https://api.mailchannels.net/tx/v1/send', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      personalizations: [
-        {
-          to: [{ email: 'rich@dxos.org', name: 'RB' }],
-        },
-      ],
-      from: {
-        email: 'sender@example.com',
-        name: 'Workers - MailChannels integration',
-      },
-      subject: 'Hello from DXOS!',
-      content: [
-        {
-          type: 'text/plain',
-          value: 'And no email service accounts and all for free too!',
-        },
-      ],
-    }),
-  });
+/**
+ * Every program attempts to expand until it can read mail.
+ * Those programs which cannot so expand are replaced by ones which can.
+ * [Zawinski's Law]
+ */
+// TODO(burdon): Merge with auth.
+app.get('/api/users/email/:userId', async (context) => {
+  auth(context.req, context.env.API_KEY);
+  const [user] = await new UserManager(context.env.DB).getUsersById([context.req.param('userId')]);
+  if (!user) {
+    throw new HTTPException(400);
+  }
 
-  const result = await fetch(request);
-  console.log(JSON.stringify(result));
+  const data = await sendEmail(user);
+  if (data?.errors?.length) {
+    throw new HTTPException(502, { message: data.errors[0] });
+  }
 
   return new Response();
 });
@@ -156,6 +150,7 @@ app.post('/api/chat', async (context) => {
 /**
  *
  */
+// TODO(burdon): Modelfusion client.
 app.post('/api/chat/stream', async (context) => {
   const request = await context.req.json<ChatRequest>();
   const stream = await chatStream(context.env.AI, request);

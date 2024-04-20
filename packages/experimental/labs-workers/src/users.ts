@@ -6,6 +6,9 @@ import { invariant } from '@dxos/invariant';
 // TODO(burdon): Zod schema.
 // TODO(burdon): Validate email.
 import { PublicKey } from '@dxos/keys';
+import { nonNullable } from '@dxos/util';
+
+import { str } from './util';
 
 export type User = {
   id: number;
@@ -39,11 +42,12 @@ export class UserManager {
     return results.map(mapRecord);
   }
 
-  async getUsersById(userIds: string[]) {
+  async getUsersById(userIds: string[]): Promise<User[]> {
     const { results } = await this.db
       .prepare(str('SELECT * FROM Users', `WHERE UserId IN (${userIds.join(',')})`))
       .all();
-    return results.map(mapRecord);
+
+    return results.filter(nonNullable).map(mapRecord);
   }
 
   async upsertUser({ email }: Partial<User>): Promise<User[]> {
@@ -69,7 +73,7 @@ export class UserManager {
     const users = await this.getUsersById(userIds);
 
     // Create and update tokens.
-    const batch = users.map(({ id }) => {
+    const batch = users.filter(nonNullable).map(({ id }) => {
       return this.db
         .prepare('UPDATE Users SET Status = ?1, AccessToken = ?2 WHERE UserId = ?3')
         .bind('A', PublicKey.random().toHex(), id);
@@ -82,5 +86,3 @@ export class UserManager {
     return await this.getUsersById(userIds);
   }
 }
-
-const str = (...text: string[]) => text.join(' ');

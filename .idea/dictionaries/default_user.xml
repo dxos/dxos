@@ -2,6 +2,7 @@
   <dictionary name="default.user">
     <words>
       <w>libdatachannel</w>
+      <w>personalizations</w>
     </words>
   </dictionary>
 </component>

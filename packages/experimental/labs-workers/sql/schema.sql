@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS Users (
   IdentityKey TEXT,
   AccessToken TEXT,
   Created NUMBER,
+  Name TEXT,
   Email TEXT UNIQUE,
   Status CHAR
 );
