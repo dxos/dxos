@@ -12,6 +12,26 @@
     &[disabled]:not([disabled='false']) {
       @apply opacity-40 cursor-not-allowed shadow-none;
     }
+    /* Variants consistent between enabled & disabled */
+    &[data-variant='ghost'] {
+      @apply bg-transparent;
+      &:hover {
+        @apply surface-hover text-inherit;
+      }
+      &[data-state='open'] {
+        @apply surface-input;
+      }
+      &[aria-pressed='true'],
+      &[aria-checked='true'] {
+        @apply surface-base fg-accent;
+      }
+    }
+    &[data-variant='outline'] {
+      @apply border separator-base bg-transparent;
+      &:hover {
+        @apply surface-hover;
+      }
+    }
     /* Enabled styles */
     &:not([disabled]),
     &[disabled='false'] {
@@ -20,25 +40,6 @@
         @apply surface-hover;
       }
       /* Variants */
-      &[data-variant='outline'] {
-        @apply border separator-base bg-transparent;
-        &:hover {
-          @apply surface-hover;
-        }
-      }
-      &[data-variant='ghost'] {
-        @apply bg-transparent;
-        &:hover {
-          @apply surface-hover text-inherit;
-        }
-        &[data-state='open'] {
-          @apply surface-input;
-        }
-        &[aria-pressed='true'],
-        &[aria-checked='true'] {
-          @apply surface-base fg-accent;
-        }
-      }
       &[data-variant='primary'] {
         @apply fg-inverse surface-accent;
         &:hover,
