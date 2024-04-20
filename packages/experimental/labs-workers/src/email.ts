@@ -57,7 +57,7 @@ export const messages: Record<string, MailRequest> = {
 export const sendEmail = async (users: User[], message: MailRequest): Promise<MailResponse[]> => {
   return await Promise.all(
     users.map(async (user) => {
-      log.info('sending email', { email: user.email });
+      log.info('sending', { email: user.email });
 
       const request = new Request('https://api.mailchannels.net/tx/v1/send', {
         method: 'POST',
@@ -73,7 +73,10 @@ export const sendEmail = async (users: User[], message: MailRequest): Promise<Ma
       });
 
       const { status, statusText } = await fetch(request);
-      return { userId: user.id, error: status === 200 ? undefined : statusText } satisfies MailResponse;
+      return {
+        userId: user.id,
+        error: status === 200 || status === 202 ? undefined : statusText,
+      } satisfies MailResponse;
     }),
   );
 };

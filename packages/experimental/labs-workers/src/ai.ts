@@ -4,6 +4,8 @@
 
 import { type Ai } from '@cloudflare/ai';
 
+import { log } from '@dxos/log';
+
 export type ChatRequest = {
   messages: {
     role?: 'user' | 'system';
@@ -20,7 +22,7 @@ export type ChatRequest = {
 const model = '@cf/mistral/mistral-7b-instruct-v0.1';
 
 export const chat = async (ai: Ai, { messages }: ChatRequest) => {
-  console.log(messages);
+  log.info('chat', { messages });
   const result = await ai.run(model, {
     max_tokens: 256,
     messages: messages.map(({ role = 'user', content }) => ({ role, content })),

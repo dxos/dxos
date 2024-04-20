@@ -3,6 +3,14 @@ main = "src/index.ts"
 compatibility_date = "2024-04-19"
 account_id = "950816f3f59b079880a1ae33fb0ec320"
 
+[vars]
+  WORKER_ENV = "production"
+
+[env]
+  [env.local]
+    [env.local.vars]
+      WORKER_ENV = "local"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "dev-users"

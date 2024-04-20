@@ -57,10 +57,19 @@ export class UserManager {
     return results.map(mapRecord);
   }
 
+  async getUserByEmail(email: string): Promise<User | null> {
+    const { results } = await this.db.prepare('SELECT * FROM Users WHERE email = ?1').bind(email).all();
+    if (results.length === 0) {
+      return null;
+    }
+
+    return mapRecord(results[0]);
+  }
+
   async getUsersByDate(n = 10): Promise<User[]> {
     const { results } = await this.db
-      .prepare('SELECT * FROM Users WHERE status = ? ORDER BY created')
-      .bind(Status.WAITING)
+      .prepare('SELECT * FROM Users WHERE status = ?1 ORDER BY created LIMIT ?2')
+      .bind(Status.WAITING, n)
       .all();
     return results.map(mapRecord);
   }

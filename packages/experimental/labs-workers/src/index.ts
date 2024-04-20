@@ -3,8 +3,10 @@
 //
 
 import { type Ai } from '@cloudflare/ai';
-import { Hono, type HonoRequest } from 'hono';
+import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
+import { jwt, sign } from 'hono/jwt';
 
 import { log } from '@dxos/log';
 
@@ -19,13 +21,18 @@ import { UserManager, type User } from './users';
 
 export type Env = {
   Bindings: {
-    AI: Ai;
-    DB: D1Database;
+    WORKER_ENV: 'production' | 'local';
 
     // https://developers.cloudflare.com/workers/configuration/secrets
-    PRI_KEY: string; // Signing key.
-    PUB_KEY: string;
+
+    // Admin API key.
     API_KEY: string;
+
+    // JWT Cookie.
+    JWT_SECRET: string;
+
+    AI: Ai;
+    DB: D1Database;
   };
 };
 
@@ -43,23 +50,73 @@ app.onError((err) => {
     log.error('request failed', { err });
   } else {
     // TODO(burdon): Just log.
-    log.info('invalid request', { err: err.message });
+    log.info('invalid request', { status: response.status, statusCode: response.statusText, err: err.message });
   }
 
   return response;
 });
 
-// TODO(burdon): Auth middleware?
-//  https://hono.dev/concepts/middleware
-//  https://hono.dev/getting-started/cloudflare-workers#using-variables-in-middleware
-//  https://developers.cloudflare.com/workers/examples/basic-auth/
-//  https://developers.cloudflare.com/workers/examples/auth-with-headers/
-const auth = (req: HonoRequest, apiKey: string) => {
-  const value = req.header('X-API-KEY');
-  if (value !== apiKey) {
+// https://hono.dev/concepts/middleware
+app.use(async (context, next) => {
+  const start = Date.now();
+  await next();
+  const end = Date.now();
+  context.res.headers.set('X-Response-Time', `${end - start}`);
+});
+
+//
+// Auth
+//
+
+app.use('/api/*', (context, next) => {
+  const value = context.req.header('X-API-KEY');
+  if (value !== context.env.API_KEY) {
     throw new HTTPException(401);
   }
-};
+
+  return next();
+});
+
+app.use('/app/*', (context, next) => {
+  const jwtMiddleware = jwt({
+    secret: context.env.JWT_SECRET,
+    cookie: 'access_token',
+  });
+
+  return jwtMiddleware(context, next);
+});
+
+/**
+ * Set JWT from one time link.
+ */
+app.get('/access', async (context) => {
+  // Check token matches.
+  const { searchParams } = new URL(context.req.url);
+  const email = decodeURIComponent(searchParams.get('email')!);
+  const accessToken = decodeURIComponent(searchParams.get('access_token')!);
+  const user = await new UserManager(context.env.DB).getUserByEmail(email);
+  if (!user || !accessToken || user.accessToken !== accessToken) {
+    throw new HTTPException(401);
+  }
+
+  // TODO(burdon): Payload may designate agent access.
+  const token = await sign({ agent: false }, context.env.JWT_SECRET);
+
+  // https://hono.dev/helpers/cookie
+  // https://thevalleyofcode.com/hono/4-handle-cookies
+  // https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication
+  setCookie(context, 'access_token', token, {
+    domain: 'https://labs-workers.dxos.workers.dev',
+    secure: context.env.WORKER_ENV === 'production',
+    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    httpOnly: true,
+  });
+
+  // TODO(burdon): Add access token to HALO.
+  // TODO(burdon): Remove access token (one-off only? Otherwise could be shared).
+
+  return new Response();
+});
 
 //
 // App
@@ -67,17 +124,18 @@ const auth = (req: HonoRequest, apiKey: string) => {
 
 // TODO(burdon): Test admin/submission form.
 
-app.get('/app/:email/:accessToken', async (context) => {
-  // TODO(burdon): Check for token.
-  // TODO(burdon): Signed token (e.g., has credential to login and use agent).
-  // TODO(burdon): Set cookie.
-  // TODO(burdon): Add access token to HALO.
-  // console.log(context.req.param('email'), context.req.param('accessToken'));
+app.get('/app', async (context) => {
+  // TODO(burdon): Check cookie.
+  const accessToken = getCookie(context, 'accessToken');
+  if (!accessToken) {
+    throw new HTTPException(401);
+  }
+
   return new Response();
 });
 
 //
-// Users
+// Admin API
 //
 
 /***
@@ -86,7 +144,6 @@ app.get('/app/:email/:accessToken', async (context) => {
  * ```
  */
 app.get('/api/users', async (context) => {
-  auth(context.req, context.env.API_KEY);
   const result = await new UserManager(context.env.DB).getUsers();
   return context.json(result);
 });
@@ -97,13 +154,14 @@ app.get('/api/users', async (context) => {
  * ```
  */
 app.post('/api/users', async (context) => {
-  auth(context.req, context.env.API_KEY);
   const user = await context.req.json<User>();
   await new UserManager(context.env.DB).upsertUser(user);
 
-  const [result] = await sendEmail([user], messages.signup);
-  if (result.error) {
-    throw new HTTPException(502, { message: 'Error sending email.' });
+  if (context.env.WORKER_ENV === 'production') {
+    const [result] = await sendEmail([user], messages.signup);
+    if (result.error) {
+      throw new HTTPException(502, { message: 'Error sending email.' });
+    }
   }
 
   return context.json(user);
@@ -115,8 +173,8 @@ app.post('/api/users', async (context) => {
  * ```
  */
 app.delete('/api/users/:userId', async (context) => {
-  auth(context.req, context.env.API_KEY);
-  await new UserManager(context.env.DB).deleteUser(context.req.param('userId'));
+  const { userId } = context.req.param();
+  await new UserManager(context.env.DB).deleteUser(userId);
   return new Response();
 });
 
@@ -126,7 +184,6 @@ app.delete('/api/users/:userId', async (context) => {
  * ```
  */
 app.post('/api/users/authorize', async (context) => {
-  auth(context.req, context.env.API_KEY);
   const userManager = new UserManager(context.env.DB);
   let { next, userIds } = await context.req.json<{ next?: number; userIds?: number[] }>();
   if (next) {
@@ -138,17 +195,20 @@ app.post('/api/users/authorize', async (context) => {
   }
 
   const users = await userManager.authorizeUsers(userIds);
-  const results = await sendEmail(users, messages.welcome);
-  for (const { userId, error } of results) {
-    if (error) {
-      await userManager.updateUser(userId, 'E');
+
+  if (context.env.WORKER_ENV === 'production') {
+    const results = await sendEmail(users, messages.welcome);
+    for (const { userId, error } of results) {
+      if (error) {
+        await userManager.updateUser(userId, 'E');
+      }
+    }
+    if (results.some((result) => result.error)) {
+      throw new HTTPException(502, { message: 'Error sending email' });
     }
   }
-  if (results.some((result) => result.error)) {
-    throw new HTTPException(502, { message: 'Error sending email' });
-  }
 
-  return context.json(results);
+  return context.json(users);
 });
 
 //
