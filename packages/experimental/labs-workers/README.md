@@ -28,6 +28,15 @@ npx wrangler deploy
 npx wrangler tail
 ```
 
+### Backup
+
+TODO(burdon): Output assumes table hasn't changed; can modify INSERT (values). JSON values?
+
+```bash
+mkdir -p /tmp/dx/workers
+npx wrangler d1 export dev-users --no-schema=true --remote --output=/tmp/dx/workers/users.sql
+```
+
 ### Configuring email delivery MailChannels
 
 1. Configure [domain lockdown](https://support.mailchannels.com/hc/en-us/articles/4565898358413-Sending-Email-from-Cloudflare-Workers-using-MailChannels-Send-API) for MailChannels email sending.

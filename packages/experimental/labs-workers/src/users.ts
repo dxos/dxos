@@ -2,13 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EmailValidator from 'email-validator';
+import { HTTPException } from 'hono/http-exception';
+
 import { invariant } from '@dxos/invariant';
-// TODO(burdon): Zod schema.
-// TODO(burdon): Validate email.
 import { PublicKey } from '@dxos/keys';
 import { nonNullable } from '@dxos/util';
 
 import { str } from './util';
+
+// TODO(burdon): Zod schema.
+// TODO(burdon): Validate email.
 
 export type User = {
   id: number;
@@ -34,6 +38,9 @@ const mapRecord = ({ UserId, IdentityKey, AccessToken, Created, Status, Email }:
 
 // https://developers.cloudflare.com/d1/build-with-d1/d1-client-api
 
+/**
+ *
+ */
 export class UserManager {
   constructor(private db: D1Database) {}
 
@@ -50,13 +57,23 @@ export class UserManager {
     return results.filter(nonNullable).map(mapRecord);
   }
 
-  async upsertUser({ email }: Partial<User>): Promise<User[]> {
-    const { results } = await this.db
-      .prepare(str('INSERT INTO Users (Created, Email, Status)', 'VALUES (?1, ?2, ?3)'))
-      .bind(Date.now(), email, 'N')
-      .all();
+  async upsertUser({ email }: Partial<User>): Promise<void> {
+    if (!email || !EmailValidator.validate(email)) {
+      throw new HTTPException(400, { message: `Invalid email: ${email}` });
+    }
 
-    return results.map(mapRecord);
+    try {
+      await this.db
+        .prepare(str('INSERT INTO Users (Created, Email, Status)', 'VALUES (?1, ?2, ?3)'))
+        .bind(Date.now(), email, 'N')
+        .all();
+    } catch (err) {
+      if (String(err).match(/UNIQUE/i)) {
+        throw new HTTPException(400, { message: `Email already registered: ${email}` });
+      }
+
+      throw err;
+    }
   }
 
   async deleteUser(userId: string) {

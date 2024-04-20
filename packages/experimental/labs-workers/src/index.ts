@@ -6,8 +6,10 @@ import { type Ai } from '@cloudflare/ai';
 import { Hono, type HonoRequest } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
+import { log } from '@dxos/log';
+
 import { chat, type ChatRequest, chatStream } from './ai';
-import { sendEmail } from './email';
+import { messages, sendEmail } from './email';
 import { UserManager, type User } from './users';
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
@@ -30,9 +32,22 @@ export type Env = {
 // https://hono.dev/getting-started/cloudflare-workers
 // https://developers.cloudflare.com/workers/runtime-apis/request
 
+const app = new Hono<Env>();
+
 // TODO(burdon): Static content (e.g., Web app).
 
-const app = new Hono<Env>();
+// https://hono.dev/api/exception#handling-httpexception
+app.onError((err) => {
+  const response = err instanceof HTTPException ? err.getResponse() : Response.error();
+  if (response.status >= 500) {
+    log.error('request failed', { err });
+  } else {
+    // TODO(burdon): Just log.
+    log.info('invalid request', { err: err.message });
+  }
+
+  return response;
+});
 
 // TODO(burdon): Auth middleware?
 //  https://hono.dev/concepts/middleware
@@ -57,8 +72,8 @@ app.get('/app/:email/:accessToken', async (context) => {
   // TODO(burdon): Signed token (e.g., has credential to login and use agent).
   // TODO(burdon): Set cookie.
   // TODO(burdon): Add access token to HALO.
-  console.log(context.req.param('email'), context.req.param('accessToken'));
-  return new Response('ok');
+  // console.log(context.req.param('email'), context.req.param('accessToken'));
+  return new Response();
 });
 
 //
@@ -84,8 +99,14 @@ app.get('/api/users', async (context) => {
 app.post('/api/users', async (context) => {
   auth(context.req, context.env.API_KEY);
   const user = await context.req.json<User>();
-  const result = await new UserManager(context.env.DB).upsertUser(user);
-  return context.json(result);
+  await new UserManager(context.env.DB).upsertUser(user);
+
+  const results = await sendEmail([user], messages.signup);
+  if (results.some((result) => result.errors?.length)) {
+    throw new HTTPException(502, { message: 'Error sending email.' });
+  }
+
+  return context.json(user);
 });
 
 /**
@@ -107,29 +128,14 @@ app.delete('/api/users/:userId', async (context) => {
 app.post('/api/users/authorize', async (context) => {
   auth(context.req, context.env.API_KEY);
   const { userIds } = await context.req.json<{ userIds: string[] }>();
-  const result = await new UserManager(context.env.DB).authorizeUsers(userIds);
-  return context.json(result);
-});
+  const users = await new UserManager(context.env.DB).authorizeUsers(userIds);
 
-/**
- * Every program attempts to expand until it can read mail.
- * Those programs which cannot so expand are replaced by ones which can.
- * [Zawinski's Law]
- */
-// TODO(burdon): Merge with auth.
-app.get('/api/users/email/:userId', async (context) => {
-  auth(context.req, context.env.API_KEY);
-  const [user] = await new UserManager(context.env.DB).getUsersById([context.req.param('userId')]);
-  if (!user) {
-    throw new HTTPException(400);
+  const results = await sendEmail(users, messages.welcome);
+  if (results.some((result) => result.errors?.length)) {
+    throw new HTTPException(502, { message: 'Error sending email.' });
   }
 
-  const data = await sendEmail(user);
-  if (data?.errors?.length) {
-    throw new HTTPException(502, { message: data.errors[0] });
-  }
-
-  return new Response();
+  return context.json(users);
 });
 
 //
