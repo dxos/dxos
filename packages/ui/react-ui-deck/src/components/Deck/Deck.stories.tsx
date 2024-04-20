@@ -18,7 +18,7 @@ export default {
   parameters: { translations, layout: 'fullscreen' },
 };
 
-export const Default = {
+export const Simple = {
   args: {},
   render: () => {
     return (
