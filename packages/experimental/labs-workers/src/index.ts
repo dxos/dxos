@@ -5,6 +5,7 @@
 import { type Ai } from '@cloudflare/ai';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
+import { html } from 'hono/html';
 import { HTTPException } from 'hono/http-exception';
 import { jwt, sign } from 'hono/jwt';
 import { logger } from 'hono/logger';
@@ -133,12 +134,12 @@ app.get('/access', async (context) => {
 // App
 //
 
-// TODO(burdon): Static content (e.g., Web app).
 app.get('/app/home', async (context) => {
-  const token = getCookie(context, 'access_token');
-  log.info('auth', { token });
-
-  return new Response('ok');
+  // https://hono.dev/helpers/html
+  return context.html(
+    html`<!doctype html>
+      <h1>Hello DXOS!</h1>`,
+  );
 });
 
 // TODO(burdon): Test admin/submission form.
