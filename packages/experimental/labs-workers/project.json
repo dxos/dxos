@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "lint": {},
-    "test": {
+    "__test": {
       "options": {
         "ciEnvironments": [
           "nodejs"
