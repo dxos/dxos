@@ -1,8 +1,5 @@
 # labs-workers
 
-# TODO(burdon): Set-up 1Password `op` secrets integration; instead of env vars.
-#  https://1password.com/downloads/command-line
-
 ## Set-up
 
 ```bash
@@ -37,7 +34,7 @@ mkdir -p /tmp/dx/workers
 npx wrangler d1 export dev-users --no-schema=true --remote --output=/tmp/dx/workers/users.sql
 ```
 
-### Configuring email delivery MailChannels
+### Configuring MailChannels for email delivery
 
 1. Configure [domain lockdown](https://support.mailchannels.com/hc/en-us/articles/4565898358413-Sending-Email-from-Cloudflare-Workers-using-MailChannels-Send-API) for MailChannels email sending.
 2. Add SPF records.
@@ -59,7 +56,13 @@ WARNING: THE FOLLOWING WITH DROP THE REMOTE DATABASE.
 ```bash
 npx wrangler d1 execute dev-users --remote --file=./sql/schema.sql
 npx wrangler d1 execute dev-users --remote --json --command="SELECT * FROM Users"
+```
 
+### Secrets management
+
+Create and configure API Key and JWT Secrets.
+
+```bash
 # Create Admin API_KEY
 openssl rand -hex 32
 npx wrangler secret put API_KEY
@@ -71,22 +74,15 @@ npx wrangler secret put JWT_SECRET
 curl -s -v -H "X-API-KEY: xxx" http://localhost:8787/api/users | jq
 ```
 
-## Design
+Get API KEY from 1password:
 
-- CF worker checks cookie.
-- If present streams app HTML.
-  - App checks cookie and bails if not present.
-- If not set redirects to signup page (Website)
-  - Posts email address to worker that manages DB (D1 or Upstash REDIS or Superbase).
-- Admin creates magic one-time link with token.
-  - Link adds cookie.
-  - Adds credential to HALO.
-- HALO panel generate magic link for devices.
-
+```bash
+export DX_API_KEY=$(op item get "Cloudflare" --fields label="DX_API_KEY")
+```
 
 ## References
 
-Cloudflare Workers (workerd)
+Cloudflare Workers (`workerd`)
 
 - https://developers.cloudflare.com/d1/get-started
 - https://developers.cloudflare.com/workers/tutorials
