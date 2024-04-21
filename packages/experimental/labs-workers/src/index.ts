@@ -17,10 +17,10 @@ import { chat, type ChatRequest, chatStream } from './ai';
 import { messages, sendEmail } from './email';
 import { UserManager, type User } from './users';
 
-// TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
-
 // TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
 //  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
+
+// TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
 
 export type Env = {
   Bindings: {
