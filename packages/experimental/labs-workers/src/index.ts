@@ -5,9 +5,9 @@
 import { type Ai } from '@cloudflare/ai';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
-import { html } from 'hono/html';
+import { html, raw } from 'hono/html';
 import { HTTPException } from 'hono/http-exception';
-import { jwt, sign } from 'hono/jwt';
+import { decode, jwt, sign } from 'hono/jwt';
 import { logger } from 'hono/logger';
 import { timing } from 'hono/timing';
 
@@ -84,9 +84,6 @@ app.use('/api/*', (context, next) => {
 
 // TODO(burdon): Does JWT signing/validate inc response time significantly (re pricing plan).
 app.use('/app/*', (context, next) => {
-  const token = getCookie(context, 'access_token');
-  log.info('AUTH', { token });
-
   const jwtMiddleware = jwt({
     secret: context.env.JWT_SECRET,
     cookie: 'access_token',
@@ -109,36 +106,47 @@ app.get('/access', async (context) => {
   }
 
   // TODO(burdon): Payload may designate agent access.
-  const token = await sign({ agent: false }, context.env.JWT_SECRET);
-  log.info('authorized', { user, token });
+  const token = await sign({ email, agent: false }, context.env.JWT_SECRET);
+  log.info('authorized', { user });
 
   // https://hono.dev/helpers/cookie
   // TODO(burdon): https://hono.dev/helpers/cookie#following-the-best-practices
   // https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
   setCookie(context, 'access_token', token, {
-    // domain: 'https://labs-workers.dxos.workers.dev',
-    // secure: context.env.WORKER_ENV === 'production',
-    // expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    httpOnly: false,
+    // NOTE: Setting domain breaks curl.
+    secure: context.env.WORKER_ENV === 'production',
+    httpOnly: true,
   });
 
   // TODO(burdon): Add access token to HALO.
   // TODO(burdon): Remove access token (one-off only? Otherwise could be shared).
 
   log.info('redirecting...');
-  return context.redirect('/app/home');
+  return context.redirect('/app');
 });
 
 //
 // App
 //
 
-app.get('/app/home', async (context) => {
+app.get('/app', async (context) => {
+  const token = getCookie(context, 'access_token');
+  if (!token) {
+    throw new HTTPException(401);
+  }
+
+  const { payload } = decode(token);
+  log.info('token', { payload });
+
   // https://hono.dev/helpers/html
+  // TODO(burdon): Serve content HTML page from netlify.
   return context.html(html`
     <!doctype html>
-    <h1>Hello DXOS!</h1>
+    <body>
+      <h1>Hello DXOS!</h1>
+      <pre>${raw(JSON.stringify(payload))}</pre>
+    </body>
   `);
 });
 

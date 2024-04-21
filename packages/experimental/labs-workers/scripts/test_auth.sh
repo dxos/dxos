@@ -28,4 +28,4 @@ curl -i -v --cookie-jar cookies.txt \
 cat cookies.txt
 
 # Test the token.
-curl --cookie cookies.txt https://labs-workers.dxos.workers.dev/app/home
+curl -w '\n' --cookie cookies.txt https://labs-workers.dxos.workers.dev/app
