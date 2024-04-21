@@ -22,6 +22,9 @@ import chat from './chat';
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
 
+// TODO(burdon): YAML file for config.
+export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
+
 export type Env = {
   Bindings: {
     WORKER_ENV: 'production' | 'local';

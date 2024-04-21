@@ -10,8 +10,9 @@ import { decode, jwt, sign } from 'hono/jwt';
 
 import { log } from '@dxos/log';
 
+import { createMessage, sendEmail, templates } from '../api/email';
 import { UserManager } from '../api/users';
-import type { Env } from '../index';
+import { DISCORD_INVITE_URL, type Env } from '../index';
 
 const app = new Hono<Env>();
 
@@ -117,7 +118,12 @@ app.get('/signup', async (context) => {
  */
 app.post('/signup', async (context) => {
   const { email } = await context.req.parseBody<{ email: string }>();
-  await new UserManager(context.env.DB).upsertUser({ email });
+
+  const user = await new UserManager(context.env.DB).insertUser({ email });
+  if (context.env.WORKER_ENV === 'production') {
+    await sendEmail(user, createMessage(templates.signup, { invite_url: DISCORD_INVITE_URL }));
+  }
+
   return context.redirect('/thanks');
 });
 
@@ -128,7 +134,7 @@ app.get('/thanks', async (context) => {
   return context.html(html`
     <!doctype html>
     <body>
-      <h1>Thank you!</h1>
+      <h1>Thanks, we'll be in touch soon.</h1>
     </body>
   `);
 });

@@ -11,8 +11,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { nonNullable } from '@dxos/util';
 
-import { str } from '../util';
-
 // TODO(burdon): Zod schema.
 
 export enum Status {
@@ -77,23 +75,25 @@ export class UserManager {
   }
 
   async getUsersById(userIds: number[]): Promise<User[]> {
-    const { results } = await this.db
-      .prepare(str('SELECT * FROM Users', `WHERE user_id IN (${userIds.join(',')})`))
-      .all();
-
+    const { results } = await this.db.prepare(`SELECT * FROM Users WHERE user_id IN (${userIds.join(',')})`).all();
     return results.filter(nonNullable).map(mapRecord);
   }
 
-  async upsertUser({ email }: Partial<User>): Promise<void> {
+  async insertUser({ email }: Partial<User>): Promise<User> {
     if (!email || !EmailValidator.validate(email)) {
       throw new HTTPException(400, { message: `Invalid email: ${email}` });
     }
 
     try {
-      await this.db
-        .prepare(str('INSERT INTO Users (created, email, status)', 'VALUES (?1, ?2, ?3)'))
+      const {
+        meta: { last_row_id },
+      } = await this.db
+        .prepare('INSERT INTO Users (created, email, status) VALUES (?1, ?2, ?3)')
         .bind(Date.now(), email, Status.WAITING)
         .all();
+
+      const [user] = await this.getUsersById([last_row_id]);
+      return user;
     } catch (err) {
       if (String(err).match(/UNIQUE/i)) {
         throw new HTTPException(400, { message: `Email already registered: ${email}` });

@@ -9,10 +9,7 @@ import { log } from '@dxos/log';
 
 import { createMessage, sendEmail, templates } from './email';
 import { Status, type User, UserManager } from './users';
-import type { Env } from '../index';
-
-// TODO(burdon): YAML file for config.
-const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
+import { DISCORD_INVITE_URL, type Env } from '../index';
 
 const app = new Hono<Env>();
 
@@ -27,6 +24,12 @@ app.use('/*', (context, next) => {
 
   return next();
 });
+
+// TODO(burdon): Token to auth.
+// app.get('/auth/:access_key', async (context) => {
+//   const accessKey = context.req.param('access_key');
+//   return context.redirect('/users');
+// });
 
 /***
  * ```bash
@@ -44,9 +47,8 @@ app.get('/users', async (context) => {
  * ```
  */
 app.post('/users', async (context) => {
-  const user = await context.req.json<User>();
-  await new UserManager(context.env.DB).upsertUser(user);
-
+  const input = await context.req.json<User>();
+  const user = await new UserManager(context.env.DB).insertUser(input);
   if (context.env.WORKER_ENV === 'production') {
     await sendEmail(user, createMessage(templates.signup, { invite_url: DISCORD_INVITE_URL }));
   }
