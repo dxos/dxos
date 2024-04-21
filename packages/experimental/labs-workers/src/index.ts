@@ -17,6 +17,8 @@ import { chat, type ChatRequest, chatStream } from './ai';
 import { messages, sendEmail } from './email';
 import { UserManager, type User } from './users';
 
+// TODO(burdon): Move to w3 repo.
+
 // TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
 //  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
 
