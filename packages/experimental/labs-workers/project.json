@@ -4,14 +4,14 @@
   "sourceRoot": "packages/experimental/labs-workers/src",
   "projectType": "library",
   "targets": {
-    "lint": {},
     "__test": {
       "options": {
         "ciEnvironments": [
           "nodejs"
         ]
       }
-    }
+    },
+    "lint": {}
   },
   "implicitDependencies": [
     "esbuild",

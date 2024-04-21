@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 
 import { createMessage, sendEmail, templates } from './email';
 import { Status, type User, UserManager } from './users';
-import { DISCORD_INVITE_URL, type Env } from '../index';
+import { DISCORD_INVITE_URL, type Env } from '../defs';
 
 const app = new Hono<Env>();
 

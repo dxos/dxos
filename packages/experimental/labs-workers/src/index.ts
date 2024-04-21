@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Ai } from '@cloudflare/ai';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { logger } from 'hono/logger';
@@ -14,6 +13,10 @@ import { log } from '@dxos/log';
 import api from './api';
 import app from './app';
 import chat from './chat';
+import { type Env } from './defs';
+import signaling from './signaling';
+
+export * from './signaling';
 
 // TODO(burdon): Move to w3 or new monorepo repo.
 // TODO(burdon): CI: https://developers.cloudflare.com/workers/configuration/continuous-integration
@@ -29,28 +32,6 @@ import chat from './chat';
 
 // TODO(burdon): Geo (privacy).
 //  https://developers.cloudflare.com/workers/examples/geolocation-hello-world
-
-// TODO(burdon): YAML file for config.
-export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
-
-/**
- * Secrets management.
- * https://developers.cloudflare.com/workers/configuration/secrets
- */
-export type Env = {
-  Bindings: {
-    WORKER_ENV: 'production' | 'local';
-
-    // Admin API key.
-    API_KEY: string;
-
-    // JWT Cookie.
-    JWT_SECRET: string;
-
-    AI: Ai;
-    DB: D1Database;
-  };
-};
 
 // https://hono.dev/getting-started/cloudflare-workers
 // https://developers.cloudflare.com/workers/runtime-apis/request
@@ -93,5 +74,6 @@ root.onError((err, context) => {
 root.route('/', app);
 root.route('/api', api);
 root.route('/chat', chat);
+root.route('/signal', signaling);
 
 export default root;

@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { createMessage, sendEmail, templates } from '../api/email';
 import { UserManager } from '../api/users';
-import { DISCORD_INVITE_URL, type Env } from '../index';
+import { DISCORD_INVITE_URL, type Env } from '../defs';
 
 const app = new Hono<Env>();
 
