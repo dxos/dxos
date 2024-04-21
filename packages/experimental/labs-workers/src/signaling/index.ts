@@ -10,7 +10,6 @@ export * from './swarm';
 
 const app = new Hono<Env>();
 
-// https://developers.cloudflare.com/durable-objects/reference/in-memory-state
 // const ip = context.req.raw.headers.get('CF-Connecting-IP');
 // log.info('signal', { ip });
 

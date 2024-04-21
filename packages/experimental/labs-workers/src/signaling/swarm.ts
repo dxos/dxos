@@ -10,6 +10,7 @@ import { DurableObject } from 'cloudflare:workers';
 
 // TODO(burdon): Rust: https://github.com/cloudflare/workers-rs?tab=readme-ov-file#durable-objects
 
+// https://developers.cloudflare.com/durable-objects/reference/in-memory-state
 // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
 
 /**

@@ -7304,9 +7304,6 @@ importers:
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
-      partykit:
-        specifier: ^0.0.103
-        version: 0.0.103
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
