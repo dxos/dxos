@@ -7,6 +7,8 @@ import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import { HTTPException } from 'hono/http-exception';
 import { jwt, sign } from 'hono/jwt';
+import { logger } from 'hono/logger';
+import { timing } from 'hono/timing';
 
 import { log } from '@dxos/log';
 
@@ -15,9 +17,9 @@ import { messages, sendEmail } from './email';
 import { UserManager, type User } from './users';
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
-// TODO(burdon): Logging/Baselime?
 
 // TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
+//  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
 
 export type Env = {
   Bindings: {
@@ -41,7 +43,9 @@ export type Env = {
 
 const app = new Hono<Env>();
 
-// TODO(burdon): Static content (e.g., Web app).
+// TODO(burdon): Logging/Baselime?
+app.use(logger());
+app.use(timing());
 
 // https://hono.dev/api/exception#handling-httpexception
 app.onError((err) => {
@@ -77,7 +81,11 @@ app.use('/api/*', (context, next) => {
   return next();
 });
 
-app.use('/app/*', (context, next) => {
+// TODO(burdon): Does JWT signing/validate inc response time significantly (re pricing plan).
+app.use('/xxx/*', (context, next) => {
+  const token = getCookie(context, 'access_token');
+  log.info('AUTH', { token });
+
   const jwtMiddleware = jwt({
     secret: context.env.JWT_SECRET,
     cookie: 'access_token',
@@ -101,38 +109,38 @@ app.get('/access', async (context) => {
 
   // TODO(burdon): Payload may designate agent access.
   const token = await sign({ agent: false }, context.env.JWT_SECRET);
+  log.info('authorized', { user, token });
 
   // https://hono.dev/helpers/cookie
-  // https://thevalleyofcode.com/hono/4-handle-cookies
+  // TODO(burdon): https://hono.dev/helpers/cookie#following-the-best-practices
   // https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication
   setCookie(context, 'access_token', token, {
-    domain: 'https://labs-workers.dxos.workers.dev',
-    secure: context.env.WORKER_ENV === 'production',
-    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    httpOnly: true,
+    // domain: 'https://labs-workers.dxos.workers.dev',
+    // secure: context.env.WORKER_ENV === 'production',
+    // expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    // httpOnly: true,
   });
 
   // TODO(burdon): Add access token to HALO.
   // TODO(burdon): Remove access token (one-off only? Otherwise could be shared).
 
-  return new Response();
+  log.info('redirecting...');
+  context.redirect('/app/home');
 });
 
 //
 // App
 //
 
-// TODO(burdon): Test admin/submission form.
+// TODO(burdon): Static content (e.g., Web app).
+app.get('/app/home', async (context) => {
+  const token = getCookie(context, 'access_token');
+  log.info('auth', { token });
 
-app.get('/app', async (context) => {
-  // TODO(burdon): Check cookie.
-  const accessToken = getCookie(context, 'accessToken');
-  if (!accessToken) {
-    throw new HTTPException(401);
-  }
-
-  return new Response();
+  return new Response('ok');
 });
+
+// TODO(burdon): Test admin/submission form.
 
 //
 // Admin API
