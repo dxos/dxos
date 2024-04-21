@@ -18,6 +18,10 @@ USER=$(npx wrangler d1 execute dev-users --remote --json \
 
 EMAIL=$(echo $USER | jq -r ".email")
 ACCESS_TOKEN=$(echo $USER | jq -r ".access_token")
+if [-z "${EMAIL}"] || [-z "${ACCESS_TOKEN}"]; then
+  echo "No authorized users."
+  exit 1;
+fi
 
 # Check authorization and set the token.
 curl -i --cookie-jar cookies.txt \

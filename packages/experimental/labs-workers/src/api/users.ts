@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { nonNullable } from '@dxos/util';
 
-import { str } from './util';
+import { str } from '../util';
 
 // TODO(burdon): Zod schema.
 
@@ -48,7 +48,7 @@ const mapRecord = ({ user_id, identity_key, access_token, created, status, name,
 // https://developers.cloudflare.com/d1/build-with-d1/d1-client-api
 
 /**
- *
+ * User admin.
  */
 export class UserManager {
   constructor(private db: D1Database) {}

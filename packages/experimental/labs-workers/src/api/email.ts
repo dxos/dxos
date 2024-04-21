@@ -7,7 +7,6 @@ import { HTTPException } from 'hono/http-exception';
 import { log } from '@dxos/log';
 
 import { type User } from './users';
-import { str } from './util';
 
 export type MailRequest = {
   subject: string;
@@ -31,20 +30,20 @@ export const createMessage = (template: MailRequest, props: Record<string, strin
 export const templates: Record<string, MailRequest> = {
   signup: {
     subject: 'Hello from DXOS!',
-    content: str(
-      'Thank you for your interest in the Composer Beta.\n\n',
-      'We will be back in touch as soon as we can support adding you to the beta program.\n\n',
+    content: [
+      'Thank you for your interest in the Composer Beta.',
+      'We will be back in touch as soon as we can support adding you to the beta program.',
       'Please consider joining our Discord: {invite_url}',
-    ),
+    ].join('\n\n'),
   },
 
   welcome: {
     subject: 'Welcome to Composer!',
-    content: str(
-      "We're very happy to enroll you in the Composer Beta.\n\n",
-      'Please visit the following access link to get started:\n\n',
+    content: [
+      "We're very happy to enroll you in the Composer Beta.",
+      'Please visit the following access link to get started:',
       '{access_link}',
-    ),
+    ].join('\n\n'),
   },
 };
 
@@ -76,8 +75,9 @@ export const sendEmail = async (user: User, message: MailRequest): Promise<void>
     }),
   });
 
-  const { status } = await fetch(request);
-  if (status !== 200) {
+  const { status, statusText } = await fetch(request);
+  if (status !== 202) {
+    log.error('error sending', { status, statusText });
     throw new HTTPException(502, { message: `Error sending email: ${user.email}` });
   }
 };
