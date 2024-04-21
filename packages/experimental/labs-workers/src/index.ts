@@ -82,7 +82,7 @@ app.use('/api/*', (context, next) => {
 });
 
 // TODO(burdon): Does JWT signing/validate inc response time significantly (re pricing plan).
-app.use('/xxx/*', (context, next) => {
+app.use('/app/*', (context, next) => {
   const token = getCookie(context, 'access_token');
   log.info('AUTH', { token });
 
@@ -114,18 +114,19 @@ app.get('/access', async (context) => {
   // https://hono.dev/helpers/cookie
   // TODO(burdon): https://hono.dev/helpers/cookie#following-the-best-practices
   // https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
   setCookie(context, 'access_token', token, {
     // domain: 'https://labs-workers.dxos.workers.dev',
     // secure: context.env.WORKER_ENV === 'production',
     // expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-    // httpOnly: true,
+    httpOnly: false,
   });
 
   // TODO(burdon): Add access token to HALO.
   // TODO(burdon): Remove access token (one-off only? Otherwise could be shared).
 
   log.info('redirecting...');
-  context.redirect('/app/home');
+  return context.redirect('/app/home');
 });
 
 //
