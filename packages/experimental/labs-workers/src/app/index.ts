@@ -46,9 +46,9 @@ app.get('/', async (context) => {
   return context.html(html`
     <!doctype html>
     <body>
-      <h1>Hello DXOS!</h1>
-      <pre>${raw(JSON.stringify(payload))}</pre>
-      <a href="/reset">Reset</a>
+      <h1>Welcome to Composer!</h1>
+      <pre>${raw(JSON.stringify(payload, undefined, 2))}</pre>
+      <a href="/reset">Logout</a>
     </body>
   `);
 });
