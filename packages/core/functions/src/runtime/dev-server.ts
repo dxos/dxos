@@ -69,7 +69,7 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:name', async (req, res) => {
+    app.post('/swarmKey', async (req, res) => {
       const { name } = req.params;
       try {
         if (this._options.reload) {

@@ -4,24 +4,42 @@
 
 import { Hono } from 'hono';
 
-import { log } from '@dxos/log';
-
 import type { Env } from '../defs';
 
 export * from './signaling-object';
 
 const app = new Hono<Env>();
 
-app.get('/:name', async (context) => {
-  const ip = context.req.raw.headers.get('CF-Connecting-IP');
-  log.info('signal', { ip });
+// https://developers.cloudflare.com/durable-objects/reference/in-memory-state
+// const ip = context.req.raw.headers.get('CF-Connecting-IP');
+// log.info('signal', { ip });
 
-  const { name } = context.req.param();
-  const id = context.env.SIGNALING.idFromName(name);
+/**
+ * ```bash
+ * curl -s -w '\n' http://localhost:8787/signal/join/a/1 | jq
+ * ```
+ */
+// TODO(burdon): Post.
+app.get('/join/:swarmKey/:peerKey', async (context) => {
+  const { swarmKey, peerKey } = context.req.param();
+  const id = context.env.SIGNALING.idFromName(swarmKey);
   const stub = context.env.SIGNALING.get(id);
-  const response = await stub.fetch(context.req.raw);
-  const data = await response.json();
-  return context.json({ id, name, data });
+  const peers = await stub.join(peerKey);
+  return context.json({ id, swarmKey, peers });
+});
+
+/**
+ * ```bash
+ * curl -s -w '\n' http://localhost:8787/signal/leave/a/1 | jq
+ * ```
+ */
+// TODO(burdon): Post.
+app.get('/leave/:swarmKey/:peerKey', async (context) => {
+  const { swarmKey, peerKey } = context.req.param();
+  const id = context.env.SIGNALING.idFromName(swarmKey);
+  const stub = context.env.SIGNALING.get(id);
+  const peers = await stub.leave(peerKey);
+  return context.json({ id, swarmKey, peers });
 });
 
 export default app;

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Env } from 'hono';
+import { DurableObject } from 'cloudflare:workers';
 
 // TODO(burdon): Web sockets server.
 //  https://developers.cloudflare.com/durable-objects/api/websockets
@@ -10,14 +10,22 @@ import { type Env } from 'hono';
 
 // TODO(burdon): Rust: https://github.com/cloudflare/workers-rs?tab=readme-ov-file#durable-objects
 
-export class SignalingObject {
-  constructor(
-    private readonly _state: DurableObjectState,
-    private readonly _env: Env,
-  ) {}
+/**
+ * Represents swarm.
+ */
+export class SignalingObject extends DurableObject {
+  // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
+  async join(key: string): Promise<number> {
+    const peers = (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
+    peers.add(key);
+    await this.ctx.storage.put('peers', peers);
+    return peers.size;
+  }
 
-  async fetch(request: Request) {
-    console.log('##############');
-    return Response.json({ test: 123 });
+  async leave(key: string): Promise<number> {
+    const peers = (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
+    peers.delete(key);
+    await this.ctx.storage.put('peers', peers);
+    return peers.size;
   }
 }

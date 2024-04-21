@@ -4,6 +4,8 @@
 
 import { type Ai } from '@cloudflare/ai';
 
+import { type SignalingObject } from './signaling';
+
 // TODO(burdon): YAML file for config.
 export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
 
@@ -22,7 +24,7 @@ export type Env = {
     JWT_SECRET: string;
 
     DB: D1Database;
-    SIGNALING: DurableObjectNamespace;
+    SIGNALING: DurableObjectNamespace<SignalingObject>;
     AI: Ai;
   };
 };
