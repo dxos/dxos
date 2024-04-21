@@ -82,7 +82,6 @@ app.use('/api/*', (context, next) => {
   return next();
 });
 
-// TODO(burdon): Does JWT signing/validate inc response time significantly (re pricing plan).
 app.use('/app/*', (context, next) => {
   const jwtMiddleware = jwt({
     secret: context.env.JWT_SECRET,

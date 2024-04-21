@@ -20,7 +20,7 @@ EMAIL=$(echo $USER | jq -r ".email")
 ACCESS_TOKEN=$(echo $USER | jq -r ".access_token")
 
 # Check authorization and set the token.
-curl -i -v --cookie-jar cookies.txt \
+curl -v --cookie-jar cookies.txt \
   --data-urlencode "access_token=${ACCESS_TOKEN}" \
   --data-urlencode "email=${EMAIL}" \
   --get https://labs-workers.dxos.workers.dev/access
@@ -28,4 +28,4 @@ curl -i -v --cookie-jar cookies.txt \
 cat cookies.txt
 
 # Test the token.
-curl -w '\n' --cookie cookies.txt https://labs-workers.dxos.workers.dev/app
+curl -v -w '\n' --cookie cookies.txt https://labs-workers.dxos.workers.dev/app
