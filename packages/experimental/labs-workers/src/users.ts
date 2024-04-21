@@ -14,7 +14,6 @@ import { nonNullable } from '@dxos/util';
 import { str } from './util';
 
 // TODO(burdon): Zod schema.
-// TODO(burdon): Validate email.
 
 enum Status {
   AUTHORIZED = 'A',
@@ -28,7 +27,7 @@ export type User = {
   accessToken?: string | null;
   created: Date;
   email: string;
-  status: string; // TODO(burdon): Enum.
+  status: Status;
 };
 
 const mapRecord = ({ user_id, identity_key, access_token, created, status, email }: Record<string, unknown>) =>
@@ -38,7 +37,7 @@ const mapRecord = ({ user_id, identity_key, access_token, created, status, email
     accessToken: access_token as string | null,
     created: new Date(created as number),
     email: email as string,
-    status: status as string,
+    status: status as Status,
   }) satisfies User;
 
 // TODO(burdon): Backup database (admin tool/scheduled?)
