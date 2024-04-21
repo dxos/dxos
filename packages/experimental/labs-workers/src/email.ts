@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { HTTPException } from 'hono/dist/types/http-exception';
+import { HTTPException } from 'hono/http-exception';
 
 import { log } from '@dxos/log';
 
