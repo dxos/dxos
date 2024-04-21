@@ -26,16 +26,18 @@ export type User = {
   identityKey?: string | null;
   accessToken?: string | null;
   created: Date;
+  name: string;
   email: string;
   status: Status;
 };
 
-const mapRecord = ({ user_id, identity_key, access_token, created, status, email }: Record<string, unknown>) =>
+const mapRecord = ({ user_id, identity_key, access_token, created, status, name, email }: Record<string, unknown>) =>
   ({
     id: user_id as number,
     identityKey: identity_key as string | null,
     accessToken: access_token as string | null,
     created: new Date(created as number),
+    name: name as string,
     email: email as string,
     status: status as Status,
   }) satisfies User;
@@ -70,6 +72,7 @@ export class UserManager {
       .prepare('SELECT * FROM Users WHERE status = ?1 ORDER BY created LIMIT ?2')
       .bind(Status.WAITING, n)
       .all();
+
     return results.map(mapRecord);
   }
 
