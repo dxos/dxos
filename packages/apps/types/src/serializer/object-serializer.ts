@@ -8,7 +8,6 @@ import { type Space } from '@dxos/client/echo';
 import { create, getEchoObjectAnnotation, getSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
-import { jsonSerializer } from './serializer';
 import { serializers } from './serializers';
 import { getSpaceProperty } from './space-properties';
 import { type SerializedObject, type SerializedSpace, TypeOfExpando } from './types';
@@ -59,32 +58,33 @@ export class ObjectSerializer {
 
   private async _serializeFolder(folder: FolderType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
-    for (const child of folder.objects) {
-      if (!child) {
+    for (const object of folder.objects) {
+      if (!object) {
         continue;
       }
 
-      if (child instanceof FolderType) {
-        files.push(await this._serializeFolder(child));
+      if (object instanceof FolderType) {
+        files.push(await this._serializeFolder(object));
         continue;
       }
 
-      const schema = getSchema(child);
+      const schema = getSchema(object);
       if (!schema) {
         continue;
       }
 
       const typename = getEchoObjectAnnotation(schema)?.typename ?? TypeOfExpando;
-      const serializer = serializers[typename] ?? jsonSerializer;
+      const serializer = serializers[typename] ?? serializers.default;
 
-      const filename = serializer.filename(child);
-      const content = await serializer.serialize(child, serializers);
+      const filename = serializer.filename(object);
+      const content = await serializer.serialize({ object, serializers });
       files.push({
         type: 'file',
-        id: child.id,
+        id: object.id,
         // TODO(burdon): Extension is part of name.
         name: this._uniqueNames.unique(filename.name),
         extension: filename.extension,
+        // TODO(wittjosiah): Content probably doesn't need to be in metadata.
         content,
         md5sum: md5(content),
         typename,
@@ -101,31 +101,31 @@ export class ObjectSerializer {
   }
 
   private async _deserializeFolder(folder: FolderType, data: SerializedObject[]): Promise<void> {
-    for (const object of data) {
+    for (const file of data) {
       try {
-        let child = folder.objects.find((item) => item?.id === object.id);
-        switch (object.type) {
+        let child = folder.objects.find((item) => item?.id === file.id);
+        switch (file.type) {
           case 'folder': {
             if (!child) {
-              child = create(FolderType, { name: object.name, objects: [] });
-
-              // TODO(dmaretskyi): This won't work.
-              // child[base]._id = object.id;
+              child = create(FolderType, { name: file.name, objects: [] });
               folder.objects.push(child);
             }
 
-            await this._deserializeFolder(child as FolderType, object.children);
+            await this._deserializeFolder(child as FolderType, file.children);
             break;
           }
 
           case 'file': {
-            const child = folder.objects.find((item) => item?.id === object.id);
-            const serializer = serializers[object.typename] ?? jsonSerializer;
-            const deserialized = await serializer.deserialize(object.content!, child, serializers);
+            const object = folder.objects.find((item) => item?.id === file.id);
+            const serializer = serializers[file.typename] ?? serializers.default;
+            const deserialized = await serializer.deserialize({
+              content: file.content!,
+              file,
+              object,
+              serializers,
+            });
 
-            if (!child) {
-              // TODO(dmaretskyi): This won't work.
-              // deserialized[base]._id = object.id;
+            if (!object) {
               folder.objects.push(deserialized);
             }
             break;

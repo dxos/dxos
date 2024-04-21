@@ -159,13 +159,16 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          classNames={['grid col-span-2 group', active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start']}
+          classNames={[
+            'grid col-span-2 group/section',
+            active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
+          ]}
           style={draggableStyle}
         >
           <div
             role='none'
             className={mx(
-              'group grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
               active && 'surface-attention after:separator-separator s-outline-separator',
@@ -178,7 +181,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]:pbs-[--rail-action]'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]'
             >
               <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
                 <DropdownMenu.Root
