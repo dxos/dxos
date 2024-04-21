@@ -136,10 +136,10 @@ app.get('/access', async (context) => {
 
 app.get('/app/home', async (context) => {
   // https://hono.dev/helpers/html
-  return context.html(
-    html`<!doctype html>
-      <h1>Hello DXOS!</h1>`,
-  );
+  return context.html(html`
+    <!doctype html>
+    <h1>Hello DXOS!</h1>
+  `);
 });
 
 // TODO(burdon): Test admin/submission form.
