@@ -118,7 +118,6 @@ app.get('/signup', async (context) => {
  */
 app.post('/signup', async (context) => {
   const { email } = await context.req.parseBody<{ email: string }>();
-
   const user = await new UserManager(context.env.DB).insertUser({ email });
   if (context.env.WORKER_ENV === 'production') {
     await sendEmail(user, createMessage(templates.signup, { invite_url: DISCORD_INVITE_URL }));

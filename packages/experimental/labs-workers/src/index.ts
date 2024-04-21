@@ -20,16 +20,16 @@ import chat from './chat';
 // TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
 //  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
 
-// TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
+// TODO(burdon): Geo (privacy).
+//  https://developers.cloudflare.com/workers/examples/geolocation-hello-world
 
 // TODO(burdon): YAML file for config.
 export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
 
+// https://developers.cloudflare.com/workers/configuration/secrets
 export type Env = {
   Bindings: {
     WORKER_ENV: 'production' | 'local';
-
-    // https://developers.cloudflare.com/workers/configuration/secrets
 
     // Admin API key.
     API_KEY: string;
