@@ -71,7 +71,7 @@ npx wrangler secret put API_KEY
 openssl rand -hex 32
 npx wrangler secret put JWT_SECRET
 
-curl -s -v -H "X-API-KEY: xxx" http://localhost:8787/api/users | jq
+curl -s -H "X-API-KEY: ${DX_API_KEY}" https://labs-workers.dxos.workers.dev/api/users | jq
 ```
 
 Get API KEY from 1password:
