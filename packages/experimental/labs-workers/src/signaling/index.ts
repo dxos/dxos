@@ -19,7 +19,7 @@ const app = new Hono<Env>();
  * curl -s -w '\n' http://localhost:8787/signal/join/a/1 | jq
  * ```
  */
-// TODO(burdon): Post.
+// TODO(burdon): Change to Post.
 app.get('/join/:swarmKey/:peerKey', async (context) => {
   const { swarmKey, peerKey } = context.req.param();
   const id = context.env.SIGNALING.idFromName(swarmKey);
@@ -33,7 +33,7 @@ app.get('/join/:swarmKey/:peerKey', async (context) => {
  * curl -s -w '\n' http://localhost:8787/signal/leave/a/1 | jq
  * ```
  */
-// TODO(burdon): Post.
+// TODO(burdon): Change to Post.
 app.get('/leave/:swarmKey/:peerKey', async (context) => {
   const { swarmKey, peerKey } = context.req.param();
   const id = context.env.SIGNALING.idFromName(swarmKey);
