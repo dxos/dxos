@@ -105,8 +105,8 @@ app.get('/signup', async (context) => {
     <body>
       <h1>Join the Composer Beta</h1>
       <form class="flex" method="POST">
-        <input type="text" name="email" placeholder="Email address" />
-        <button>Signup</button>
+        <input type="text" name="email" style="padding: 8px" placeholder="Email address" size="40" />
+        <button style="padding: 8px">Signup</button>
       </form>
     </body>
   `);
