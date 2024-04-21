@@ -15,7 +15,7 @@ import { str } from './util';
 
 // TODO(burdon): Zod schema.
 
-enum Status {
+export enum Status {
   AUTHORIZED = 'A',
   WAITING = 'W',
   ERROR = 'E',

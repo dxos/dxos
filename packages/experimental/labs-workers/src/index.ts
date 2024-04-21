@@ -9,13 +9,14 @@ import { html, raw } from 'hono/html';
 import { HTTPException } from 'hono/http-exception';
 import { decode, jwt, sign } from 'hono/jwt';
 import { logger } from 'hono/logger';
+import { prettyJSON } from 'hono/pretty-json';
 import { timing } from 'hono/timing';
 
 import { log } from '@dxos/log';
 
 import { chat, type ChatRequest, chatStream } from './ai';
-import { messages, sendEmail } from './email';
-import { UserManager, type User } from './users';
+import { templates, sendEmail, createMessage } from './email';
+import { UserManager, type User, Status } from './users';
 
 // TODO(burdon): Move to w3 repo.
 
@@ -23,6 +24,9 @@ import { UserManager, type User } from './users';
 //  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
 
 // TODO(burdon): Geo: https://developers.cloudflare.com/workers/examples/geolocation-hello-world
+
+// TODO(burdon): YAML file for config.
+export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
 
 export type Env = {
   Bindings: {
@@ -48,16 +52,18 @@ const app = new Hono<Env>();
 
 // TODO(burdon): Logging/Baselime?
 app.use(logger());
+app.use(prettyJSON({ space: 2 }));
 app.use(timing());
 
 // https://hono.dev/api/exception#handling-httpexception
-app.onError((err) => {
+app.onError((err, context) => {
   const response = err instanceof HTTPException ? err.getResponse() : new Response('Request failed', { status: 500 });
-  if (response.status >= 500) {
-    log.error('request failed', { err });
-  } else {
-    // TODO(burdon): Just log.
+  if (response.status === 401) {
+    return context.redirect('/signup');
+  } else if (response.status < 500) {
     log.info('invalid request', { status: response.status, statusCode: response.statusText, err: err.message });
+  } else {
+    log.error('request failed', { err });
   }
 
   return response;
@@ -72,24 +78,16 @@ app.use(async (context, next) => {
 });
 
 //
-// Auth
+// App
 //
 
-app.use('/api/*', (context, next) => {
-  const value = context.req.header('X-API-KEY');
-  if (value !== context.env.API_KEY) {
-    throw new HTTPException(401);
-  }
-
-  return next();
-});
-
-app.use('/app/*', (context, next) => {
+app.use('/app', (context, next) => {
   const jwtMiddleware = jwt({
     secret: context.env.JWT_SECRET,
     cookie: 'access_token',
   });
 
+  // https://hono.dev/middleware/builtin/jwt
   return jwtMiddleware(context, next);
 });
 
@@ -131,10 +129,11 @@ app.get('/access', async (context) => {
 // App
 //
 
+// TODO(burdon): Serve app as static resource: https://github.com/honojs/examples/tree/main/serve-static
 app.get('/app', async (context) => {
   const token = getCookie(context, 'access_token');
   if (!token) {
-    throw new HTTPException(401);
+    return context.redirect('/signup');
   }
 
   const { payload } = decode(token);
@@ -151,11 +150,46 @@ app.get('/app', async (context) => {
   `);
 });
 
-// TODO(burdon): Test admin/submission form.
+app.get('/signup', async (context) => {
+  return context.html(html`
+    <!doctype html>
+    <body>
+      <h1>Join the Composer Beta</h1>
+      <form class="flex" method="POST">
+        <input type="text" name="email" placeholder="Email address" />
+        <button>Signup</button>
+      </form>
+    </body>
+  `);
+});
+
+app.post('/signup', async (context) => {
+  const { email } = await context.req.parseBody<{ email: string }>();
+  await new UserManager(context.env.DB).upsertUser({ email });
+  return context.redirect('/thanks');
+});
+
+app.get('/thanks', async (context) => {
+  return context.html(html`
+    <!doctype html>
+    <body>
+      <h1>Thank you!</h1>
+    </body>
+  `);
+});
 
 //
 // Admin API
 //
+
+app.use('/api/*', (context, next) => {
+  const value = context.req.header('X-API-KEY');
+  if (value !== context.env.API_KEY) {
+    throw new HTTPException(401);
+  }
+
+  return next();
+});
 
 /***
  * ```bash
@@ -177,10 +211,7 @@ app.post('/api/users', async (context) => {
   await new UserManager(context.env.DB).upsertUser(user);
 
   if (context.env.WORKER_ENV === 'production') {
-    const [result] = await sendEmail([user], messages.signup);
-    if (result.error) {
-      throw new HTTPException(502, { message: 'Error sending email.' });
-    }
+    await sendEmail(user, createMessage(templates.signup, { invite_url: DISCORD_INVITE_URL }));
   }
 
   return context.json(user);
@@ -216,14 +247,20 @@ app.post('/api/users/authorize', async (context) => {
   const users = await userManager.authorizeUsers(userIds);
 
   if (context.env.WORKER_ENV === 'production') {
-    const results = await sendEmail(users, messages.welcome);
-    for (const { userId, error } of results) {
-      if (error) {
-        await userManager.updateUser(userId, 'E');
+    for (const user of users) {
+      try {
+        // Create link.
+        const url = new URL(context.req.url);
+        const linkUrl = new URL('/access', url.origin);
+        linkUrl.searchParams.append('email', user.email);
+        linkUrl.searchParams.append('access_token', user.accessToken!);
+
+        // Send message.
+        await sendEmail(user, createMessage(templates.welcome, { invite_url: linkUrl.toString() }));
+      } catch (err) {
+        log.catch(err);
+        await userManager.updateUser(user.id, Status.ERROR);
       }
-    }
-    if (results.some((result) => result.error)) {
-      throw new HTTPException(502, { message: 'Error sending email' });
     }
   }
 
