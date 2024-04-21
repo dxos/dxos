@@ -6,7 +6,7 @@ import { Hono } from 'hono';
 
 import type { Env } from '../defs';
 
-export * from './signaling-object';
+export * from './swarm-object';
 
 const app = new Hono<Env>();
 

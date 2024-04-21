@@ -10,11 +10,12 @@ import { DurableObject } from 'cloudflare:workers';
 
 // TODO(burdon): Rust: https://github.com/cloudflare/workers-rs?tab=readme-ov-file#durable-objects
 
+// https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
+
 /**
  * Represents swarm.
  */
-export class SignalingObject extends DurableObject {
-  // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
+export class SwarmObject extends DurableObject {
   async join(key: string): Promise<number> {
     const peers = (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
     peers.add(key);
