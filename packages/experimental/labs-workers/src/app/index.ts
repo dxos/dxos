@@ -1,8 +1,4 @@
 //
-// App
-//
-
-//
 // Copyright 2024 DXOS.org
 //
 
@@ -19,6 +15,9 @@ import type { Env } from '../index';
 
 const app = new Hono<Env>();
 
+/**
+ * Access control.
+ */
 app.use('/', (context, next) => {
   const jwtMiddleware = jwt({
     secret: context.env.JWT_SECRET,
@@ -29,6 +28,9 @@ app.use('/', (context, next) => {
   return jwtMiddleware(context, next);
 });
 
+/**
+ * Serve app.
+ */
 // TODO(burdon): Serve app as static resource: https://github.com/honojs/examples/tree/main/serve-static
 app.get('/', async (context) => {
   const token = getCookie(context, 'access_token');
@@ -86,11 +88,17 @@ app.get('/access', async (context) => {
   return context.redirect('/');
 });
 
+/**
+ * Remove cookie.
+ */
 app.get('/reset', async (context) => {
   deleteCookie(context, 'access_token');
   return context.redirect('/');
 });
 
+/**
+ * Signup form.
+ */
 app.get('/signup', async (context) => {
   return context.html(html`
     <!doctype html>
@@ -104,12 +112,18 @@ app.get('/signup', async (context) => {
   `);
 });
 
+/**
+ * Process signup.
+ */
 app.post('/signup', async (context) => {
   const { email } = await context.req.parseBody<{ email: string }>();
   await new UserManager(context.env.DB).upsertUser({ email });
   return context.redirect('/thanks');
 });
 
+/**
+ * Landing page.
+ */
 app.get('/thanks', async (context) => {
   return context.html(html`
     <!doctype html>

@@ -16,6 +16,9 @@ const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
 
 const app = new Hono<Env>();
 
+/**
+ * Access control.
+ */
 app.use('/*', (context, next) => {
   const value = context.req.header('X-API-KEY');
   if (value !== context.env.API_KEY) {
