@@ -148,7 +148,7 @@ export class Query<T extends {} = any> {
       this._sources.delete(source);
     });
 
-    log.info('construct', { filter: this._filter.toProto() });
+    log('construct', { filter: this._filter.toProto() });
     this._queryContext.start();
   }
 
@@ -206,10 +206,10 @@ export class Query<T extends {} = any> {
 
   private _handleQueryLifecycle() {
     if (this._subscribers === 0 && this._isRunning) {
-      log.info('stop query', { filter: this._filter.toProto() });
+      log('stop query', { filter: this._filter.toProto() });
       this._queryContext.stop();
     } else if (this._subscribers > 0 && !this._isRunning) {
-      log.info('start query', { filter: this._filter.toProto() });
+      log('start query', { filter: this._filter.toProto() });
       this._queryContext.start();
     }
   }
