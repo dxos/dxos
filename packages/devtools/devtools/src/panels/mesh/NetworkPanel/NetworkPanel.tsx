@@ -24,7 +24,7 @@ import { mx } from '@dxos/react-ui-theme';
 import { defaultMap } from '@dxos/util';
 
 import { PanelContainer } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
 export type NetworkGraphNode = {
@@ -137,7 +137,7 @@ export const NetworkPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
         </Toolbar.Root>
       }
     >
