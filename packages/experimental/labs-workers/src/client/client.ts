@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import args from 'args';
 import WebSocket from 'ws';
 
 import { invariant } from '@dxos/invariant';
@@ -10,17 +11,26 @@ import { log } from '@dxos/log';
 
 import { type SwarmMessage } from '../signaling';
 
-const port = 9000;
-const dev = true; // TODO(burdon): args.
+const { prod, endpoint, port } = args
+  .option('prod', 'production mode', false)
+  .option('endpoint', 'production endpoint', 'labs-workers.dxos.workers.dev')
+  .option('port', 'dev server if not in prod mode', 8787)
+  .parse(process.argv);
 
-const url = dev ? `ws://localhost:${port}/signal/ws` : 'wss://labs-workers.dxos.workers.dev/signal/ws';
+const url = prod ? `wss://${endpoint}}/signal/ws` : `ws://localhost:${port}/signal/ws`;
 
 // TODO(burdon): How do individual peers connect in an existing swarm? Routing?
 
 const swarmKey = 'xxx';
 
+process.exit();
+
 /**
  * Test client.
+ *
+ * ```bash
+ * npx ts-node ./src/client/client.ts
+ * ```
  */
 class Client {
   private readonly _peerKey = PublicKey.random();
