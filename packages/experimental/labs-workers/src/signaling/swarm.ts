@@ -9,12 +9,6 @@ import { DurableObject } from 'cloudflare:workers';
 // https://developers.cloudflare.com/durable-objects/reference/in-memory-state
 // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
 
-export type SwarmMessage = {
-  peerKey: string;
-  swarmKey: string;
-  data: any;
-};
-
 /**
  * Represents swarm.
  */

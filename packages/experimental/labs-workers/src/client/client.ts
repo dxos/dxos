@@ -9,21 +9,17 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type SwarmMessage } from '../signaling';
+// TODO(burdon): Factor out non-client deps.
+import { decodeMessage, encodeMessage, type SwarmMessage } from '../signaling/protocol';
 
-const { prod, endpoint, port } = args
+const { prod, endpoint, port, swarmKey } = args
   .option('prod', 'production mode', false)
   .option('endpoint', 'production endpoint', 'labs-workers.dxos.workers.dev')
   .option('port', 'dev server if not in prod mode', 8787)
+  .option('swarm-key', 'swarm key', 'test-swarm-key')
   .parse(process.argv);
 
 const url = prod ? `wss://${endpoint}}/signal/ws` : `ws://localhost:${port}/signal/ws`;
-
-// TODO(burdon): How do individual peers connect in an existing swarm? Routing?
-
-const swarmKey = 'xxx';
-
-process.exit();
 
 /**
  * Test client.
@@ -50,13 +46,11 @@ class Client {
     Object.assign(this._ws, {
       onopen: () => {
         log.info('opened');
-        this._ws?.send(
-          JSON.stringify({
-            peerKey: this._peerKey.toHex(),
-            swarmKey,
-            data: 'ping',
-          } satisfies SwarmMessage),
-        );
+        this.send({
+          swarmKey,
+          peerKey: this._peerKey.toHex(),
+          data: 'join',
+        });
       },
 
       onclose: () => {
@@ -68,8 +62,16 @@ class Client {
       },
 
       onmessage: (event) => {
-        const data = JSON.parse(event.data.toString());
+        const { data } = decodeMessage(event.data) ?? {};
         log.info('received', { data });
+
+        if (data) {
+          this.send({
+            // swarmKey,
+            peerKey: this._peerKey.toHex(),
+            data: 'ping',
+          });
+        }
       },
     } satisfies Partial<WebSocket>);
   }
@@ -81,7 +83,20 @@ class Client {
       this._ws = undefined;
     }
   }
+
+  send(message: SwarmMessage) {
+    invariant(this._ws);
+    log.info('sending', { message });
+    this._ws.send(encodeMessage(message));
+  }
 }
 
-// TODO(burdon): Catch ctrl-c and safely close down.
-void new Client(url).open();
+const client = new Client(url);
+void client.open();
+
+// Catch ctrl-c and safely close down.
+process.on('SIGINT', async () => {
+  log.info('caught interrupt signal');
+  await client.close();
+  process.exit();
+});
