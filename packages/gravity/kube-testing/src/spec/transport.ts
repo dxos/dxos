@@ -153,8 +153,8 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       {
         log.info('starting streams', { agentIdx });
 
-        // TODO(egorgripasov): Multiply by iterration number.
-        const targetStreems = (numAgents - 1) * spec.swarmsPerAgent;
+        // TODO(egorgripasov): Multiply by iteration number.
+        const targetStreams = (numAgents - 1) * spec.swarmsPerAgent;
         let actualStreams = 0;
 
         await forEachSwarmAndAgent(
@@ -185,7 +185,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           },
         );
 
-        log.info('streams started', { testCounter, agentIdx, targetStreems, actualStreams });
+        log.info('streams started', { testCounter, agentIdx, targetStreems: targetStreams, actualStreams });
         await env.syncBarrier(`streams are started at ${testCounter}`);
       }
 
@@ -196,8 +196,8 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
         log.info('start testing connections', { agentIdx, testCounter });
 
         const targetConnections = (numAgents - 1) * spec.swarmsPerAgent;
-        let actualConnections = 0;
 
+        let actualConnections = 0;
         await forEachSwarmAndAgent(
           env.params.agentId,
           Object.keys(env.params.agents),
@@ -207,7 +207,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
             try {
               await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
               actualConnections++;
-              log.info('test connection succeded', { agentIdx, swarmIdx });
+              log.info('test connection succeeded', { agentIdx, swarmIdx });
             } catch (error) {
               log.info('test connection failed', { agentIdx, swarmIdx, error });
             }
