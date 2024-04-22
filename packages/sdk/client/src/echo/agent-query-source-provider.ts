@@ -146,6 +146,10 @@ export class AgentQuerySource implements QuerySource {
       })
       .catch((error) => error.message === 'Close.' || log.catch(error));
   }
+
+  close(): void {
+    // No-op.
+  }
 }
 
 const getEchoObjectFromSnapshot = (objSnapshot: EchoObjectProto): EchoReactiveObject<any> | undefined => {
