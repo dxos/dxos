@@ -137,8 +137,8 @@ export class Query<T extends {} = any> {
 
         // Clear `prohibitSignalActions` to allow the signal to be emitted.
         compositeRuntime.untracked(() => {
-          this._signal.notifyWrite();
           this._event.emit(this);
+          this._signal.notifyWrite();
         });
       });
       source.update(this._filter);
