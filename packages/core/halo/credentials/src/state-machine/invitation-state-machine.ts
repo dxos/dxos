@@ -45,9 +45,10 @@ export class InvitationStateMachine {
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
         if (credential.id) {
+          const isExpired = credential.expirationDate && credential.expirationDate.getTime() < Date.now();
           const wasUsed = this._redeemedInvitationCredentialIds.has(credential.id) && !assertion.multiUse;
           const wasCancelled = this._cancelledInvitationCredentialIds.has(credential.id);
-          if (wasCancelled || wasUsed) {
+          if (isExpired || wasCancelled || wasUsed) {
             return;
           }
           const invitation: DelegateSpaceInvitation = { ...assertion };
