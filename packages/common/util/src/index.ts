@@ -14,6 +14,7 @@ export * from './human-hash';
 export * from './interval';
 export * from './json';
 export * from './map';
+export * from './navigation';
 export * from './order';
 export * from './platform';
 export * from './random';

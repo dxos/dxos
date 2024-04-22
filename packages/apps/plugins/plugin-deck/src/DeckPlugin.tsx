@@ -37,8 +37,7 @@ import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 import { activeToUri, checkAppScheme, uriToActive } from '@dxos/util';
 
-import { LayoutContext } from './LayoutContext';
-import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
+import { LayoutContext, MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
@@ -52,7 +51,7 @@ type NavigationState = Location & {
   previousNode: Node | undefined;
 };
 
-export const LayoutPlugin = ({
+export const DeckPlugin = ({
   observability,
 }: {
   observability?: boolean;
