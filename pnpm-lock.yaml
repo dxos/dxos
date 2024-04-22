@@ -7304,6 +7304,9 @@ importers:
       '@types/cookie':
         specifier: ^0.6.0
         version: 0.6.0
+      '@types/ws':
+        specifier: ^7.4.0
+        version: 7.4.7
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -7313,6 +7316,9 @@ importers:
       wrangler:
         specifier: ^3.51.2
         version: 3.51.2(@cloudflare/workers-types@4.20240405.0)
+      ws:
+        specifier: ^8.14.2
+        version: 8.14.2
 
   packages/experimental/metagraph:
     dependencies:

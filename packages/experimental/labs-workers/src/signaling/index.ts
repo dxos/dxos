@@ -3,15 +3,44 @@
 //
 
 import { Hono } from 'hono';
+import { upgradeWebSocket } from 'hono/cloudflare-workers';
+
+import { log } from '@dxos/log';
 
 import type { Env } from '../defs';
 
 export * from './swarm';
 
+//
+// Peers connect to the signaling server and exchange RTC messages with other peers.
+// Peers will stay connected to active spaces.
+//
+
 const app = new Hono<Env>();
 
-// const ip = context.req.raw.headers.get('CF-Connecting-IP');
-// log.info('signal', { ip });
+/**
+ * Web socket connection.
+ * https://hono.dev/helpers/websocket
+ */
+// TODO(burdon): Does this support hibernation?
+// TODO(burdon): Maintain single socket connection across all swarms?
+app.get(
+  '/ws',
+  upgradeWebSocket((c) => {
+    // const ip = c.req.raw.headers.get('CF-Connecting-IP');
+    // log.info('signal', { ip });
+
+    return {
+      onMessage: (event, ws) => {
+        log.info('received', { data: event.data });
+        ws.send(JSON.stringify({ action: 'pong' }));
+      },
+      onClose: () => {
+        log.info('closed');
+      },
+    };
+  }),
+);
 
 /**
  * ```bash
@@ -19,12 +48,12 @@ const app = new Hono<Env>();
  * ```
  */
 // TODO(burdon): Change to Post.
-app.get('/join/:swarmKey/:peerKey', async (context) => {
-  const { swarmKey, peerKey } = context.req.param();
-  const id = context.env.SIGNALING.idFromName(swarmKey);
-  const stub = context.env.SIGNALING.get(id);
+app.get('/join/:swarmKey/:peerKey', async (c) => {
+  const { swarmKey, peerKey } = c.req.param();
+  const id = c.env.SIGNALING.idFromName(swarmKey);
+  const stub = c.env.SIGNALING.get(id);
   const peers = await stub.join(peerKey);
-  return context.json({ id, swarmKey, peers });
+  return c.json({ id, swarmKey, peers });
 });
 
 /**
@@ -33,12 +62,12 @@ app.get('/join/:swarmKey/:peerKey', async (context) => {
  * ```
  */
 // TODO(burdon): Change to Post.
-app.get('/leave/:swarmKey/:peerKey', async (context) => {
-  const { swarmKey, peerKey } = context.req.param();
-  const id = context.env.SIGNALING.idFromName(swarmKey);
-  const stub = context.env.SIGNALING.get(id);
+app.get('/leave/:swarmKey/:peerKey', async (c) => {
+  const { swarmKey, peerKey } = c.req.param();
+  const id = c.env.SIGNALING.idFromName(swarmKey);
+  const stub = c.env.SIGNALING.get(id);
   const peers = await stub.leave(peerKey);
-  return context.json({ id, swarmKey, peers });
+  return c.json({ id, swarmKey, peers });
 });
 
 export default app;

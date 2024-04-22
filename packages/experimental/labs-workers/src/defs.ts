@@ -23,8 +23,13 @@ export type Env = {
     // JWT Cookie.
     JWT_SECRET: string;
 
+    // SQL Database.
     DB: D1Database;
+
+    // Signaling server.
     SIGNALING: DurableObjectNamespace<SwarmObject>;
+
+    // AI.
     AI: Ai;
   };
 };
