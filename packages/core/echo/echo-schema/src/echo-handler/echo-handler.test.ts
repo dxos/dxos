@@ -205,6 +205,31 @@ describe('Reactive Object with ECHO database', () => {
         expect(query.objects.length).to.eq(1);
       }
     });
+
+    test.only('does not return deleted objects', async () => {
+      const graph = new Hypergraph();
+      graph.runtimeSchemaRegistry.registerSchema(TypedObject);
+      const { db } = await createDatabase(graph);
+      const obj = db.add(create(TypedObject, { string: 'foo' }));
+      const query = db.query(Filter.schema(TypedObject));
+      expect(query.objects.length).to.eq(1);
+
+      db.remove(obj);
+      expect(query.objects.length).to.eq(0);
+    });
+
+    test.only('deleted objects are returned when re-added', async () => {
+      const graph = new Hypergraph();
+      graph.runtimeSchemaRegistry.registerSchema(TypedObject);
+      const { db } = await createDatabase(graph);
+      const obj = db.add(create(TypedObject, { string: 'foo' }));
+      db.remove(obj);
+      const query = db.query(Filter.schema(TypedObject));
+      expect(query.objects.length).to.eq(0);
+
+      db.add(obj);
+      expect(query.objects.length).to.eq(1);
+    });
   });
 
   test('data symbol', async () => {
