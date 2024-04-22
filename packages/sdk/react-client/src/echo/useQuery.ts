@@ -33,7 +33,7 @@ export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   return (
     useSyncExternalStore<T[] | undefined>(
-      (cb) => query?.subscribe?.(cb) ?? cb,
+      (cb) => query?.subscribe(cb) ?? cb,
       () => query?.objects,
     ) ?? []
   );
