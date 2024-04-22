@@ -11,9 +11,12 @@ import { log } from '@dxos/log';
 import { type SwarmMessage } from './swarm';
 import type { Env } from '../defs';
 
+export * from './socket';
 export * from './swarm';
 
 const app = new Hono<Env>();
+
+// TODO(burdon): https://github.com/partykit/partykit/blob/main/packages/partykit/src/server.ts
 
 /**
  * Peers connect to the signaling server and exchange RTC messages with other peers.
@@ -22,8 +25,24 @@ const app = new Hono<Env>();
  */
 // TODO(burdon): Does this support hibernation?
 // TODO(burdon): Maintain single socket connection across all swarms?
+app.get('/ws', (c) => {
+  log.info('open');
+  const upgradeHeader = c.req.raw.headers.get('Upgrade');
+  if (!upgradeHeader || upgradeHeader !== 'websocket') {
+    return new Response('Durable Object expected Upgrade: websocket', { status: 426 });
+  }
+
+  // TODO(burdon): Test with just fetch (not hono).
+
+  // TODO(burdon): Create durable object for room.
+  const id = c.env.WEBSOCKET.idFromName('sockets');
+  const stub = c.env.WEBSOCKET.get(id);
+  return stub.fetch(c.req.raw);
+});
+
+// npx ts-node ./src/client/client.ts
 app.get(
-  '/ws',
+  '/ws2',
   upgradeWebSocket((c) => {
     log.info('open');
 
@@ -48,6 +67,9 @@ app.get(
         log.info('received', { data });
         const { peerKey, swarmKey } = data;
         const stub = c.env.SIGNALING.get(c.env.SIGNALING.idFromName(swarmKey));
+
+        // https://developers.cloudflare.com/durable-objects/api/websockets/#state-methods
+        // acceptWebSocket(ws);
 
         onClose = async () => {
           log.info('closed', { peerKey });
