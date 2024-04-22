@@ -69,7 +69,8 @@ export interface QuerySource {
   /**
    * Set the filter and trigger the query.
    */
-  update(filter: Filter): void;
+  // TODO(dmaretskyi): Rename to run.
+  update(filter: Filter): Promise<QueryResult[]>;
 
   // TODO(dmaretskyi): Make async.
   close(): void;
@@ -172,7 +173,7 @@ export class Query<T extends {} = any> {
   /**
    * Resend query to remote agents.
    */
-  update() {
+  run(): Promise<QueryResult<T>[]> {
     for (const source of this._sources) {
       source.update(this._filter);
     }
