@@ -5,7 +5,6 @@
 import type { Contact } from '@dxos/client/halo';
 import { useMulticastObservable } from '@dxos/react-async';
 
-import { useMulticastObservable } from '@dxos/react-async';
 import { useClient } from '../client';
 
 /**
