@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
   type AcceptInvitationRequest,
-  type Invitation,
+  Invitation,
   type AuthenticationRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -51,9 +51,7 @@ export class InvitationsManager {
     this._createInvitations.set(invitation.get().invitationId, invitation);
     this.invitationCreated.emit(invitation.get());
 
-    const saveInvitationTask = invitation.get().persistent
-      ? this._safePersistInBackground(invitation)
-      : Promise.resolve();
+    const saveInvitationTask = this._safePersistInBackground(handler, invitation);
 
     // onComplete is called on cancel, expiration, or redemption of a single-use invitation
     this._onInvitationComplete(invitation, async () => {
@@ -163,12 +161,16 @@ export class InvitationsManager {
     }
   }
 
-  private _safePersistInBackground(invitation: CancellableInvitation): Promise<void> {
+  private _safePersistInBackground(handler: InvitationProtocol, invitation: CancellableInvitation): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(async () => {
         try {
-          await this._metadataStore.addInvitation(invitation.get());
-          this.saved.emit(invitation.get());
+          if (invitation.get().type === Invitation.Type.DELEGATED) {
+            await handler.delegate(invitation.get());
+          } else if (invitation.get().persistent) {
+            await this._metadataStore.addInvitation(invitation.get());
+            this.saved.emit(invitation.get());
+          }
         } catch (err: any) {
           log.catch(err);
           await invitation.cancel();
