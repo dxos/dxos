@@ -25,18 +25,18 @@ export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
   options?: QueryOptions,
   deps?: any[],
 ) => {
-  const query = useMemo(
-    () => space?.db.query(filter, options) as Query<T> | undefined,
-    [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])],
-  );
+  const { subscribe, getObjects } = useMemo(() => {
+    const query = space?.db.query(filter, options) as Query<T> | undefined;
+
+    return {
+      subscribe: (cb: () => void) => query?.subscribe(cb) ?? noop,
+      getObjects: () => query?.objects ?? [],
+    };
+  }, [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
-  return (
-    useSyncExternalStore<T[] | undefined>(
-      (cb) => query?.subscribe?.(cb) ?? cb,
-      () => query?.objects,
-    ) ?? []
-  );
+  // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes -- make sure it is stable.
+  return useSyncExternalStore<T[] | undefined>(subscribe, getObjects) ?? [];
 };
 
 // TODO(dmaretskyi): Serialize the filter here instead.
@@ -44,3 +44,5 @@ const filterToDepsArray = (filter?: FilterSource<any>) =>
   Object.entries(filter ?? {})
     .flat(10)
     .map((x) => (typeof x === 'function' || typeof x === 'object' ? null : x));
+
+const noop = () => {};
