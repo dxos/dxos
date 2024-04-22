@@ -4,12 +4,15 @@
 
 import { useMemo } from 'react';
 
+import { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/client';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { MulticastObservable } from '@dxos/async';
 import { useMulticastObservable } from '@dxos/react-async';
 import { CancellableInvitationObservable, useInvitationStatus } from '../invitations';
 import { useSpace } from './useSpaces';
+import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
 
 export const useSpaceInvitations = (spaceKey?: PublicKey): CancellableInvitationObservable[] => {
   const space = useSpace(spaceKey);

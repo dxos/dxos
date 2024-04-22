@@ -3,6 +3,7 @@
 //
 
 import { type NetworkStatus } from '@dxos/client/mesh';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useMulticastObservable } from '@dxos/react-async';
 import { useClient } from '../client';
