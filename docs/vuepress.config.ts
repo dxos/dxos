@@ -51,7 +51,7 @@ const config: UserConfig = defineUserConfig({
     repo: 'dxos/dxos',
     // TODO(wittjosiah): Use release tag?
     docsBranch: 'main',
-    docsDir: 'docs/docs',
+    docsDir: 'docs/content',
     sidebar: sidebar({
       '/guide/': 'structure',
       '/api/': await apiSidebar(),
