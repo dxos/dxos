@@ -39,10 +39,9 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   } = props;
 
   const columns = useDefaultValue(props.columns, []);
-  const data = useDefaultValue(props.data, []);
+  const incomingData = useDefaultValue(props.data, []);
 
-  const [_, update] = useState(false);
-  useEffect(() => update((v) => !v), [JSON.stringify(data), update]);
+  const [data, setData] = useState([...incomingData]);
 
   const forceUpdate = useCallback(() => setData([...incomingData]), [incomingData]);
   useEffect(() => forceUpdate(), [JSON.stringify(incomingData), forceUpdate]);
