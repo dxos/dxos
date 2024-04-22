@@ -9,7 +9,19 @@ import { log } from '@dxos/log';
 import { decodeMessage, encodeMessage } from './protocol';
 
 /**
- * Durable socket connection.
+ * WebSockets are long-lived TCP connections that enable bi-directional, real-time communication between client and server.
+ * Cloudflare Durable Objects coordinate Cloudflare Workers to manage WebSocket connections between peers.
+ *
+ * https://developers.cloudflare.com/workers/runtime-apis/websockets
+ *
+ * Hibernation allows Durable Objects that do not have events handlers (i.e., not handling peer messages)
+ * to be removed from memory without disconnecting the WebSocket.
+ *
+ * https://developers.cloudflare.com/durable-objects/examples/websocket-hibernation-server
+ *
+ * Pricing model.
+ * https://developers.cloudflare.com/durable-objects/platform/pricing/#example-2
+ * Example: $300/mo for 10,000 peers.
  */
 export class WebSocketServer extends DurableObject {
   private _connectedSockets = 0;
@@ -48,7 +60,8 @@ export class WebSocketServer extends DurableObject {
         const data = decodeMessage(event.data) || {};
         log.info('message', { data });
         if (data?.swarmKey) {
-          server.send(encodeMessage({ swarmKey: data?.swarmKey, data: { sockets: this._connectedSockets } }));
+          const n = this.ctx.getWebSockets().length;
+          server.send(encodeMessage({ swarmKey: data?.swarmKey, data: { n, sockets: this._connectedSockets } }));
         }
       },
     } satisfies Partial<WebSocket>);
