@@ -551,7 +551,6 @@ service InvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-  rpc LoadPersistentInvitations(google.protobuf.Empty) returns (LoadPersistentInvitationsResponse);
 }
 
 //

@@ -39,6 +39,7 @@ import {
   SpaceInvitationProtocol,
   type InvitationProtocol,
 } from '../invitations';
+import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
@@ -62,6 +63,7 @@ export class ServiceContext extends Resource {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
+  public readonly invitationsManager: InvitationsManager;
   public readonly automergeHost: AutomergeHost;
   public readonly indexMetadata: IndexMetadataStore;
   public readonly indexer: Indexer;
@@ -136,6 +138,11 @@ export class ServiceContext extends Resource {
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitationsManager = new InvitationsManager(
+      this.invitations,
+      (invitation) => this.getInvitationHandler(invitation),
+      this.metadataStore,
+    );
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
@@ -166,6 +173,10 @@ export class ServiceContext extends Resource {
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }
+
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
+
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
