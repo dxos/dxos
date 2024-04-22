@@ -1,17 +1,12 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
   getCoreRowModel,
   getSortedRowModel,
   useReactTable,
-  type ColumnSizingInfoState,
   type GroupingState,
   type RowData,
-  type ColumnSizingState,
-  type OnChangeFn,
-  type RowSelectionState,
   getGroupedRowModel,
   getExpandedRowModel,
   type Row,
@@ -20,14 +15,14 @@ import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { useDefaultValue, useOnTransition } from '@dxos/react-ui';
+import { useDefaultValue } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
 import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { type TableProps } from './props';
-import { usePinLastRow } from '../../hooks';
+import { useColumnResizing, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
 
 export const Table = <TData extends RowData>(props: TableProps<TData>) => {
@@ -46,55 +41,20 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   const columns = useDefaultValue(props.columns, []);
   const data = useDefaultValue(props.data, []);
 
+  const [_, update] = useState(false);
+  useEffect(() => update((v) => !v), [JSON.stringify(data), update]);
+
+  const forceUpdate = useCallback(() => setData([...incomingData]), [incomingData]);
+  useEffect(() => forceUpdate(), [JSON.stringify(incomingData), forceUpdate]);
+
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
-  const [columnsInitialised, setColumnsInitialised] = useState(false);
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
-
-  useEffect(() => {
-    if (columnsInitialised) {
-      return;
-    }
-
-    setColumnSizing(
-      columns
-        .filter((column) => !!column.size && (column as any).prop !== undefined)
-        .reduce<ColumnSizingState>((state, column) => {
-          state[(column as any).prop] = column.size!;
-          return state;
-        }, {}),
-    );
-
-    setColumnsInitialised(true);
-  }, [columns, setColumnSizing]);
-
-  const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
-
-  // Notify on column resize.
-  const notifyColumnResize = useCallback(() => onColumnResize?.(columnSizing), [onColumnResize, columnSizing]);
-  useOnTransition(columnSizingInfo.isResizingColumn, (v) => typeof v === 'string', false, notifyColumnResize);
-
-  const [rowSelection = {}, setRowSelection] = useControllableState({
-    prop: props.rowSelection,
-    onChange: props.onRowSelectionChange,
-    defaultProp: props.defaultRowSelection,
+  const { columnSizing, setColumnSizing, columnSizingInfo, setColumnSizingInfo } = useColumnResizing({
+    columns,
+    onColumnResize,
   });
 
-  // TODO(thure): Does @tanstack/react-table really need this intervention? It did seem necessary to enforce single-selection...
-  const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
-    (updaterOrValue) => {
-      const nextRowSelection = typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-      if (rowsSelectable === 'multi') {
-        setRowSelection(nextRowSelection);
-      } else if (rowsSelectable) {
-        const nextRowSelectionKey = Object.keys(nextRowSelection).filter((id) => !rowSelection[id])[0];
-        setRowSelection(nextRowSelectionKey ? { [nextRowSelectionKey]: true } : {});
-      } else {
-        setRowSelection({});
-      }
-    },
-    [rowsSelectable, setRowSelection, rowSelection],
-  );
+  const { rowSelection, handleRowSelectionChange } = useRowSelection(props);
 
   const [grouping, handleGroupingChange] = useState<GroupingState>(props.grouping ?? []);
   useEffect(() => handleGroupingChange(props.grouping ?? []), [handleGroupingChange, props.grouping]);
