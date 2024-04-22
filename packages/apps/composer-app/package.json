@@ -17,6 +17,7 @@
     "@braneframe/plugin-chess": "workspace:*",
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-debug": "workspace:*",
+    "@braneframe/plugin-deck": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",

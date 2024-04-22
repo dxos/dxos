@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
+export const DECK_PLUGIN = 'dxos.org/plugin/deck';
 
 export default {
-  id: LAYOUT_PLUGIN,
-  name: 'Layout',
+  id: DECK_PLUGIN,
+  name: 'Deck',
 };

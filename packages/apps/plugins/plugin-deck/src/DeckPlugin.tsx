@@ -38,7 +38,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { activeToUri, checkAppScheme, uriToActive } from '@dxos/util';
 
 import { LayoutContext, MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import meta, { LAYOUT_PLUGIN } from './meta';
+import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
 
@@ -61,12 +61,12 @@ export const DeckPlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
-  const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
+  const settings = new LocalStorageStore<LayoutSettingsProps>(DECK_PLUGIN, {
     showFooter: false,
     enableNativeRedirect: false,
   });
 
-  const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>(DECK_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
 
@@ -179,12 +179,12 @@ export const DeckPlugin = ({
             id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
             data: () =>
               intentPlugin?.provides.intent.dispatch({
-                plugin: LAYOUT_PLUGIN,
+                plugin: DECK_PLUGIN,
                 action: LayoutAction.SET_LAYOUT,
                 data: { element: 'fullscreen' },
               }),
             properties: {
-              label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
+              label: ['toggle fullscreen label', { ns: DECK_PLUGIN }],
               icon: (props: IconProps) => <ArrowsOut {...props} />,
               keyBinding: {
                 macos: 'ctrl+meta+f',
@@ -211,7 +211,7 @@ export const DeckPlugin = ({
         useEffect(() => {
           const handleNavigation = async () => {
             await dispatch({
-              plugin: LAYOUT_PLUGIN,
+              plugin: DECK_PLUGIN,
               action: NavigationAction.ACTIVATE,
               data: { id: uriToActive(window.location.pathname) },
             });
@@ -241,11 +241,11 @@ export const DeckPlugin = ({
           : location.activeNode
             ? layout.values.fullscreen
               ? {
-                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  data: { component: `${DECK_PLUGIN}/MainLayout` },
                   surfaces: { main: { data: { active: location.activeNode.data } } },
                 }
               : {
-                  data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                  data: { component: `${DECK_PLUGIN}/MainLayout` },
                   surfaces: {
                     sidebar: {
                       data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
@@ -260,18 +260,16 @@ export const DeckPlugin = ({
                   },
                 }
             : {
-                data: { component: `${LAYOUT_PLUGIN}/MainLayout` },
+                data: { component: `${DECK_PLUGIN}/MainLayout` },
                 surfaces: {
                   sidebar: {
                     data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                   },
                   main: {
-                    data: location.active
-                      ? { active: location.active }
-                      : { component: `${LAYOUT_PLUGIN}/ContentEmpty` },
+                    data: location.active ? { active: location.active } : { component: `${DECK_PLUGIN}/ContentEmpty` },
                   },
                   // TODO(wittjosiah): This plugin should own document title.
-                  documentTitle: { data: { component: `${LAYOUT_PLUGIN}/DocumentTitle` } },
+                  documentTitle: { data: { component: `${DECK_PLUGIN}/DocumentTitle` } },
                 },
               };
 
@@ -287,7 +285,7 @@ export const DeckPlugin = ({
       surface: {
         component: ({ data, role }) => {
           switch (data.component) {
-            case `${LAYOUT_PLUGIN}/MainLayout`:
+            case `${DECK_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
                   fullscreen={layout.values.fullscreen}
@@ -308,7 +306,7 @@ export const DeckPlugin = ({
                 />
               );
 
-            case `${LAYOUT_PLUGIN}/ContentEmpty`:
+            case `${DECK_PLUGIN}/ContentEmpty`:
               return <ContentEmpty />;
           }
 
@@ -342,16 +340,16 @@ export const DeckPlugin = ({
               const title =
                 // TODO(wittjosiah): How to handle chains better?
                 intent.data?.results?.[0]?.result?.undoable?.message ??
-                translations[0]['en-US']['dxos.org/plugin/layout']['undo available label'];
+                translations[0]['en-US']['dxos.org/plugin/deck']['undo available label'];
               layout.values.toasts = [
                 ...layout.values.toasts,
                 {
                   id: currentUndoId,
                   title,
                   duration: 10_000,
-                  actionLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo action label'],
-                  actionAlt: translations[0]['en-US']['dxos.org/plugin/layout']['undo action alt'],
-                  closeLabel: translations[0]['en-US']['dxos.org/plugin/layout']['undo close label'],
+                  actionLabel: translations[0]['en-US']['dxos.org/plugin/deck']['undo action label'],
+                  actionAlt: translations[0]['en-US']['dxos.org/plugin/deck']['undo action alt'],
+                  closeLabel: translations[0]['en-US']['dxos.org/plugin/deck']['undo close label'],
                   onAction: () => intentPlugin?.provides.intent.undo?.(),
                 },
               ];

@@ -7,10 +7,10 @@ import React from 'react';
 import { useTranslation } from '@dxos/react-ui';
 import { errorText, mx } from '@dxos/react-ui-theme';
 
-import { LAYOUT_PLUGIN } from '../meta';
+import { DECK_PLUGIN } from '../meta';
 
 export const Fallback = () => {
-  const { t } = useTranslation(LAYOUT_PLUGIN);
+  const { t } = useTranslation(DECK_PLUGIN);
 
   return (
     <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

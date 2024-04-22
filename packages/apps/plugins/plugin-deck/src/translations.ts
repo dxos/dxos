@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { LAYOUT_PLUGIN } from './meta';
+import { DECK_PLUGIN } from './meta';
 
 export default [
   {
     'en-US': {
-      [LAYOUT_PLUGIN]: {
+      [DECK_PLUGIN]: {
         'main header label': 'Main header',
         'open navigation sidebar label': 'Open navigation sidebar.',
         'open complementary sidebar label': 'Open complementary sidebar.',

@@ -8,10 +8,10 @@ import { Surface } from '@dxos/app-framework';
 import { useTranslation } from '@dxos/react-ui';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { LAYOUT_PLUGIN } from '../meta';
+import { DECK_PLUGIN } from '../meta';
 
 export const ContentEmpty = () => {
-  const { t } = useTranslation(LAYOUT_PLUGIN);
+  const { t } = useTranslation(DECK_PLUGIN);
   return (
     <div
       role='none'

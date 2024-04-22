@@ -12,7 +12,7 @@ import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
-import { LAYOUT_PLUGIN } from '../meta';
+import { DECK_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
   fullscreen: boolean;
@@ -33,7 +33,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
     popoverContent,
     popoverAnchorId,
   } = context;
-  const { t } = useTranslation(LAYOUT_PLUGIN);
+  const { t } = useTranslation(DECK_PLUGIN);
 
   if (fullscreen) {
     return (

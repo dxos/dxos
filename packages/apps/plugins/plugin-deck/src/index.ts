@@ -6,5 +6,4 @@ import { DeckPlugin } from './DeckPlugin';
 
 export default DeckPlugin;
 
-export * from './components/LayoutContext';
 export * from './DeckPlugin';
