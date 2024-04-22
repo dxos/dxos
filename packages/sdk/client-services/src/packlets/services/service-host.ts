@@ -272,11 +272,7 @@ export class ClientServicesHost {
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
-      InvitationsService: new InvitationsServiceImpl(
-        this._serviceContext.invitations,
-        (invitation) => this._serviceContext.getInvitationHandler(invitation),
-        this._serviceContext.metadataStore,
-      ),
+      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
@@ -310,11 +306,6 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
-    // TODO(nf): move to InvitationManager in ServiceContext?
-    invariant(this.serviceRegistry.services.InvitationsService);
-    const loadedInvitations = await this.serviceRegistry.services.InvitationsService.loadPersistentInvitations();
-
-    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
