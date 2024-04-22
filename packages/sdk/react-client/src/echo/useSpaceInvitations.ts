@@ -2,29 +2,18 @@
 // Copyright 2022 DXOS.org
 //
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useMemo } from 'react';
 
+import { MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/client';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useSpace } from './useSpaces';
-import { useInvitationStatus } from '../invitations';
+import { type CancellableInvitationObservable, useInvitationStatus } from '../invitations';
 
-export const useSpaceInvitations = (spaceKey?: PublicKey) => {
+export const useSpaceInvitations = (spaceKey?: PublicKey): CancellableInvitationObservable[] => {
   const space = useSpace(spaceKey);
-  const invitations =
-    useSyncExternalStore(
-      (listener) => {
-        if (!space) {
-          return () => {};
-        }
-
-        const subscription = space.invitations.subscribe(() => listener());
-        return () => subscription.unsubscribe();
-      },
-      () => space?.invitations.get(),
-    ) ?? [];
-
-  return invitations;
+  return useMulticastObservable(space?.invitations ?? MulticastObservable.empty()) ?? [];
 };
 
 export const useSpaceInvitation = (spaceKey?: PublicKey, invitationId?: string) => {
