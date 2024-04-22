@@ -148,7 +148,7 @@ export class Query<T extends {} = any> {
       this._sources.delete(source);
     });
 
-    this._queryContext.start();
+    log.info('construct', { filter: this._filter.toProto() })
   }
 
   get filter(): Filter {
@@ -205,8 +205,10 @@ export class Query<T extends {} = any> {
 
   private _handleQueryLifecycle() {
     if (this._subscribers === 0 && this._isRunning) {
+      log.info('stop query', { filter: this._filter.toProto() });
       this._queryContext.stop();
     } else if (this._subscribers > 0 && !this._isRunning) {
+      log.info('start query', { filter: this._filter.toProto() });
       this._queryContext.start();
     }
   }
