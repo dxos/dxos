@@ -149,6 +149,7 @@ export class Query<T extends {} = any> {
     });
 
     log('construct', { filter: this._filter.toProto() });
+    // TODO(dmaretskyi): Remove.
     this._queryContext.start();
   }
 
