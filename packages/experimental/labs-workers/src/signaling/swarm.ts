@@ -9,9 +9,9 @@ import { DurableObject } from 'cloudflare:workers';
 // https://developers.cloudflare.com/durable-objects/reference/in-memory-state
 // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
 
-export type Message = {
-  swarmKey: string;
+export type SwarmMessage = {
   peerKey: string;
+  swarmKey: string;
   data: any;
 };
 
@@ -19,23 +19,27 @@ export type Message = {
  * Represents swarm.
  */
 export class SwarmObject extends DurableObject {
+  async getPeers(): Promise<Set<string>> {
+    return (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
+  }
+
   /**
    * Join the swarm.
    */
-  async join(key: string): Promise<number> {
-    const peers = (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
-    peers.add(key);
+  async join(peerKey: string): Promise<string[]> {
+    const peers = await this.getPeers();
+    peers.add(peerKey);
     await this.ctx.storage.put('peers', peers);
-    return peers.size;
+    return Array.from(peers.values()).filter((peer) => peer !== peerKey);
   }
 
   /**
    * Leave the swarm.
    */
-  async leave(key: string): Promise<number> {
-    const peers = (await this.ctx.storage.get<Set<string>>('peers')) || new Set();
-    peers.delete(key);
+  async leave(peerKey: string): Promise<string[]> {
+    const peers = await this.getPeers();
+    peers.delete(peerKey);
     await this.ctx.storage.put('peers', peers);
-    return peers.size;
+    return Array.from(peers.values()).filter((peer) => peer !== peerKey);
   }
 }
