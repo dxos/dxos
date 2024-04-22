@@ -5,6 +5,7 @@
 import '@dxosTheme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { deepSignal } from 'deepsignal/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema/schema';
@@ -384,6 +385,51 @@ export const TenThousandRows = {
           keyAccessor={(row) => row.publicKey.toHex()}
           columns={columns}
           data={items}
+          fullWidth
+          stickyHeader
+          border
+          getScrollElement={() => containerRef.current}
+        />
+      </div>
+    );
+  },
+};
+
+const state = deepSignal({ items: createItems(10) });
+
+export const RealTimeUpdates = {
+  render: () => {
+    useEffect(() => {
+      const interval = setInterval(() => {
+        const stateVal = state.$items?.value;
+
+        if (!stateVal) {
+          return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * stateVal.length);
+
+        stateVal[randomIndex].name = faker.commerce.productName();
+        stateVal[randomIndex].count = Math.floor(Math.random() * 1000);
+        stateVal[randomIndex].started = new Date();
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }, [state]);
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    const onUpdate = useCallback((...args: any[]) => {}, []);
+    const columns = useMemo(() => makeColumns(onUpdate), []);
+
+    return (
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns}
+          data={state.$items?.value}
           fullWidth
           stickyHeader
           border
