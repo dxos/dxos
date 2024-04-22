@@ -200,6 +200,6 @@ const queryIndexedContact = async (space: Space) => {
         receivedIndexedContact.wake(result.object);
       }
     }
-  }, true);
+  }, { fire: true });
   return receivedIndexedContact.wait({ timeout: 5000 });
 };

@@ -312,16 +312,19 @@ export class SpaceProxy implements Space {
     {
       const unsubscribe = this._db
         .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
-        .subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        }, true);
+        .subscribe(
+          (query) => {
+            if (query.objects.length === 1) {
+              this._properties = query.objects[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
