@@ -12,6 +12,7 @@ import { type FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -50,6 +51,8 @@ export class ControlPipeline {
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
+  public readonly onDelegatedInvitation: Callback<AsyncCallback<DelegateSpaceInvitation>>;
+  public readonly onDelegatedInvitationRemoved: Callback<AsyncCallback<DelegateSpaceInvitation>>;
 
   @trace.metricsCounter()
   private _usage = new TimeUsageCounter();
@@ -92,6 +95,8 @@ export class ControlPipeline {
 
     this.onMemberAdmitted = this._spaceStateMachine.onMemberAdmitted;
     this.onCredentialProcessed = this._spaceStateMachine.onCredentialProcessed;
+    this.onDelegatedInvitation = this._spaceStateMachine.onDelegatedInvitation;
+    this.onDelegatedInvitationRemoved = this._spaceStateMachine.onDelegatedInvitationRemoved;
   }
 
   get spaceState(): SpaceState {

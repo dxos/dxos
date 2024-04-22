@@ -18,8 +18,8 @@ export class InvitationStateMachine {
   private readonly _redeemedInvitationCredentialIds = new ComplexSet(PublicKey.hash);
   private readonly _cancelledInvitationCredentialIds = new ComplexSet(PublicKey.hash);
 
-  readonly onOutstandingInvitation = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
-  readonly onOutstandingInvitationRemoved = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
+  readonly onDelegatedInvitation = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
+  readonly onDelegatedInvitationRemoved = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
 
   constructor(private readonly _spaceKey: PublicKey) {}
 
@@ -39,7 +39,7 @@ export class InvitationStateMachine {
         const existingInvitation = this._invitations.get(assertion.credentialId);
         if (existingInvitation != null) {
           this._invitations.delete(assertion.credentialId);
-          await this.onOutstandingInvitationRemoved.callIfSet(existingInvitation);
+          await this.onDelegatedInvitationRemoved.callIfSet(existingInvitation);
         }
         break;
       }
@@ -52,7 +52,7 @@ export class InvitationStateMachine {
           }
           const invitation: DelegateSpaceInvitation = { ...assertion };
           this._invitations.set(credential.id, invitation);
-          await this.onOutstandingInvitation.callIfSet(invitation);
+          await this.onDelegatedInvitation.callIfSet(invitation);
         }
         break;
       }
@@ -62,7 +62,7 @@ export class InvitationStateMachine {
           const existingInvitation = this._invitations.get(assertion.invitationCredentialId);
           if (existingInvitation != null && !existingInvitation.multiUse) {
             this._invitations.delete(assertion.invitationCredentialId);
-            await this.onOutstandingInvitationRemoved.callIfSet(existingInvitation);
+            await this.onDelegatedInvitationRemoved.callIfSet(existingInvitation);
           }
         }
         break;

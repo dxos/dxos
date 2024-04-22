@@ -8,6 +8,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TypedMessage } from '@dxos/protocols';
 import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
@@ -22,6 +23,7 @@ export interface SpaceState {
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
   readonly creator: MemberInfo | undefined;
+  readonly invitations: DelegateSpaceInvitation[];
 
   addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
@@ -61,6 +63,8 @@ export class SpaceStateMachine implements SpaceState {
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
+  readonly onDelegatedInvitation = this._invitations.onDelegatedInvitation;
+  readonly onDelegatedInvitationRemoved = this._invitations.onDelegatedInvitationRemoved;
 
   constructor(private readonly _spaceKey: PublicKey) {}
 
@@ -86,6 +90,10 @@ export class SpaceStateMachine implements SpaceState {
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
+  }
+
+  get invitations(): DelegateSpaceInvitation[] {
+    return [...this._invitations.invitations.values()];
   }
 
   async addCredentialProcessor(processor: CredentialProcessor) {

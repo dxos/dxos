@@ -12,10 +12,11 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
@@ -23,6 +24,7 @@ import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
+import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -78,6 +80,7 @@ export class DataSpaceManager {
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _automergeHost: AutomergeHost,
+    private readonly _invitationsManager: InvitationsManager,
     params?: DataSpaceManagerRuntimeParams,
   ) {
     const {
@@ -247,6 +250,9 @@ export class DataSpaceManager {
         log.warn('auth failure');
       },
       memberKey: this._signingContext.identityKey,
+      onDelegatedInvitationStatusChange: (invitation, isActive) => {
+        return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
+      },
     });
     controlFeed && (await space.setControlFeed(controlFeed));
     dataFeed && (await space.setDataFeed(dataFeed));
@@ -267,6 +273,7 @@ export class DataSpaceManager {
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
+            this._createDelegatedInvitations(space.spaceState.invitations);
             this.updated.emit();
           }
         },
@@ -288,5 +295,36 @@ export class DataSpaceManager {
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private async _handleInvitationStatusChange(
+    dataSpace: DataSpace | undefined,
+    invitation: DelegateSpaceInvitation,
+    isActive: boolean,
+  ): Promise<void> {
+    if (dataSpace?.state !== SpaceState.READY) {
+      return;
+    }
+    if (isActive) {
+      this._createDelegatedInvitations([invitation]);
+    } else {
+      await this._invitationsManager.cancelInvitation(invitation);
+    }
+  }
+
+  private _createDelegatedInvitations(invitations: DelegateSpaceInvitation[]) {
+    invitations.forEach((invitation) => {
+      this._invitationsManager.createInvitation({
+        type: Invitation.Type.INTERACTIVE,
+        kind: Invitation.Kind.SPACE,
+        authMethod: invitation.authMethod,
+        invitationId: invitation.invitationId,
+        swarmKey: invitation.swarmKey,
+        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
+        lifetime: invitation.expiresOn ? invitation.expiresOn.getTime() - Date.now() : undefined,
+        multiUse: invitation.multiUse,
+        persistent: false,
+      });
+    });
   }
 }

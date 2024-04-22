@@ -11,6 +11,7 @@ import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
@@ -42,6 +43,7 @@ export type ConstructSpaceParams = {
    */
   onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
+  onDelegatedInvitationStatusChange: (invitation: DelegateSpaceInvitation, isActive: boolean) => Promise<void>;
 };
 
 /**
@@ -84,6 +86,7 @@ export class SpaceManager {
     swarmIdentity,
     onAuthorizedConnection,
     onAuthFailure,
+    onDelegatedInvitationStatusChange,
     memberKey,
   }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
@@ -111,6 +114,7 @@ export class SpaceManager {
       metadataStore: this._metadataStore,
       snapshotManager,
       memberKey,
+      onDelegatedInvitationStatusChange,
     });
     this._spaces.set(space.key, space);
 

@@ -36,11 +36,11 @@ export class InvitationsManager {
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
-    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol,
+    private readonly _getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
     private readonly _metadataStore: MetadataStore,
   ) {}
 
-  createInvitation(options: Invitation): CancellableInvitation {
+  createInvitation(options: Partial<Invitation> & Pick<Invitation, 'invitationId' | 'kind'>): CancellableInvitation {
     const existingInvitation = this._createInvitations.get(options.invitationId);
     if (existingInvitation) {
       return existingInvitation;

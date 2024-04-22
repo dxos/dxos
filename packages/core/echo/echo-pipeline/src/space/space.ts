@@ -11,6 +11,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { Callback, type AsyncCallback } from '@dxos/util';
@@ -35,6 +36,8 @@ export type SpaceParams = {
 
   // TODO(dmaretskyi): Superseded by epochs.
   snapshotId?: string | undefined;
+
+  onDelegatedInvitationStatusChange: (invitation: DelegateSpaceInvitation, isActive: boolean) => Promise<void>;
 };
 
 export type CreatePipelineParams = {
@@ -98,6 +101,14 @@ export class Space extends Resource {
       await this.onCredentialProcessed.callIfSet(credential);
       log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
+    });
+    this._controlPipeline.onDelegatedInvitation.set(async (invitation) => {
+      log('onDelegatedInvitation', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, true);
+    });
+    this._controlPipeline.onDelegatedInvitationRemoved.set(async (invitation) => {
+      log('onDelegatedInvitationRemoved', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, false);
     });
 
     // Start replicating the genesis feed.
