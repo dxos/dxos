@@ -148,7 +148,8 @@ export class Query<T extends {} = any> {
       this._sources.delete(source);
     });
 
-    log.info('construct', { filter: this._filter.toProto() })
+    log.info('construct', { filter: this._filter.toProto() });
+    this._queryContext.start();
   }
 
   get filter(): Filter {
