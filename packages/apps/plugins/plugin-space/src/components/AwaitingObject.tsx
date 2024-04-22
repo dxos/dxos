@@ -25,9 +25,11 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const client = useClient();
+
+  // TODO(dmaretskyi): Any reason not to useQuery here?
   const query = useMemo(() => client.spaces.query(), []);
   const objects = useSyncExternalStore(
-    (cb) => query.subscribe(cb),
+    useMemo(() => (cb) => query.subscribe(cb), [query]),
     () => query.objects,
   );
 
