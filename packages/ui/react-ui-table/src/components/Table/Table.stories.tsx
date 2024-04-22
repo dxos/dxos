@@ -398,8 +398,34 @@ export const TenThousandRows = {
 const state = deepSignal({ items: createItems(10) });
 
 export const RealTimeUpdates = {
-  render: () => {
+  args: {
+    periodicMutations: true,
+    mutationInterval: 1000,
+    periodicDeletions: false,
+    deletionInterval: 5000,
+    periodicInsertions: false,
+    insertionInterval: 3000,
+  },
+  argTypes: {
+    mutationInterval: { control: 'number' },
+    periodicDeletions: { control: 'boolean' },
+    deletionInterval: { control: 'number' },
+    periodicInsertions: { control: 'boolean' },
+    insertionInterval: { control: 'number' },
+  },
+  render: ({
+    periodicMutations,
+    mutationInterval,
+    periodicDeletions,
+    deletionInterval,
+    periodicInsertions,
+    insertionInterval,
+  }: any) => {
     useEffect(() => {
+      if (!periodicMutations) {
+        return;
+      }
+
       const interval = setInterval(() => {
         const stateVal = state.$items?.value;
 
@@ -412,10 +438,47 @@ export const RealTimeUpdates = {
         stateVal[randomIndex].name = faker.commerce.productName();
         stateVal[randomIndex].count = Math.floor(Math.random() * 1000);
         stateVal[randomIndex].started = new Date();
-      }, 1000);
+      }, mutationInterval);
 
       return () => clearInterval(interval);
-    }, [state]);
+    }, [periodicMutations, mutationInterval]);
+
+    useEffect(() => {
+      if (!periodicInsertions) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        const stateVal = state.$items?.value;
+
+        if (!stateVal) {
+          return;
+        }
+
+        stateVal.push(createItems(1)[0]);
+      }, insertionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicInsertions, insertionInterval]);
+
+    useEffect(() => {
+      if (!periodicDeletions) {
+        return;
+      }
+      const interval = setInterval(() => {
+        const stateVal = state.$items?.value;
+
+        if (!stateVal) {
+          return;
+        }
+
+        // Randomly delete a row from stateVal
+        const randomIndex = Math.floor(Math.random() * stateVal.length);
+        stateVal.splice(randomIndex, 1);
+      }, deletionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicDeletions, deletionInterval]);
 
     const containerRef = useRef<HTMLDivElement | null>(null);
 
