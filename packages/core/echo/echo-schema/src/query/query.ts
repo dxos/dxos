@@ -219,13 +219,13 @@ export class Query<T extends {} = any> {
   subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
     invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
 
-    log.info('subscribe');
+    log('subscribe');
     this._subscribers++;
     const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
     this._handleQueryLifecycle();
 
     const unsubscribe = () => {
-      log.info('unsubscribe');
+      log('unsubscribe');
       this._subscribers--;
       unsubscribeFromEvent?.();
       this._handleQueryLifecycle();
