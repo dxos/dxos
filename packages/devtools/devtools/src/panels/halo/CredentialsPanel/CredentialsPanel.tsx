@@ -27,8 +27,8 @@ const columns: TableColumnDef<Credential, any>[] = [
 ];
 
 export const CredentialsPanel = () => {
-  const { space } = useDevtoolsState();
-  const credentials = useCredentials({ spaceKey: space?.key });
+  const { space, haloSpaceKey } = useDevtoolsState();
+  const credentials = useCredentials({ spaceKey: haloSpaceKey || space?.key });
 
   return (
     <PanelContainer
