@@ -147,7 +147,7 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
   }
 
-  toggleFolderCollapsed(nth = 0) {
+  toggleCollectionCollapsed(nth = 0) {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
@@ -159,10 +159,10 @@ export class AppManager {
   }
 
   // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createFolder(nth?: number) {
+  async createCollection(nth?: number) {
     const object = this.page.getByTestId('spacePlugin.createObject');
     await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId('spacePlugin.createFolder').click();
+    return this.page.getByTestId('spacePlugin.createCollection').click();
   }
 
   async renameObject(newName: string, nth = 0) {

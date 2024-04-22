@@ -187,11 +187,16 @@ export const updateGraphWithSpace = ({
           {
             id: getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')),
             data: () =>
-              dispatch({
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection, object: create(Collection, { objects: [], views: {} }) },
-              }),
+              dispatch([
+                {
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: collection, object: create(Collection, { objects: [], views: {} }) },
+                },
+                {
+                  action: NavigationAction.ACTIVATE,
+                },
+              ]),
             properties: {
               label: ['create collection label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <CardsThree {...props} />,
