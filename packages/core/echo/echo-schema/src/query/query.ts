@@ -71,6 +71,9 @@ export interface QuerySource {
    * Set the filter and trigger the query.
    */
   update(filter: Filter): void;
+
+  // TODO(dmaretskyi): Make async.
+  close(): void;
 }
 
 export interface QueryContext {

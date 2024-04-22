@@ -173,7 +173,9 @@ export class Hypergraph {
           context.addQuerySource(provider.create());
         }
       },
-      onStop: () => {},
+      onStop: () => {
+        this._queryContexts.delete(context);
+      },
     });
     this._queryContexts.add(context);
 
@@ -188,13 +190,15 @@ export interface QuerySourceProvider {
 export type GraphQueryContextParams = {
   // TODO(dmaretskyi): Make async.
   onStart: () => void;
-  // TODO(dmaretskyi): Make async.
+
   onStop: () => void;
 };
 
 export class GraphQueryContext implements QueryContext {
   public added = new Event<QuerySource>();
   public removed = new Event<QuerySource>();
+
+  private readonly _querySources: QuerySource[] = [];
 
   constructor(private readonly _params: GraphQueryContextParams) {}
 
@@ -204,9 +208,13 @@ export class GraphQueryContext implements QueryContext {
 
   stop() {
     this._params.onStop();
+    for (const source of this._querySources) {
+      this.removed.emit(source);
+    }
   }
 
   addQuerySource(querySource: QuerySource) {
+    this._querySources.push(querySource);
     this.added.emit(querySource);
   }
 }
@@ -293,4 +301,6 @@ class SpaceQuerySource implements QuerySource {
     this._results = undefined;
     this.changed.emit();
   }
+
+  close() {}
 }

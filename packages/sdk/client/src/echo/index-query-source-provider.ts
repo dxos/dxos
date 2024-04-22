@@ -19,6 +19,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { nonNullable } from '@dxos/util';
 
 import { type SpaceProxy } from './space-proxy';
+import { invariant } from '@dxos/invariant';
 
 export type IndexQueryProviderParams = {
   service: IndexService;
@@ -42,6 +43,8 @@ export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
   private _results?: QueryResult[] = [];
   private _stream?: Stream<QueryResponse>;
+  // TODO(dmaretskyi): Resource baseclass.
+  private _closed = false;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
@@ -50,6 +53,7 @@ export class IndexQuerySource implements QuerySource {
   }
 
   update(filter: Filter): void {
+    invariant(!this._closed, 'Query source is closed.');
     if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
       return;
     }
@@ -112,5 +116,10 @@ export class IndexQuerySource implements QuerySource {
 
       this.changed.emit();
     });
+  }
+
+  close(): void {
+    void this._stream?.close();
+    this._closed = true;
   }
 }
