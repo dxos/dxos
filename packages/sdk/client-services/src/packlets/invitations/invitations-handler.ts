@@ -193,7 +193,7 @@ export class InvitationsHandler {
       return extension;
     };
 
-    if (invitation.lifetime && invitation.created && invitation.lifetime !== 0) {
+    if (invitation.lifetime && invitation.created) {
       if (invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()) {
         log.warn('invitation has already expired');
       } else {
@@ -251,7 +251,6 @@ export class InvitationsHandler {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     invariant(protocol);
 
-    // TODO(nf): duplicate check in InvitationsService
     if (deviceProfile) {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
     }
