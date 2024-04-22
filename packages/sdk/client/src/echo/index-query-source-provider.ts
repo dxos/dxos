@@ -13,13 +13,13 @@ import {
   type QuerySource,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { nonNullable } from '@dxos/util';
 
 import { type SpaceProxy } from './space-proxy';
-import { invariant } from '@dxos/invariant';
 
 export type IndexQueryProviderParams = {
   service: IndexService;

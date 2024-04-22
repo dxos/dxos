@@ -5,6 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
@@ -13,8 +14,6 @@ import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
 import { type EchoReactiveObject } from '../ddl';
 import { prohibitSignalActions } from '../guarded-scope';
-import { UndefinedKeyword } from '@effect/schema/AST';
-import { invariant } from '@dxos/invariant';
 
 // TODO(burdon): Reconcile with echo-db/database/selection.
 
