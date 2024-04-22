@@ -19,24 +19,24 @@ const app = new Hono<Env>();
 /**
  * Access control.
  */
-app.use('/', (context, next) => {
+app.use('/', (c, next) => {
   const jwtMiddleware = jwt({
-    secret: context.env.JWT_SECRET,
+    secret: c.env.JWT_SECRET,
     cookie: 'access_token',
   });
 
   // https://hono.dev/middleware/builtin/jwt
-  return jwtMiddleware(context, next);
+  return jwtMiddleware(c, next);
 });
 
 /**
  * Serve app.
  */
 // TODO(burdon): Serve app as static resource: https://github.com/honojs/examples/tree/main/serve-static
-app.get('/', async (context) => {
-  const token = getCookie(context, 'access_token');
+app.get('/', async (c) => {
+  const token = getCookie(c, 'access_token');
   if (!token) {
-    return context.redirect('/signup');
+    return c.redirect('/signup');
   }
 
   const { payload } = decode(token);
@@ -44,7 +44,7 @@ app.get('/', async (context) => {
 
   // https://hono.dev/helpers/html
   // TODO(burdon): Serve content HTML page from netlify.
-  return context.html(html`
+  return c.html(html`
     <!doctype html>
     <body>
       <h1>Welcome to Composer!</h1>
@@ -57,28 +57,28 @@ app.get('/', async (context) => {
 /**
  * Set JWT from one time link.
  */
-app.get('/access', async (context) => {
+app.get('/access', async (c) => {
   // Check token matches.
-  const { searchParams } = new URL(context.req.url);
+  const { searchParams } = new URL(c.req.url);
   const email = decodeURIComponent(searchParams.get('email')!);
   const accessToken = decodeURIComponent(searchParams.get('access_token')!);
-  const user = await new UserManager(context.env.DB).getUserByEmail(email);
+  const user = await new UserManager(c.env.DB).getUserByEmail(email);
   if (!user || !accessToken || user.accessToken !== accessToken) {
     throw new HTTPException(401);
   }
 
   // Create access token.
   const payload = { email, composer: true, agent: false };
-  const token = await sign(payload, context.env.JWT_SECRET);
+  const token = await sign(payload, c.env.JWT_SECRET);
   log.info('created token', { user: user.id, payload });
 
   // https://hono.dev/helpers/cookie
   // TODO(burdon): https://hono.dev/helpers/cookie#following-the-best-practices
   // https://stackoverflow.com/questions/37582444/jwt-vs-cookies-for-token-based-authentication
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-  setCookie(context, 'access_token', token, {
+  setCookie(c, 'access_token', token, {
     // NOTE: Setting domain breaks curl.
-    secure: context.env.WORKER_ENV === 'production',
+    secure: c.env.WORKER_ENV === 'production',
     httpOnly: true,
   });
 
@@ -86,22 +86,22 @@ app.get('/access', async (context) => {
   // TODO(burdon): Remove access token (one-off only? Otherwise could be shared).
 
   log.info('redirecting...');
-  return context.redirect('/');
+  return c.redirect('/');
 });
 
 /**
  * Remove cookie.
  */
-app.get('/reset', async (context) => {
-  deleteCookie(context, 'access_token');
-  return context.redirect('/');
+app.get('/reset', async (c) => {
+  deleteCookie(c, 'access_token');
+  return c.redirect('/');
 });
 
 /**
  * Signup form.
  */
-app.get('/signup', async (context) => {
-  return context.html(html`
+app.get('/signup', async (c) => {
+  return c.html(html`
     <!doctype html>
     <body>
       <h1>Join the Composer Beta</h1>
@@ -116,21 +116,21 @@ app.get('/signup', async (context) => {
 /**
  * Process signup.
  */
-app.post('/signup', async (context) => {
-  const { email } = await context.req.parseBody<{ email: string }>();
-  const user = await new UserManager(context.env.DB).insertUser({ email });
-  if (context.env.WORKER_ENV === 'production') {
+app.post('/signup', async (c) => {
+  const { email } = await c.req.parseBody<{ email: string }>();
+  const user = await new UserManager(c.env.DB).insertUser({ email });
+  if (c.env.WORKER_ENV === 'production') {
     await sendEmail(user, createMessage(templates.signup, { invite_url: DISCORD_INVITE_URL }));
   }
 
-  return context.redirect('/thanks');
+  return c.redirect('/thanks');
 });
 
 /**
  * Landing page.
  */
-app.get('/thanks', async (context) => {
-  return context.html(html`
+app.get('/thanks', async (c) => {
+  return c.html(html`
     <!doctype html>
     <body>
       <h1>Thanks, we'll be in touch soon.</h1>

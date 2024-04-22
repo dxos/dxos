@@ -4,9 +4,12 @@
 
 import { DurableObject } from 'cloudflare:workers';
 
+import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { decodeMessage, encodeMessage } from './protocol';
+import { type Env } from '../defs';
 
 /**
  * WebSockets are long-lived TCP connections that enable bi-directional, real-time communication between client and server.
@@ -21,62 +24,82 @@ import { decodeMessage, encodeMessage } from './protocol';
  *
  * Pricing model.
  * https://developers.cloudflare.com/durable-objects/platform/pricing/#example-2
- * Example: $300/mo for 10,000 peers.
+ * Example: $300/mo for 10,000 peers (very actively connected).
  */
 export class WebSocketServer extends DurableObject {
-  private _connectedSockets = 0;
-
-  // TODO(burdon): Does this support hibernation?
-  // https://developers.cloudflare.com/durable-objects/api/websockets/#state-methods
+  private _connectedSockets;
 
   // This is reset whenever the constructor runs because regular WebSockets do not survive Durable Object resets.
   // WebSockets accepted via the Hibernation API can survive a certain type of eviction, but we will not cover that here.
+  constructor(state: DurableObjectState, env: Env) {
+    super(state, env);
+    this._connectedSockets = 0;
+  }
 
   override async fetch(request: Request) {
     // Creates two ends of a WebSocket connection.
-    const webSocketPair = new WebSocketPair();
-    const [client, server] = Object.values(webSocketPair);
+    const [client, server] = Object.values(new WebSocketPair());
+    const swarmKey = PublicKey.from(request.url.split('/').pop()!);
 
-    Object.assign(server, {
-      // If the client closes the connection, the runtime will close the connection too.
-      onclose: (event) => {
-        log.info('closing...', { code: event.code });
+    // Bind the socket to the Durable Object but make it hibernatable.
+    // https://developers.cloudflare.com/durable-objects/api/websockets/#state-methods
+    // TODO(burdon): Assign tag?
+    this.ctx.acceptWebSocket(server, [swarmKey.toHex()]);
 
-        // Check if client has disconnected.
-        // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
-        if (event.code !== 1005) {
-          server.close(event.code, 'WebSocketServer is closing WebSocket');
-        }
+    // TODO(burdon): Auto-respond without waking object.
+    // this.ctx.setWebSocketAutoResponse();
 
-        this._connectedSockets -= 1;
-        log.info('closed', { count: this._connectedSockets });
-      },
-
-      onerror: (event) => {
-        log.catch(event);
-      },
-
-      onmessage: (event) => {
-        const data = decodeMessage(event.data) || {};
-        log.info('message', { data });
-        if (data?.swarmKey) {
-          const n = this.ctx.getWebSockets().length;
-          server.send(encodeMessage({ swarmKey: data?.swarmKey, data: { n, sockets: this._connectedSockets } }));
-        }
-      },
-    } satisfies Partial<WebSocket>);
-
-    // Tells the runtime that this WebSocket is to begin terminating request within the Durable Object.
-    // It has the effect of "accepting" the connection, and allowing the WebSocket to send and receive messages.
-    // @ts-ignore
-    server.accept();
     this._connectedSockets += 1;
-    log.info('connected', { url: request.url, count: this._connectedSockets });
+    log.info('connected', { swarmKey: swarmKey.truncate(), count: this._connectedSockets });
 
-    // Change (upgrade) protocol.
     return new Response(null, {
-      status: 101,
+      status: 101, // Change (upgrade) protocol.
       webSocket: client,
     });
+  }
+
+  override async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
+    log.info('closing...', { code });
+
+    // Check if client has disconnected.
+    // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
+    if (code !== 1005) {
+      ws.close(code, 'WebSocketServer is closing WebSocket');
+    }
+
+    this._connectedSockets -= 1;
+    log.info('closed', { count: this._connectedSockets });
+  }
+
+  override async webSocketError(ws: WebSocket, error: Error) {
+    log.catch(error);
+  }
+
+  // TODO(burdon): Implement protocol:
+  //  - advertise
+  //  - offer
+  //  - answer
+
+  override async webSocketMessage(ws: WebSocket, _message: ArrayBuffer | string) {
+    const message = decodeMessage(_message) || {};
+    log.info('message', { message });
+
+    const { peerKey, data } = message;
+    invariant(peerKey, 'Missing peerKey.');
+    // @ts-ignore
+    ws.serializeAttachment({ peerKey });
+
+    if (data === 'ping') {
+      ws.send(encodeMessage({ data: 'pong' }));
+    } else {
+      // Broadcast to all connected peers.
+      for (const peer of this.ctx.getWebSockets()) {
+        if (peer !== ws) {
+          // @ts-ignore
+          // const { peerKey } = peer.deserializeAttachment() ?? {};
+          peer.send(encodeMessage({ peerKey, data }));
+        }
+      }
+    }
   }
 }

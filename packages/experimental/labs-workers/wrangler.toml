@@ -27,8 +27,8 @@ class_name = "SwarmObject"
 name = "WEBSOCKET"
 class_name = "WebSocketServer"
 
-[ai]
-binding = "AI"
+#[ai]
+#binding = "AI"
 
 [[migrations]]
 tag = "v1"
