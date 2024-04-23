@@ -10,7 +10,7 @@ import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { Filter, create } from '@dxos/echo-schema';
-import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
+import { QueryServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
@@ -23,7 +23,7 @@ import { QueryOptions } from '../echo';
 import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { ContactType, TestBuilder } from '../testing';
 
-describe('Index queries', () => {
+describe.only('Index queries', () => {
   test('indexing stack', async () => {
     const builder = new TestBuilder();
     builder.level = createTestLevel();
@@ -59,7 +59,7 @@ describe('Index queries', () => {
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
 
-    const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
+    const service = new QueryServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
     const indexQuerySourceProvider = new IndexQuerySourceProvider({
       service,
       echo: client.spaces,

@@ -4,39 +4,32 @@
 
 import { DeferredTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type QueryRequest, type QueryResponse, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
 
-export type QueryServiceParams = {
+type QueryStateParams = {
   indexer: Indexer;
   automergeHost: AutomergeHost;
+  onClose: () => Promise<void>;
 };
 
-export class QueryServiceImpl implements QueryService {
-  private readonly _ctx = new Context();
-  constructor(private readonly _params: QueryServiceParams) {}
+export class QueryState {
+  private _resultsStream: Stream<QueryResponse> | undefined = undefined;
 
-  async setIndexConfig(config: IndexConfig): Promise<void> {
-    if (this._params.indexer.initialized) {
-      log.warn('Indexer already initialized. Cannot change config.');
-      return;
-    }
-    this._params.indexer.setIndexConfig(config);
-    await this._params.indexer.initialize();
-  }
+  constructor(private readonly _params: QueryStateParams) {}
 
-  find(request: QueryRequest): Stream<QueryResponse> {
+  createResultsStream(request: QueryRequest): Stream<QueryResponse> {
+    invariant(!this._resultsStream, 'Results stream already exists');
     const filter = Filter.fromProto(request.filter);
-    return new Stream(({ next, ctx }) => {
+    this._resultsStream = new Stream<QueryResponse>(({ next, ctx }) => {
       // Previous id-s.
       let previousResults: string[] = [];
 
@@ -54,7 +47,7 @@ export class QueryServiceImpl implements QueryService {
                     // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
                     await handle.whenReady();
                   }
-                  if (this._ctx.disposed || ctx.disposed) {
+                  if (ctx.disposed) {
                     return;
                   }
                   const spaceKey = getSpaceKeyFromDoc(handle.docSync());
@@ -77,7 +70,7 @@ export class QueryServiceImpl implements QueryService {
               )
             ).filter(nonNullable),
           };
-          if (this._ctx.disposed || ctx.disposed) {
+          if (ctx.disposed) {
             return;
           }
 
@@ -100,10 +93,18 @@ export class QueryServiceImpl implements QueryService {
       this._params.indexer.updated.on(ctx, () => updateTask.schedule());
 
       updateTask.schedule();
-    });
-  }
 
-  destroy() {
-    void this._ctx.dispose();
+      return () => {
+        queueMicrotask(async () => {
+          try {
+            await this._params.onClose();
+          } catch (err) {
+            log.catch(err);
+          }
+        });
+      };
+    });
+
+    return this._resultsStream;
   }
 }
