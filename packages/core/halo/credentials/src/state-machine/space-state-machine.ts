@@ -169,7 +169,6 @@ export class SpaceStateMachine implements SpaceState {
 
         toBeRevoked.revoked = true;
         await this._members.onRevoked(toBeRevoked.credential, credential);
-        await this._invitations.process(credential);
         break;
       }
       case 'dxos.halo.credentials.SpaceGenesis': {
