@@ -225,6 +225,7 @@ export class GraphQueryContext implements QueryContext {
 class SpaceQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
+  private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoReactiveObject<any>>[] = undefined;
 
@@ -257,6 +258,14 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
+  async run(filter: Filter): Promise<QueryResult<EchoReactiveObject<any>>[]> {
+    let results: QueryResult<EchoReactiveObject<any>>[] = [];
+    prohibitSignalActions(() => {
+      results = this._query(filter);
+    });
+    return results;
+  }
+
   getResults(): QueryResult<EchoReactiveObject<any>>[] {
     if (!this._filter) {
       return [];
@@ -264,26 +273,14 @@ class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        this._results = this._database.automerge
-          .allObjectCores()
-          // TODO(dmaretskyi): Cleanup proxy <-> core.
-          .filter((core) => filterMatch(this._filter!, core))
-          .map((core) => ({
-            id: core.id,
-            spaceKey: this.spaceKey,
-            object: core.rootProxy as EchoReactiveObject<any>,
-            resolution: {
-              source: 'local',
-              time: 0,
-            },
-          }));
+        this._results = this._query(this._filter!);
       });
     }
 
     return this._results!;
   }
 
-  run(filter: Filter<EchoReactiveObject<any>>): void {
+  update(filter: Filter<EchoReactiveObject<any>>): void {
     if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       // Disabled by spaces filter.
       this._filter = undefined;
@@ -296,14 +293,38 @@ class SpaceQuerySource implements QuerySource {
       return;
     }
 
+    void this._ctx.dispose().catch();
+    this._ctx = new Context();
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+    this._database.automerge._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();
   }
 
-  close() {}
+  close() {
+    this._filter = undefined;
+    this._results = undefined;
+    void this._ctx.dispose().catch();
+  }
+
+  private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
+    return (
+      this._database.automerge
+        .allObjectCores()
+        // TODO(dmaretskyi): Cleanup proxy <-> core.
+        .filter((core) => filterMatch(filter, core))
+        .map((core) => ({
+          id: core.id,
+          spaceKey: this.spaceKey,
+          object: core.rootProxy as EchoReactiveObject<any>,
+          resolution: {
+            source: 'local',
+            time: 0,
+          },
+        }))
+    );
+  }
 }
