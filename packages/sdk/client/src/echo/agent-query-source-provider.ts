@@ -109,6 +109,10 @@ export class AgentQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
+  run(): Promise<QueryResult[]> {
+    throw new Error('not implemented');
+  }
+
   update(filter: Filter): void {
     if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
