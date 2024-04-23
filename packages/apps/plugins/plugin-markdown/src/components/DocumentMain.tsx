@@ -42,7 +42,10 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
     };
   }, [doc]);
 
-  const comments = doc.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
+  const comments =
+    doc.comments
+      ?.filter((comment) => comment.thread?.id && comment.cursor)
+      .map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
 
   if (!doc.content) {
     return null;
