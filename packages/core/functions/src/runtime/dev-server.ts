@@ -72,6 +72,7 @@ export class DevServer {
     app.post('/:name', async (req, res) => {
       const { name } = req.params;
       try {
+        log.info('calling', { name });
         if (this._options.reload) {
           const { def } = this._handlers[name];
           await this._load(def, true);
@@ -80,7 +81,7 @@ export class DevServer {
         res.statusCode = await this._invoke(name, req.body);
         res.end();
       } catch (err: any) {
-        log.error(`Function failed: ${name}`, err);
+        log.catch(err);
         res.statusCode = 500;
         res.end();
       }
