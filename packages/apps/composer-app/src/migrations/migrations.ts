@@ -2,10 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
+import * as S from '@effect/schema/Schema';
+
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
+import { create, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
+
+export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
+  name: S.optional(S.string),
+  objects: S.mutable(S.array(ref(Expando))),
+}) {}
 
 export const migrations: Migration[] = [
   {

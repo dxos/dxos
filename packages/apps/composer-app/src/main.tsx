@@ -43,6 +43,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
+import { type Collection } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -211,12 +212,16 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
-        onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
+        onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
-          const { DocumentType, TextV0Type } = await import('@braneframe/types');
+          const { DocumentType, TextV0Type, Collection, getSpaceProperty } = await import('@braneframe/types');
+          const personalSpaceCollection = getSpaceProperty<Collection | undefined>(
+            client.spaces.default,
+            Collection.typename,
+          );
           const content = create(TextV0Type, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
-          personalSpaceFolder.objects.push(document);
+          personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.ACTIVATE,
             data: { id: document.id },

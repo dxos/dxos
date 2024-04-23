@@ -3,9 +3,9 @@
 //
 
 export * from './AwaitingObject';
+export * from './CollectionMain';
 export * from './EmptySpace';
 export * from './EmptyTree';
-export * from './FolderMain';
 export * from './MissingObject';
 export * from './PersistenceStatus';
 export * from './PopoverRemoveObject';

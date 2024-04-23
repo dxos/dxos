@@ -4,14 +4,14 @@
 
 import { expect } from 'chai';
 
-import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
-import { migrations } from './migrations';
+import { FolderType, migrations } from './migrations';
 
 const testBuilder = new TestBuilder();
 

@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { StackType, DocumentType } from '@braneframe/types';
+import { Collection, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { Filter } from '@dxos/echo-schema';
@@ -45,8 +45,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Filter.schema(StackType));
-              let previousObjects: StackType[] = [];
+              const query = space.db.query(Filter.schema(Collection));
+              let previousObjects: Collection[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -106,8 +106,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof StackType && state.presenting
-                ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
+              return data.active instanceof Collection && state.presenting
+                ? { node: <PresenterMain collection={data.active} />, disposition: 'hoist' }
                 : null;
             case 'slide':
               return data.slide instanceof DocumentType ? <MarkdownSlideMain document={data.slide} /> : null;

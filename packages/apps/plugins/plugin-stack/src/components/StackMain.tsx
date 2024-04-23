@@ -3,9 +3,9 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback, type FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
+import { FileType, Section, StackView } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -16,8 +16,8 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, Filter, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -38,23 +38,21 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
 };
 
-const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
+const StackMain: FC<{ stack: StackView; separation?: boolean }> = ({ stack, separation }) => {
   const { dispatch } = useIntent();
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const id = `stack-${stack.id}`;
-  const items = stack.sections
-    .filter(nonNullable)
-    // TODO(wittjosiah): Should the database handle this differently?
-    // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => object)
-    .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
-      return { id, object: object as SectionType, ...rest };
-    });
-  const space = getSpace(stack);
-  const [folder] = useQuery(space, Filter.schema(FolderType));
+  const items =
+    stack.collection?.objects
+      // TODO(wittjosiah): Should the database handle this differently?
+      // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+      .filter(nonNullable)
+      .map((object) => {
+        const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
+        return { id, object, ...rest };
+      }) ?? [];
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
@@ -64,7 +62,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveObject(data) || data instanceof StackType) {
+    if (!isReactiveObject(data) || data instanceof StackView) {
       return 'reject';
     }
 
@@ -77,38 +75,45 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+    invariant(stack.collection, 'Referenced collection is missing.');
+
     if (
       (active.path === Path.create(id, active.item.id) || active.path === id) &&
       (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
     ) {
-      stack.sections.splice(active.position!, 1);
+      stack.collection.objects.splice(active.position!, 1);
+      delete stack.sections[active.item.id];
     }
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
-    // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, create(SectionType, { object }));
+      stack.collection.objects.splice(over.position!, 0, object);
     } else if (object && over.path === id) {
-      stack.sections.push(create(SectionType, { object }));
+      stack.collection.objects.push(object);
+    }
+
+    if (!stack.sections[object.id]) {
+      stack.sections[object.id] = {};
     }
   };
 
   const handleDelete = (path: string) => {
-    const index = stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
+    invariant(stack.collection, 'Referenced collection is missing.');
+
+    const index = stack.collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
-      stack.sections.splice(index, 1);
+      stack.collection.objects.splice(index, 1);
+      delete stack.sections[Path.last(path)];
     }
   };
 
-  const handleAdd = useCallback(
-    (sectionObject: SectionType['object']) => {
-      stack.sections.push(create(SectionType, { object: sectionObject }));
-      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
-      folder?.objects.push(sectionObject);
-    },
-    [stack, stack.sections],
-  );
+  const handleAdd = (sectionObject: EchoReactiveObject<any>) => {
+    invariant(stack.collection, 'Referenced collection is missing.');
+
+    stack.collection.objects.push(sectionObject);
+    stack.sections[sectionObject.id] = {};
+  };
 
   // TODO(wittjosiah): Factor out.
   const handleFileUpload = fileManagerPlugin?.provides.file.upload
@@ -151,7 +156,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={SectionType.typename}
+        type={Section.identifier}
         items={items}
         separation={separation}
         transform={handleTransform}

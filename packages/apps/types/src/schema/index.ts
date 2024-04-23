@@ -3,6 +3,7 @@
 //
 
 export * from './chain';
+export * from './collection';
 export * from './document';
 export * from './file';
 export * from './folder';
