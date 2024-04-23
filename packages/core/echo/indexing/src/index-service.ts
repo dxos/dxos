@@ -51,7 +51,10 @@ export class IndexServiceImpl implements IndexService {
                 results.map(async (result) => {
                   const { objectId, documentId } = idCodec.decode(result.id);
                   const handle = this._params.automergeHost.repo.find(documentId as any);
-                  await handle.whenReady();
+                  if (!handle.isReady()) {
+                    // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+                    await handle.whenReady();
+                  }
                   if (this._ctx.disposed || ctx.disposed) {
                     return;
                   }

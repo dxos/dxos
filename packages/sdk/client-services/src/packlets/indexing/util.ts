@@ -4,7 +4,6 @@
 
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
-import { warnAfterTimeout } from '@dxos/debug';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
 import { type ObjectSnapshot } from '@dxos/indexing';
 import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
@@ -22,7 +21,10 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
     for (const id of ids) {
       const { documentId, objectId } = idCodec.decode(id);
       const handle = automergeHost.repo.find(documentId as any);
-      await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+      if (!handle.isReady()) {
+        // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+        await handle.whenReady();
+      }
       const doc = handle.docSync();
       const hash = getHeads(doc).join('');
       yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], currentHash: hash }] : [];
@@ -47,7 +49,10 @@ export const createDocumentsIterator = (automergeHost: AutomergeHost) =>
         return;
       }
 
-      await warnAfterTimeout(5000, 'to long to load doc', () => handle.whenReady());
+      if (!handle.isReady()) {
+        // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+        await handle.whenReady();
+      }
       const doc = handle.docSync();
 
       const heads = getHeads(doc);
