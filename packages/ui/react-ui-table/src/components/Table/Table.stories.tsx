@@ -8,6 +8,7 @@ import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema/schema';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { AnchoredOverflow, Button, DensityProvider } from '@dxos/react-ui';
@@ -384,6 +385,109 @@ export const TenThousandRows = {
           keyAccessor={(row) => row.publicKey.toHex()}
           columns={columns}
           data={items}
+          fullWidth
+          stickyHeader
+          border
+          getScrollElement={() => containerRef.current}
+        />
+      </div>
+    );
+  },
+};
+
+registerSignalRuntime();
+const state = create({ items: createItems(10) });
+
+export const RealTimeUpdates = {
+  args: {
+    periodicMutations: true,
+    mutationInterval: 1000,
+    periodicDeletions: false,
+    deletionInterval: 5000,
+    periodicInsertions: false,
+    insertionInterval: 3000,
+  },
+  argTypes: {
+    mutationInterval: { control: 'number' },
+    periodicDeletions: { control: 'boolean' },
+    deletionInterval: { control: 'number' },
+    periodicInsertions: { control: 'boolean' },
+    insertionInterval: { control: 'number' },
+  },
+  render: ({
+    periodicMutations,
+    mutationInterval,
+    periodicDeletions,
+    deletionInterval,
+    periodicInsertions,
+    insertionInterval,
+  }: any) => {
+    useEffect(() => {
+      if (!periodicMutations) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        if (state.items.length === 0) {
+          return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        console.log('Mutating row', randomIndex);
+        state.items[randomIndex].name = faker.commerce.productName();
+        state.items[randomIndex].count = Math.floor(Math.random() * 1000);
+        state.items[randomIndex].started = new Date();
+      }, mutationInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicMutations, mutationInterval, state.items]);
+
+    useEffect(() => {
+      if (!periodicInsertions) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        console.log('Inserting...');
+        state.items.push(createItems(1)[0]);
+      }, insertionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicInsertions, insertionInterval, state.items]);
+
+    useEffect(() => {
+      if (!periodicDeletions) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        if (state.items.length === 0) {
+          return;
+        }
+
+        console.log('Deleting');
+
+        // Randomly delete a row from state.items
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        state.items.splice(randomIndex, 1);
+      }, deletionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicDeletions, deletionInterval, state.items]);
+
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    const onUpdate = useCallback((...args: any[]) => {}, []);
+    const columns = useMemo(() => makeColumns(onUpdate), []);
+
+    return (
+      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
+        <Table<Item>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.publicKey.toHex()}
+          columns={columns}
+          data={state.items}
           fullWidth
           stickyHeader
           border

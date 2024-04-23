@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { format } from 'date-fns/format';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -102,14 +102,16 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
 
   // https://tanstack.com/table/v8/docs/examples/react/editable-data
   const initialValue = cellContext.getValue();
-  const [value, setValue] = useState(() => {
-    // TODO(burdon): Temporary shim for automerge.
-    if ((initialValue as any)?.content) {
-      return (initialValue as any)?.content;
-    }
 
-    return initialValue;
-  });
+  const getInitialValue = useCallback(() => {
+    // TODO(burdon): Temporary shim for automerge.
+    return (initialValue as any)?.content ?? initialValue;
+  }, [initialValue]);
+
+  const [value, setValue] = useState(getInitialValue);
+
+  // Update value if initialValue changes externally (cell reactivity).
+  useEffect(() => setValue(getInitialValue()), [getInitialValue]);
 
   const handleSave = () => {
     ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
