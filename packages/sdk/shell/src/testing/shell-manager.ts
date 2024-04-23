@@ -75,7 +75,7 @@ export class ShellManager extends ScopedShellManager {
     await this.shell.getByTestId('device-list-item-current.options').click();
     await this.shell.getByTestId('device-list-item-current.join-existing').click();
     await this.shell.getByTestId('join-new-identity.reset-identity-input').fill('CONFIRM');
-    await this.shell.getByTestId('join-new-identity.reset-identity-input-confirm').click();
+    await this.shell.getByTestId('join-new-identity.reset-identity-confirm').click();
     await this.inputInvitation('device', invitationCode, this.shell);
   }
 
@@ -117,7 +117,8 @@ export class ShellManager extends ScopedShellManager {
 
   private async _onConsoleMessage(message: ConsoleMessage) {
     try {
-      const json = JSON.parse(message.text());
+      const text = message.text();
+      const json = JSON.parse(text.slice(text.indexOf('{')));
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
       }
