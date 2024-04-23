@@ -19,7 +19,7 @@ import { ObjectTable } from './ObjectTable';
 
 faker.seed(1);
 
-const Story = () => {
+const useTable = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
 
@@ -45,6 +45,10 @@ const Story = () => {
     setTable(table);
   }, []);
 
+  return table;
+};
+
+const Story = ({ table }: { table?: TableType }) => {
   const containerRef = React.createRef<HTMLDivElement>();
 
   if (!table) {
@@ -58,14 +62,39 @@ const Story = () => {
   );
 };
 
+const SingleTableStory = () => {
+  const table = useTable();
+
+  return <Story table={table} />;
+};
+
+const MultipleTableStory = () => {
+  const table = useTable();
+
+  return (
+    <div className='flex flex-col gap-4'>
+      <Story table={table} />
+      <Story table={table} />
+      <Story table={table} />
+    </div>
+  );
+};
+
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
-  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
+  render: () => <ClientRepeater component={SingleTableStory} createIdentity createSpace />,
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
+};
+
+export const MultipleTables = () => <ClientRepeater component={MultipleTableStory} createIdentity createSpace />;
+
+MultipleTables.decorators = [withTheme, FullscreenDecorator()];
+MultipleTables.parameters = {
+  layout: 'fullscreen',
 };
 
 export const Default = {};
