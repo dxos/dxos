@@ -273,7 +273,7 @@ export class DataSpaceManager {
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
-            this._createDelegatedInvitations(space.spaceState.invitations);
+            this._createDelegatedInvitations(dataSpace, space.spaceState.invitations);
             this.updated.emit();
           }
         },
@@ -306,17 +306,18 @@ export class DataSpaceManager {
       return;
     }
     if (isActive) {
-      this._createDelegatedInvitations([invitation]);
+      this._createDelegatedInvitations(dataSpace, [invitation]);
     } else {
       await this._invitationsManager.cancelInvitation(invitation);
     }
   }
 
-  private _createDelegatedInvitations(invitations: DelegateSpaceInvitation[]) {
+  private _createDelegatedInvitations(space: DataSpace, invitations: DelegateSpaceInvitation[]) {
     invitations.forEach((invitation) => {
       this._invitationsManager.createInvitation({
         type: Invitation.Type.INTERACTIVE,
         kind: Invitation.Kind.SPACE,
+        spaceKey: space.key,
         authMethod: invitation.authMethod,
         invitationId: invitation.invitationId,
         swarmKey: invitation.swarmKey,

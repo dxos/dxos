@@ -80,6 +80,7 @@ message DelegateSpaceInvitation {
   dxos.client.services.Invitation.AuthMethod auth_method = 2;
   dxos.keys.PublicKey swarm_key = 3;
   dxos.halo.credentials.SpaceMember.Role role = 4;
+  /// Present for AuthMethod.KNOWN_PUBLIC_KEY, where guess needs to prove possession of a corresponding private key
   optional dxos.keys.PublicKey guest_key = 5;
   optional google.protobuf.Timestamp expires_on = 6;
   bool multi_use = 7;
