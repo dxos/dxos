@@ -206,7 +206,7 @@ describe('Reactive Object with ECHO database', () => {
       }
     });
 
-    test.only('does not return deleted objects', async () => {
+    test('does not return deleted objects', async () => {
       const graph = new Hypergraph();
       graph.runtimeSchemaRegistry.registerSchema(TypedObject);
       const { db } = await createDatabase(graph);
@@ -218,7 +218,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(query.objects.length).to.eq(0);
     });
 
-    test.only('deleted objects are returned when re-added', async () => {
+    test('deleted objects are returned when re-added', async () => {
       const graph = new Hypergraph();
       graph.runtimeSchemaRegistry.registerSchema(TypedObject);
       const { db } = await createDatabase(graph);
