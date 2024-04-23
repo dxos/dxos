@@ -216,6 +216,9 @@ const Invitations = (args: { id: number; count: number }) => {
   );
 };
 
+// TODO(wittjosiah): This story fails to start in Safari/Webkit.
+//   The issue appears to be related to dynamic imports during client initialization.
+//   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default = {
   render: (args: { id: number }) => (
     <ClipboardProvider>
