@@ -5,10 +5,10 @@
 import '@dxosTheme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema/schema';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { AnchoredOverflow, Button, DensityProvider } from '@dxos/react-ui';
@@ -395,7 +395,8 @@ export const TenThousandRows = {
   },
 };
 
-const state = deepSignal({ items: createItems(10) });
+registerSignalRuntime();
+const state = create({ items: createItems(10) });
 
 export const RealTimeUpdates = {
   args: {
@@ -427,21 +428,19 @@ export const RealTimeUpdates = {
       }
 
       const interval = setInterval(() => {
-        const stateVal = state.$items?.value;
-
-        if (!stateVal) {
+        if (state.items.length === 0) {
           return;
         }
 
-        const randomIndex = Math.floor(Math.random() * stateVal.length);
-
-        stateVal[randomIndex].name = faker.commerce.productName();
-        stateVal[randomIndex].count = Math.floor(Math.random() * 1000);
-        stateVal[randomIndex].started = new Date();
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        console.log('Mutating row', randomIndex);
+        state.items[randomIndex].name = faker.commerce.productName();
+        state.items[randomIndex].count = Math.floor(Math.random() * 1000);
+        state.items[randomIndex].started = new Date();
       }, mutationInterval);
 
       return () => clearInterval(interval);
-    }, [periodicMutations, mutationInterval]);
+    }, [periodicMutations, mutationInterval, state.items]);
 
     useEffect(() => {
       if (!periodicInsertions) {
@@ -449,36 +448,32 @@ export const RealTimeUpdates = {
       }
 
       const interval = setInterval(() => {
-        const stateVal = state.$items?.value;
-
-        if (!stateVal) {
-          return;
-        }
-
-        stateVal.push(createItems(1)[0]);
+        console.log('Inserting...');
+        state.items.push(createItems(1)[0]);
       }, insertionInterval);
 
       return () => clearInterval(interval);
-    }, [periodicInsertions, insertionInterval]);
+    }, [periodicInsertions, insertionInterval, state.items]);
 
     useEffect(() => {
       if (!periodicDeletions) {
         return;
       }
-      const interval = setInterval(() => {
-        const stateVal = state.$items?.value;
 
-        if (!stateVal) {
+      const interval = setInterval(() => {
+        if (state.items.length === 0) {
           return;
         }
 
-        // Randomly delete a row from stateVal
-        const randomIndex = Math.floor(Math.random() * stateVal.length);
-        stateVal.splice(randomIndex, 1);
+        console.log('Deleting');
+
+        // Randomly delete a row from state.items
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        state.items.splice(randomIndex, 1);
       }, deletionInterval);
 
       return () => clearInterval(interval);
-    }, [periodicDeletions, deletionInterval]);
+    }, [periodicDeletions, deletionInterval, state.items]);
 
     const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -492,7 +487,7 @@ export const RealTimeUpdates = {
           rowsSelectable='multi'
           keyAccessor={(row) => row.publicKey.toHex()}
           columns={columns}
-          data={state.$items?.value}
+          data={state.items}
           fullWidth
           stickyHeader
           border
