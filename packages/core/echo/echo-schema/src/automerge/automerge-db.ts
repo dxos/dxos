@@ -223,7 +223,16 @@ export class AutomergeDb {
 
   addCore(core: AutomergeObjectCore) {
     if (core.database) {
-      return; // Already in the database.
+      // Already in the database.
+      if (core.database !== this) {
+        throw new Error('Object already belongs to another database');
+      }
+
+      if (core.isDeleted()) {
+        core.setDeleted(false);
+      }
+
+      return;
     }
 
     invariant(!this._objects.has(core.id));
