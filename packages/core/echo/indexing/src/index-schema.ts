@@ -89,6 +89,7 @@ export class IndexSchema extends Resource implements Index {
         limit: ORAMA_LIMIT,
       });
     }
+
     return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
   }
 
