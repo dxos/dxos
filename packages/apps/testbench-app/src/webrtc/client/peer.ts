@@ -8,13 +8,13 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { DATA_CHANNEL_ID, DATA_CHANNEL_LABEL, STUN_ENDPOINT } from './defs';
-import { SignalingChannel } from './signaling-channel';
+import { SignalingClient } from './signaling-client';
 
 /**
  * WebRTC Peer.
  */
 export class Peer {
-  private _signaler: SignalingChannel;
+  private _signaler: SignalingClient;
   private _connection?: RTCPeerConnection;
   private _channel?: RTCDataChannel; // TODO(burdon): Multiple?
 
@@ -25,7 +25,7 @@ export class Peer {
   public readonly update = new Event<{ state?: string }>();
 
   constructor(public readonly id: PublicKey) {
-    this._signaler = new SignalingChannel(this.id);
+    this._signaler = new SignalingClient(this.id);
   }
 
   get info() {
