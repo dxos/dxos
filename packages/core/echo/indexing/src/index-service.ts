@@ -10,23 +10,22 @@ import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
-import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type QueryRequest, type QueryResponse, type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
 
-export type IndexServiceParams = {
+export type QueryServiceParams = {
   indexer: Indexer;
   automergeHost: AutomergeHost;
 };
 
-export class IndexServiceImpl implements IndexService {
+export class QueryServiceImpl implements QueryService {
   private readonly _ctx = new Context();
-  constructor(private readonly _params: IndexServiceParams) {}
+  constructor(private readonly _params: QueryServiceParams) {}
 
-  async setConfig(config: IndexConfig): Promise<void> {
+  async setIndexConfig(config: IndexConfig): Promise<void> {
     if (this._params.indexer.initialized) {
       log.warn('Indexer already initialized. Cannot change config.');
       return;

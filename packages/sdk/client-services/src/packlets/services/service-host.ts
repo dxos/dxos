@@ -16,7 +16,7 @@ import {
   type LevelDB,
 } from '@dxos/echo-pipeline';
 import { getTypeReference } from '@dxos/echo-schema';
-import { IndexServiceImpl } from '@dxos/indexing';
+import { QueryServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -287,7 +287,7 @@ export class ClientServicesHost {
 
       DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
-      IndexService: new IndexServiceImpl({
+      QueryService: new QueryServiceImpl({
         indexer: this._serviceContext.indexer,
         automergeHost: this._serviceContext.automergeHost,
       }),
