@@ -116,10 +116,10 @@ export class Peer {
     }
     // Check if we are already trying to connect to that peer.
     if (this.connection || this.initiating) {
+      // Determine the "polite" peer (the one that will accept offers).
       // Peer with the highest Id closes its connection, and accepts remote peer's offer.
       if (remoteId.toHex() < this.localPeerId.toHex()) {
-        // TODO(burdon): Too verbose.
-        // TODO(nf): gets stuck when remote connection is aborted (i.e. closed tab)
+        // TODO(nf): gets stuck when remote connection is aborted (i.e. closed tab).
         log('close local connection', {
           localPeerId: this.id,
           topic: this.topic,
@@ -132,7 +132,7 @@ export class Peer {
           await this.closeConnection(new ConnectionDisplacedError());
         }
       } else {
-        // Continue with our origination attempt, the remote peer will close it's connection and accept ours.
+        // Continue with our origination attempt, the remote peer will close its connection and accept ours.
         return { accept: false };
       }
     }
