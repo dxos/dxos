@@ -33,7 +33,7 @@ export interface AgentHostingProviderClient {
 
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
-export class EldonAgentHostingProviderClient implements AgentHostingProviderClient {
+export class DXOSAgentHostingProviderClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   constructor(private readonly _clientConfig: Config) {
     const runtimeAgentHostingConfig = this._clientConfig.get('runtime.services.agentHosting');
@@ -42,9 +42,9 @@ export class EldonAgentHostingProviderClient implements AgentHostingProviderClie
     this._config = {
       ...defaultConfig,
       baseURL: runtimeAgentHostingConfig.server,
-      password: this._clientConfig.get('runtime.app.env.DX_ELDON_PASSWORD'),
+      password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
     };
-    log.info('EldonAgentHostingProviderClient initialized', { config: this._config });
+    log.info('AgentHostingProviderClient initialized', { config: this._config });
   }
 
   public requestInitWithCredentials(req: RequestInit): RequestInit {
