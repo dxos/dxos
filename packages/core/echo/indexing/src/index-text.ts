@@ -15,7 +15,7 @@ import { trace } from '@dxos/tracing';
 import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
 
 // Note: By default, Orama search returns 10 results.
-const ORAMA_LIMIT = 1_000_000;
+// const ORAMA_LIMIT = 1_000_000;
 
 type OramaSchemaType = orama.Orama<
   {
