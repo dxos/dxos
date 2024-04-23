@@ -69,8 +69,7 @@ export interface QuerySource {
   /**
    * Set the filter and trigger the query.
    */
-  // TODO(dmaretskyi): Rename to run.
-  update(filter: Filter): Promise<QueryResult[]>;
+  run(filter: Filter): Promise<QueryResult[]>;
 
   // TODO(dmaretskyi): Make async.
   close(): void;
@@ -142,7 +141,7 @@ export class Query<T extends {} = any> {
           this._signal.notifyWrite();
         });
       });
-      source.update(this._filter);
+      source.run(this._filter);
     });
 
     this._queryContext.removed.on((source) => {
@@ -175,7 +174,7 @@ export class Query<T extends {} = any> {
    */
   run(): Promise<QueryResult<T>[]> {
     for (const source of this._sources) {
-      source.update(this._filter);
+      source.run(this._filter);
     }
   }
 
