@@ -109,6 +109,8 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
   }, [initialValue]);
 
   const [value, setValue] = useState(getInitialValue);
+
+  // Update value if initialValue changes externally (cell reactivity).
   useEffect(() => setValue(getInitialValue()), [getInitialValue]);
 
   const handleSave = () => {

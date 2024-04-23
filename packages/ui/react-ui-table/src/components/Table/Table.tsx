@@ -43,6 +43,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
 
   const [data, setData] = useState([...incomingData]);
 
+  // Reactivity workaround: https://github.com/dxos/dxos/issues/6376.
   const forceUpdate = useCallback(() => setData([...incomingData]), [incomingData]);
   useEffect(() => forceUpdate(), [JSON.stringify(incomingData), forceUpdate]);
 
