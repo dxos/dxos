@@ -30,7 +30,7 @@ export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
 
     return {
       subscribe: (cb: () => void) => query?.subscribe(cb) ?? noop,
-      getObjects: () => query?.objects ?? [],
+      getObjects: () => query?.objects ?? EMPTY_ARRAY,
     };
   }, [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]);
 
@@ -46,3 +46,5 @@ const filterToDepsArray = (filter?: FilterSource<any>) =>
     .map((x) => (typeof x === 'function' || typeof x === 'object' ? null : x));
 
 const noop = () => {};
+
+const EMPTY_ARRAY: never[] = [];
