@@ -285,6 +285,7 @@ export class SpaceProxy implements Space {
     log('initialized');
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _initializeDb() {
     this._databaseOpen = true;
 
