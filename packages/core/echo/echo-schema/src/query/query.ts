@@ -55,6 +55,11 @@ export type QueryResult<T extends {} = any> = {
   };
 };
 
+export type OneShotQueryResult<T extends {} = any> = {
+  results: QueryResult<T>[];
+  objects: EchoReactiveObject<T>[];
+};
+
 /**
  * Query data source.
  * Implemented by a space or a remote agent.
@@ -67,9 +72,14 @@ export interface QuerySource {
   changed: Event<void>;
 
   /**
-   * Set the filter and trigger the query.
+   * One-shot query.
    */
   run(filter: Filter): Promise<QueryResult[]>;
+
+  /**
+   * Set the filter and trigger continuous updates.
+   */
+  update(filter: Filter): void;
 
   // TODO(dmaretskyi): Make async.
   close(): void;
@@ -141,10 +151,11 @@ export class Query<T extends {} = any> {
           this._signal.notifyWrite();
         });
       });
-      source.run(this._filter);
+      source.update(this._filter);
     });
 
     this._queryContext.removed.on((source) => {
+      source.close();
       this._sources.delete(source);
     });
 
@@ -169,13 +180,14 @@ export class Query<T extends {} = any> {
     return this._objectCache!;
   }
 
-  /**
-   * Resend query to remote agents.
-   */
-  run(): Promise<QueryResult<T>[]> {
-    for (const source of this._sources) {
-      source.run(this._filter);
-    }
+  async run(): Promise<OneShotQueryResult<T>> {
+    const filter = this._filter;
+    const runTasks = [...this._sources.values()].map((s) => s.run(filter));
+    const results = (await Promise.all(runTasks)).flatMap((r) => r);
+    return {
+      results,
+      objects: this._uniqueObjects(results),
+    };
   }
 
   private _ensureCachePresent() {
@@ -183,26 +195,29 @@ export class Query<T extends {} = any> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
-          const seen = new Set<string>();
           this._resultCache = Array.from(this._sources)
             .flatMap((source) => source.getResults())
             .filter(
               (result) => result.object && filterMatch(this._filter, getAutomergeObjectCore(result.object)),
             ) as QueryResult<T>[];
-          this._objectCache = this._resultCache
-            .map((result) => result.object)
-            .filter(nonNullable)
-            .filter((object) => {
-              // TODO(burdon): Dedupe?
-              if (seen.has(object.id)) {
-                return false;
-              }
-              seen.add(object.id);
-              return true;
-            });
+          this._objectCache = this._uniqueObjects(this._resultCache);
         });
       });
     }
+  }
+
+  private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {
+    const seen = new Set<string>();
+    return results
+      .map((result) => result.object)
+      .filter(nonNullable)
+      .filter((object) => {
+        if (seen.has(object.id)) {
+          return false;
+        }
+        seen.add(object.id);
+        return true;
+      });
   }
 
   private _handleQueryLifecycle() {
