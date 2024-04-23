@@ -678,12 +678,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
-      effect:
-        specifier: 2.4.9
-        version: 2.4.9
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0

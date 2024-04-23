@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
 import { Collection, getSpaceProperty, setSpaceProperty } from '@braneframe/types';
-import { create, Expando, ref, TypedObject } from '@dxos/echo-schema';
+import { create, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
