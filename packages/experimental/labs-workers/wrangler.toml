@@ -21,11 +21,7 @@ database_id = "98e5b6a0-53f4-468b-b483-6c66a8cf9f15"
 
 [[durable_objects.bindings]]
 name = "SIGNALING"
-class_name = "SwarmObject"
-
-[[durable_objects.bindings]]
-name = "WEBSOCKET"
-class_name = "WebSocketServer"
+class_name = "SignalingServer"
 
 #[ai]
 #binding = "AI"

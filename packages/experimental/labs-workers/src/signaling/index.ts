@@ -11,7 +11,6 @@ import type { Env } from '../defs';
 
 export * from './protocol';
 export * from './socket';
-export * from './swarm';
 
 const app = new Hono<Env>();
 
@@ -37,8 +36,8 @@ app.get('/ws/:swarmKey', async (c) => {
   // Route the WebSocket connection to the Durable Object associated with the swarm.
   // The Hibernation API limits to 32k connections per durable object (with 10 tags per socket).
   // https://developers.cloudflare.com/durable-objects/api/websockets/#acceptwebsocket
-  const id = c.env.WEBSOCKET.idFromName(swarmKey.toHex());
-  const stub = c.env.WEBSOCKET.get(id);
+  const id = c.env.SIGNALING.idFromName(swarmKey.toHex());
+  const stub = c.env.SIGNALING.get(id);
   const response = await stub.fetch(c.req.raw);
 
   return new Response(null, {
