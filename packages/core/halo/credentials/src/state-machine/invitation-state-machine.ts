@@ -21,8 +21,6 @@ export class InvitationStateMachine {
   readonly onDelegatedInvitation = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
   readonly onDelegatedInvitationRemoved = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
 
-  constructor(private readonly _spaceKey: PublicKey) {}
-
   get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
     return this._invitations;
   }
@@ -45,7 +43,7 @@ export class InvitationStateMachine {
       }
       case 'dxos.halo.invitations.DelegateSpaceInvitation': {
         if (credential.id) {
-          const isExpired = credential.expirationDate && credential.expirationDate.getTime() < Date.now();
+          const isExpired = assertion.expiresOn && assertion.expiresOn.getTime() < Date.now();
           const wasUsed = this._redeemedInvitationCredentialIds.has(credential.id) && !assertion.multiUse;
           const wasCancelled = this._cancelledInvitationCredentialIds.has(credential.id);
           if (isExpired || wasCancelled || wasUsed) {

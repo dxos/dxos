@@ -52,7 +52,7 @@ const REVOCABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
 export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
-  private readonly _invitations = new InvitationStateMachine(this._spaceKey);
+  private readonly _invitations = new InvitationStateMachine();
   private readonly _credentials: CredentialEntry[] = [];
   private readonly _credentialsById = new ComplexMap<PublicKey, CredentialEntry>(PublicKey.hash);
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
