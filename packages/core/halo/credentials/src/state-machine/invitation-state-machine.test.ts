@@ -71,6 +71,17 @@ describe('InvitationStateMachine', () => {
     expectNoInvitation(stateMachine, baseInvitation);
   });
 
+  test('invitation stays if unrelated admission credential', async () => {
+    const stateMachine = createStateMachine();
+    const unrelatedInvitation = await delegateInvitation({
+      ...baseInvitation,
+      invitationId: PublicKey.random().toHex(),
+    });
+    await stateMachine.process(await delegateInvitation(baseInvitation));
+    await stateMachine.process(await admitMember(unrelatedInvitation));
+    expectHasInvitation(stateMachine, baseInvitation);
+  });
+
   test('multi-use invitations', async () => {
     const stateMachine = createStateMachine();
     const multiUseInvitation = { ...baseInvitation, multiUse: true };

@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
-import { type CancellableInvitation } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
@@ -49,37 +48,24 @@ describe('Spaces/invitations', () => {
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
       // Alice creates a delegated invitation
-      const delegatedInvitationPosted = new Trigger();
-      const delegatedInvitationDisposed = new Trigger();
-      const invitationStream = bob.services.services.InvitationsService!.queryInvitations();
-      afterTest(() => invitationStream.close());
-      let observableInvitation: CancellableInvitation | null = null;
-      invitationStream.subscribe((msg) => {
-        const invitation = observableInvitation?.get();
-        if (invitation == null) {
-          return;
-        }
-        if (invitation.invitationId === msg.invitations?.[0]?.invitationId) {
-          if (msg.action === QueryInvitationsResponse.Action.ADDED) {
-            delegatedInvitationPosted.wake();
-          } else if (msg.action === QueryInvitationsResponse.Action.REMOVED) {
-            delegatedInvitationDisposed.wake();
-          }
-        }
-      });
-      observableInvitation = space.share({
+      const bobInvitations = createInvitationTracker(bob);
+      const observableInvitation = space.share({
         type: Invitation.Type.DELEGATED,
         authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: false,
       });
-      await delegatedInvitationPosted.wait();
+      await bobInvitations.waitForInvitation(observableInvitation.get());
       // Alice leaves
       await alice.destroy();
       // Bob admits Fred
+      const fredInvitations = createInvitationTracker(fred);
       fred.spaces.join(observableInvitation.get());
       await waitForSpace(fred, space.key!, { ready: true });
       // Invitation gets disposed
-      await delegatedInvitationDisposed.wait();
+      await bobInvitations.waitEmpty();
+      // Fred sees disposal as well
+      await sleep(20);
+      await fredInvitations.waitEmpty();
     });
 
     test('multi-use', async () => {
@@ -93,35 +79,72 @@ describe('Spaces/invitations', () => {
       expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
 
       // Alice creates a delegated invitation
-      const delegatedInvitationPosted = new Trigger();
-      const invitationStream = bob.services.services.InvitationsService!.queryInvitations();
-      afterTest(() => invitationStream.close());
-      let observableInvitation: CancellableInvitation | null = null;
-      invitationStream.subscribe((msg) => {
-        const invitation = observableInvitation?.get();
-        if (invitation == null) {
-          return;
-        }
-        if (invitation.invitationId === msg.invitations?.[0]?.invitationId) {
-          delegatedInvitationPosted.wake();
-        }
-      });
-      observableInvitation = space.share({
+      const bobInvitations = createInvitationTracker(bob);
+      const observableInvitation = space.share({
         type: Invitation.Type.DELEGATED,
         authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
         multiUse: true,
       });
-      await delegatedInvitationPosted.wait();
+      await bobInvitations.waitForInvitation(observableInvitation.get());
       await alice.destroy();
       // Bob admits Fred
+      const fredInvitations = createInvitationTracker(fred);
       fred.spaces.join(observableInvitation.get());
       await waitForSpace(fred, space.key!, { ready: true });
+      // Fred can also handle the invitation now
+      await fredInvitations.waitForInvitation(observableInvitation.get());
       // Charlie gets admitted using the same invitation after some time
       await sleep(10);
       charlie.spaces.join(observableInvitation.get());
       await waitForSpace(charlie, space.key!, { ready: true });
     });
   });
+
+  const createInvitationTracker = (peer: Client) => {
+    let awaitedInvitationId: string | null = null;
+    const onInvitationAppeared = new Trigger();
+    const invitationIds = new Set();
+    const invitationsEmpty = new Trigger();
+    const invitationStream = peer.services.services.InvitationsService!.queryInvitations();
+    afterTest(() => invitationStream.close());
+    invitationStream.subscribe((msg) => {
+      if (msg.type === QueryInvitationsResponse.Type.ACCEPTED) {
+        return;
+      }
+      if (msg.action === QueryInvitationsResponse.Action.ADDED) {
+        msg.invitations?.forEach((inv) => invitationIds.add(inv.invitationId));
+        if (awaitedInvitationId != null && invitationIds.has(awaitedInvitationId)) {
+          awaitedInvitationId = null;
+          onInvitationAppeared.wake();
+        }
+      } else if (msg.action === QueryInvitationsResponse.Action.REMOVED) {
+        msg.invitations?.forEach((inv) => invitationIds.delete(inv.invitationId));
+        if (invitationIds.size > 0) {
+          invitationsEmpty.wake();
+        }
+      }
+    });
+    return {
+      get invitations() {
+        return invitationIds;
+      },
+      waitEmpty: (): Promise<void> => {
+        if (invitationIds.size === 0) {
+          return Promise.resolve();
+        }
+        invitationsEmpty.reset();
+        return invitationsEmpty.wait();
+      },
+      waitForInvitation: (invitation: Invitation) => {
+        if (invitationIds.has(invitation.invitationId)) {
+          return Promise.resolve();
+        }
+        awaitedInvitationId = invitation.invitationId;
+        onInvitationAppeared.reset();
+        return onInvitationAppeared.wait();
+      },
+    };
+  };
 });
 
 const createInitializedClients = (count: number): Promise<Client[]> => {
