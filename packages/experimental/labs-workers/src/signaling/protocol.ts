@@ -7,18 +7,27 @@ import type WebSocket from 'ws';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-// TODO(burdon): Use PublicKey and encode/decode. Protobuf.
-export type SwarmMessage<T = {}> = {
-  swarmKey?: PublicKey;
-  peerKey?: PublicKey;
+export type Message<T = {}> = {
+  type: 'ping' | 'pong' | 'join' | 'leave' | 'info' | 'offer' | 'answer';
+  sender?: PublicKey; // If undefined then from server.
+  recipient?: PublicKey; // If undefined then broadcast.
   data?: T;
 };
 
-export const encodeMessage = (message: SwarmMessage) => JSON.stringify(message);
+export type SwarmPayload = {
+  peerKeys: PublicKey[];
+};
 
-export const decodeMessage = (data: WebSocket.Data): SwarmMessage | null => {
+export type WebRTCPayload = {
+  description?: RTCSessionDescription;
+  candidate?: RTCIceCandidate;
+};
+
+export const encodeMessage = <T = {}>(message: Message<T>) => JSON.stringify(message);
+
+export const decodeMessage = <T = {}>(data: WebSocket.Data): Message<T> | null => {
   try {
-    return JSON.parse(data.toString()) as SwarmMessage;
+    return JSON.parse(data.toString()) as Message<T>;
   } catch (err) {
     log.catch(err);
     return null;

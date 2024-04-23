@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out non-client deps.
-import { decodeMessage, encodeMessage, type SwarmMessage } from '../signaling/protocol';
+import { decodeMessage, encodeMessage, type Message, type SwarmPayload } from '../signaling/protocol';
 
 const TESTING_SWARM_KEY = '34c6a1e612ce21fa1937b33329b1890450d193a8407e035bdb065ce468479164';
 
@@ -48,7 +48,7 @@ class Client {
     Object.assign(this._ws, {
       onopen: () => {
         log.info('opened', { peerKey: this._peerKey });
-        this.send({ data: 'ping' });
+        this.send({ type: 'join' });
       },
 
       onclose: () => {
@@ -60,11 +60,17 @@ class Client {
       },
 
       onmessage: (event) => {
-        const message = decodeMessage(event.data) ?? {};
+        const message = decodeMessage(event.data);
         log.info('received', { peerKey: this._peerKey, message });
-        const { data } = message;
-        if (data === 'pong') {
-          this.send({ data: 'hello' });
+        switch (message?.type) {
+          case 'info': {
+            // TODO(burdon): Select peer and make offer.
+            const { peerKeys } = message.data as SwarmPayload;
+            if (peerKeys.length) {
+              this.send({ type: 'offer', recipient: peerKeys[0] });
+            }
+            break;
+          }
         }
       },
     } satisfies Partial<WebSocket>);
@@ -78,10 +84,10 @@ class Client {
     }
   }
 
-  send(message: SwarmMessage) {
+  send(message: Message) {
     invariant(this._ws);
     log.info('sending', { peerKey: this._peerKey, message });
-    this._ws.send(encodeMessage(Object.assign({ peerKey: this._peerKey }, message)));
+    this._ws.send(encodeMessage(Object.assign<Partial<Message>, Message>({ sender: this._peerKey }, message)));
   }
 }
 
