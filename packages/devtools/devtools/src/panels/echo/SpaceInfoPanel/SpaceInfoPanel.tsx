@@ -18,7 +18,7 @@ import { getSize } from '@dxos/react-ui-theme';
 import { PipelineTable } from './PipelineTable';
 import { SpaceProperties } from './SpaceProperties';
 import { Bitbar, PanelContainer } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
 type FeedInfo = {
@@ -77,7 +77,7 @@ export const SpaceInfoPanel: FC = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
           <Toolbar.Button onClick={() => forceUpdate({})}>
             <ArrowClockwise className={getSize(5)} />
           </Toolbar.Button>

@@ -19,6 +19,7 @@ import { type PublicKey } from '@dxos/react-client';
 export type DevtoolsContextType = {
   space?: Space;
   feedKey?: PublicKey;
+  haloSpaceKey?: PublicKey;
 };
 
 export type DevtoolsContextState = [DevtoolsContextType, Dispatch<SetStateAction<DevtoolsContextType>>];
