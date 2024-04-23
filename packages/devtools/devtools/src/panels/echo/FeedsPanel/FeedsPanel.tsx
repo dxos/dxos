@@ -13,7 +13,7 @@ import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
@@ -76,7 +76,7 @@ export const FeedsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
           <PublicKeySelector
             placeholder='Select feed'
             getLabel={getLabel}
