@@ -8,7 +8,7 @@ import { Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create } from '@dxos/echo-schema/schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { AnchoredOverflow, Button, DensityProvider } from '@dxos/react-ui';
