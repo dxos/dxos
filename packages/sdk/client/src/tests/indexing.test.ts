@@ -60,6 +60,9 @@ describe.only('Index queries', () => {
     await indexer.initialize();
 
     const service = new QueryServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
+    await service.open();
+    afterTest(() => service.close());
+
     const indexQuerySourceProvider = new IndexQuerySourceProvider({
       service,
       echo: client.spaces,

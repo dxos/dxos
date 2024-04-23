@@ -83,6 +83,7 @@ export class ClientServicesHost {
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
+  private _queryService!: QueryServiceImpl;
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -262,6 +263,12 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
+    this._queryService = new QueryServiceImpl({
+      indexer: this._serviceContext.indexer,
+      automergeHost: this._serviceContext.automergeHost,
+    });
+    await this._queryService.open(ctx);
+
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
@@ -287,10 +294,7 @@ export class ClientServicesHost {
 
       DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
-      QueryService: new QueryServiceImpl({
-        indexer: this._serviceContext.indexer,
-        automergeHost: this._serviceContext.automergeHost,
-      }),
+      QueryService: this._queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -340,6 +344,7 @@ export class ClientServicesHost {
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
+    await this._queryService.close();
     await this._serviceContext.close();
     await this._level?.close();
     this._open = false;
