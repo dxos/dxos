@@ -23,6 +23,7 @@ export class IndexSchema extends Resource implements Index {
 
   /**
    * Map `typename` -> Set `index id`.
+   * @see https://v8.dev/blog/hash-code for performance estimations.
    */
   private readonly _index = new Map<string | null, Set<ObjectPointerEncoded>>();
 
@@ -66,13 +67,13 @@ export class IndexSchema extends Resource implements Index {
   @trace.span({ showInBrowserTimeline: true })
   static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
     const index = new IndexSchema();
-    const serializedIndex: Array<{ type: string | null; ids: string[] }> = JSON.parse(serialized).index;
+    const serializedIndex: { type: string | null; ids: string[] }[] = JSON.parse(serialized).index;
     index._identifier = identifier;
-    serializedIndex.forEach(({ type, ids }) => {
+    for (const { type, ids } of serializedIndex) {
       index._index.set(type, new Set(ids));
-    });
+    }
     return index;
   }
 }
 
-const getTypeFromObject = (object: Partial<ObjectStructure>) => object.system?.type?.itemId ?? null;
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => object.system?.type?.itemId ?? null;
