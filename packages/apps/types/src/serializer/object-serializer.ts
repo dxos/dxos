@@ -102,15 +102,15 @@ export class ObjectSerializer {
   private async _deserializeFolder(collection: Collection, data: SerializedObject[]): Promise<void> {
     for (const file of data) {
       try {
-        let child = collection.objects.find((item) => item?.id === file.id);
+        let object = collection.objects.find((item) => item?.id === file.id);
         switch (file.type) {
           case 'folder': {
-            if (!child) {
-              child = create(Collection, { name: object.name, objects: [], views: {} });
-              collection.objects.push(child);
+            if (!object) {
+              object = create(Collection, { name: file.name, objects: [], views: {} });
+              collection.objects.push(object);
             }
 
-            await this._deserializeFolder(child as Collection, file.children);
+            await this._deserializeFolder(object as Collection, file.children);
             break;
           }
 
