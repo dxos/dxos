@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { Filter } from '@dxos/echo-schema';
@@ -43,7 +44,10 @@ export class QueryState extends Resource {
       await Promise.all(
         hits.map(async (result) => {
           const { objectId, documentId } = idCodec.decode(result.id);
-          const handle = this._params.automergeHost.repo.find(documentId as any);
+          const handle =
+            this._params.automergeHost.repo.handles[documentId as DocumentId] ??
+            this._params.automergeHost.repo.find(documentId as DocumentId);
+
           if (!handle.isReady()) {
             // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
             await handle.whenReady();
