@@ -18,7 +18,7 @@ export interface SignalingListener {
  * Signaling client.
  * https://docs.partykit.io/reference/partysocket-api
  */
-export class SignalingChannel {
+export class SignalingClient {
   private socket?: PartySocket;
 
   constructor(public readonly id: PublicKey) {}

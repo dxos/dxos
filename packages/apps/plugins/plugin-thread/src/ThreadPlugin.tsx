@@ -323,8 +323,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments?.splice(index, 1);
                 }
 
-                // TODO(wittjosiah): Deleting the thread entirely here causes an error when undoing.
-                // space.db.remove(thread);
+                space.db.remove(thread);
 
                 return {
                   undoable: {
@@ -333,7 +332,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments.push({ thread, cursor });
+                // TODO(wittjosiah): SDK should do this automatically.
+                const savedThread = space.db.add(thread);
+                doc.comments.push({ thread: savedThread, cursor });
                 return { data: true };
               }
             }

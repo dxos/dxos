@@ -15,7 +15,9 @@ test.describe('Invitations', () => {
   let manager: InvitationsManager;
 
   // TODO(wittjosiah): Storybook takes a bit to be ready for testing against.
-  test.beforeAll(async ({ browser }) => {
+  test.beforeAll(async ({ browser, browserName }) => {
+    // TODO(wittjosiah): Storybook is broken in Safari/Webkit.
+    test.skip(browserName === 'webkit');
     test.setTimeout(60_000);
     manager = new InvitationsManager(browser);
     await manager.init();
