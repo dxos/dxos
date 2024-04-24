@@ -39,8 +39,10 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object: EchoReactiveObject<any>) =>
-          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+        project.org = (
+          await space.db.query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
         ).objects[0];
       }
 
@@ -77,9 +79,11 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
         }
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
-        const { objects: existing } = space.db.query((object: EchoReactiveObject<any>) =>
-          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-        );
+        const { objects: existing } = await space.db
+          .query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
+          .run();
         if (existing.length !== 0) {
           return;
         }

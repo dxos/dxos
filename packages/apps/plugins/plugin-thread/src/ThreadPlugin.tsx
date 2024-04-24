@@ -75,6 +75,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
         const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
+          // TODO query
           const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
           if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
@@ -162,9 +163,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               // Add all threads not linked to documents to the graph.
               const query = space.db.query(Filter.schema(ThreadType));
+              subscriptions.add(query.subscribe());
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
               const documentQuery = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(documentQuery.subscribe());
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {

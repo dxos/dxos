@@ -140,6 +140,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               // Add all documents to the graph.
               const query = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {

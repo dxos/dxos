@@ -101,7 +101,7 @@ export class RequestProcessor {
     });
 
     // Find suitable prompt.
-    const { objects: chains = [] } = space.db.query(Filter.schema(ChainType));
+    const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
     const allPrompts = (await loadObjectReferences(chains, (c) => c.prompts)).flatMap((p) => p);
     for (const prompt of allPrompts) {
       if (prompt.command === options.prompt) {

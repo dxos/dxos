@@ -223,10 +223,24 @@ export class Query<T extends {} = any> {
   private _handleQueryLifecycle() {
     if (this._subscribers === 0 && this._isRunning) {
       log('stop query', { filter: this._filter.toProto() });
-      this._queryContext.stop();
+      this._start();
     } else if (this._subscribers > 0 && !this._isRunning) {
       log('start query', { filter: this._filter.toProto() });
+      this._stop();
+    }
+  }
+
+  private _start() {
+    if (!this._isRunning) {
       this._queryContext.start();
+      this._isRunning = true;
+    }
+  }
+
+  private _stop() {
+    if (this._isRunning) {
+      this._queryContext.stop();
+      this._isRunning = false;
     }
   }
 

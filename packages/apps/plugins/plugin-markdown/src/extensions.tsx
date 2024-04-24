@@ -78,6 +78,7 @@ export const getExtensions = ({ dispatch, settings, document }: ExtensionsOption
     extensions.push(
       autocomplete({
         onSearch: (text: string) => {
+          // TODO query
           // TODO(burdon): Specify filter (e.g., stack).
           const { objects = [] } = space?.db.query(Filter.schema(DocumentType)) ?? {};
           return objects

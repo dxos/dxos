@@ -65,6 +65,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   ) {
     super(schemaMap, generators, (type: T) => {
       const schema = this.getSchema(type);
+      // TODO query
       return (schema && this._space.db.query(Filter.schema(schema)).objects) ?? [];
     });
 

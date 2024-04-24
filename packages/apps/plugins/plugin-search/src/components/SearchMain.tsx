@@ -21,6 +21,7 @@ export const SearchMain: FC<{ space: Space }> = ({ space }) => {
   // TODO(burdon): UX to select all spaces.
   const allSpaces = false;
 
+  // TODO query
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const { objects } = allSpaces ? client.spaces.query() : space?.db.query() ?? {};
   const results = useSearchResults(objects);

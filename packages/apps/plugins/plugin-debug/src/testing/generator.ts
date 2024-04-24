@@ -68,6 +68,7 @@ export class Generator {
   }
 
   updateDocument() {
+    // TODO query
     const { objects } = this._space.db.query(Filter.schema(DocumentType));
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);

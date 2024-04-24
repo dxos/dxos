@@ -25,6 +25,7 @@ export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
   options?: QueryOptions,
   deps?: any[],
 ) => {
+  // TODO query
   const { subscribe, getObjects } = useMemo(() => {
     const query = space?.db.query(filter, options) as Query<T> | undefined;
 

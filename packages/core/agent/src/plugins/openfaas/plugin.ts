@@ -98,7 +98,7 @@ export class OpenFaasPlugin extends Plugin {
       }
 
       // TODO(dmaretskyi): Fix type.
-      const objects = space.db.query({ __type: 'dxos.function.Trigger' }).objects;
+      const objects = (await space.db.query({ __type: 'dxos.function.Trigger' }).run()).objects;
       triggers.push(...objects.map((object) => object.toJSON() as Trigger));
     }
 
