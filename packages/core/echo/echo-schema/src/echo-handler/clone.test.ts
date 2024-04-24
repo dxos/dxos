@@ -84,7 +84,7 @@ describe('clone', () => {
     expect(task2.assignee !== task1.assignee).to.be.true;
     expect(task2.assignee.id).to.equal(task1.assignee.id);
     expect(task2.assignee.name).to.equal(task1.assignee.name);
-    expect(db2.query({ type: 'Person' }).objects[0] === task2.assignee).to.be.true;
+    expect((await db2.query({ type: 'Person' }).run()).objects[0] === task2.assignee).to.be.true;
   });
 
   test('clone with nested text objects', async () => {

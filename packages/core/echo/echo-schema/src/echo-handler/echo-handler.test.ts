@@ -191,18 +191,18 @@ describe('Reactive Object with ECHO database', () => {
       db.add(create(TypedObject, { string: 'foo' }));
 
       {
-        const query = db.query(Filter.typename('TestSchema'));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.typename('TestSchema')).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const query = db.query(Filter.schema(TypedObject));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.schema(TypedObject)).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const query = db.query(Filter.schema(TestSchemaClass));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.schema(TestSchemaClass)).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
     });
   });

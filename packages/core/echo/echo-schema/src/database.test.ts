@@ -50,15 +50,15 @@ describe('Database', () => {
     await db.flush();
 
     {
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects.length).to.eq(n);
     }
 
-    db.remove(db.query().objects[0]);
+    db.remove((await db.query().run()).objects[0]);
     await db.flush();
 
     {
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects.length).to.eq(n - 1);
     }
   });
@@ -91,7 +91,7 @@ describe('Database', () => {
     await database.flush();
     expect(getAutomergeObjectCore(task).database).to.exist;
 
-    const { objects: tasks } = database.query(Filter.schema(Task));
+    const { objects: tasks } = await database.query(Filter.schema(Task)).run();
     expect(tasks).to.have.length(1);
     expect(tasks[0].id).to.eq(task.id);
   });
@@ -105,7 +105,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = database.query(Filter.schema(Container));
+      const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.records).to.have.length(1);
       expect(container.records![0].type).to.eq(RecordType.WORK);
@@ -125,7 +125,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = database.query(Filter.schema(Container));
+      const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(container.objects![0]!.foo).to.equal(100);
@@ -146,7 +146,7 @@ describe('Database', () => {
     }
 
     {
-      const { objects } = database.query(Filter.schema(Container));
+      const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
       expect(getType(container.objects![0])?.itemId).to.equal(Task.typename);
@@ -193,7 +193,9 @@ describe('Database', () => {
     database.add(create(Task, { title: 'foo 2' }));
     database.add(create(Task, { title: 'bar 3' }));
 
-    expect(database.query(Filter.schema(Task, (task) => task.title?.startsWith('foo'))).objects).to.have.length(2);
+    expect(
+      (await database.query(Filter.schema(Task, (task: Task) => task.title?.startsWith('foo'))).run()).objects,
+    ).to.have.length(2);
   });
 
   test('typenames of nested objects', async () => {
@@ -250,7 +252,7 @@ describe('Database', () => {
       const { db } = await addToDatabase(root);
 
       expect(root.records).to.have.length(1);
-      const queriedContainer = db.query(Filter.schema(Container)).objects[0]!;
+      const queriedContainer = (await db.query(Filter.schema(Container)).run()).objects[0]!;
       expect(queriedContainer.records!.length).to.equal(1);
       expect(queriedContainer.records![0]!.contacts![0]!.name).to.equal('tester');
     });
