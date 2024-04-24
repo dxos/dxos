@@ -4,6 +4,7 @@
 
 export * from './AwaitingObject';
 export * from './CollectionMain';
+export * from './CollectionSection';
 export * from './EmptySpace';
 export * from './EmptyTree';
 export * from './MissingObject';

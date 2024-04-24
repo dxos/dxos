@@ -21,6 +21,7 @@ import {
   parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
+  Surface,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, type Identifiable, isEchoObject, isReactiveObject } from '@dxos/echo-schema';
@@ -38,6 +39,7 @@ import { ComplexMap } from '@dxos/util';
 import {
   AwaitingObject,
   CollectionMain,
+  CollectionSection,
   EmptySpace,
   EmptyTree,
   MissingObject,
@@ -48,7 +50,6 @@ import {
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
-  SpaceMain,
   SpacePresence,
   SpaceSettings,
 } from './components';
@@ -236,12 +237,12 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         schema: [Collection],
       },
       surface: {
-        component: ({ data, role }) => {
+        component: ({ data, role, ...rest }) => {
           switch (role) {
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(data.active) ? (
-                <SpaceMain space={data.active} />
+                <Surface data={{ active: getSpaceProperty(data.active, Collection.typename) }} role={role} {...rest} />
               ) : data.active instanceof Collection ? (
                 { node: <CollectionMain collection={data.active} />, disposition: 'fallback' }
               ) : typeof data.active === 'string' && data.active.length === 64 ? (
@@ -325,6 +326,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                   }
                 : null;
             }
+            case 'section':
+              return data.object instanceof Collection ? <CollectionSection collection={data.object} /> : null;
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
