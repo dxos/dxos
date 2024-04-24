@@ -89,6 +89,8 @@ export interface QueryContext {
   added: Event<QuerySource>;
   removed: Event<QuerySource>;
 
+  sources: QuerySource[];
+
   /**
    * Start creating query sources and firing events.
    *
@@ -117,21 +119,15 @@ export type QuerySubscriptionOptions = {
  * Predicate based query.
  */
 export class Query<T extends {} = any> {
-  private readonly _ctx = new Context({
-    onError: (err) => {
-      log.catch(err);
-    },
-  });
-
   private readonly _filter: Filter;
   private readonly _sources = new Set<QuerySource>();
   private readonly _signal = compositeRuntime.createSignal();
   private readonly _event = new Event<Query<T>>();
 
+  private _runningCtx: Context | null = null;
   private _resultCache: QueryResult<T>[] | undefined = undefined;
   private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
   private _subscribers: number = 0;
-  private _isRunning = false;
 
   constructor(
     private readonly _queryContext: QueryContext,
@@ -139,19 +135,15 @@ export class Query<T extends {} = any> {
   ) {
     this._filter = filter;
 
+    this._queryContext.sources.forEach((s) => this._sources.add(s));
     this._queryContext.added.on((source) => {
+      if (this._sources.has(source)) {
+        return;
+      }
       this._sources.add(source);
-      source.changed.on(this._ctx, () => {
-        this._resultCache = undefined;
-        this._objectCache = undefined;
-
-        // Clear `prohibitSignalActions` to allow the signal to be emitted.
-        compositeRuntime.untracked(() => {
-          this._event.emit(this);
-          this._signal.notifyWrite();
-        });
-      });
-      source.update(this._filter);
+      if (this._runningCtx != null) {
+        this._subscribeToSourceUpdates(this._runningCtx, source);
+      }
     });
 
     this._queryContext.removed.on((source) => {
@@ -160,8 +152,6 @@ export class Query<T extends {} = any> {
     });
 
     log('construct', { filter: this._filter.toProto() });
-    // TODO(dmaretskyi): Remove.
-    this._queryContext.start();
   }
 
   get filter(): Filter {
@@ -169,12 +159,14 @@ export class Query<T extends {} = any> {
   }
 
   get results(): QueryResult<T>[] {
+    this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._resultCache!;
   }
 
   get objects(): EchoReactiveObject<T>[] {
+    this._checkQueryIsRunning();
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
@@ -188,6 +180,38 @@ export class Query<T extends {} = any> {
       results,
       objects: this._uniqueObjects(results),
     };
+  }
+
+  /**
+   * Subscribe to query results.
+   * Queries that have at least one subscriber are updated reactively when the underlying data changes.
+   */
+  // TODO(burdon): Change to SubscriptionHandle (make uniform).
+  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
+    invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
+
+    log('subscribe');
+    this._subscribers++;
+    const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
+    this._handleQueryLifecycle();
+
+    const unsubscribe = () => {
+      log('unsubscribe');
+      this._subscribers--;
+      unsubscribeFromEvent?.();
+      this._handleQueryLifecycle();
+    };
+
+    if (callback && opts?.fire) {
+      try {
+        callback(this);
+      } catch (err) {
+        unsubscribe();
+        throw err;
+      }
+    }
+
+    return unsubscribe;
   }
 
   private _ensureCachePresent() {
@@ -221,58 +245,55 @@ export class Query<T extends {} = any> {
   }
 
   private _handleQueryLifecycle() {
-    if (this._subscribers === 0 && this._isRunning) {
+    if (this._subscribers === 0 && this._runningCtx != null) {
       log('stop query', { filter: this._filter.toProto() });
-      this._start();
-    } else if (this._subscribers > 0 && !this._isRunning) {
-      log('start query', { filter: this._filter.toProto() });
       this._stop();
+    } else if (this._subscribers > 0 && this._runningCtx == null) {
+      log('start query', { filter: this._filter.toProto() });
+      this._start();
     }
   }
 
   private _start() {
-    if (!this._isRunning) {
+    if (this._runningCtx == null) {
+      this._runningCtx = new Context({
+        onError: (err) => {
+          log.catch(err);
+        },
+      });
       this._queryContext.start();
-      this._isRunning = true;
+      for (const source of this._sources) {
+        this._subscribeToSourceUpdates(this._runningCtx, source);
+      }
     }
   }
 
   private _stop() {
-    if (this._isRunning) {
+    if (this._runningCtx) {
+      void this._runningCtx.dispose()?.catch();
       this._queryContext.stop();
-      this._isRunning = false;
+      this._runningCtx = null;
     }
   }
 
-  /**
-   * Subscribe to query results.
-   * Queries that have at least one subscriber are updated reactively when the underlying data changes.
-   */
-  // TODO(burdon): Change to SubscriptionHandle (make uniform).
-  subscribe(callback?: (query: Query<T>) => void, opts?: QuerySubscriptionOptions): Subscription {
-    invariant(!(!callback && opts?.fire), 'Cannot fire without a callback.');
+  private _subscribeToSourceUpdates(ctx: Context, source: QuerySource) {
+    source.changed.on(ctx, () => {
+      this._resultCache = undefined;
+      this._objectCache = undefined;
+      // Clear `prohibitSignalActions` to allow the signal to be emitted.
+      compositeRuntime.untracked(() => {
+        this._event.emit(this);
+        this._signal.notifyWrite();
+      });
+    });
+    source.update(this._filter);
+  }
 
-    log('subscribe');
-    this._subscribers++;
-    const unsubscribeFromEvent = callback ? this._event.on(callback) : undefined;
-    this._handleQueryLifecycle();
-
-    const unsubscribe = () => {
-      log('unsubscribe');
-      this._subscribers--;
-      unsubscribeFromEvent?.();
-      this._handleQueryLifecycle();
-    };
-
-    if (callback && opts?.fire) {
-      try {
-        callback(this);
-      } catch (err) {
-        unsubscribe();
-        throw err;
-      }
+  private _checkQueryIsRunning() {
+    if (this._runningCtx == null) {
+      throw new Error(
+        'Query must have at least 1 subscriber for `.objects` and `.results` to be used. Use query.run() for single-use result retrieval.',
+      );
     }
-
-    return unsubscribe;
   }
 }
