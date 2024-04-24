@@ -60,6 +60,7 @@ import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
+import { FolderType, SectionType, StackType } from './migrations';
 import translations from './translations';
 
 const main = async () => {
@@ -173,6 +174,9 @@ const main = async () => {
         config,
         services,
         shell: './shell.html',
+        onClientInitialized: async (client) => {
+          client.addSchema(FolderType, StackType, SectionType);
+        },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
