@@ -12,15 +12,15 @@ import type {
   LocationProvides,
 } from '@dxos/app-framework';
 
-export type LayoutSettingsProps = {
+export type DeckSettingsProps = {
   showFooter: boolean;
   enableNativeRedirect: boolean;
 };
 
-export type LayoutPluginProvides = SurfaceProvides &
+export type DeckPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   TranslationsProvides &
-  SettingsProvides<LayoutSettingsProps> &
+  SettingsProvides<DeckSettingsProps> &
   LayoutProvides &
   LocationProvides;

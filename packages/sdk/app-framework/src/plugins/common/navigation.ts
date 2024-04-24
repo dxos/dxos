@@ -17,9 +17,14 @@ import type { Plugin } from '../PluginHost';
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 // TODO(wittjosiah): We should align this more with `window.location` along the lines of what React Router does.
 export const Location = z.object({
-  active: z.string().optional().describe('Id of the currently active item.'),
-  // TODO(wittjosiah): History?
-  previous: z.string().optional(),
+  active: z
+    .union([z.string(), z.record(z.string(), z.union([z.string(), z.array(z.string())]))])
+    .optional()
+    .describe('Id of currently active item, or record of item id(s) keyed by the app part in which they are active.'),
+  closed: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .describe('Id or ids of recently closed items, in order of when they were closed.'),
 });
 
 export type Location = z.infer<typeof Location>;

@@ -36,7 +36,9 @@ export type Toast = z.infer<typeof Toast>;
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
   fullscreen: z.boolean(),
+
   sidebarOpen: z.boolean(),
+  sidebarContent: z.any().optional().describe('Data to be passed to the navigational sidebar Surface.'),
 
   complementarySidebarOpen: z.boolean(),
   complementarySidebarContent: z.any().optional().describe('Data to be passed to the complementary sidebar Surface.'),
@@ -91,7 +93,7 @@ export namespace LayoutAction {
     /**
      * Element to set the state of.
      */
-    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast';
+    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast' | 'main' | 'article';
 
     /**
      * Whether the element is on or off.

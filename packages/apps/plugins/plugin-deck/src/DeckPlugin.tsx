@@ -21,12 +21,12 @@ import {
   Surface,
   Toast as ToastSchema,
   type IntentPluginProvides,
-  type Location,
   type Plugin,
   type PluginDefinition,
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  type Location,
   IntentAction,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema/schema';
@@ -40,35 +40,43 @@ import { activeToUri, checkAppScheme, uriToActive } from '@dxos/util';
 import { LayoutContext, MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
+import { type DeckPluginProvides, type DeckSettingsProps } from './types';
 
 const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
 
-type NavigationState = Location & {
-  activeNode: Node | undefined;
-  previousNode: Node | undefined;
+type AttentionState = {
+  attended: Set<string>;
+  attendedNodes: Set<Node>;
 };
+
+type LocationState = Location &
+  Partial<{
+    activeNodes: Record<string, Node[]>;
+    closedNodes: Node[];
+  }>;
 
 export const DeckPlugin = ({
   observability,
 }: {
   observability?: boolean;
-} = {}): PluginDefinition<LayoutPluginProvides> => {
+} = {}): PluginDefinition<DeckPluginProvides> => {
   let graphPlugin: Plugin<GraphProvides> | undefined;
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
-  const settings = new LocalStorageStore<LayoutSettingsProps>(DECK_PLUGIN, {
+  const settings = new LocalStorageStore<DeckSettingsProps>(DECK_PLUGIN, {
     showFooter: false,
     enableNativeRedirect: false,
   });
 
   const layout = new LocalStorageStore<Layout>(DECK_PLUGIN, {
     fullscreen: false,
+
     sidebarOpen: true,
+    sidebarContent: null,
 
     complementarySidebarOpen: false,
     complementarySidebarContent: null,
@@ -84,18 +92,45 @@ export const DeckPlugin = ({
     toasts: [],
   });
 
-  const location = create<NavigationState>({
-    active: undefined,
-    previous: undefined,
+  const location = create<LocationState>({
+    active: {},
+    get activeNodes() {
+      invariant(graphPlugin, 'Graph plugin not found.');
+      return (
+        this.active &&
+        Object.entries(this.active).reduce((acc: Record<string, Node[]>, [part, ids]) => {
+          if (typeof ids === 'string') {
+            const node = graphPlugin!.provides.graph.findNode(ids);
+            if (node) {
+              acc[part] = [node];
+            }
+          } else if (Array.isArray(ids)) {
+            acc[part] = ids.map((id) => graphPlugin!.provides.graph.findNode(id)).filter(Boolean) as Node[];
+          }
+          return acc;
+        }, {})
+      );
+    },
+    closed: [],
+    get closedNodes() {
+      invariant(graphPlugin, 'Graph plugin not found.');
+      return this.closed && this.closed.map((id: string) => graphPlugin!.provides.graph.findNode(id));
+    },
+  });
+
+  const attention = create<AttentionState>({
+    attended: new Set(),
 
     // TODO(burdon): Should not be on this object.
-    get activeNode() {
+    get attendedNodes() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.active && graphPlugin.provides.graph.findNode(this.active);
-    },
-    get previousNode() {
-      invariant(graphPlugin, 'Graph plugin not found.');
-      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
+      return new Set(
+        (this.attended
+          ? Array.from(this.attended)
+              .map((attendedId) => graphPlugin!.provides.graph.findNode(attendedId as string))
+              .filter(Boolean)
+          : []) as Node[],
+      );
     },
   });
 
@@ -196,9 +231,11 @@ export const DeckPlugin = ({
         },
       },
       context: (props: PropsWithChildren) => (
-        <Mosaic.Root>
-          <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-        </Mosaic.Root>
+        <AttentionProvider attended={attention.attended}>
+          <Mosaic.Root>
+            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+          </Mosaic.Root>
+        </AttentionProvider>
       ),
       root: () => {
         const { plugins } = usePlugins();

@@ -8,11 +8,11 @@ import { SettingsValue } from '@braneframe/plugin-settings';
 import { Input, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../meta';
-import { type LayoutSettingsProps } from '../types';
+import { type DeckSettingsProps } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
 
-export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) => {
+export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) => {
   const { t } = useTranslation(DECK_PLUGIN);
 
   return (
