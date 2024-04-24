@@ -109,8 +109,8 @@ export class AgentQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
-  run(): Promise<QueryResult[]> {
-    throw new Error('not implemented');
+  async run(): Promise<QueryResult[]> {
+    return this._results ?? [];
   }
 
   update(filter: Filter): void {

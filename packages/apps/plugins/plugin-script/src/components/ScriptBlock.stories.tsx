@@ -35,7 +35,7 @@ const Story = () => {
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
+    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
   }, []);
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.

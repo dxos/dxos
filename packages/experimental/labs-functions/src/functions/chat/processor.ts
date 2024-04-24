@@ -217,7 +217,7 @@ export class RequestProcessor {
         }
 
         // TODO(dmaretskyi): Convert to the new dynamic schema API.
-        const schemas = space.db.schemaRegistry.getAll();
+        const schemas = await space.db.schemaRegistry.getAll();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.

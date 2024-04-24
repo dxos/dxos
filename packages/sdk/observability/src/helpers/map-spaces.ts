@@ -30,6 +30,7 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       key: space.key.truncate(),
       open: space.isOpen,
       members: space.members.get().length,
+      // TODO query
       objects: space.db.query().objects.length,
       startup,
       epoch,

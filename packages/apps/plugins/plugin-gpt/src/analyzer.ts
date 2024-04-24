@@ -27,7 +27,7 @@ export class GptAnalyzer {
   }
 
   async exec(space: Space, document: DocumentType) {
-    const schemas = space.db.schemaRegistry.getAll();
+    const schemas = await space.db.schemaRegistry.getAll();
     const text = document.content?.content;
     log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {

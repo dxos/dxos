@@ -55,7 +55,7 @@ export class Generator {
   }
 
   createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
-    this._generator.createObjects(count);
+    this._generator.createObjects(count).catch();
   }
 
   createDocument() {
@@ -67,9 +67,8 @@ export class Generator {
     return this._space.db.add(create(DocumentType, { title, content: create(TextV0Type, { content }) }));
   }
 
-  updateDocument() {
-    // TODO query
-    const { objects } = this._space.db.query(Filter.schema(DocumentType));
+  async updateDocument() {
+    const { objects } = await this._space.db.query(Filter.schema(DocumentType)).run();
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
       const text = object.content?.content ?? '';

@@ -13,7 +13,7 @@ import {
   type QuerySource,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryResponse, type QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/agent/query';
 import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { nonNullable } from '@dxos/util';
@@ -95,41 +95,17 @@ export class IndexQuerySource implements QuerySource {
         await currentCtx?.dispose();
         const ctx = new Context();
         currentCtx = ctx;
-        if (!response.results || response.results.length === 0) {
-          return [];
-        }
 
-        const results: QueryResult[] = (
-          await Promise.all(
-            response.results!.map(async (result) => {
-              const space = this._params.echo.get(result.spaceKey);
-              if (!space) {
-                return;
-              }
-
-              await (space as SpaceProxy)._databaseInitialized.wait();
-              const object = await space.db.automerge.loadObjectById(result.id);
-              if (ctx.disposed) {
-                return;
-              }
-
-              if (!object) {
-                return;
-              }
-
-              const core = getAutomergeObjectCore(object);
-
-              const queryResult: QueryResult = {
-                id: object.id,
-                spaceKey: core.database!.spaceKey,
-                object,
-                match: { rank: result.rank },
-                resolution: { source: 'index', time: Date.now() - start },
-              };
-              return queryResult;
-            }),
-          )
-        ).filter(nonNullable);
+        const results: QueryResult[] =
+          (response.results?.length ?? 0) > 0
+            ? (
+                await Promise.all(
+                  response.results!.map(async (result) => {
+                    return this._filterMapResult(ctx, start, result);
+                  }),
+                )
+              ).filter(nonNullable)
+            : [];
 
         const next = onResult(results);
         if (next === OnResult.CLOSE_STREAM) {
@@ -142,6 +118,38 @@ export class IndexQuerySource implements QuerySource {
         }
       },
     );
+  }
+
+  private async _filterMapResult(
+    ctx: Context,
+    queryStartTimestamp: number,
+    result: RemoteQueryResult,
+  ): Promise<QueryResult | null> {
+    const space = this._params.echo.get(result.spaceKey);
+    if (!space) {
+      return null;
+    }
+
+    await (space as SpaceProxy)._databaseInitialized.wait();
+    const object = await space.db.automerge.loadObjectById(result.id);
+    if (ctx.disposed) {
+      return null;
+    }
+
+    if (!object) {
+      return null;
+    }
+
+    const core = getAutomergeObjectCore(object);
+
+    const queryResult: QueryResult = {
+      id: object.id,
+      spaceKey: core.database!.spaceKey,
+      object,
+      match: { rank: result.rank },
+      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+    };
+    return queryResult;
   }
 
   private _closeStream() {

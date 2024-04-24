@@ -28,12 +28,14 @@ const dxosTypes = [DocumentType, FileType, GridType, KanbanType, SketchType, Sta
 /**
  * Migrate space content from pre-folders into folder structure.
  */
-const upgrade035 = () => {
+const upgrade035 = async () => {
   const client: Client = (window as any).dxos.client;
   if (client) {
     const defaultSpace = client.spaces.default;
     const personalSpaceFolderSelector = { name: defaultSpace.key.toHex() };
-    let personalSpaceFolder = defaultSpace.db.query(Filter.schema(FolderType, personalSpaceFolderSelector)).objects[0];
+    let personalSpaceFolder = (
+      await defaultSpace.db.query(Filter.schema(FolderType, personalSpaceFolderSelector)).run()
+    ).objects[0];
     if (!personalSpaceFolder) {
       personalSpaceFolder = create(FolderType, { ...personalSpaceFolderSelector, objects: [] });
     }

@@ -42,7 +42,7 @@ export const createContext = async (
 
   // Create schema registry.
   // TODO(burdon): Filter?
-  const schemaList = space.db.schemaRegistry.getAll();
+  const schemaList = await space.db.schemaRegistry.getAll();
   const schema = schemaList.reduce<Map<string, DynamicEchoSchema>>((map, schema) => {
     const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
