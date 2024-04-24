@@ -10,8 +10,8 @@ import { cancelWithContext } from '@dxos/context';
 import { Filter, type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { Plugin } from '../plugin';
 
