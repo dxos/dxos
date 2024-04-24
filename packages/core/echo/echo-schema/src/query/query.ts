@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { asyncTimeout, Event, TimeoutError } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -172,13 +172,25 @@ export class Query<T extends {} = any> {
     return this._objectCache!;
   }
 
-  async run(): Promise<OneShotQueryResult<T>> {
+  async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
     const filter = this._filter;
-    const runTasks = [...this._sources.values()].map((s) => s.run(filter));
-    const results = (await Promise.all(runTasks)).flatMap((r) => r);
+    const runTasks = [...this._sources.values()].map(async (s) => {
+      try {
+        return await asyncTimeout(s.run(filter), timeout.timeout);
+      } catch (err) {
+        if (!(err instanceof TimeoutError)) {
+          log.catch(err);
+        }
+      }
+    });
+    if (runTasks.length === 0) {
+      return { objects: [], results: [] };
+    }
+    const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
+    const filteredResults = this._filterResults(filter, mergedResults);
     return {
-      results,
-      objects: this._uniqueObjects(results),
+      results: filteredResults,
+      objects: this._uniqueObjects(filteredResults),
     };
   }
 
@@ -219,15 +231,18 @@ export class Query<T extends {} = any> {
       prohibitSignalActions(() => {
         // TODO(dmaretskyi): Clean up getters in the internal signals so they don't use the Proxy API and don't hit the signals.
         compositeRuntime.untracked(() => {
-          this._resultCache = Array.from(this._sources)
-            .flatMap((source) => source.getResults())
-            .filter(
-              (result) => result.object && filterMatch(this._filter, getAutomergeObjectCore(result.object)),
-            ) as QueryResult<T>[];
+          this._resultCache = this._filterResults(
+            this._filter,
+            Array.from(this._sources).flatMap((source) => source.getResults()),
+          );
           this._objectCache = this._uniqueObjects(this._resultCache);
         });
       });
     }
+  }
+
+  private _filterResults(filter: Filter, results: QueryResult[]): QueryResult<T>[] {
+    return results.filter((result) => result.object && filterMatch(filter, getAutomergeObjectCore(result.object)));
   }
 
   private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {
