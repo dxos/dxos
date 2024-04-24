@@ -49,12 +49,12 @@
     "@radix-ui/react-radio-group": "^1.1.2",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "@react-hook/async": "^3.1.1",
-    "@xstate/react": "^3.2.1",
+    "@xstate/react": "^4.1.1",
     "date-fns": "^3.3.1",
     "emoji-mart": "^5.5.2",
     "react-qr-rounded": "^1.0.0",
     "url-join": "^5.0.0",
-    "xstate": "^4.37.0"
+    "xstate": "^5.9.1"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
