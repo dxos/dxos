@@ -29,7 +29,7 @@ app.get('/ws/:swarmKey', async (c) => {
     return new Response('Durable Object expected Upgrade: websocket', { status: 426 });
   }
 
-  // TODO(burdon): PRIVACY.
+  // TODO(burdon): PRIVACY!
   const { postalCode, latitude, longitude } = (c.req.raw as any).cf as IncomingRequestCfProperties;
   log.info('metadata', { postalCode, latitude, longitude });
 

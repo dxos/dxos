@@ -1,10 +1,17 @@
 #
-# Wrangler configuration file.
+# Workers configuration file.
+# https://developers.cloudflare.com/workers/wrangler/configuration
+#
 
 name = "labs-workers"
 main = "src/index.ts"
 compatibility_date = "2024-04-19"
 account_id = "950816f3f59b079880a1ae33fb0ec320"
+
+# Configure via Settings > Triggers > Custom Domains.
+routes = [
+  { pattern = "admin.composer.rocks", custom_domain = true }
+]
 
 [vars]
   WORKER_ENV = "production"
