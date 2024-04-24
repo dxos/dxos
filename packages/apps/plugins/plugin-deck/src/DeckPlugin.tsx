@@ -4,18 +4,15 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { type Node, useGraph } from '@braneframe/plugin-graph';
+import { useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
-  findPlugin,
   parseGraphPlugin,
   parseIntentPlugin,
-  parseSurfacePlugin,
   resolvePlugin,
   useIntent,
-  usePlugins,
   LayoutAction,
   NavigationAction,
   Surface,
@@ -28,19 +25,19 @@ import {
   type Layout,
   type Location,
   IntentAction,
+  isActiveParts,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema/schema';
-import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { activeToUri, checkAppScheme, uriToActive } from '@dxos/util';
 
 import { LayoutContext, MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { activeToUri, checkAppScheme, firstMainId, uriToActive } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
@@ -48,14 +45,7 @@ const appScheme = 'composer://';
 
 type AttentionState = {
   attended: Set<string>;
-  attendedNodes: Set<Node>;
 };
-
-type LocationState = Location &
-  Partial<{
-    activeNodes: Record<string, Node[]>;
-    closedNodes: Node[];
-  }>;
 
 export const DeckPlugin = ({
   observability,
@@ -92,46 +82,13 @@ export const DeckPlugin = ({
     toasts: [],
   });
 
-  const location = create<LocationState>({
+  const location = create<Location>({
     active: {},
-    get activeNodes() {
-      invariant(graphPlugin, 'Graph plugin not found.');
-      return (
-        this.active &&
-        Object.entries(this.active).reduce((acc: Record<string, Node[]>, [part, ids]) => {
-          if (typeof ids === 'string') {
-            const node = graphPlugin!.provides.graph.findNode(ids);
-            if (node) {
-              acc[part] = [node];
-            }
-          } else if (Array.isArray(ids)) {
-            acc[part] = ids.map((id) => graphPlugin!.provides.graph.findNode(id)).filter(Boolean) as Node[];
-          }
-          return acc;
-        }, {})
-      );
-    },
     closed: [],
-    get closedNodes() {
-      invariant(graphPlugin, 'Graph plugin not found.');
-      return this.closed && this.closed.map((id: string) => graphPlugin!.provides.graph.findNode(id));
-    },
   });
 
   const attention = create<AttentionState>({
     attended: new Set(),
-
-    // TODO(burdon): Should not be on this object.
-    get attendedNodes() {
-      invariant(graphPlugin, 'Graph plugin not found.');
-      return new Set(
-        (this.attended
-          ? Array.from(this.attended)
-              .map((attendedId) => graphPlugin!.provides.graph.findNode(attendedId as string))
-              .filter(Boolean)
-          : []) as Node[],
-      );
-    },
   });
 
   const handleSetLayout = ({
@@ -234,15 +191,13 @@ export const DeckPlugin = ({
         <AttentionProvider attended={attention.attended}>
           <Mosaic.Root>
             <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+            <Mosaic.DragOverlay />
           </Mosaic.Root>
         </AttentionProvider>
       ),
       root: () => {
-        const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const [shortId, component] = location.active?.split(':') ?? [];
-        const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -273,51 +228,44 @@ export const DeckPlugin = ({
           }
         }, [location.active]);
 
-        const surfaceProps: SurfaceProps = plugin
-          ? { data: { component: `${plugin.meta.id}/${component}` } }
-          : location.activeNode
-            ? layout.values.fullscreen
-              ? {
-                  data: { component: `${DECK_PLUGIN}/MainLayout` },
-                  surfaces: { main: { data: { active: location.activeNode.data } } },
-                }
-              : {
-                  data: { component: `${DECK_PLUGIN}/MainLayout` },
-                  surfaces: {
-                    sidebar: {
-                      data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
-                    },
-                    main: { data: { active: location.activeNode.data } },
-                    'navbar-start': {
-                      data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
-                    },
-                    'navbar-end': { data: { object: location.activeNode.data } },
-                    status: { data: { active: location.activeNode.data } },
-                    documentTitle: { data: { activeNode: location.activeNode } },
+        const surfaceProps: SurfaceProps = layout.values.fullscreen
+          ? {
+              data: { component: `${DECK_PLUGIN}/FullscreenLayout` },
+              surfaces: {
+                main: { data: { active: firstMainId(location.active) } },
+              },
+            }
+          : {
+              data: { component: `${DECK_PLUGIN}/DeckLayout` },
+              surfaces: {
+                sidebar: {
+                  data: {
+                    graph,
+                    active: isActiveParts(location.active) ? location.active.sidebar : ['navtree'],
+                    popoverAnchorId: layout.values.popoverAnchorId,
                   },
-                }
-            : {
-                data: { component: `${DECK_PLUGIN}/MainLayout` },
-                surfaces: {
-                  sidebar: {
-                    data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
-                  },
-                  main: {
-                    data: location.active ? { active: location.active } : { component: `${DECK_PLUGIN}/ContentEmpty` },
-                  },
-                  // TODO(wittjosiah): This plugin should own document title.
-                  documentTitle: { data: { component: `${DECK_PLUGIN}/DocumentTitle` } },
                 },
-              };
+                main: {
+                  data: {
+                    graph,
+                    active: isActiveParts(location.active) ? location.active.main : [],
+                    popoverAnchorId: layout.values.popoverAnchorId,
+                  },
+                },
+                complementary: {
+                  data: {
+                    graph,
+                    active: isActiveParts(location.active) ? location.active.complementary : [],
+                    popoverAnchorId: layout.values.popoverAnchorId,
+                  },
+                },
+                documentTitle: {
+                  data: { activeNode: graphPlugin?.provides.graph.findNode(Array.from(attention.attended)[0]) },
+                },
+              },
+            };
 
-        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
-
-        return (
-          <AttentionProvider attended={attended}>
-            <Surface {...surfaceProps} />
-            <Mosaic.DragOverlay />
-          </AttentionProvider>
-        );
+        return <Surface {...surfaceProps} />;
       },
       surface: {
         component: ({ data, role }) => {
@@ -403,11 +351,15 @@ export const DeckPlugin = ({
               }
 
               batch(() => {
-                location.previous = location.active;
-                location.active = id;
+                location.active = isActiveParts(location.active)
+                  ? {
+                      ...location.active,
+                      main: [id, ...location.active.main],
+                    }
+                  : { main: [id] };
               });
 
-              const schema = location.activeNode?.data?.__typename;
+              const schema = graphPlugin?.provides.graph.findNode(id)?.data?.__typename;
 
               return {
                 data: {
