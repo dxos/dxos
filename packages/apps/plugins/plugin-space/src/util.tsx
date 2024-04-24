@@ -213,8 +213,8 @@ export const updateGraphWithSpace = ({
         graph,
         condition:
           space.state.get() === SpaceState.READY &&
-          typeof Migrations.versionProperty === 'string' &&
-          getSpaceProperty(space, Migrations.versionProperty) !== Migrations.targetVersion,
+          !!Migrations.versionProperty &&
+          space.properties[Migrations.versionProperty] !== Migrations.targetVersion,
         removeEdges: true,
         nodes: [
           {

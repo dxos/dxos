@@ -119,7 +119,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         const personalSpaceCollection = create(Collection, { objects: [], views: {} });
         setSpaceProperty(defaultSpace, Collection.typename, personalSpaceCollection);
         if (Migrations.versionProperty) {
-          setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
         await onFirstRun?.({ client, dispatch });
       }
@@ -492,7 +492,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
               sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
-                setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
+                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
               }
 
               return { data: { space, id: space.key.toHex() } };
