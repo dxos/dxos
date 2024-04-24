@@ -252,6 +252,9 @@ class SpaceQuerySource implements QuerySource {
   };
 
   async run(filter: Filter): Promise<QueryResult<EchoReactiveObject<any>>[]> {
+    if (!this._isValidSourceForFilter(filter)) {
+      return [];
+    }
     let results: QueryResult<EchoReactiveObject<any>>[] = [];
     prohibitSignalActions(() => {
       results = this._query(filter);
@@ -274,14 +277,7 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoReactiveObject<any>>): void {
-    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
-      // Disabled by spaces filter.
-      this._filter = undefined;
-      return;
-    }
-
-    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
-      // Disabled by dataLocation filter.
+    if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
     }
@@ -319,5 +315,17 @@ class SpaceQuerySource implements QuerySource {
           },
         }))
     );
+  }
+
+  private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
+    // Disabled by spaces filter.
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
+      return false;
+    }
+    // Disabled by dataLocation filter.
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+      return false;
+    }
+    return true;
   }
 }
