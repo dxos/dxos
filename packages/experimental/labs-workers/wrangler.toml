@@ -36,4 +36,4 @@ class_name = "SignalingServer"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["SwarmObject", "WebSocketServer"]
+new_classes = ["SignalingServer"]

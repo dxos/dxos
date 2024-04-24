@@ -4,7 +4,7 @@
 
 import { type Ai } from '@cloudflare/ai';
 
-import { type SwarmObject, type WebSocketServer } from './signaling';
+import { type SwarmObject } from './signaling';
 
 // TODO(burdon): YAML file for config.
 export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
@@ -27,7 +27,6 @@ export type Env = {
     DB: D1Database;
 
     // Signaling server.
-    WEBSOCKET: DurableObjectNamespace<WebSocketServer>;
     SIGNALING: DurableObjectNamespace<SwarmObject>;
 
     // AI.
