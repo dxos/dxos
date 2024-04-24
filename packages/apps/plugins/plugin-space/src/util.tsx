@@ -80,7 +80,9 @@ const getFolderGraphNodePartials = ({
       // } else {
 
       // Add child to destination collection.
-      collection.objects.push(child.data);
+      if (!collection.objects.includes(child.data)) {
+        collection.objects.push(child.data);
+      }
 
       // }
     },
