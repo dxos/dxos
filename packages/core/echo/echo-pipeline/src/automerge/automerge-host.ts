@@ -26,6 +26,7 @@ import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
 import { type SubLevelDB } from './types';
 
+// TODO: Remove
 export type { DocumentId };
 
 export type AutomergeHostParams = {
