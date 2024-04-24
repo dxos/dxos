@@ -38,9 +38,13 @@ export class QueryServiceImpl extends Resource implements QueryService {
   private readonly _updateQueries = new DeferredTask(this._ctx, async () => {
     await Promise.all(
       Array.from(this._queries).map(async (query) => {
-        const { changed } = await query.state.runQuery();
-        if (changed) {
-          query.sendResults(query.state.getResults());
+        try {
+          const { changed } = await query.state.runQuery();
+          if (changed) {
+            query.sendResults(query.state.getResults());
+          }
+        } catch (err) {
+          log.catch(err);
         }
       }),
     );
@@ -92,8 +96,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
       queueMicrotask(async () => {
         try {
           const { changed } = await query.state.runQuery();
-          if (changed && !ctx.disposed) {
-            next({ queryId: request.queryId, results: query.state.getResults() });
+          if (changed) {
+            query.sendResults(query.state.getResults());
           }
         } catch (error) {
           log.catch(error);
