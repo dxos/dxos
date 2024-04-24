@@ -35,10 +35,10 @@ import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { activeToUri, checkAppScheme, uriToActive } from '@dxos/util';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
+import { activeToUri, checkAppScheme, firstMainId, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
@@ -87,16 +87,18 @@ export const LayoutPlugin = ({
 
   const location = create<NavigationState>({
     active: undefined,
-    previous: undefined,
+    closed: undefined,
 
     // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.active && graphPlugin.provides.graph.findNode(this.active);
+      return this.active ? graphPlugin.provides.graph.findNode(firstMainId(this.active)) : undefined;
     },
     get previousNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
+      return this.closed
+        ? graphPlugin.provides.graph.findNode(Array.isArray(this.closed) ? this.closed[0] : this.closed)
+        : undefined;
     },
   });
 
@@ -205,7 +207,7 @@ export const LayoutPlugin = ({
         const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const [shortId, component] = location.active?.split(':') ?? [];
+        const [shortId, component] = location.active ? firstMainId(location.active).split(':') : [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
 
         // Update selection based on browser navigation.
@@ -369,7 +371,7 @@ export const LayoutPlugin = ({
               }
 
               batch(() => {
-                location.previous = location.active;
+                location.closed = firstMainId(location.active);
                 location.active = id;
               });
 

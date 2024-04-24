@@ -31,7 +31,6 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
