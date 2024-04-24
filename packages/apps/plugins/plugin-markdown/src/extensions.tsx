@@ -6,9 +6,9 @@ import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/reac
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
-import { Filter, getSpace } from '@dxos/react-client/echo';
+import { type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
@@ -32,14 +32,13 @@ export type ExtensionsOptions = {
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
+  query?: Query<DocumentType>;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ dispatch, settings, document }: ExtensionsOptions): Extension[] => {
-  const space = document ? getSpace(document) : undefined;
-
+export const getExtensions = ({ dispatch, settings, document, query }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     //
     // Common.
@@ -74,14 +73,13 @@ export const getExtensions = ({ dispatch, settings, document }: ExtensionsOption
   //
   // Autocomplete object links.
   //
-  if (space) {
+  if (query) {
     extensions.push(
       autocomplete({
         onSearch: (text: string) => {
           // TODO query
           // TODO(burdon): Specify filter (e.g., stack).
-          const { objects = [] } = space?.db.query(Filter.schema(DocumentType)) ?? {};
-          return objects
+          return query.objects
             .map<AutocompleteResult | undefined>((object) =>
               object.title?.length && object.id !== document?.id
                 ? {
