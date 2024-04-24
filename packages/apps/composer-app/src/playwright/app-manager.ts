@@ -107,7 +107,7 @@ export class AppManager {
 
   async createSpace(timeout = 5_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
-    await this.page.getByTestId('spacePlugin.main').waitFor({ timeout });
+    await this.waitForSpaceReady(timeout);
   }
 
   async joinSpace() {
@@ -115,15 +115,8 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
-    return waitFor(
-      () =>
-        this.page
-          .getByTestId('spacePlugin.main')
-          .getAttribute('data-isready')
-          .then((value) => value === 'true'),
-      params,
-    );
+  async waitForSpaceReady(timeout = 30_000) {
+    await this.page.getByTestId('spacePlugin.shareSpaceButton').waitFor({ timeout });
   }
 
   getSpacePresenceMembers() {
@@ -241,24 +234,3 @@ export class AppManager {
     await this.page.getByTestId('resetDialog').waitFor();
   }
 }
-
-// TODO(wittjosiah): Factor out.
-const waitFor = (
-  cb: () => Promise<boolean>,
-  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
-): Promise<void> =>
-  new Promise<void>((resolve, reject) => {
-    const interval = setInterval(async () => {
-      const res = await cb();
-      if (res) {
-        clearTimeout(timeout);
-        clearInterval(interval);
-        resolve();
-      }
-    }, _interval);
-
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      reject(new Error('Timeout waiting for condition.'));
-    }, _timeout);
-  });

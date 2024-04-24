@@ -31,7 +31,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, getSpace, type PropertiesProps, isSpace } from '@dxos/react-client/echo';
+import { type Space, getSpace, type PropertiesProps, isSpace, SpaceState } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -308,17 +308,22 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
             case 'navbar-end': {
-              if (!isEchoObject(data.object)) {
+              if (!isEchoObject(data.object) && !isSpace(data.object)) {
                 return null;
               }
 
               const defaultSpace = clientPlugin?.provides.client.spaces.default;
-              const space = getSpace(data.object);
-              return space && space !== defaultSpace
+              const space = isSpace(data.object) ? data.object : getSpace(data.object);
+              const object = isSpace(data.object)
+                ? data.object.state.get() === SpaceState.READY
+                  ? (getSpaceProperty(space, Collection.typename) as Collection)
+                  : undefined
+                : data.object;
+              return space && space !== defaultSpace && object
                 ? {
                     node: (
                       <>
-                        <SpacePresence object={data.object} />
+                        <SpacePresence object={object} />
                         <ShareSpaceButton spaceKey={space.key} />
                       </>
                     ),
