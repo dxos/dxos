@@ -11,6 +11,7 @@ import type { Env } from '../defs';
 
 export * from './protocol';
 export * from './socket';
+export * from './swarm';
 
 const app = new Hono<Env>();
 

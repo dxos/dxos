@@ -64,7 +64,7 @@ export class SignalingServer extends DurableObject {
     // Check if client has disconnected.
     // https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1
     if (code !== 1005) {
-      ws.close(code, 'SignalingServer is closing WebSocket');
+      ws.close(code, 'WebSocketServer is closing WebSocket');
     }
 
     // @ts-ignore

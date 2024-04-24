@@ -2,6 +2,7 @@
 # Workers configuration file.
 # https://developers.cloudflare.com/workers/wrangler/configuration
 #
+# Wrangler configuration file.
 
 name = "labs-workers"
 main = "src/index.ts"
