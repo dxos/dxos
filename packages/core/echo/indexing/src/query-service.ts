@@ -3,10 +3,13 @@
 //
 
 import { DeferredTask } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
+import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
 import { log } from '@dxos/log';
+import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import {
   type QueryRequest,
@@ -15,12 +18,9 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { ObjectSnapshot, type Indexer } from './indexer';
+import { type ObjectSnapshot, type Indexer } from './indexer';
 import { QueryState } from './query-state';
-import { DocHandle, DocumentId } from '@dxos/automerge/automerge-repo';
-import { getHeads } from '@dxos/automerge/automerge';
-import { ObjectPointerEncoded, idCodec } from '@dxos/protocols';
-import { ConcatenatedHeadHashes } from './types';
+import { type ConcatenatedHeadHashes } from './types';
 
 export type QueryServiceParams = {
   indexer: Indexer;

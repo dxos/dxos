@@ -15,7 +15,6 @@ import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
-import { log } from '@dxos/log';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
@@ -33,7 +32,6 @@ describe('Indexer', () => {
       loadDocuments: async function* (ids) {
         yield documents.filter((doc) => ids.includes(doc.id));
       },
-      getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
 
@@ -93,11 +91,6 @@ describe('Indexer', () => {
       metadataStore,
       loadDocuments: async function* (ids) {
         yield ids.map((id) => ({ id, object: objects[parseInt(id)], currentHash: 'hash' }));
-      },
-      getAllDocuments: async function* () {
-        for (const index in objects) {
-          yield [{ id: index, object: objects[index], currentHash: 'hash' }];
-        }
       },
     });
     afterTest(() => indexer.destroy());

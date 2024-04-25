@@ -41,6 +41,7 @@ describe('Index queries', () => {
     await client.halo.createIdentity();
 
     const indexer = new Indexer({
+      db: builder.level,
       indexStore: new IndexStore({ db: builder.level!.sublevel('index-store') }),
       metadataStore: services.host!.context.indexMetadata,
       loadDocuments: async function* (ids: string[]) {
@@ -53,7 +54,6 @@ describe('Index queries', () => {
           yield [{ id, object: doc.objects[objectId], currentHash: heads.at(-1)! }];
         }
       },
-      getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
 

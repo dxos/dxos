@@ -3,9 +3,8 @@
 //
 
 import { getHeads } from '@dxos/automerge/automerge';
-import { type DocumentId, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
-import { type ObjectSnapshot } from '@dxos/indexing';
 import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
 
 /**

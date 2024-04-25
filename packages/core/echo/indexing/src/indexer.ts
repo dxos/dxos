@@ -41,8 +41,6 @@ export type IndexerParams = {
   indexStore: IndexStore;
 
   loadDocuments: (ids: ObjectPointerEncoded[]) => AsyncGenerator<ObjectSnapshot[]>;
-
-  getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 };
 
 @trace.resource()
@@ -75,15 +73,12 @@ export class Indexer {
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
-  // TODO(dmaretskyi): Remove.
-  private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 
-  constructor({ db, metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
+  constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     this._db = db;
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
     this._loadDocuments = loadDocuments;
-    this._getAllDocuments = getAllDocuments;
   }
 
   get initialized() {
