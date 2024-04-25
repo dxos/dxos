@@ -46,7 +46,7 @@ export class QueryPlugin extends Plugin {
     const filter = Filter.fromProto(
       defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
     );
-    const { results: queryResults } = this.context.client.spaces.query(filter, filter.options);
+    const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
 
     const response: QueryResponse = {
       queryId: request.queryId,

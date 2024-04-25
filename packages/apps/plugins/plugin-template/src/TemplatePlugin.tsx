@@ -60,6 +60,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
 
               // Add all documents to the graph.
               const query = space.db.query({ type: typename });
+              subscriptions.add(query.subscribe());
               let previousObjects: EchoReactiveObject<any>[] = [];
               subscriptions.add(
                 effect(() => {

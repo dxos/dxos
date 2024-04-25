@@ -63,6 +63,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
               // Add all maps to the graph.
               const query = space.db.query(Filter.schema(MapType));
+              subscriptions.add(query.subscribe());
               let previousObjects: MapType[] = [];
               subscriptions.add(
                 effect(() => {

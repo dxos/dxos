@@ -50,7 +50,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
   useEffect(() => {
     if (space) {
-      setSchemas(space.db.schemaRegistry.getAll());
+      space.db.schemaRegistry.getAll().then(setSchemas);
     }
   }, [showSettings, space]);
 

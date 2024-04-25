@@ -79,7 +79,7 @@ describe('dynamic schema', () => {
     expect(getType(object)?.itemId).to.be.eq(schema.id);
 
     db.add(object);
-    const queried = db.query(Filter.schema(schema)).objects;
+    const queried = (await db.query(Filter.schema(schema)).run()).objects;
     expect(queried.length).to.eq(1);
     expect(queried[0].id).to.eq(object.id);
   });

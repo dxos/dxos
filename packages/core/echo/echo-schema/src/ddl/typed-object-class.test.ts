@@ -63,7 +63,7 @@ describe('EchoObject class dsl', () => {
   test('can query objects by type', async () => {
     const { db } = await setupDatabase();
     db.add(create(Organization, { ...DEFAULT_ORG }));
-    const query = db.query(Filter.schema(Organization));
+    const query = await db.query(Filter.schema(Organization)).run();
     expect(query.objects[0].name).to.eq(DEFAULT_ORG.name);
   });
 

@@ -109,7 +109,7 @@ export class Serializer {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
     const {
       objects: [properties],
-    } = database.query(Filter.typename(TYPE_PROPERTIES));
+    } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
     const { objects } = data;
 

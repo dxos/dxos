@@ -40,7 +40,7 @@ describe('HyperGraph', () => {
     await builder.flushAll();
 
     const query = builder.graph.query({ type: 'task' });
-    expect(query.objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj2.id]);
+    expect((await query.run()).objects.map((obj) => obj.id)).to.deep.eq([obj1.id, obj2.id]);
 
     let updated = false;
     query.subscribe(() => {

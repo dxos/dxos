@@ -3,10 +3,11 @@
 //
 
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { parseIntentPlugin, useResolvePlugin, parseNavigationPlugin, NavigationAction } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -25,13 +26,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const client = useClient();
-
-  // TODO(dmaretskyi): Any reason not to useQuery here?
-  const query = useMemo(() => client.spaces.query(), []);
-  const objects = useSyncExternalStore(
-    useMemo(() => (cb) => query.subscribe(cb), [query]),
-    () => query.objects,
-  );
+  const objects = useQuery(client.spaces);
 
   useEffect(() => {
     if (!id) {
