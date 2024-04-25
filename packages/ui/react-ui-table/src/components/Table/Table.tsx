@@ -45,8 +45,7 @@ type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primit
 const TableViewport = ({ children, classNames, ...props }: TableViewportProps) => {
   const { scrollContextRef } = useTableRootContext();
 
-  // TODO(Zan): This isn't sufficient yet.
-  const classes = mx('overflow-auto', classNames);
+  const classes = mx(classNames);
 
   return (
     <div role='none' className={classes} ref={scrollContextRef} {...props}>

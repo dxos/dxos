@@ -116,9 +116,19 @@ const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, a
 // Tests
 //
 
+const MinimalTable = (props: any) => {
+  return (
+    <Table.Root>
+      <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Table<any> {...props} />
+      </Table.Viewport>
+    </Table.Root>
+  );
+};
+
 export default {
   title: 'react-ui-table/Table',
-  component: Table,
+  component: MinimalTable,
   args: {
     header: true,
     keyAccessor: (item: Item) => item.publicKey.toHex(),
@@ -205,7 +215,7 @@ export const Dynamic = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             role='grid'
             rowsSelectable='multi'
@@ -236,7 +246,7 @@ export const Editable = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             role='grid'
             rowsSelectable='multi'
@@ -267,7 +277,7 @@ export const PinnedLastRow = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             role='grid'
             rowsSelectable='multi'
@@ -321,7 +331,7 @@ export const InsertDelete = {
           <Button onClick={onDeleteLast}>Delete last</Button>
         </div>
         <Table.Root>
-          <Table.Viewport classNames='fixed inset-0'>
+          <Table.Viewport classNames='fixed inset-0 overflow-auto'>
             <Table.Table<Item>
               role='grid'
               rowsSelectable='multi'
@@ -351,7 +361,7 @@ export const Resizable = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -379,7 +389,7 @@ export const TenThousandRows = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             role='grid'
             rowsSelectable='multi'
@@ -481,7 +491,7 @@ export const RealTimeUpdates = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0'>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
           <Table.Table<Item>
             role='grid'
             rowsSelectable='multi'
