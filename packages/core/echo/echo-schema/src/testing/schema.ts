@@ -6,6 +6,13 @@ import * as S from '@effect/schema/Schema';
 
 import { TypedObject } from '../typed-object-class';
 
+export const TEST_SCHEMA_TYPE = {
+  typename: 'TestSchema',
+  version: '1.0.0',
+};
+
+export class GeneratedEmptySchema extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
+
 export class TestClass {
   field = 'value';
 
@@ -34,10 +41,7 @@ const fields = {
   other: S.any,
 };
 
-export class TestSchemaClass extends TypedObject<TestSchemaClass>({
-  typename: 'TestSchema',
-  version: '1.0.0',
-})(fields, { partial: true }) {}
+export class TestSchemaClass extends TypedObject<TestSchemaClass>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
 
 export const TestSchema = S.mutable(S.partial(S.struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;

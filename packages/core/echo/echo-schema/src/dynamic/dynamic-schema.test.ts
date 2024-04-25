@@ -4,100 +4,31 @@
 
 import * as AST from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
+import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
+import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
 import { DynamicEchoSchema } from './dynamic-schema';
-import { Filter } from '../../query';
-import { createDatabase } from '../../testing';
-import {
-  EchoObjectAnnotationId,
-  fieldMeta,
-  getEchoObjectAnnotation,
-  getFieldMetaAnnotation,
-  ref,
-} from '../annotations';
-import { getSchema, getTypeReference, getType } from '../getter';
+import { StoredEchoSchema } from './stored-schema';
+import { fieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../annotations';
+import { getTypeReference } from '../getter';
 import { create } from '../handler';
+import { effectToJsonSchema } from '../json';
+import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
 
-const generatedType = { typename: 'generated', version: '1.0.0' };
-
-class GeneratedEmptySchema extends TypedObject(generatedType)({}) {}
-
-class ClassWithSchemaField extends TypedObject({ typename: 'SchemaHolder', version: '1.0.0' })({
-  schema: S.optional(ref(DynamicEchoSchema)),
-}) {}
+registerSignalRuntime();
 
 describe('dynamic schema', () => {
-  test('set DynamicSchema as echo object field', async () => {
-    const { db } = await setupTest();
-    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
-    class GeneratedSchema extends TypedObject(generatedType)({
-      field: S.string,
-    }) {}
-
-    instanceWithSchemaRef.schema = db.schemaRegistry.add(GeneratedSchema);
-    const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
-    });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
-
-    const validator = S.validateSync(instanceWithSchemaRef.schema!);
-    expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
-    expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
-  });
-
-  test('create echo object with DynamicSchema', async () => {
-    const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject(generatedType)({ field: S.string }) {}
-    const schema = db.schemaRegistry.add(GeneratedSchema);
-    const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
-
-    const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...generatedType, storedSchemaId: instanceWithSchemaRef.schema?.id },
-    });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
-  });
-
-  test('can be used to create objects', async () => {
-    const { db } = await setupTest();
-    const schema = db.schemaRegistry.add(GeneratedEmptySchema);
-    const object = create(schema, {});
-    schema.addColumns({ field1: S.string });
-    object.field1 = 'works';
-    object.field1 = undefined;
-    expect(() => {
-      object.field1 = 42;
-    }).to.throw();
-    expect(() => {
-      object.field2 = false;
-    }).to.throw();
-
-    expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(getType(object)?.itemId).to.be.eq(schema.id);
-
-    db.add(object);
-    const queried = (await db.query(Filter.schema(schema)).run()).objects;
-    expect(queried.length).to.eq(1);
-    expect(queried[0].id).to.eq(object.id);
-  });
-
-  test('getTypeReference', async () => {
-    const { db } = await setupTest();
-    const schema = db.schemaRegistry.add(GeneratedEmptySchema);
-    expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
-  });
-
   test('getProperties filters out id and unwraps optionality', async () => {
-    const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject(generatedType)({
+    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
       field1: S.string,
       field2: S.boolean,
     }) {}
 
-    const registered = db.schemaRegistry.add(GeneratedSchema);
+    const registered = createDynamicSchema(GeneratedSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field2', AST.booleanKeyword],
       ['field1', AST.stringKeyword],
@@ -105,12 +36,11 @@ describe('dynamic schema', () => {
   });
 
   test('addColumns', async () => {
-    const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject(generatedType)({
+    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
       field1: S.string,
     }) {}
 
-    const registered = db.schemaRegistry.add(GeneratedSchema);
+    const registered = createDynamicSchema(GeneratedSchema);
     registered.addColumns({ field2: S.boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
@@ -119,8 +49,7 @@ describe('dynamic schema', () => {
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
-    const { db } = await setupTest();
-    const registered = db.schemaRegistry.add(GeneratedEmptySchema);
+    const registered = createDynamicSchema(GeneratedEmptySchema);
     registered.addColumns({ field1: S.string });
     registered.addColumns({ field2: S.boolean });
     registered.addColumns({ field3: S.number });
@@ -134,8 +63,7 @@ describe('dynamic schema', () => {
   });
 
   test('removeColumns', async () => {
-    const { db } = await setupTest();
-    const registered = db.schemaRegistry.add(GeneratedEmptySchema);
+    const registered = createDynamicSchema(GeneratedEmptySchema);
     registered.addColumns({ field1: S.string });
     registered.addColumns({ field2: S.boolean });
     registered.addColumns({ field3: S.number });
@@ -147,10 +75,9 @@ describe('dynamic schema', () => {
   });
 
   test('schema manipulations preserve annotations', async () => {
-    const { db } = await setupTest();
     const meteNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
-    const registered = db.schemaRegistry.add(GeneratedEmptySchema);
+    const registered = createDynamicSchema(GeneratedEmptySchema);
     registered.addColumns({
       field1: S.string.pipe(fieldMeta(meteNamespace, metaInfo)),
       field2: S.string,
@@ -158,13 +85,22 @@ describe('dynamic schema', () => {
     registered.addColumns({ field3: S.string });
     registered.updateColumns({ field3: S.boolean });
     registered.removeColumns(['field2']);
-    expect(getEchoObjectAnnotation(registered)).to.deep.contain(generatedType);
+    expect(getEchoObjectAnnotation(registered)).to.deep.contain(TEST_SCHEMA_TYPE);
     expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
   });
 
-  const setupTest = async () => {
-    const { db, graph } = await createDatabase();
-    graph.runtimeSchemaRegistry.registerSchema(ClassWithSchemaField);
-    return { db };
+  const createDynamicSchema = (schema: S.Schema<any>): DynamicEchoSchema => {
+    const dynamicSchema = new DynamicEchoSchema(
+      create(StoredEchoSchema, {
+        typename: getTypeReference(schema)!.itemId,
+        version: TEST_SCHEMA_TYPE.version,
+        jsonSchema: effectToJsonSchema(schema),
+      }),
+    );
+    effect(() => {
+      const _ = dynamicSchema.serializedSchema.jsonSchema;
+      dynamicSchema.invalidate();
+    });
+    return dynamicSchema;
   };
 });

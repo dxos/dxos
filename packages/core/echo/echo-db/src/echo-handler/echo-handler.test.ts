@@ -19,6 +19,13 @@ import {
   type EchoReactiveObject,
   getSchema,
 } from '@dxos/echo-schema';
+import {
+  TestSchemaClass,
+  TestSchema,
+  type TestSchemaWithClass,
+  TEST_OBJECT,
+  TestClass,
+} from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -29,7 +36,6 @@ import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
-import { TEST_OBJECT, TestClass, TestSchema, TestSchemaClass, type TestSchemaWithClass } from '../testing';
 import { createDatabase, TestBuilder, Contact, Task } from '../testing';
 
 registerSignalRuntime();

@@ -198,6 +198,22 @@ describe('Database', () => {
     ).to.have.length(2);
   });
 
+  describe('references', () => {
+    test('add with a reference to echo reactive proxy', async () => {
+      const { db: database } = await createDbWithTypes();
+      const firstTask = database.add(create(Task, { title: 'foo' }));
+      const secondTask = database.add(create(Task, { title: 'bar', previous: firstTask }));
+      expect(secondTask.previous).to.eq(firstTask);
+    });
+
+    test('add with a reference to a reactive proxy', async () => {
+      const { db: database } = await createDbWithTypes();
+      const task = database.add(create(Task, { title: 'first', previous: create(Task, { title: 'second' }) }));
+      expect(task.title).to.eq('first');
+      expect(task.previous?.id).to.be.a('string');
+    });
+  });
+
   test('typenames of nested objects', async () => {
     const { db: database } = await createDbWithTypes();
 

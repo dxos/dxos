@@ -5323,6 +5323,9 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5341,6 +5344,9 @@ importers:
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
       effect:
         specifier: 2.4.9
         version: 2.4.9
@@ -5348,27 +5354,9 @@ importers:
         specifier: ^4.4.2
         version: 4.4.2
     devDependencies:
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
       '@dxos/test':
         specifier: workspace:*
         version: link:../../../../tools/executors/test
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-      '@types/lodash.get':
-        specifier: ^4.4.7
-        version: 4.4.7
-      '@types/lodash.isequal':
-        specifier: ^4.5.0
-        version: 4.5.6
-      fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
-      wait-for-expect:
-        specifier: ^3.0.2
-        version: 3.0.2
 
   packages/core/echo/echo-signals:
     dependencies:

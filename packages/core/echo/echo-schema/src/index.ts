@@ -13,3 +13,4 @@ export * from './getter';
 export * from './typed-object-class';
 export * from './types';
 export * from './reference';
+export { defineHiddenProperty } from './utils';

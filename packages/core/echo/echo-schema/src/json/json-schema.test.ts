@@ -8,24 +8,23 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { type EchoObjectAnnotation, fieldMeta, ref } from '../annotations';
+import { fieldMeta, ref } from '../annotations';
+import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
-
-const testSchema: EchoObjectAnnotation = { typename: 'Test', version: '0.1.0' };
 
 describe('effect-to-json', () => {
   const ECHO_KEY = '$echo';
 
   test('type annotation', () => {
-    class Schema extends TypedObject(testSchema)({ field: S.string }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
     const jsonSchema = effectToJsonSchema(Schema);
-    expect(jsonSchema[ECHO_KEY].type).to.deep.eq(testSchema);
+    expect(jsonSchema[ECHO_KEY].type).to.deep.eq(TEST_SCHEMA_TYPE);
   });
 
   test('field meta annotation', () => {
     const meta = { maxLength: 0 };
     const metaNamespace = 'dxos.test';
-    class Schema extends TypedObject(testSchema)({
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({
       field: S.string.pipe(fieldMeta(metaNamespace, meta)),
     }) {}
     const jsonSchema = effectToJsonSchema(Schema);
@@ -33,9 +32,9 @@ describe('effect-to-json', () => {
   });
 
   test('reference annotation', () => {
-    class DeepNested extends TypedObject(testSchema)({ field: S.string }) {}
-    class Nested extends TypedObject(testSchema)({ field: ref(DeepNested) }) {}
-    class Schema extends TypedObject(testSchema)({ field: ref(Nested) }) {}
+    class DeepNested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(DeepNested) }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(Nested) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     const nested = jsonSchema.properties.field;
     expectReferenceAnnotation(nested);
@@ -43,15 +42,15 @@ describe('effect-to-json', () => {
   });
 
   test('array of references', () => {
-    class Nested extends TypedObject(testSchema)({ field: S.string }) {}
-    class Schema extends TypedObject(testSchema)({ field: S.array(ref(Nested)) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.array(ref(Nested)) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field.items);
   });
 
   test('optional references', () => {
-    class Nested extends TypedObject(testSchema)({ field: S.string }) {}
-    class Schema extends TypedObject(testSchema)({ field: S.optional(ref(Nested)) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.optional(ref(Nested)) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     expectReferenceAnnotation(jsonSchema.properties.field);
   });
@@ -64,19 +63,19 @@ describe('effect-to-json', () => {
   });
 
   const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].type).to.deep.eq(testSchema);
-    expect(object[ECHO_KEY].reference).to.deep.eq(testSchema);
+    expect(object[ECHO_KEY].type).to.deep.eq(TEST_SCHEMA_TYPE);
+    expect(object[ECHO_KEY].reference).to.deep.eq(TEST_SCHEMA_TYPE);
   };
 });
 
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class DeepNested extends TypedObject(testSchema)({ field: S.string }) {}
+      class DeepNested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
 
-      class Nested extends TypedObject(testSchema)({ field: ref(DeepNested) }) {}
+      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(DeepNested) }) {}
 
-      class Schema extends TypedObject(testSchema)(
+      class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
           string: S.string.pipe(S.identifier('String')),
           number: S.number.pipe(fieldMeta('dxos.test', { is_date: true })),
