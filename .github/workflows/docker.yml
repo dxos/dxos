@@ -58,6 +58,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # TODO: update DO registry name when migration is complete
       - name: Docker meta for agent
         id: agent-meta
         uses: docker/metadata-action@v5
