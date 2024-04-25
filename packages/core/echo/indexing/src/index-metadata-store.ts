@@ -9,7 +9,6 @@ import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { type ConcatenatedHeadHashes } from './types';
-import { log } from '@dxos/log';
 
 export type IndexMetadataStoreParams = {
   db: SubLevelDB;
