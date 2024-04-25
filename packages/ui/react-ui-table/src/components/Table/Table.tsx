@@ -12,10 +12,8 @@ import {
   getExpandedRowModel,
   type Row,
 } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState, useContext } from 'react';
 
-import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
