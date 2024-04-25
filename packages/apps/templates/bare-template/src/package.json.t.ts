@@ -76,8 +76,6 @@ export namespace Features {
   export const schema = ({ depVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
       '@dxos/echo-schema': depVersion,
-      '@effect/schema': '^0.64.7',
-      effect: '^2.4.9',
     },
   });
 }

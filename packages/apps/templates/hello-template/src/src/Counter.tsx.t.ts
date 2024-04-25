@@ -8,7 +8,7 @@ export default template.define.script({
       : plate/* javascript */ `
     import React, { useEffect } from 'react';
 
-    import { Expando, useQuery, useSpace } from '@dxos/react-client/echo';
+    import { create, Expando, useQuery, useSpace } from '@dxos/react-client/echo';
 
     export const Counter = () => {
       const space = useSpace();
@@ -16,7 +16,7 @@ export default template.define.script({
 
       useEffect(() => {
         if (!counter && space) {
-          const c = new Expando({ type: 'counter' });
+          const c = create(Expando, { type: 'counter', count: 0 });
           void space.db.add(c);
         }
       }, [counter, space]);
@@ -32,7 +32,7 @@ export default template.define.script({
               className='p-4 m-2 border'
               data-testid='counter'
               onClick={() => {
-                counter.count = (counter.count ?? 0) + 1;
+                counter.count = counter.count + 1;
               }}>
               {counter.count ? \`Clicked \${counter.count} times\` : 'Click me!'}
             </button>
@@ -41,5 +41,5 @@ export default template.define.script({
       );
     };
     `;
-  }}
-);
+  },
+});
