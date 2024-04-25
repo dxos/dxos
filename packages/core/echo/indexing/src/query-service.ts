@@ -124,14 +124,14 @@ export class QueryServiceImpl extends Resource implements QueryService {
       }
     }
 
-    this._params.indexer.reIndex(ids);
+    await this._params.indexer.reIndex(ids);
   }
 }
 
 /**
  * Factory for `getAllDocuments` iterator.
  */
-export const createDocumentsIterator = (automergeHost: AutomergeHost) =>
+const createDocumentsIterator = (automergeHost: AutomergeHost) =>
   /**
    * Recursively get all object data blobs from loaded documents from Automerge Repo.
    * @param ids

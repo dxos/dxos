@@ -294,6 +294,10 @@ export class Client {
       }
     }
 
+    {
+      await this._services?.services.QueryService?.reIndex();
+    }
+
     log.info('Repair succeeded', { repairSummary });
     return repairSummary;
   }

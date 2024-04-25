@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
@@ -161,29 +161,55 @@ describe('Index queries', () => {
     }
   });
 
-  test('index already available data', async () => {
+  test('re-index data', async () => {
     const builder = new TestBuilder();
+    builder.storage = createStorage({ type: StorageType.RAM });
+    builder.level = createTestLevel();
     afterTest(async () => {
       await builder.destroy();
     });
-    const client = new Client({ services: builder.createLocal() });
-    await client.initialize();
-    if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
-      client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
+
+    let spaceKey: PublicKey;
+    {
+      const client = new Client({ services: builder.createLocal() });
+      await client.initialize();
+      if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+        client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
+      }
+
+      await client.halo.createIdentity();
+
+      const space = await client.spaces.create();
+      await space.waitUntilReady();
+      spaceKey = space.key;
+
+      const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
+      space.db.add(contact);
+      await space.db.flush();
+
+      const indexedContact = await queryIndexedContact(space);
+      expect(indexedContact.name).to.equal('John Doe');
+      await sleep(1000);
+      await client.destroy();
     }
-    afterTest(() => client.destroy());
 
-    await client.halo.createIdentity();
+    await builder.level.open();
+    await builder.level.sublevel('index-storage').clear();
 
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
+    {
+      const client = new Client({ services: builder.createLocal() });
+      await client.initialize();
+      if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+        client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
+      }
+      afterTest(() => client.destroy());
+      await client.spaces.isReady.wait({ timeout: 1000 });
+      const space = client.spaces.get(spaceKey)!;
+      await asyncTimeout(space.waitUntilReady(), 1000);
 
-    const contact = create(ContactType, { name: 'John Doe', identifiers: [] });
-    space.db.add(contact);
-    await space.db.flush();
-
-    const indexedContact = await queryIndexedContact(space);
-    expect(indexedContact.name).to.equal('John Doe');
+      const indexedContact = await queryIndexedContact(space);
+      expect(indexedContact.name).to.equal('John Doe');
+    }
   });
 });
 

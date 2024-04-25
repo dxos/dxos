@@ -33,5 +33,5 @@ message QueryResponse {
 service QueryService {
   rpc SetIndexConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
   rpc Find(QueryRequest) returns (stream QueryResponse);
-  rpc reIndex(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc ReIndex(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
