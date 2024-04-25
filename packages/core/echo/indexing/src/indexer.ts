@@ -58,14 +58,12 @@ export class Indexer {
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
-      log.info('quit');
       return;
     }
 
     if (this._newIndexes.length > 0) {
       await this._promoteNewIndexes();
     }
-    log.info('1');
     await this._indexUpdatedObjects();
   });
 
@@ -186,11 +184,9 @@ export class Indexer {
   @trace.span({ showInBrowserTimeline: true })
   private async _indexUpdatedObjects() {
     if (this._ctx.disposed) {
-      log.info('Indexer is disposed');
       return;
     }
     const ids = await this._metadataStore.getDirtyDocuments();
-    log.info('Indexing dirty documents', { ids });
     if (ids.length === 0 || this._ctx.disposed) {
       return;
     }
@@ -205,7 +201,6 @@ export class Indexer {
 
     const updates: boolean[] = [];
     for await (const documents of this._loadDocuments(ids)) {
-      log.info('Indexing documents', { documents });
       if (this._ctx.disposed) {
         return;
       }

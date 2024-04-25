@@ -67,7 +67,7 @@ describe('Indexer', () => {
     }
   });
 
-  test.only('objects are indexed for first time', async () => {
+  test('objects are indexed for first time', async () => {
     const level = createTestLevel();
     await openAndClose(level);
 
