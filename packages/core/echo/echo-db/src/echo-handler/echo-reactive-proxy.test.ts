@@ -3,8 +3,9 @@
 //
 
 import { create, echoObject } from '@dxos/echo-schema';
-import { TestSchema, reactiveProxyTests } from '@dxos/echo-schema/testing';
+import { TestSchema } from '@dxos/echo-schema/testing';
 
+import { reactiveProxyTests } from './proxy.blueprint-test';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
 

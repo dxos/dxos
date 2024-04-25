@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from './create';
-import { reactiveProxyTests } from '../proxy/proxy.blueprint-test';
-import { type TestSchema } from '../testing';
+import { create } from '@dxos/echo-schema';
+import { type TestSchema } from '@dxos/echo-schema/testing';
+
+import { reactiveProxyTests } from './proxy.blueprint-test';
 
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
