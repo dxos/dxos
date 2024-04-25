@@ -30,8 +30,8 @@ export namespace Features {
       '@phosphor-icons/react': '^2.0.5',
     },
     devDependencies: {
-      '@dxos/react-ui': '^' + frameworkVersion,
-      '@dxos/react-ui-theme': '^' + frameworkVersion,
+      '@dxos/react-ui': frameworkVersion,
+      '@dxos/react-ui-theme': frameworkVersion,
     },
   });
 
@@ -39,17 +39,17 @@ export namespace Features {
     devDependencies: {
       'vite-plugin-wasm': '^3.3.0',
       'vite-plugin-top-level-await': '^1.3.1',
-      '@dxos/react-client': '^' + frameworkVersion,
-      '@dxos/config': '^' + frameworkVersion,
-      '@dxos/shell': '^' + frameworkVersion,
-      '@braneframe/plugin-space': '^' + frameworkVersion,
-      '@braneframe/plugin-navtree': '^' + frameworkVersion,
-      '@braneframe/plugin-layout': '^' + frameworkVersion,
-      '@braneframe/plugin-graph': '^' + frameworkVersion,
-      '@braneframe/plugin-client': '^' + frameworkVersion,
-      '@braneframe/plugin-stack': '^' + frameworkVersion,
-      '@braneframe/plugin-metadata': '^' + frameworkVersion,
-      '@braneframe/plugin-settings': '^' + frameworkVersion,
+      '@dxos/react-client': frameworkVersion,
+      '@dxos/config': frameworkVersion,
+      '@dxos/shell': frameworkVersion,
+      '@braneframe/plugin-space': frameworkVersion,
+      '@braneframe/plugin-navtree': frameworkVersion,
+      '@braneframe/plugin-layout': frameworkVersion,
+      '@braneframe/plugin-graph': frameworkVersion,
+      '@braneframe/plugin-client': frameworkVersion,
+      '@braneframe/plugin-stack': frameworkVersion,
+      '@braneframe/plugin-metadata': frameworkVersion,
+      '@braneframe/plugin-settings': frameworkVersion,
     },
   });
 }
@@ -68,13 +68,13 @@ export const base = ({ name, version, frameworkVersion }: Context): Partial<Pack
     },
     dependencies: {
       '@preact/signals-react': '^1.3.6',
-      '@dxos/app-framework': `^${frameworkVersion}`,
+      '@dxos/app-framework': frameworkVersion,
     },
     devDependencies: {
       '@types/node': '^18.11.9',
       vite: '^5.1.3',
       typescript: '^5.0.4',
-      '@braneframe/plugin-theme': `^${frameworkVersion}`,
+      '@braneframe/plugin-theme': frameworkVersion,
     },
   };
 };
