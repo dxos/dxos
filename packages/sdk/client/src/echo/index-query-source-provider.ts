@@ -13,15 +13,18 @@ import {
   type QuerySource,
   getAutomergeObjectCore,
 } from '@dxos/echo-schema';
-import { type QueryResponse, type QueryResult as RemoteQueryResult } from '@dxos/protocols/proto/dxos/agent/query';
-import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import {
+  type QueryService,
+  type QueryResponse,
+  type QueryResult as RemoteQueryResult,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
 import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
-  service: IndexService;
+  service: QueryService;
   echo: Echo;
 };
 
@@ -34,7 +37,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 }
 
 export type IndexQuerySourceParams = {
-  service: IndexService;
+  service: QueryService;
   echo: Echo;
 };
 

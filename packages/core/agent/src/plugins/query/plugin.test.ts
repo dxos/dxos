@@ -11,7 +11,7 @@ import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { Filter, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 

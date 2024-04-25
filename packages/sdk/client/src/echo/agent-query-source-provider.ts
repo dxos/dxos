@@ -16,9 +16,9 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 export class AgentQuerySourceProvider implements QuerySourceProvider {
