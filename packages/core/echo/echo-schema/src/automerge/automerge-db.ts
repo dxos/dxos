@@ -135,6 +135,9 @@ export class AutomergeDb {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
+    if (!this._isOpen) {
+      return [];
+    }
     const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
     if (!rootDoc) {
       return [];

@@ -53,7 +53,7 @@ describe('schema registry', () => {
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = registry.getAll();
+    const retrieved = await registry.getAll();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -63,7 +63,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = db.query(Filter.schema(StoredEchoSchema)).objects;
+    const retrieved = (await db.query(Filter.schema(StoredEchoSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;

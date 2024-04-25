@@ -154,11 +154,14 @@ describe('Client', () => {
     const spaceKey = space1.key;
 
     const query = space1.db.query(Filter.schema(ThreadType));
-    query.subscribe(({ objects }) => {
-      if (objects.length === 1) {
-        threadQueried.wake(objects[0]);
-      }
-    }, true);
+    query.subscribe(
+      ({ objects }) => {
+        if (objects.length === 1) {
+          threadQueried.wake(objects[0]);
+        }
+      },
+      { fire: true },
+    );
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     // Create Thread on second client.

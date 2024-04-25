@@ -100,6 +100,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
 
               // Add all stacks to the graph.
               const query = space.db.query(Filter.schema(StackType));
+              subscriptions.add(query.subscribe());
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {

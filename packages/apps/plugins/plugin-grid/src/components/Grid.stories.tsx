@@ -51,17 +51,21 @@ const DemoGrid = ({
   const [items, setItems] = useState<GridDataItem[]>(
     initialItems ??
       (() => {
-        const objects = generator.createObjects(types);
-        // TODO(wittjosiah): Use generator to create positions.
-        return objects.map((object: any) => {
-          return create(GridItemType, {
-            object,
-            position: {
-              x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
-              y: faker.number.int({ min: 0, max: (options.size?.y ?? 1) - 1 }),
-            },
-          });
+        generator.createObjects(types).then((objects) => {
+          setItems(
+            objects.map((object: any) => {
+              return create(GridItemType, {
+                object,
+                position: {
+                  x: faker.number.int({ min: 0, max: (options.size?.x ?? 1) - 1 }),
+                  y: faker.number.int({ min: 0, max: (options.size?.y ?? 1) - 1 }),
+                },
+              });
+            }),
+          );
         });
+        // TODO(wittjosiah): Use generator to create positions.
+        return [];
       }),
   );
 

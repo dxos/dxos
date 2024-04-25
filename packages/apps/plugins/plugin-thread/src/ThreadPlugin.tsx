@@ -58,6 +58,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let unsubscribe: UnsubscribeCallback | undefined;
+  let queryUnsubscribe: UnsubscribeCallback | undefined;
 
   return {
     meta,
@@ -67,15 +68,21 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+      if (!client) {
+        return;
+      }
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
+      const threadsQuery = client.spaces.query(Filter.schema(ThreadType, (thread) => !thread.context));
+      queryUnsubscribe = threadsQuery.subscribe();
       unsubscribe = effect(() => {
         const active = navigationPlugin?.provides.location.active;
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
         const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
-          const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
+          const [thread] = threadsQuery.objects.filter((thread) => getSpace(thread) === space);
           if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
@@ -105,6 +112,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     },
     unload: async () => {
       unsubscribe?.();
+      queryUnsubscribe?.();
     },
     provides: {
       settings: settings.values,
@@ -162,9 +170,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               // Add all threads not linked to documents to the graph.
               const query = space.db.query(Filter.schema(ThreadType));
+              subscriptions.add(query.subscribe());
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
               const documentQuery = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(documentQuery.subscribe());
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {

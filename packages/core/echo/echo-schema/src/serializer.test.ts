@@ -39,7 +39,7 @@ describe('Serializer', () => {
       const { db } = await createDatabase();
       await serializer.import(db, data);
 
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects).to.have.length(1);
       expect(objects[0].title).to.eq('Test');
     }
@@ -77,7 +77,7 @@ describe('Serializer', () => {
       const { db } = await createDatabase();
       await serializer.import(db, serialized);
 
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects).to.have.length(4);
       const main = objects.find((object) => object.title === 'Main task')!;
       expect(main).to.exist;
@@ -110,7 +110,7 @@ describe('Serializer', () => {
 
       const {
         objects: [contact],
-      } = db.query(Filter.schema(Contact));
+      } = await db.query(Filter.schema(Contact)).run();
       expect(contact.name).to.eq(name);
       expect(contact instanceof Contact).to.be.true;
       expect(getSchema(contact)).to.eq(Contact);

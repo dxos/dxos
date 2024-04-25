@@ -460,19 +460,25 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
-    spaceA.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objA)).to.be.true;
-      inc();
-    }, true);
+    spaceA.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objA)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
-    spaceB.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objB)).to.be.true;
-      inc();
-    }, true);
+    spaceB.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objB)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
     await wait();
   });

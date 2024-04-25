@@ -63,6 +63,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
               // Add all sketches to the graph.
               const query = space.db.query(Filter.schema(SketchType));
+              subscriptions.add(query.subscribe());
               let previousObjects: SketchType[] = [];
               subscriptions.add(
                 effect(() => {

@@ -82,7 +82,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     } else {
       start(
         async () => {
-          generator.updateDocument();
+          await generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,

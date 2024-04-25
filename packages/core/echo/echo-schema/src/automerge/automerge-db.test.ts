@@ -454,16 +454,12 @@ interface DocumentHandles {
 const waitObjectLoaded = async (peer: TestPeer, obj: any, options: { triggerLoading: boolean; timeout?: number }) => {
   const onObjectLoaded = new Trigger();
   const query = peer.db.query({ id: obj.id });
-  const unsubscribe = query.subscribe(() => {
-    onObjectLoaded.wake();
-  });
+  const unsubscribe = query.subscribe(() => onObjectLoaded.wake(), { fire: true });
   if (options.triggerLoading) {
     const peerTextObject = peer.db.getObjectById(obj.id);
     expect(peerTextObject).to.be.undefined;
   }
-  if (query.objects.find((o) => o.id === obj.id) == null) {
-    await onObjectLoaded.wait({ timeout: options.timeout });
-  }
+  await onObjectLoaded.wait();
   unsubscribe();
 };
 

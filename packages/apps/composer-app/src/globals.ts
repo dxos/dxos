@@ -28,33 +28,36 @@ const dxosTypes = [DocumentType, FileType, GridType, KanbanType, SketchType, Sta
 /**
  * Migrate space content from pre-folders into folder structure.
  */
-const upgrade035 = () => {
+const upgrade035 = async () => {
   const client: Client = (window as any).dxos.client;
   if (client) {
     const defaultSpace = client.spaces.default;
     const personalSpaceFolderSelector = { name: defaultSpace.key.toHex() };
-    let personalSpaceFolder = defaultSpace.db.query(Filter.schema(FolderType, personalSpaceFolderSelector)).objects[0];
+    let personalSpaceFolder = (
+      await defaultSpace.db.query(Filter.schema(FolderType, personalSpaceFolderSelector)).run()
+    ).objects[0];
     if (!personalSpaceFolder) {
       personalSpaceFolder = create(FolderType, { ...personalSpaceFolderSelector, objects: [] });
     }
 
-    let sharedSpacesFolder = defaultSpace.db.query(Filter.schema(FolderType, { name: 'shared-spaces' })).objects[0];
+    let sharedSpacesFolder = (await defaultSpace.db.query(Filter.schema(FolderType, { name: 'shared-spaces' })).run())
+      .objects[0];
     if (!sharedSpacesFolder) {
       sharedSpacesFolder = create(FolderType, { name: 'shared-spaces', objects: [] });
     }
 
-    let rootFolder = defaultSpace.db.query(Filter.schema(FolderType, { name: 'root' })).objects[0];
+    let rootFolder = (await defaultSpace.db.query(Filter.schema(FolderType, { name: 'root' })).run()).objects[0];
     if (!rootFolder) {
       rootFolder = create(FolderType, { name: 'root', objects: [personalSpaceFolder, sharedSpacesFolder] });
       defaultSpace.db.add(rootFolder);
     }
 
-    client.spaces.get().forEach((space) => {
+    const migrateSpaceTasks = client.spaces.get().map(async (space) => {
       if (space.state.get() !== SpaceState.READY) {
         return;
       }
-      const queries = dxosTypes.map((type) => space.db.query(Filter.schema(type as any)));
-      let spaceFolder = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).objects[0];
+      const queries = await Promise.all(dxosTypes.map((type) => space.db.query(Filter.schema(type as any)).run()));
+      let spaceFolder = (await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run()).objects[0];
       if (space === defaultSpace) {
         spaceFolder.objects.push(
           ...queries
@@ -75,6 +78,7 @@ const upgrade035 = () => {
         sharedSpacesFolder.objects.push(spaceFolder);
       }
     });
+    await Promise.all(migrateSpaceTasks);
   }
 };
 

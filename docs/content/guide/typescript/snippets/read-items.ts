@@ -13,11 +13,11 @@ async () => {
   // grab a space
   const space = spaces[0];
   // get all items
-  const allObjects = space.db.query();
+  const allObjects = await space.db.query().run();
   // get items that match a filter
-  const tasks = space.db.query({ type: 'task' });
+  const tasks = await space.db.query({ type: 'task' }).run();
   // get items that match a predicate
-  const finishedTasks = space.db.query(
+  const finishedTasks = await space.db.query(
     (doc) => doc.type == 'task' && doc.isCompleted
-  );
+  ).run();
 };

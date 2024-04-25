@@ -62,6 +62,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
               // Add all games to the graph.
               const query = space.db.query(Filter.schema(GameType));
+              subscriptions.add(query.subscribe());
               let previousObjects: GameType[] = [];
               subscriptions.add(
                 effect(() => {
