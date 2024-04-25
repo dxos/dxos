@@ -13,8 +13,9 @@ import {
   type Row,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState, useContext } from 'react';
 
+import { log } from '@dxos/log';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -22,7 +23,7 @@ import { TableBody } from './TableBody';
 import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
-import { TableRootProvider, useTableRootContext } from './TableRootContext';
+import { TableRootContext, useTableRootContext } from './TableRootContext';
 import { type TableProps } from './props';
 import { useColumnResizing, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
@@ -33,17 +34,19 @@ type TableRootProps = {
 };
 
 const TableRoot = ({ children, scrollContextRef }: TableRootProps) => {
-  // Use provided scrollContextRef or a new internal ref as a fallback
-  const internalRef = React.useRef<HTMLDivElement>(null);
-  const effectiveRef = scrollContextRef || internalRef;
-
-  return <TableRootProvider scrollContextRef={effectiveRef}>{children}</TableRootProvider>;
+  const contextValue = useTableRootContext(scrollContextRef);
+  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
 };
 
 type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>>;
 
 const TableViewport = ({ children, classNames, ...props }: TableViewportProps) => {
-  const { scrollContextRef } = useTableRootContext();
+  const { dispatch } = useContext(TableRootContext);
+  const scrollContextRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    dispatch({ type: 'updateScrollContextRef', ref: scrollContextRef });
+  }, []);
 
   const classes = mx(classNames);
 
@@ -194,7 +197,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
 const VirtualizedTableContent = () => {
   const { table } = useTableContext();
-  const { scrollContextRef } = useTableRootContext();
+  const { scrollContextRef } = useContext(TableRootContext);
 
   const centerRows = table.getCenterRows();
   let pinnedRows = [] as Row<unknown>[];
@@ -209,11 +212,23 @@ const VirtualizedTableContent = () => {
 
   // TODO(Zan): This needs to move to the TableRoot context.
   const { getTotalSize, getVirtualItems } = useVirtualizer({
-    getScrollElement: () => scrollContextRef.current,
+    getScrollElement: () => scrollContextRef?.current ?? null,
     count: centerRows.length,
     overscan: 8,
     estimateSize: () => 40,
   });
+
+  // TODO: (Zan), this always fires on mount before the scroll context ref is set.
+  // We can resolve this when we support unvirtualised tables again.
+  if (scrollContextRef === undefined) {
+    log.warn(
+      [
+        'No scroll context ref found.',
+        'Either wrap `Table` in a `Table.Viewport` or provide a `scrollContextRef` to the `Table.Root`',
+      ].join('\n'),
+    );
+    return null;
+  }
 
   const virtualRows = getVirtualItems();
   const totalSize = getTotalSize();
@@ -225,9 +240,21 @@ const VirtualizedTableContent = () => {
 
   return (
     <Fragment>
-      {paddingTop > 0 && <div style={{ height: `${paddingTop}px` }} aria-hidden='true' />}
+      {paddingTop > 0 && (
+        <tbody role='none'>
+          <tr role='none'>
+            <td style={{ height: `${paddingTop}px` }} role='none' />
+          </tr>
+        </tbody>
+      )}
       <TableBody rows={rowsToRender} />
-      {paddingBottom > 0 && <div style={{ height: `${paddingBottom}px` }} aria-hidden='true' />}
+      {paddingBottom > 0 && (
+        <tbody role='none'>
+          <tr role='none'>
+            <td style={{ height: `${paddingBottom}px` }} role='none' />
+          </tr>
+        </tbody>
+      )}
     </Fragment>
   );
 };

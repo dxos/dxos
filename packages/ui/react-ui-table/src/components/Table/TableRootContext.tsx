@@ -2,25 +2,30 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useContext, createContext, type ReactNode } from 'react';
+import type React from 'react';
+import { createContext, useState } from 'react';
 
-type TableRootContextValue = {
-  scrollContextRef: React.RefObject<HTMLDivElement>;
+type TableRootContextActions = { type: 'updateScrollContextRef'; ref: React.RefObject<HTMLDivElement> };
+
+export const useTableRootContext = (initialRef?: React.RefObject<HTMLDivElement>) => {
+  const [scrollContextRef, setScrollContextRef] = useState(initialRef);
+
+  const dispatch = (action: TableRootContextActions) => {
+    switch (action.type) {
+      case 'updateScrollContextRef':
+        setScrollContextRef(action.ref);
+        break;
+
+      default:
+        break;
+    }
+  };
+
+  return { scrollContextRef, dispatch };
 };
+
+export type TableRootContextValue = ReturnType<typeof useTableRootContext>;
 
 // Create the context without a default value.
 // The expectation is that the provider will always supply a value, so no need to define a default here.
-const TableContext = createContext<TableRootContextValue>({} as TableRootContextValue);
-
-export const TableRootProvider: React.FC<TableRootContextValue & { children: ReactNode }> = ({
-  children,
-  ...value
-}) => {
-  return <TableContext.Provider value={value}>{children}</TableContext.Provider>;
-};
-
-// Create a custom hook to consume the context
-export const useTableRootContext = (): TableRootContextValue => {
-  const context = useContext(TableContext as React.Context<TableRootContextValue>);
-  return context;
-};
+export const TableRootContext = createContext<TableRootContextValue>({} as TableRootContextValue);
