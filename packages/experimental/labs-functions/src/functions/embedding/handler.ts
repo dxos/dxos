@@ -7,7 +7,8 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { DocumentType, FileType } from '@braneframe/types';
-import { type EchoReactiveObject, Filter, hasType, loadObjectReferences } from '@dxos/echo-schema';
+import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

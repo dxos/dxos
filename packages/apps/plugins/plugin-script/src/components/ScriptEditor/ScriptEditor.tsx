@@ -8,7 +8,7 @@ import { EditorView, keymap, lineNumbers } from '@codemirror/view';
 import { minimalSetup } from 'codemirror';
 import React from 'react';
 
-import { DocAccessor } from '@dxos/echo-schema';
+import { DocAccessor } from '@dxos/react-client/echo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { automerge, defaultTheme, useTextEditor } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';

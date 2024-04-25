@@ -6,8 +6,8 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';

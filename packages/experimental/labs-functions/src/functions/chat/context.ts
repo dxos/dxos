@@ -4,14 +4,8 @@
 
 import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import {
-  type DynamicEchoSchema,
-  type EchoReactiveObject,
-  createDocAccessor,
-  effectToJsonSchema,
-  getTextInRange,
-  loadObjectReferences,
-} from '@dxos/echo-schema';
+import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
+import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: EchoReactiveObject<any>;

@@ -3,7 +3,8 @@
 //
 
 import { type Space, type Query } from '@dxos/client/echo';
-import { type EchoReactiveObject, type Filter, type Subscription } from '@dxos/echo-schema';
+import { type Filter, type Subscription } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 
 export type ObjectIndexer<T extends EchoReactiveObject<any>> = (object: T) => string | undefined;
 

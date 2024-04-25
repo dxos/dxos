@@ -3,7 +3,7 @@
 //
 
 import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 
 import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
 

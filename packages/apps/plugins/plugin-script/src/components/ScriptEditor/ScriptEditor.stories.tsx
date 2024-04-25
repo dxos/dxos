@@ -17,7 +17,7 @@ import '@dxosTheme';
 
 import React, { useMemo } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
 

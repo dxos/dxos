@@ -3,7 +3,8 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
   type Invitation,

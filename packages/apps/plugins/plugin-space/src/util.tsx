@@ -23,10 +23,10 @@ import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNode
 import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import { Filter, type EchoReactiveObject, isEchoObject, isReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
-import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, type Space, Filter, isEchoObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';

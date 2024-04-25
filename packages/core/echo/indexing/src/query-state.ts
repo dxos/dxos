@@ -4,8 +4,8 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
+import { Filter } from '@dxos/echo-db';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
-import { Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';

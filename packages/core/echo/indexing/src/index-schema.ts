@@ -4,8 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
+import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
