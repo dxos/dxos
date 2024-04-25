@@ -2,10 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type DocumentId, type PeerId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
+import { sleep } from '@dxos/async';
+import { next as automerge, getHistory } from '@dxos/automerge/automerge';
+import {
+  type DocHandle,
+  Repo,
+  type DocumentId,
+  type PeerId,
+  type StorageAdapterInterface,
+} from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -36,6 +44,8 @@ export type AutomergeHostParams = {
   directory?: Directory;
   storageCallbacks?: StorageCallbacks;
 };
+
+const FLUSH_TIMEOUT = 5000;
 
 @trace.resource()
 export class AutomergeHost {
@@ -184,11 +194,17 @@ export class AutomergeHost {
   // Methods for client-services.
   //
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ documentIds }: FlushRequest): Promise<void> {
+  async flush({ states }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
-    await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+    await Promise.all(
+      states?.map(async ({ heads, documentId }) => {
+        invariant(heads, 'heads are required for flush');
+        const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
 
-    await this._repo.flush(documentIds as DocumentId[]);
+    await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
@@ -225,4 +241,33 @@ export const getSpaceKeyFromDoc = (doc: any): string | null => {
   }
 
   return String(rawSpaceKey);
+};
+
+const waitForHeads = async (handle: DocHandle<any>, heads: string[]) => {
+  let waited = 0;
+  const inc = 100;
+  while (true) {
+    await handle.whenReady();
+    // Check if all requested heads are present in the history.
+    checkIfHeadsArePresentInDoc(handle.docSync(), heads);
+    if (waited > FLUSH_TIMEOUT) {
+      log.warn('waiting to long for heads to sync on flush', { documentId: handle.documentId, heads });
+      return;
+    }
+    await sleep(inc);
+    waited += inc;
+  }
+};
+
+const checkIfHeadsArePresentInDoc = (doc: any, heads: string[]): boolean => {
+  const history = getHistory(doc);
+  if (!history) {
+    log.warn('no history found');
+    return false;
+  }
+  const historyHashes = history.map(({ change }) => change.hash);
+  if (heads?.every((hash) => historyHashes.includes(hash))) {
+    return true;
+  }
+  return false;
 };
