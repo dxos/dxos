@@ -2937,6 +2937,9 @@ importers:
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
     devDependencies:
       '@dxos/app-framework':
         specifier: workspace:*
