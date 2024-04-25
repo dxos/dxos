@@ -39,21 +39,23 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object: EchoReactiveObject<any>) =>
-          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+        project.org = (
+          await space.db.query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
         ).objects[0];
       }
 
       // Create organization if failed to query.
       if (!project.org && repoData.organization) {
-        const orgSchema = space.db.schemaRegistry.getByTypename(TestSchemaType.organization);
+        const orgSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
         project.org = create(orgSchema, { name: repoData.organization?.login });
         getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
 
-    const contactSchema = space.db.schemaRegistry.getByTypename(TestSchemaType.contact);
+    const contactSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.contact);
     invariant(contactSchema);
 
     //
@@ -77,9 +79,11 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
         }
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
-        const { objects: existing } = space.db.query((object: EchoReactiveObject<any>) =>
-          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-        );
+        const { objects: existing } = await space.db
+          .query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
+          .run();
         if (existing.length !== 0) {
           return;
         }

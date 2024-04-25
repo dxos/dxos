@@ -322,7 +322,8 @@ export const updateGraphWithSpace = ({
     return true;
   });
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
-  const unsubscribeQuery = effect(() => {
+  const unsubscribeQuery = query.subscribe();
+  const unsubscribeQueryHandler = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
     const folderObjects = folder?.objects ?? [];
@@ -490,6 +491,7 @@ export const updateGraphWithSpace = ({
   return () => {
     unsubscribeSpace();
     unsubscribeQuery();
+    unsubscribeQueryHandler();
   };
 };
 
@@ -521,7 +523,8 @@ export const updateGraphWithAddObjectAction = ({
   // Include the create document action on all folders.
   const folderQuery = space.db.query(Filter.schema(FolderType));
   let previousFolders: FolderType[] = [];
-  return effect(() => {
+  const unsubscribeQuery = folderQuery.subscribe();
+  const unsubscribeQueryHandler = effect(() => {
     const removedFolders = previousFolders.filter((folder) => !folderQuery.objects.includes(folder));
     previousFolders = folderQuery.objects;
 
@@ -579,6 +582,10 @@ export const updateGraphWithAddObjectAction = ({
       });
     });
   });
+  return () => {
+    unsubscribeQueryHandler();
+    unsubscribeQuery();
+  };
 };
 
 /**

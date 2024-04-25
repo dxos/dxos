@@ -4,6 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
+import { type UnsubscribeCallback } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -13,11 +14,26 @@ import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotat
 import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from './ddl';
 import { Filter } from './query';
 
+type OnSchemaListChangedFn = (schemaList: DynamicEchoSchema[]) => void;
+
 export class DynamicSchemaRegistry {
   private readonly _schemaById: Map<string, DynamicEchoSchema> = new Map();
   private readonly _schemaByType: Map<string, DynamicEchoSchema> = new Map();
-  private readonly _unsubscribeFnList: Array<() => void> = [];
-  constructor(private readonly db: EchoDatabase) {}
+  private readonly _unsubscribeFnById: Map<string, UnsubscribeCallback> = new Map();
+  private readonly _onSchemaListChangeListeners: OnSchemaListChangedFn[] = [];
+
+  constructor(private readonly db: EchoDatabase) {
+    this.db.query(Filter.schema(StoredEchoSchema)).subscribe(({ objects }) => {
+      const currentObjectIds = new Set(objects.map((o) => o.id));
+      const newObjects = objects.filter((o) => !this._schemaById.has(o.id));
+      const removedObjects = [...this._schemaById.keys()].filter((oid) => !currentObjectIds.has(oid));
+      newObjects.forEach((o) => this._register(o));
+      removedObjects.forEach((oid) => this._unregisterById(oid));
+      if (newObjects.length > 0 || removedObjects.length > 0) {
+        this._notifySchemaListChanged();
+      }
+    });
+  }
 
   public isRegistered(schema: S.Schema<any>): boolean {
     const storedSchemaId =
@@ -38,19 +54,28 @@ export class DynamicSchemaRegistry {
       log.warn('type object is not a stored schema', { id: typeObject?.id });
       return undefined;
     }
-    return this.register(typeObject);
+    return this._register(typeObject);
   }
 
-  public getByTypename(typename: string): DynamicEchoSchema | undefined {
-    return this.db
-      .query(Filter.schema(StoredEchoSchema, (s) => s.typename === typename))
-      .objects.map((stored) => this.register(stored))[0];
+  public getRegisteredByTypename(typename: string): DynamicEchoSchema | undefined {
+    return this._schemaByType.get(typename);
   }
 
-  public getAll(): DynamicEchoSchema[] {
-    return this.db.query(Filter.schema(StoredEchoSchema)).objects.map((stored) => {
-      return this.register(stored);
+  public async getAll(): Promise<DynamicEchoSchema[]> {
+    return (await this.db.query(Filter.schema(StoredEchoSchema)).run()).objects.map((stored) => {
+      return this._register(stored);
     });
+  }
+
+  public subscribe(callback: OnSchemaListChangedFn): UnsubscribeCallback {
+    callback([...this._schemaById.values()]);
+    this._onSchemaListChangeListeners.push(callback);
+    return () => {
+      const index = this._onSchemaListChangeListeners.indexOf(callback);
+      if (index >= 0) {
+        this._onSchemaListChangeListeners.splice(index, 1);
+      }
+    };
   }
 
   public add(schema: S.Schema<any>): DynamicEchoSchema {
@@ -66,10 +91,22 @@ export class DynamicSchemaRegistry {
     });
     schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
     const storedSchema = this.db.add(schemaToStore);
-    return this.register(storedSchema);
+    const result = this._register(storedSchema);
+    this._notifySchemaListChanged();
+    return result;
   }
 
   public register(schema: StoredEchoSchema): DynamicEchoSchema {
+    const existing = this._schemaById.get(schema.id);
+    if (existing != null) {
+      return existing;
+    }
+    const registered = this._register(schema);
+    this._notifySchemaListChanged();
+    return registered;
+  }
+
+  private _register(schema: StoredEchoSchema): DynamicEchoSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -80,13 +117,22 @@ export class DynamicSchemaRegistry {
     });
     this._schemaById.set(schema.id, dynamicSchema);
     this._schemaByType.set(schema.typename, dynamicSchema);
-    this._unsubscribeFnList.push(subscription);
+    this._unsubscribeFnById.set(schema.id, subscription);
     return dynamicSchema;
   }
 
-  public clear() {
-    this._unsubscribeFnList.forEach((fn) => fn());
-    this._unsubscribeFnList.length = 0;
-    this._schemaById.clear();
+  private _unregisterById(id: string) {
+    const schema = this._schemaById.get(id);
+    if (schema != null) {
+      this._schemaById.delete(id);
+      this._schemaByType.delete(schema.typename);
+      this._unsubscribeFnById.get(schema.id)?.();
+      this._unsubscribeFnById.delete(schema.id);
+    }
+  }
+
+  private _notifySchemaListChanged() {
+    const list = [...this._schemaById.values()];
+    this._onSchemaListChangeListeners.forEach((s) => s(list));
   }
 }

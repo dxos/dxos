@@ -191,18 +191,18 @@ describe('Reactive Object with ECHO database', () => {
       db.add(create(TypedObject, { string: 'foo' }));
 
       {
-        const query = db.query(Filter.typename('TestSchema'));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.typename('TestSchema')).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const query = db.query(Filter.schema(TypedObject));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.schema(TypedObject)).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const query = db.query(Filter.schema(TestSchemaClass));
-        expect(query.objects.length).to.eq(1);
+        const queryResult = await db.query(Filter.schema(TestSchemaClass)).run();
+        expect(queryResult.objects.length).to.eq(1);
       }
     });
 
@@ -212,10 +212,10 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await createDatabase(graph);
       const obj = db.add(create(TypedObject, { string: 'foo' }));
       const query = db.query(Filter.schema(TypedObject));
-      expect(query.objects.length).to.eq(1);
+      expect((await query.run()).objects.length).to.eq(1);
 
       db.remove(obj);
-      expect(query.objects.length).to.eq(0);
+      expect((await query.run()).objects.length).to.eq(0);
     });
 
     test('deleted objects are returned when re-added', async () => {
@@ -224,11 +224,11 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await createDatabase(graph);
       const obj = db.add(create(TypedObject, { string: 'foo' }));
       db.remove(obj);
-      const query = db.query(Filter.schema(TypedObject));
-      expect(query.objects.length).to.eq(0);
+      const query = await db.query(Filter.schema(TypedObject));
+      expect((await query.run()).objects.length).to.eq(0);
 
       db.add(obj);
-      expect(query.objects.length).to.eq(1);
+      expect((await query.run()).objects.length).to.eq(1);
     });
   });
 

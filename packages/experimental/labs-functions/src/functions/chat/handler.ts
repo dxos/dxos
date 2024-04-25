@@ -27,7 +27,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   // Get active threads.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
-  const { objects: threads } = space.db.query(Filter.schema(ThreadType));
+  const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();
   await loadObjectReferences(objects, (t) => t.messages ?? []);
   const activeThreads = objects.reduce((activeThreads, message) => {
     const thread = threads.find((thread) => thread.messages.some((m) => m?.id === message.id));
