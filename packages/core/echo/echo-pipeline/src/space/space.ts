@@ -5,13 +5,13 @@
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
 import { Resource, type Context, LifecycleState } from '@dxos/context';
 import { type FeedInfo } from '@dxos/credentials';
+import { type DelegateInvitationCredential } from '@dxos/credentials/dist/types/src/state-machine/invitation-state-machine';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { Callback, type AsyncCallback } from '@dxos/util';
@@ -37,7 +37,7 @@ export type SpaceParams = {
   // TODO(dmaretskyi): Superseded by epochs.
   snapshotId?: string | undefined;
 
-  onDelegatedInvitationStatusChange: (invitation: DelegateSpaceInvitation, isActive: boolean) => Promise<void>;
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
 };
 
 export type CreatePipelineParams = {

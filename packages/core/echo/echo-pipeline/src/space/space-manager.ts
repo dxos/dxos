@@ -3,6 +3,7 @@
 //
 
 import { synchronized, trackLeaks } from '@dxos/async';
+import { type DelegateInvitationCredential } from '@dxos/credentials/dist/types/src/state-machine/invitation-state-machine';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -11,7 +12,6 @@ import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
@@ -43,7 +43,7 @@ export type ConstructSpaceParams = {
    */
   onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
-  onDelegatedInvitationStatusChange: (invitation: DelegateSpaceInvitation, isActive: boolean) => Promise<void>;
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
 };
 
 /**

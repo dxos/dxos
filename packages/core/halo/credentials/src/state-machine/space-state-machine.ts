@@ -23,7 +23,7 @@ export interface SpaceState {
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
   readonly creator: MemberInfo | undefined;
-  readonly invitations: DelegateSpaceInvitation[];
+  readonly invitations: ReadonlyMap<PublicKey, DelegateSpaceInvitation>;
 
   addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
@@ -92,8 +92,8 @@ export class SpaceStateMachine implements SpaceState {
     return this._genesisCredential;
   }
 
-  get invitations(): DelegateSpaceInvitation[] {
-    return [...this._invitations.invitations.values()];
+  get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
+    return this._invitations.invitations;
   }
 
   async addCredentialProcessor(processor: CredentialProcessor) {

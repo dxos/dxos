@@ -5,6 +5,7 @@
 import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { SpaceStateMachine, type SpaceState, type MemberInfo, type FeedInfo } from '@dxos/credentials';
+import { type DelegateInvitationCredential } from '@dxos/credentials/dist/types/src/state-machine/invitation-state-machine';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -12,7 +13,6 @@ import { type FeedMessageBlock } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type ControlPipelineSnapshot } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 import { TimeSeriesCounter, TimeUsageCounter, trace } from '@dxos/tracing';
 import { type AsyncCallback, Callback, tracer } from '@dxos/util';
@@ -51,8 +51,8 @@ export class ControlPipeline {
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
-  public readonly onDelegatedInvitation: Callback<AsyncCallback<DelegateSpaceInvitation>>;
-  public readonly onDelegatedInvitationRemoved: Callback<AsyncCallback<DelegateSpaceInvitation>>;
+  public readonly onDelegatedInvitation: Callback<AsyncCallback<DelegateInvitationCredential>>;
+  public readonly onDelegatedInvitationRemoved: Callback<AsyncCallback<DelegateInvitationCredential>>;
 
   @trace.metricsCounter()
   private _usage = new TimeUsageCounter();

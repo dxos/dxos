@@ -40,7 +40,9 @@ export class InvitationsManager {
     private readonly _metadataStore: MetadataStore,
   ) {}
 
-  createInvitation(options: Partial<Invitation> & Pick<Invitation, 'invitationId' | 'kind'>): CancellableInvitation {
+  async createInvitation(
+    options: Partial<Invitation> & Pick<Invitation, 'invitationId' | 'kind'>,
+  ): Promise<CancellableInvitation> {
     const existingInvitation = this._createInvitations.get(options.invitationId);
     if (existingInvitation) {
       return existingInvitation;
@@ -76,12 +78,13 @@ export class InvitationsManager {
       // get saved persistent invitations, filter and remove from storage those that have expired.
       const freshInvitations = persistentInvitations.filter((invitation) => !hasInvitationExpired(invitation));
 
-      const cInvitations = freshInvitations.map((persistentInvitation) => {
+      const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false }).get();
+        return this.createInvitation({ ...persistentInvitation, persistent: false });
       });
+      const cInvitations = await Promise.all(loadTasks);
 
-      return { invitations: cInvitations };
+      return { invitations: cInvitations.map((invitation) => invitation.get()) };
     } catch (err) {
       log.catch(err);
       return { invitations: [] };

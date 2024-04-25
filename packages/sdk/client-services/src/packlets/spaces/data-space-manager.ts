@@ -4,7 +4,7 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
-import { getCredentialAssertion, type CredentialSigner } from '@dxos/credentials';
+import { getCredentialAssertion, type CredentialSigner, type DelegateInvitationCredential } from '@dxos/credentials';
 import { type AutomergeHost, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -273,7 +273,7 @@ export class DataSpaceManager {
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
-            this._createDelegatedInvitations(dataSpace, space.spaceState.invitations);
+            await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
             this.updated.emit();
           }
         },
@@ -299,23 +299,28 @@ export class DataSpaceManager {
 
   private async _handleInvitationStatusChange(
     dataSpace: DataSpace | undefined,
-    invitation: DelegateSpaceInvitation,
+    delegatedInvitation: DelegateInvitationCredential,
     isActive: boolean,
   ): Promise<void> {
     if (dataSpace?.state !== SpaceState.READY) {
       return;
     }
     if (isActive) {
-      this._createDelegatedInvitations(dataSpace, [invitation]);
+      await this._createDelegatedInvitations(dataSpace, [
+        [delegatedInvitation.credentialId, delegatedInvitation.invitation],
+      ]);
     } else {
-      await this._invitationsManager.cancelInvitation(invitation);
+      await this._invitationsManager.cancelInvitation(delegatedInvitation.invitation);
     }
   }
 
-  private _createDelegatedInvitations(space: DataSpace, invitations: DelegateSpaceInvitation[]) {
-    invitations.forEach((invitation) => {
-      this._invitationsManager.createInvitation({
-        type: Invitation.Type.INTERACTIVE,
+  private async _createDelegatedInvitations(
+    space: DataSpace,
+    invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
+  ): Promise<void> {
+    const tasks = invitations.map(([credentialId, invitation]) => {
+      return this._invitationsManager.createInvitation({
+        type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,
         authMethod: invitation.authMethod,
@@ -324,8 +329,10 @@ export class DataSpaceManager {
         guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
         lifetime: invitation.expiresOn ? invitation.expiresOn.getTime() - Date.now() : undefined,
         multiUse: invitation.multiUse,
+        delegationCredentialId: credentialId,
         persistent: false,
       });
     });
+    await Promise.all(tasks);
   }
 }

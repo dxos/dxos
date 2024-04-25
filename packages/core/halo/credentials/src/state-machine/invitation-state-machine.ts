@@ -9,6 +9,11 @@ import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util
 
 import { getCredentialAssertion } from '../credentials';
 
+export interface DelegateInvitationCredential {
+  credentialId: PublicKey;
+  invitation: DelegateSpaceInvitation;
+}
+
 /**
  * Tracks the feed tree for a space.
  * Provides a list of admitted feeds.
@@ -18,8 +23,8 @@ export class InvitationStateMachine {
   private readonly _redeemedInvitationCredentialIds = new ComplexSet(PublicKey.hash);
   private readonly _cancelledInvitationCredentialIds = new ComplexSet(PublicKey.hash);
 
-  readonly onDelegatedInvitation = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
-  readonly onDelegatedInvitationRemoved = new Callback<AsyncCallback<DelegateSpaceInvitation>>();
+  readonly onDelegatedInvitation = new Callback<AsyncCallback<DelegateInvitationCredential>>();
+  readonly onDelegatedInvitationRemoved = new Callback<AsyncCallback<DelegateInvitationCredential>>();
 
   get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
     return this._invitations;
@@ -37,7 +42,10 @@ export class InvitationStateMachine {
         const existingInvitation = this._invitations.get(assertion.credentialId);
         if (existingInvitation != null) {
           this._invitations.delete(assertion.credentialId);
-          await this.onDelegatedInvitationRemoved.callIfSet(existingInvitation);
+          await this.onDelegatedInvitationRemoved.callIfSet({
+            credentialId: assertion.credentialId,
+            invitation: existingInvitation,
+          });
         }
         break;
       }
@@ -51,7 +59,10 @@ export class InvitationStateMachine {
           }
           const invitation: DelegateSpaceInvitation = { ...assertion };
           this._invitations.set(credential.id, invitation);
-          await this.onDelegatedInvitation.callIfSet(invitation);
+          await this.onDelegatedInvitation.callIfSet({
+            credentialId: credential.id,
+            invitation,
+          });
         }
         break;
       }
@@ -61,7 +72,10 @@ export class InvitationStateMachine {
           const existingInvitation = this._invitations.get(assertion.invitationCredentialId);
           if (existingInvitation != null && !existingInvitation.multiUse) {
             this._invitations.delete(assertion.invitationCredentialId);
-            await this.onDelegatedInvitationRemoved.callIfSet(existingInvitation);
+            await this.onDelegatedInvitationRemoved.callIfSet({
+              credentialId: assertion.invitationCredentialId,
+              invitation: existingInvitation,
+            });
           }
         }
         break;
