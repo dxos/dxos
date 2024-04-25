@@ -3,6 +3,7 @@
 //
 
 import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
@@ -282,7 +283,10 @@ export class AutomergeDb {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+      states: this._automergeDocLoader.getAllHandles().map((handle) => ({
+        heads: getHeads(handle.docSync()),
+        documentId: handle.documentId,
+      })),
     });
   }
 
