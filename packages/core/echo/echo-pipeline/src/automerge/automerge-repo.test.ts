@@ -4,17 +4,21 @@
 
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { createTestLevel } from '../testing';
 
 describe('AutomergeRepo', () => {
   // Currently failing
-  test.skip('flush', async () => {
+  test('flush', async () => {
+    const level = createTestLevel();
+    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+    await openAndClose(level, storage);
+
     const repo = new Repo({
       network: [],
-      storage: new AutomergeStorageAdapter(createStorage({ type: StorageType.NODE }).createDirectory()),
+      storage,
     });
     const handle = repo.create<{ field?: string }>();
 
@@ -26,4 +30,6 @@ describe('AutomergeRepo', () => {
       await p;
     }
   });
+
+  test('getChangeByHash', async () => {});
 });
