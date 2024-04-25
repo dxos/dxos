@@ -6,7 +6,8 @@ import { X } from '@phosphor-icons/react';
 import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
 
 import type { PublicKey } from '@dxos/client';
-import { Filter, create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/client/echo';
+import { create } from '@dxos/echo-schema';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Button, Input } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';

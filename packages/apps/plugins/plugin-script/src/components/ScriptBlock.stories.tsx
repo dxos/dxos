@@ -7,8 +7,8 @@ import '@dxosTheme';
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
 // @ts-ignore

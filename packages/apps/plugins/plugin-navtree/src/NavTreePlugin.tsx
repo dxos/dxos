@@ -20,7 +20,7 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';

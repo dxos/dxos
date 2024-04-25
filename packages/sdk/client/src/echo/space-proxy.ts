@@ -10,14 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import {
-  EchoDatabaseImpl,
-  type AutomergeContext,
-  type EchoDatabase,
-  type Hypergraph,
-  Filter,
-  type EchoReactiveObject,
-} from '@dxos/echo-schema';
+import { EchoDatabaseImpl, type AutomergeContext, type EchoDatabase, type Hypergraph, Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

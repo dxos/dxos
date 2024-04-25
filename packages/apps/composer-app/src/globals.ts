@@ -13,10 +13,10 @@ import {
   TableType,
 } from '@braneframe/types';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { Filter, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
-import { type Space, SpaceState } from '@dxos/react-client/echo';
+import { type Space, SpaceState, Filter } from '@dxos/react-client/echo';
 
 import { appKey } from './constants';
 import { migrations } from './migrations';

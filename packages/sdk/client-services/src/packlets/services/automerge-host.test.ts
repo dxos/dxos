@@ -5,9 +5,9 @@
 import { expect } from 'chai';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { AutomergeContext } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {

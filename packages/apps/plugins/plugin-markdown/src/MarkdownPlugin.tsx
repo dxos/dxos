@@ -18,9 +18,9 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter, type Query, create, type ReactiveObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, Filter, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 

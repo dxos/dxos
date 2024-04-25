@@ -4,7 +4,7 @@
 
 import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
-import { isEchoObject } from '@dxos/echo-schema';
+import { isEchoObject } from '@dxos/react-client/echo';
 
 import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 

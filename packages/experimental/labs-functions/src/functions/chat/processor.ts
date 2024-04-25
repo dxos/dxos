@@ -21,8 +21,8 @@ import {
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
-import { Filter, type JsonSchema, loadObjectReferences } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { Filter, loadObjectReferences } from '@dxos/echo-db';
+import { create, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { createContext, type RequestContext } from './context';

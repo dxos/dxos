@@ -20,7 +20,7 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Hypergraph } from '@dxos/echo-schema';
+import { Hypergraph } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

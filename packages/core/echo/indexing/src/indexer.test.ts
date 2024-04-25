@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { Reference } from '@dxos/echo-db';
+import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure, encodeReference } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { type Filter } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
