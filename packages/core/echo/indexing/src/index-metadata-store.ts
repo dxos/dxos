@@ -66,7 +66,6 @@ export class IndexMetadataStore {
       }
     }
 
-    log.info('getDirtyDocuments', { res });
     return Array.from(res.values())
       .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
       .map((metadata) => metadata.id);
