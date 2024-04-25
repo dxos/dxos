@@ -109,6 +109,9 @@ export const createItems = (count: number) =>
 
 export type TableContentProps = StackSectionContent & Pick<TableProps<Item>, 'columns' | 'data'>;
 
-export const TableContent = ({ data: { columns, data } }: { data: TableContentProps }) => {
-  return <Table columns={columns} data={data} />;
-};
+export const TableContent = ({ data: { columns, data } }: { data: TableContentProps }) => (
+  <Table.Root>
+    {/* TODO(Zan): Does this work without viewport? */}
+    <Table.Table columns={columns} data={data} />;
+  </Table.Root>
+);

@@ -136,13 +136,12 @@ export const SwarmPanel = () => {
   return (
     <PanelContainer classNames='divide-y'>
       <div ref={containerRef} className='h-1/2 overflow-auto'>
-        <Table<SwarmConnection>
+        <Table.Table<SwarmConnection>
           columns={columns}
           data={items}
           keyAccessor={(row) => row.id.toHex()}
           grouping={['topic']}
           onDatumClick={(datum) => handleSelect([datum])}
-          getScrollElement={() => containerRef.current}
         />
       </div>
       <div className='h-1/2 overflow-auto'>

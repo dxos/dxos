@@ -55,13 +55,9 @@ export const FeedTable: FC = () => {
   return (
     // TODO(Zan): Is this the right container to use?
     <AnchoredOverflow.Root ref={containerRef}>
-      <Table<FeedInfo>
-        columns={columns}
-        data={updatedFeeds}
-        onDatumClick={handleSelect}
-        fullWidth
-        getScrollElement={() => containerRef.current}
-      />
+      <Table.Root scrollContextRef={containerRef}>
+        <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
+      </Table.Root>
       <AnchoredOverflow.Anchor />
     </AnchoredOverflow.Root>
   );

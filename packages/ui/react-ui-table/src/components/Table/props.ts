@@ -3,7 +3,6 @@
 //
 
 import { type RowData, type RowSelectionState, type Table, type VisibilityState } from '@tanstack/react-table';
-import { type VirtualizerOptions } from '@tanstack/react-virtual';
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
@@ -48,7 +47,7 @@ export type TableProps<TData extends RowData> = TableFlags &
     // `table` element props
     classNames: ClassNameValue;
     pinLastRow: boolean;
-  }> & { getScrollElement: VirtualizerOptions<Element, any>['getScrollElement'] };
+  }>;
 
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 

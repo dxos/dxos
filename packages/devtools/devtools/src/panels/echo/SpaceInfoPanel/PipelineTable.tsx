@@ -130,13 +130,9 @@ export const PipelineTable: FC<{
 
   return (
     <AnchoredOverflow.Root ref={containerRef}>
-      <Table<PipelineTableRow>
-        columns={columns}
-        data={data}
-        onDatumClick={handleSelect}
-        fullWidth
-        getScrollElement={() => containerRef.current}
-      />
+      <Table.Root scrollContextRef={containerRef}>
+        <Table.Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
+      </Table.Root>
       ;
       <AnchoredOverflow.Anchor />
     </AnchoredOverflow.Root>

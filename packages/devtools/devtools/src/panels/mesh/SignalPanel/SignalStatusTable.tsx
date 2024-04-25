@@ -116,7 +116,9 @@ export const SignalStatusTable = () => {
 
   return (
     <AnchoredOverflow.Root ref={containerRef}>
-      <Table<SignalStatus> columns={columns} data={status} getScrollElement={() => containerRef.current} />
+      <Table.Root scrollContextRef={containerRef}>
+        <Table.Table<SignalStatus> columns={columns} data={status} />
+      </Table.Root>
       <AnchoredOverflow.Anchor />
     </AnchoredOverflow.Root>
   );

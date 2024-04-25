@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import { AnchoredOverflow } from '@dxos/react-ui';
 import { Table, type TableColumnDef } from '@dxos/react-ui-table';
@@ -28,23 +28,22 @@ export const MasterDetailTable = <T extends {}>({
   const TableContainer = pinToBottom ? AnchoredOverflow.Root : 'div';
   const tableContainerStyles = pinToBottom ? { classNames: widths[0] } : { className: mx('overflow-auto', widths[0]) };
 
-  const containerRef = useRef<HTMLDivElement>(null);
-
   return (
-    <div className='flex grow overflow-hidden divide-x'>
-      <TableContainer {...tableContainerStyles} ref={containerRef}>
-        <Table<T>
-          columns={columns}
-          data={data}
-          rowsSelectable
-          currentDatum={selected}
-          onDatumClick={setSelected}
-          fullWidth
-          getScrollElement={() => containerRef.current}
-        />
-        {pinToBottom && <AnchoredOverflow.Anchor />}
-      </TableContainer>
+    <Table.Root>
+      <Table.Viewport classNames='flex grow overflow-hidden divide-x'>
+        <TableContainer {...tableContainerStyles}>
+          <Table.Table<T>
+            columns={columns}
+            data={data}
+            rowsSelectable
+            currentDatum={selected}
+            onDatumClick={setSelected}
+            fullWidth
+          />
+          {pinToBottom && <AnchoredOverflow.Anchor />}
+        </TableContainer>
+      </Table.Viewport>
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected} />}</div>
-    </div>
+    </Table.Root>
   );
 };

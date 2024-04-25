@@ -130,13 +130,9 @@ export const SpaceListPanel: FC = () => {
 
       {/* TODO(Zan): Is this the right container? */}
       <AnchoredOverflow.Root ref={containerRef}>
-        <Table<Space>
-          columns={columns}
-          data={spaces}
-          onDatumClick={handleSelect}
-          fullWidth
-          getScrollElement={() => containerRef.current}
-        />
+        <Table.Root scrollContextRef={containerRef}>
+          <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+        </Table.Root>
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
     </PanelContainer>

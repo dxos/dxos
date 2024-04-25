@@ -49,13 +49,14 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
       />
 
       <AnchoredOverflow.Root ref={containerRef} classNames='flex grow'>
-        <Table<ConnectionInfo.StreamStats>
-          columns={columns}
-          data={connection.streams ?? []}
-          keyAccessor={(row) => row.id.toString()}
-          fullWidth
-          getScrollElement={() => containerRef.current}
-        />
+        <Table.Root scrollContextRef={containerRef}>
+          <Table.Table<ConnectionInfo.StreamStats>
+            columns={columns}
+            data={connection.streams ?? []}
+            keyAccessor={(row) => row.id.toString()}
+            fullWidth
+          />
+        </Table.Root>
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
     </>

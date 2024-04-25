@@ -71,7 +71,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
 
   return (
     <DensityProvider density={'fine'}>
-      <Table<SchemaRecord> columns={columns} data={data} />
+      <Table.Table<SchemaRecord> columns={columns} data={data} />
     </DensityProvider>
   );
 };
