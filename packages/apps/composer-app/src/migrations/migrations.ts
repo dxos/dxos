@@ -65,12 +65,8 @@ export const migrations: Migration[] = [
       const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
 
       // Create corresponding collections for folders and stacks.
-      const folderCollections = await Promise.all(
-        folders.map(async (folder): Promise<[FolderType, Collection]> => {
-          const objects = await loadObjectReferences(folder, (folder) => folder.objects);
-          return [folder, create(Collection, { name: folder.name, objects, views: {} })];
-        }),
-      );
+      // NOTE: Stacks need to be loaded first because recursive loading is hairy currently.
+      //   Working theory is that it's because folders can contain stacks but stacks can't contain folders.
       const stackCollections = await Promise.all(
         stacks.map(async (stack): Promise<[StackType, Collection]> => {
           const sections = await loadObjectReferences(stack, (stack) => stack.sections);
@@ -87,6 +83,12 @@ export const migrations: Migration[] = [
               views: {},
             }),
           ];
+        }),
+      );
+      const folderCollections = await Promise.all(
+        folders.map(async (folder): Promise<[FolderType, Collection]> => {
+          const objects = await loadObjectReferences(folder, (folder) => folder.objects);
+          return [folder, create(Collection, { name: folder.name, objects, views: {} })];
         }),
       );
 
