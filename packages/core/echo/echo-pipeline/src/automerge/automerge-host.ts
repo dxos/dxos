@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
-import { next as automerge, getHistory } from '@dxos/automerge/automerge';
+import { Trigger } from '@dxos/async';
+import { type Doc, next as automerge, getBackend } from '@dxos/automerge/automerge';
 import {
   type DocHandle,
   Repo,
   type DocumentId,
   type PeerId,
   type StorageAdapterInterface,
+  type DocHandleChangePayload,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
@@ -31,7 +32,7 @@ import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type SubLevelDB } from './types';
+import { type SpaceDoc, type SubLevelDB } from './types';
 
 // TODO: Remove
 export type { DocumentId };
@@ -243,31 +244,23 @@ export const getSpaceKeyFromDoc = (doc: any): string | null => {
   return String(rawSpaceKey);
 };
 
-const waitForHeads = async (handle: DocHandle<any>, heads: string[]) => {
-  let waited = 0;
-  const inc = 100;
-  while (true) {
-    await handle.whenReady();
-    // Check if all requested heads are present in the history.
-    checkIfHeadsArePresentInDoc(handle.docSync(), heads);
-    if (waited > FLUSH_TIMEOUT) {
-      log.warn('waiting to long for heads to sync on flush', { documentId: handle.documentId, heads });
-      return;
-    }
-    await sleep(inc);
-    waited += inc;
+const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: string[]) => {
+  await handle.whenReady();
+  if (headsArePresentInDoc(handle.docSync(), heads)) {
+    return;
   }
+  // Wait for the document to receive one change it will kick it in sync with the thin-client.
+  const waitForChange = new Trigger();
+  const listener = ({ doc }: DocHandleChangePayload<SpaceDoc>) => {
+    if (headsArePresentInDoc(handle.docSync(), heads)) {
+      waitForChange.wake();
+      handle.off('change', listener);
+    }
+  };
+  handle.on('change', listener);
+  await waitForChange.wait({ timeout: FLUSH_TIMEOUT });
 };
 
-const checkIfHeadsArePresentInDoc = (doc: any, heads: string[]): boolean => {
-  const history = getHistory(doc);
-  if (!history) {
-    log.warn('no history found');
-    return false;
-  }
-  const historyHashes = history.map(({ change }) => change.hash);
-  if (heads?.every((hash) => historyHashes.includes(hash))) {
-    return true;
-  }
-  return false;
+const headsArePresentInDoc = (doc: Doc<any>, heads: string[]): boolean => {
+  return heads.map((head) => getBackend(doc).getChangeByHash(head)).every((change) => change !== null);
 };
