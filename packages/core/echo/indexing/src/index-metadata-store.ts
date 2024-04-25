@@ -18,7 +18,7 @@ export type DocumentMetadata = {
   /**
    * Encoded object pointer: `${documentId}|${objectId}`.
    */
-  id: string;
+  id: ObjectPointerEncoded;
   lastIndexedHash?: ConcatenatedHeadHashes;
   lastAvailableHash?: ConcatenatedHeadHashes;
 };
@@ -28,7 +28,16 @@ export class IndexMetadataStore {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
+  /**
+   * Documents that were saved by automerge-repo but maybe not indexed (also includes indexed documents).
+   *
+   * ObjectPointerEncoded -> ConcatenatedHeadHashes
+   */
   private readonly _lastSeen: SubLevelDB;
+
+  /**
+   * Documents that were indexing
+   */
   private readonly _lastIndexed: SubLevelDB;
 
   constructor({ db }: IndexMetadataStoreParams) {
@@ -37,16 +46,16 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async getDirtyDocuments(): Promise<string[]> {
-    const res = new Map<string, DocumentMetadata>();
+  async getDirtyDocuments(): Promise<ObjectPointerEncoded[]> {
+    const res = new Map<ObjectPointerEncoded, DocumentMetadata>();
 
-    for await (const [id, lastAvailableHash] of this._lastIndexed.iterator<string, string>({
+    for await (const [id, lastAvailableHash] of this._lastSeen.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
       valueEncoding: 'json',
     })) {
       defaultMap(res, id, { id, lastAvailableHash });
     }
 
-    for await (const [id, lastIndexedHash] of this._lastSeen.iterator<string, string>({
+    for await (const [id, lastIndexedHash] of this._lastIndexed.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
       valueEncoding: 'json',
     })) {
       if (res.has(id)) {
@@ -59,6 +68,20 @@ export class IndexMetadataStore {
     return Array.from(res.values())
       .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
       .map((metadata) => metadata.id);
+  }
+
+  /**
+   * @returns All document id's that were already indexed. May include dirty documents.
+   */
+  async getAllIndexedDocuments(): Promise<ObjectPointerEncoded[]> {
+    const tuples = await this._lastIndexed
+      .iterator<ObjectPointerEncoded>({
+        valueEncoding: 'json',
+        values: false,
+      })
+      .all();
+
+    return tuples.map(([id]) => id);
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -75,7 +98,7 @@ export class IndexMetadataStore {
     this.dirty.emit();
   }
 
-  async markClean(id: string, lastIndexedHash: string) {
+  async markClean(id: ObjectPointerEncoded, lastIndexedHash: ConcatenatedHeadHashes) {
     await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
     this.clean.emit();
   }

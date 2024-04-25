@@ -71,6 +71,7 @@ export class Indexer {
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
+  // TODO(dmaretskyi): Remove.
   private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
@@ -161,7 +162,8 @@ export class Indexer {
 
   @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
-    for await (const documents of this._getAllDocuments()) {
+    const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();
+    for await (const documents of this._loadDocuments(documentsToIndex)) {
       if (this._ctx.disposed) {
         return;
       }

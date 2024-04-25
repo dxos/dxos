@@ -15,6 +15,7 @@ import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { IndexMetadataStore } from './index-metadata-store';
 import { IndexStore } from './index-store';
 import { Indexer, type ObjectSnapshot } from './indexer';
+import { log } from '@dxos/log';
 
 describe('Indexer', () => {
   test('objects that are marked as dirty are getting indexed', async () => {
@@ -84,10 +85,17 @@ describe('Indexer', () => {
     objects.forEach((object, index) => documents.push({ id: String(index), object, currentHash: 'hash' }));
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
+
+    // Add objects to indexer list. Normally they would be added by the indexer itself.
+    await metadataStore.markClean('0', 'hash');
+    await metadataStore.markClean('1', 'hash');
+
     const indexer = new Indexer({
       indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
-      loadDocuments: async function* () {},
+      loadDocuments: async function* (ids) {
+        yield ids.map((id) => ({ id, object: objects[parseInt(id)], currentHash: 'hash' }));
+      },
       getAllDocuments: async function* () {
         for (const index in objects) {
           yield [{ id: index, object: objects[index], currentHash: 'hash' }];
