@@ -12,7 +12,7 @@ import {
   type QueryResult,
   type QuerySource,
   getAutomergeObjectCore,
-} from '@dxos/echo-schema';
+} from '@dxos/echo-db';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryService,

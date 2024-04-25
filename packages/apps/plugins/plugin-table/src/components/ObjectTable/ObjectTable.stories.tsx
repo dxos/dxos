@@ -8,10 +8,10 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { type Hypergraph } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
+import { type Hypergraph } from '@dxos/react-client/echo';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 

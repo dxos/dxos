@@ -3,7 +3,8 @@
 //
 
 import { ContactType, MessageType, type RecipientType } from '@braneframe/types';
-import { Filter, hasType, create } from '@dxos/echo-schema';
+import { Filter, hasType } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

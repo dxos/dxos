@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Reference } from '@dxos/echo-db';
+import { Reference } from '@dxos/echo-schema';
 
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 

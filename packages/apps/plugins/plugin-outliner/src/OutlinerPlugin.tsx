@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, Filter } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';

@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../../../tools/executors/test"
+    },
+    {
       "path": "../../../common/async"
     },
     {
@@ -23,9 +26,6 @@
     },
     {
       "path": "../../../common/debug"
-    },
-    {
-      "path": "../../../common/feed-store"
     },
     {
       "path": "../../../common/invariant"
@@ -40,16 +40,31 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/timeframe"
+      "path": "../../../common/random-access-storage"
     },
     {
-      "path": "../../../common/typings"
+      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"
     },
     {
       "path": "../../protocols"
+    },
+    {
+      "path": "../automerge"
+    },
+    {
+      "path": "../echo-pipeline"
+    },
+    {
+      "path": "../echo-schema"
+    },
+    {
+      "path": "../echo-signals"
+    },
+    {
+      "path": "../echo-typegen"
     }
   ]
 }

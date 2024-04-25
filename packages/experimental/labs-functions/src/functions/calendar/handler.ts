@@ -8,7 +8,8 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { EventType, type RecipientType } from '@braneframe/types';
-import { type EchoReactiveObject, Filter, getMeta } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';

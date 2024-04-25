@@ -5,13 +5,8 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import {
-  type EchoReactiveObject,
-  type Filter,
-  type QueryResult,
-  type QuerySource,
-  type QuerySourceProvider,
-} from '@dxos/echo-schema';
+import { type Filter, type QueryResult, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
