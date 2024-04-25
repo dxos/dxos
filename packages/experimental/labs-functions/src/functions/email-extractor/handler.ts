@@ -13,7 +13,7 @@ import { registerTypes } from '../../util';
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
   let i = 0;
   invariant(space);
-  const { objects: contacts } = space.db.query(Filter.schema(ContactType));
+  const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();
   const objectsByEmail = new Map<string, ContactType>();
   registerTypes(space);
 
@@ -42,7 +42,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   let messages: MessageType[] = [];
   if (objects === undefined) {
-    messages = space.db.query(Filter.schema(MessageType, { type: 'email' })).objects;
+    messages = (await space.db.query(Filter.schema(MessageType, { type: 'email' }))).objects;
   } else if (objects.length) {
     // Only if undefined.
     messages = objects.filter(hasType(MessageType));

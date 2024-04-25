@@ -38,12 +38,12 @@ describe('Queries', () => {
 
   test('filter properties', async () => {
     {
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects).to.have.length(10);
     }
 
     {
-      const { objects, results } = db.query({ label: undefined });
+      const { objects, results } = await db.query({ label: undefined }).run();
       expect(objects).to.have.length(1);
       expect(results).to.have.length(1);
       expect(results[0].object).to.eq(objects[0]);
@@ -52,29 +52,29 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query({ label: 'red' });
+      const { objects } = await db.query({ label: 'red' }).run();
       expect(objects).to.have.length(3);
     }
 
     {
-      const { objects } = db.query({ label: 'pink' });
+      const { objects } = await db.query({ label: 'pink' }).run();
       expect(objects).to.have.length(0);
     }
   });
 
   test('filter operators', async () => {
     {
-      const { objects } = db.query(() => false);
+      const { objects } = await db.query(() => false).run();
       expect(objects).to.have.length(0);
     }
 
     {
-      const { objects } = db.query(() => true);
+      const { objects } = await db.query(() => true).run();
       expect(objects).to.have.length(10);
     }
 
     {
-      const { objects } = db.query((object: Expando) => object.label === 'red' || object.label === 'green');
+      const { objects } = await db.query((object: Expando) => object.label === 'red' || object.label === 'green').run();
       expect(objects).to.have.length(5);
     }
   });
@@ -82,18 +82,18 @@ describe('Queries', () => {
   test('filter chaining', async () => {
     {
       // prettier-ignore
-      const { objects } = db.query([
+      const { objects } = await db.query([
         () => true,
         { label: 'blue' },
         (object: any) => object.idx > 6
-      ]);
+      ]).run();
       expect(objects).to.have.length(2);
     }
   });
 
   test('options', async () => {
     {
-      const { objects } = db.query({ label: 'red' });
+      const { objects } = await db.query({ label: 'red' }).run();
       expect(objects).to.have.length(3);
 
       for (const object of objects) {
@@ -103,22 +103,24 @@ describe('Queries', () => {
     }
 
     {
-      const { objects } = db.query();
+      const { objects } = await db.query().run();
       expect(objects).to.have.length(7);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
+      const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED }).run();
       expect(objects).to.have.length(7);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED });
+      const { objects } = await db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED }).run();
       expect(objects).to.have.length(10);
     }
 
     {
-      const { objects } = db.query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY });
+      const { objects } = await db
+        .query(undefined, { deleted: QueryOptions.ShowDeletedOption.SHOW_DELETED_ONLY })
+        .run();
       expect(objects).to.have.length(3);
     }
   });
@@ -204,8 +206,9 @@ describe('Queries with types', () => {
     const name = 'Rich Ivanov';
 
     const query = peer.db.query(Filter.typename('example.test.Contact'));
-    expect(query.objects).to.have.length(1);
-    expect(query.objects[0]).to.eq(contact);
+    const result = await query.run();
+    expect(result.objects).to.have.length(1);
+    expect(result.objects[0]).to.eq(contact);
 
     const nameUpdate = new Trigger();
     const anotherContactAdded = new Trigger();
@@ -237,7 +240,7 @@ describe('Queries with types', () => {
 
     // query
     {
-      const contact = peer.db.query(Filter.schema(Contact)).objects[0];
+      const contact = (await peer.db.query(Filter.schema(Contact)).run()).objects[0];
       expect(contact.name).to.eq(name);
       expect(contact instanceof Contact).to.be.true;
     }
@@ -254,8 +257,8 @@ test('map over refs in query result', async () => {
     folder.objects.push(object);
   }
 
-  const query = peer.db.query({ name: 'folder' });
-  const result = query.objects.flatMap(({ objects }) => objects);
+  const queryResult = await peer.db.query({ name: 'folder' }).run();
+  const result = queryResult.objects.flatMap(({ objects }) => objects);
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);

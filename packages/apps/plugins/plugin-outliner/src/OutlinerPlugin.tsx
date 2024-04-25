@@ -63,6 +63,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
 
               // Add all outlines to the graph.
               const query = space.db.query(Filter.schema(TreeType));
+              subscriptions.add(query.subscribe());
               let previousObjects: TreeType[] = [];
               subscriptions.add(
                 effect(() => {

@@ -65,6 +65,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
               // Add all tables to the graph.
               const query = space.db.query(Filter.schema(TableType));
+              subscriptions.add(query.subscribe());
               let previousObjects: TableType[] = [];
               subscriptions.add(
                 effect(() => {

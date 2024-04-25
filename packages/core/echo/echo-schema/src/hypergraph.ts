@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { ComplexMap, WeakDictionary, entry } from '@dxos/util';
+import { ComplexMap, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
@@ -40,7 +40,7 @@ export class Hypergraph {
     PublicKey.hash,
   );
 
-  private readonly _queryContexts = new WeakDictionary<{}, GraphQueryContext>();
+  private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
   get runtimeSchemaRegistry(): RuntimeSchemaRegistry {
@@ -164,16 +164,20 @@ export class Hypergraph {
   }
 
   private _createQueryContext(): QueryContext {
-    const context = new GraphQueryContext(async () => {
-      for (const database of this._databases.values()) {
-        context.addQuerySource(new SpaceQuerySource(database));
-      }
-      for (const provider of this._querySourceProviders) {
-        context.addQuerySource(provider.create());
-      }
+    const context = new GraphQueryContext({
+      onStart: () => {
+        this._queryContexts.add(context);
+      },
+      onStop: () => {
+        this._queryContexts.delete(context);
+      },
     });
-    this._queryContexts.set({}, context);
-
+    for (const database of this._databases.values()) {
+      context.addQuerySource(new SpaceQuerySource(database));
+    }
+    for (const provider of this._querySourceProviders) {
+      context.addQuerySource(provider.create());
+    }
     return context;
   }
 }
@@ -182,17 +186,31 @@ export interface QuerySourceProvider {
   create(): QuerySource;
 }
 
+export type GraphQueryContextParams = {
+  // TODO(dmaretskyi): Make async.
+  onStart: () => void;
+
+  onStop: () => void;
+};
+
 export class GraphQueryContext implements QueryContext {
   public added = new Event<QuerySource>();
   public removed = new Event<QuerySource>();
 
-  constructor(private _onStart: () => void) {}
+  public readonly sources: QuerySource[] = [];
+
+  constructor(private readonly _params: GraphQueryContextParams) {}
 
   start() {
-    this._onStart();
+    this._params.onStart();
+  }
+
+  stop() {
+    this._params.onStop();
   }
 
   addQuerySource(querySource: QuerySource) {
+    this.sources.push(querySource);
     this.added.emit(querySource);
   }
 }
@@ -200,6 +218,7 @@ export class GraphQueryContext implements QueryContext {
 class SpaceQuerySource implements QuerySource {
   public readonly changed = new Event<void>();
 
+  private _ctx: Context = new Context();
   private _filter: Filter | undefined = undefined;
   private _results?: QueryResult<EchoReactiveObject<any>>[] = undefined;
 
@@ -232,6 +251,17 @@ class SpaceQuerySource implements QuerySource {
     });
   };
 
+  async run(filter: Filter): Promise<QueryResult<EchoReactiveObject<any>>[]> {
+    if (!this._isValidSourceForFilter(filter)) {
+      return [];
+    }
+    let results: QueryResult<EchoReactiveObject<any>>[] = [];
+    prohibitSignalActions(() => {
+      results = this._query(filter);
+    });
+    return results;
+  }
+
   getResults(): QueryResult<EchoReactiveObject<any>>[] {
     if (!this._filter) {
       return [];
@@ -239,19 +269,7 @@ class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        this._results = this._database.automerge
-          .allObjectCores()
-          // TODO(dmaretskyi): Cleanup proxy <-> core.
-          .filter((core) => filterMatch(this._filter!, core))
-          .map((core) => ({
-            id: core.id,
-            spaceKey: this.spaceKey,
-            object: core.rootProxy as EchoReactiveObject<any>,
-            resolution: {
-              source: 'local',
-              time: 0,
-            },
-          }));
+        this._results = this._query(this._filter!);
       });
     }
 
@@ -259,24 +277,55 @@ class SpaceQuerySource implements QuerySource {
   }
 
   update(filter: Filter<EchoReactiveObject<any>>): void {
-    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
-      // Disabled by spaces filter.
+    if (!this._isValidSourceForFilter(filter)) {
       this._filter = undefined;
       return;
     }
 
-    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
-      // Disabled by dataLocation filter.
-      this._filter = undefined;
-      return;
-    }
-
+    void this._ctx.dispose().catch();
+    this._ctx = new Context();
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.automerge._updateEvent.on(new Context(), this._onUpdate, { weak: true });
+    this._database.automerge._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();
+  }
+
+  close() {
+    this._filter = undefined;
+    this._results = undefined;
+    void this._ctx.dispose().catch();
+  }
+
+  private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
+    return (
+      this._database.automerge
+        .allObjectCores()
+        // TODO(dmaretskyi): Cleanup proxy <-> core.
+        .filter((core) => filterMatch(filter, core))
+        .map((core) => ({
+          id: core.id,
+          spaceKey: this.spaceKey,
+          object: core.rootProxy as EchoReactiveObject<any>,
+          resolution: {
+            source: 'local',
+            time: 0,
+          },
+        }))
+    );
+  }
+
+  private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
+    // Disabled by spaces filter.
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
+      return false;
+    }
+    // Disabled by dataLocation filter.
+    if (filter.options.dataLocation && filter.options.dataLocation === QueryOptions.DataLocation.REMOTE) {
+      return false;
+    }
+    return true;
   }
 }

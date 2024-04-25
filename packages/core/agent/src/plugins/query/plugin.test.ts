@@ -148,8 +148,8 @@ describe('QueryPlugin', () => {
         const generator = createSpaceObjectGenerator(space);
         generator.addSchemas();
 
-        generator.createObject({ types: [TestSchemaType.organization] });
-        const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
+        await generator.createObject({ types: [TestSchemaType.organization] });
+        const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
         testName = objects[0].name;
         await space.db.flush();
       }

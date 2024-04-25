@@ -40,7 +40,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   try {
     const mailboxes: MailboxType[] = objects?.filter(hasType(MailboxType)) ?? [];
     if (!space) {
-      const { objects } = client.experimental.graph.query(Filter.schema(MailboxType));
+      const { objects } = await client.experimental.graph.query(Filter.schema(MailboxType)).run();
       mailboxes.push(...objects);
     }
 
@@ -68,7 +68,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
 // TODO(burdon): Util.
 const processMailbox = async (space: Space, mailbox: MailboxType, messages: MessageType[]) => {
-  const { objects: current = [] } = space.db.query(Filter.schema(MessageType)) ?? {};
+  const { objects: current = [] } = (await space.db.query(Filter.schema(MessageType)).run()) ?? {};
 
   // Merge messages.
   // console.log(messages.map((message) => message[debug]));

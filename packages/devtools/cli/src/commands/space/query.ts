@@ -20,7 +20,7 @@ export default class Query extends BaseCommand<typeof Query> {
     const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, key);
-      const { objects } = space.db.query({ type: 'test' });
+      const { objects } = await space.db.query({ type: 'test' }).run();
       if (this.flags.json) {
         if (this.flags.verbose) {
           return { objects };

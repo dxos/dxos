@@ -46,6 +46,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
             spaces.forEach((space) => {
               // Add all documents to the graph.
               const query = space.db.query(Filter.schema(StackType));
+              subscriptions.add(query.subscribe());
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {

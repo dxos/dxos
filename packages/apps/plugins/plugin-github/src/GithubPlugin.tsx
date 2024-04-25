@@ -53,6 +53,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
               const query = space.db.query((obj: EchoReactiveObject<any>) =>
                 getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
               );
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
