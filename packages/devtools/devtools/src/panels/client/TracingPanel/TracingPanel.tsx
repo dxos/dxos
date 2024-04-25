@@ -112,15 +112,19 @@ export const TracingPanel = () => {
     'border-b first:border-r last:border-l',
   );
 
+  const anchoredOverflowRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
     <PanelContainer>
-      <AnchoredOverflow.Root classNames='flex flex-col h-1/3 overflow-auto'>
+      <AnchoredOverflow.Root ref={anchoredOverflowRef} classNames='flex flex-col h-1/3 overflow-auto'>
         <Table<ResourceState>
           columns={columns}
           data={Array.from(state.current.resources.values())}
           currentDatum={selectedResource}
           onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
           fullWidth
+          getScrollElement={() => anchoredOverflowRef.current}
         />
         <AnchoredOverflow.Anchor />
       </AnchoredOverflow.Root>
@@ -142,8 +146,8 @@ export const TracingPanel = () => {
             <MetricsView resource={selectedResource?.resource} />
           </Tabs.Content>
 
-          <Tabs.Content value='logs' className='grow overflow-auto'>
-            <LogView logs={selectedResource?.logs ?? []} />
+          <Tabs.Content ref={containerRef} value='logs' className='grow overflow-auto'>
+            <LogView logs={selectedResource?.logs ?? []} getContainerRef={() => containerRef.current} />
           </Tabs.Content>
 
           <Tabs.Content value='spans' className='grow overflow-hidden'>

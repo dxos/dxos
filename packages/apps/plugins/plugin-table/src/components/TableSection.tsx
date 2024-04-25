@@ -6,8 +6,9 @@ import React, { type FC, useRef } from 'react';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
-const TableSection: FC<ObjectTableProps> = ({ table }) => {
+const TableSection: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+
   return (
     <div className='bs-96 mlb-2 overflow-auto' ref={containerRef}>
       <ObjectTable

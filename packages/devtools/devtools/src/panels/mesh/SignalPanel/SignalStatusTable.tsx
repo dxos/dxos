@@ -11,6 +11,7 @@ import { type SignalStatus } from '@dxos/messaging';
 import { type SubscribeToSignalStatusResponse } from '@dxos/protocols/proto/dxos/devtools/host';
 import { SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 const states = {
@@ -111,5 +112,12 @@ export const SignalStatusTable = () => {
     helper.accessor('error', {}),
   ];
 
-  return <Table<SignalStatus> columns={columns} data={status} />;
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  return (
+    <AnchoredOverflow.Root ref={containerRef}>
+      <Table<SignalStatus> columns={columns} data={status} getScrollElement={() => containerRef.current} />
+      <AnchoredOverflow.Anchor />
+    </AnchoredOverflow.Root>
+  );
 };

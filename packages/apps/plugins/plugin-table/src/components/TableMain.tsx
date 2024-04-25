@@ -9,7 +9,7 @@ import { baseSurface } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
-const TableMain: FC<ObjectTableProps> = ({ table }) => {
+const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   return (

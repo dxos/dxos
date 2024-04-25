@@ -31,30 +31,24 @@ export type TableCurrent<TData extends RowData> = Partial<{
   onDatumClick: (datum: TData) => void;
 }>;
 
-export type TableProps<
-  TData extends RowData,
-  ScrollElement extends Element | Window = Element,
-  ItemElement extends Element = HTMLTableRowElement,
-> = TableFlags &
+export type TableProps<TData extends RowData> = TableFlags &
   TableCurrent<TData> &
-  Partial<
-    {
-      keyAccessor: KeyValue<TData>;
-      data: TData[];
-      columns: TableColumnDef<TData>[];
-      onColumnResize: (state: Record<string, number>) => void;
-      columnVisibility: VisibilityState;
-      // Controllable row selection
-      rowSelection: RowSelectionState;
-      defaultRowSelection: RowSelectionState;
-      onRowSelectionChange: (rowSelection: RowSelectionState) => void;
-      // Derived from row selection
-      onDataSelectionChange: (dataSelection: TData[]) => void;
-      // `table` element props
-      classNames: ClassNameValue;
-      pinLastRow: boolean;
-    } & Pick<VirtualizerOptions<ScrollElement, ItemElement>, 'getScrollElement'>
-  >;
+  Partial<{
+    keyAccessor: KeyValue<TData>;
+    data: TData[];
+    columns: TableColumnDef<TData>[];
+    onColumnResize: (state: Record<string, number>) => void;
+    columnVisibility: VisibilityState;
+    // Controllable row selection
+    rowSelection: RowSelectionState;
+    defaultRowSelection: RowSelectionState;
+    onRowSelectionChange: (rowSelection: RowSelectionState) => void;
+    // Derived from row selection
+    onDataSelectionChange: (dataSelection: TData[]) => void;
+    // `table` element props
+    classNames: ClassNameValue;
+    pinLastRow: boolean;
+  }> & { getScrollElement: VirtualizerOptions<Element, any>['getScrollElement'] };
 
 export type { RowSelectionState, VisibilityState, TableColumnDef, KeyValue };
 

@@ -11,10 +11,9 @@ import {
   getExpandedRowModel,
   type Row,
 } from '@tanstack/react-table';
-import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { Fragment, useCallback, useEffect, useState } from 'react';
 
-import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 
 import { TableBody } from './TableBody';
@@ -116,10 +115,6 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
-  if (!getScrollElement) {
-    log.warn('Table: getScrollElement is not set. This is required for virtualized tables.');
-  }
-
   return (
     <TableProvider
       {...props}
@@ -128,7 +123,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       expand={expand}
       isGrid={role === 'grid' || role === 'treegrid'}
     >
-      <TableImpl<TData> debug={false} getScrollElement={getScrollElement} {...props} />
+      <TableImpl<TData> debug={false} {...props} />
     </TableProvider>
   );
 };
@@ -148,8 +143,9 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     );
   }
 
-  const virtualisable = getScrollElement !== undefined;
   const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
+
+  const TableComponent = isResizingColumn ? MemoizedVirtualisedTableContent : VirtualizedTableContent;
 
   return (
     <table
@@ -159,39 +155,14 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     >
       <TableHead />
 
-      {grouping?.length !== 0 ? (
-        virtualisable ? (
-          isResizingColumn ? (
-            <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
-          ) : (
-            <VirtualizedTableContent getScrollElement={getScrollElement} />
-          )
-        ) : (
-          <UnvirtualizedTableContent />
-        )
-      ) : (
-        <GroupedTableContent />
-      )}
+      {grouping?.length !== 0 ? <TableComponent getScrollElement={getScrollElement} /> : <GroupedTableContent />}
 
       {footer && <TableFooter />}
     </table>
   );
 };
 
-const UnvirtualizedTableContent = () => {
-  const { table } = useTableContext();
-
-  const centerRows = table.getCenterRows();
-  const pinnedRows = table.getBottomRows();
-
-  const rows = [...centerRows, ...pinnedRows];
-
-  return <TableBody rows={rows} />;
-};
-
-const VirtualizedTableContent = ({
-  getScrollElement,
-}: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
+const VirtualizedTableContent = ({ getScrollElement }: Pick<TableProps<any>, 'getScrollElement'>) => {
   const { table } = useTableContext();
 
   const centerRows = table.getCenterRows();
@@ -221,23 +192,11 @@ const VirtualizedTableContent = ({
   const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows];
 
   return (
-    <>
-      {paddingTop > 0 && (
-        <tbody role='none'>
-          <tr role='none'>
-            <td style={{ height: `${paddingTop}px` }} role='none' />
-          </tr>
-        </tbody>
-      )}
+    <Fragment>
+      {paddingTop > 0 && <div style={{ height: `${paddingTop}px` }} aria-hidden='true' />}
       <TableBody rows={rowsToRender} />
-      {paddingBottom > 0 && (
-        <tbody role='none'>
-          <tr role='none'>
-            <td style={{ height: `${paddingBottom}px` }} role='none' />
-          </tr>
-        </tbody>
-      )}
-    </>
+      {paddingBottom > 0 && <div style={{ height: `${paddingBottom}px` }} aria-hidden='true' />}
+    </Fragment>
   );
 };
 

@@ -47,6 +47,9 @@ const logColumns = (() => {
   return columns;
 })();
 
-export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
+export const LogView: FC<{ logs: LogEntry[]; getContainerRef: () => Element | null }> = ({
+  logs = [],
+  getContainerRef,
+}) => {
+  return <Table<LogEntry> columns={logColumns} data={logs} fullWidth getScrollElement={getContainerRef} />;
 };

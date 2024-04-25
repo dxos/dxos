@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { PublicKey } from '@dxos/keys';
 import { type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type SubscribeToSpacesResponse } from '@dxos/protocols/proto/dxos/devtools/host';
+import { AnchoredOverflow } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { Timeframe } from '@dxos/timeframe';
 import { ComplexSet } from '@dxos/util';
@@ -125,5 +126,19 @@ export const PipelineTable: FC<{
     navigate('/echo/feeds');
   };
 
-  return <Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />;
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  return (
+    <AnchoredOverflow.Root ref={containerRef}>
+      <Table<PipelineTableRow>
+        columns={columns}
+        data={data}
+        onDatumClick={handleSelect}
+        fullWidth
+        getScrollElement={() => containerRef.current}
+      />
+      ;
+      <AnchoredOverflow.Anchor />
+    </AnchoredOverflow.Root>
+  );
 };
