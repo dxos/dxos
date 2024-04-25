@@ -15,8 +15,12 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type Indexer } from './indexer';
+import { ObjectSnapshot, type Indexer } from './indexer';
 import { QueryState } from './query-state';
+import { DocHandle, DocumentId } from '@dxos/automerge/automerge-repo';
+import { getHeads } from '@dxos/automerge/automerge';
+import { ObjectPointerEncoded, idCodec } from '@dxos/protocols';
+import { ConcatenatedHeadHashes } from './types';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -107,4 +111,82 @@ export class QueryServiceImpl extends Resource implements QueryService {
       return query.close;
     });
   }
+
+  /**
+   * Re-index all loaded documents.
+   */
+  async reIndex() {
+    const iterator = createDocumentsIterator(this._params.automergeHost);
+    const ids = new Map<ObjectPointerEncoded, ConcatenatedHeadHashes>();
+    for await (const documents of iterator()) {
+      for (const { id, currentHash } of documents) {
+        ids.set(id, currentHash);
+      }
+    }
+
+    this._params.indexer.reIndex(ids);
+  }
 }
+
+/**
+ * Factory for `getAllDocuments` iterator.
+ */
+export const createDocumentsIterator = (automergeHost: AutomergeHost) =>
+  /**
+   * Recursively get all object data blobs from loaded documents from Automerge Repo.
+   * @param ids
+   */
+  // TODO(mykola): Unload automerge handles after usage.
+  async function* getAllDocuments(): AsyncGenerator<ObjectSnapshot[], void, void> {
+    /** visited automerge handles */
+    const visited = new Set<string>();
+
+    async function* getObjectsFromHandle(handle: DocHandle<any>): AsyncGenerator<ObjectSnapshot[]> {
+      if (visited.has(handle.documentId)) {
+        return;
+      }
+
+      if (!handle.isReady()) {
+        // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+        await handle.whenReady();
+      }
+      const doc = handle.docSync();
+
+      const heads = getHeads(doc);
+
+      if (doc.objects) {
+        yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
+          return {
+            id: idCodec.encode({ documentId: handle.documentId, objectId }),
+            object,
+            currentHash: heads.join(''),
+          };
+        });
+      }
+
+      if (doc.links) {
+        for (const id of Object.values(doc.links as { [echoId: string]: string })) {
+          if (visited.has(id)) {
+            continue;
+          }
+          const linkHandle = automergeHost.repo.handles[id as DocumentId] ?? automergeHost.repo.find(id as DocumentId);
+          for await (const result of getObjectsFromHandle(linkHandle)) {
+            yield result;
+          }
+        }
+      }
+
+      visited.add(handle.documentId);
+    }
+
+    // TODO(mykola): Use list of roots instead of iterating over all handles.
+    for (const handle of Object.values(automergeHost.repo.handles)) {
+      if (visited.has(handle.documentId)) {
+        continue;
+      }
+      for await (const result of getObjectsFromHandle(handle)) {
+        yield result;
+      }
+      visited.add(handle.documentId);
+    }
+  };

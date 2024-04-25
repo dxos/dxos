@@ -9,6 +9,7 @@ import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
 import { type ConcatenatedHeadHashes } from './types';
+import { log } from '@dxos/log';
 
 export type IndexMetadataStoreParams = {
   db: SubLevelDB;
@@ -65,6 +66,7 @@ export class IndexMetadataStore {
       }
     }
 
+    log.info('getDirtyDocuments', { res });
     return Array.from(res.values())
       .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
       .map((metadata) => metadata.id);
@@ -86,9 +88,9 @@ export class IndexMetadataStore {
 
   @trace.span({ showInBrowserTimeline: true })
   markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
-    idToLastHash.forEach((lastAvailableHash, id) => {
+    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
       batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
-    });
+    }
   }
 
   /**
@@ -101,5 +103,17 @@ export class IndexMetadataStore {
   async markClean(id: ObjectPointerEncoded, lastIndexedHash: ConcatenatedHeadHashes) {
     await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
     this.clean.emit();
+  }
+
+  // markClean(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
+  //   for (const [id, lastIndexedHash] of idToLastHash.entries()) {
+  //     batch.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json', sublevel: this._lastIndexed });
+  //   }
+  // }
+
+  dropFromClean(ids: ObjectPointerEncoded[], batch: BatchLevel) {
+    for (const id of ids) {
+      batch.del(id, { sublevel: this._lastIndexed });
+    }
   }
 }

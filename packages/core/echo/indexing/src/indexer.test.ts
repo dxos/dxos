@@ -27,6 +27,7 @@ describe('Indexer', () => {
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
+      db: level,
       indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
       loadDocuments: async function* (ids) {
@@ -68,7 +69,7 @@ describe('Indexer', () => {
     }
   });
 
-  test('objects are indexed for first time', async () => {
+  test.only('objects are indexed for first time', async () => {
     const level = createTestLevel();
     await openAndClose(level);
 
@@ -86,11 +87,8 @@ describe('Indexer', () => {
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
 
-    // Add objects to indexer list. Normally they would be added by the indexer itself.
-    await metadataStore.markClean('0', 'hash');
-    await metadataStore.markClean('1', 'hash');
-
     const indexer = new Indexer({
+      db: level,
       indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
       loadDocuments: async function* (ids) {
@@ -104,14 +102,23 @@ describe('Indexer', () => {
     });
     afterTest(() => indexer.destroy());
 
-    const doneIndexing = indexer.updated.waitForCount(1);
-
     {
+      const doneIndexing = indexer.updated.waitForCount(1);
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.initialize();
+      await asyncTimeout(doneIndexing, 1000);
     }
 
-    await asyncTimeout(doneIndexing, 1000);
+    {
+      const doneIndexing = indexer.updated.waitForCount(1);
+      await indexer.reIndex(
+        new Map([
+          ['0', 'hash'],
+          ['1', 'hash'],
+        ]),
+      );
+      await asyncTimeout(doneIndexing, 1000);
+    }
 
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);

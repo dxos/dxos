@@ -7,7 +7,7 @@ import isEqual from 'lodash.isequal';
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Filter } from '@dxos/echo-db';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type LevelDB, type ObjectStructure } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -18,7 +18,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type Index } from './types';
+import { type ConcatenatedHeadHashes, type Index } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -35,6 +35,8 @@ export type ObjectSnapshot = {
 };
 
 export type IndexerParams = {
+  db: LevelDB;
+
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
 
@@ -58,23 +60,26 @@ export class Indexer {
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
+      log.info('quit');
       return;
     }
 
     if (this._newIndexes.length > 0) {
       await this._promoteNewIndexes();
     }
-
+    log.info('1');
     await this._indexUpdatedObjects();
   });
 
+  private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
   // TODO(dmaretskyi): Remove.
   private readonly _getAllDocuments: () => AsyncGenerator<ObjectSnapshot[]>;
 
-  constructor({ metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
+  constructor({ db, metadataStore, indexStore, loadDocuments, getAllDocuments }: IndexerParams) {
+    this._db = db;
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
     this._loadDocuments = loadDocuments;
@@ -160,6 +165,14 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
+  async reIndex(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>) {
+    const batch = this._db.batch();
+    this._metadataStore.markDirty(idToLastHash, batch);
+    this._metadataStore.dropFromClean(Array.from(idToLastHash.keys()), batch);
+    await batch.write();
+    this._run.schedule();
+  }
+
   @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
     const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();
@@ -178,9 +191,11 @@ export class Indexer {
   @trace.span({ showInBrowserTimeline: true })
   private async _indexUpdatedObjects() {
     if (this._ctx.disposed) {
+      log.info('Indexer is disposed');
       return;
     }
     const ids = await this._metadataStore.getDirtyDocuments();
+    log.info('Indexing dirty documents', { ids });
     if (ids.length === 0 || this._ctx.disposed) {
       return;
     }
@@ -195,6 +210,7 @@ export class Indexer {
 
     const updates: boolean[] = [];
     for await (const documents of this._loadDocuments(ids)) {
+      log.info('Indexing documents', { documents });
       if (this._ctx.disposed) {
         return;
       }
