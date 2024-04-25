@@ -78,7 +78,7 @@ export class InvitationsManager {
       return observableInvitation;
     }
 
-    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, invitation);
+    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
 
     return observableInvitation;
   }
@@ -211,6 +211,7 @@ export class InvitationsManager {
       created,
       lifetime,
       multiUse,
+      delegationCredentialId: options?.delegationCredentialId,
       ...protocol.getInvitationContext(),
     } satisfies Invitation;
   }

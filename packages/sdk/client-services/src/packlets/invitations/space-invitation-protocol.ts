@@ -47,7 +47,11 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async admit(request: AdmissionRequest, guestProfile?: ProfileDocument | undefined): Promise<AdmissionResponse> {
+  async admit(
+    invitation: Invitation,
+    request: AdmissionRequest,
+    guestProfile?: ProfileDocument | undefined,
+  ): Promise<AdmissionResponse> {
     invariant(this._spaceKey);
     const space = await this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
@@ -63,6 +67,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       space.inner.genesisFeedKey,
       guestProfile,
+      invitation.delegationCredentialId,
     );
 
     // TODO(dmaretskyi): Refactor.

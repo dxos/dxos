@@ -208,6 +208,7 @@ export const createAdmissionCredentials = async (
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
   profile?: ProfileDocument,
+  invitationCredentialId?: PublicKey,
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -218,6 +219,7 @@ export const createAdmissionCredentials = async (
         role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
         profile,
         genesisFeedKey,
+        invitationCredentialId,
       },
     }),
   ]);

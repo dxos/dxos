@@ -85,7 +85,7 @@ export class InvitationsHandler {
           try {
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
-            const admissionResponse = await protocol.admit(admissionRequest, extension.guestProfile);
+            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
             extension.completedTrigger.wake(deviceKey);
