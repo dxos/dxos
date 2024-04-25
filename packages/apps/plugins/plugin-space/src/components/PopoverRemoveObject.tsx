@@ -6,8 +6,8 @@ import React, { useCallback, useRef } from 'react';
 
 import { getSpaceProperty, Collection } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type Expando, isEchoObject } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { type Expando } from '@dxos/echo-schema';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';

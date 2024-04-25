@@ -17,7 +17,8 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { AutomergeContext, create, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-schema';
+import { AutomergeContext, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -172,7 +173,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
 
       this._graph.registerQuerySourceProvider(
-        new IndexQuerySourceProvider({ echo: this, service: this._serviceProvider.services.IndexService! }),
+        new IndexQuerySourceProvider({ echo: this, service: this._serviceProvider.services.QueryService! }),
       );
       subscription.unsubscribe();
     });
@@ -186,7 +187,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async setIndexConfig(config: IndexConfig) {
-    await this._serviceProvider.services.IndexService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
+    await this._serviceProvider.services.QueryService?.setIndexConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**

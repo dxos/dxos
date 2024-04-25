@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 
 import { SurfaceProvider, type SurfaceRootContext } from './SurfaceRootContext';
 import SurfaceMeta from './meta';

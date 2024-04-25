@@ -8,9 +8,10 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type Space } from '@dxos/client-protocol';
 import { warnAfterTimeout } from '@dxos/debug';
+import { Filter } from '@dxos/echo-db';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { Filter, create } from '@dxos/echo-schema';
-import { IndexServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
+import { create } from '@dxos/echo-schema';
+import { QueryServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
@@ -59,7 +60,10 @@ describe('Index queries', () => {
     indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
     await indexer.initialize();
 
-    const service = new IndexServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
+    const service = new QueryServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
+    await service.open();
+    afterTest(() => service.close());
+
     const indexQuerySourceProvider = new IndexQuerySourceProvider({
       service,
       echo: client.spaces,
@@ -186,20 +190,23 @@ describe('Index queries', () => {
 const queryIndexedContact = async (space: Space) => {
   const receivedIndexedContact = new Trigger<ContactType>();
   const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
-  const unsub = query.subscribe((query) => {
-    log('Query results', {
-      length: query.results.length,
-      results: query.results.map(({ object, resolution }) => ({
-        object: (object as any).toJSON(),
-        resolution,
-      })),
-    });
-    for (const result of query.results) {
-      if (result.object instanceof ContactType && result.resolution?.source === 'index') {
-        unsub();
-        receivedIndexedContact.wake(result.object);
+  const unsub = query.subscribe(
+    (query) => {
+      log('Query results', {
+        length: query.results.length,
+        results: query.results.map(({ object, resolution }) => ({
+          object: (object as any).toJSON(),
+          resolution,
+        })),
+      });
+      for (const result of query.results) {
+        if (result.object instanceof ContactType && result.resolution?.source === 'index') {
+          unsub();
+          receivedIndexedContact.wake(result.object);
+        }
       }
-    }
-  }, true);
+    },
+    { fire: true },
+  );
   return receivedIndexedContact.wait({ timeout: 5000 });
 };

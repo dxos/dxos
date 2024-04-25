@@ -5,7 +5,7 @@
 import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
-import { type ReactiveObject, create } from '@dxos/echo-schema/schema';
+import { type ReactiveObject, create } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {

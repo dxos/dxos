@@ -97,7 +97,7 @@
       "path": "../automerge"
     },
     {
-      "path": "../echo-db"
+      "path": "../echo-schema"
     }
   ]
 }

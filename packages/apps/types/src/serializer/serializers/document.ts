@@ -2,13 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  createDocAccessor,
-  getRangeFromCursor,
-  create,
-  getAutomergeObjectCore,
-  createEchoObject,
-} from '@dxos/echo-schema';
+import { createDocAccessor, getRangeFromCursor, getAutomergeObjectCore, createEchoObject } from '@dxos/client/echo';
+import { create } from '@dxos/echo-schema';
 
 import { type TypedObjectSerializer, validFilename } from './default';
 import { DocumentType, TextV0Type, ThreadType } from '../../schema';

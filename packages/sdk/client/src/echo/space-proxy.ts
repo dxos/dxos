@@ -10,14 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import {
-  EchoDatabaseImpl,
-  type AutomergeContext,
-  type EchoDatabase,
-  type Hypergraph,
-  Filter,
-  type EchoReactiveObject,
-} from '@dxos/echo-schema';
+import { EchoDatabaseImpl, type AutomergeContext, type EchoDatabase, type Hypergraph, Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -313,16 +307,19 @@ export class SpaceProxy implements Space {
     {
       const unsubscribe = this._db
         .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
-        .subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        }, true);
+        .subscribe(
+          (query) => {
+            if (query.objects.length === 1) {
+              this._properties = query.objects[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),

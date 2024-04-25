@@ -21,10 +21,10 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, getTextInRange, Filter, isSpace } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, Filter, isSpace, createDocAccessor } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -58,6 +58,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   let navigationPlugin: Plugin<LocationProvides> | undefined;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let unsubscribe: UnsubscribeCallback | undefined;
+  let queryUnsubscribe: UnsubscribeCallback | undefined;
 
   return {
     meta,
@@ -67,15 +68,21 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+      if (!client) {
+        return;
+      }
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
+      const threadsQuery = client.spaces.query(Filter.schema(ThreadType, (thread) => !thread.context));
+      queryUnsubscribe = threadsQuery.subscribe();
       unsubscribe = effect(() => {
         const active = navigationPlugin?.provides.location.active;
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
         const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
-          const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
+          const [thread] = threadsQuery.objects.filter((thread) => getSpace(thread) === space);
           if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
             void intentPlugin?.provides.intent.dispatch({
               action: LayoutAction.SET_LAYOUT,
@@ -105,6 +112,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
     },
     unload: async () => {
       unsubscribe?.();
+      queryUnsubscribe?.();
     },
     provides: {
       settings: settings.values,
@@ -162,9 +170,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               // Add all threads not linked to documents to the graph.
               const query = space.db.query(Filter.schema(ThreadType));
+              subscriptions.add(query.subscribe());
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
               const documentQuery = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(documentQuery.subscribe());
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -313,8 +323,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments?.splice(index, 1);
                 }
 
-                // TODO(wittjosiah): Deleting the thread entirely here causes an error when undoing.
-                // space.db.remove(thread);
+                space.db.remove(thread);
 
                 return {
                   undoable: {
@@ -323,7 +332,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments.push({ thread, cursor });
+                // TODO(wittjosiah): SDK should do this automatically.
+                const savedThread = space.db.add(thread);
+                doc.comments.push({ thread: savedThread, cursor });
                 return { data: true };
               }
             }

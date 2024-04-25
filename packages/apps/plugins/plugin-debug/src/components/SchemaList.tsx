@@ -21,10 +21,14 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
   onCreate,
 }) => {
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
-  const objects = space.db.schemaRegistry.getAll();
-  const data = objects
-    .filter((object) => object.typename)
-    .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 }));
+  const [data, setData] = useState<SchemaRecord[]>([]);
+  space.db.schemaRegistry.getAll().then((objects) => {
+    setData(
+      objects
+        .filter((object) => object.typename)
+        .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 })),
+    );
+  });
 
   const handleUpdateCount = (record: SchemaRecord, _: string, count: number | undefined) => {
     setSchemaCount((schemaCount) => Object.assign({}, schemaCount, { [record.id]: count }));
@@ -32,7 +36,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
 
   const handleCreate = (id: string) => {
     const count = schemaCount[id] ?? 1;
-    const schema = objects.find((schema) => schema.id === id);
+    const schema = data.find((schema) => schema.id === id);
     if (schema) {
       onCreate?.(schema, count);
     }

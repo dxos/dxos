@@ -14,7 +14,7 @@ const client = new Client();
   // grab a space
   const space = spaces[0];
   // grab an object
-  const result = space.db.query({ type: 'task' });
+  const result = await space.db.query({ type: 'task' }).run();
   const object = result.objects[0];
   // mutate the object directly
   object.isCompleted = true;

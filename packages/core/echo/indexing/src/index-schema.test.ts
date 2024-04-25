@@ -4,9 +4,9 @@
 
 import { expect } from 'chai';
 
-import { Reference } from '@dxos/echo-db';
+import { type Filter } from '@dxos/echo-db';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';

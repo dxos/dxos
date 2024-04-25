@@ -7,9 +7,10 @@ import '@dxosTheme';
 import React, { type FC, useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
-import { createDocAccessor, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

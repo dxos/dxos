@@ -10,8 +10,6 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/config.proto";
-import "dxos/agent/query.proto";
-import "dxos/echo/indexing.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
@@ -382,16 +380,6 @@ service SpacesService {
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
   rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
-}
-
-//
-// Indexing
-//
-
-service IndexService {
-  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc Find(dxos.agent.query.QueryRequest) returns (stream dxos.agent.query.QueryResponse);
-  
 }
 
 //

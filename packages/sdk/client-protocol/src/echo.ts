@@ -3,7 +3,7 @@
 //
 
 import type { MulticastObservable } from '@dxos/async';
-import type { FilterSource, Query } from '@dxos/echo-schema';
+import type { FilterSource, Query } from '@dxos/echo-db';
 import type { PublicKey } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

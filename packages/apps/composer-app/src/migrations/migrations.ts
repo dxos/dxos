@@ -25,13 +25,13 @@ export class StackType extends TypedObject({ typename: 'braneframe.Stack', versi
 export const migrations: Migration[] = [
   {
     version: 1,
-    up: ({ space }) => {
+    up: async ({ space }) => {
       const rootFolder = getSpaceProperty(space, FolderType.typename);
       if (rootFolder instanceof FolderType) {
         return;
       }
 
-      const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
+      const { objects } = await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run();
       if (objects.length > 0) {
         setSpaceProperty(space, FolderType.typename, objects[0]);
       } else {
@@ -42,9 +42,9 @@ export const migrations: Migration[] = [
   },
   {
     version: 2,
-    up: ({ space }) => {
+    up: async ({ space }) => {
       const rootFolder = getSpaceProperty<FolderType>(space, FolderType.typename)!;
-      const { objects } = space.db.query(Filter.schema(FolderType, { name: space.key.toHex() }));
+      const { objects } = await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run();
       if (objects.length <= 1) {
         return;
       }

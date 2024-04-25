@@ -5,7 +5,7 @@
 import React, { forwardRef } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import {

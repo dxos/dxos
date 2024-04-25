@@ -12,61 +12,71 @@
       "browser": "./dist/lib/browser/index.mjs",
       "import": "./dist/lib/browser/index.mjs",
       "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": "./dist/lib/node/index.cjs",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./devtools": {
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "import": "./dist/lib/browser/devtools/index.mjs",
       "require": "./dist/lib/node/devtools/index.cjs",
-      "node": "./dist/lib/node/devtools/index.cjs"
+      "node": "./dist/lib/node/devtools/index.cjs",
+      "types": "./dist/types/src/devtools/index.d.ts"
     },
     "./echo": {
       "browser": "./dist/lib/browser/echo/index.mjs",
       "import": "./dist/lib/browser/echo/index.mjs",
       "require": "./dist/lib/node/echo/index.cjs",
-      "node": "./dist/lib/node/echo/index.cjs"
+      "node": "./dist/lib/node/echo/index.cjs",
+      "types": "./dist/types/src/echo/index.d.ts"
     },
     "./halo": {
       "browser": "./dist/lib/browser/halo/index.mjs",
       "import": "./dist/lib/browser/halo/index.mjs",
       "require": "./dist/lib/node/halo/index.cjs",
-      "node": "./dist/lib/node/halo/index.cjs"
+      "node": "./dist/lib/node/halo/index.cjs",
+      "types": "./dist/types/src/halo/index.d.ts"
     },
     "./invitations": {
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "import": "./dist/lib/browser/invitations/index.mjs",
       "require": "./dist/lib/node/invitations/index.cjs",
-      "node": "./dist/lib/node/invitations/index.cjs"
+      "node": "./dist/lib/node/invitations/index.cjs",
+      "types": "./dist/types/src/invitations/index.d.ts"
     },
     "./mesh": {
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "import": "./dist/lib/browser/mesh/index.mjs",
       "require": "./dist/lib/node/mesh/index.cjs",
-      "node": "./dist/lib/node/mesh/index.cjs"
+      "node": "./dist/lib/node/mesh/index.cjs",
+      "types": "./dist/types/src/mesh/index.d.ts"
     },
     "./services": {
       "browser": "./dist/lib/browser/services/index.mjs",
       "import": "./dist/lib/browser/services/index.mjs",
       "require": "./dist/lib/node/services/index.cjs",
-      "node": "./dist/lib/node/services/index.cjs"
+      "node": "./dist/lib/node/services/index.cjs",
+      "types": "./dist/types/src/services/index.d.ts"
     },
     "./shared-worker": {
       "browser": "./dist/lib/browser/worker/shared-worker.mjs",
       "import": "./dist/lib/browser/worker/shared-worker.mjs",
       "require": "./dist/lib/node/worker/shared-worker.cjs",
-      "node": "./dist/lib/node/worker/shared-worker.cjs"
+      "node": "./dist/lib/node/worker/shared-worker.cjs",
+      "types": "./dist/types/src/worker/shared-worker.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
+      "node": "./dist/lib/node/testing/index.cjs",
+      "types": "./dist/types/src/testing/index.d.ts"
     },
     "./worker": {
       "browser": "./dist/lib/browser/worker/index.mjs",
       "import": "./dist/lib/browser/worker/index.mjs",
       "require": "./dist/lib/node/worker/index.cjs",
-      "node": "./dist/lib/node/worker/index.cjs"
+      "node": "./dist/lib/node/worker/index.cjs",
+      "types": "./dist/types/src/worker/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",

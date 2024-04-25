@@ -10,8 +10,8 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { Collection, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
@@ -46,6 +46,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
             spaces.forEach((space) => {
               // Add all documents to the graph.
               const query = space.db.query(Filter.schema(Collection));
+              subscriptions.add(query.subscribe());
               let previousObjects: Collection[] = [];
               subscriptions.add(
                 effect(() => {

@@ -5,9 +5,9 @@
 import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
 import { TableType } from '@braneframe/types';
-import { type DynamicEchoSchema, S, create, TypedObject, Filter } from '@dxos/echo-schema';
+import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
@@ -50,7 +50,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
 
   useEffect(() => {
     if (space) {
-      setSchemas(space.db.schemaRegistry.getAll());
+      space.db.schemaRegistry.getAll().then(setSchemas);
     }
   }, [showSettings, space]);
 

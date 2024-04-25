@@ -8,10 +8,10 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { type Hypergraph } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
+import { type Hypergraph } from '@dxos/react-client/echo';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -19,7 +19,7 @@ import { ObjectTable } from './ObjectTable';
 
 faker.seed(1);
 
-const Story = () => {
+const useTable = () => {
   const client = useClient();
   const [table, setTable] = useState<TableType>();
 
@@ -27,7 +27,7 @@ const Story = () => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.project]: 6 });
+    generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
     const graph = (client as any)._graph as Hypergraph;
 
@@ -45,6 +45,10 @@ const Story = () => {
     setTable(table);
   }, []);
 
+  return table;
+};
+
+const Story = ({ table }: { table?: TableType }) => {
   const containerRef = React.createRef<HTMLDivElement>();
 
   if (!table) {
@@ -58,14 +62,39 @@ const Story = () => {
   );
 };
 
+const SingleTableStory = () => {
+  const table = useTable();
+
+  return <Story table={table} />;
+};
+
+const MultipleTableStory = () => {
+  const table = useTable();
+
+  return (
+    <div className='flex flex-col gap-4'>
+      <Story table={table} />
+      <Story table={table} />
+      <Story table={table} />
+    </div>
+  );
+};
+
 export default {
   title: 'plugin-table/ObjectTable',
   component: ObjectTable,
-  render: () => <ClientRepeater component={Story} createIdentity createSpace />,
+  render: () => <ClientRepeater component={SingleTableStory} createIdentity createSpace />,
   decorators: [withTheme, FullscreenDecorator()],
   parameters: {
     layout: 'fullscreen',
   },
+};
+
+export const MultipleTables = () => <ClientRepeater component={MultipleTableStory} createIdentity createSpace />;
+
+MultipleTables.decorators = [withTheme, FullscreenDecorator()];
+MultipleTables.parameters = {
+  layout: 'fullscreen',
 };
 
 export const Default = {};
