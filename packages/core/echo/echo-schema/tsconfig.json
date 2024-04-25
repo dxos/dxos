@@ -14,9 +14,6 @@
   ],
   "references": [
     {
-      "path": "../../../../tools/executors/test"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
