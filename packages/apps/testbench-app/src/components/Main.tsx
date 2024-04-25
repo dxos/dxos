@@ -5,11 +5,11 @@
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type ReactiveObject, type S } from '@dxos/echo-schema';
+import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';

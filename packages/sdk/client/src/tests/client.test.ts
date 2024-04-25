@@ -9,7 +9,8 @@ import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { Filter, create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 

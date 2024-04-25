@@ -3,7 +3,7 @@
 //
 
 import { create } from './create';
-import { reactiveProxyTests } from '../proxy/proxy.test';
+import { reactiveProxyTests } from '../proxy/proxy.blueprint-test';
 import { type TestSchema } from '../testing';
 
 describe('Reactive proxy', () => {

@@ -16,8 +16,8 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, Filter, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { create, isReactiveObject, getType } from '@dxos/echo-schema';
+import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
 import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';

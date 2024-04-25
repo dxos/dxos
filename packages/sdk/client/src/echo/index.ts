@@ -4,7 +4,21 @@
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
 export {
+  getMeta,
+  getSchema,
+  getType,
+  Expando,
+  create,
+  type EchoReactiveObject,
+  type ReactiveObject,
+  type ObjectMeta,
+} from '@dxos/echo-schema';
+export {
   createSubscription,
+  createEchoObject,
+  getRangeFromCursor,
+  getTypeRef,
+  getAutomergeObjectCore,
   hasType,
   Filter,
   Query,
@@ -13,22 +27,16 @@ export {
   fromCursor,
   toCursor,
   DocAccessor,
-  getMeta,
-  getSchema,
-  getType,
-  Expando,
-  create,
   isEchoObject,
   RuntimeSchemaRegistry,
-  type EchoReactiveObject,
-  type ReactiveObject,
+  type IDocHandle,
   type EchoDatabase,
   type FilterSource,
-  type ObjectMeta,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
-} from '@dxos/echo-schema';
+  type Hypergraph,
+} from '@dxos/echo-db';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

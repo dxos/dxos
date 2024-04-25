@@ -6,7 +6,7 @@ import type { Resource } from 'i18next';
 import React from 'react';
 
 import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 

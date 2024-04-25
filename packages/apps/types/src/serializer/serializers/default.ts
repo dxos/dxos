@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create, Expando, getAutomergeObjectCore, getMeta, getTypeRef, type ReactiveObject } from '@dxos/echo-schema';
-import { createEchoObject } from '@dxos/echo-schema';
+import { getAutomergeObjectCore, createEchoObject, getTypeRef } from '@dxos/client/echo';
+import { create, Expando, getMeta, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
 

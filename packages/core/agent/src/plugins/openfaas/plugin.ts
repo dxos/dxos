@@ -5,7 +5,7 @@
 import { DeferredTask } from '@dxos/async';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription } from '@dxos/echo-schema';
+import { createSubscription } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';

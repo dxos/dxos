@@ -6,8 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 

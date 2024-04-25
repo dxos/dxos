@@ -14,3 +14,8 @@ export * from './typed-object-class';
 export * from './types';
 export * from './reference';
 export { defineHiddenProperty } from './utils';
+
+export * as S from '@effect/schema/Schema';
+export * as AST from '@effect/schema/AST';
+
+// This comment is here to bust NX cache. Remove it after the code changes.

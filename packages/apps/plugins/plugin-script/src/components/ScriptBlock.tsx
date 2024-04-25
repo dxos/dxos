@@ -7,7 +7,7 @@ import { Check, Play, Warning } from '@phosphor-icons/react';
 import esbuildWasmURL from 'esbuild-wasm/esbuild.wasm?url';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DocAccessor } from '@dxos/echo-schema';
+import { DocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, useThemeContext, Toolbar, Button } from '@dxos/react-ui';
 import { mx, getSize } from '@dxos/react-ui-theme';
 

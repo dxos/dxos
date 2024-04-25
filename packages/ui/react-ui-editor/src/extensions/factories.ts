@@ -21,9 +21,8 @@ import {
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { generateName } from '@dxos/display-name';
-import { type DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type DocAccessor, type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';

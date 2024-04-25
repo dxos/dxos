@@ -15,7 +15,4 @@ export * from './util';
 export * from './text';
 export * from './echo-handler';
 
-export * as S from '@effect/schema/Schema';
-export * as AST from '@effect/schema/AST';
-
 // This comment is here to bust NX cache. Remove it after the code changes.

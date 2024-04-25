@@ -6,7 +6,8 @@ import { join } from 'node:path';
 
 import { ThreadType, MessageType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
-import { Filter, loadObjectReferences, create, getMeta } from '@dxos/echo-schema';
+import { Filter, loadObjectReferences } from '@dxos/echo-db';
+import { create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 
 import { RequestProcessor } from './processor';
