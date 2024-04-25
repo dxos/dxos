@@ -5080,6 +5080,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../automerge
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../../common/codec-protobuf
@@ -5089,6 +5092,15 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../echo-pipeline
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
+      '@dxos/echo-signals':
+        specifier: workspace:*
+        version: link:../echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5104,28 +5116,58 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      '@dxos/timeframe':
+      '@dxos/random-access-storage':
         specifier: workspace:*
-        version: link:../../../common/timeframe
+        version: link:../../../common/random-access-storage
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+      '@orama/orama':
+        specifier: ^2.0.8
+        version: 2.0.8
+      effect:
+        specifier: 2.4.9
+        version: 2.4.9
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
     devDependencies:
-      '@automerge/automerge':
-        specifier: ^2.1.13
-        version: 2.1.13
-      '@automerge/automerge-repo':
-        specifier: ^1.1.5
-        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      '@dxos/feed-store':
+      '@dxos/echo-typegen':
         specifier: workspace:*
-        version: link:../../../common/feed-store
-      '@dxos/typings':
+        version: link:../echo-typegen
+      '@dxos/test':
         specifier: workspace:*
-        version: link:../../../common/typings
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.10
+        version: link:../../../../tools/executors/test
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
+      wait-for-expect:
+        specifier: ^3.0.2
+        version: 3.0.2
 
   packages/core/echo/echo-generator:
     dependencies:
@@ -5281,30 +5323,6 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../../common/async
-      '@dxos/automerge':
-        specifier: workspace:*
-        version: link:../automerge
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo-db
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-signals':
-        specifier: workspace:*
-        version: link:../echo-signals
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5320,43 +5338,25 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../../common/random-access-storage
-      '@dxos/tracing':
-        specifier: workspace:*
-        version: link:../../../common/tracing
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
       '@effect/schema':
         specifier: 0.64.7
         version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
-      '@orama/orama':
-        specifier: ^2.0.8
-        version: 2.0.8
       effect:
         specifier: 2.4.9
         version: 2.4.9
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      lodash.isequal:
-        specifier: ^4.5.0
-        version: 4.5.0
     devDependencies:
-      '@dxos/echo-typegen':
+      '@dxos/echo-signals':
         specifier: workspace:*
-        version: link:../echo-typegen
+        version: link:../echo-signals
+      '@dxos/test':
+        specifier: workspace:*
+        version: link:../../../../tools/executors/test
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -10523,6 +10523,7 @@ packages:
       - '@types/node'
       - supports-color
       - typescript
+    dev: false
 
   /@automerge/automerge-wasm@0.12.0:
     resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
@@ -35390,6 +35391,7 @@ packages:
 
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
+    dev: false
 
   /isstream@0.1.2:
     resolution: {integrity: sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==}
@@ -37492,6 +37494,7 @@ packages:
     requiresBuild: true
     dependencies:
       isomorphic.js: 0.2.5
+    dev: false
 
   /libbase64@1.2.1:
     resolution: {integrity: sha512-l+nePcPbIG1fNlqMzrh68MLkX/gTxk/+vdvAb388Ssi7UuUN31MI44w4Yf33mM3Cm4xDfw48mdf3rkdHszLNew==}
@@ -49618,6 +49621,7 @@ packages:
     requiresBuild: true
     dependencies:
       lib0: 0.2.87
+    dev: false
 
   /yjs@13.6.14:
     resolution: {integrity: sha512-D+7KcUr0j+vBCUSKXXEWfA+bG4UQBviAwP3gYBhkstkgwy5+8diOPMx0iqLIOxNo/HxaREUimZRxqHGAHCL2BQ==}

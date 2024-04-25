@@ -1,22 +1,15 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export * from './automerge';
-export * from './automerge/key-path';
-export * from './database';
-export * from './guarded-scope';
-export * from './hypergraph';
-export * from './query';
-export * from './serializer';
-export * from './runtime-schema-registry';
-export * from './dynamic-schema-registry';
-export * from './util';
-export * from './text';
-export * from './ddl';
-export * from './echo-handler';
-
-export * as S from '@effect/schema/Schema';
-export * as AST from '@effect/schema/AST';
-
-// This comment is here to bust NX cache. Remove it after the code changes.
+export * from './dynamic';
+export * from './ast';
+export * from './handler';
+export * from './json';
+export * from './proxy';
+export * from './annotations';
+export * from './expando';
+export * from './getter';
+export * from './typed-object-class';
+export * from './types';
+export * from './reference';
