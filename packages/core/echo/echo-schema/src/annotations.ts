@@ -58,7 +58,7 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
   }
 
   // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
-  return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
+  return S.union(schema, S.undefined).annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
 };
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');

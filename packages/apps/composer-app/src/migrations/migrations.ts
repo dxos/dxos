@@ -5,15 +5,14 @@
 import { Collection, getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import { create, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration } from '@dxos/migrations';
-import { Filter } from '@dxos/react-client/echo';
-import { nonNullable } from '@dxos/util';
+import { Filter, loadObjectReferences } from '@dxos/react-client/echo';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
   name: S.optional(S.string),
   objects: S.mutable(S.array(ref(Expando))),
 }) {}
 
-export class SectionType extends TypedObject({ typename: 'braneframe.Section', version: '0.1.0' })({
+export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
   object: ref(Expando),
 }) {}
 
@@ -66,20 +65,30 @@ export const migrations: Migration[] = [
       const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
 
       // Create corresponding collections for folders and stacks.
-      const folderCollections = folders.map((folder): [FolderType, Collection] => [
-        folder,
-        create(Collection, { name: folder.name, objects: folder.objects, views: {} }),
-      ]);
-      const stackCollections = stacks.map((stack): [StackType, Collection] => [
-        stack,
-        create(Collection, {
-          name: stack.title,
-          objects: stack.sections.map((section) => section?.object).filter(nonNullable),
-          // StackView will be created when the stack is rendered.
-          // There's nothing to migrate here because no stack-specific data was stored previously.
-          views: {},
+      const folderCollections = await Promise.all(
+        folders.map(async (folder): Promise<[FolderType, Collection]> => {
+          const objects = await loadObjectReferences(folder, (folder) => folder.objects);
+          return [folder, create(Collection, { name: folder.name, objects, views: {} })];
         }),
-      ]);
+      );
+      const stackCollections = await Promise.all(
+        stacks.map(async (stack): Promise<[StackType, Collection]> => {
+          const sections = await loadObjectReferences(stack, (stack) => stack.sections);
+          const objects = await Promise.all(
+            sections.map(async (section) => loadObjectReferences(section, (section) => section.object)),
+          );
+          return [
+            stack,
+            create(Collection, {
+              name: stack.title,
+              objects,
+              // StackView will be created when the stack is rendered.
+              // There's nothing to migrate here because no stack-specific data was stored previously.
+              views: {},
+            }),
+          ];
+        }),
+      );
 
       // Replace folders and stacks, in migrated collections with corresponding collections.
       // This is only done for folders because stacks previously couldn't contain other stacks or folders.

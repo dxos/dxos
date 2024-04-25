@@ -29,6 +29,7 @@ export {
   DocAccessor,
   isEchoObject,
   RuntimeSchemaRegistry,
+  loadObjectReferences,
   type IDocHandle,
   type EchoDatabase,
   type FilterSource,
