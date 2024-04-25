@@ -21,28 +21,13 @@ export interface TestConfiguration {
 
 export type TestConfigurationFactory = (schema: S.Schema<any> | undefined) => TestConfiguration | null;
 
-export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory) => {
+export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [undefined, TestSchema, TestSchemaClass]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
     }
     const { objectsHaveId, createObjectFn: createObject } = testConfig;
-
-    // const objectsHaveId = useDatabase;
-    // const testSetup = useDatabase ? createDatabase(new Hypergraph()) : undefined;
-    // const createObject = async (props: Partial<TestSchema> = {}): Promise<TestSchema> => {
-    //   const testSchema = useDatabase && schema === TestSchema ? schema.pipe(echoObject('TestSchema', '1.0.0')) : schema;
-    //   const obj = testSchema == null ? (create(props) as TestSchema) : create(testSchema as any, props);
-    //   if (!useDatabase) {
-    //     return obj as any;
-    //   }
-    //   const { db, graph } = await testSetup!;
-    //   if (testSchema && !graph.runtimeSchemaRegistry.isSchemaRegistered(testSchema as any)) {
-    //     graph.runtimeSchemaRegistry.registerSchema(testSchema as any);
-    //   }
-    //   return db.add(obj) as any;
-    // };
 
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {

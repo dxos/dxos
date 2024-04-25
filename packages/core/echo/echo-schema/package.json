@@ -39,14 +39,16 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/test": "workspace:*",
     "@effect/schema": "0.64.7",
     "@preact/signals-core": "^1.6.0",
+    "chai": "^4.4.1",
     "effect": "2.4.9",
+    "expect": "^27.0.2",
+    "jest": "^28.0.0",
     "lodash.get": "^4.4.2"
   },
-  "devDependencies": {
-    "@dxos/test": "workspace:*"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

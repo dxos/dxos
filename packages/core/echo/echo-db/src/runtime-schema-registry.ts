@@ -4,7 +4,7 @@
 
 import type * as S from '@effect/schema/Schema';
 
-import { requireTypeReference, StoredEchoSchema } from './ddl';
+import { requireTypeReference, StoredEchoSchema } from '@dxos/echo-schema';
 
 export class RuntimeSchemaRegistry {
   private readonly _schemaDefinitions = new Map<string, S.Schema<any>>();
