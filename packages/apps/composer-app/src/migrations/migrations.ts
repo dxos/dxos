@@ -60,10 +60,10 @@ export const migrations: Migration[] = [
   },
   {
     version: 3,
-    up: ({ space }) => {
+    up: async ({ space }) => {
       // Find all folders and stacks.
-      const folders = space.db.query(Filter.schema(FolderType)).objects;
-      const stacks = space.db.query(Filter.schema(StackType)).objects;
+      const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
+      const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
 
       // Create corresponding collections for folders and stacks.
       const folderCollections = folders.map((folder): [FolderType, Collection] => [

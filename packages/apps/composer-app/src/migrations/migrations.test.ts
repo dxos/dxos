@@ -93,13 +93,13 @@ describe('Composer migrations', () => {
 
     const folderQuery = space.db.query(Filter.schema(FolderType));
     const stackQuery = space.db.query(Filter.schema(StackType));
-    expect(folderQuery.objects).to.have.lengthOf(3);
-    expect(stackQuery.objects).to.have.lengthOf(1);
+    expect((await folderQuery.run()).objects).to.have.lengthOf(3);
+    expect((await stackQuery.run()).objects).to.have.lengthOf(1);
 
     await migrations[2].up({ space });
 
     const collectionQuery = space.db.query(Filter.schema(Collection));
-    expect(collectionQuery.objects).to.have.lengthOf(4);
+    expect((await collectionQuery.run()).objects).to.have.lengthOf(4);
     const rootCollection = getSpaceProperty(space, Collection.typename) as Collection;
     expect(rootCollection instanceof Collection).to.be.true;
     expect(rootCollection.objects[0] instanceof Collection).to.be.true;
