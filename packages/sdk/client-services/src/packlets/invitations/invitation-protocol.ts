@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type PublicKey } from '@dxos/keys';
 import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { ProfileDocument, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -33,7 +34,7 @@ export interface InvitationProtocol {
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
-  delegate(invitation: Invitation): Promise<void>;
+  delegate(invitation: Invitation): Promise<PublicKey>;
 
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.

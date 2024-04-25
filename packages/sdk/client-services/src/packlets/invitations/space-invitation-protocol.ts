@@ -80,7 +80,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async delegate(invitation: Invitation): Promise<void> {
+  async delegate(invitation: Invitation): Promise<PublicKey> {
     invariant(this._spaceKey);
     const space = await this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
@@ -108,7 +108,9 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       },
     );
 
+    invariant(credential.credential);
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
+    return credential.credential.credential.id!;
   }
 
   checkInvitation(invitation: Partial<Invitation>) {
