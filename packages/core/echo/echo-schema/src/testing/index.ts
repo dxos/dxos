@@ -4,4 +4,3 @@
 
 export * from './schema';
 export * from './utils';
-export { reactiveProxyTests } from '../proxy/proxy.blueprint-test';

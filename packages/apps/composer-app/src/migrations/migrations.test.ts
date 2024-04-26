@@ -21,8 +21,8 @@ describe('Composer migrations', () => {
 
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocal() });
-    client.addSchema(FolderType, Expando, SectionType, StackType, Collection);
     await client.initialize();
+    client.addSchema(FolderType, Expando, SectionType, StackType, Collection);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;

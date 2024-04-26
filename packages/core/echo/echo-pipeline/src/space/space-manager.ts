@@ -3,6 +3,7 @@
 //
 
 import { synchronized, trackLeaks } from '@dxos/async';
+import { type DelegateInvitationCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -42,6 +43,7 @@ export type ConstructSpaceParams = {
    */
   onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
 };
 
 /**
@@ -84,6 +86,7 @@ export class SpaceManager {
     swarmIdentity,
     onAuthorizedConnection,
     onAuthFailure,
+    onDelegatedInvitationStatusChange,
     memberKey,
   }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
@@ -111,6 +114,7 @@ export class SpaceManager {
       metadataStore: this._metadataStore,
       snapshotManager,
       memberKey,
+      onDelegatedInvitationStatusChange,
     });
     this._spaces.set(space.key, space);
 

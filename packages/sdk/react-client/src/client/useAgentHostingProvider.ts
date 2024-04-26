@@ -4,7 +4,7 @@
 
 import {
   type AgentHostingProviderClient,
-  EldonAgentHostingProviderClient,
+  DXOSAgentHostingProviderClient,
   FakeAgentHostingProvider,
 } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
@@ -33,5 +33,5 @@ export const useAgentHostingProviderClient = (config: Config): AgentHostingProvi
     return new FakeAgentHostingProvider(config);
   }
 
-  return new EldonAgentHostingProviderClient(config);
+  return new DXOSAgentHostingProviderClient(config);
 };

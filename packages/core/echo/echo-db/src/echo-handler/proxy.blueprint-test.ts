@@ -5,12 +5,11 @@
 import type * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import jestExpect from 'expect';
+import { describe, test } from 'mocha';
 
+import { getProxyHandlerSlot } from '@dxos/echo-schema';
+import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
-import { describe, test } from '@dxos/test';
-
-import { getProxyHandlerSlot } from './proxy';
-import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '../testing';
 
 registerSignalRuntime();
 
