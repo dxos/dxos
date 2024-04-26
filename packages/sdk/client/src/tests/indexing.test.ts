@@ -36,7 +36,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addJohn = async (space: Space) => {
+  const addContact = async (space: Space, name: string) => {
     await space.waitUntilReady();
     const contact = create(ContactType, { name: john, identifiers: [] });
     space.db.add(contact);
@@ -44,7 +44,7 @@ describe('Index queries', () => {
     return contact;
   };
 
-  const queryIndexedJohn = async (space: Space) => {
+  const queryIndexedContact = async (space: Space, name: string) => {
     const receivedIndexedContact = new Trigger<ContactType>();
     const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
     const unsub = query.subscribe(
@@ -112,9 +112,9 @@ describe('Index queries', () => {
     });
     client._graph.registerQuerySourceProvider(indexQuerySourceProvider);
     const space = await client.spaces.create();
-    await addJohn(space);
+    await addContact(space, john);
 
-    await queryIndexedJohn(space);
+    await queryIndexedContact(space, john);
   });
 
   test('index queries work with client', async () => {
@@ -128,9 +128,9 @@ describe('Index queries', () => {
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
-    await addJohn(space);
+    await addContact(space, john);
 
-    await queryIndexedJohn(space);
+    await queryIndexedContact(space, john);
   });
 
   test('indexes persists between client restarts', async () => {
@@ -149,8 +149,8 @@ describe('Index queries', () => {
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addJohn(space);
-      await queryIndexedJohn(space);
+      await addContact(space, john);
+      await queryIndexedContact(space, john);
 
       await client.destroy();
     }
@@ -162,7 +162,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await queryIndexedJohn(space);
+      await queryIndexedContact(space, john);
     }
   });
 
@@ -181,8 +181,8 @@ describe('Index queries', () => {
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addJohn(space);
-      await queryIndexedJohn(space);
+      await addContact(space, john);
+      await queryIndexedContact(space, john);
 
       await client.destroy();
     }
@@ -197,7 +197,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), 1000);
 
-      await queryIndexedJohn(space);
+      await queryIndexedContact(space, john);
     }
   });
 
@@ -217,8 +217,8 @@ describe('Index queries', () => {
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addJohn(space);
-      await queryIndexedJohn(space);
+      await addContact(space, john);
+      await queryIndexedContact(space, john);
 
       await client.destroy();
     }
@@ -235,7 +235,7 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), 1000);
 
       await client.services.services.QueryService?.reIndex();
-      await queryIndexedJohn(space);
+      await queryIndexedContact(space, john);
     }
   });
 });
