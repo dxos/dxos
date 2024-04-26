@@ -19,8 +19,8 @@ import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { inspectObject } from '@dxos/debug';
-import { Hypergraph } from '@dxos/echo-db';
+import { inspectObject, raise } from '@dxos/debug';
+import { EchoClient } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -94,10 +94,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  /**
-   * @internal
-   */
-  readonly _graph = new Hypergraph();
+  private readonly _echoClient = new EchoClient({});
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -126,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -212,16 +209,21 @@ export class Client {
     const self = this;
     return {
       get graph() {
-        return self._graph;
+        return self._echoClient.graph;
       },
     };
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
   addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
-    const notRegistered = schemaList.filter((s) => !this._graph.runtimeSchemaRegistry.isSchemaRegistered(s));
+    // TODO(dmaretskyi): Uncomment after release.
+    // if (!this._initialized) {
+    //   throw new ApiError('Client not open.');
+    // }
+
+    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.isSchemaRegistered(s));
     if (notRegistered.length > 0) {
-      this._graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }
     return this;
   }
@@ -360,12 +362,16 @@ export class Client {
     });
     await this._services.open(this._ctx);
 
+    this._echoClient.connectToService({
+      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+    });
+    await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
       this._config,
       this._services,
-      this._graph,
+      this._echoClient,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -461,6 +467,7 @@ export class Client {
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
     await this._runtime?.close();
+    await this._echoClient.close(this._ctx);
     await this._services?.close(this._ctx);
     log('closed');
   }
