@@ -28,7 +28,7 @@ export class InvitationsServiceImpl implements InvitationsService {
 
   createInvitation(options: Invitation): Stream<Invitation> {
     return new Stream<Invitation>(({ next, close }) => {
-      this._invitationsManager
+      void this._invitationsManager
         .createInvitation(options)
         .then((invitation) => invitation.subscribe(next, close, close))
         .catch(close);
