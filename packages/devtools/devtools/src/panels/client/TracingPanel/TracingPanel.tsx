@@ -117,17 +117,15 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <Table.Root>
-        <Table.Viewport asChild>
-          <AnchoredOverflow.Root classNames='flex flex-col h-1/3 overflow-auto'>
-            <Table.Table<ResourceState>
-              columns={columns}
-              data={Array.from(state.current.resources.values())}
-              currentDatum={selectedResource}
-              onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
-              fullWidth
-            />
-            <AnchoredOverflow.Anchor />
-          </AnchoredOverflow.Root>
+        <Table.Viewport classNames={'overflow-anchored flex flex-col h-1/3 overflow-auto'}>
+          <Table.Table<ResourceState>
+            columns={columns}
+            data={Array.from(state.current.resources.values())}
+            currentDatum={selectedResource}
+            onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
+            fullWidth
+          />
+          <AnchoredOverflow.Anchor />
         </Table.Viewport>
       </Table.Root>
 

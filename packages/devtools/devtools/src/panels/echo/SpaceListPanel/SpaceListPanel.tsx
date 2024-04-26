@@ -127,12 +127,9 @@ export const SpaceListPanel: FC = () => {
       <DialogRestoreSpace handleFile={handleImport} />
 
       <Table.Root>
-        <Table.Viewport asChild>
-          {/* TODO(Zan): Is this the right container? */}
-          <AnchoredOverflow.Root>
-            <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
-            <AnchoredOverflow.Anchor />
-          </AnchoredOverflow.Root>
+        <Table.Viewport classNames='overflow-anchored'>
+          <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+          <AnchoredOverflow.Anchor />
         </Table.Viewport>
       </Table.Root>
     </PanelContainer>

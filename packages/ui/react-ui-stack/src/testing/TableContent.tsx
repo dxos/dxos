@@ -111,7 +111,8 @@ export type TableContentProps = StackSectionContent & Pick<TableProps<Item>, 'co
 
 export const TableContent = ({ data: { columns, data } }: { data: TableContentProps }) => (
   <Table.Root>
-    {/* TODO(Zan): Does this work without viewport? */}
-    <Table.Table columns={columns} data={data} />;
+    <Table.Viewport>
+      <Table.Table columns={columns} data={data} />;
+    </Table.Viewport>
   </Table.Root>
 );

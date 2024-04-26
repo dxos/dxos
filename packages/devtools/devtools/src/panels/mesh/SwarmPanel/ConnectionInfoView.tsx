@@ -48,16 +48,14 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
       />
 
       <Table.Root>
-        <Table.Viewport asChild>
-          <AnchoredOverflow.Root classNames='flex grow'>
-            <Table.Table<ConnectionInfo.StreamStats>
-              columns={columns}
-              data={connection.streams ?? []}
-              keyAccessor={(row) => row.id.toString()}
-              fullWidth
-            />
-            <AnchoredOverflow.Anchor />
-          </AnchoredOverflow.Root>
+        <Table.Viewport classNames='flex grow overflow-anchored'>
+          <Table.Table<ConnectionInfo.StreamStats>
+            columns={columns}
+            data={connection.streams ?? []}
+            keyAccessor={(row) => row.id.toString()}
+            fullWidth
+          />
+          <AnchoredOverflow.Anchor />
         </Table.Viewport>
       </Table.Root>
     </>

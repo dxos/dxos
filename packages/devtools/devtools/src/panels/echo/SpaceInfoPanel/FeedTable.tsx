@@ -52,12 +52,9 @@ export const FeedTable: FC = () => {
 
   return (
     <Table.Root>
-      <Table.Viewport asChild>
-        {/* // TODO(Zan): Is this the right container to use? */}
-        <AnchoredOverflow.Root>
-          <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
-          <AnchoredOverflow.Anchor />
-        </AnchoredOverflow.Root>
+      <Table.Viewport classNames='overflow-anchored'>
+        <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
+        <AnchoredOverflow.Anchor />
       </Table.Viewport>
     </Table.Root>
   );
