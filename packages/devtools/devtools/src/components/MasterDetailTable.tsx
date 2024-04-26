@@ -29,21 +29,23 @@ export const MasterDetailTable = <T extends {}>({
   const tableContainerStyles = pinToBottom ? { classNames: widths[0] } : { className: mx('overflow-auto', widths[0]) };
 
   return (
-    <Table.Root>
-      <Table.Viewport classNames='flex grow overflow-hidden divide-x'>
-        <TableContainer {...tableContainerStyles}>
-          <Table.Table<T>
-            columns={columns}
-            data={data}
-            rowsSelectable
-            currentDatum={selected}
-            onDatumClick={setSelected}
-            fullWidth
-          />
-          {pinToBottom && <AnchoredOverflow.Anchor />}
-        </TableContainer>
-      </Table.Viewport>
+    <div className='flex grow overflow-hidden divide-x'>
+      <Table.Root>
+        <Table.Viewport asChild>
+          <TableContainer {...tableContainerStyles}>
+            <Table.Table<T>
+              columns={columns}
+              data={data}
+              rowsSelectable
+              currentDatum={selected}
+              onDatumClick={setSelected}
+              fullWidth
+            />
+            {pinToBottom && <AnchoredOverflow.Anchor />}
+          </TableContainer>
+        </Table.Viewport>
+      </Table.Root>
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected} />}</div>
-    </Table.Root>
+    </div>
   );
 };

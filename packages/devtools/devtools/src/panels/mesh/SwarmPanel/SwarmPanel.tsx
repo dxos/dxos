@@ -131,19 +131,20 @@ export const SwarmPanel = () => {
   // TODO(dmaretskyi): Grid already has some sort features.
   items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
   return (
     <PanelContainer classNames='divide-y'>
-      <div ref={containerRef} className='h-1/2 overflow-auto'>
-        <Table.Table<SwarmConnection>
-          columns={columns}
-          data={items}
-          keyAccessor={(row) => row.id.toHex()}
-          grouping={['topic']}
-          onDatumClick={(datum) => handleSelect([datum])}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='h-1/2 overflow-auto'>
+          <Table.Table<SwarmConnection>
+            columns={columns}
+            data={items}
+            keyAccessor={(row) => row.id.toHex()}
+            grouping={['topic']}
+            onDatumClick={(datum) => handleSelect([datum])}
+          />
+        </Table.Viewport>
+      </Table.Root>
+
       <div className='h-1/2 overflow-auto'>
         {sessionId ? (
           connection ? (
