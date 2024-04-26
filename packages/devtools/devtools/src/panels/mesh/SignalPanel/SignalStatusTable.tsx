@@ -112,14 +112,14 @@ export const SignalStatusTable = () => {
     helper.accessor('error', {}),
   ];
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
   return (
-    <AnchoredOverflow.Root ref={containerRef}>
-      <Table.Root scrollContextRef={containerRef}>
-        <Table.Table<SignalStatus> columns={columns} data={status} />
-      </Table.Root>
-      <AnchoredOverflow.Anchor />
-    </AnchoredOverflow.Root>
+    <Table.Root>
+      <Table.Viewport asChild>
+        <AnchoredOverflow.Root>
+          <Table.Table<SignalStatus> columns={columns} data={status} />
+          <AnchoredOverflow.Anchor />
+        </AnchoredOverflow.Root>
+      </Table.Viewport>
+    </Table.Root>
   );
 };

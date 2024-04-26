@@ -126,15 +126,14 @@ export const PipelineTable: FC<{
     navigate('/echo/feeds');
   };
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
   return (
-    <AnchoredOverflow.Root ref={containerRef}>
-      <Table.Root scrollContextRef={containerRef}>
-        <Table.Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
-      </Table.Root>
-      ;
-      <AnchoredOverflow.Anchor />
-    </AnchoredOverflow.Root>
+    <Table.Root>
+      <Table.Viewport asChild>
+        <AnchoredOverflow.Root>
+          <Table.Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
+          <AnchoredOverflow.Anchor />
+        </AnchoredOverflow.Root>
+      </Table.Viewport>
+    </Table.Root>
   );
 };

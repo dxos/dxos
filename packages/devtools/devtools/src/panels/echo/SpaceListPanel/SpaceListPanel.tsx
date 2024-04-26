@@ -122,19 +122,19 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       <DialogRestoreSpace handleFile={handleImport} />
 
-      {/* TODO(Zan): Is this the right container? */}
-      <AnchoredOverflow.Root ref={containerRef}>
-        <Table.Root scrollContextRef={containerRef}>
-          <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
-        </Table.Root>
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
+      <Table.Root>
+        <Table.Viewport asChild>
+          {/* TODO(Zan): Is this the right container? */}
+          <AnchoredOverflow.Root>
+            <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+            <AnchoredOverflow.Anchor />
+          </AnchoredOverflow.Root>
+        </Table.Viewport>
+      </Table.Root>
     </PanelContainer>
   );
 };

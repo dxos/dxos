@@ -47,13 +47,6 @@ const logColumns = (() => {
   return columns;
 })();
 
-export const LogView: FC<{ logs: LogEntry[]; scrollContextRef: React.RefObject<HTMLDivElement> }> = ({
-  logs = [],
-  scrollContextRef,
-}) => {
-  return (
-    <Table.Root scrollContextRef={scrollContextRef}>
-      <Table.Table<LogEntry> columns={logColumns} data={logs} fullWidth />
-    </Table.Root>
-  );
+export const LogTable: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
+  return <Table.Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
 };

@@ -50,15 +50,15 @@ export const FeedTable: FC = () => {
     navigate('/echo/feeds');
   };
 
-  const containerRef = React.useRef<HTMLDivElement>(null);
-
   return (
-    // TODO(Zan): Is this the right container to use?
-    <AnchoredOverflow.Root ref={containerRef}>
-      <Table.Root scrollContextRef={containerRef}>
-        <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
-      </Table.Root>
-      <AnchoredOverflow.Anchor />
-    </AnchoredOverflow.Root>
+    <Table.Root>
+      <Table.Viewport asChild>
+        {/* // TODO(Zan): Is this the right container to use? */}
+        <AnchoredOverflow.Root>
+          <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
+          <AnchoredOverflow.Anchor />
+        </AnchoredOverflow.Root>
+      </Table.Viewport>
+    </Table.Root>
   );
 };

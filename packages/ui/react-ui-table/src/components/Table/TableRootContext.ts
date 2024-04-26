@@ -3,15 +3,12 @@
 //
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import type React from 'react';
-import { createContext, useState } from 'react';
+import { createContext, useRef, useState } from 'react';
 
-type TableRootContextActions =
-  | { type: 'updateScrollContextRef'; ref: React.RefObject<HTMLDivElement> }
-  | { type: 'updateTableCount'; count: number };
+type TableRootContextActions = { type: 'updateTableCount'; count: number };
 
-export const useTableRootContext = (initialRef?: React.RefObject<HTMLDivElement>) => {
-  const [scrollContextRef, setScrollContextRef] = useState(initialRef);
+export const useTableRootContext = () => {
+  const scrollContextRef = useRef<HTMLDivElement>(null);
   const [tableCount, setTableCount] = useState(0);
 
   const virtualizer = useVirtualizer({
@@ -23,10 +20,6 @@ export const useTableRootContext = (initialRef?: React.RefObject<HTMLDivElement>
 
   const dispatch = (action: TableRootContextActions) => {
     switch (action.type) {
-      case 'updateScrollContextRef':
-        setScrollContextRef(action.ref);
-        break;
-
       case 'updateTableCount':
         setTableCount(action.count);
         break;

@@ -27,7 +27,6 @@ const schema = {
 
 // TODO(burdon): Stream results.
 export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connection }) => {
-  const containerRef = React.useRef<HTMLDivElement>(null);
   if (!connection) {
     return null;
   }
@@ -48,17 +47,19 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
         }}
       />
 
-      <AnchoredOverflow.Root ref={containerRef} classNames='flex grow'>
-        <Table.Root scrollContextRef={containerRef}>
-          <Table.Table<ConnectionInfo.StreamStats>
-            columns={columns}
-            data={connection.streams ?? []}
-            keyAccessor={(row) => row.id.toString()}
-            fullWidth
-          />
-        </Table.Root>
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
+      <Table.Root>
+        <Table.Viewport asChild>
+          <AnchoredOverflow.Root classNames='flex grow'>
+            <Table.Table<ConnectionInfo.StreamStats>
+              columns={columns}
+              data={connection.streams ?? []}
+              keyAccessor={(row) => row.id.toString()}
+              fullWidth
+            />
+            <AnchoredOverflow.Anchor />
+          </AnchoredOverflow.Root>
+        </Table.Viewport>
+      </Table.Root>
     </>
   );
 };

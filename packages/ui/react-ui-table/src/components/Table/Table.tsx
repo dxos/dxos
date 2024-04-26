@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 import { type Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -26,29 +27,27 @@ import { type TableProps } from './props';
 import { useColumnResizing, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
 
-type TableRootProps = {
-  children: React.ReactNode;
-  scrollContextRef?: React.RefObject<HTMLDivElement>;
-};
+type TableRootProps = { children: React.ReactNode };
 
-const TableRoot = ({ children, scrollContextRef }: TableRootProps) => {
-  const contextValue = useTableRootContext(scrollContextRef);
+const TableRoot = ({ children }: TableRootProps) => {
+  const contextValue = useTableRootContext();
   return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
 };
 
-type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>>;
+type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+};
 
-const TableViewport = ({ children, classNames, ...props }: TableViewportProps) => {
-  const { dispatch } = useContext(TableRootContext);
-  const scrollContextRef = React.useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    dispatch({ type: 'updateScrollContextRef', ref: scrollContextRef });
-  }, []);
+const TableViewport = ({ children, classNames, asChild, ...props }: TableViewportProps) => {
+  const { scrollContextRef } = useContext(TableRootContext);
 
   const classes = mx(classNames);
 
-  return (
+  return asChild ? (
+    <Slot ref={scrollContextRef} {...props}>
+      {children}
+    </Slot>
+  ) : (
     <div role='none' className={classes} ref={scrollContextRef} {...props}>
       {children}
     </div>
