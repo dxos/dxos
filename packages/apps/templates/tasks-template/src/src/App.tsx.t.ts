@@ -18,7 +18,7 @@ export default template.define.script({
   } from 'react-router-dom';
   
   import { ClientProvider, Config, Dynamics, Local, Defaults, useShell } from '@dxos/react-client';
-  import { useSpace, useQuery } from '@dxos/react-client/echo';
+  import { create, Filter, useSpace, useQuery } from '@dxos/react-client/echo';
   
   import { TaskList } from './TaskList';
   import { Task } from './schema';
