@@ -2,20 +2,27 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import type { AuthenticatingInvitation, CancellableInvitation } from '@dxos/client-protocol';
-import { type Context } from '@dxos/context';
+import { Event, PushStream } from '@dxos/async';
+import {
+  type AuthenticatingInvitation,
+  AUTHENTICATION_CODE_LENGTH,
+  CancellableInvitation,
+  INVITATION_TIMEOUT,
+} from '@dxos/client-protocol';
+import { Context } from '@dxos/context';
+import { generatePasscode } from '@dxos/credentials';
 import { hasInvitationExpired, type MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
   type AcceptInvitationRequest,
-  type Invitation,
   type AuthenticationRequest,
+  Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 import type { InvitationProtocol } from './invitation-protocol';
-import type { InvitationsHandler } from './invitations-handler';
+import { createAdmissionKeypair, type InvitationsHandler } from './invitations-handler';
 
 /**
  * Entry point for creating and accepting invitations, keeps track of existing invitation set and
@@ -36,36 +43,44 @@ export class InvitationsManager {
 
   constructor(
     private readonly _invitationsHandler: InvitationsHandler,
-    private readonly _getHandler: (invitation: Invitation) => InvitationProtocol,
+    private readonly _getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
     private readonly _metadataStore: MetadataStore,
   ) {}
 
-  createInvitation(options: Invitation): CancellableInvitation {
-    const existingInvitation = this._createInvitations.get(options.invitationId);
-    if (existingInvitation) {
-      return existingInvitation;
+  async createInvitation(options: Partial<Invitation> & Pick<Invitation, 'kind'>): Promise<CancellableInvitation> {
+    if (options.invitationId) {
+      const existingInvitation = this._createInvitations.get(options.invitationId);
+      if (existingInvitation) {
+        return existingInvitation;
+      }
     }
 
     const handler = this._getHandler(options);
-    const invitation = this._invitationsHandler.createInvitation(handler, options);
-    this._createInvitations.set(invitation.get().invitationId, invitation);
-    this.invitationCreated.emit(invitation.get());
+    const invitation = this._createInvitation(handler, options);
+    const { ctx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
 
-    const saveInvitationTask = invitation.get().persistent
-      ? this._safePersistInBackground(invitation)
-      : Promise.resolve();
-
+    this._createInvitations.set(invitation.invitationId, observableInvitation);
+    this.invitationCreated.emit(invitation);
     // onComplete is called on cancel, expiration, or redemption of a single-use invitation
-    this._onInvitationComplete(invitation, async () => {
-      this._createInvitations.delete(invitation.get().invitationId);
-      this.removedCreated.emit(invitation.get());
-      if (invitation.get().persistent) {
-        await saveInvitationTask;
-        await this._safeDeleteInvitation(invitation.get());
+    this._onInvitationComplete(observableInvitation, async () => {
+      this._createInvitations.delete(observableInvitation.get().invitationId);
+      this.removedCreated.emit(observableInvitation.get());
+      if (observableInvitation.get().persistent) {
+        await this._safeDeleteInvitation(observableInvitation.get());
       }
     });
 
-    return invitation;
+    try {
+      await this._persistIfRequired(handler, stream, invitation);
+    } catch (err) {
+      log.catch(err);
+      await observableInvitation.cancel();
+      return observableInvitation;
+    }
+
+    this._invitationsHandler.handleInvitationFlow(ctx, stream, handler, observableInvitation.get());
+
+    return observableInvitation;
   }
 
   async loadPersistentInvitations(): Promise<{ invitations: Invitation[] }> {
@@ -78,12 +93,13 @@ export class InvitationsManager {
       // get saved persistent invitations, filter and remove from storage those that have expired.
       const freshInvitations = persistentInvitations.filter((invitation) => !hasInvitationExpired(invitation));
 
-      const cInvitations = freshInvitations.map((persistentInvitation) => {
+      const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation({ ...persistentInvitation, persistent: false }).get();
+        return this.createInvitation({ ...persistentInvitation, persistent: false });
       });
+      const cInvitations = await Promise.all(loadTasks);
 
-      return { invitations: cInvitations };
+      return { invitations: cInvitations.map((invitation) => invitation.get()) };
     } catch (err) {
       log.catch(err);
       return { invitations: [] };
@@ -163,20 +179,78 @@ export class InvitationsManager {
     }
   }
 
-  private _safePersistInBackground(invitation: CancellableInvitation): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(async () => {
-        try {
-          await this._metadataStore.addInvitation(invitation.get());
-          this.saved.emit(invitation.get());
-        } catch (err: any) {
-          log.catch(err);
-          await invitation.cancel();
-        } finally {
-          resolve();
-        }
-      });
+  private _createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): Invitation {
+    const {
+      invitationId = PublicKey.random().toHex(),
+      type = Invitation.Type.INTERACTIVE,
+      authMethod = Invitation.AuthMethod.SHARED_SECRET,
+      state = Invitation.State.INIT,
+      timeout = INVITATION_TIMEOUT,
+      swarmKey = PublicKey.random(),
+      persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
+      created = new Date(),
+      guestKeypair = undefined,
+      lifetime = 86400, // 1 day,
+      multiUse = false,
+    } = options ?? {};
+    const authCode =
+      options?.authCode ??
+      (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
+
+    return {
+      invitationId,
+      type,
+      authMethod,
+      state,
+      swarmKey,
+      authCode,
+      timeout,
+      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
+      guestKeypair:
+        guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
+      created,
+      lifetime,
+      multiUse,
+      delegationCredentialId: options?.delegationCredentialId,
+      ...protocol.getInvitationContext(),
+    } satisfies Invitation;
+  }
+
+  private _createObservableInvitation(handler: InvitationProtocol, invitation: Invitation) {
+    const stream = new PushStream<Invitation>();
+    const ctx = new Context({
+      onError: (err) => {
+        stream.error(err);
+        void ctx.dispose();
+      },
     });
+    ctx.onDispose(() => {
+      log('complete', { ...handler.toJSON() });
+      stream.complete();
+    });
+    const observableInvitation = new CancellableInvitation({
+      initialInvitation: invitation,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      },
+    });
+    return { ctx, stream, observableInvitation };
+  }
+
+  private async _persistIfRequired(
+    handler: InvitationProtocol,
+    changeStream: PushStream<Invitation>,
+    invitation: Invitation,
+  ): Promise<void> {
+    if (invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId == null) {
+      const delegationCredentialId = await handler.delegate(invitation);
+      changeStream.next({ ...invitation, delegationCredentialId });
+    } else if (invitation.persistent) {
+      await this._metadataStore.addInvitation(invitation);
+      this.saved.emit(invitation);
+    }
   }
 
   private async _safeDeleteInvitation(invitation: Invitation): Promise<void> {

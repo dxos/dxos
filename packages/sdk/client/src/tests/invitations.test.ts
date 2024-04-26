@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncChain, asyncTimeout, Trigger } from '@dxos/async';
+import { asyncChain, asyncTimeout, Trigger, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
   createAdmissionKeypair,
@@ -438,6 +438,9 @@ describe('Invitations', () => {
           const persistentInvitation = tempHost.share({ authMethod: Invitation.AuthMethod.NONE });
           persistentInvitationId = persistentInvitation.get().invitationId;
           await savedTrigger.wait();
+          await waitForCondition({
+            condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
+          });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
           await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
         }

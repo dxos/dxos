@@ -38,7 +38,7 @@ const Story = () => {
 
     setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
 
-    space.db.schemaRegistry.getAll().then(setSchemas);
+    void space.db.schemaRegistry.getAll().then(setSchemas).catch();
   }, []);
 
   const handleClose = (success: boolean) => {
