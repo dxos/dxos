@@ -27,7 +27,7 @@ const Story = () => {
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
+    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
 
     const view = space.db.add(create(ViewType, { title: '', type: '' }));
 

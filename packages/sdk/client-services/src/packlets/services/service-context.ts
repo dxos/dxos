@@ -256,6 +256,7 @@ export class ServiceContext extends Resource {
       signingContext,
       this.feedStore,
       this.automergeHost,
+      this.invitationsManager,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

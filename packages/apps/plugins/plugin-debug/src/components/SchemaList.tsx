@@ -22,13 +22,16 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
 }) => {
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
   const [data, setData] = useState<SchemaRecord[]>([]);
-  space.db.schemaRegistry.getAll().then((objects) => {
-    setData(
-      objects
-        .filter((object) => object.typename)
-        .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 })),
-    );
-  });
+  void space.db.schemaRegistry
+    .getAll()
+    .then((objects) => {
+      setData(
+        objects
+          .filter((object) => object.typename)
+          .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 })),
+      );
+    })
+    .catch();
 
   const handleUpdateCount = (record: SchemaRecord, _: string, count: number | undefined) => {
     setSchemaCount((schemaCount) => Object.assign({}, schemaCount, { [record.id]: count }));
