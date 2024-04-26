@@ -9,10 +9,10 @@ import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
-import { trace } from '@dxos/tracing';
 
 type QueryStateParams = {
   indexer: Indexer;

@@ -9,9 +9,9 @@ import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
 import { type SpaceState, type SpaceDoc } from './types';
-import { trace } from '@dxos/tracing';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
