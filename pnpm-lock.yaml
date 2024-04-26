@@ -4261,9 +4261,6 @@ importers:
       race-as-promised:
         specifier: ^0.0.2
         version: 0.0.2
-      random-access-storage:
-        specifier: ^3.0.0
-        version: 3.0.0
       streamx:
         specifier: ^2.12.5
         version: 2.12.5
@@ -4769,24 +4766,36 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      buffer-alloc:
+        specifier: ^1.1.0
+        version: 1.2.0
+      buffer-from:
+        specifier: ^0.1.1
+        version: 0.1.2
       del:
         specifier: ^5.1.0
         version: 5.1.0
+      inherits:
+        specifier: ^2.0.3
+        version: 2.0.4
+      next-tick:
+        specifier: ^1.0.0
+        version: 1.1.0
+      once:
+        specifier: ^1.4.0
+        version: 1.4.0
       pify:
         specifier: ~5.0.0
         version: 5.0.0
       random-access-file:
         specifier: ^2.2.1
         version: 2.2.1
-      random-access-idb:
-        specifier: ^1.2.2
-        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       random-access-memory:
         specifier: ^4.1.0
         version: 4.1.0
       random-access-storage:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^1.3.0
+        version: 1.4.3
       random-access-web:
         specifier: ^2.0.3
         version: 2.0.3
@@ -4797,6 +4806,9 @@ importers:
       '@types/randombytes':
         specifier: ^2.0.0
         version: 2.0.0
+      random-access-idb:
+        specifier: ^1.2.2
+        version: 1.2.2(patch_hash=mqfhtwnltd5kq5s4kb4gk7k2k4)
       randombytes:
         specifier: ^2.1.0
         version: 2.1.0
@@ -5045,11 +5057,11 @@ importers:
   packages/core/echo/automerge:
     dependencies:
       '@automerge/automerge':
-        specifier: ^2.1.13
-        version: 2.1.13
+        specifier: ^2.2.0
+        version: 2.2.0
       '@automerge/automerge-repo':
-        specifier: ^1.1.5
-        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: ^1.1.4
         version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -5072,8 +5084,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       xstate:
-        specifier: ^4.37.0
-        version: 4.37.1
+        specifier: ^5.9.1
+        version: 5.12.0
 
   packages/core/echo/echo-db:
     dependencies:
@@ -10477,7 +10489,7 @@ packages:
   /@automerge/automerge-repo@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
     resolution: {integrity: sha512-EuY/+hwPkR0bLkMzi2obRFzW3fsUtlih7S0Te/nJRvsXS7a5mrzmqnQpFwYZPZzeBsPrxaBC2vVrcNqferlaLQ==}
     dependencies:
-      '@automerge/automerge': 2.1.13
+      '@automerge/automerge': 2.2.0
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
@@ -10494,10 +10506,10 @@ packages:
       - supports-color
       - typescript
 
-  /@automerge/automerge-repo@1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-SwXWwkasugfdGwQy4RuS/pn2FrI+YDtzrwvUbXkLVRiX83Zt3UQBXlL+QW+5QbH7uQ2mK0l3rOkRlQwnsYHUNg==}
+  /@automerge/automerge-repo@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-rh8PEgC0tDULrfnS5Gcq0U8yxqU0kuwcfx/JkQnOtp0FU/1IoalGAc3qgvceruRMOrzfXaktZ/r9a13I5UtiTQ==}
     dependencies:
-      '@automerge/automerge': 2.1.13
+      '@automerge/automerge': 2.2.0
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
@@ -10506,7 +10518,7 @@ packages:
       tiny-typed-emitter: 2.1.0
       ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       uuid: 9.0.1
-      xstate: 4.37.1
+      xstate: 5.12.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -10517,11 +10529,15 @@ packages:
 
   /@automerge/automerge-wasm@0.12.0:
     resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
+    dev: false
 
-  /@automerge/automerge@2.1.13:
-    resolution: {integrity: sha512-9t185MgkFvwvqccmA45yKq61If2KCpKxZg19gukwO9G15bvxuh5ulWv2PWvMZ+iTvhDYCH+pZwXmFkD4nufScw==}
+  /@automerge/automerge-wasm@0.15.0:
+    resolution: {integrity: sha512-LGIEw93ezooqEa4mIkTq1j2NVYnz8YT+szwAYA7FNYPdF0ii9JzK5HWIMyoT9dmsBqAgx9JnjNllyFikjPLQqg==}
+
+  /@automerge/automerge@2.2.0:
+    resolution: {integrity: sha512-tnMTznckXwqDN1lNh2zQLkfb+0+cE1FcwcOEWtDX7Bvs/SRjp0o9X9bsNm51ND8oDScfePiksXHKiaONxbKGWw==}
     dependencies:
-      '@automerge/automerge-wasm': 0.12.0
+      '@automerge/automerge-wasm': 0.15.0
       uuid: 9.0.1
 
   /@aw-web-design/x-default-browser@1.4.126:
@@ -27651,7 +27667,6 @@ packages:
 
   /buffer-from@0.1.2:
     resolution: {integrity: sha512-RiWIenusJsmI2KcvqQABB83tLxCByE3upSP8QU3rJDMVFGPWLvPQJt/O1Su9moRWeH7d+Q2HYb68f6+v+tw2vg==}
-    dev: false
 
   /buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
@@ -39772,7 +39787,6 @@ packages:
 
   /next-tick@1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
-    dev: false
 
   /nice-try@1.0.5:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
@@ -42114,7 +42128,6 @@ packages:
       next-tick: 1.1.0
       once: 1.4.0
       random-access-storage: 1.4.3
-    dev: false
     patched: true
 
   /random-access-memory@3.1.4:
@@ -42145,13 +42158,6 @@ packages:
       events: 3.3.0
       inherits: 2.0.4
       queue-tick: 1.0.1
-
-  /random-access-storage@3.0.0:
-    resolution: {integrity: sha512-f9KeHUMhrqj0hE2d4HbUXk/Cd5vElaVzdA0PuqPTlnxsG3dDvwQaMg8POT5tWK6UxJ80zAONZpHgLPMnnff1RA==}
-    dependencies:
-      events: 3.3.0
-      queue-tick: 1.0.1
-    dev: false
 
   /random-access-web@2.0.3:
     resolution: {integrity: sha512-nN3AAgl4/lTOYMk5Qm44SzFsglOmaG2d0Kh0603umh35+rk9QXYLFf0nFJ0GOv9INBsP9iT1lub24r8PjyCtvA==}
@@ -49288,6 +49294,10 @@ packages:
 
   /xstate@4.37.1:
     resolution: {integrity: sha512-MuB7s01nV5vG2CzaBg2msXLGz7JuS+x/NBkQuZAwgEYCnWA8iQMiRz2VGxD3pcFjZAOih3fOgDD3kDaFInEx+g==}
+
+  /xstate@5.12.0:
+    resolution: {integrity: sha512-4W/Hj553mwVnTLQ1itc3rni/cGtM5OkjyavTjaxCelc0ZZKE/ks6tYllc98KbekIoUrEPm4CJH/wTB5p5pPGEw==}
+    dev: false
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
