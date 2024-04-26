@@ -4797,8 +4797,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       random-access-storage:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^1.3.0
+        version: 1.4.3
       random-access-web:
         specifier: ^2.0.3
         version: 2.0.3
