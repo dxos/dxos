@@ -42,6 +42,10 @@ versionGroups:
       - 'dxos-example-template'
     dependencies:
       - '@dxos/*'
+  - packages:
+      - '@dxos/automerge'
+    dependencies:
+      - 'xstate'
 sortFirst:
   - name
   - version
