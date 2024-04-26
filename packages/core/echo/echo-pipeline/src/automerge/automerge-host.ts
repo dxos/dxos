@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Trigger, Event } from '@dxos/async';
-import { type Doc, next as automerge, getBackend, type Heads, type Hash } from '@dxos/automerge/automerge';
+import { Event } from '@dxos/async';
+import { type Doc, next as automerge, getBackend, type Heads } from '@dxos/automerge/automerge';
 import {
   type DocHandle,
   Repo,
@@ -26,7 +26,7 @@ import {
 import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
+import { ComplexMap, ComplexSet, defaultMap, mapValues, nonNullable } from '@dxos/util';
 
 import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
@@ -247,40 +247,30 @@ export const getSpaceKeyFromDoc = (doc: any): string | null => {
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   await handle.whenReady();
 
-  /**
-   * Map of heads and their availability in the document.
-   * Hash -> isPresent
-   */
-  const availableHeads = new Map<Hash, boolean>(
-    heads.map((hash) => [hash, hashIsPresentInDoc(handle.docSync(), hash)]),
-  );
+  const unavailableHeads: Heads = heads
+    .map((hash) => (!hashIsPresentInDoc(handle.docSync(), hash) ? hash : null))
+    .filter(nonNullable);
 
-  /**
-   *  Check if all heads are present in the document.
-   */
-  const allHeadsArePresent = () => Array.from(availableHeads.values()).every(Boolean);
-
-  if (allHeadsArePresent()) {
+  // Check if all heads are present in the document.
+  if (unavailableHeads.length === 0) {
     return;
   }
 
-  const waitForUnavailableHeads = new Trigger();
   await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitFor(({ doc }) => {
     // Check if unavailable heads became available.
-    for (const [hash, isPresent] of availableHeads.entries()) {
-      if (!isPresent && hashIsPresentInDoc(doc, hash)) {
-        availableHeads.set(hash, true);
+    for (const hash of unavailableHeads) {
+      if (hashIsPresentInDoc(doc, hash)) {
+        unavailableHeads.splice(unavailableHeads.indexOf(hash), 1);
       }
     }
 
-    if (allHeadsArePresent()) {
+    if (unavailableHeads.length === 0) {
       return true;
     }
     return false;
   });
-  await waitForUnavailableHeads.wait({ timeout: FLUSH_TIMEOUT });
 };
 
-const hashIsPresentInDoc = (doc: Doc<any>, hash: Hash): boolean => {
+const hashIsPresentInDoc = (doc: Doc<any>, hash: string): boolean => {
   return !!getBackend(doc).getChangeByHash(hash);
 };
