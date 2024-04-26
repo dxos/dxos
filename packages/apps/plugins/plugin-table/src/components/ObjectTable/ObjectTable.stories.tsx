@@ -27,7 +27,7 @@ const useTable = () => {
     const space = client.spaces.default;
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
+    void generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
     const graph = (client as any)._graph as Hypergraph;
 
