@@ -28,6 +28,7 @@ import {
   type SurfaceProps,
   type Layout,
   IntentAction,
+  firstMainId,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema/schema';
 import { invariant } from '@dxos/invariant';
@@ -38,7 +39,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
 import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
-import { activeToUri, checkAppScheme, firstMainId, uriToActive } from './helpers';
+import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
 import { type LayoutPluginProvides, type LayoutSettingsProps } from './types';
@@ -215,8 +216,8 @@ export const LayoutPlugin = ({
           const handleNavigation = async () => {
             await dispatch({
               plugin: LAYOUT_PLUGIN,
-              action: NavigationAction.ACTIVATE,
-              data: { id: uriToActive(window.location.pathname) },
+              action: NavigationAction.OPEN,
+              data: { activeParts: { main: [uriToActive(window.location.pathname)] } },
             });
           };
 
@@ -362,8 +363,8 @@ export const LayoutPlugin = ({
             }
 
             // TODO(wittjosiah): Factor out.
-            case NavigationAction.ACTIVATE: {
-              const id = intent.data?.id ?? intent.data?.result?.id;
+            case NavigationAction.OPEN: {
+              const id = firstMainId(intent.data);
               const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
                 // TODO(wittjosiah): Factor out.

@@ -126,8 +126,9 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
       window.location.href = location;
     } else {
       void intentPlugin?.provides.intent.dispatch({
-        action: NavigationAction.ACTIVATE,
-        data: { id: location },
+        action: NavigationAction.OPEN,
+        // TODO(thure): what is `location` and is this right?
+        data: { activeParts: { main: [location] } },
       });
     }
   });

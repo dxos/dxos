@@ -53,10 +53,8 @@ export const NavTreeContainer = ({
     }
 
     await dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: {
-        id: node.id,
-      },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [node.id] } },
     });
 
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');

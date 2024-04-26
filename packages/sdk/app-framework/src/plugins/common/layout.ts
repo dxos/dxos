@@ -40,6 +40,13 @@ export const Layout = z.object({
   sidebarOpen: z.boolean(),
 
   complementarySidebarOpen: z.boolean(),
+  /**
+   * @deprecated
+   */
+  complementarySidebarContent: z
+    .any()
+    .optional()
+    .describe('DEPRECATED. Data to be passed to the complementary sidebar Surface.'),
 
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),

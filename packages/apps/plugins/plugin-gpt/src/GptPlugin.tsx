@@ -17,6 +17,7 @@ import {
   type LocationProvides,
   type Plugin,
   type PluginDefinition,
+  firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -115,7 +116,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               // TODO(burdon): Factor out.
               const location = navigationPlugin?.provides.location;
               const graph = graphPlugin?.provides.graph;
-              const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
+              const activeNode = location?.active ? graph?.findNode(firstMainId(location.active)) : undefined;
               const active = activeNode?.data;
               const space = getSpace(active);
               if (space && active instanceof DocumentType && settings.values.apiKey) {

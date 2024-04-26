@@ -49,8 +49,8 @@ export const getExtensions = ({ dispatch, settings, document }: ExtensionsOption
       renderLinkButton: dispatch
         ? onRenderLink((id: string) => {
             void dispatch({
-              action: NavigationAction.ACTIVATE,
-              data: { id },
+              action: NavigationAction.OPEN,
+              data: { activeParts: { main: [id] } },
             });
           })
         : undefined,

@@ -35,6 +35,27 @@ export type Location = z.infer<typeof Location>;
 export const isActiveParts = (active: string | ActiveParts | undefined): active is ActiveParts =>
   !!active && typeof active !== 'string';
 
+export const firstMainId = (active: Location['active']): string =>
+  isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
+
+export const activeIds = (active: string | ActiveParts | undefined): Set<string> =>
+  active
+    ? isActiveParts(active)
+      ? Object.values(active).reduce((acc, ids) => {
+          Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
+          return acc;
+        }, new Set<string>())
+      : new Set([active])
+    : new Set();
+
+export const isIdActive = (active: string | ActiveParts | undefined, id: string): boolean => {
+  return active
+    ? isActiveParts(active)
+      ? Object.values(active).findIndex((ids) => (Array.isArray(ids) ? ids.indexOf(id) > -1 : ids === id)) > -1
+      : active === id
+    : false;
+};
+
 /**
  * Provides for a plugin that can manage the app navigation.
  */
@@ -64,6 +85,6 @@ export enum NavigationAction {
  * Expected payload for navigation actions.
  */
 export namespace NavigationAction {
-  export type Open = IntentData<ActiveParts>;
-  export type Close = IntentData<ActiveParts>;
+  export type Open = IntentData<{ activeParts: ActiveParts }>;
+  export type Close = IntentData<{ activeParts: ActiveParts }>;
 }

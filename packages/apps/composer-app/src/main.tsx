@@ -228,8 +228,8 @@ const main = async () => {
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id: document.id },
+            action: NavigationAction.OPEN,
+            data: { activeParts: { main: [document.id] } },
           });
         },
       }),

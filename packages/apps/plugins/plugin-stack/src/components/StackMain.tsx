@@ -124,8 +124,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [id] } },
     });
   };
 

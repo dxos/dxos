@@ -19,6 +19,7 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
+  firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -71,7 +72,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
       unsubscribe = effect(() => {
-        const active = navigationPlugin?.provides.location.active;
+        const active = firstMainId(navigationPlugin?.provides.location.active);
         const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
         const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
         untracked(() => {
@@ -242,7 +243,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                           threads={threads ?? []}
                           detached={detached ?? []}
                           currentId={state.current}
-                          context={{ object: location?.active }}
+                          context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
@@ -275,7 +276,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={{ object: location?.active }} />
+                    <ChatContainer thread={data.subject} context={{ object: firstMainId(location?.active) }} />
                   </>
                 );
               }

@@ -64,8 +64,8 @@ export const AwaitingObject = ({ id }: { id: string }) => {
 
   const handleNavigate = () => {
     void intentPlugin?.provides.intent.dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [id] } },
     });
     void handleClose();
   };

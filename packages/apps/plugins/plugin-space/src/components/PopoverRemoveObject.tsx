@@ -5,7 +5,13 @@
 import React, { useCallback, useRef } from 'react';
 
 import { getSpaceProperty, FolderType } from '@braneframe/types';
-import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import {
+  NavigationAction,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  useResolvePlugin,
+  isIdActive,
+} from '@dxos/app-framework';
 import { type Expando, isEchoObject } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
@@ -25,10 +31,10 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: E
     }
 
     // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-    if (navigationPlugin?.provides.location.active === object.id) {
+    if (isIdActive(navigationPlugin?.provides.location.active, object.id)) {
       await intentPlugin?.provides.intent.dispatch({
-        action: NavigationAction.ACTIVATE,
-        data: { id: undefined },
+        action: NavigationAction.CLOSE,
+        data: { activeParts: { main: object.id, sidebar: object.id, complementary: object.id } },
       });
     }
 
