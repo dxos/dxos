@@ -11,10 +11,9 @@ import { baseSurface } from '@dxos/react-ui-theme';
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
-  <Main.Content>
-    <Table.Root>
-      {/* TODO(Zan): Is moving the classes from Main.Content to the viewport ok? */}
-      <Table.Viewport
+  <Table.Root>
+    <Table.Viewport asChild>
+      <Main.Content
         classNames={[baseSurface, 'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-auto']}
       >
         <ObjectTable
@@ -23,9 +22,9 @@ const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) =>
           stickyHeader
           role='grid'
         />
-      </Table.Viewport>
-    </Table.Root>
-  </Main.Content>
+      </Main.Content>
+    </Table.Viewport>
+  </Table.Root>
 );
 
 export default TableMain;
