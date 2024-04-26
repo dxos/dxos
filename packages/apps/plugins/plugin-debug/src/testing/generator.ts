@@ -55,7 +55,7 @@ export class Generator {
   }
 
   createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
-    this._generator.createObjects(count).catch();
+    void this._generator.createObjects(count).catch();
   }
 
   createDocument() {
