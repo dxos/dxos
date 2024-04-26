@@ -29,7 +29,6 @@ export type CreateDatabaseParams = {
   owningObject?: unknown;
 };
 
-// TODO(dmaretskyi): Move to echo-db package.
 export class EchoClient extends Resource {
   private readonly _graph: Hypergraph;
 

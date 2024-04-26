@@ -209,17 +209,9 @@ export class Client {
     const self = this;
     return {
       get graph() {
-        return self._graph;
+        return self._echoClient.graph;
       },
     };
-  }
-
-  /**
-   * @internal
-   * @deprecated
-   */
-  get _graph() {
-    return this._echoClient.graph;
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
@@ -228,9 +220,9 @@ export class Client {
       throw new ApiError('Client not open.');
     }
 
-    const notRegistered = schemaList.filter((s) => !this._graph.runtimeSchemaRegistry.isSchemaRegistered(s));
+    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.isSchemaRegistered(s));
     if (notRegistered.length > 0) {
-      this._graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }
     return this;
   }
