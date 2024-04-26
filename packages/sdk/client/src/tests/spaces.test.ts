@@ -354,13 +354,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -388,13 +387,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
