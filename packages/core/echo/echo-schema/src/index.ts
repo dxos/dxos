@@ -9,10 +9,11 @@ export * from './json';
 export * from './proxy';
 export * from './annotations';
 export * from './expando';
-export * from './getter';
+export { isDeleted, getSchema, getType, getMeta, getTypeReference, requireTypeReference } from './getter';
 export * from './typed-object-class';
 export * from './types';
 export * from './reference';
+export { ref } from './ref-annotation';
 export { defineHiddenProperty } from './utils';
 
 export * as S from '@effect/schema/Schema';

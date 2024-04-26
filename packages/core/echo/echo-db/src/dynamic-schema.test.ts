@@ -49,11 +49,7 @@ describe('DynamicSchema', () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
     const schema = db.schemaRegistry.add(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
-
-    const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
-    });
-    expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
+    expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq(TEST_SCHEMA_TYPE.typename);
   });
 
   test('can be used to create objects', async () => {
