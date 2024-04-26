@@ -5,6 +5,8 @@ export default template.define
   .slots({
     content: '<p>Your code goes here</p>',
     extraImports: '',
+    onClientInitialized: '',
+    onCreateIdentity: '',
   })
   .script({
     content: ({ input, slots, imports }) => {
@@ -34,9 +36,11 @@ export default template.define
           ${dxosUi ? plate`fallback={Loader}` : ''}
           onInitialized={async (client) => {
             ${schema && plate`// client.addSchema(Task);`}
+            ${slots.onClientInitialized}
             const searchParams = new URLSearchParams(location.search);
             if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {
               await client.halo.createIdentity();
+              ${slots.onCreateIdentity}
             }
           }}
         >
