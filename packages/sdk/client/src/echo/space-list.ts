@@ -17,7 +17,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { AutomergeContext, EchoClient, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-db';
+import { type EchoClient, type FilterSource, type Query } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

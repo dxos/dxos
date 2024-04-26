@@ -1,11 +1,16 @@
-import { Context, LifecycleState, Resource } from '@dxos/context';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
-import { Hypergraph } from '../hypergraph';
+
 import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
+import { Hypergraph } from '../hypergraph';
 
 export type EchoClientParams = {};
 
@@ -32,7 +37,7 @@ export class EchoClient extends Resource {
   private _automergeContext: AutomergeContext | undefined = undefined;
   private _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
 
-  constructor({}: EchoClientParams) {
+  constructor(params: EchoClientParams) {
     super();
     this._graph = new Hypergraph();
   }
