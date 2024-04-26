@@ -26,7 +26,7 @@ import {
 import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, defaultMap, mapValues, nonNullable } from '@dxos/util';
+import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
 import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
@@ -45,8 +45,6 @@ export type AutomergeHostParams = {
   directory?: Directory;
   storageCallbacks?: StorageCallbacks;
 };
-
-const FLUSH_TIMEOUT = 5000;
 
 @trace.resource()
 export class AutomergeHost {
@@ -246,31 +244,23 @@ export const getSpaceKeyFromDoc = (doc: any): string | null => {
 
 const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
   await handle.whenReady();
+  const unavailableHeads = new Set(heads);
 
-  const unavailableHeads: Heads = heads
-    .map((hash) => (!hashIsPresentInDoc(handle.docSync(), hash) ? hash : null))
-    .filter(nonNullable);
-
-  // Check if all heads are present in the document.
-  if (unavailableHeads.length === 0) {
-    return;
-  }
-
-  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitFor(({ doc }) => {
+  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
     // Check if unavailable heads became available.
-    for (const hash of unavailableHeads) {
-      if (hashIsPresentInDoc(doc, hash)) {
-        unavailableHeads.splice(unavailableHeads.indexOf(hash), 1);
+    for (const changeHash of unavailableHeads.values()) {
+      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
+        unavailableHeads.delete(changeHash);
       }
     }
 
-    if (unavailableHeads.length === 0) {
+    if (unavailableHeads.size === 0) {
       return true;
     }
     return false;
   });
 };
 
-const hashIsPresentInDoc = (doc: Doc<any>, hash: string): boolean => {
-  return !!getBackend(doc).getChangeByHash(hash);
+const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
+  return !!getBackend(doc).getChangeByHash(changeHash);
 };
