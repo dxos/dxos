@@ -197,12 +197,11 @@ const VirtualizedTableContent = () => {
   const { virtualizer, dispatch } = useContext(TableRootContext);
 
   const centerRows = table.getCenterRows();
+  let pinnedRows = [] as Row<unknown>[];
 
   useEffect(() => {
     dispatch({ type: 'updateTableCount', count: centerRows.length });
   }, [centerRows.length]);
-
-  let pinnedRows = [] as Row<unknown>[];
 
   try {
     // TODO(zan): Work out how to sync the row pinning with rendering
@@ -220,7 +219,9 @@ const VirtualizedTableContent = () => {
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
 
-  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows];
+  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows].filter(
+    (r) => !!r,
+  );
 
   return (
     <Fragment>
