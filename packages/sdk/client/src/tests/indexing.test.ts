@@ -30,8 +30,8 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({ services });
     await client.initialize();
-    if (!client._graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
-      client._graph.runtimeSchemaRegistry.registerSchema(ContactType);
+    if (!client.experimental.graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
+      client.experimental.graph.runtimeSchemaRegistry.registerSchema(ContactType);
     }
     return client;
   };
@@ -110,7 +110,7 @@ describe('Index queries', () => {
       service,
       echo: client.spaces,
     });
-    client._graph.registerQuerySourceProvider(indexQuerySourceProvider);
+    client.experimental.graph.registerQuerySourceProvider(indexQuerySourceProvider);
     const space = await client.spaces.create();
     await addContact(space, john);
 

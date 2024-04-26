@@ -271,7 +271,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     this.client = new Client({ services: this.services });
     await this.client.initialize();
 
-    this.client._graph.runtimeSchemaRegistry.registerSchema(TextV0Type);
+    this.client.experimental.graph.runtimeSchemaRegistry.registerSchema(TextV0Type);
 
     if (!this.spaceKey) {
       await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });

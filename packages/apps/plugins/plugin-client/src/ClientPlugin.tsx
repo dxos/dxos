@@ -76,10 +76,10 @@ export const ClientPlugin = ({
 
       const config = new Config(await Storage(), Envs(), Local(), Defaults());
       client = new Client({ config, ...options });
-      client.addSchema(TextV0Type);
 
       try {
         await client.initialize();
+        client.addSchema(TextV0Type);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {

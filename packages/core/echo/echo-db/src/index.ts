@@ -14,5 +14,4 @@ export * from './dynamic-schema-registry';
 export * from './util';
 export * from './text';
 export * from './echo-handler';
-
-// This comment is here to bust NX cache. Remove it after the code changes.
+export * from './client';
