@@ -4262,8 +4262,8 @@ importers:
         specifier: ^0.0.2
         version: 0.0.2
       random-access-storage:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^1.3.0
+        version: 1.4.3
       streamx:
         specifier: ^2.12.5
         version: 2.12.5
@@ -42157,13 +42157,6 @@ packages:
       events: 3.3.0
       inherits: 2.0.4
       queue-tick: 1.0.1
-
-  /random-access-storage@3.0.0:
-    resolution: {integrity: sha512-f9KeHUMhrqj0hE2d4HbUXk/Cd5vElaVzdA0PuqPTlnxsG3dDvwQaMg8POT5tWK6UxJ80zAONZpHgLPMnnff1RA==}
-    dependencies:
-      events: 3.3.0
-      queue-tick: 1.0.1
-    dev: false
 
   /random-access-web@2.0.3:
     resolution: {integrity: sha512-nN3AAgl4/lTOYMk5Qm44SzFsglOmaG2d0Kh0603umh35+rk9QXYLFf0nFJ0GOv9INBsP9iT1lub24r8PjyCtvA==}
