@@ -10,7 +10,14 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import { EchoDatabaseImpl, type AutomergeContext, type EchoDatabase, type Hypergraph, Filter } from '@dxos/echo-db';
+import {
+  EchoDatabaseImpl,
+  type AutomergeContext,
+  type EchoDatabase,
+  type Hypergraph,
+  Filter,
+  EchoClient,
+} from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -30,7 +37,6 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { EchoClient } from './echo-client';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()

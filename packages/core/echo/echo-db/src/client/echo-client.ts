@@ -1,9 +1,11 @@
 import { Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeContext, EchoDatabaseImpl, Hypergraph } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
+import { Hypergraph } from '../hypergraph';
+import { AutomergeContext } from '../automerge';
+import { EchoDatabaseImpl } from '../database';
 
 export type EchoClientParams = {};
 

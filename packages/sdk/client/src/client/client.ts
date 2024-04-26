@@ -20,7 +20,7 @@ import type { Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
-import { Hypergraph } from '@dxos/echo-db';
+import { EchoClient, Hypergraph } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,7 +36,6 @@ import { IndexKind, type RuntimeSchemaRegistry } from '../echo';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
-import { EchoClient } from '../echo/echo-client';
 
 /**
  * This options object configures the DXOS Client.

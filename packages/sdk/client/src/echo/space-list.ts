@@ -17,7 +17,7 @@ import {
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
-import { AutomergeContext, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-db';
+import { AutomergeContext, EchoClient, type FilterSource, type Hypergraph, type Query } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -34,7 +34,6 @@ import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
-import { EchoClient } from './echo-client';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -52,6 +51,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   constructor(
+    // TODO(dmaretskyi): Seems unused - remove.
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
