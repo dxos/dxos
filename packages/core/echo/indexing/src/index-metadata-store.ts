@@ -103,12 +103,9 @@ export class IndexMetadataStore {
     this.clean.emit();
   }
 
-  // markClean(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
-  //   for (const [id, lastIndexedHash] of idToLastHash.entries()) {
-  //     batch.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json', sublevel: this._lastIndexed });
-  //   }
-  // }
-
+  /**
+   * Called on re-indexing.
+   */
   dropFromClean(ids: ObjectPointerEncoded[], batch: BatchLevel) {
     for (const id of ids) {
       batch.del(id, { sublevel: this._lastIndexed });
