@@ -4,8 +4,7 @@
 
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
 import { Resource, type Context, LifecycleState } from '@dxos/context';
-import { type FeedInfo } from '@dxos/credentials';
-import { type DelegateInvitationCredential } from '@dxos/credentials/dist/types/src/state-machine/invitation-state-machine';
+import { type FeedInfo, type DelegateInvitationCredential } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

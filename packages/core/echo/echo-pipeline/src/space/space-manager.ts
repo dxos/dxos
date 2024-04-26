@@ -3,7 +3,7 @@
 //
 
 import { synchronized, trackLeaks } from '@dxos/async';
-import { type DelegateInvitationCredential } from '@dxos/credentials/dist/types/src/state-machine/invitation-state-machine';
+import { type DelegateInvitationCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
