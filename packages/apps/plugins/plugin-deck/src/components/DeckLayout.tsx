@@ -6,9 +6,16 @@ import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { Surface, type Toast as ToastSchema, type Location } from '@dxos/app-framework';
+import {
+  Surface,
+  type Toast as ToastSchema,
+  type Location,
+  isActiveParts,
+  type ActiveParts,
+} from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
+import { Deck } from '@dxos/react-ui-deck';
+import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
@@ -19,7 +26,7 @@ export type AttentionState = {
   attended: Set<string>;
 };
 
-export type MainLayoutProps = {
+export type DeckLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
@@ -30,6 +37,24 @@ export type MainLayoutProps = {
 
 export const NAV_ID = 'NavTree';
 
+export const firstSidebarId = (active: Location['active']): string =>
+  isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : active ?? '';
+
+export const firstComplementaryId = (active: Location['active']): string =>
+  isActiveParts(active)
+    ? Array.isArray(active.complementary)
+      ? active.complementary[0]
+      : active.complementary
+    : active ?? '';
+
+const PlankLoading = () => {
+  return (
+    <div role='none' className='grid bs-[100dvh] place-items-center'>
+      <Status indeterminate aria-label='Initializing' />
+    </div>
+  );
+};
+
 export const DeckLayout = ({
   fullscreen,
   showHintsFooter,
@@ -37,7 +62,7 @@ export const DeckLayout = ({
   onDismissToast,
   attention,
   location,
-}: MainLayoutProps) => {
+}: DeckLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -58,6 +83,12 @@ export const DeckLayout = ({
       </div>
     );
   }
+
+  const activeParts: ActiveParts = isActiveParts(location.active)
+    ? location.active
+    : { main: [location.active] as string[] };
+  const sidebarId = firstSidebarId(activeParts);
+  const complementaryId = firstComplementaryId(activeParts);
 
   return (
     <Popover.Root
@@ -90,7 +121,11 @@ export const DeckLayout = ({
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar>
-          <Surface role='navigation' name='sidebar' />
+          {sidebarId && sidebarId !== NAV_ID ? (
+            <Surface role='article' data={graph.findNode(sidebarId)} limit={1} />
+          ) : (
+            <Surface role='navigation' name='sidebar' limit={1} />
+          )}
         </Main.NavigationSidebar>
 
         {/* Notch */}
@@ -107,34 +142,27 @@ export const DeckLayout = ({
           <Surface role='notch-end' />
         </Main.Notch>
 
-        <Main.ComplementarySidebar>{/* Right Complementary sidebar. */}</Main.ComplementarySidebar>
-
-        {/* Top (header) bar. */}
-        <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
-          <div aria-label={t('main header label')} role='none'>
-            <div role='none' className='flex items-center gap-1 bs-[--rail-size]'>
-              <Surface role='navbar-start' />
-              <div role='none' className='grow' />
-              <Surface role='navbar-end' direction='inline-reverse' />
-            </div>
-          </div>
-        </Main.Content>
+        <Main.ComplementarySidebar>
+          {complementaryId && complementaryId !== NAV_ID ? (
+            <Surface role='article' data={graph.findNode(complementaryId)} limit={1} />
+          ) : (
+            <Surface role='navigation' name='sidebar' limit={1} />
+          )}
+        </Main.ComplementarySidebar>
 
         {/* Dialog overlay to dismiss dialogs. */}
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface
-          role='main'
-          limit={1}
-          fallback={Fallback}
-          placeholder={
-            // TODO(wittjosiah): Better placeholder? Delay rendering?
-            <div className='flex bs-[100dvh] justify-center items-center'>
-              <Status indeterminate aria-label='Initializing' />
-            </div>
-          }
-        />
+        <Deck.Root>
+          {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).map((id) => {
+            return (
+              <Deck.Plank key={id}>
+                <Surface role='article' data={graph.findNode(id)} limit={1} fallback={<PlankLoading />} />
+              </Deck.Plank>
+            );
+          })}
+        </Deck.Root>
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}
