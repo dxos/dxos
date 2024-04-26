@@ -34,7 +34,6 @@
     "@dxos/util": "workspace:*",
     "lodash.defaultsdeep": "^4.6.1",
     "race-as-promised": "^0.0.2",
-    "random-access-storage": "^1.3.0",
     "streamx": "^2.12.5"
   },
   "devDependencies": {
