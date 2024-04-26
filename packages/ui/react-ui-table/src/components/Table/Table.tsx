@@ -212,20 +212,7 @@ const VirtualizedTableContent = () => {
     pinnedRows = table.getBottomRows();
   } catch (_) {} // Ignore error
 
-  // TODO(Zan): This needs to move to the TableRoot context.
   const { getTotalSize, getVirtualItems } = virtualizer;
-
-  // // TODO: (Zan), this always fires on mount before the scroll context ref is set.
-  // // We can resolve this when we support unvirtualised tables again.
-  // if (scrollContextRef === undefined) {
-  //   log.warn(
-  //     [
-  //       'No scroll context ref found.',
-  //       'Either wrap `Table` in a `Table.Viewport` or provide a `scrollContextRef` to the `Table.Root`',
-  //     ].join('\n'),
-  //   );
-  //   return null;
-  // }
 
   const virtualRows = getVirtualItems();
   const totalSize = getTotalSize();
