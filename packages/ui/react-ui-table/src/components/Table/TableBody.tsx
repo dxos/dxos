@@ -28,48 +28,50 @@ const TableBody = ({ rows }: TableBodyProps) => {
 
   return (
     <tbody {...(isGrid && domAttributes)}>
-      {rows.map((row) => {
-        const isCurrent = currentDatum === row.original;
-        const isSelected = rowSelection?.[row.id];
+      {rows
+        .filter((row) => !!row)
+        .map((row) => {
+          const isCurrent = currentDatum === row.original;
+          const isSelected = rowSelection?.[row.id];
 
-        const isPinned = row.getIsPinned();
+          const isPinned = row.getIsPinned();
 
-        const classNames = tbodyTr({ canBeCurrent, isPinned: isPinned !== false });
+          const classNames = tbodyTr({ canBeCurrent, isPinned: isPinned !== false });
 
-        return (
-          <tr
-            key={keyAccessor ? keyAccessor(row.original) : row.id}
-            className={classNames}
-            data-index={row.index}
-            ref={virtualizer.measureElement}
-            {...(isCurrent && { 'aria-current': 'location' })}
-            {...(isSelected && { 'aria-selected': 'true' })}
-            {...(canBeCurrent && {
-              tabIndex: 0,
-              onClick: () => {
-                onDatumClick(row.original);
-              },
-              onKeyUp: ({ key }) => {
-                if (key === 'Enter' || key === ' ') {
+          return (
+            <tr
+              key={keyAccessor ? keyAccessor(row.original) : row.id}
+              className={classNames}
+              data-index={row.index}
+              ref={virtualizer.measureElement}
+              {...(isCurrent && { 'aria-current': 'location' })}
+              {...(isSelected && { 'aria-selected': 'true' })}
+              {...(canBeCurrent && {
+                tabIndex: 0,
+                onClick: () => {
                   onDatumClick(row.original);
-                }
-              },
-            })}
-          >
-            {debug && <td>{row.id}</td>}
+                },
+                onKeyUp: ({ key }) => {
+                  if (key === 'Enter' || key === ' ') {
+                    onDatumClick(row.original);
+                  }
+                },
+              })}
+            >
+              {debug && <td>{row.id}</td>}
 
-            {row.getVisibleCells().map((cell) => {
-              return (
-                <Cell key={cell.id} cell={cell}>
-                  {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
-                </Cell>
-              );
-            })}
+              {row.getVisibleCells().map((cell) => {
+                return (
+                  <Cell key={cell.id} cell={cell}>
+                    {flexRender(cell.column.columnDef.cell, { className: 'pli-2', ...cell.getContext() })}
+                  </Cell>
+                );
+              })}
 
-            {expand && <td />}
-          </tr>
-        );
-      })}
+              {expand && <td />}
+            </tr>
+          );
+        })}
     </tbody>
   );
 };
