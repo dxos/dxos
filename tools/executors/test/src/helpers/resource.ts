@@ -5,8 +5,8 @@
 import { afterTest } from './after-test';
 
 interface ResourceLike {
-  open(): Promise<any>;
-  close(): Promise<any>;
+  open(): Promise<void>;
+  close(): Promise<void>;
 }
 
 export const openAndClose = async (...resources: ResourceLike[]) => {
