@@ -3,9 +3,10 @@
 //
 
 import { type Context, createContext } from 'react';
-import { type Step } from 'react-joyride';
+import { type Step as BaseStep } from 'react-joyride';
 
 import {
+  type Plugin,
   type GraphBuilderProvides,
   type IntentResolverProvides,
   type SurfaceProvides,
@@ -13,6 +14,10 @@ import {
 } from '@dxos/app-framework';
 
 import { HELP_PLUGIN } from './meta';
+
+export type Step = BaseStep & {
+  before?: (context: { plugins: Plugin[] }) => any;
+};
 
 export type HelpContextType = {
   running: boolean;

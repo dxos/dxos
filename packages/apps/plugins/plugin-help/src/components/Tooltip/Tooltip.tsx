@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, useEffect, useRef } from 'react';
 import { type TooltipRenderProps, type Props } from 'react-joyride';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
-import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, mx, accentSurface } from '@dxos/react-ui-theme';
 
 import { useHelp } from '../../hooks';
 
@@ -69,12 +69,12 @@ export const Tooltip = ({
     <DensityProvider density='fine'>
       <div
         className={mx(
-          'flex flex-col min-w-[12rem] max-w-[30rem] min-h-[10rem] overflow-hidden rounded',
-          attentionSurface,
+          'flex flex-col min-w-[12rem] max-w-[30rem] min-h-[10rem] overflow-hidden rounded-md',
+          accentSurface,
         )}
       >
         <div className='flex p-2 items-center'>
-          <div className='grow px-2 text-lg text-primary-500'>{title}</div>
+          <div className='grow px-2 text-lg fg-inverse'>{title}</div>
           <Button variant='ghost' onClick={closeProps.onClick} title={closeProps['aria-label']}>
             <X className={getSize(4)} />
           </Button>
