@@ -51,7 +51,13 @@ export class IndexSchema extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: Filter) {
-    return Array.from(this._index.get(filter.type?.itemId ?? null) ?? []).map((id) => ({ id, rank: 0 }));
+    if (filter.type?.itemId === undefined) {
+      return Array.from(this._index.values())
+        .flatMap((ids) => Array.from(ids))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
+    return Array.from(this._index.get(filter.type.itemId) ?? []).map((id) => ({ id, rank: 0 }));
   }
 
   @trace.span({ showInBrowserTimeline: true })
