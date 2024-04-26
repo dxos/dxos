@@ -21,16 +21,16 @@ import {
   type GraphProvides,
   type Layout,
   type Location,
+  type ActiveParts,
   IntentAction,
   isActiveParts,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema/schema';
-import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout } from './components';
+import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
@@ -194,7 +194,7 @@ export const DeckPlugin = ({
           const handleNavigation = async () => {
             await dispatch({
               plugin: DECK_PLUGIN,
-              action: NavigationAction.ACTIVATE,
+              action: NavigationAction.OPEN,
               data: { id: uriToActive(window.location.pathname) },
             });
           };
@@ -282,48 +282,87 @@ export const DeckPlugin = ({
             }
 
             // TODO(wittjosiah): Factor out.
-            case NavigationAction.ACTIVATE: {
-              const id = intent.data?.id ?? intent.data?.result?.id;
-              const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              if (path) {
-                // TODO(wittjosiah): Factor out.
-                Keyboard.singleton.setCurrentContext(path.join('/'));
-              }
+            case NavigationAction.OPEN: {
+              // TODO(thure): set Keyboard context based on attention rather than navigation.
+              // const id = intent.data?.id ?? intent.data?.result?.id;
+              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
+              // if (path) {
+              //   Keyboard.singleton.setCurrentContext(path.join('/'));
+              // }
 
               batch(() => {
-                location.active = isActiveParts(location.active)
-                  ? {
-                      ...location.active,
-                      main: [id, ...location.active.main],
-                    }
-                  : { main: [id] };
+                if (intent.data) {
+                  location.active = isActiveParts(location.active)
+                    ? Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
+                        const partMembers = new Set<string>();
+                        // Add opened members first so they appear at the beginning.
+                        (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
+                        (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                          partMembers.add(id),
+                        );
+                        acc[part] = Array.from(partMembers);
+                        return acc;
+                      }, location.active)
+                    : { sidebar: NAV_ID, ...intent.data, main: [...(intent.data.main ?? []), location.active] };
+                }
               });
 
-              const schema = graphPlugin?.provides.graph.findNode(id)?.data?.__typename;
+              const openedIds: string[] = Array.from(
+                intent.data
+                  ? Object.values(intent.data).reduce((acc, ids) => {
+                      Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
+                      return acc;
+                    }, new Set<string>())
+                  : new Set<string>(),
+              );
 
               return {
                 data: {
-                  id,
-                  path,
-                  active: true,
+                  ids: openedIds,
                 },
                 intents: [
                   observability
-                    ? [
-                        {
-                          action: ObservabilityAction.SEND_EVENT,
-                          data: {
-                            name: 'navigation.activate',
-                            properties: {
-                              id,
-                              schema,
-                            },
+                    ? openedIds.map((id) => ({
+                        // TODO(thure): Can this handle Deck’s multifariousness?
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          name: 'navigation.activate',
+                          properties: {
+                            id,
+                            schema: graphPlugin?.provides.graph.findNode(id)?.data?.__typename,
                           },
                         },
-                      ]
+                      }))
                     : [],
                 ],
               };
+            }
+
+            // TODO(wittjosiah): Factor out.
+            case NavigationAction.CLOSE: {
+              // TODO(thure): set Keyboard context based on attention rather than navigation.
+              // const id = intent.data?.id ?? intent.data?.result?.id;
+              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
+              // if (path) {
+              //   Keyboard.singleton.setCurrentContext(path.join('/'));
+              // }
+
+              batch(() => {
+                // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
+                if (intent.data && isActiveParts(location.active)) {
+                  location.active = Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
+                    const partMembers = new Set<string>();
+                    (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                      partMembers.add(id),
+                    );
+                    (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
+                    acc[part] = Array.from(partMembers);
+                    return acc;
+                  }, location.active);
+                }
+              });
+
+              // TODO(thure): What needs doing for cleaning up?
             }
           }
         },

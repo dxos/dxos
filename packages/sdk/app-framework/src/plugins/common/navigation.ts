@@ -56,23 +56,14 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
-  ACTIVATE = `${NAVIGATION_ACTION}/activate`,
+  OPEN = `${NAVIGATION_ACTION}/open`,
+  CLOSE = `${NAVIGATION_ACTION}/close`,
 }
 
 /**
  * Expected payload for navigation actions.
  */
 export namespace NavigationAction {
-  export type Activate = IntentData<{
-    /**
-     * Id to set as active.
-     */
-    id: string;
-
-    /**
-     * Location of the active item.
-     * Defaults to 'main'.
-     */
-    key?: string;
-  }>;
+  export type Open = IntentData<ActiveParts>;
+  export type Close = IntentData<ActiveParts>;
 }
