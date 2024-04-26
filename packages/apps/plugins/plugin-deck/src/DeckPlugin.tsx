@@ -30,7 +30,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, LayoutSettings, ContentFallback, type AttentionState, DeckLayout } from './components';
+import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
@@ -243,16 +243,9 @@ export const DeckPlugin = ({
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return {
-                node: <ContentFallback />,
-                disposition: 'fallback',
-              };
-
             case 'settings':
               return data.plugin === meta.id ? <LayoutSettings settings={settings.values} /> : null;
           }
-
           return null;
         },
       },
