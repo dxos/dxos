@@ -297,7 +297,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reIndex();
+      await this._services?.services.QueryService?.reIndex(undefined, { timeout: 30_000 });
     }
 
     log.info('Repair succeeded', { repairSummary });

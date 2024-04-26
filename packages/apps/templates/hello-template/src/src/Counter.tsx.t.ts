@@ -8,18 +8,11 @@ export default template.define.script({
       : plate/* javascript */ `
     import React, { useEffect } from 'react';
 
-    import { create, Expando, useQuery, useSpace } from '@dxos/react-client/echo';
+    import { useQuery, useSpace } from '@dxos/react-client/echo';
 
     export const Counter = () => {
       const space = useSpace();
       const [counter] = useQuery(space, { type: 'counter' });
-
-      useEffect(() => {
-        if (!counter && space) {
-          const c = create(Expando, { type: 'counter', count: 0 });
-          void space.db.add(c);
-        }
-      }, [counter, space]);
 
       if (!space) {
         return null;
