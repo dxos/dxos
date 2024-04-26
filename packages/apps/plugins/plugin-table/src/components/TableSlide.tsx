@@ -12,13 +12,15 @@ const TableSlide: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) =
   return (
     <div role='none' className='flex-1 min-bs-0 pli-16 plb-24'>
       <Table.Root>
-        <Table.Viewport classNames='bs-full overflow-auto grid place-items-center'>
-          <ObjectTable
-            key={table.id} // New component instance per table.
-            table={table}
-            stickyHeader
-            role='table'
-          />
+        <Table.Viewport asChild>
+          <div role='none' className='bs-full overflow-auto grid place-items-center'>
+            <ObjectTable
+              key={table.id} // New component instance per table.
+              table={table}
+              stickyHeader
+              role='table'
+            />
+          </div>
         </Table.Viewport>
       </Table.Root>
     </div>

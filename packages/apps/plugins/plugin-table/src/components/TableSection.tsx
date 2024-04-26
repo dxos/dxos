@@ -10,12 +10,14 @@ import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableSection: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
   <Table.Root>
-    <Table.Viewport classNames='bs-96 mlb-2 overflow-auto'>
-      <ObjectTable
-        key={table.id} // New component instance per table.
-        table={table}
-        role='table'
-      />
+    <Table.Viewport asChild>
+      <div className='bs-96 mlb-2 overflow-auto'>
+        <ObjectTable
+          key={table.id} // New component instance per table.
+          table={table}
+          role='table'
+        />
+      </div>
     </Table.Viewport>
   </Table.Root>
 );
