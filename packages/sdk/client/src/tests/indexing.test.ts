@@ -47,21 +47,24 @@ describe('Index queries', () => {
   const queryIndexedJohn = async (space: Space) => {
     const receivedIndexedContact = new Trigger<ContactType>();
     const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
-    const unsub = query.subscribe((query) => {
-      log('Query results', {
-        length: query.results.length,
-        results: query.results.map(({ object, resolution }) => ({
-          object: (object as any).toJSON(),
-          resolution,
-        })),
-      });
-      for (const result of query.results) {
-        if (result.object instanceof ContactType && result.resolution?.source === 'index') {
-          unsub();
-          receivedIndexedContact.wake(result.object);
+    const unsub = query.subscribe(
+      (query) => {
+        log('Query results', {
+          length: query.results.length,
+          results: query.results.map(({ object, resolution }) => ({
+            object: (object as any).toJSON(),
+            resolution,
+          })),
+        });
+        for (const result of query.results) {
+          if (result.object instanceof ContactType && result.resolution?.source === 'index') {
+            unsub();
+            receivedIndexedContact.wake(result.object);
+          }
         }
-      }
-    }, true);
+      },
+      { fire: true },
+    );
     const contact = await receivedIndexedContact.wait({ timeout: 5000 });
     expect(contact).to.be.instanceOf(ContactType);
     expect(contact.name).to.equal(john);
