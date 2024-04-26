@@ -219,6 +219,10 @@ export class Client {
 
   // TODO(dmaretskyi): Expose `graph` directly?
   addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+    if (!this._initialized) {
+      throw new ApiError('Client not open.');
+    }
+
     const notRegistered = schemaList.filter((s) => !this._graph.runtimeSchemaRegistry.isSchemaRegistered(s));
     if (notRegistered.length > 0) {
       this._graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
