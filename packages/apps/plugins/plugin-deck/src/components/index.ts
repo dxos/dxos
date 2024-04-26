@@ -7,5 +7,5 @@ export * from './ContentFallback';
 export * from './Fallback';
 export * from './LayoutSettings';
 export * from './LayoutContext';
-export * from './MainLayout';
+export * from './DeckLayout';
 export * from './Toast';

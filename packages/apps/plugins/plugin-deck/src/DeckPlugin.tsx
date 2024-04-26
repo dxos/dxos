@@ -6,7 +6,6 @@ import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   parseGraphPlugin,
@@ -15,13 +14,11 @@ import {
   useIntent,
   LayoutAction,
   NavigationAction,
-  Surface,
   Toast as ToastSchema,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
   type GraphProvides,
-  type SurfaceProps,
   type Layout,
   type Location,
   IntentAction,
@@ -33,19 +30,15 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
+import { LayoutContext, LayoutSettings, ContentFallback, type AttentionState, DeckLayout } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
-import { activeToUri, checkAppScheme, firstMainId, uriToActive } from './util';
+import { activeToUri, checkAppScheme, uriToActive } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
-
-type AttentionState = {
-  attended: Set<string>;
-};
 
 export const DeckPlugin = ({
   observability,
@@ -66,10 +59,7 @@ export const DeckPlugin = ({
     fullscreen: false,
 
     sidebarOpen: true,
-    sidebarContent: null,
-
     complementarySidebarOpen: false,
-    complementarySidebarContent: null,
 
     dialogContent: null,
     dialogOpen: false,
@@ -112,7 +102,8 @@ export const DeckPlugin = ({
 
       case 'complementary': {
         layout.values.complementarySidebarOpen = !!state;
-        layout.values.complementarySidebarContent = component || subject ? { component, subject } : null;
+        // TODO(thure): Hoist content into the c11y sidebar of Deck.
+        // layout.values.complementarySidebarContent = component || subject ? { component, subject } : null;
         return { data: true };
       }
 
@@ -197,7 +188,6 @@ export const DeckPlugin = ({
       ),
       root: () => {
         const { dispatch } = useIntent();
-        const { graph } = useGraph();
 
         // Update selection based on browser navigation.
         useEffect(() => {
@@ -228,73 +218,30 @@ export const DeckPlugin = ({
           }
         }, [location.active]);
 
-        const surfaceProps: SurfaceProps = layout.values.fullscreen
-          ? {
-              data: { component: `${DECK_PLUGIN}/FullscreenLayout` },
-              surfaces: {
-                main: { data: { active: firstMainId(location.active) } },
-              },
-            }
-          : {
-              data: { component: `${DECK_PLUGIN}/DeckLayout` },
-              surfaces: {
-                sidebar: {
-                  data: {
-                    graph,
-                    active: isActiveParts(location.active) ? location.active.sidebar : ['navtree'],
-                    popoverAnchorId: layout.values.popoverAnchorId,
-                  },
-                },
-                main: {
-                  data: {
-                    graph,
-                    active: isActiveParts(location.active) ? location.active.main : [],
-                    popoverAnchorId: layout.values.popoverAnchorId,
-                  },
-                },
-                complementary: {
-                  data: {
-                    graph,
-                    active: isActiveParts(location.active) ? location.active.complementary : [],
-                    popoverAnchorId: layout.values.popoverAnchorId,
-                  },
-                },
-                documentTitle: {
-                  data: { activeNode: graphPlugin?.provides.graph.findNode(Array.from(attention.attended)[0]) },
-                },
-              },
-            };
-
-        return <Surface {...surfaceProps} />;
+        return (
+          <DeckLayout
+            attention={attention}
+            location={location}
+            fullscreen={layout.values.fullscreen}
+            showHintsFooter={settings.values.showFooter}
+            toasts={layout.values.toasts}
+            onDismissToast={(id) => {
+              const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+              if (index !== -1) {
+                // Allow time for the toast to animate out.
+                setTimeout(() => {
+                  if (layout.values.toasts[index].id === currentUndoId) {
+                    currentUndoId = undefined;
+                  }
+                  layout.values.toasts.splice(index, 1);
+                }, 1000);
+              }
+            }}
+          />
+        );
       },
       surface: {
         component: ({ data, role }) => {
-          switch (data.component) {
-            case `${DECK_PLUGIN}/MainLayout`:
-              return (
-                <MainLayout
-                  fullscreen={layout.values.fullscreen}
-                  showHintsFooter={settings.values.showFooter}
-                  toasts={layout.values.toasts}
-                  onDismissToast={(id) => {
-                    const index = layout.values.toasts.findIndex((toast) => toast.id === id);
-                    if (index !== -1) {
-                      // Allow time for the toast to animate out.
-                      setTimeout(() => {
-                        if (layout.values.toasts[index].id === currentUndoId) {
-                          currentUndoId = undefined;
-                        }
-                        layout.values.toasts.splice(index, 1);
-                      }, 1000);
-                    }
-                  }}
-                />
-              );
-
-            case `${DECK_PLUGIN}/ContentEmpty`:
-              return <ContentEmpty />;
-          }
-
           switch (role) {
             case 'main':
               return {

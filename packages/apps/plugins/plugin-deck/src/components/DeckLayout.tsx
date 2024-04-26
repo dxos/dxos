@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Sidebar as MenuIcon, X } from '@phosphor-icons/react';
+import { Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
+import { useGraph } from '@braneframe/plugin-graph';
+import { Surface, type Toast as ToastSchema, type Location } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
@@ -14,18 +15,32 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
+export type AttentionState = {
+  attended: Set<string>;
+};
+
 export type MainLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
+  location: Location;
+  attention: AttentionState;
 };
 
-export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
+export const NAV_ID = 'NavTree';
+
+export const DeckLayout = ({
+  fullscreen,
+  showHintsFooter,
+  toasts,
+  onDismissToast,
+  attention,
+  location,
+}: MainLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
-    complementarySidebarContent,
     dialogOpen,
     dialogContent,
     dialogBlockAlign,
@@ -34,6 +49,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
     popoverAnchorId,
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
+  const { graph } = useGraph();
 
   if (fullscreen) {
     return (
@@ -57,7 +73,11 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
       }}
     >
       <div role='none' className='sr-only'>
-        <Surface role='document-title' name='documentTitle' limit={1} />
+        <Surface
+          role='document-title'
+          data={{ activeNode: graph.findNode(Array.from(attention.attended)[0]) }}
+          limit={1}
+        />
       </div>
 
       <Main.Root
@@ -87,17 +107,7 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
           <Surface role='notch-end' />
         </Main.Notch>
 
-        {/* Right Complementary sidebar. */}
-        <Main.ComplementarySidebar classNames='overflow-hidden grid grid-cols-1 grid-rows-[var(--rail-size)_1fr]'>
-          <Button
-            variant='ghost'
-            classNames='absolute block-start-1 inline-end-1 p-0 bs-[--rail-action] is-[--rail-action]'
-            onClick={() => (context.complementarySidebarOpen = false)}
-          >
-            <X />
-          </Button>
-          <Surface role='complementary' data={complementarySidebarContent} />
-        </Main.ComplementarySidebar>
+        <Main.ComplementarySidebar>{/* Right Complementary sidebar. */}</Main.ComplementarySidebar>
 
         {/* Top (header) bar. */}
         <Main.Content classNames={['fixed inset-inline-0 block-start-0 z-[2]', baseSurface]} asChild>
@@ -106,16 +116,6 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
               <Surface role='navbar-start' />
               <div role='none' className='grow' />
               <Surface role='navbar-end' direction='inline-reverse' />
-              {complementarySidebarContent && (
-                <Button
-                  onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
-                  variant='ghost'
-                  classNames='p-0 bs-[var(--rail-action)] is-[var(--rail-action)] m-1'
-                >
-                  <span className='sr-only'>{t('open complementary sidebar label')}</span>
-                  <MenuIcon weight='light' mirrored className={getSize(5)} />
-                </Button>
-              )}
             </div>
           </div>
         </Main.Content>
