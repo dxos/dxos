@@ -26,6 +26,7 @@ import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
 import { type SubLevelDB } from './types';
 
+// TODO: Remove
 export type { DocumentId };
 
 export type AutomergeHostParams = {
@@ -183,7 +184,7 @@ export class AutomergeHost {
   //
   // Methods for client-services.
   //
-
+  @trace.span({ showInBrowserTimeline: true })
   async flush({ documentIds }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
     await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);

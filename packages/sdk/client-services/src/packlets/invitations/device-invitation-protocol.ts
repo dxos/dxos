@@ -4,6 +4,7 @@
 
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
+import { type PublicKey } from '@dxos/keys';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -33,7 +34,11 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async admit(request: AdmissionRequest): Promise<AdmissionResponse> {
+  async delegate(invitation: Invitation): Promise<PublicKey> {
+    throw new Error('delegation not supported');
+  }
+
+  async admit(_: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
     invariant(request.device);
     const identity = this._getIdentity();
     await identity.admitDevice(request.device);

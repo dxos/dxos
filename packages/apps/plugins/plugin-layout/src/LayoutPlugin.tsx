@@ -30,7 +30,7 @@ import {
   IntentAction,
   firstMainId,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';

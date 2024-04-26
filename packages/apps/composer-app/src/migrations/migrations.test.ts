@@ -21,8 +21,8 @@ describe('Composer migrations', () => {
 
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocal() });
-    client.addSchema(FolderType, Expando);
     await client.initialize();
+    client.addSchema(FolderType, Expando);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;
@@ -34,12 +34,13 @@ describe('Composer migrations', () => {
 
   test(migrations[0].version.toString(), async () => {
     const query = space.db.query(Filter.schema(FolderType));
-    expect(query.objects).to.have.lengthOf(0);
+    expect((await query.run({ timeout: 100 })).objects).to.have.lengthOf(0);
 
     await migrations[0].up({ space });
-    expect(query.objects).to.have.lengthOf(1);
-    expect(query.objects[0].name).to.equal(space.key.toHex());
-    expect(getSpaceProperty(space, FolderType.typename)).to.equal(query.objects[0]);
+    const afterMigration = await query.run();
+    expect(afterMigration.objects).to.have.lengthOf(1);
+    expect(afterMigration.objects[0].name).to.equal(space.key.toHex());
+    expect(getSpaceProperty(space, FolderType.typename)).to.equal(afterMigration.objects[0]);
   });
 
   test(migrations[1].version.toString(), async () => {
@@ -54,14 +55,16 @@ describe('Composer migrations', () => {
     folder3.objects = keys.slice(6, 9).map((key) => create(Expando, { key }));
 
     const query = space.db.query(Filter.schema(FolderType));
-    expect(query.objects).to.have.lengthOf(3);
-    expect(query.objects[0].name).to.equal(space.key.toHex());
-    expect(query.objects[0].objects).to.have.lengthOf(3);
+    const beforeMigration = await query.run();
+    expect(beforeMigration.objects).to.have.lengthOf(3);
+    expect(beforeMigration.objects[0].name).to.equal(space.key.toHex());
+    expect(beforeMigration.objects[0].objects).to.have.lengthOf(3);
 
     await migrations[1].up({ space });
-    expect(query.objects).to.have.lengthOf(1);
-    expect(query.objects[0].name).to.equal('');
-    expect(query.objects[0].objects).to.have.lengthOf(9);
-    expect(getSpaceProperty(space, FolderType.typename)).to.equal(query.objects[0]);
+    const afterMigration = await query.run();
+    expect(afterMigration.objects).to.have.lengthOf(1);
+    expect(afterMigration.objects[0].name).to.equal('');
+    expect(afterMigration.objects[0].objects).to.have.lengthOf(9);
+    expect(getSpaceProperty(space, FolderType.typename)).to.equal(afterMigration.objects[0]);
   });
 });

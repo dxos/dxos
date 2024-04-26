@@ -11,11 +11,12 @@ import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useSta
 import { createRoot } from 'react-dom/client';
 
 import { TextV0Type } from '@braneframe/types';
-import { createDocAccessor, create, createEchoObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';

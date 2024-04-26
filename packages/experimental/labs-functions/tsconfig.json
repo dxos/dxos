@@ -52,6 +52,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/echo/echo-generator"
     },
     {

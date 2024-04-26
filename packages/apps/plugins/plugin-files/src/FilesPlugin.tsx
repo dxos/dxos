@@ -19,7 +19,7 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';

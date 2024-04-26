@@ -21,6 +21,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
     "@dxos/gem-spore": "workspace:*",

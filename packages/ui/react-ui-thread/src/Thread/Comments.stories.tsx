@@ -8,7 +8,8 @@ import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { MessageType, TextV0Type } from '@braneframe/types';
-import { createDocAccessor, create, createEchoObject } from '@dxos/echo-schema';
+import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';

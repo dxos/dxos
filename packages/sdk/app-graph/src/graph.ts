@@ -4,7 +4,7 @@
 
 import { untracked } from '@preact/signals-core';
 
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 

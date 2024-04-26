@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type DynamicEchoSchema, create, type Hypergraph } from '@dxos/echo-schema';
+import { type DynamicEchoSchema, create } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
+import { useSpaces, type Hypergraph } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -38,7 +38,7 @@ const Story = () => {
 
     setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
 
-    setSchemas(space.db.schemaRegistry.getAll());
+    void space.db.schemaRegistry.getAll().then(setSchemas).catch();
   }, []);
 
   const handleClose = (success: boolean) => {

@@ -29,7 +29,7 @@ describe('Search', () => {
       return space.db.add(create(Expando, { title: faker.lorem.sentence(), content }));
     });
 
-    const { objects } = space.db.query();
+    const { objects } = await space.db.query().run();
     const results = filterObjects(objects, new RegExp(match, 'i'));
     expect(results).to.have.length(1);
   });

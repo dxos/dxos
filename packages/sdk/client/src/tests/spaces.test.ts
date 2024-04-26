@@ -9,9 +9,9 @@ import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
+import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
+import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -354,13 +354,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -388,13 +387,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -460,19 +458,25 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
-    spaceA.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objA)).to.be.true;
-      inc();
-    }, true);
+    spaceA.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objA)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
-    spaceB.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objB)).to.be.true;
-      inc();
-    }, true);
+    spaceB.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objB)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
     await wait();
   });

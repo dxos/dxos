@@ -6,7 +6,7 @@ import { ArrowsCounterClockwise, CheckCircle, Warning } from '@phosphor-icons/re
 import React, { useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { type EchoDatabase } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
 

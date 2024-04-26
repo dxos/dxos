@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { TextV0Type, TreeItemType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
 import { attentionSurface } from '@dxos/react-ui-theme';

@@ -19,9 +19,11 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
+import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
 
@@ -104,6 +106,7 @@ export type TestPeerProps = {
   signingContext?: SigningContext;
   blobStore?: BlobStore;
   automergeHost?: AutomergeHost;
+  invitationsManager?: InvitationsManager;
 };
 
 export class TestPeer {
@@ -181,7 +184,7 @@ export class TestPeer {
     }));
   }
 
-  get dataSpaceManager() {
+  get dataSpaceManager(): DataSpaceManager {
     return (this._props.dataSpaceManager ??= new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
@@ -189,6 +192,21 @@ export class TestPeer {
       this.identity,
       this.feedStore,
       this.automergeHost,
+      this.invitationsManager,
+    ));
+  }
+
+  get invitationsManager() {
+    return (this._props.invitationsManager ??= new InvitationsManager(
+      new InvitationsHandler(this.networkManager),
+      (invitation) => {
+        if (invitation.kind === Invitation.Kind.SPACE) {
+          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey!);
+        } else {
+          throw new Error('not implemented');
+        }
+      },
+      this.metadataStore,
     ));
   }
 

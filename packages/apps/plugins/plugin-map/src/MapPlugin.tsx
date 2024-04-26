@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { MapType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
@@ -63,6 +64,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
               // Add all maps to the graph.
               const query = space.db.query(Filter.schema(MapType));
+              subscriptions.add(query.subscribe());
               let previousObjects: MapType[] = [];
               subscriptions.add(
                 effect(() => {

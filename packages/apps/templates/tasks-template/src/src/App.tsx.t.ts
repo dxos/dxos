@@ -18,19 +18,18 @@ export default template.define.script({
   } from 'react-router-dom';
   
   import { ClientProvider, Config, Dynamics, Local, Defaults, useShell } from '@dxos/react-client';
-  import { useSpace, useQuery } from '@dxos/react-client/echo';
+  import { create, Filter, useSpace, useQuery } from '@dxos/react-client/echo';
   
   import { TaskList } from './TaskList';
   import { Task } from './schema';
   
-  // Dynamics allows configuration to be supplied by the hosting KUBE.
-  const config = async () => new Config(await Dynamics(), Local(), Defaults());
+  const config = async () => new Config(Local(), Defaults());
   
   export const TaskListContainer = () => {
     const { spaceKey } = useParams<{ spaceKey: string }>();
   
     const space = useSpace(spaceKey);
-    const tasks = useQuery<Task>(space, Task.filter());
+    const tasks = useQuery<Task>(space, Filter.schema(Task));
     const shell = useShell();
   
     return (
@@ -43,7 +42,7 @@ export default template.define.script({
           void shell.shareSpace({ spaceKey: space?.key });
         }}
         onTaskCreate={(newTaskTitle) => {
-          const task = new Task({ title: newTaskTitle, completed: false });
+          const task = create(Task, { title: newTaskTitle, completed: false });
           space?.db.add(task);
         }}
         onTaskRemove={(task) => {
@@ -105,6 +104,7 @@ export default template.define.script({
     return (
       <ClientProvider
         config={config}
+        shell='./shell.html'
         onInitialized={async (client) => {
           client.addSchema(Task);
           const searchParams = new URLSearchParams(location.search);

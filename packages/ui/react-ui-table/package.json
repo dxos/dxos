@@ -28,6 +28,8 @@
     "@effect/schema": "0.64.7",
     "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/react-context": "^1.0.0",
+    "@radix-ui/react-primitive": "^1.0.2",
+    "@radix-ui/react-slot": "^1.0.1",
     "@radix-ui/react-use-controllable-state": "^1.0.0",
     "@tanstack/react-table": "^8.13.2",
     "@tanstack/react-virtual": "^3.0.1",
@@ -36,6 +38,7 @@
   },
   "devDependencies": {
     "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-signals": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

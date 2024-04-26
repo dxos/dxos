@@ -63,6 +63,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               }
 
               const query = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {

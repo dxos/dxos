@@ -4,11 +4,19 @@
 
 import { useMemo, useSyncExternalStore } from 'react';
 
-import type { QueryOptions, Query, FilterSource, Space, EchoReactiveObject } from '@dxos/client/echo';
+import {
+  type QueryOptions,
+  type Query,
+  type FilterSource,
+  type Space,
+  type EchoReactiveObject,
+  type Echo,
+  isSpace,
+} from '@dxos/client/echo';
 
 type UseQuery = {
   <T extends EchoReactiveObject<any>>(
-    space?: Space,
+    spaceOrEcho?: Space | Echo,
     filter?: FilterSource<T>,
     options?: QueryOptions,
     deps?: any[],
@@ -20,19 +28,29 @@ type UseQuery = {
  */
 // TODO(burdon): Support typed operator filters (e.g., Note.filter(note => ...)).
 export const useQuery: UseQuery = <T extends EchoReactiveObject<any>>(
-  space?: Space,
+  spaceOrEcho?: Space | Echo,
   filter?: FilterSource<T>,
   options?: QueryOptions,
   deps?: any[],
 ) => {
   const { subscribe, getObjects } = useMemo(() => {
-    const query = space?.db.query(filter, options) as Query<T> | undefined;
+    const query = isSpace(spaceOrEcho)
+      ? spaceOrEcho.db.query(filter, options)
+      : (spaceOrEcho?.query(filter, options) as Query<T> | undefined);
+    let subscribed = false;
 
     return {
-      subscribe: (cb: () => void) => query?.subscribe(cb) ?? noop,
-      getObjects: () => query?.objects ?? [],
+      subscribe: (cb: () => void) => {
+        subscribed = true;
+        const unsubscribe = query?.subscribe(cb) ?? noop;
+        return () => {
+          unsubscribe?.();
+          subscribed = false;
+        };
+      },
+      getObjects: () => (subscribed && query ? query.objects : EMPTY_ARRAY),
     };
-  }, [space?.db, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]);
+  }, [spaceOrEcho, ...(typeof filter === 'function' ? [] : filterToDepsArray(filter)), ...(deps ?? [])]);
 
   // https://beta.reactjs.org/reference/react/useSyncExternalStore
   // NOTE: This hook will resubscribe whenever the callback passed to the first argument changes -- make sure it is stable.
@@ -46,3 +64,5 @@ const filterToDepsArray = (filter?: FilterSource<any>) =>
     .map((x) => (typeof x === 'function' || typeof x === 'object' ? null : x));
 
 const noop = () => {};
+
+const EMPTY_ARRAY: never[] = [];

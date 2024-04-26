@@ -61,6 +61,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
               // Add all kanbans to the graph.
               const query = space.db.query(Filter.schema(KanbanType));
+              subscriptions.add(query.subscribe());
               let previousObjects: KanbanType[] = [];
               subscriptions.add(
                 effect(() => {

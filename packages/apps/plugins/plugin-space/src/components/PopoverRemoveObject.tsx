@@ -12,8 +12,8 @@ import {
   useResolvePlugin,
   isIdActive,
 } from '@dxos/app-framework';
-import { type Expando, isEchoObject } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { type Expando } from '@dxos/echo-schema';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';

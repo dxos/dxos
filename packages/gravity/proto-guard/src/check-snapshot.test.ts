@@ -66,7 +66,7 @@ describe('Tests against old storage', () => {
     {
       // TODO(dmaretskyi): Only needed because waitUntilReady seems to not guarantee that all objects will be present.
       const expectedObjects = 3;
-      if (space.db.query(undefined, { models: ['*'] }).objects.length < expectedObjects) {
+      if ((await space.db.query(undefined, { models: ['*'] }).run()).objects.length < expectedObjects) {
         const queryPromise = new Promise<void>((resolve) => {
           space.db.query().subscribe((query) => {
             if (query.objects.length >= expectedObjects) {
@@ -84,7 +84,7 @@ describe('Tests against old storage', () => {
       expect(space.properties.toJSON()).to.contain(data.space.properties);
 
       // Expando.
-      const expando = space.db.query({ type: 'expando' }).objects[0];
+      const expando = (await space.db.query({ type: 'expando' }).run()).objects[0];
       expect(contains(expando.toJSON(), data.space.expando)).to.be.true;
 
       // Text.

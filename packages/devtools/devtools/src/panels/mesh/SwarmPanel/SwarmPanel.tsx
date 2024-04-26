@@ -133,15 +133,18 @@ export const SwarmPanel = () => {
 
   return (
     <PanelContainer classNames='divide-y'>
-      <div className='h-1/2 overflow-auto'>
-        <Table<SwarmConnection>
-          columns={columns}
-          data={items}
-          keyAccessor={(row) => row.id.toHex()}
-          grouping={['topic']}
-          onDatumClick={(datum) => handleSelect([datum])}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='h-1/2 overflow-auto'>
+          <Table.Table<SwarmConnection>
+            columns={columns}
+            data={items}
+            keyAccessor={(row) => row.id.toHex()}
+            grouping={['topic']}
+            onDatumClick={(datum) => handleSelect([datum])}
+          />
+        </Table.Viewport>
+      </Table.Root>
+
       <div className='h-1/2 overflow-auto'>
         {sessionId ? (
           connection ? (

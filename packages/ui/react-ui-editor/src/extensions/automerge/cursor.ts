@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { toCursor, type DocAccessor, fromCursor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
+import { toCursor, type DocAccessor, fromCursor } from '@dxos/react-client/echo';
 
 import { type CursorConverter } from '../cursor';
 
