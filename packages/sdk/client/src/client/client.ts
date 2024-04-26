@@ -294,6 +294,10 @@ export class Client {
       }
     }
 
+    {
+      await this._services?.services.QueryService?.reIndex();
+    }
+
     log.info('Repair succeeded', { repairSummary });
     return repairSummary;
   }
@@ -404,6 +408,8 @@ export class Client {
       throw err;
     }
 
+    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+
     await this._runtime.open();
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
@@ -429,8 +435,6 @@ export class Client {
 
       await this._shellClientProxy.open();
     }
-
-    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     log('opened');
   }
