@@ -25,6 +25,10 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
     .pipe(
       S.filter(
         (obj) => {
+          if (obj === undefined) {
+            // unresolved reference
+            return true;
+          }
           if (obj instanceof DynamicEchoSchema) {
             return annotation.typename === StoredEchoSchema.typename;
           }

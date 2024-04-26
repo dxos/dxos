@@ -30,6 +30,8 @@ describe('complex schema validations', () => {
 
     const field = 'hello';
     expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
+    // unresolved reference
+    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw();
     const bar = create(Bar, { fooRef: create(Foo, { field }) });
     expect(bar.fooRef?.field).to.eq(field);
   });
