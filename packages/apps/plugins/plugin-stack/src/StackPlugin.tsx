@@ -5,7 +5,7 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Collection, Section, StackView } from '@braneframe/types';
+import { Collection, StackView } from '@braneframe/types';
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -13,7 +13,7 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
-import meta, { STACK_PLUGIN } from './meta';
+import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
 import translations from './translations';
 import { type StackPluginProvides, type StackProvides, type StackState, type StackSettingsProps } from './types';
 
@@ -48,7 +48,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [Section.identifier]: {
+          [SECTION_IDENTIFIER]: {
             parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
               switch (type) {
                 case 'node':

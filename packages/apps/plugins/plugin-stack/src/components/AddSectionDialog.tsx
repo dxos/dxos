@@ -3,7 +3,7 @@
 //
 import React, { useCallback, useState } from 'react';
 
-import { type Collection } from '@braneframe/types';
+import { StackView, type Collection } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -45,11 +45,10 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
             : collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
       collection.objects.splice(index + (position === 'after' ? 1 : 0), 0, sectionObject);
-      // const stack = collection.views[StackView.typename];
-      // if (stack) {
-      // TODO(wittjosiah): Throws.
-      // stack.sections[sectionObject.id] = {};
-      // }
+      const stack = collection.views[StackView.typename];
+      if (stack) {
+        stack.sections[sectionObject.id] = {};
+      }
       setPending(false);
       void dispatch?.({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
     },

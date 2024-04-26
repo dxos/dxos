@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { type Collection, FileType, StackView, Section } from '@braneframe/types';
+import { type Collection, FileType, StackView } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -37,7 +37,7 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
-import { STACK_PLUGIN } from '../meta';
+import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -89,7 +89,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveObject(data) || data instanceof StackView) {
+    if (!isReactiveObject(data)) {
       return 'reject';
     }
 
@@ -119,8 +119,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
 
     if (!stack.sections[object.id]) {
-      // TODO(wittjosiah): Throws.
-      // stack.sections[object.id] = {};
+      stack.sections[object.id] = {};
     }
   };
 
@@ -134,8 +133,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
 
   const handleAdd = (sectionObject: EchoReactiveObject<any>) => {
     collection.objects.push(sectionObject);
-    // TODO(wittjosiah): Throws.
-    // stack.sections[sectionObject.id] = {};
+    stack.sections[sectionObject.id] = {};
   };
 
   // TODO(wittjosiah): Factor out.
@@ -183,7 +181,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={Section.identifier}
+        type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
         transform={handleTransform}
