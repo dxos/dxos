@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {

@@ -100,7 +100,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
 
   // TODO(dmaretskyi): Stubs for future use.
   async open() {}
-  
+
   // TODO(dmaretskyi): Stubs for future use.
   async close() {}
 
