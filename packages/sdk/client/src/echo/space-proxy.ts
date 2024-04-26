@@ -30,6 +30,7 @@ import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { EchoClient } from './echo-client';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
 @trace.resource()
@@ -85,8 +86,7 @@ export class SpaceProxy implements Space {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
-    graph: Hypergraph,
-    automergeContext: AutomergeContext,
+    echoClient: EchoClient,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -99,12 +99,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    invariant(this._clientServices.services.DataService, 'DataService not available');
-    this._db = new EchoDatabaseImpl({
-      spaceKey: this.key,
-      graph,
-      automergeContext,
-    });
+    this._db = echoClient.createDatabase({ spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -119,8 +114,6 @@ export class SpaceProxy implements Space {
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
-
-    graph._register(this.key, this._db, this);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);

@@ -54,6 +54,7 @@ export class AutomergeContext {
       });
       this._adapter.ready();
     } else {
+      // log.warn('Running ECHO without a service connection is deprecated. No data will be persisted.');
       this._repo = new Repo({ network: [] });
     }
   }

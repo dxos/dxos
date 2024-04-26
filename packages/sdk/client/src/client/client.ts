@@ -19,7 +19,7 @@ import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { inspectObject } from '@dxos/debug';
+import { inspectObject, raise } from '@dxos/debug';
 import { Hypergraph } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -36,6 +36,7 @@ import { IndexKind, type RuntimeSchemaRegistry } from '../echo';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
+import { EchoClient } from '../echo/echo-client';
 
 /**
  * This options object configures the DXOS Client.
@@ -94,10 +95,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  /**
-   * @internal
-   */
-  readonly _graph = new Hypergraph();
+  private readonly _echoClient = new EchoClient({});
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -215,6 +213,14 @@ export class Client {
         return self._graph;
       },
     };
+  }
+
+  /**
+   * @internal
+   * @deprecated
+   */
+  get _graph() {
+    return this._echoClient.graph;
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
@@ -364,12 +370,16 @@ export class Client {
     });
     await this._services.open(this._ctx);
 
+    this._echoClient.connectToService({
+      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+    });
+    await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
       this._config,
       this._services,
-      this._graph,
+      this._echoClient,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -465,6 +475,7 @@ export class Client {
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
     await this._runtime?.close();
+    await this._echoClient.close(this._ctx);
     await this._services?.close(this._ctx);
     log('closed');
   }

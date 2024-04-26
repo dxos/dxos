@@ -34,6 +34,7 @@ import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
+import { EchoClient } from './echo-client';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
@@ -45,11 +46,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
 
-  /**
-   * @internal
-   */
-  readonly _automergeContext: AutomergeContext;
-
   @trace.info()
   private get _isReadyState() {
     return this._isReady.get();
@@ -58,7 +54,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   constructor(
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _graph: Hypergraph,
+    private readonly _echoClient: EchoClient,
     private readonly _getIdentityKey: () => PublicKey | undefined,
     /**
      * @internal
@@ -68,9 +64,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);
     this._spacesStream = spacesStream;
-    this._automergeContext = new AutomergeContext(_serviceProvider.services.DataService, {
-      spaceFragmentationEnabled: true,
-    });
   }
 
   [inspect.custom]() {
@@ -122,7 +115,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
-          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._graph, this._automergeContext);
+          spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
@@ -169,10 +162,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
       const agentQuerySourceProvider = new AgentQuerySourceProvider(this.default);
       await agentQuerySourceProvider.open();
-      this._graph.registerQuerySourceProvider(agentQuerySourceProvider);
+      this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
 
-      this._graph.registerQuerySourceProvider(
+      this._echoClient.graph.registerQuerySourceProvider(
         new IndexQuerySourceProvider({ echo: this, service: this._serviceProvider.services.QueryService! }),
       );
       subscription.unsubscribe();
@@ -196,7 +189,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   @trace.span()
   async _close() {
     await this._ctx.dispose();
-    await this._automergeContext.close();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
@@ -291,6 +283,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @param options
    */
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
-    return this._graph.query(filter, options);
+    return this._echoClient.graph.query(filter, options);
   }
 }

@@ -98,6 +98,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
+  async open() {}
+
+  async close() {}
+
   getObjectById<T extends EchoReactiveObject<any>>(id: string): T | undefined {
     return this._automerge.getObjectById(id) as T | undefined;
   }
