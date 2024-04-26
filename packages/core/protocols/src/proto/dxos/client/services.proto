@@ -480,6 +480,9 @@ message Invitation {
 
   /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
   optional AdmissionKeypair guest_keypair = 16;
+
+  /// Present on Type.DELEGATED invitations.
+  optional dxos.keys.PublicKey delegation_credential_id = 17;
 }
 
 message AdmissionKeypair {

@@ -3,14 +3,8 @@
 //
 
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
-import {
-  AuthenticatingInvitation,
-  AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitation,
-  INVITATION_TIMEOUT,
-} from '@dxos/client-protocol';
+import { AuthenticatingInvitation, INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { generatePasscode } from '@dxos/credentials';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -67,55 +61,12 @@ export class InvitationsHandler {
    */
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitation {
-    const {
-      invitationId = PublicKey.random().toHex(),
-      type = Invitation.Type.INTERACTIVE,
-      authMethod = Invitation.AuthMethod.SHARED_SECRET,
-      state = Invitation.State.INIT,
-      timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random(),
-      persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
-      created = new Date(),
-      guestKeypair = undefined,
-      lifetime = 86400, // 1 day,
-      multiUse = false,
-    } = options ?? {};
-    const authCode =
-      options?.authCode ??
-      (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
-    invariant(protocol);
-
-    const invitation: Invitation = {
-      invitationId,
-      type,
-      authMethod,
-      state,
-      swarmKey,
-      authCode,
-      timeout,
-      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
-      guestKeypair:
-        guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
-      created,
-      lifetime,
-      multiUse,
-      ...protocol.getInvitationContext(),
-    };
-
-    const stream = new PushStream<Invitation>();
-    const ctx = new Context({
-      onError: (err) => {
-        stream.error(err);
-        void ctx.dispose();
-      },
-    });
-
-    ctx.onDispose(() => {
-      log('complete', { ...protocol.toJSON() });
-      stream.complete();
-    });
-
+  handleInvitationFlow(
+    ctx: Context,
+    stream: PushStream<Invitation>,
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+  ): void {
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
       const extension = new InvitationHostExtension({
@@ -134,7 +85,7 @@ export class InvitationsHandler {
           try {
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
-            const admissionResponse = await protocol.admit(admissionRequest, extension.guestProfile);
+            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
             extension.completedTrigger.wake(deviceKey);
@@ -154,7 +105,7 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
-              const deviceKey = await extension.completedTrigger.wait({ timeout });
+              const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
@@ -168,7 +119,7 @@ export class InvitationsHandler {
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
-              if (!multiUse) {
+              if (!invitation.multiUse) {
                 // Wait for graceful close before disposing.
                 await swarmConnection.close();
                 await ctx.dispose();
@@ -229,18 +180,6 @@ export class InvitationsHandler {
 
       stream.next({ ...invitation, state: Invitation.State.CONNECTING });
     });
-
-    // TODO(burdon): Stop anything pending.
-    const observable = new CancellableInvitation({
-      initialInvitation: invitation,
-      subscriber: stream.observable,
-      onCancel: async () => {
-        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
-        await ctx.dispose();
-      },
-    });
-
-    return observable;
   }
 
   acceptInvitation(
