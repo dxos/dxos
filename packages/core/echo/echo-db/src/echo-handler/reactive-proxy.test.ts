@@ -2,10 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { create } from './create';
-import { reactiveProxyTests } from '../proxy/proxy.blueprint-test';
-import { type TestSchema } from '../testing';
+import { create } from '@dxos/echo-schema';
+import { type TestSchema } from '@dxos/echo-schema/testing';
 
+import { reactiveProxyTests } from './proxy.blueprint-test';
+
+// NOTE: These are tests for @dxos/echo-schema but they live here currently because the tests are shared.
+//  echo-schema cannot export the test blueprint because @dxos/test is not published.
 describe('Reactive proxy', () => {
   reactiveProxyTests((schema) => {
     if (typeof schema === 'function') {

@@ -61,4 +61,22 @@ describe('Level', () => {
     expect(await second.get(key)).to.equal(value);
     expect(await second.iterator().all()).to.deep.equal([[key, value]]);
   });
+
+  test('sublevel prefixes', () => {
+    const level = createTestLevel();
+    expect(level.prefixKey('', 'utf8')).to.equal('');
+
+    {
+      const sublevel = level.sublevel('sublevel');
+      expect(sublevel.prefixKey('', 'utf8')).to.equal('!sublevel!');
+    }
+
+    {
+      const sublevel = level.sublevel('');
+      expect(sublevel.prefixKey('', 'utf8')).to.equal('!!');
+
+      const sublevel2 = sublevel.sublevel('');
+      expect(sublevel2.prefixKey('', 'utf8')).to.equal('!!!!');
+    }
+  });
 });
