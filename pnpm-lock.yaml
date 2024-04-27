@@ -678,6 +678,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/web-auth':
+        specifier: ^0.4.28
+        version: 0.4.28
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -694,6 +697,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.22.19
+      '@cloudflare/workers-types':
+        specifier: ^4.20240423.0
+        version: 4.20240423.0
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -7298,8 +7304,8 @@ importers:
         version: 0.137.0
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20240405.0
-        version: 4.20240419.0
+        specifier: ^4.20240423.0
+        version: 4.20240423.0
       '@types/args':
         specifier: ^5.0.3
         version: 5.0.3
@@ -7323,7 +7329,7 @@ importers:
         version: 1.5.0(@types/node@18.11.9)(@vitest/browser@1.5.0)(@vitest/ui@1.5.0)(happy-dom@13.3.4)(jsdom@20.0.1)
       wrangler:
         specifier: ^3.51.2
-        version: 3.51.2(@cloudflare/workers-types@4.20240419.0)
+        version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -13247,6 +13253,12 @@ packages:
     resolution: {integrity: sha512-4iri8i1AqYHJE2DstZYkyEprg6Pq6sKx3xn5FpySk9sNhH7qN2LLlHJCfDTZRILNwQNPD7mATWM0TBui7uC1pA==}
     dev: true
 
+  /@baselime/edge-logger@0.3.2:
+    resolution: {integrity: sha512-Z7vAtFx7Ld8+Um1PSxUyEP0Wx/T43EYm0zD3lM1h59bJeC+I8Uh90KkAkZckwNnaC3R0tjW6h5DQdSmtRLhSXQ==}
+    dependencies:
+      '@opentelemetry/api': 1.6.0
+    dev: false
+
   /@baselime/node-opentelemetry@0.5.8(@trpc/server@10.45.2):
     resolution: {integrity: sha512-wF3119LuxWLqCg1od6qHWqzz8fdod9HIB03Aa8EZNoxcGY7kxFXdDW8v1iz8jCx2bCRHw6ZYSL9Hpg8AwDnzyg==}
     peerDependencies:
@@ -13454,8 +13466,8 @@ packages:
     resolution: {integrity: sha512-CiYtVpQURPgQqtBKkmOAnfPElVZuD7Xyf1IxKtKp2B4aB9gnooapwJhzeY8c4Ls4u17SgMS0MprOkrgYwzZ6xg==}
     dev: true
 
-  /@cloudflare/workers-types@4.20240419.0:
-    resolution: {integrity: sha512-UM16sr4HEe0mDj6C5OFcodzdj/CnEp0bfncAq3g7OpDsoZ1sBrfsMrb7Yc4f8J81EemvmQZyE6sSanpURtVkcQ==}
+  /@cloudflare/workers-types@4.20240423.0:
+    resolution: {integrity: sha512-ssuccb3j+URp6mP2p0PcQE9vmS3YeKBQnALHF9P3yQfUAFozuhTsDTbqmL+zPrJvUcG7SL2xVQkNDF9QJeKDZw==}
     dev: true
 
   /@cnakazawa/watch@1.0.4:
@@ -13957,6 +13969,32 @@ packages:
       react: 18.2.0
       tslib: 2.6.0
 
+  /@dxos/async@0.4.9:
+    resolution: {integrity: sha512-bS4s7xod4yZRL2ZS4Ylf5r21HmHjlclQRGgqecm8zbkyv/j+ii7rtJjnyjptzvYHd7awBzxgOwZq7s0twAwi6w==}
+    dependencies:
+      '@dxos/context': 0.4.9
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/log': 0.4.9
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      zen-observable: 0.10.0
+      zen-push: 0.3.1
+    dev: false
+
+  /@dxos/context@0.4.9:
+    resolution: {integrity: sha512-4rdh3ZBnspOyiAc3pMOsRr3dhjK0bsSVM9vzLpMf+dyuKNmVurpjzJ1FOmCcEbxxs5ITottHARys6hEWm/EPww==}
+    dependencies:
+      '@dxos/log': 0.4.9
+      '@dxos/util': 0.4.9
+    dev: false
+
+  /@dxos/debug@0.4.9:
+    resolution: {integrity: sha512-nnnmDqII7/9LnbnVdwEzmcq9FqFTe5vaM5Qc0JvZo3/BMhPc3pFZkMqtQpGn7DQJq4/xes09c/6Vw19MjW4SIA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+    dev: false
+
   /@dxos/esbuild-book-knobs@2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-io/I+4uKdotdiIpE7OAYWtIUOhx4VWP7yGweprM1flQZXmDfwglAavxKlEcqafEoimquX+K5UWYGnBPYh+a0RQ==}
     deprecated: Versions published prior to open sourcing are no longer supported
@@ -14004,6 +14042,68 @@ packages:
       - '@types/react'
       - supports-color
     dev: true
+
+  /@dxos/invariant@0.4.9:
+    resolution: {integrity: sha512-BXpmvZmX6uweggeTQW+d30/S9A1fcl8V+IfotV0TADAbgOE4LLXiNXlbDuFhlL7XQQg1AYv6efJ4OMnyur9/EA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/keys@0.4.9:
+    resolution: {integrity: sha512-8jFH8O1gOubbHjVLMLTGdCyXzMqPIn59ez4oj/jC4DJaJ7xKLSWEd3aSAkdk+ZQ5yR8HPQX6dXTz6JPOSP9oJA==}
+    dependencies:
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/log@0.4.9:
+    resolution: {integrity: sha512-MOGKh7gcgO8maNnTtjtbwybqz8GvNBRaqA/huSlafg8NGOXBPy3yga00qVeA0aIp3E1NazVN4LebVVyHZlQOuA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      chalk: 4.1.2
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+      lodash.pick: 4.4.0
+      lodash.pickby: 4.6.0
+    dev: false
+
+  /@dxos/node-std@0.4.9:
+    resolution: {integrity: sha512-mKwOT1lndx0fAperkOdz0b/DAPbYlq0bzSBBccIWXqmCdE7rC4bxU6Yudklvp0NKZkT3d7N1Z5uZyxEUg4JsKg==}
+    dependencies:
+      assert: 2.1.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.0
+      util: 0.12.5
+    dev: false
+
+  /@dxos/util@0.4.9:
+    resolution: {integrity: sha512-830DFvs0gHvuzHRZgFYNorKz77L6/wj4S7vyYaFe1ZedyywX4KfGDxtqP0OatT8h03NpupLU8n8ih3tRkLE/aQ==}
+    dependencies:
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/keys': 0.4.9
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/web-auth@0.4.28:
+    resolution: {integrity: sha512-lNBUQi/MMZ6pMyVkSnNAA+EWzlmrsTKZ1tErnleTdBwTrZWWPCr1Wig0hkVVxZom4Wgnf56dMca6BOni9mzbHQ==}
+    dependencies:
+      '@baselime/edge-logger': 0.3.2
+      '@dxos/async': 0.4.9
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/keys': 0.4.9
+      '@dxos/log': 0.4.9
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      cookie: 0.6.0
+      hono: 4.2.8
+      lodash.pick: 4.4.0
+    dev: false
 
   /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
     resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
@@ -18265,6 +18365,11 @@ packages:
     engines: {node: '>=14'}
     dependencies:
       '@opentelemetry/api': 1.8.0
+    dev: false
+
+  /@opentelemetry/api@1.6.0:
+    resolution: {integrity: sha512-OWlrQAnWn9577PhVgqjUvMr1pg57Bc4jv0iL4w0PRuOSRvq67rvHW9Ie/dZVMvCzhSCB+UxhcY/PmCmFj33Q+g==}
+    engines: {node: '>=8.0.0'}
     dev: false
 
   /@opentelemetry/api@1.8.0:
@@ -26736,7 +26841,6 @@ packages:
       object-is: 1.1.5
       object.assign: 4.1.4
       util: 0.12.5
-    dev: true
 
   /assertion-error@1.1.0:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
@@ -33917,6 +34021,11 @@ packages:
 
   /hono@4.2.6:
     resolution: {integrity: sha512-AtbHZJYWsm+uFHLz0C6xltX7hjOV44a55gSEGBfoQOJ00KSxEUOoiIkmd+NXfapNX0j2GCKhqMmYeegBdHRwcQ==}
+    engines: {node: '>=16.0.0'}
+    dev: false
+
+  /hono@4.2.8:
+    resolution: {integrity: sha512-re/zNrOWb7Sp9KhojlMEgcgvqsE8Rgk9IcmumqsbKa9ruPT5XuOcx1U+xuNaI4SUnwrPsiTQ72MiodtpJEVfjg==}
     engines: {node: '>=16.0.0'}
     dev: false
 
@@ -49016,7 +49125,7 @@ packages:
     resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
     dev: true
 
-  /wrangler@3.51.2(@cloudflare/workers-types@4.20240419.0):
+  /wrangler@3.51.2(@cloudflare/workers-types@4.20240423.0):
     resolution: {integrity: sha512-8TRUwzPHj6+uPDzY0hBJ9/YwniEF9pqMGe5qbqLP/XsHTCWxIFib5go374zyCkmuVh23AwV7NuTA6gUtSqZ8pQ==}
     engines: {node: '>=16.17.0'}
     hasBin: true
@@ -49027,7 +49136,7 @@ packages:
         optional: true
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.1
-      '@cloudflare/workers-types': 4.20240419.0
+      '@cloudflare/workers-types': 4.20240423.0
       '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
       '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
       blake3-wasm: 2.1.5

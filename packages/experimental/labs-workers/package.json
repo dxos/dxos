@@ -30,7 +30,7 @@
     "modelfusion": "^0.137.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240405.0",
+    "@cloudflare/workers-types": "^4.20240423.0",
     "@types/args": "^5.0.3",
     "@types/cookie": "^0.6.0",
     "@types/ws": "^7.4.0",
