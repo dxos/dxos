@@ -10,15 +10,12 @@ import { timing } from 'hono/timing';
 
 import { log } from '@dxos/log';
 
-import api from './api';
-import app from './app';
 import chat from './chat';
 import { type Env } from './defs';
 import signaling from './signaling';
 
 export * from './signaling';
 
-// TODO(burdon): Move to w3 or new monorepo repo.
 // TODO(burdon): CI: https://developers.cloudflare.com/workers/configuration/continuous-integration
 // TODO(burdon): Cron: https://developers.cloudflare.com/workers/configuration/cron-triggers
 // TODO(burdon): Sites (replace netlify): https://developers.cloudflare.com/workers/configuration/sites/start-from-existing
@@ -38,7 +35,6 @@ export * from './signaling';
 
 const root = new Hono<Env>();
 
-// TODO(burdon): Logging/Baselime?
 root.use(logger());
 root.use(prettyJSON({ space: 2 }));
 root.use(timing());
@@ -71,8 +67,6 @@ root.onError((err, context) => {
   return response;
 });
 
-root.route('/', app);
-root.route('/api', api);
 root.route('/chat', chat);
 root.route('/signal', signaling);
 
