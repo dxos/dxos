@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ViewType } from '@braneframe/types';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -27,9 +27,9 @@ const Story = () => {
 
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
+    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
 
-    const view = space.db.add(E.object(ViewType, { title: '', type: '' }));
+    const view = space.db.add(create(ViewType, { title: '', type: '' }));
 
     setSpace(space);
     setView(view);

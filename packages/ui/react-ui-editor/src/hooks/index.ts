@@ -4,4 +4,3 @@
 
 export * from './useActionHandler';
 export * from './useTextEditor';
-export * from './useDocAccessor';

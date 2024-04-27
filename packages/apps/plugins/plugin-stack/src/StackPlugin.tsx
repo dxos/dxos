@@ -11,8 +11,9 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { SectionType, StackType } from '@braneframe/types';
 import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Filter } from '@dxos/react-client/echo';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
@@ -27,7 +28,7 @@ import {
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-  const stackState = E.object<StackState>({ creators: [] });
+  const stackState = create<StackState>({ creators: [] });
 
   return {
     meta,
@@ -99,7 +100,8 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
               );
 
               // Add all stacks to the graph.
-              const query = space.db.query(E.Filter.schema(StackType));
+              const query = space.db.query(Filter.schema(StackType));
+              subscriptions.add(query.subscribe());
               let previousObjects: StackType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -156,7 +158,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { data: E.object(StackType, { sections: [] }) };
+              return { data: create(StackType, { sections: [] }) };
             }
           }
         },

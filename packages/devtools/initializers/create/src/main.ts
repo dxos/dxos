@@ -25,7 +25,7 @@ void (async () => {
     tailwind: true,
     storybook: false,
     pwa: false,
-    proto: false,
+    schema: false,
     ...(name ? { name, createFolder: true } : {}),
   };
 

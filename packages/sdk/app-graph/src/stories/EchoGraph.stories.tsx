@@ -9,7 +9,7 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
@@ -57,6 +57,7 @@ const spaceBuilderExtension = (graph: Graph) => {
       );
 
       const query = space.db.query();
+      subscriptions.add(query.subscribe());
       subscriptions.add(
         effect(() => {
           query.objects.forEach((object) => {
@@ -95,7 +96,8 @@ const objectBuilderExtension = (graph: Graph) => {
     subscriptions.clear();
     spaces.forEach((space) => {
       const query = space.db.query({ type: 'test' });
-      let previousObjects: E.EchoReactiveObject<any>[] = [];
+      subscriptions.add(query.subscribe());
+      let previousObjects: EchoReactiveObject<any>[] = [];
       subscriptions.add(
         effect(() => {
           const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -181,7 +183,7 @@ const runAction = (action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(E.object({ type: 'test', name: faker.commerce.productName() }));
+      getSpace()?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {

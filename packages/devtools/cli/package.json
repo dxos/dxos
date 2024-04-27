@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@oclif/test": "^2.3.31",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",

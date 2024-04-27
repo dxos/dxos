@@ -58,17 +58,18 @@
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-async": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.7",
+    "vite": "^5.2.9",
     "vite-plugin-turbosnap": "^1.0.2"
   },
   "peerDependencies": {

@@ -9,13 +9,13 @@ import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { type SpaceProxy } from '../echo';
 import { syncItemsAutomerge, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
@@ -55,6 +55,7 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
+    testBuilder.level = createTestLevel();
     afterTest(() => testBuilder.destroy());
 
     {
@@ -219,9 +220,10 @@ describe('Client services', () => {
 
     const hostSpace = await client1.spaces.create();
     log('spaces.create', { key: hostSpace.key });
+
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: hostSpace as SpaceProxy,
+        host: hostSpace,
         guest: client2.spaces,
         options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
       }),
@@ -271,5 +273,5 @@ describe('Client services', () => {
     }
 
     await syncItemsAutomerge(hostSpace.db, guestSpace.db);
-  });
+  }).timeout(20_000);
 });

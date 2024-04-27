@@ -10,7 +10,7 @@ import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credenti
 import { failUndefined } from '@dxos/debug';
 import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
+import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -32,13 +32,14 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
-import { createDocumentsIterator, createSelectedDocumentsIterator } from '../indexing';
+import { createSelectedDocumentsIterator } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
   SpaceInvitationProtocol,
   type InvitationProtocol,
 } from '../invitations';
+import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
@@ -62,6 +63,7 @@ export class ServiceContext extends Resource {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
+  public readonly invitationsManager: InvitationsManager;
   public readonly automergeHost: AutomergeHost;
   public readonly indexMetadata: IndexMetadataStore;
   public readonly indexer: Indexer;
@@ -124,17 +126,23 @@ export class ServiceContext extends Resource {
 
     this.automergeHost = new AutomergeHost({
       directory: storage.createDirectory('automerge'),
-      metadata: this.indexMetadata,
+      db: level.sublevel('automerge'),
+      storageCallbacks: createStorageCallbacks({ host: () => this.automergeHost, metadata: this.indexMetadata }),
     });
 
     this.indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
+      db: this.level,
+      indexStore: new IndexStore({ db: level.sublevel('index-storage') }),
       metadataStore: this.indexMetadata,
       loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
-      getAllDocuments: createDocumentsIterator(this.automergeHost),
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitationsManager = new InvitationsManager(
+      this.invitations,
+      (invitation) => this.getInvitationHandler(invitation),
+      this.metadataStore,
+    );
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
@@ -158,12 +166,17 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
+    await this.automergeHost.open();
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }
+
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
+
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
@@ -243,6 +256,7 @@ export class ServiceContext extends Resource {
       signingContext,
       this.feedStore,
       this.automergeHost,
+      this.invitationsManager,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

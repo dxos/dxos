@@ -5,10 +5,10 @@
 import '@dxosTheme';
 
 import * as Arbitrary from '@effect/schema/Arbitrary';
-import * as S from '@effect/schema/Schema';
 import * as fc from 'fast-check';
-import React, { useRef } from 'react';
+import React from 'react';
 
+import { S } from '@dxos/echo-schema';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -51,22 +51,21 @@ const items = fc.sample(exampleSchemaArbitrary, 10);
 
 export const SchemaTable = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
-
     return (
-      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
-        <Table<ExampleSchema>
-          role='grid'
-          rowsSelectable='multi'
-          keyAccessor={(row) => JSON.stringify(row)}
-          columns={columns}
-          data={items}
-          fullWidth
-          stickyHeader
-          border
-          getScrollElement={() => containerRef.current}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='inset-0 fixed'>
+          <Table.Table<ExampleSchema>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => JSON.stringify(row)}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+          />
+        </Table.Viewport>
+      </Table.Root>
     );
   },
 };

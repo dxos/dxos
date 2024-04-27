@@ -6,8 +6,8 @@ import { X } from '@phosphor-icons/react';
 import React, { type KeyboardEventHandler, useState, type ChangeEventHandler } from 'react';
 
 import type { PublicKey } from '@dxos/client';
-import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { Filter } from '@dxos/client/echo';
+import { create } from '@dxos/echo-schema';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Button, Input } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
@@ -25,7 +25,7 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 
   const handleKeyDown: KeyboardEventHandler<HTMLInputElement> = (event) => {
     if (event.key === 'Enter' && space && value) {
-      const task = E.object(TaskType, { title: value, completed: false });
+      const task = create(TaskType, { title: value, completed: false });
       setValue('');
       space.db.add(task);
     }

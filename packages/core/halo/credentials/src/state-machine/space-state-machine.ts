@@ -8,9 +8,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TypedMessage } from '@dxos/protocols';
 import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type FeedInfo, FeedStateMachine } from './feed-state-machine';
+import { InvitationStateMachine } from './invitation-state-machine';
 import { MemberStateMachine, type MemberInfo } from './member-state-machine';
 import { getCredentialAssertion, verifyCredential } from '../credentials';
 import { type CredentialProcessor } from '../processor/credential-processor';
@@ -21,6 +23,7 @@ export interface SpaceState {
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
   readonly creator: MemberInfo | undefined;
+  readonly invitations: ReadonlyMap<PublicKey, DelegateSpaceInvitation>;
 
   addCredentialProcessor(processor: CredentialProcessor): Promise<void>;
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
@@ -39,7 +42,7 @@ export type CredentialEntry = {
   revoked: boolean;
 };
 
-const REVOKABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
+const REVOCABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
 
 /**
  * Validates and processes credentials for a single space.
@@ -49,6 +52,7 @@ const REVOKABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
 export class SpaceStateMachine implements SpaceState {
   private readonly _members = new MemberStateMachine(this._spaceKey);
   private readonly _feeds = new FeedStateMachine(this._spaceKey);
+  private readonly _invitations = new InvitationStateMachine();
   private readonly _credentials: CredentialEntry[] = [];
   private readonly _credentialsById = new ComplexMap<PublicKey, CredentialEntry>(PublicKey.hash);
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
@@ -59,6 +63,8 @@ export class SpaceStateMachine implements SpaceState {
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
   readonly onMemberAdmitted = this._members.onMemberAdmitted;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
+  readonly onDelegatedInvitation = this._invitations.onDelegatedInvitation;
+  readonly onDelegatedInvitationRemoved = this._invitations.onDelegatedInvitationRemoved;
 
   constructor(private readonly _spaceKey: PublicKey) {}
 
@@ -84,6 +90,10 @@ export class SpaceStateMachine implements SpaceState {
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
+  }
+
+  get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
+    return this._invitations.invitations;
   }
 
   async addCredentialProcessor(processor: CredentialProcessor) {
@@ -159,7 +169,6 @@ export class SpaceStateMachine implements SpaceState {
 
         toBeRevoked.revoked = true;
         await this._members.onRevoked(toBeRevoked.credential, credential);
-
         break;
       }
       case 'dxos.halo.credentials.SpaceGenesis': {
@@ -195,6 +204,7 @@ export class SpaceStateMachine implements SpaceState {
         }
 
         await this._members.process(credential);
+        await this._invitations.process(credential);
         break;
       }
 
@@ -220,6 +230,15 @@ export class SpaceStateMachine implements SpaceState {
 
         // TODO(dmaretskyi): Check that the feed owner is a member of the space.
         await this._feeds.process(credential, sourceFeed);
+        break;
+      }
+      case 'dxos.halo.invitations.CancelDelegatedInvitation':
+      case 'dxos.halo.invitations.DelegateSpaceInvitation': {
+        if (!this._canInviteNewMembers(credential.issuer)) {
+          log.warn(`Invalid invitation, space member is not authorized to invite new members: ${credential.issuer}`);
+          return false;
+        }
+        await this._invitations.process(credential);
         break;
       }
     }
@@ -257,7 +276,7 @@ export class SpaceStateMachine implements SpaceState {
 
   private _credentialCanBeRevoked(entry: CredentialEntry) {
     // TODO(dmaretskyi): Prohibit from removing space's creator member credential.
-    return REVOKABLE_CREDENTIALS.includes(entry.credential.subject.assertion['@type']);
+    return REVOCABLE_CREDENTIALS.includes(entry.credential.subject.assertion['@type']);
   }
 }
 

@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as S from '@effect/schema/Schema';
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 
-import { type OpaqueEchoObject } from '@dxos/echo-schema';
+import type { S, EchoReactiveObject } from '@dxos/echo-schema';
 import { Table, schemaToColumnDefs } from '@dxos/react-ui-table';
 
 export type ItemTableProps<T> = {
@@ -13,16 +12,17 @@ export type ItemTableProps<T> = {
   objects?: T[];
 };
 
-export const ItemTable = <T extends OpaqueEchoObject>({ schema, objects = [] }: ItemTableProps<T>) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
+export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects = [] }: ItemTableProps<T>) => {
   const columns = useMemo(() => {
     // TODO(burdon): [API]: id is added to schema?
     const [id, ...rest] = schemaToColumnDefs(schema);
     return [
       {
         ...id,
+        // TODO(burdon): Sizes are not respected.
         size: 60,
         minSize: 60,
+        maxSize: 60,
         cell: (cell) => <span className='px-2 font-mono'>{cell.getValue().slice(0, 8)}</span>,
       },
       ...rest,
@@ -30,18 +30,19 @@ export const ItemTable = <T extends OpaqueEchoObject>({ schema, objects = [] }: 
   }, [schema]);
 
   return (
-    <div ref={containerRef} className='overflow-auto'>
-      <Table<T>
-        role='grid'
-        rowsSelectable='multi'
-        keyAccessor={(row) => row.id}
-        columns={columns}
-        data={objects}
-        fullWidth
-        stickyHeader
-        border
-        getScrollElement={() => containerRef.current}
-      />
-    </div>
+    <Table.Root>
+      <Table.Viewport classNames='overflow-auto'>
+        <Table.Table<T>
+          role='grid'
+          rowsSelectable='multi'
+          keyAccessor={(row) => row.id}
+          columns={columns}
+          data={objects}
+          fullWidth
+          stickyHeader
+          border
+        />
+      </Table.Viewport>
+    </Table.Root>
   );
 };

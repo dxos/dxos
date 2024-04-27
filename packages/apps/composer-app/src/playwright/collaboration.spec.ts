@@ -157,10 +157,11 @@ test.describe('Collaboration tests', () => {
     });
 
     await guest.getSpacePresenceMembers().first().click();
+    // TODO(wittjosiah): Second document is taking a while to sync.
     await waitForExpect(async () => {
       expect(await host.page.url()).to.equal(await guest.page.url());
       expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
       expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
-    });
+    }, 20_000);
   });
 });

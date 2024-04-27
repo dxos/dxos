@@ -73,7 +73,7 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       open: space.isOpen,
       name: space.properties.name,
       members: space.members.get().length,
-      objects: space.db.query().objects.length,
+      objects: space.db.automerge.getAllObjectIds().length,
       startup,
       epoch,
       // appliedEpoch,

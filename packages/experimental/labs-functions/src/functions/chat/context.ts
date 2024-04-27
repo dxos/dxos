@@ -4,7 +4,8 @@
 
 import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema, getTextInRange } from '@dxos/echo-schema';
+import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
+import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 
 export type RequestContext = {
   object?: EchoReactiveObject<any>;
@@ -12,18 +13,21 @@ export type RequestContext = {
   schema?: Map<string, DynamicEchoSchema>;
 };
 
-export const createContext = (space: Space, message: MessageType, thread: ThreadType): RequestContext => {
+export const createContext = async (
+  space: Space,
+  message: MessageType,
+  thread: ThreadType,
+): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
   if (message.context?.object) {
-    const { objects } = space.db.query({ id: message.context?.object });
-    object = objects[0];
+    object = await space.db.automerge.loadObjectById(message.context?.object);
   } else if (thread.context?.object) {
-    const { objects } = space.db.query({ id: thread.context?.object });
-    object = objects[0];
+    object = await space.db.automerge.loadObjectById(thread.context?.object);
   }
 
   let text: string | undefined;
   if (object instanceof DocumentType) {
+    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((c) => c.thread));
     const comment = object.comments?.find((comment) => comment.thread === thread);
     if (comment) {
       text = getReferencedText(object, comment);
@@ -32,7 +36,7 @@ export const createContext = (space: Space, message: MessageType, thread: Thread
 
   // Create schema registry.
   // TODO(burdon): Filter?
-  const schemaList = space.db.schemaRegistry.getAll();
+  const schemaList = await space.db.schemaRegistry.getAll();
   const schema = schemaList.reduce<Map<string, DynamicEchoSchema>>((map, schema) => {
     const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
@@ -54,6 +58,6 @@ const getReferencedText = (document: DocumentType, comment: DocumentCommentType)
     return '';
   }
 
-  const [begin, end] = comment.cursor.split(':');
-  return document.content ? getTextInRange(document.content, begin, end) : '';
+  const [start, end] = comment.cursor.split(':');
+  return document.content ? getTextInRange(createDocAccessor(document.content, ['content']), start, end) : '';
 };

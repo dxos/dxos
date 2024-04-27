@@ -16,10 +16,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "0.64.7",
     "@sentry/react": "^7.100.1",
     "classnames": "^2.3.2",
-    "effect": "2.4.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
@@ -33,7 +31,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.7",
+    "vite": "^5.2.9",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   }

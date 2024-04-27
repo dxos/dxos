@@ -82,7 +82,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
     } else {
       start(
         async () => {
-          generator.updateDocument();
+          await generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -100,8 +100,9 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any
 
   const handleCreateInvitation = () => {
     const invitation = space.share({
-      type: Invitation.Type.MULTIUSE,
+      type: Invitation.Type.INTERACTIVE,
       authMethod: Invitation.AuthMethod.NONE,
+      multiUse: true,
     });
 
     // TODO(burdon): Refactor.

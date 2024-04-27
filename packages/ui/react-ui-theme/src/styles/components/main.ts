@@ -19,14 +19,16 @@ const sidebarSlots = {
   start: {
     width: 'sm:data-[side=is]:is-[270px]',
     sidebar: 'sm:data-[side=is]:-inline-start-[270px]',
-    content: 'lg:data-[sidebar-inline-start-state=open]:pis-[270px]',
+    content:
+      'lg:data-[sidebar-inline-start-state=open]:pis-[270px] lg:data-[sidebar-inline-start-state=open]:scroll-ps-[270px]',
     notch: 'max-is-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
     width: 'sm:data-[side=ie]:is-[360px]',
     sidebar: 'sm:data-[side=ie]:-inline-end-[360px]',
-    content: 'lg:data-[sidebar-inline-end-state=open]:pie-[360px]',
+    content:
+      'lg:data-[sidebar-inline-end-state=open]:pie-[360px] lg:data-[sidebar-inline-end-state=open]:scroll-pe-[360px]',
   },
 };
 
@@ -45,9 +47,9 @@ export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
   mx(
-    "transition-[padding-inline-start,padding-'inline-end'] duration-200 ease-in-out",
-    `pis-0 ${sidebarSlots.start.content}`,
-    `pie-0 ${sidebarSlots.end.content}`,
+    'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out',
+    `pis-0 scroll-ps-0 ${sidebarSlots.start.content}`,
+    `pie-0 scroll-pe-0 ${sidebarSlots.end.content}`,
     bounce && bounceLayout,
     ...etc,
   );

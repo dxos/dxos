@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
@@ -62,7 +63,8 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
               );
 
               // Add all outlines to the graph.
-              const query = space.db.query(E.Filter.schema(TreeType));
+              const query = space.db.query(Filter.schema(TreeType));
+              subscriptions.add(query.subscribe());
               let previousObjects: TreeType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -143,10 +145,10 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           switch (intent.action) {
             case OutlinerAction.CREATE: {
               return {
-                data: E.object(TreeType, {
-                  root: E.object(TreeItemType, {
-                    text: E.object(TextV0Type, { content: '' }),
-                    items: [E.object(TreeItemType, { text: E.object(TextV0Type, { content: '' }), items: [] })],
+                data: create(TreeType, {
+                  root: create(TreeItemType, {
+                    text: create(TextV0Type, { content: '' }),
+                    items: [create(TreeItemType, { text: create(TextV0Type, { content: '' }), items: [] })],
                   }),
                 }),
               };

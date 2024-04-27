@@ -5,8 +5,8 @@
 import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import * as E from '@dxos/echo-schema';
-import { type Space, useQuery, SpaceState } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
+import { type Space, useQuery, SpaceState, Filter } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { Header } from './Header';
@@ -22,11 +22,11 @@ export const Todos = () => {
   const { state } = useParams();
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
-  const [list] = useQuery<TodoListType>(space, E.Filter.schema(TodoListType));
+  const [list] = useQuery<TodoListType>(space, Filter.schema(TodoListType));
 
   useEffect(() => {
     if (space && space.state.get() === SpaceState.READY && !list) {
-      void space.db.add(E.object(TodoListType, { todos: [] }));
+      void space.db.add(create(TodoListType, { todos: [] }));
     }
   }, [space, list]);
 
@@ -42,7 +42,7 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title) {
-      list.todos.push(E.object(TodoType, { title, completed: false }));
+      list.todos.push(create(TodoType, { title, completed: false }));
       inputRef.current!.value = '';
     }
   };

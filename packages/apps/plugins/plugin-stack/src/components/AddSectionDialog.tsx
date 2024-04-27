@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 
 import { FolderType, type StackType, SectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
@@ -47,11 +47,7 @@ export const AddSectionDialog = ({ path, position, stack }: AddSectionDialogProp
             ? stack.sections.length
             : stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
-      stack.sections.splice(
-        index + (position === 'after' ? 1 : 0),
-        0,
-        E.object(SectionType, { object: sectionObject }),
-      );
+      stack.sections.splice(index + (position === 'after' ? 1 : 0), 0, create(SectionType, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
       setPending(false);

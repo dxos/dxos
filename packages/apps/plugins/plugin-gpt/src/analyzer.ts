@@ -2,14 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as AST from '@effect/schema/AST';
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
 import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, getTypename } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { AST, getTypename, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -29,8 +27,8 @@ export class GptAnalyzer {
   }
 
   async exec(space: Space, document: DocumentType) {
-    const schemas = space.db.schemaRegistry.getAll();
-    const text = getTextContent(document.content);
+    const schemas = await space.db.schemaRegistry.getAll();
+    const text = document.content?.content;
     log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
       return;
@@ -84,11 +82,11 @@ export class GptAnalyzer {
             invariant(id);
             const value = obj[id];
             if (value != null && AST.isStringKeyword(type)) {
-              data[String(id)] = E.object(TextV0Type, { content: value });
+              data[String(id)] = create(TextV0Type, { content: value });
             }
           }
 
-          const object = E.object(schema, data);
+          const object = create(schema, data);
           space.db.add(object);
           log.info('created', { json: JSON.stringify(object, null, 2) });
         }

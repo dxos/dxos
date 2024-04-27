@@ -11,7 +11,7 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { ChainInput, ChainPromptType, ChainType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
@@ -64,6 +64,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
 
               // Add all chains to the graph.
               const query = space.db.query(Filter.schema(ChainType));
+              subscriptions.add(query.subscribe());
               let previousObjects: ChainType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -127,7 +128,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                data: E.object(ChainType, { prompts: [] }),
+                data: create(ChainType, { prompts: [] }),
               };
             }
           }

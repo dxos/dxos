@@ -5,8 +5,8 @@
 import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { TestSchemaType } from '@dxos/echo-generator';
-import { type EchoReactiveObject, type ForeignKey } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { type EchoReactiveObject, type ForeignKey, getMeta } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
   registerTypes(space);
 
   for (const project of objects) {
-    if (!project.repo || !project.repo.includes('github.com') || E.getMeta(project).keys.length !== 0) {
+    if (!project.repo || !project.repo.includes('github.com') || getMeta(project).keys.length !== 0) {
       return;
     }
 
@@ -39,21 +39,23 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = space.db.query((object: EchoReactiveObject<any>) =>
-          E.getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+        project.org = (
+          await space.db.query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
         ).objects[0];
       }
 
       // Create organization if failed to query.
       if (!project.org && repoData.organization) {
-        const orgSchema = space.db.schemaRegistry.getByTypename(TestSchemaType.organization);
+        const orgSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
-        project.org = E.object(orgSchema, { name: repoData.organization?.login });
-        E.getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
+        project.org = create(orgSchema, { name: repoData.organization?.login });
+        getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
 
-    const contactSchema = space.db.schemaRegistry.getByTypename(TestSchemaType.contact);
+    const contactSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.contact);
     invariant(contactSchema);
 
     //
@@ -77,24 +79,26 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
         }
 
         const foreignKey: ForeignKey = { source: 'github.com', id: String(user.id) };
-        const { objects: existing } = space.db.query((object: EchoReactiveObject<any>) =>
-          E.getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-        );
+        const { objects: existing } = await space.db
+          .query((object: EchoReactiveObject<any>) =>
+            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
+          )
+          .run();
         if (existing.length !== 0) {
           return;
         }
 
-        const contact = E.object(contactSchema, {
+        const contact = create(contactSchema, {
           name: user.name,
           email: user.email,
           opg: project.org,
         });
-        E.getMeta(contact).keys.push(foreignKey);
+        getMeta(contact).keys.push(foreignKey);
         space.db.add(contact);
       }),
     );
 
-    E.getMeta(project).keys.push({ source: 'github.com' });
+    getMeta(project).keys.push({ source: 'github.com' });
 
     // TODO(burdon): Make automatic.
     await space.db.flush();

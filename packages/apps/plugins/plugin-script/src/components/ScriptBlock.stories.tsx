@@ -4,13 +4,12 @@
 
 import '@dxosTheme';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { createEchoReactiveObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
-import { useDocAccessor } from '@dxos/react-ui-editor';
 
 // @ts-ignore
 import mainUrl from './FrameContainer/frame?url';
@@ -31,18 +30,19 @@ const code = [
 const Story = () => {
   const client = useClient();
   // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
-  const { accessor } = useDocAccessor(createEchoReactiveObject({ content: code }));
+  const object = useMemo(() => createEchoObject({ content: code }), [code]);
+  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
+    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
   }, []);
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />
+      {accessor && <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />}
     </div>
   );
 };

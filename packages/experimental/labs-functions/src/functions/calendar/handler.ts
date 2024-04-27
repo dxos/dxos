@@ -8,8 +8,9 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { EventType, type RecipientType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { type EchoReactiveObject, Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -59,7 +60,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   const sourceId = 'google.com/calendar';
   const syncer = new ObjectSyncer<EchoReactiveObject<EventType>>(Filter.schema(EventType), (object) => {
-    for (const { id, source } of E.getMeta(object).keys ?? []) {
+    for (const { id, source } of getMeta(object).keys ?? []) {
       if (source === sourceId) {
         return id;
       }
@@ -81,7 +82,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       log.info('event data', { summary, attendees });
       // TODO(burdon): Upsert.
       if (!existing) {
-        const newEvent = E.object(EventType, {
+        const newEvent = create(EventType, {
           title: summary || '',
           owner: { name: creator?.displayName, email: creator?.email },
           startDate: start?.date?.toString() ?? '',
@@ -89,7 +90,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
           attendees:
             attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ?? [],
         });
-        E.getMeta(newEvent).keys = [{ source: sourceId, id }];
+        getMeta(newEvent).keys = [{ source: sourceId, id }];
         space.db.add(newEvent);
       }
     }

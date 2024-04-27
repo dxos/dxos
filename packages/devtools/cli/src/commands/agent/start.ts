@@ -16,6 +16,7 @@ import {
   FunctionsPlugin,
   QueryPlugin,
   parseAddress,
+  type AgentHttpParams,
 } from '@dxos/agent';
 import { asyncTimeout, runInContext, scheduleTaskInterval, Trigger } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
@@ -43,6 +44,10 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Expose web socket port.',
       helpValue: 'port',
       aliases: ['web-socket'],
+    }),
+    http: Flags.integer({
+      description: 'Expose http port.',
+      helpValue: 'port',
     }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
@@ -76,13 +81,29 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
+    let httpParams: AgentHttpParams | undefined;
+    if (this.flags.http) {
+      if (!process.env.DX_AGENT_HTTP_AUTHENTICATION_TOKEN || !process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN) {
+        this.log(
+          'DX_AGENT_HTTP_AUTHENTICATION_TOKEN or DX_AGENT_WS_AUTHENTICATION_TOKEN not set, http server will not be started.',
+        );
+      } else {
+        httpParams = {
+          port: this.flags.http,
+          authenticationToken: process.env.DX_AGENT_HTTP_AUTHENTICATION_TOKEN,
+          wsAuthenticationToken: process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN,
+        };
+      }
+    }
+
     this._agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,
       protocol: {
-        socket,
+        socketPath: socket,
         webSocket: this.flags.ws,
+        ...(httpParams ? { http: httpParams } : {}),
       },
       plugins: [
         new ChainPlugin(),

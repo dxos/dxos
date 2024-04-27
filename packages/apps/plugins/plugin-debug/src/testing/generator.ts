@@ -5,11 +5,10 @@
 import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, getRawDoc } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 
 const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
@@ -51,12 +50,12 @@ export class Generator {
   createTables() {
     return tableDefs.map(({ type, title, props }) => {
       const schema = this._generator.getSchema(type);
-      return this._space.db.add(E.object(TableType, { title, schema, props: props ?? [] }));
+      return this._space.db.add(create(TableType, { title, schema, props: props ?? [] }));
     });
   }
 
   createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
-    this._generator.createObjects(count);
+    void this._generator.createObjects(count).catch();
   }
 
   createDocument() {
@@ -65,16 +64,16 @@ export class Generator {
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    return this._space.db.add(E.object(DocumentType, { title, content: E.object(TextV0Type, { content }) }));
+    return this._space.db.add(create(DocumentType, { title, content: create(TextV0Type, { content }) }));
   }
 
-  updateDocument() {
-    const { objects } = this._space.db.query(Filter.schema(DocumentType));
+  async updateDocument() {
+    const { objects } = await this._space.db.query(Filter.schema(DocumentType)).run();
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
       const text = object.content?.content ?? '';
       const idx = text.lastIndexOf(' ', faker.number.int({ min: 0, max: text.length }));
-      const docAccessor = getRawDoc(object, ['content']);
+      const docAccessor = createDocAccessor(object, ['content']);
       docAccessor.handle.change((doc) => {
         const insertText = idx >= 0 ? ' ' + faker.lorem.word() : faker.lorem.sentence();
         A.splice(doc, docAccessor.path.slice(), Math.max(idx, 0), 0, insertText.toString());

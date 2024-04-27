@@ -5,7 +5,7 @@ import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { ArrowCounterClockwise, CaretDown, ImageSquare } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import {
   Button,
@@ -23,7 +23,7 @@ export type EmojiPickerProps = {
   disabled?: boolean;
   defaultEmoji?: string;
   emoji?: string;
-  onChangeEmoji?: Dispatch<SetStateAction<string>>;
+  onChangeEmoji?: (nextEmoji: string) => void;
   onClickClear?: ButtonProps['onClick'];
 };
 

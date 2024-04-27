@@ -8,9 +8,15 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DataServiceImpl, type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-pipeline';
-import * as E from '@dxos/echo-schema';
-import { IndexServiceImpl } from '@dxos/indexing';
+import {
+  DataServiceImpl,
+  type ObjectStructure,
+  encodeReference,
+  type SpaceDoc,
+  type LevelDB,
+} from '@dxos/echo-pipeline';
+import { getTypeReference } from '@dxos/echo-schema';
+import { QueryServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -50,6 +56,7 @@ export type ClientServicesHostParams = {
   signalManager?: SignalManager;
   connectionLog?: boolean;
   storage?: Storage;
+  level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
   runtimeParams?: ServiceContextRuntimeParams;
@@ -76,6 +83,7 @@ export class ClientServicesHost {
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
+  private _queryService!: QueryServiceImpl;
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -101,12 +109,14 @@ export class ClientServicesHost {
     transportFactory,
     signalManager,
     storage,
+    level,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
     runtimeParams,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
+    this._level = level;
     this._callbacks = callbacks;
     this._runtimeParams = runtimeParams;
 
@@ -239,6 +249,8 @@ export class ClientServicesHost {
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
+    await this._level.open();
+
     await this._resourceLock?.acquire();
 
     await this._loggingService.open();
@@ -251,6 +263,12 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
+    this._queryService = new QueryServiceImpl({
+      indexer: this._serviceContext.indexer,
+      automergeHost: this._serviceContext.automergeHost,
+    });
+    await this._queryService.open(ctx);
+
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
@@ -261,11 +279,7 @@ export class ClientServicesHost {
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
-      InvitationsService: new InvitationsServiceImpl(
-        this._serviceContext.invitations,
-        (invitation) => this._serviceContext.getInvitationHandler(invitation),
-        this._serviceContext.metadataStore,
-      ),
+      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
@@ -280,10 +294,7 @@ export class ClientServicesHost {
 
       DataService: new DataServiceImpl(this._serviceContext.automergeHost),
 
-      IndexService: new IndexServiceImpl({
-        indexer: this._serviceContext.indexer,
-        automergeHost: this._serviceContext.automergeHost,
-      }),
+      QueryService: this._queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -299,11 +310,6 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
-    // TODO(nf): move to InvitationManager in ServiceContext?
-    invariant(this.serviceRegistry.services.InvitationsService);
-    const loadedInvitations = await this.serviceRegistry.services.InvitationsService.loadPersistentInvitations();
-
-    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -338,6 +344,7 @@ export class ClientServicesHost {
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
+    await this._queryService.close();
     await this._serviceContext.close();
     await this._level?.close();
     this._open = false;
@@ -372,7 +379,7 @@ export class ClientServicesHost {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(E.getTypeReference(Properties)!),
+        type: encodeReference(getTypeReference(Properties)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),

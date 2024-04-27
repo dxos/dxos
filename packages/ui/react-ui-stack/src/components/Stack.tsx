@@ -51,7 +51,6 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
 export const Stack = ({
   id,
   type = DEFAULT_TYPE,
-  classNames,
   SectionContent,
   items = [],
   separation = true,
@@ -76,8 +75,7 @@ export const Stack = ({
     onChange: onChangeCollapsedSections,
   });
 
-  // TODO(burdon): Why callback not useMemo?
-  const getOverlayStyle = useCallback(() => ({ width: Math.min(width, 59 * 16) }), [width]);
+  const getOverlayStyle = useCallback(() => ({ width }), [width]);
 
   const getOverlayProps = useCallback(
     () => ({ itemContext: { SectionContent, collapsedSections } }),
@@ -97,44 +95,43 @@ export const Stack = ({
   );
 
   return (
-    // TODO(thure): Can this ref be passed into `SectionTile`? This can’t use `display: contents` because it breaks `useResizeDetector`.
-    <div role='none' ref={containerRef} {...props} className={mx(classNames)}>
-      <Mosaic.Container
-        {...{
-          id,
-          type,
-          Component: SectionTile,
-          getOverlayStyle,
-          getOverlayProps,
-          onOver,
-          onDrop,
-          modifier: stackModifier,
+    <Mosaic.Container
+      {...{
+        id,
+        type,
+        Component: SectionTile,
+        getOverlayStyle,
+        getOverlayProps,
+        onOver,
+        onDrop,
+        modifier: stackModifier,
+      }}
+    >
+      <Mosaic.DroppableTile
+        path={id}
+        type={type}
+        item={{ id, items: itemsWithPreview }}
+        itemContext={{
+          separation,
+          transform,
+          onDeleteSection,
+          onNavigateToSection,
+          onAddSection,
+          SectionContent,
+          collapsedSections,
+          onCollapseSection: setCollapsedSections,
         }}
-      >
-        <Mosaic.DroppableTile
-          path={id}
-          type={type}
-          item={{ id, items: itemsWithPreview }}
-          itemContext={{
-            separation,
-            transform,
-            onDeleteSection,
-            onNavigateToSection,
-            onAddSection,
-            SectionContent,
-            collapsedSections,
-            onCollapseSection: setCollapsedSections,
-          }}
-          isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
-          Component={StackTile}
-        />
-      </Mosaic.Container>
-    </div>
+        isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
+        Component={StackTile}
+        {...props}
+        ref={containerRef}
+      />
+    </Mosaic.Container>
   );
 };
 
 const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
-  ({ classNames, path, isOver, item: { items }, itemContext }, forwardedRef) => {
+  ({ classNames, path, isOver, item: { items }, itemContext, type: _type, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { Component, type } = useContainer();
     const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
@@ -154,6 +151,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
           classNames,
         )}
         {...(!activeItem && domAttributes)}
+        {...props}
       >
         {items.length > 0 ? (
           <Mosaic.SortableContext items={items} direction='vertical'>

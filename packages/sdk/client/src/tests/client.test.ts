@@ -9,8 +9,8 @@ import waitForExpect from 'wait-for-expect';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Config } from '@dxos/config';
-import * as E from '@dxos/echo-schema';
-import { Filter } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { describe, test, afterTest } from '@dxos/test';
 import { isNode } from '@dxos/util';
 
@@ -40,6 +40,7 @@ describe('Client', () => {
     afterTest(() => testBuilder.destroy());
 
     const client = new Client({ services: testBuilder.createLocal() });
+    afterTest(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
@@ -136,12 +137,14 @@ describe('Client', () => {
     const client1 = new Client({ services: testBuilder.createLocal() });
     const client2 = new Client({ services: testBuilder.createLocal() });
     await client1.initialize();
+    afterTest(() => client1.destroy());
     await client2.initialize();
+    afterTest(() => client2.destroy());
 
     await client1.halo.createIdentity();
     await client2.halo.createIdentity();
     for (const client of [client1, client2]) {
-      client.addSchema(ThreadType, MessageType);
+      client.addSchema(ThreadType, MessageType, TextV0Type);
     }
 
     const threadQueried = new Trigger<ThreadType>();
@@ -152,25 +155,28 @@ describe('Client', () => {
     const spaceKey = space1.key;
 
     const query = space1.db.query(Filter.schema(ThreadType));
-    query.subscribe(({ objects }) => {
-      if (objects.length === 1) {
-        threadQueried.wake(objects[0]);
-      }
-    }, true);
+    query.subscribe(
+      ({ objects }) => {
+        if (objects.length === 1) {
+          threadQueried.wake(objects[0]);
+        }
+      },
+      { fire: true },
+    );
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     // Create Thread on second client.
     const space2 = client2.spaces.get(spaceKey)!;
     await space2.waitUntilReady();
-    const thread2 = space2.db.add(E.object(ThreadType, { messages: [] }));
+    const thread2 = space2.db.add(create(ThreadType, { messages: [] }));
     await space2.db.flush();
 
     const thread1 = await threadQueried.wait({ timeout: 2_000 });
 
     const text = 'Hello world';
     const message = space2.db.add(
-      E.object(MessageType, {
-        blocks: [{ timestamp: new Date().toISOString(), content: E.object(TextV0Type, { content: text }) }],
+      create(MessageType, {
+        blocks: [{ timestamp: new Date().toISOString(), content: create(TextV0Type, { content: text }) }],
       }),
     );
     thread2.messages.push(message);
@@ -180,5 +186,18 @@ describe('Client', () => {
       expect(thread1.messages.length).to.eq(1);
       expect(thread1.messages[0]!.blocks[0].content?.content).to.eq(text);
     }, 1000);
+  });
+
+  test('reset & create space', async () => {
+    const testBuilder = new TestBuilder();
+
+    const client = new Client({ services: testBuilder.createLocal() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.reset();
+
+    await client.halo.createIdentity();
+    await client.spaces.create();
   });
 });

@@ -13,21 +13,12 @@ import { type Message as SignalMessage, SignalState, type SwarmEvent } from '@dx
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { SignalRPCClient } from './signal-rpc-client';
-import { type Message, type SignalMethods } from '../signal-methods';
+import { type Message, type SignalClientMethods, type SignalStatus } from '../signal-methods';
 
 const DEFAULT_RECONNECT_TIMEOUT = 100;
-const MAX_RECONNECT_TIMEOUT = 5000;
-const ERROR_RECONCILE_DELAY = 1000;
+const MAX_RECONNECT_TIMEOUT = 5_000;
+const ERROR_RECONCILE_DELAY = 1_000;
 const RECONCILE_INTERVAL = 5_000;
-
-export type SignalStatus = {
-  host: string;
-  state: SignalState;
-  error?: string;
-  reconnectIn: number;
-  connectionStarted: Date;
-  lastStateChange: Date;
-};
 
 export type CommandTrace = {
   messageId: string;
@@ -41,9 +32,11 @@ export type CommandTrace = {
 };
 
 /**
+ * KUBE-specific signaling client.
  * Establishes a websocket connection to signal server and provides RPC methods.
  */
-export class SignalClient implements SignalMethods {
+// TODO(burdon): Rename impl.
+export class SignalClient implements SignalClientMethods {
   private _state = SignalState.CLOSED;
 
   private _lastError?: Error;
@@ -119,7 +112,6 @@ export class SignalClient implements SignalMethods {
 
   /**
    * @param _host Signal server websocket URL.
-   * @param _onMessage
    */
   constructor(
     private readonly _host: string,
@@ -132,7 +124,7 @@ export class SignalClient implements SignalMethods {
     }
   }
 
-  open() {
+  async open() {
     log.trace('dxos.mesh.signal-client.open', trace.begin({ id: this._instanceId }));
 
     if ([SignalState.CONNECTED, SignalState.CONNECTING].includes(this._state)) {
@@ -213,7 +205,6 @@ export class SignalClient implements SignalMethods {
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): Promise<void> {
     this._performance.leaveCounter++;
     log('leaving', { topic, peerId });
-
     void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });
@@ -380,7 +371,7 @@ export class SignalClient implements SignalMethods {
 
       const swarmStream = await asyncTimeout(
         cancelWithContext(this._connectionCtx!, client.join({ topic, peerId })),
-        5000,
+        5_000,
       );
       // Subscribing to swarm events.
       // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
@@ -419,7 +410,7 @@ export class SignalClient implements SignalMethods {
 
       const messageStream = await asyncTimeout(
         cancelWithContext(this._connectionCtx!, client.receiveMessages(peerId)),
-        5000,
+        5_000,
       );
       messageStream.subscribe(async (message: SignalMessage) => {
         this._performance.receivedMessages++;

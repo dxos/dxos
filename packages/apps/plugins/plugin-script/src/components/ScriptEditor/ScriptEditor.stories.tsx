@@ -15,10 +15,9 @@
 
 import '@dxosTheme';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { createEchoReactiveObject } from '@dxos/echo-schema';
-import { useDocAccessor } from '@dxos/react-ui-editor';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
 
@@ -43,11 +42,12 @@ const examples: string[] = [
 
 const Story = () => {
   // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
-  const { accessor } = useDocAccessor(createEchoReactiveObject({ content: examples[1] }));
+  const object = useMemo(() => createEchoObject({ content: examples[1] }), []);
+  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   return (
     <div className='flex fixed inset-0 bg-neutral-50'>
       <div className='flex w-[700px] mx-auto'>
-        <ScriptEditor source={accessor} className='bg-white text-lg' />
+        {accessor && <ScriptEditor source={accessor} className='bg-white text-lg' />}
       </div>
     </div>
   );

@@ -197,6 +197,10 @@ const main = async () => {
         ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
         : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
+      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
+        namespace: appKey,
+        observability: () => observability,
+      }),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
@@ -208,10 +212,10 @@ const main = async () => {
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
-          const { object } = await import('@dxos/echo-schema');
+          const { create } = await import('@dxos/echo-schema');
           const { DocumentType, TextV0Type } = await import('@braneframe/types');
-          const content = object(TextV0Type, { content: INITIAL_CONTENT });
-          const document = object(DocumentType, { title: INITIAL_TITLE, content });
+          const content = create(TextV0Type, { content: INITIAL_CONTENT });
+          const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
             action: NavigationAction.ACTIVATE,
@@ -220,10 +224,6 @@ const main = async () => {
         },
       }),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
-      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
-        namespace: appKey,
-        observability: () => observability,
-      }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
         appName: 'Composer',
@@ -232,22 +232,27 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
+      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
       LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ObservabilityMeta.id,
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
-      ObservabilityMeta.id,
       WildcardMeta.id,
     ],
-    // TODO(burdon): Add DebugMeta if dev build.
-    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
+    defaults: [
+      // TODO(burdon): Add DebugMeta if dev build.
+      MarkdownMeta.id,
+      StackMeta.id,
+      ThreadMeta.id,
+      SketchMeta.id,
+    ],
   });
 
   createRoot(document.getElementById('root')!).render(

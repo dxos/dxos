@@ -8,18 +8,18 @@ import waitForExpect from 'wait-for-expect';
 import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
-import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
-import * as E from '@dxos/echo-schema';
-import { type ExpandoType, getAutomergeObjectCore, getTextContent, type ReactiveObject } from '@dxos/echo-schema';
+import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpace, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace } from '../echo';
 import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -83,8 +83,10 @@ describe('Spaces', () => {
   });
 
   test('creates a space re-opens the client', async () => {
-    const testBuilder = new TestBuilder(new Config({ version: 1 }));
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
     testBuilder.storage = createStorage({ type: StorageType.RAM });
+    testBuilder.level = createTestLevel();
 
     const client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
@@ -141,7 +143,7 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2.spaces }),
+      performInvitation({ host: space1, guest: client2.spaces }),
     );
     const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 
@@ -296,7 +298,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
+    space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -343,7 +345,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
+    space2.db.getObjectById(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -352,13 +354,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -386,13 +387,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -458,19 +458,25 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
-    spaceA.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objA)).to.be.true;
-      inc();
-    }, true);
+    spaceA.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objA)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
-    spaceB.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objB)).to.be.true;
-      inc();
-    }, true);
+    spaceB.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objB)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
     await wait();
   });
@@ -505,7 +511,7 @@ describe('Spaces', () => {
       await waitForExpect(async () => {
         expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
-      const guestRoot: ExpandoType = guestSpace.db.getObjectById(hostRoot.id)!;
+      const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
         if (guestRoot.entries.length === 2) {
@@ -521,20 +527,20 @@ describe('Spaces', () => {
   });
 
   const getDocumentText = (space: Space, documentId: string): string => {
-    return getTextContent((space.db.getObjectById(documentId) as any).content)!;
+    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
   };
 
   const registerTypes = (client: Client) => {
-    client.addSchema(DocumentType);
+    client.addSchema(DocumentType, TextV0Type);
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {
-    return E.object(DocumentType, {
-      content: E.object(TextV0Type, { content: '' }),
+    return create(DocumentType, {
+      content: create(TextV0Type, { content: '' }),
     });
   };
 
-  const createEchoObject = <T extends {}>(props: T): ReactiveObject<ExpandoType> => {
-    return E.object(E.ExpandoType, props);
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
+    return create(Expando, props);
   };
 });

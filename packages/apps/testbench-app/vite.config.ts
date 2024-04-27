@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { sentryVitePlugin } from '@sentry/vite-plugin';
+// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react';
 import { join, resolve } from 'node:path';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
@@ -13,6 +13,7 @@ import WasmPlugin from 'vite-plugin-wasm';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { UserConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -29,7 +30,7 @@ export default defineConfig({
       strict: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
-        //   https://vitejs.dev/config/server-options.html#server-fs-allow
+        //  https://vitejs.dev/config/server-options.html#server-fs-allow
         searchForWorkspaceRoot(process.cwd()),
       ],
     },
@@ -59,7 +60,12 @@ export default defineConfig({
     tsconfigPaths({
       projects: ['../../../tsconfig.paths.json'],
     }),
-    ConfigPlugin({ env: ['DX_VAULT'] }),
+    ConfigPlugin({
+      env: [
+        'DX_VAULT',
+        'BASELIME_API_KEY'
+      ]
+    }),
     ThemePlugin({
       root: __dirname,
       content: [
@@ -73,15 +79,15 @@ export default defineConfig({
     ReactPlugin({ jsxRuntime: 'classic' }),
     // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
     // https://www.npmjs.com/package/@sentry/vite-plugin
-    sentryVitePlugin({
-      org: 'dxos',
-      project: 'testbench-app',
-      sourcemaps: {
-        assets: './packages/apps/testbench-app/out/testbench-app/**',
-      },
-      authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      disable: process.env.DX_ENVIRONMENT !== 'production',
-    }),
+    // sentryVitePlugin({
+    //   org: 'dxos',
+    //   project: 'testbench-app',
+    //   sourcemaps: {
+    //     assets: './packages/apps/testbench-app/out/testbench-app/**',
+    //   },
+    //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
+    //   disable: process.env.DX_ENVIRONMENT !== 'production',
+    // }),
     // https://www.bundle-buddy.com/rollup
     {
       name: 'bundle-buddy',
@@ -104,4 +110,4 @@ export default defineConfig({
       },
     },
   ],
-});
+} as UserConfig);

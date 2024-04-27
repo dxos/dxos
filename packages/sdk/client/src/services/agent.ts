@@ -59,6 +59,9 @@ export class AgentClientServiceProvider implements ClientServicesProvider {
       handlers: {},
     });
 
+    this._client.error.on((error) => {
+      this.closed.emit(error);
+    });
     await this._client.open();
   }
 

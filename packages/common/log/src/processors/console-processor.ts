@@ -8,6 +8,7 @@ import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
+import { getRelativeFilename } from './common';
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
 
@@ -22,18 +23,6 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 export const truncate = (text?: string, length = 0, right = false) => {
   const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
-};
-
-const getRelativeFilename = (filename: string) => {
-  // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
-  // Including `packages/` part of the path so that excluded paths (e.g. from dist) are clickable in vscode.
-  const match = filename.match(/.+\/(packages\/.+\/.+)/);
-  if (match) {
-    const [, filePath] = match;
-    return filePath;
-  }
-
-  return filename;
 };
 
 // TODO(burdon): Optional package name.

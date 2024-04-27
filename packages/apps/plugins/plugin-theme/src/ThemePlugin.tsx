@@ -6,7 +6,7 @@ import type { Resource } from 'i18next';
 import React from 'react';
 
 import { filterPlugins, parseTranslationsPlugin, type PluginDefinition } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { type ThemeFunction, type ThemeMode, ThemeProvider, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -20,7 +20,7 @@ export type ThemePluginOptions = {
 
 export const ThemePlugin = ({ appName, tx: propsTx }: ThemePluginOptions = { appName: 'test' }): PluginDefinition => {
   const resources: Resource[] = [compositeEnUs(appName)];
-  const state = E.object<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const state = create<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
   let modeQuery: MediaQueryList | undefined;
 
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
