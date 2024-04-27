@@ -7,11 +7,12 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import { QueryOptions } from '@dxos/client/echo';
 import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { Filter, type EchoReactiveObject } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { Plugin } from '../plugin';
 
@@ -46,7 +47,7 @@ export class QueryPlugin extends Plugin {
     const filter = Filter.fromProto(
       defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
     );
-    const { results: queryResults } = this.context.client.spaces.query(filter, filter.options);
+    const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
 
     const response: QueryResponse = {
       queryId: request.queryId,

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Space } from '@dxos/client/echo';
-import { type DynamicEchoSchema, Filter, type ReactiveObject } from '@dxos/echo-schema';
+import { type Space, Filter } from '@dxos/client/echo';
+import { type DynamicEchoSchema, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
@@ -35,22 +35,23 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
-  createObject({ types }: { types?: T[] } = {}): ReactiveObject<any> {
+  async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
-    const data = this._generators[type](this._provider);
+    const data = await this._generators[type](this._provider);
     const schema = this.getSchema(type);
     return schema ? create(schema, data) : create(data);
   }
 
   // TODO(burdon): Create batch.
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
-  createObjects(map: Partial<Record<T, number>>): ReactiveObject<any>[] {
-    const objects: ReactiveObject<any>[] = [];
-    Object.entries<number>(map as any).forEach(([type, count]) => {
-      range(() => objects.push(this.createObject({ types: [type as T] })), count);
-    });
+  async createObjects(map: Partial<Record<T, number>>): Promise<ReactiveObject<any>[]> {
+    const tasks = Object.entries<number>(map as any)
+      .map(([type, count]) => {
+        return range(() => this.createObject({ types: [type as T] }), count);
+      })
+      .flatMap((t) => t);
 
-    return objects;
+    return Promise.all(tasks);
   }
 }
 
@@ -63,16 +64,15 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     schemaMap: TestSchemaMap<T>,
     generators: TestGeneratorMap<T>,
   ) {
-    super(schemaMap, generators, (type: T) => {
+    super(schemaMap, generators, async (type: T) => {
       const schema = this.getSchema(type);
-      return (schema && this._space.db.query(Filter.schema(schema)).objects) ?? [];
+      return (schema && (await this._space.db.query(Filter.schema(schema)).run()).objects) ?? [];
     });
 
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
-    const schemas = this._space.db.schemaRegistry.getAll();
     Object.entries<DynamicEchoSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
-      let schema = schemas.find((object) => object.typename === type);
+      let schema = this._space.db.schemaRegistry.getRegisteredByTypename(type);
       if (schema == null) {
         schema = this._space.db.schemaRegistry.add(dynamicSchema.schema);
       }
@@ -82,9 +82,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   addSchemas() {
     const result: DynamicEchoSchema[] = [];
-    const dbSchemas = this._space.db.schemaRegistry.getAll();
     this.schemas.forEach((schema) => {
-      const existing = dbSchemas.find((object) => object.typename === schema.typename);
+      const existing = this._space.db.schemaRegistry.getRegisteredByTypename(schema.typename);
       if (existing == null) {
         result.push(this._space.db.schemaRegistry.add(schema.schema));
       } else {
@@ -95,7 +94,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return result;
   }
 
-  override createObject({ types }: { types?: T[] } = {}): ReactiveObject<any> {
-    return this._space.db.add(super.createObject({ types }));
+  override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
+    return this._space.db.add(await super.createObject({ types }));
   }
 }

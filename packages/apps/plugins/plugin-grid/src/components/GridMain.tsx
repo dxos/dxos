@@ -6,9 +6,9 @@ import React, { forwardRef, type FC } from 'react';
 
 import { DocumentType, GridItemType, type GridType } from '@braneframe/types';
 import { Surface, parseMetadataResolverPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type EchoReactiveObject, isEchoObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';

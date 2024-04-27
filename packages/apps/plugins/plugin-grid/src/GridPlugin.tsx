@@ -75,6 +75,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
               // Add all grids to the graph.
               const query = space.db.query(Filter.schema(GridType));
+              subscriptions.add(query.subscribe());
               let previousObjects: GridType[] = [];
               subscriptions.add(
                 effect(() => {

@@ -5,7 +5,7 @@
 import '@dxosTheme';
 import React, { useMemo, type FC } from 'react';
 
-import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Tooltip } from '@dxos/react-ui';
 import { automerge } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';

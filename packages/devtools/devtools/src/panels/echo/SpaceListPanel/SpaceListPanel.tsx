@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Button, useFileDownload } from '@dxos/react-ui';
+import { AnchoredOverflow, Button, useFileDownload } from '@dxos/react-ui';
 import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
 import { DialogRestoreSpace } from './DialogRestoreSpace';
@@ -125,7 +125,13 @@ export const SpaceListPanel: FC = () => {
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       <DialogRestoreSpace handleFile={handleImport} />
-      <Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+
+      <Table.Root>
+        <Table.Viewport classNames='overflow-anchored'>
+          <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+          <AnchoredOverflow.Anchor />
+        </Table.Viewport>
+      </Table.Root>
     </PanelContainer>
   );
 };

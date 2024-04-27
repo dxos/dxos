@@ -4,7 +4,7 @@
 
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
 import { Resource, type Context, LifecycleState } from '@dxos/context';
-import { type FeedInfo } from '@dxos/credentials';
+import { type FeedInfo, type DelegateInvitationCredential } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -35,6 +35,8 @@ export type SpaceParams = {
 
   // TODO(dmaretskyi): Superseded by epochs.
   snapshotId?: string | undefined;
+
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
 };
 
 export type CreatePipelineParams = {
@@ -98,6 +100,14 @@ export class Space extends Resource {
       await this.onCredentialProcessed.callIfSet(credential);
       log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
+    });
+    this._controlPipeline.onDelegatedInvitation.set(async (invitation) => {
+      log('onDelegatedInvitation', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, true);
+    });
+    this._controlPipeline.onDelegatedInvitationRemoved.set(async (invitation) => {
+      log('onDelegatedInvitationRemoved', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, false);
     });
 
     // Start replicating the genesis feed.

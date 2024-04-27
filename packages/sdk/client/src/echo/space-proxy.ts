@@ -10,14 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import {
-  EchoDatabaseImpl,
-  type AutomergeContext,
-  type EchoDatabase,
-  type Hypergraph,
-  Filter,
-  type EchoReactiveObject,
-} from '@dxos/echo-schema';
+import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -91,8 +85,7 @@ export class SpaceProxy implements Space {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
-    graph: Hypergraph,
-    automergeContext: AutomergeContext,
+    echoClient: EchoClient,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -105,12 +98,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    invariant(this._clientServices.services.DataService, 'DataService not available');
-    this._db = new EchoDatabaseImpl({
-      spaceKey: this.key,
-      graph,
-      automergeContext,
-    });
+    this._db = echoClient.createDatabase({ spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -125,8 +113,6 @@ export class SpaceProxy implements Space {
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
-
-    graph._register(this.key, this._db, this);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);
@@ -313,16 +299,19 @@ export class SpaceProxy implements Space {
     {
       const unsubscribe = this._db
         .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
-        .subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        }, true);
+        .subscribe(
+          (query) => {
+            if (query.objects.length === 1) {
+              this._properties = query.objects[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),

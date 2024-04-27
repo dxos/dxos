@@ -66,41 +66,43 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
             </Popover.Anchor>
           </DropdownMenu.Trigger>
 
-          <DropdownMenu.Content onCloseAutoFocus={onDropdownCloseAutoFocus} sideOffset={4} collisionPadding={8}>
-            <DropdownMenu.Viewport>
-              {canSort && (
-                <>
-                  <DropdownMenu.Item onClick={() => onSelectSort('asc')}>
-                    <span className='grow'>Sort ascending</span>
-                    <span className='opacity-50'>
-                      <ArrowUp className={getSize(4)} />
-                    </span>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Item onClick={() => onSelectSort('desc')}>
-                    <span className='grow'>Sort descending</span>
-                    <span className='opacity-50'>
-                      <ArrowDown className={getSize(4)} />
-                    </span>
-                  </DropdownMenu.Item>
-                  {sortDirection !== false && (
-                    <DropdownMenu.Item onClick={onClearSort}>
-                      <span className='grow'>Clear sort</span>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content onCloseAutoFocus={onDropdownCloseAutoFocus} sideOffset={4} collisionPadding={8}>
+              <DropdownMenu.Viewport>
+                {canSort && (
+                  <>
+                    <DropdownMenu.Item onClick={() => onSelectSort('asc')}>
+                      <span className='grow'>Sort ascending</span>
                       <span className='opacity-50'>
-                        <X className={getSize(4)} />
+                        <ArrowUp className={getSize(4)} />
                       </span>
                     </DropdownMenu.Item>
-                  )}
-                </>
-              )}
-              <DropdownMenu.Item onClick={onOpenColumnSettings}>
-                <span className='grow'>Column settings</span>
-                <span className='opacity-50'>
-                  <GearSix className={mx(getSize(4), 'rotate-90')} />
-                </span>
-              </DropdownMenu.Item>
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
+                    <DropdownMenu.Item onClick={() => onSelectSort('desc')}>
+                      <span className='grow'>Sort descending</span>
+                      <span className='opacity-50'>
+                        <ArrowDown className={getSize(4)} />
+                      </span>
+                    </DropdownMenu.Item>
+                    {sortDirection !== false && (
+                      <DropdownMenu.Item onClick={onClearSort}>
+                        <span className='grow'>Clear sort</span>
+                        <span className='opacity-50'>
+                          <X className={getSize(4)} />
+                        </span>
+                      </DropdownMenu.Item>
+                    )}
+                  </>
+                )}
+                <DropdownMenu.Item onClick={onOpenColumnSettings}>
+                  <span className='grow'>Column settings</span>
+                  <span className='opacity-50'>
+                    <GearSix className={mx(getSize(4), 'rotate-90')} />
+                  </span>
+                </DropdownMenu.Item>
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
 
           <ColumnSettingsPanel {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
         </Popover.Root>

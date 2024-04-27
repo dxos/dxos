@@ -8,17 +8,7 @@ import { MemoryStorage, StorageType, type Storage, type StorageConstructor } fro
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    if (
-      navigator &&
-      navigator.storage &&
-      typeof navigator.storage.getDirectory === 'function' &&
-      FileSystemFileHandle &&
-      typeof (FileSystemFileHandle.prototype as any).createWritable === 'function'
-    ) {
-      return new WebFS(root);
-    } else {
-      return new IDbStorage(root);
-    }
+    return new IDbStorage(root);
   }
 
   switch (type) {
@@ -27,12 +17,9 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
     }
 
     case StorageType.IDB:
-    case StorageType.CHROME: {
-      return new IDbStorage(root);
-    }
-
+    case StorageType.CHROME:
     case StorageType.FIREFOX: {
-      throw new Error('Firefox storage is no longer supported.');
+      return new IDbStorage(root);
     }
 
     case StorageType.WEBFS: {

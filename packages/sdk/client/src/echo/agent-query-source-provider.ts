@@ -5,20 +5,15 @@
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { todo } from '@dxos/debug';
-import {
-  type EchoReactiveObject,
-  type Filter,
-  type QueryResult,
-  type QuerySource,
-  type QuerySourceProvider,
-} from '@dxos/echo-schema';
+import { type Filter, type QueryResult, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
 export class AgentQuerySourceProvider implements QuerySourceProvider {
@@ -109,6 +104,10 @@ export class AgentQuerySource implements QuerySource {
     return this._results ?? [];
   }
 
+  async run(): Promise<QueryResult[]> {
+    return this._results ?? [];
+  }
+
   update(filter: Filter): void {
     if (filter.options.dataLocation === undefined || filter.options.dataLocation === QueryOptions.DataLocation.LOCAL) {
       // Disabled by dataLocation filter.
@@ -145,6 +144,10 @@ export class AgentQuerySource implements QuerySource {
         this.changed.emit();
       })
       .catch((error) => error.message === 'Close.' || log.catch(error));
+  }
+
+  close(): void {
+    // No-op.
   }
 }
 

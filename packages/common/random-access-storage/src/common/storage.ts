@@ -8,12 +8,18 @@ import { type Directory } from './directory';
 export enum StorageType {
   RAM = 'ram',
   IDB = 'idb',
+  /**
+   * @deprecated
+   */
   CHROME = 'chrome',
   /**
    * @deprecated
    */
   FIREFOX = 'firefox',
   NODE = 'node',
+  /**
+   * @deprecated
+   */
   WEBFS = 'webfs',
 }
 

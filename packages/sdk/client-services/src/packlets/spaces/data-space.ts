@@ -6,7 +6,6 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
 import {
   type MetadataStore,
   type Space,
@@ -15,6 +14,7 @@ import {
   type SpaceDoc,
 } from '@dxos/echo-pipeline';
 import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';

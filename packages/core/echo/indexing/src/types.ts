@@ -3,8 +3,8 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 export interface Index {

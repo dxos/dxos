@@ -8,10 +8,11 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { Filter, type Query } from '@dxos/echo-db';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type ReactiveObject, type Query, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type ReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
@@ -148,8 +149,8 @@ describe('QueryPlugin', () => {
         const generator = createSpaceObjectGenerator(space);
         generator.addSchemas();
 
-        generator.createObject({ types: [TestSchemaType.organization] });
-        const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
+        await generator.createObject({ types: [TestSchemaType.organization] });
+        const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
         testName = objects[0].name;
         await space.db.flush();
       }

@@ -1,0 +1,37 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+import "dxos/keys.proto";
+import "dxos/echo/filter.proto";
+import "dxos/echo/object.proto";
+import "dxos/echo/indexing.proto";
+
+package dxos.echo.query;
+
+message QueryRequest {
+  optional string queryId = 1;
+  dxos.echo.filter.Filter filter = 2;
+}
+
+message QueryResult {
+  string id = 1;
+  dxos.keys.PublicKey spaceKey = 2;
+  float rank = 3;
+}
+
+message QueryResponse {
+  optional string queryId = 1;
+  repeated QueryResult results = 2;
+  repeated dxos.echo.object.EchoObject objects = 3;
+}
+
+service QueryService {
+  rpc SetIndexConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
+  rpc Find(QueryRequest) returns (stream QueryResponse);
+  rpc ReIndex(google.protobuf.Empty) returns (google.protobuf.Empty);
+}

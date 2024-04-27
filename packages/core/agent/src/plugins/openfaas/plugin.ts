@@ -5,7 +5,7 @@
 import { DeferredTask } from '@dxos/async';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription } from '@dxos/echo-schema';
+import { createSubscription } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -98,7 +98,7 @@ export class OpenFaasPlugin extends Plugin {
       }
 
       // TODO(dmaretskyi): Fix type.
-      const objects = space.db.query({ __type: 'dxos.function.Trigger' }).objects;
+      const objects = (await space.db.query({ __type: 'dxos.function.Trigger' }).run()).objects;
       triggers.push(...objects.map((object) => object.toJSON() as Trigger));
     }
 

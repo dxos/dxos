@@ -5,10 +5,10 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { Reference } from '@dxos/echo-db';
+import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure, encodeReference } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { type Filter } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
@@ -26,12 +26,12 @@ describe('Indexer', () => {
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
     const doneIndexing = metadataStore.clean.waitForCount(2);
     const indexer = new Indexer({
+      db: level,
       indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
       loadDocuments: async function* (ids) {
         yield documents.filter((doc) => ids.includes(doc.id));
       },
-      getAllDocuments: async function* () {},
     });
     afterTest(() => indexer.destroy());
 
@@ -84,26 +84,34 @@ describe('Indexer', () => {
     objects.forEach((object, index) => documents.push({ id: String(index), object, currentHash: 'hash' }));
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
+
     const indexer = new Indexer({
+      db: level,
       indexStore: new IndexStore({ db: level.sublevel('index-store') }),
       metadataStore,
-      loadDocuments: async function* () {},
-      getAllDocuments: async function* () {
-        for (const index in objects) {
-          yield [{ id: index, object: objects[index], currentHash: 'hash' }];
-        }
+      loadDocuments: async function* (ids) {
+        yield ids.map((id) => ({ id, object: objects[parseInt(id)], currentHash: 'hash' }));
       },
     });
     afterTest(() => indexer.destroy());
 
-    const doneIndexing = indexer.updated.waitForCount(1);
-
     {
+      const doneIndexing = indexer.updated.waitForCount(1);
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
       await indexer.initialize();
+      await asyncTimeout(doneIndexing, 1000);
     }
 
-    await asyncTimeout(doneIndexing, 1000);
+    {
+      const doneIndexing = indexer.updated.waitForCount(1);
+      await indexer.reIndex(
+        new Map([
+          ['0', 'hash'],
+          ['1', 'hash'],
+        ]),
+      );
+      await asyncTimeout(doneIndexing, 1000);
+    }
 
     {
       const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);

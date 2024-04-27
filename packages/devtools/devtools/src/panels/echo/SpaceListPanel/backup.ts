@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SerializedSpace, Serializer } from '@dxos/echo-schema';
+import { type SerializedSpace, Serializer } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 

@@ -11,7 +11,8 @@ import { Trigger } from '@dxos/async';
 import { GameType } from '@dxos/chess-app/types';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { getAutomergeObjectCore, create } from '@dxos/echo-schema';
+import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
