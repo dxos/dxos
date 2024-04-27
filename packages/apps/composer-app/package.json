@@ -9,7 +9,7 @@
   "license": "MIT",
   "author": "DXOS.org",
   "scripts": {
-    "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/_worker.js",
+    "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
     "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
     "socket": "bundle"
   },

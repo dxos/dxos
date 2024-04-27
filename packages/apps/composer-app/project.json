@@ -6,23 +6,76 @@
   "targets": {
     "build": {
       "options": {
-        "main": "packages/apps/composer-app/src/index.ts",
-        "outputPath": "packages/apps/composer-app/dist",
+        "main": "{projectRoot}/src/index.ts",
+        "outputPath": "{projectRoot}/dist",
         "transformers": [
           "@dxos/log-hook/transformer"
         ],
-        "tsConfig": "packages/apps/composer-app/tsconfig.json"
+        "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
-    "bundle": {
+    "bundle-app": {
+      "cache": true,
+      "dependsOn": [
+        "^build"
+      ],
       "executor": "@nx/vite:build",
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "env": "CONFIG_DYNAMIC"
+        },
+        {
+          "env": "DX_ENVIRONMENT"
+        },
+        {
+          "env": "DX_IPDATA_API_KEY"
+        },
+        {
+          "env": "DX_SENTRY_DESTINATION"
+        },
+        {
+          "env": "DX_TELEMETRY_API_KEY"
+        },
+        {
+          "env": "DX_HOST"
+        },
+        {
+          "env": "NODE_ENV"
+        },
+        {
+          "env": "REMOTE_SOURCE"
+        },
+        {
+          "env": "LOG_FILTER"
+        },
+        {
+          "env": "LOG_PREFIX"
+        },
+        {
+          "env": "SENTRY_RELEASE_AUTH_TOKEN"
+        }
+      ],
       "options": {
         "generatePackageJson": false,
-        "outputPath": "packages/apps/composer-app/out/composer"
+        "outputPath": "{projectRoot}/out/composer"
       },
       "outputs": [
         "{options.outputPath}"
       ]
+    },
+    "bundle": {
+      // Don't cache because this is writing into the output of the app bundle
+      // which is already a cached directory.
+      "cache": false,
+      "dependsOn": [
+        "bundle-app"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "build:functions"
+      }
     },
     "e2e": {
       "options": {
