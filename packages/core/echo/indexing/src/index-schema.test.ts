@@ -4,12 +4,12 @@
 
 import { expect } from 'chai';
 
-import { type Filter } from '@dxos/echo-db';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
 import { Reference } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
+import { IndexQuery } from './types';
 
 describe('IndexSchema', () => {
   const schemaURI = '@example.org/schema/Contact';
@@ -40,7 +40,7 @@ describe('IndexSchema', () => {
 
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
-    const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+    const ids = await index.find({ typename: schemaURI });
     expect(ids.length).to.equal(1);
     expect(ids[0].id).to.equal('0');
   });
@@ -53,7 +53,7 @@ describe('IndexSchema', () => {
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
     {
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -66,7 +66,7 @@ describe('IndexSchema', () => {
     {
       const updated = await index.update('0', {});
       expect(updated).to.be.true;
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -80,7 +80,7 @@ describe('IndexSchema', () => {
     await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
     {
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -88,7 +88,7 @@ describe('IndexSchema', () => {
     await index.remove('0');
 
     {
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(0);
     }
   });
@@ -105,7 +105,7 @@ describe('IndexSchema', () => {
     const loadedIndex = await IndexSchema.load({ serialized, identifier: index.identifier, indexKind: index.kind });
 
     {
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }

@@ -13,6 +13,7 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { type Indexer } from './indexer';
+import { IndexQuery } from './types';
 
 type QueryStateParams = {
   indexer: Indexer;
@@ -24,7 +25,7 @@ type QueryRunResult = {
   changed: boolean;
 };
 
-/**
+/**s
  * Manages querying logic on service side
  */
 @trace.resource()
@@ -42,7 +43,7 @@ export class QueryState extends Resource {
   @trace.span({ showInBrowserTimeline: true })
   async runQuery(): Promise<QueryRunResult> {
     const filter = Filter.fromProto(this._params.request.filter);
-    const hits = await this._params.indexer.find(filter);
+    const hits = await this._params.indexer.find(filterToIndexQuery(filter));
     const results: QueryResult[] = (
       await Promise.all(
         hits.map(async (result) => {
@@ -94,3 +95,7 @@ export class QueryState extends Resource {
     return { changed: true };
   }
 }
+
+const filterToIndexQuery = (filter: Filter): IndexQuery => ({
+  typename: filter.type?.itemId,
+});

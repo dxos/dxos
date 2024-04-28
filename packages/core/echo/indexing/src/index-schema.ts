@@ -4,7 +4,6 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -12,7 +11,7 @@ import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
+import { type Index, type IndexStaticProps, type LoadParams, staticImplements, IndexQuery } from './types';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()
@@ -50,14 +49,19 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async find(filter: Filter) {
-    if (filter.type?.itemId === undefined) {
+  async find(filter: IndexQuery) {
+    if (filter.typename === null) {
+      // TODO(dmaretskyi): Implement querying for Expando objects.
+      throw new Error('Not implemented');
+    }
+
+    if (filter.typename === undefined) {
       return Array.from(this._index.values())
         .flatMap((ids) => Array.from(ids))
         .map((id) => ({ id, rank: 0 }));
     }
 
-    return Array.from(this._index.get(filter.type.itemId) ?? []).map((id) => ({ id, rank: 0 }));
+    return Array.from(this._index.get(filter.typename) ?? []).map((id) => ({ id, rank: 0 }));
   }
 
   @trace.span({ showInBrowserTimeline: true })

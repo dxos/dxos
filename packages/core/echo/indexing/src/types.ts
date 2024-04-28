@@ -3,9 +3,19 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Filter } from '@dxos/echo-db';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+
+/**
+ * @deprecated
+ */
+export type IndexQuery = {
+  /**
+   * null means all Expando objects.
+   * undefined means all objects (no filter).
+   */
+  typename?: string | null;
+};
 
 export interface Index {
   identifier: string;
@@ -20,7 +30,9 @@ export interface Index {
    */
   update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
   remove(id: string): Promise<void>;
-  find(filter: Filter): Promise<{ id: string; rank: number }[]>;
+
+  // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
+  find(filter: IndexQuery): Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }

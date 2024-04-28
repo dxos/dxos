@@ -6,7 +6,6 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Filter } from '@dxos/echo-db';
 import { type LevelDB, type ObjectStructure } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -18,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type ConcatenatedHeadHashes, type Index } from './types';
+import { IndexQuery, type ConcatenatedHeadHashes, type Index } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -150,7 +149,7 @@ export class Indexer {
   }
 
   @synchronized
-  async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
+  async find(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
     if (!this._initialized || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
