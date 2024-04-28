@@ -26,6 +26,7 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
+import { EchoHost } from '@dxos/echo-db';
 
 //
 // TODO(burdon): Replace with test builder.
@@ -105,7 +106,7 @@ export type TestPeerProps = {
   snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
-  automergeHost?: AutomergeHost;
+  echoHost?: EchoHost;
   invitationsManager?: InvitationsManager;
 };
 
@@ -178,9 +179,10 @@ export class TestPeer {
     return this._props.signingContext ?? failUndefined();
   }
 
-  get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost({
-      db: this.level.sublevel('automerge'),
+  get echoHost() {
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     }));
   }
 
@@ -191,7 +193,7 @@ export class TestPeer {
       this.keyring,
       this.identity,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
       this.invitationsManager,
     ));
   }

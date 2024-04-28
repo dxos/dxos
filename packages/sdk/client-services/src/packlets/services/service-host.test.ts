@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
 
-import { asyncTimeout, latch, Trigger } from '@dxos/async';
+import { asyncTimeout, latch, sleep, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';
@@ -27,6 +27,12 @@ describe('ClientServicesHost', () => {
   afterEach(async () => {
     // Clean up.
     isNode() && rmSync(dataRoot, { recursive: true, force: true });
+  });
+
+  test('open and close', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    await host.close();
   });
 
   test('queryCredentials', async () => {
