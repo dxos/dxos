@@ -20,7 +20,6 @@ app.post('/chat', async (c) => {
   return c.json(result);
 });
 
-// TODO(burdon): Modelfusion client?
 app.post('/stream', async (c) => {
   const request = await c.req.json<ChatRequest>();
   const stream = await chatStream(c.env.AI, request);
