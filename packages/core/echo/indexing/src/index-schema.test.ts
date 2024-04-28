@@ -9,7 +9,6 @@ import { Reference } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
-import { IndexQuery } from './types';
 
 describe('IndexSchema', () => {
   const schemaURI = '@example.org/schema/Contact';

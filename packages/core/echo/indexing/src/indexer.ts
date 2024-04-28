@@ -17,7 +17,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { IndexQuery, type ConcatenatedHeadHashes, type Index } from './types';
+import { type IndexQuery, type ConcatenatedHeadHashes, type Index } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.

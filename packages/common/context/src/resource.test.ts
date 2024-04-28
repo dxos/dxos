@@ -1,5 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import expect from 'expect';
+
 import { describe, test } from '@dxos/test';
+
 import { LifecycleState, Resource } from './resource';
 
 class TestResource extends Resource {

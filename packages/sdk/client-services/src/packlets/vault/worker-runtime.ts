@@ -120,7 +120,7 @@ export class WorkerRuntime {
       this._sessions.delete(session);
       if (this._sessions.size === 0) {
         // Terminate the worker when all sessions are closed.
-        if(!!globalThis.self) {
+        if (globalThis.self) {
           self.close();
         }
       } else {

@@ -11,7 +11,7 @@ import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements, IndexQuery } from './types';
+import { type Index, type IndexStaticProps, type LoadParams, staticImplements, type IndexQuery } from './types';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()

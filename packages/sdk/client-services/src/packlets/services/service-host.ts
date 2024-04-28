@@ -8,6 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { QueryServiceImpl } from '@dxos/echo-db';
 import {
   DataServiceImpl,
   type ObjectStructure,
@@ -45,7 +46,6 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-import { QueryServiceImpl } from '@dxos/echo-db';
 
 export type ClientServicesHostParams = {
   /**

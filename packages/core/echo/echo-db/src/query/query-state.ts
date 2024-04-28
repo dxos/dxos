@@ -5,13 +5,13 @@
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { type Indexer, IndexQuery } from '@dxos/indexing';
 import { Filter } from './filter';
 
 type QueryStateParams = {
@@ -24,7 +24,7 @@ type QueryRunResult = {
   changed: boolean;
 };
 
-/**s
+/** s
  * Manages querying logic on service side
  */
 @trace.resource()
