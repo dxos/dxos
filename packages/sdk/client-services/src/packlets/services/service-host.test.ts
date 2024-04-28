@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import { rmSync } from 'node:fs';
 
-import { asyncTimeout, latch, sleep, Trigger } from '@dxos/async';
+import { asyncTimeout, latch, Trigger } from '@dxos/async';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { verifyPresentation } from '@dxos/credentials';

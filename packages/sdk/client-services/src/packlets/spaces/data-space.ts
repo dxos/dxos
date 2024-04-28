@@ -6,13 +6,8 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import {
-  type MetadataStore,
-  type Space,
-  createMappedFeedWriter,
-  type AutomergeHost,
-  type SpaceDoc,
-} from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-db';
+import { type MetadataStore, type Space, createMappedFeedWriter, type SpaceDoc } from '@dxos/echo-pipeline';
 import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
@@ -40,7 +35,6 @@ import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import { EchoHost } from '@dxos/echo-db';
 
 export type DataSpaceCallbacks = {
   /**

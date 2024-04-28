@@ -5,23 +5,17 @@
 import { expect } from 'chai';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
-import { warnAfterTimeout } from '@dxos/debug';
-import { Filter, QueryServiceImpl } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo-db';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { create } from '@dxos/echo-schema';
-import { IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { idCodec } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, openAndClose, test } from '@dxos/test';
+import { afterTest, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { QueryOptions } from '../echo';
-import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { ContactType, TestBuilder } from '../testing';
 
 describe('Index queries', () => {

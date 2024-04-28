@@ -6,14 +6,8 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  AutomergeHost,
-  MetadataStore,
-  type LevelDB,
-  SnapshotStore,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, type LevelDB, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -26,7 +20,6 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
-import { EchoHost } from '@dxos/echo-db';
 
 //
 // TODO(burdon): Replace with test builder.

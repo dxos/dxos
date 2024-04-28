@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type LevelDB } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
-import { createSelectedDocumentsIterator } from './documents-iterator';
-import { Storage } from '@dxos/random-access-storage';
-import { PublicKey } from '@dxos/keys';
-import { AutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
-import { QueryServiceImpl } from '../query';
-import { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { invariant } from '@dxos/invariant';
-import { TeleportExtension } from '@dxos/teleport';
+import { type PublicKey } from '@dxos/keys';
+import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import { type Storage } from '@dxos/random-access-storage';
+import { type TeleportExtension } from '@dxos/teleport';
+
+import { createSelectedDocumentsIterator } from './documents-iterator';
+import { QueryServiceImpl } from '../query';
 
 export type EchoHostParams = {
   kv: LevelDB;

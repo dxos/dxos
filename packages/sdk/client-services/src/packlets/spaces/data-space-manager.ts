@@ -5,7 +5,8 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { getCredentialAssertion, type CredentialSigner, type DelegateInvitationCredential } from '@dxos/credentials';
-import { type AutomergeHost, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-db';
+import { type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -25,7 +26,6 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-import { EchoHost } from '@dxos/echo-db';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
