@@ -16,7 +16,6 @@ import {
   type LevelDB,
 } from '@dxos/echo-pipeline';
 import { getTypeReference } from '@dxos/echo-schema';
-import { QueryServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -46,6 +45,7 @@ import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
 import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
+import { QueryServiceImpl } from '@dxos/echo-db';
 
 export type ClientServicesHostParams = {
   /**

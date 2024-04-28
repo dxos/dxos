@@ -18,9 +18,8 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type ObjectSnapshot, type Indexer } from './indexer';
+import { type ObjectSnapshot, type Indexer, type ConcatenatedHeadHashes } from '@dxos/indexing';
 import { QueryState } from './query-state';
-import { type ConcatenatedHeadHashes } from './types';
 
 export type QueryServiceParams = {
   indexer: Indexer;

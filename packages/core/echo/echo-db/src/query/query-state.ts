@@ -4,7 +4,6 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Resource } from '@dxos/context';
-import { Filter } from '@dxos/echo-db';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
@@ -12,8 +11,8 @@ import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
-import { type Indexer } from './indexer';
-import { IndexQuery } from './types';
+import { type Indexer, IndexQuery } from '@dxos/indexing';
+import { Filter } from './filter';
 
 type QueryStateParams = {
   indexer: Indexer;
