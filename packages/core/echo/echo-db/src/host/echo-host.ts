@@ -90,7 +90,8 @@ export class EchoHost extends Resource {
       doc.access = { spaceKey: spaceKey.toHex() };
     });
 
-    await this._automergeHost.repo.flush();
+    // Blocked by https://github.com/dxos/dxos/pull/6430
+    // await this._automergeHost.repo.flush();
 
     return automergeRoot.url;
   }
