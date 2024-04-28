@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Chess } from 'chess.js';
 import { Hono } from 'hono';
 import { Game } from 'js-chess-engine';
 
