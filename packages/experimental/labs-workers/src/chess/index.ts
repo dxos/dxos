@@ -53,7 +53,7 @@ app.post('/move', async (c) => {
   if (debug) {
     const chess = new Chess(fen);
     // eslint-disable-next-line no-console
-    console.log(chess.ascii());
+    console.log(`FEN: ${chess.fen()}\n` + chess.ascii());
   }
 
   return c.json<GameState>(response);
