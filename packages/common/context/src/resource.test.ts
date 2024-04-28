@@ -12,7 +12,7 @@ describe('Resource', () => {
   test('open and close', async () => {
     const resource = new TestResource();
     expect(resource.lifecycleState).toEqual(LifecycleState.CLOSED);
-    
+
     await resource.open();
     expect(resource.lifecycleState).toEqual(LifecycleState.OPEN);
 
@@ -20,7 +20,7 @@ describe('Resource', () => {
     expect(resource.lifecycleState).toEqual(LifecycleState.CLOSED);
   });
 
-  test('reopen', async () => {
+  test('reentrant', async () => {
     const resource = new TestResource();
 
     await resource.open();

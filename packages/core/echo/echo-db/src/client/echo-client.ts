@@ -29,6 +29,11 @@ export type CreateDatabaseParams = {
   owningObject?: unknown;
 };
 
+/**
+ * ECHO client.
+ * Manages a set of databases and builds a unified hypergraph.
+ * Connects to the ECHO host via an ECHO service.
+ */
 export class EchoClient extends Resource {
   private readonly _graph: Hypergraph;
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
