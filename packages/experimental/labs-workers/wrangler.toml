@@ -2,17 +2,31 @@
 # Workers configuration file.
 # https://developers.cloudflare.com/workers/wrangler/configuration
 #
-# Wrangler configuration file.
+# Bundling
+# Workers run on top of the V8 JS and WASM engine.
+# https://developers.cloudflare.com/workers/runtime-apis/web-standards/#javascript-standards
+# NOTE: Wrangler runs esbuild by default.
+# https://developers.cloudflare.com/workers/wrangler/bundling
+# https://developers.cloudflare.com/workers/wrangler/configuration/#bundling
+#
 
 name = "labs-workers"
 main = "src/index.ts"
-compatibility_date = "2024-04-19"
+compatibility_date = "2024-04-05"
 account_id = "950816f3f59b079880a1ae33fb0ec320"
 
-# Configure via Settings > Triggers > Custom Domains.
-routes = [
-  { pattern = "admin.composer.rocks", custom_domain = true }
-]
+# TODO(burdon): Node compatibility for Stockfish (e.g., "perf_hooks").
+# https://developers.cloudflare.com/workers/configuration/compatibility-dates/#nodejs-compatibility-flag
+# https://developers.cloudflare.com/workers/runtime-apis/nodejs
+# Uses: https://github.com/cyco130/esbuild-plugin-polyfill-node
+# https://github.com/cloudflare/workers-sdk/tree/main/fixtures/isomorphic-random-example
+#node_compat = true
+#compatibility_flags = [ "nodejs_compat" ]
+
+# https://webpack.js.org/configuration/externals
+#rules = [
+#  { type = "CommonJS", globs = ["perf_hooks"], fallthrough = true }
+#]
 
 [vars]
   WORKER_ENV = "production"

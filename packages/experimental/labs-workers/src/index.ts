@@ -10,9 +10,9 @@ import { timing } from 'hono/timing';
 
 import { log } from '@dxos/log';
 
-import chat from './chat';
+import chess from './chess';
 import { type Env } from './defs';
-import signaling from './signaling';
+import testing from './testing';
 
 export * from './signaling';
 
@@ -67,7 +67,9 @@ root.onError((err, context) => {
   return response;
 });
 
-root.route('/chat', chat);
-root.route('/signal', signaling);
+root.route('/testing', testing);
+root.route('/chess', chess);
+// root.route('/chat', chat);
+// root.route('/signal', signaling);
 
 export default root;

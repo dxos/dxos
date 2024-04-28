@@ -10,8 +10,6 @@
   "main": "dist/lib/node/index.cjs",
   "types": "dist/types/src/index.d.ts",
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist"
   ],
   "dependencies": {
@@ -27,6 +25,7 @@
     "cookie": "^0.6.0",
     "email-validator": "^2.0.4",
     "hono": "^4.2.5",
+    "js-chess-engine": "^1.0.2",
     "modelfusion": "^0.137.0"
   },
   "devDependencies": {
@@ -38,7 +37,7 @@
     "miniflare": "^3.20240405.2",
     "ts-node": "10.9.1",
     "vitest": "^1.5.0",
-    "wrangler": "^3.51.2",
+    "wrangler": "^3.52.0",
     "ws": "^8.14.2"
   }
 }
