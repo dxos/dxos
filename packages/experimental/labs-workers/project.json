@@ -4,6 +4,7 @@
   "sourceRoot": "packages/experimental/labs-workers/src",
   "projectType": "library",
   "targets": {
+    "test": {},
     "__test": {
       "options": {
         "ciEnvironments": [

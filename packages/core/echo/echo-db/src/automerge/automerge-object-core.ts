@@ -271,7 +271,6 @@ export class AutomergeObjectCore {
       }
 
       const core = getAutomergeObjectCore(obj);
-
       if (!core.database) {
         this.database.add(obj);
         return new Reference(core.id);
