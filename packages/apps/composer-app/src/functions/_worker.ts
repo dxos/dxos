@@ -14,5 +14,8 @@ const handler = authMiddleware({ service: 'composer-app-worker', cookie: 'COMPOS
  * Output _worker.js to <pages_build_output_dir> and deploy via git.
  */
 export default {
-  fetch: async (request, env, c) => handler(request, env, c),
+  fetch: async (request, env, c)=> {
+    console.log('###', env);
+    return handler(request, env, c)
+  },
 } as ExportedHandler<Env>;
