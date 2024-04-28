@@ -7,7 +7,7 @@ import { Hono } from 'hono';
 import { Game } from 'js-chess-engine';
 
 import type { Env } from '../defs';
-import { safeJson } from '../util';
+import { type FunctionEvent, safeJson } from '../util';
 
 const app = new Hono<Env>();
 
@@ -20,12 +20,6 @@ const app = new Hono<Env>();
 
 // const wasmSupported = typeof WebAssembly === 'object' &&
 //   WebAssembly.validate(Uint8Array.of(0x0, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00));
-
-// TODO(burdon): Standardize POST API (event, state). ETL.
-export type Event<T extends {}> = {
-  debug: boolean;
-  data: T;
-};
 
 export type GameState = {
   fen?: string;
@@ -40,20 +34,20 @@ export type GameState = {
  * ```
  */
 app.post('/move', async (c) => {
-  const request = await safeJson<Event<GameState>>(c.req);
-  const { debug, data = {} } = request ?? {};
+  const request = await safeJson<FunctionEvent<GameState>>(c.req, {});
+  const { debug, data = {} } = request;
 
   // https://www.npmjs.com/package/js-chess-engine#computer-ai
   const game = new Game(data.fen);
   game.aiMove(data.level ?? 1);
-  const fen = game.exportFEN();
 
+  const fen = game.exportFEN();
   const response: GameState = { fen };
 
   if (debug) {
     const chess = new Chess(fen);
     // eslint-disable-next-line no-console
-    console.log(chess.ascii());
+    console.log(`FEN: ${chess.fen()}\n` + chess.ascii());
   }
 
   return c.json<GameState>(response);

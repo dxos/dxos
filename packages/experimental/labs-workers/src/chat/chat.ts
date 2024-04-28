@@ -13,9 +13,10 @@ export type ChatRequest = {
   }[];
 };
 
-// https://playground.ai.cloudflare.com/
-// https://developers.cloudflare.com/workers-ai/
+// https://developers.cloudflare.com/ai
+// https://developers.cloudflare.com/workers-ai
 // https://developers.cloudflare.com/workers-ai/tutorials/build-a-retrieval-augmented-generation-ai/#3-adding-the-ai-binding
+// https://playground.ai.cloudflare.com
 
 // https://developers.cloudflare.com/workers-ai/models/
 // const model = '@cf/hermes-2-pro-mistral-7b'; // TODO(burdon): JSON.
@@ -34,10 +35,10 @@ export const chat = async (ai: Ai, { messages }: ChatRequest) => {
 // TODO(burdon): Interrupt.
 export const chatStream = async (ai: Ai, { messages }: ChatRequest): Promise<ReadableStream> => {
   const result = (await ai.run(model, {
-    stream: true,
     max_tokens: 256,
     messages: messages.map(({ role = 'user', content }) => ({ role, content })),
-  })) as ReadableStream; // TODO(burdon): ???
+    stream: true,
+  })) as ReadableStream;
 
   return result;
 };
