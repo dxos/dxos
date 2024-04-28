@@ -49,6 +49,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../mesh/teleport"
+    },
+    {
       "path": "../../protocols"
     },
     {

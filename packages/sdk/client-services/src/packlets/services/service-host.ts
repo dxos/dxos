@@ -364,7 +364,7 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.echoHost.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.

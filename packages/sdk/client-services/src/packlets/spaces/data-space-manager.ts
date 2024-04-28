@@ -240,8 +240,8 @@ export class DataSpaceManager {
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._echoHost.automergeHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.automergeHost.createExtension());
+        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
       },
       onAuthFailure: () => {
         log.warn('auth failure');
@@ -262,6 +262,7 @@ export class DataSpaceManager {
       presence,
       keyring: this._keyring,
       feedStore: this._feedStore,
+      echoHost: this._echoHost,
       signingContext: this._signingContext,
       callbacks: {
         beforeReady: async () => {
@@ -279,7 +280,6 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
-      automergeHost: this._echoHost.automergeHost,
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {

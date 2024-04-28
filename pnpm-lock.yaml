@@ -5140,6 +5140,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../mesh/teleport
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing

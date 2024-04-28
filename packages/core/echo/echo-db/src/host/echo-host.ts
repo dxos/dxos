@@ -8,10 +8,11 @@ import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from 
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { Storage } from '@dxos/random-access-storage';
 import { PublicKey } from '@dxos/keys';
-import { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { AutomergeUrl, Repo } from '@dxos/automerge/automerge-repo';
 import { QueryServiceImpl } from '../query';
 import { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { invariant } from '@dxos/invariant';
+import { TeleportExtension } from '@dxos/teleport';
 
 export type EchoHostParams = {
   kv: LevelDB;
@@ -61,12 +62,8 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  /**
-   * @deprecated
-   */
-  // TODO(dmaretskyi): Remove.
-  get automergeHost(): AutomergeHost {
-    return this._automergeHost;
+  get automergeRepo(): Repo {
+    return this._automergeHost.repo;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -95,5 +92,26 @@ export class EchoHost extends Resource {
     await this._automergeHost.repo.flush();
 
     return automergeRoot.url;
+  }
+
+  /**
+   * Authorize remote device to access space.
+   */
+  // TODO(dmaretskyi): Rethink replication/auth API.
+  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
+    this._automergeHost.authorizeDevice(spaceKey, deviceKey);
+  }
+
+  /**
+   * This doc will be replicated from remote peers.
+   */
+  // TODO(dmaretskyi): Rethink replication/auth API.
+  replicateDocument(docUrl: string) {
+    this._automergeHost._requestedDocs.add(docUrl);
+  }
+
+  // TODO(dmaretskyi): Rethink replication/auth API.
+  createReplicationExtension(): TeleportExtension {
+    return this._automergeHost.createExtension();
   }
 }
