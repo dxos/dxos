@@ -13,51 +13,61 @@ import { log } from '@dxos/log';
 import chess from './chess';
 import { type Env } from './defs';
 import testing from './testing';
+import { safeJson } from './util';
 
 export * from './signaling';
 
-// TODO(burdon): CI: https://developers.cloudflare.com/workers/configuration/continuous-integration
-// TODO(burdon): Cron: https://developers.cloudflare.com/workers/configuration/cron-triggers
-// TODO(burdon): Sites (replace netlify): https://developers.cloudflare.com/workers/configuration/sites/start-from-existing
-// TODO(burdon): Email handler: https://developers.cloudflare.com/email-routing/email-workers/enable-email-workers
-
-// TODO(burdon): Domains.
-//  https://developers.cloudflare.com/workers/configuration/routing
-
-// TODO(burdon): Zod validator middleware: https://hono.dev/concepts/stacks
-//  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
-
-// TODO(burdon): Geo (privacy).
-//  https://developers.cloudflare.com/workers/examples/geolocation-hello-world
-
-// https://hono.dev/getting-started/cloudflare-workers
-// https://developers.cloudflare.com/workers/runtime-apis/request
-
+/**
+ * https://hono.dev/top
+ * https://hono.dev/getting-started/cloudflare-workers
+ * https://developers.cloudflare.com/workers/runtime-apis/request
+ */
 const root = new Hono<Env>();
 
-root.use(logger());
+// TODO(burdon): Integrate baselime.
+root.use(
+  logger((msg, ...params) => {
+    log.info(msg, params.length ? { params } : undefined);
+  }),
+);
+root.use(
+  timing({
+    // TODO(burdon): Filter certain events.
+    enabled: () => true,
+  }),
+);
 root.use(prettyJSON({ space: 2 }));
-root.use(timing());
 
 /**
  * Custom middleware.
  * https://hono.dev/concepts/middleware
  */
-root.use(async (context, next) => {
+root.use(async (c, next) => {
   const start = Date.now();
   await next();
   const end = Date.now();
-  context.res.headers.set('X-Response-Time', `${end - start}`);
+  c.res.headers.set('X-Response-Time', `${end - start}`);
+});
+
+/**
+ * Custom request logging.
+ */
+root.use(async (c, next) => {
+  const data = await safeJson(c.req);
+  // TODO(burdon): Configure logging.
+  log.info('request', { path: c.req.path, data });
+  await next();
+  log.info('response', { path: c.req.path, status: c.res.status });
 });
 
 /**
  * Error handling.
  * https://hono.dev/api/exception#handling-httpexception
  */
-root.onError((err, context) => {
+root.onError((err, c) => {
   const response = err instanceof HTTPException ? err.getResponse() : new Response('Request failed', { status: 500 });
   if (response.status === 401) {
-    return context.redirect('/signup');
+    return c.redirect('/signup');
   } else if (response.status < 500) {
     log.info('invalid request', { status: response.status, statusCode: response.statusText, err: err.message });
   } else {

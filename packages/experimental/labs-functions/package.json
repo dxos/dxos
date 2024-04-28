@@ -43,7 +43,7 @@
     "@octokit/rest": "^19.0.5",
     "amadeus": "^8.0.0",
     "assert": "^2.0.0",
-    "chess.js": "1.0.0-alpha.0",
+    "chess.js": "^1.0.0-beta.8",
     "cross-fetch": "^3.1.5",
     "csv-parse": "^5.3.6",
     "date-fns": "^3.3.1",

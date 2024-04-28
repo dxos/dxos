@@ -997,8 +997,8 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       chess.js:
-        specifier: 1.0.0-alpha.0
-        version: 1.0.0-alpha.0
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -6879,8 +6879,8 @@ importers:
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
       chess.js:
-        specifier: 1.0.0-alpha.0
-        version: 1.0.0-alpha.0
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -7133,8 +7133,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       chess.js:
-        specifier: 1.0.0-alpha.0
-        version: 1.0.0-alpha.0
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       cross-fetch:
         specifier: ^3.1.5
         version: 3.1.5
@@ -7290,6 +7290,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      chess.js:
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       cookie:
         specifier: ^0.6.0
         version: 0.6.0
@@ -28410,8 +28413,8 @@ packages:
       parse5: 3.0.3
     dev: false
 
-  /chess.js@1.0.0-alpha.0:
-    resolution: {integrity: sha512-nwEDlNEOZR/FaKW1DZLYtjgJrtAlxBW/6Fp4Hk8QXqpCCLrXweOU6/vKfJ/jNHT2gPqasxi0/ZPslcWAAdzozg==}
+  /chess.js@1.0.0-beta.8:
+    resolution: {integrity: sha512-UngzUMXmexcQaQA/UEJuJj5vatEy34awYMD5YMOp/FW3HM7lqspp7ymYs5JAmquDq0WROtURRfSffoa/vrCCyw==}
     dev: false
 
   /chokidar@3.5.3:

@@ -4,14 +4,16 @@
 
 import { Hono } from 'hono';
 
-import { log } from '@dxos/log';
-
 import type { Env } from '../defs';
 
 const app = new Hono<Env>();
 
+/**
+ * ```bash
+ * curl -s -w '\n' -X GET http://localhost:8787/testing | jq
+ * ```
+ */
 app.get('/', (c) => {
-  log.info('test', { env: c.env });
   return c.json({ env: c.env });
 });
 
