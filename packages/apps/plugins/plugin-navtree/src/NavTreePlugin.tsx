@@ -6,7 +6,6 @@ import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { Collection } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   resolvePlugin,
@@ -50,16 +49,10 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
 
   // Filter for the longest path to a node from the root.
   // This is used to determine the nodes to show in the navtree.
-  // If an object is in a collection, the longest path to the object is the path through the collection.
-  // This will cause the object to be rendered in the collection and not at the root of the space.
+  // If an object is in a folder, the longest path to the object is the path through the folder.
+  // This will cause the object to be rendered in the folder and not at the root of the space.
   // In the future, expect this logic to be more complex as objects may show up in multiple places, etc.
   const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
-    // Omit children of collections from the longest path filter.
-    // Since objects can be in multiple collections we want all their children to be shown.
-    if (connectedNode.data instanceof Collection) {
-      return true;
-    }
-
     const longestPath = longestPaths.get(node.id);
     if (!longestPath) {
       return false;

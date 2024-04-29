@@ -19,9 +19,5 @@ export const ShareSpaceButton = ({ spaceKey }: { spaceKey: PublicKey }) => {
 export const ShareSpaceButtonImpl = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
-  return (
-    <Button data-testid='spacePlugin.shareSpaceButton' onClick={onClick}>
-      {t('share space label')}
-    </Button>
-  );
+  return <Button onClick={onClick}>{t('share space label')}</Button>;
 };

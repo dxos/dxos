@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { getSpaceProperty, Collection } from '@braneframe/types';
+import { getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
@@ -12,13 +12,7 @@ import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRemoveObject = ({
-  object,
-  collection: propsCollection,
-}: {
-  object: Expando;
-  collection?: Collection;
-}) => {
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: Expando; folder?: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
@@ -40,17 +34,17 @@ export const PopoverRemoveObject = ({
 
     const space = getSpace(object);
 
-    // Remove object from collection it's in.
-    const collection = propsCollection ?? getSpaceProperty<Collection>(space, Collection.typename);
-    if (collection) {
-      const index = collection.objects.indexOf(object);
-      index !== -1 && collection.objects.splice(index, 1);
+    // Remove object from folder it's in.
+    const folder = propsFolder ?? getSpaceProperty<FolderType>(space, FolderType.typename);
+    if (folder) {
+      const index = folder.objects.indexOf(object);
+      index !== -1 && folder.objects.splice(index, 1);
     }
 
-    // If the object is a collection, move the objects inside of it to the collection above it.
-    if (object instanceof Collection && collection) {
+    // If the object is a folder, move the objects inside of it to the folder above it.
+    if (object instanceof FolderType && folder) {
       object.objects.forEach((obj) => {
-        collection.objects.push(obj);
+        folder.objects.push(obj);
       });
     }
 
