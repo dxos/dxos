@@ -57,7 +57,7 @@ const Story = ({ table }: { table?: TableType }) => {
 
   return (
     <div ref={containerRef} className='inset-0 overflow-auto'>
-      <ObjectTable table={table} stickyHeader getScrollElement={() => containerRef.current} />
+      <ObjectTable table={table} stickyHeader />
     </div>
   );
 };
