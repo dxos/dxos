@@ -17,6 +17,30 @@ import { safeJson } from './util';
 
 export * from './signaling';
 
+// TODO(burdon): CI: https://developers.cloudflare.com/workers/configuration/continuous-integration
+// TODO(burdon): Cron: https://developers.cloudflare.com/workers/configuration/cron-triggers
+// TODO(burdon): Sites (replace netlify): https://developers.cloudflare.com/workers/configuration/sites/start-from-existing
+// TODO(burdon): Email handler: https://developers.cloudflare.com/email-routing/email-workers/enable-email-workers
+// TODO(burdon): Momento serverless cache: https://developers.cloudflare.com/workers/configuration/integrations/momento
+
+// TODO(burdon): Zod validator middleware:
+//  https://github.com/honojs/middleware/tree/main/packages/zod-openapi
+
+// TODO(burdon): Geo (privacy).
+//  https://developers.cloudflare.com/workers/examples/geolocation-hello-world
+
+// TODO(burdon): AI function calling.
+//  https://developers.cloudflare.com/workers/tutorials/openai-function-calls-workers
+
+// TODO(burdon): Form submission from Airtable:
+//  https://developers.cloudflare.com/workers/tutorials/handle-form-submissions-with-airtable
+
+// TODO(burdon): Access.
+//  https://developers.cloudflare.com/pages/functions/plugins/cloudflare-access
+
+// https://developers.cloudflare.com/workers/examples
+// https://developers.cloudflare.com/workers/tutorials
+
 /**
  * https://hono.dev/top
  * https://hono.dev/getting-started/cloudflare-workers
@@ -26,8 +50,8 @@ const root = new Hono<Env>();
 
 // TODO(burdon): Integrate baselime.
 root.use(
-  logger((msg, ...params) => {
-    log.info(msg, params.length ? { params } : undefined);
+  logger((msg, ...args) => {
+    log.info(msg, args.length ? { args } : undefined);
   }),
 );
 root.use(
@@ -53,7 +77,8 @@ root.use(async (c, next) => {
  * Custom request logging.
  */
 root.use(async (c, next) => {
-  const data = await safeJson(c.req);
+  // TODO(burdon): Search params.
+  const data = c.req.method.toUpperCase() === 'POST' ? await safeJson(c.req) : undefined;
   // TODO(burdon): Configure logging.
   log.info('request', { path: c.req.path, data });
   await next();
