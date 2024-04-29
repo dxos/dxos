@@ -68,6 +68,7 @@ export class EchoClient extends Resource {
   disconnectFromService() {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = undefined;
+    this._queryService = undefined;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
