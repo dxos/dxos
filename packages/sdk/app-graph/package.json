@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-graph",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Constructs knowledge graphs for the purpose of building applications on top of",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
