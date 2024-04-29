@@ -1,11 +1,11 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "swc-log-plugin",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/swc-log-plugin/src",
   "projectType": "library",
   "targets": {},
-  "implicitDependencies": [],
-  "tags": [
-    "scope:tools"
-  ]
+  "implicitDependencies": []
 }

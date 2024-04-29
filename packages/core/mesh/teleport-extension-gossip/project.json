@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "teleport-extension-gossip",
+  "tags": [
+    "scope:mesh"
+  ],
   "sourceRoot": "packages/core/mesh/teleport-extension-gossip/src",
   "projectType": "library",
   "targets": {
@@ -28,8 +31,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:mesh"
   ]
 }

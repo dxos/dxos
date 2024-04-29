@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "testbench-app",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/testbench-app/src",
   "projectType": "library",
   "targets": {
@@ -54,8 +57,5 @@
         "buildTarget": "testbench-app:bundle"
       }
     }
-  },
-  "tags": [
-    "scope:apps"
-  ]
+  }
 }

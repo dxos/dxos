@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "keyboard",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/keyboard/src",
   "projectType": "library",
   "targets": {
@@ -19,8 +22,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:common"
   ]
 }

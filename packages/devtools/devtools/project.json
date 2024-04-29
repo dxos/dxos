@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "devtools",
+  "tags": [
+    "scope:devtools"
+  ],
   "sourceRoot": "packages/devtools/devtools/src",
   "projectType": "application",
   "targets": {
@@ -51,8 +54,5 @@
   },
   "implicitDependencies": [
     "esbuild"
-  ],
-  "tags": [
-    "scope:devtools"
   ]
 }

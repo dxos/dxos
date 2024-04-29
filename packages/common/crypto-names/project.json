@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "crypto-names",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/crypto-names/src",
   "projectType": "library",
   "targets": {
@@ -19,8 +22,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:common"
   ]
 }

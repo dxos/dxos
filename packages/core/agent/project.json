@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "agent",
+  "tags": [
+    "scope:core"
+  ],
   "sourceRoot": "packages/core/agent/src",
   "projectType": "library",
   "targets": {
@@ -33,8 +36,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:core"
   ]
 }

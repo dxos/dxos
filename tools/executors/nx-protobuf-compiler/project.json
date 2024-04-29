@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "nx-protobuf-compiler",
+  "tags": [
+    "scope:executors"
+  ],
   "sourceRoot": "tools/executors/nx-protobuf-compiler/src",
   "projectType": "library",
   "targets": {
@@ -19,8 +22,5 @@
   },
   "implicitDependencies": [
     "protobuf-compiler"
-  ],
-  "tags": [
-    "scope:executors"
   ]
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "gem-spore",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/gem-spore/src",
   "projectType": "library",
   "targets": {
@@ -17,8 +20,5 @@
   },
   "implictDependencies": [
     "test"
-  ],
-  "tags": [
-    "scope:experimental"
   ]
 }

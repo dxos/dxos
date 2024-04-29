@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "shell",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/shell/src",
   "projectType": "library",
   "targets": {
@@ -48,8 +51,5 @@
   },
   "implicitDependencies": [
     "esbuild"
-  ],
-  "tags": [
-    "scope:sdk"
   ]
 }

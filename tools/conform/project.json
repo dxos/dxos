@@ -1,6 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "conform",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
@@ -23,8 +26,5 @@
       }
     },
     "lint": {}
-  },
-  "tags": [
-    "scope:tools"
-  ]
+  }
 }

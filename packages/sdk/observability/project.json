@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "observability",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/observability/src",
   "projectType": "library",
   "targets": {
@@ -53,8 +56,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:sdk"
   ]
 }

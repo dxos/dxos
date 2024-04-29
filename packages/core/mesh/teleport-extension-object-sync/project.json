@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "teleport-extension-object-sync",
+  "tags": [
+    "scope:mesh"
+  ],
   "sourceRoot": "packages/core/mesh/teleport-extension-object-sync/src",
   "projectType": "library",
   "targets": {
@@ -25,8 +28,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:mesh"
   ]
 }

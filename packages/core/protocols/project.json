@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "protocols",
+  "tags": [
+    "scope:core"
+  ],
   "sourceRoot": "packages/core/protocols/src",
   "projectType": "library",
   "targets": {
@@ -67,8 +70,5 @@
   "implicitDependencies": [
     "nx-protobuf-compiler",
     "test"
-  ],
-  "tags": [
-    "scope:core"
   ]
 }

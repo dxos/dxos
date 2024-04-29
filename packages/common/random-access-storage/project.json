@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "random-access-storage",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/random-access-storage/src",
   "projectType": "library",
   "targets": {
@@ -22,8 +25,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:common"
   ]
 }

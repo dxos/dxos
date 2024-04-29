@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "examples",
+  "tags": [
+    "scope:sdk"
+  ],
   "projectType": "application",
   "targets": {
     "build": {},
@@ -48,8 +51,5 @@
         "buildTarget": "examples:bundle"
       }
     }
-  },
-  "tags": [
-    "scope:sdk"
-  ]
+  }
 }

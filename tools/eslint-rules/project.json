@@ -1,12 +1,12 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "eslint-rules",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/eslint-rules",
   "projectType": "library",
   "targets": {
     "lint": {}
-  },
-  "tags": [
-    "scope:tools"
-  ]
+  }
 }

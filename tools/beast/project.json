@@ -1,6 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "beast",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/beast/src",
   "projectType": "library",
   "targets": {
@@ -22,8 +25,5 @@
         ]
       }
     }
-  },
-  "tags": [
-    "scope:tools"
-  ]
+  }
 }

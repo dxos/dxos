@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "test",
+  "tags": [
+    "scope:executors"
+  ],
   "sourceRoot": "tools/executors/test/src",
   "projectType": "library",
   "targets": {
@@ -20,8 +23,5 @@
   "implicitDependencies": [
     "esbuild-plugins",
     "log-hook"
-  ],
-  "tags": [
-    "scope:executors"
   ]
 }

@@ -445,11 +445,11 @@ const run = async () => {
   await toolbox.init();
   await toolbox.updateReleasePlease();
   await toolbox.updateRootPackage();
+  await toolbox.updateTags();
   await toolbox.updateProjects();
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
   await toolbox.updateTsConfigPaths();
-  await toolbox.updateTags();
 
   // await toolbox.printStats();
 };

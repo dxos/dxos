@@ -1,6 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "x",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/x/src",
   "projectType": "library",
   "targets": {
@@ -22,8 +25,5 @@
         ]
       }
     }
-  },
-  "tags": [
-    "scope:tools"
-  ]
+  }
 }

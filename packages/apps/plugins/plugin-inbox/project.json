@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-inbox",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-inbox/src",
   "projectType": "library",
   "targets": {
@@ -21,8 +24,5 @@
   },
   "implicitDependencies": [
     "esbuild"
-  ],
-  "tags": [
-    "scope:plugins"
   ]
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-template",
+  "tags": [
+    "scope:templates"
+  ],
   "sourceRoot": "packages/apps/templates/plugin-template/src",
   "projectType": "library",
   "targets": {
@@ -21,8 +24,5 @@
         "forceExit": true
       }
     }
-  },
-  "tags": [
-    "scope:templates"
-  ]
+  }
 }

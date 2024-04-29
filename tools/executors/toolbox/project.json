@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "toolbox",
+  "tags": [
+    "scope:executors"
+  ],
   "sourceRoot": "tools/executors/toolbox/src",
   "projectType": "library",
   "targets": {
@@ -21,8 +24,5 @@
   "implicitDependencies": [
     "log-hook",
     "test"
-  ],
-  "tags": [
-    "scope:executors"
   ]
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-pwa",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-pwa/src",
   "projectType": "library",
   "targets": {
@@ -23,8 +26,5 @@
   },
   "implicitDependencies": [
     "esbuild"
-  ],
-  "tags": [
-    "scope:plugins"
   ]
 }

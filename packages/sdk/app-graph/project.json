@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "app-graph",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/app-graph/src",
   "projectType": "library",
   "targets": {
@@ -18,8 +21,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:sdk"
   ]
 }

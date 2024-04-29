@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "tasks-template",
+  "tags": [
+    "scope:templates"
+  ],
   "sourceRoot": "packages/apps/templates/tasks-template/src",
   "projectType": "library",
   "targets": {
@@ -26,8 +29,5 @@
         "forceExit": true
       }
     }
-  },
-  "tags": [
-    "scope:templates"
-  ]
+  }
 }

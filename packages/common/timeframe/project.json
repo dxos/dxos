@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "timeframe",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/timeframe/src",
   "projectType": "library",
   "targets": {
@@ -19,8 +22,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:common"
   ]
 }

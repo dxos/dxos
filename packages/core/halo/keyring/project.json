@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "keyring",
+  "tags": [
+    "scope:halo"
+  ],
   "sourceRoot": "packages/core/halo/keyring/src",
   "projectType": "library",
   "targets": {
@@ -19,8 +22,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:halo"
   ]
 }

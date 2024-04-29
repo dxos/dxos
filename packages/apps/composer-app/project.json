@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "composer-app",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/composer-app/src",
   "projectType": "library",
   "targets": {
@@ -120,8 +123,5 @@
   },
   "implicitDependencies": [
     "test"
-  ],
-  "tags": [
-    "scope:apps"
   ]
 }

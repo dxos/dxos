@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "typings",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/typings/src",
   "projectType": "library",
   "targets": {
@@ -23,8 +26,5 @@
     "outputs": [
       "{options.outputFile}"
     ]
-  },
-  "tags": [
-    "scope:common"
-  ]
+  }
 }

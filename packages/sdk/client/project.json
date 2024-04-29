@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "client",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/client/src",
   "projectType": "library",
   "targets": {
@@ -38,8 +41,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:sdk"
   ]
 }

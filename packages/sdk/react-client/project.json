@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-client",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/react-client/src",
   "projectType": "library",
   "targets": {
@@ -46,8 +49,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:sdk"
   ]
 }

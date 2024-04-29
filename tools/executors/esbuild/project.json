@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "esbuild",
+  "tags": [
+    "scope:executors"
+  ],
   "sourceRoot": "tools/executors/esbuild/src",
   "targets": {
     "compile": {
@@ -18,8 +21,5 @@
   },
   "implicitDependencies": [
     "log-hook"
-  ],
-  "tags": [
-    "scope:executors"
   ]
 }

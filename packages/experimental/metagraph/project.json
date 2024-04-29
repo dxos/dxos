@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "metagraph",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/metagraph/src",
   "projectType": "library",
   "targets": {
@@ -56,8 +59,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:experimental"
   ]
 }

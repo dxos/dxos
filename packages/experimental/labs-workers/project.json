@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "labs-workers",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/labs-workers/src",
   "projectType": "library",
   "targets": {
@@ -16,8 +19,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:experimental"
   ]
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "echo-schema",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/echo-schema/src",
   "projectType": "library",
   "targets": {
@@ -24,8 +27,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:echo"
   ]
 }

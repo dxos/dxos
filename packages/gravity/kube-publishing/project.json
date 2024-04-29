@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "kube-publishing",
+  "tags": [
+    "scope:gravity"
+  ],
   "sourceRoot": "packages/gravity/kube-publishing/src",
   "projectType": "library",
   "targets": {
@@ -13,8 +16,5 @@
       }
     },
     "lint": {}
-  },
-  "tags": [
-    "scope:gravity"
-  ]
+  }
 }

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "functions",
+  "tags": [
+    "scope:core"
+  ],
   "sourceRoot": "packages/core/functions/src",
   "projectType": "library",
   "targets": {
@@ -26,8 +29,5 @@
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "tags": [
-    "scope:core"
   ]
 }

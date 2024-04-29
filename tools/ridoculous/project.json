@@ -1,6 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "ridoculous",
+  "tags": [
+    "scope:tools"
+  ],
   "sourceRoot": "tools/ridoculous/src",
   "projectType": "library",
   "targets": {
@@ -15,8 +18,5 @@
       }
     },
     "lint": {}
-  },
-  "tags": [
-    "scope:tools"
-  ]
+  }
 }
