@@ -17,6 +17,7 @@ import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status 
 import { Deck } from '@dxos/react-ui-deck';
 import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
+import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
 import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
@@ -76,21 +77,17 @@ export const DeckLayout = ({
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
 
-  if (fullscreen) {
-    return (
-      <div className={fixedInsetFlexLayout}>
-        <Surface role='main' limit={1} fallback={Fallback} />
-      </div>
-    );
-  }
-
   const activeParts: ActiveParts = isActiveParts(location.active)
     ? location.active
     : { main: [location.active] as string[] };
   const sidebarId = firstSidebarId(activeParts);
   const complementaryId = firstComplementaryId(activeParts);
 
-  return (
+  return fullscreen ? (
+    <div className={fixedInsetFlexLayout}>
+      <Surface role='main' limit={1} fallback={Fallback} />
+    </div>
+  ) : (
     <Popover.Root
       modal
       open={!!(popoverAnchorId && popoverOpen)}
@@ -155,13 +152,17 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         <Deck.Root>
-          {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).map((id) => {
-            return (
-              <Deck.Plank key={id}>
-                <Surface role='article' data={graph.findNode(id)} limit={1} fallback={<PlankLoading />} />
-              </Deck.Plank>
-            );
-          })}
+          {activeParts.main ? (
+            (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean).map((id) => {
+              return (
+                <Deck.Plank key={id}>
+                  <Surface role='article' data={graph.findNode(id)} limit={1} fallback={<PlankLoading />} />
+                </Deck.Plank>
+              );
+            })
+          ) : (
+            <ContentEmpty />
+          )}
         </Deck.Root>
 
         {/* Status info. */}

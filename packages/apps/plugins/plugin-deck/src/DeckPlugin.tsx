@@ -4,7 +4,7 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
@@ -34,7 +34,7 @@ import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout, NAV_ID 
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
-import { activeToUri, checkAppScheme, uriToActive } from './util';
+import { checkAppScheme } from './util';
 
 const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
@@ -178,45 +178,47 @@ export const DeckPlugin = ({
           });
         },
       },
-      context: (props: PropsWithChildren) => (
-        <AttentionProvider attended={attention.attended}>
-          <Mosaic.Root>
-            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-            <Mosaic.DragOverlay />
-          </Mosaic.Root>
-        </AttentionProvider>
-      ),
+      context: (props: PropsWithChildren) => {
+        return (
+          <AttentionProvider attended={attention.attended}>
+            <Mosaic.Root>
+              <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
+              <Mosaic.DragOverlay />
+            </Mosaic.Root>
+          </AttentionProvider>
+        );
+      },
       root: () => {
         const { dispatch } = useIntent();
 
         // Update selection based on browser navigation.
-        useEffect(() => {
-          const handleNavigation = async () => {
-            await dispatch({
-              plugin: DECK_PLUGIN,
-              action: NavigationAction.OPEN,
-              data: { id: uriToActive(window.location.pathname) },
-            });
-          };
-
-          if (!location.active && window.location.pathname.length > 1) {
-            void handleNavigation();
-          }
-
-          window.addEventListener('popstate', handleNavigation);
-          return () => {
-            window.removeEventListener('popstate', handleNavigation);
-          };
-        }, []);
+        // useEffect(() => {
+        //   const handleNavigation = async () => {
+        //     await dispatch({
+        //       plugin: DECK_PLUGIN,
+        //       action: NavigationAction.OPEN,
+        //       data: { id: uriToActive(window.location.pathname) },
+        //     });
+        //   };
+        //
+        //   if (!location.active && window.location.pathname.length > 1) {
+        //     void handleNavigation();
+        //   }
+        //
+        //   window.addEventListener('popstate', handleNavigation);
+        //   return () => {
+        //     window.removeEventListener('popstate', handleNavigation);
+        //   };
+        // }, []);
 
         // Update URL when selection changes.
-        useEffect(() => {
-          const selectedPath = activeToUri(location.active);
-          if (window.location.pathname !== selectedPath) {
-            // TODO(wittjosiah): Better support for search params?
-            history.pushState(null, '', `${selectedPath}${window.location.search}`);
-          }
-        }, [location.active]);
+        // useEffect(() => {
+        //   const selectedPath = activeToUri(location.active);
+        //   if (window.location.pathname !== selectedPath) {
+        //     // TODO(wittjosiah): Better support for search params?
+        //     history.pushState(null, '', `${selectedPath}${window.location.search}`);
+        //   }
+        // }, [location.active]);
 
         return (
           <DeckLayout
@@ -290,22 +292,28 @@ export const DeckPlugin = ({
               //   Keyboard.singleton.setCurrentContext(path.join('/'));
               // }
 
-              batch(() => {
-                if (intent.data) {
-                  location.active = isActiveParts(location.active)
-                    ? Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
+              if (intent.data) {
+                const nextActive = isActiveParts(location.active)
+                  ? Object.entries(intent.data.activeParts).reduce(
+                      (acc: ActiveParts, [part, ids]) => {
                         const partMembers = new Set<string>();
                         // Add opened members first so they appear at the beginning.
                         (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
                         (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
                           partMembers.add(id),
                         );
-                        acc[part] = Array.from(partMembers);
+                        acc[part] = Array.from(partMembers).filter(Boolean);
                         return acc;
-                      }, location.active)
-                    : { sidebar: NAV_ID, ...intent.data, main: [...(intent.data.main ?? []), location.active] };
-                }
-              });
+                      },
+                      { ...location.active },
+                    )
+                  : {
+                      sidebar: NAV_ID,
+                      ...intent.data.activeParts,
+                      main: [...(intent.data.activeParts.main ?? []), ...(location.active ? [location.active] : [])],
+                    };
+                location.active = nextActive;
+              }
 
               const openedIds: string[] = Array.from(
                 intent.data
