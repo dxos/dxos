@@ -472,7 +472,9 @@ export const updateGraphWithSpace = ({
           {
             id: getId(SpaceAction.REMOVE_OBJECT),
             data: ({ node, caller }) => {
-              const collection = node.nodes({ direction: 'inbound' }).find(({ data }) => data instanceof Collection);
+              const collection = node
+                .nodes({ direction: 'inbound' })
+                .find(({ data }) => data instanceof Collection)?.data;
               return dispatch([
                 {
                   action: SpaceAction.REMOVE_OBJECT,
