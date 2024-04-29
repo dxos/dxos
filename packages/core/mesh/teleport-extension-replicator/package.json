@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-replicator",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Replicator extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
