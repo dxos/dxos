@@ -5,8 +5,7 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { type Filter } from '@dxos/echo-db';
-import { type ObjectStructure, encodeReference } from '@dxos/echo-pipeline';
+import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { Reference } from '@dxos/echo-schema';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -61,7 +60,7 @@ describe('Indexer', () => {
     await asyncTimeout(doneIndexing, 1000);
 
     {
-      const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await indexer.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -114,7 +113,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await indexer.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }

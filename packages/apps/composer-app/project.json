@@ -14,6 +14,16 @@
         "tsConfig": "{projectRoot}/tsconfig.json"
       }
     },
+    "bundle": {
+      "cache": false,
+      "dependsOn": [
+        "bundle-app"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "build:functions"
+      }
+    },
     "bundle-app": {
       "cache": true,
       "dependsOn": [
@@ -21,8 +31,6 @@
       ],
       "executor": "@nx/vite:build",
       "inputs": [
-        "production",
-        "^production",
         {
           "env": "CONFIG_DYNAMIC"
         },
@@ -55,7 +63,9 @@
         },
         {
           "env": "SENTRY_RELEASE_AUTH_TOKEN"
-        }
+        },
+        "^production",
+        "production"
       ],
       "options": {
         "generatePackageJson": false,
@@ -64,18 +74,6 @@
       "outputs": [
         "{options.outputPath}"
       ]
-    },
-    "bundle": {
-      // Don't cache because this is writing into the output of the app bundle
-      // which is already a cached directory.
-      "cache": false,
-      "dependsOn": [
-        "bundle-app"
-      ],
-      "executor": "nx:run-script",
-      "options": {
-        "script": "build:functions"
-      }
     },
     "e2e": {
       "options": {
