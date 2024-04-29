@@ -80,26 +80,7 @@ export class EchoClient extends Resource {
     this._indexQuerySourceProvider = new IndexQuerySourceProvider({
       service: this._queryService,
       objectLoader: {
-        loadObject: async (spaceKey, objectId) => {
-          const db = this._databases.get(spaceKey);
-          if (!db) {
-            return undefined;
-          }
-
-          // Waiting for the database to open since the query can run before the database is ready.
-          // TODO(dmaretskyi): Refactor this.
-          try {
-            await db.automerge.opened.wait();
-          } catch (err) {
-            if (err instanceof ContextDisposedError) {
-              return undefined;
-            }
-            throw err;
-          }
-
-          const object = await db.automerge.loadObjectById(objectId);
-          return object;
-        },
+        loadObject: this._loadObject.bind(this),
       },
     });
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
@@ -130,5 +111,26 @@ export class EchoClient extends Resource {
     this._graph._register(spaceKey, db, owningObject);
     this._databases.set(spaceKey, db);
     return db;
+  }
+
+  private async _loadObject(spaceKey: PublicKey, objectId: string) {
+    const db = this._databases.get(spaceKey);
+    if (!db) {
+      return undefined;
+    }
+
+    // Waiting for the database to open since the query can run before the database is ready.
+    // TODO(dmaretskyi): Refactor this.
+    try {
+      await db.automerge.opened.wait();
+    } catch (err) {
+      if (err instanceof ContextDisposedError) {
+        return undefined;
+      }
+      throw err;
+    }
+
+    const object = await db.automerge.loadObjectById(objectId);
+    return object;
   }
 }

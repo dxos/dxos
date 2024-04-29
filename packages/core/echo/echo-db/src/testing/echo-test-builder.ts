@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Level } from 'level';
-
 import { type Context, Resource } from '@dxos/context';
 import { type LevelDB } from '@dxos/echo-pipeline';
-import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { EchoClient } from '../client';
@@ -37,7 +35,7 @@ export class EchoTestPeer extends Resource {
   constructor() {
     super();
 
-    this._kv = new Level<string, string>(`/tmp/dxos-${PublicKey.random().toHex()}`);
+    this._kv = createTestLevel();
     this._storage = createStorage({ type: StorageType.RAM });
     this._echoHost = new EchoHost({
       kv: this._kv,

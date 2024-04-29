@@ -30,10 +30,7 @@ describe('Integration tests', () => {
     await db.flush();
 
     const { objects } = await db.query({ type: 'task' }).run();
-    expect(objects).to.have.length(1);
-    expect(objects[0] === object).to.be.true;
-    // TODO(dmaretskyi): `to.eq` doesn't work for some reason.
-    // expect(objects).to.eq([object]);
+    expect(objects).to.deep.eq([object]);
   });
 
   test('2 clients', async () => {
