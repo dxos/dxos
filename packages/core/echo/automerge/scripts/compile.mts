@@ -57,6 +57,11 @@ for (const platform of ['node', 'browser'] as const) {
               };
             }
 
+            // TODO(mykola): Remove once shell `xstate` dependency is bumped to 5.9.0.
+            if (args.path.startsWith('xstate')) {
+              return;
+            }
+
             if (args.kind !== 'entry-point' && !args.path.startsWith('.') && !args.path.startsWith('@automerge/')) {
               return {
                 external: true,
