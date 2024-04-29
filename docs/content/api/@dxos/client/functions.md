@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L50)
+### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/devtools/devtools.ts#L50)
 
 
 
@@ -14,7 +14,7 @@ Arguments:
 `options`: <code>[MountOptions](/api/@dxos/client/types/MountOptions)</code>
 
 
-### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/devtools/devtools.ts#L169)
+### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/devtools/devtools.ts#L169)
 
 
 
@@ -26,16 +26,44 @@ Arguments: none
 
 
 
-### [createDocAccessor(text)]()
+### [create(schema, obj)]()
 
 
 
 
-Returns: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;T&gt;</code>
+Returns: <code>[ReactiveObject](/api/@dxos/client/types/ReactiveObject)&lt;T&gt;</code>
 
 Arguments: 
 
-`text`: <code>[TextObject](/api/@dxos/client/classes/TextObject) | EchoReactiveObject&lt;object&gt;</code>
+`schema`: <code>Schema&lt;T, T, never&gt;</code>
+
+`obj`: <code>Simplify&lt;Omit&lt;T, "id"&gt;&gt;</code>
+
+
+### [createDocAccessor(obj, path)]()
+
+
+
+
+Returns: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
+
+Arguments: 
+
+`obj`: <code>[EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;T&gt;</code>
+
+`path`: <code>KeyPath</code>
+
+
+### [createEchoObject(init)]()
+
+
+
+
+Returns: <code>[EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;T&gt;</code>
+
+Arguments: 
+
+`init`: <code>T</code>
 
 
 ### [createSubscription(onUpdate)]()
@@ -53,7 +81,7 @@ Arguments:
 `onUpdate`: <code>function</code>
 
 
-### [fromCursor(object, cursor)]()
+### [fromCursor(accessor, cursor)]()
 
 
 
@@ -62,26 +90,62 @@ Returns: <code>number</code>
 
 Arguments: 
 
-`object`: <code>[TextObject](/api/@dxos/client/classes/TextObject)</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
 
 `cursor`: <code>string</code>
 
 
-### [getRawDoc(obj, \[path\])]()
+### [getAutomergeObjectCore(obj)]()
 
 
 
 
-Returns: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
+Returns: <code>AutomergeObjectCore</code>
 
 Arguments: 
 
-`obj`: <code>OpaqueEchoObject</code>
-
-`path`: <code>KeyPath</code>
+`obj`: <code>[EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;T&gt;</code>
 
 
-### [getSpaceForObject(object)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/echo/util.ts#L15)
+### [getMeta(obj)]()
+
+
+
+
+Returns: <code>[ObjectMeta](/api/@dxos/client/types/ObjectMeta)</code>
+
+Arguments: 
+
+`obj`: <code>T</code>
+
+
+### [getRangeFromCursor(accessor, cursor)]()
+
+
+
+
+Returns: <code>undefined | object</code>
+
+Arguments: 
+
+`accessor`: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
+
+`cursor`: <code>string</code>
+
+
+### [getSchema(obj)]()
+
+
+Returns the schema for the given object if one is defined.
+
+Returns: <code>undefined | Schema&lt;any, any, never&gt;</code>
+
+Arguments: 
+
+`obj`: <code>undefined | T</code>
+
+
+### [getSpace(object)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/echo/util.ts#L12)
 
 
 
@@ -90,10 +154,10 @@ Returns: <code>undefined | [Space](/api/@dxos/client/interfaces/Space)</code>
 
 Arguments: 
 
-`object`: <code>OpaqueEchoObject</code>
+`object`: <code>[ReactiveObject](/api/@dxos/client/types/ReactiveObject)&lt;any&gt;</code>
 
 
-### [getTextContent(object, defaultValue)]()
+### [getTextInRange(accessor, start, end)]()
 
 
 
@@ -102,28 +166,38 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`object`: <code>undefined | [TextObject](/api/@dxos/client/classes/TextObject) | EchoReactiveObject&lt;object&gt;</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
 
-`defaultValue`: <code>string</code>
-
-
-### [getTextInRange(object, begin, end)]()
-
-
-TODO(dima?): This API will change.
-
-Returns: <code>string</code>
-
-Arguments: 
-
-`object`: <code>[TextObject](/api/@dxos/client/classes/TextObject)</code>
-
-`begin`: <code>string</code>
+`start`: <code>string</code>
 
 `end`: <code>string</code>
 
 
-### [hasType(schema)]()
+### [getType(obj)]()
+
+
+
+
+Returns: <code>undefined | Reference</code>
+
+Arguments: 
+
+`obj`: <code>undefined | T</code>
+
+
+### [getTypeRef(\[type\])]()
+
+
+
+
+Returns: <code>undefined | Reference</code>
+
+Arguments: 
+
+`type`: <code>string | EncodedReferenceObject</code>
+
+
+### [hasType(type)]()
 
 
 
@@ -132,48 +206,34 @@ Returns: <code>function</code>
 
 Arguments: 
 
-`schema`: <code>[Schema](/api/@dxos/client/classes/Schema)</code>
+`type`: <code>function</code>
 
 
-### [isAutomergeObject(object)]()
+### [isEchoObject(value)]()
 
 
 
 
-Returns: <code>object is AutomergeObject</code>
+Returns: <code>value is [EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;any&gt;</code>
+
+Arguments: 
+
+`value`: <code>unknown</code>
+
+
+### [isSpace(object)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/echo/util.ts#L25)
+
+
+
+
+Returns: <code>object is [Space](/api/@dxos/client/interfaces/Space)</code>
 
 Arguments: 
 
 `object`: <code>unknown</code>
 
 
-### [isTypedObject(object)]()
-
-
-
-
-Returns: <code>object is [TypedObject](/api/@dxos/client/types/TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
-
-Arguments: 
-
-`object`: <code>unknown</code>
-
-
-### [setTextContent(object, text)]()
-
-
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`object`: <code>[TextObject](/api/@dxos/client/classes/TextObject)</code>
-
-`text`: <code>string</code>
-
-
-### [toCursor(object, pos)]()
+### [toCursor(accessor, pos)]()
 
 
 
@@ -182,24 +242,12 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`object`: <code>[TextObject](/api/@dxos/client/classes/TextObject)</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/client/interfaces/DocAccessor)&lt;any&gt;</code>
 
 `pos`: <code>number</code>
 
 
-### [Remote(target)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/client-services-factory.tsx#L15)
-
-
-
-
-Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
-
-Arguments: 
-
-`target`: <code>undefined | string</code>
-
-
-### [createClientServices(config, \[createWorker\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/client-services-factory.tsx#L41)
+### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/client-services-factory.tsx#L21)
 
 
 Create services from config.
@@ -212,8 +260,12 @@ Arguments:
 
 `createWorker`: <code>function</code>
 
+`observabilityGroup`: <code>string</code>
 
-### [fromAgent(options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent.ts#L29)
+`signalTelemetryEnabled`: <code>boolean</code>
+
+
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/agent.ts#L31)
 
 
 Connects to locally running CLI daemon.
@@ -225,7 +277,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/client/types/FromAgentOptions)</code>
 
 
-### [fromHost(config, \[params\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/local-client-services.ts#L19)
+### [fromHost(config, \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/local-client-services.ts#L24)
 
 
 Creates stand-alone services without rpc.
@@ -238,8 +290,12 @@ Arguments:
 
 `params`: <code>ClientServicesHostParams</code>
 
+`observabilityGroup`: <code>string</code>
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/utils.ts#L21)
+`signalTelemetryEnabled`: <code>boolean</code>
+
+
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/utils.ts#L21)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -253,7 +309,7 @@ Arguments:
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/socket.ts#L12)
+### [fromSocket(url, \[authenticationToken\])](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/socket.ts#L14)
 
 
 Access to remote client via a socket.
@@ -264,8 +320,10 @@ Arguments:
 
 `url`: <code>string</code>
 
+`authenticationToken`: <code>string</code>
 
-### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/worker-client-services.ts#L23)
+
+### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/worker-client-services.ts#L24)
 
 
 Creates services provider connected via worker.
@@ -279,7 +337,7 @@ Arguments:
 `options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
 
 
-### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/services/agent.ts#L19)
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/services/agent.ts#L21)
 
 
 
@@ -293,7 +351,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L190)
+### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/test-builder.ts#L189)
 
 
 
@@ -319,7 +377,7 @@ Arguments:
 `options`: <code>PerformInvitationParams</code>
 
 
-### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L182)
+### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/test-builder.ts#L181)
 
 
 
@@ -333,7 +391,7 @@ Arguments:
 `db2`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [testSpaceAutomerge(create, check)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L162)
+### [testSpaceAutomerge(createDb, checkDb)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/test-builder.ts#L171)
 
 
 
@@ -342,12 +400,12 @@ Returns: <code>Promise&lt;object&gt;</code>
 
 Arguments: 
 
-`create`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
+`createDb`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
-`check`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
+`checkDb`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/utils.ts#L16)
+### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/utils.ts#L16)
 
 
 
