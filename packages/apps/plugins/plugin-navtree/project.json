@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-navtree",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-navtree/src",
   "projectType": "library",
   "targets": {

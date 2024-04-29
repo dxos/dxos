@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "config",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/config/src",
   "projectType": "library",
   "targets": {

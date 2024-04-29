@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "lock-file",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/lock-file/src",
   "projectType": "library",
   "targets": {
