@@ -17,13 +17,12 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { createTestLevel } from '../testing';
 
@@ -332,20 +331,25 @@ describe('AutomergeHost', () => {
   });
 
   describe('storage', () => {
-    test('load range on node', async () => {
+    test('loadRange', async () => {
       const root = `/tmp/${randomBytes(16).toString('hex')}`;
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await level.open();
+        await adapter.open();
 
         await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
         await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
         await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+        await adapter.close();
+        await level.close();
       }
 
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await openAndClose(level, adapter);
 
         const range = await adapter.loadRange(['test']);
         expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['one', 'two']);
@@ -356,19 +360,24 @@ describe('AutomergeHost', () => {
       }
     });
 
-    test('removeRange on node', async () => {
+    test('removeRange', async () => {
       const root = `/tmp/${randomBytes(16).toString('hex')}`;
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await level.open();
+        await adapter.open();
         await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
         await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
         await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+        await adapter.close();
+        await level.close();
       }
 
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await openAndClose(level, adapter);
         await adapter.removeRange(['test']);
         const range = await adapter.loadRange(['test']);
         expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual([]);
