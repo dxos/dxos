@@ -14,10 +14,24 @@ export class CircularBuffer<T> {
     this._buffer = new Array(size);
   }
 
+  public some(predicate: (element: T) => boolean): boolean {
+    for (let i = 0; i < this._elementCount; i++) {
+      if (predicate(this._buffer[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public push(element: T) {
     this._buffer[this._nextIndex] = element;
     this._nextIndex = (this._nextIndex + 1) % this._buffer.length;
     this._elementCount = Math.min(this._buffer.length, this._elementCount + 1);
+  }
+
+  public clear() {
+    this._elementCount = 0;
+    this._nextIndex = 0;
   }
 
   public getLast(): T | undefined {
