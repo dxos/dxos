@@ -575,30 +575,32 @@ export const updateGraphWithAddObjectAction = ({
         ],
       });
 
-      removedCollections.forEach((collection) => {
-        graph.removeNode(`${plugin}/create/${collection.id}`, true);
-      });
-      collectionQuery.objects.forEach((collection) => {
-        graph.addNodes({
-          id: `${plugin}/create/${collection.id}`,
-          data: () =>
-            dispatch([
-              {
-                plugin,
-                action,
-              },
-              {
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: collection },
-              },
-              {
-                action: NavigationAction.ACTIVATE,
-              },
-            ]),
-          properties,
-          edges: [[`${SpaceAction.ADD_OBJECT}/${collection.id}`, 'inbound']],
+      if (condition) {
+        removedCollections.forEach((collection) => {
+          graph.removeNode(`${plugin}/create/${collection.id}`, true);
         });
-      });
+        collectionQuery.objects.forEach((collection) => {
+          graph.addNodes({
+            id: `${plugin}/create/${collection.id}`,
+            data: () =>
+              dispatch([
+                {
+                  plugin,
+                  action,
+                },
+                {
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: collection },
+                },
+                {
+                  action: NavigationAction.ACTIVATE,
+                },
+              ]),
+            properties,
+            edges: [[`${SpaceAction.ADD_OBJECT}/${collection.id}`, 'inbound']],
+          });
+        });
+      }
     });
   });
 
