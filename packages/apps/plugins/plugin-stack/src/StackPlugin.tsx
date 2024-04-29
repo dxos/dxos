@@ -3,32 +3,24 @@
 //
 
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
-import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SectionType, StackType } from '@braneframe/types';
-import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
-import { EventSubscriptions } from '@dxos/async';
+import { Collection, StackView } from '@braneframe/types';
+import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter } from '@dxos/react-client/echo';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
-import meta, { STACK_PLUGIN } from './meta';
+import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
 import translations from './translations';
-import {
-  StackAction,
-  type StackPluginProvides,
-  type StackProvides,
-  type StackState,
-  type StackSettingsProps,
-} from './types';
+import { type StackPluginProvides, type StackProvides, type StackState, type StackSettingsProps } from './types';
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState = create<StackState>({ creators: [] });
+  let subscription: UnsubscribeCallback;
 
   return {
     meta,
@@ -45,20 +37,23 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       }
     },
+    unload: async () => {
+      subscription?.();
+    },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
-          [StackType.typename]: {
+          [StackView.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [SectionType.typename]: {
-            parse: (section: SectionType, type: string) => {
+          [SECTION_IDENTIFIER]: {
+            parse: (section: { object: EchoReactiveObject<any> }, type: string) => {
               switch (type) {
                 case 'node':
                   // TODO(wittjosiah): Remove cast.
-                  return { id: section.object?.id, label: (section.object as any).title, data: section.object };
+                  return { id: section.object.id, label: section.object.title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':
@@ -70,70 +65,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [StackType, SectionType],
-      },
-      graph: {
-        builder: (plugins, graph) => {
-          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
-          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
-            return;
-          }
-
-          const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            subscriptions.clear();
-            spaces.forEach((space) => {
-              subscriptions.add(
-                updateGraphWithAddObjectAction({
-                  graph,
-                  space,
-                  dispatch,
-                  plugin: STACK_PLUGIN,
-                  action: StackAction.CREATE,
-                  properties: {
-                    label: ['create stack label', { ns: STACK_PLUGIN }],
-                    icon: (props: IconProps) => <StackSimple {...props} />,
-                    testId: 'stackPlugin.createObject',
-                  },
-                }),
-              );
-
-              // Add all stacks to the graph.
-              const query = space.db.query(Filter.schema(StackType));
-              subscriptions.add(query.subscribe());
-              let previousObjects: StackType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(object.id));
-                    query.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: object.title || ['stack title placeholder', { ns: STACK_PLUGIN }],
-                          icon: (props: IconProps) => <StackSimple {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
-                      });
-                    });
-                  });
-                }),
-              );
-            });
-          });
-
-          return () => {
-            unsubscribe();
-            subscriptions.clear();
-          };
-        },
+        schema: [StackView],
       },
       surface: {
         component: ({ data, role }) => {
@@ -143,23 +75,14 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
           switch (role) {
             case 'main':
-              return data.active instanceof StackType ? (
-                <StackMain stack={data.active} separation={settings.values.separation} />
+              return data.active instanceof Collection ? (
+                <StackMain collection={data.active} separation={settings.values.separation} />
               ) : null;
             case 'settings': {
               return data.plugin === meta.id ? <StackSettings settings={settings.values} /> : null;
             }
             default:
               return null;
-          }
-        },
-      },
-      intent: {
-        resolver: (intent) => {
-          switch (intent.action) {
-            case StackAction.CREATE: {
-              return { data: create(StackType, { sections: [] }) };
-            }
           }
         },
       },

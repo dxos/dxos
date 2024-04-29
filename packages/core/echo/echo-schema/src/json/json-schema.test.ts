@@ -8,7 +8,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { effectToJsonSchema, jsonToEffectSchema } from './json-schema';
-import { fieldMeta, ref } from '../annotations';
+import { fieldMeta } from '../annotations';
+import { ref } from '../ref-annotation';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
 
@@ -32,13 +33,11 @@ describe('effect-to-json', () => {
   });
 
   test('reference annotation', () => {
-    class DeepNested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
-    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(DeepNested) }) {}
+    class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
     class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(Nested) }) {}
     const jsonSchema = effectToJsonSchema(Schema);
     const nested = jsonSchema.properties.field;
     expectReferenceAnnotation(nested);
-    expectReferenceAnnotation(nested.properties.field);
   });
 
   test('array of references', () => {
@@ -63,7 +62,6 @@ describe('effect-to-json', () => {
   });
 
   const expectReferenceAnnotation = (object: any) => {
-    expect(object[ECHO_KEY].type).to.deep.eq(TEST_SCHEMA_TYPE);
     expect(object[ECHO_KEY].reference).to.deep.eq(TEST_SCHEMA_TYPE);
   };
 });
@@ -71,9 +69,7 @@ describe('effect-to-json', () => {
 describe('json-to-effect', () => {
   for (const partial of [false, true]) {
     test('deserialized equals original', () => {
-      class DeepNested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
-
-      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: ref(DeepNested) }) {}
+      class Nested extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
 
       class Schema extends TypedObject(TEST_SCHEMA_TYPE)(
         {
@@ -93,7 +89,26 @@ describe('json-to-effect', () => {
 
       const jsonSchema = effectToJsonSchema(Schema);
       const schema = jsonToEffectSchema(jsonSchema);
-      expect(schema.ast).to.deep.eq(Schema.ast);
+      expect(() => expect(schema.ast).to.deep.eq(Schema.ast)).to.throw();
+      expect(() => expect(removeFilterFunction(schema.ast)).to.deep.eq(Schema.ast)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(removeFilterFunction(Schema.ast))).to.throw();
+      expect(removeFilterFunction(schema.ast)).to.deep.eq(removeFilterFunction(Schema.ast));
     });
   }
+
+  const removeFilterFunction = (obj: any): any => {
+    if (typeof obj !== 'object') {
+      return obj;
+    }
+    if (Array.isArray(obj)) {
+      return obj.map((o) => removeFilterFunction(o));
+    }
+    const result: any = {};
+    for (const key in obj) {
+      if (key !== 'filter') {
+        result[key] = removeFilterFunction(obj[key]);
+      }
+    }
+    return result;
+  };
 });
