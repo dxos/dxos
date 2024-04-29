@@ -21,6 +21,8 @@ import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } f
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationTopology } from './invitation-topology';
 
+const MAX_DELEGATED_INVITATION_ATTEMPTS = 3;
+
 /**
  * Generic handler for Halo and Space invitations.
  * Handles the life-cycle of invitations between peers.
@@ -28,19 +30,16 @@ import { InvitationTopology } from './invitation-topology';
  * Host
  * - Creates an invitation containing a swarm topic (which can be shared via a URL, QR code, or direct message).
  * - Joins the swarm with the topic and waits for guest's introduction.
- * - Wait for guest to authenticate with OTP.
+ * - Wait for guest to authenticate with challenge specified in the invitation.
  * - Waits for guest to present credentials (containing local device and feed keys).
- * - Writes credentials to control feed then exits.
+ * - Writes credentials to control feed then exits or waits for more guests (multi use invitations).
  *
  * Guest
  * - Joins the swarm with the topic.
  * - Sends an introduction.
- * - Sends authentication OTP.
+ * - Submits the challenge.
  * - If Space handler then creates a local cloned space (with genesis block).
  * - Sends admission credentials.
- *
- * TODO(burdon): Show proxy/service relationship and reference design doc/diagram.
- *
  *  ```
  *  [Guest]                                          [Host]
  *   |------------------------------------Introduce-->|
@@ -104,6 +103,10 @@ export class InvitationsHandler {
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
+
+              if (!invitation.multiUse) {
+                await ctx.dispose();
+              }
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
@@ -115,12 +118,6 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
               throw err;
-            } finally {
-              if (!invitation.multiUse) {
-                // Wait for graceful close before disposing.
-                await swarmConnection.close();
-                await ctx.dispose();
-              }
             }
           });
         },
@@ -210,14 +207,26 @@ export class InvitationsHandler {
 
     const invitationFlowMutex = new Mutex();
     const createExtension = (): InvitationGuestExtension => {
-      const connectionCount = 0;
+      let connectionCount = 0;
+
+      const shouldCancelInvitationFlow = () => {
+        // for delegated invitations we might try with other hosts and will dispose either after
+        // a timeout or when the number of tries was exceeded
+        return invitation.type !== Invitation.Type.DELEGATED || connectionCount >= MAX_DELEGATED_INVITATION_ATTEMPTS;
+      };
 
       const extension = new InvitationGuestExtension(invitationFlowMutex, {
         onOpen: (extensionCtx) => {
+          connectionCount++;
+
           extensionCtx.onDispose(async () => {
             log('extension disposed', { currentState });
             if (!admitted) {
-              stream.error(new Error('Remote peer disconnected.'));
+              if (shouldCancelInvitationFlow()) {
+                await ctx.dispose();
+              } else {
+                setState({ state: Invitation.State.ERROR });
+              }
             }
           });
 
@@ -226,7 +235,7 @@ export class InvitationsHandler {
             try {
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
 
-              scheduleTask(ctx, () => ctx.raise(new TimeoutError(timeout)), timeout);
+              scheduleTask(ctx, () => extensionCtx.raise(new TimeoutError(timeout)), timeout);
 
               log('connected', { ...protocol.toJSON() });
               setState({ state: Invitation.State.CONNECTED });
@@ -276,7 +285,9 @@ export class InvitationsHandler {
               }
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
-              await ctx.dispose();
+              if (shouldCancelInvitationFlow()) {
+                await ctx.dispose();
+              }
             }
           });
         },
@@ -302,7 +313,8 @@ export class InvitationsHandler {
     scheduleTask(ctx, async () => {
       const error = protocol.checkInvitation(invitation);
       if (error) {
-        stream.error(error);
+        setState({ state: Invitation.State.ERROR });
+        await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
         const topic = invitation.swarmKey;
