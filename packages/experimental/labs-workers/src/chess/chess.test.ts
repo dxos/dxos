@@ -17,10 +17,12 @@ describe('Chess', () => {
         {
           id: 'game-1',
           schema: 'example.com/type/Chess',
-          changes: A.save(
-            A.change<GameType>(A.init<GameType>(), (game) => {
-              game.fen = 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2';
-            }),
+          changes: toBuffer(
+            A.save(
+              A.change<GameType>(A.init<GameType>(), (game) => {
+                game.fen = 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2';
+              }),
+            ),
           ),
         },
       ],
@@ -33,7 +35,7 @@ describe('Chess', () => {
     const objects = output.objects?.map<EchoObject<GameType>>(({ id, schema, changes }) => ({
       id,
       schema,
-      object: A.load<unknown>(changes),
+      object: A.load<unknown>(fromBuffer(changes)),
     }));
 
     expect(objects?.[0].object.fen).to.exist;
