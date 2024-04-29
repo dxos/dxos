@@ -3,6 +3,7 @@
 //
 
 import { useArrowNavigationGroup, useFocusableGroup } from '@fluentui/react-tabster';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { forwardRef, useCallback } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -43,7 +44,8 @@ export type StackProps<TData extends StackSectionContent = StackSectionContent> 
   Omit<StackContextValue<TData>, 'setCollapsedSections'> & {
     items?: StackSectionItem[];
     separation?: boolean; // TODO(burdon): Style.
-    onCollapseSection?: (id: string, collapsed: boolean) => void;
+    defaultCollapsedSections?: CollapsedSections;
+    onChangeCollapsedSections?: (nextCollapsedSections: CollapsedSections) => void;
   };
 
 export const Stack = ({
@@ -58,17 +60,26 @@ export const Stack = ({
   onAddSection,
   onDeleteSection,
   onNavigateToSection,
-  onCollapseSection,
+  collapsedSections: propsCollapsedSections,
+  defaultCollapsedSections,
+  onChangeCollapsedSections,
   ...props
 }: StackProps) => {
   const { ref: containerRef, width = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 200 });
   const { operation, overItem } = useMosaic();
   const itemsWithPreview = useItemsWithPreview({ path: id, items });
 
+  const [collapsedSections, setCollapsedSections] = useControllableState<CollapsedSections>({
+    prop: propsCollapsedSections,
+    defaultProp: defaultCollapsedSections,
+    onChange: onChangeCollapsedSections,
+  });
+
   const getOverlayStyle = useCallback(() => ({ width }), [width]);
+
   const getOverlayProps = useCallback(
-    () => ({ itemContext: { transform, SectionContent } }),
-    [transform, SectionContent],
+    () => ({ itemContext: { SectionContent, collapsedSections } }),
+    [SectionContent, collapsedSections],
   );
 
   // TODO(thure): The root cause of the discrepancy between `activeNodeRect.top` and `overlayNodeRect.top` in Composer
@@ -100,15 +111,15 @@ export const Stack = ({
         path={id}
         type={type}
         item={{ id, items: itemsWithPreview }}
-        // TODO(wittjosiah): Should this actually be a context?
         itemContext={{
           separation,
           transform,
           onDeleteSection,
           onNavigateToSection,
           onAddSection,
-          onCollapseSection,
           SectionContent,
+          collapsedSections,
+          onCollapseSection: setCollapsedSections,
         }}
         isOver={overItem && Path.hasRoot(overItem.path, id) && (operation === 'copy' || operation === 'transfer')}
         Component={StackTile}
@@ -152,7 +163,7 @@ const StackTile: MosaicTileComponent<StackItem, HTMLOListElement> = forwardRef(
                 path={path}
                 type={type}
                 position={index}
-                Component={Component}
+                Component={Component!}
               />
             ))}
           </Mosaic.SortableContext>

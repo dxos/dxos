@@ -39,14 +39,6 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   return Reference.fromLegacyTypename(annotation.typename);
 };
 
-export const getTypename = (obj: any): string | undefined => {
-  const schema = getSchema(obj);
-  if (!schema) {
-    return undefined;
-  }
-  return getEchoObjectAnnotation(schema)?.typename;
-};
-
 export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
   const proxyHandlerSlot = getProxyHandlerSlot(obj);
   const meta = proxyHandlerSlot.handler?.getMeta(obj);

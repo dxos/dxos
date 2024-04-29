@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, type BlockType, TextV0Type, Collection } from '@braneframe/types';
+import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { AST, create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -44,11 +44,11 @@ export class ResponseBuilder {
     const { data, content, type, kind } = result;
 
     //
-    // Add to collection.
+    // Add to stack.
     //
-    if (this._context.object instanceof Collection) {
+    if (this._context.object?.__typename === StackType.typename) {
       // TODO(burdon): Insert based on prompt config.
-      log.info('adding to collection', { collection: this._context.object.id });
+      log.info('adding section to stack', { stack: this._context.object.id });
 
       const formatFenced = (type: string, content: string) => {
         const tick = '```';
@@ -60,9 +60,11 @@ export class ResponseBuilder {
           ? '# Generated content\n\n' + formatFenced(type, content.trim())
           : content;
 
-      this._context.object.objects.push(
-        create(DocumentType, {
-          content: create(TextV0Type, { content: formattedContent }),
+      this._context.object.sections.push(
+        create(SectionType, {
+          object: create(DocumentType, {
+            content: create(TextV0Type, { content: formattedContent }),
+          }),
         }),
       );
 

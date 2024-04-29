@@ -107,7 +107,7 @@ export class AppManager {
 
   async createSpace(timeout = 5_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
-    await this.waitForSpaceReady(timeout);
+    await this.page.getByTestId('spacePlugin.main').waitFor({ timeout });
   }
 
   async joinSpace() {
@@ -115,8 +115,15 @@ export class AppManager {
     await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  async waitForSpaceReady(timeout = 30_000) {
-    await this.page.getByTestId('spacePlugin.shareSpaceButton').waitFor({ timeout });
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
+    return waitFor(
+      () =>
+        this.page
+          .getByTestId('spacePlugin.main')
+          .getAttribute('data-isready')
+          .then((value) => value === 'true'),
+      params,
+    );
   }
 
   getSpacePresenceMembers() {
@@ -140,7 +147,7 @@ export class AppManager {
     return this.page.getByTestId('spacePlugin.space').nth(nth).getByRole('button').first().click();
   }
 
-  toggleCollectionCollapsed(nth = 0) {
+  toggleFolderCollapsed(nth = 0) {
     return this.page.getByTestId('spacePlugin.object').nth(nth).getByRole('button').first().click();
   }
 
@@ -152,10 +159,10 @@ export class AppManager {
   }
 
   // TODO(wittjosiah): Last for backwards compatibility. Default to first object.
-  async createCollection(nth?: number) {
+  async createFolder(nth?: number) {
     const object = this.page.getByTestId('spacePlugin.createObject');
     await (nth ? object.nth(nth) : object.last()).click();
-    return this.page.getByTestId('spacePlugin.createCollection').click();
+    return this.page.getByTestId('spacePlugin.createFolder').click();
   }
 
   async renameObject(newName: string, nth = 0) {
@@ -234,3 +241,24 @@ export class AppManager {
     await this.page.getByTestId('resetDialog').waitFor();
   }
 }
+
+// TODO(wittjosiah): Factor out.
+const waitFor = (
+  cb: () => Promise<boolean>,
+  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
+): Promise<void> =>
+  new Promise<void>((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const res = await cb();
+      if (res) {
+        clearTimeout(timeout);
+        clearInterval(interval);
+        resolve();
+      }
+    }, _interval);
+
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      reject(new Error('Timeout waiting for condition.'));
+    }, _timeout);
+  });
