@@ -295,6 +295,14 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.worksAt?.name).to.eq(orgName);
     });
 
+    test('circular references', async () => {
+      const { db } = await createDatabase();
+      const task = create(Expando, { title: 'test' });
+      task.previous = create(Expando, { title: 'another' });
+      task.previous!.previous = task;
+      db.add(task);
+    });
+
     test('adding object with nested objects to DB', async () => {
       const graph = new Hypergraph();
       graph.runtimeSchemaRegistry.registerSchema(Org).registerSchema(Person);
