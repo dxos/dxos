@@ -8,14 +8,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Kanban as KanbanType } from '@braneframe/types';
+import { KanbanType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { KanbanMain } from './components';
 import meta, { KANBAN_PLUGIN } from './meta';
 import translations from './translations';
-import { KanbanAction, type KanbanPluginProvides, isKanban } from './types';
+import { KanbanAction, type KanbanPluginProvides } from './types';
 
 export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
   return {
@@ -23,7 +25,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [KanbanType.schema.typename]: {
+          [KanbanType.typename]: {
             placeholder: ['kanban title placeholder', { ns: KANBAN_PLUGIN }],
             icon: (props: IconProps) => <Kanban {...props} />,
           },
@@ -40,6 +42,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -57,7 +60,8 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
               );
 
               // Add all kanbans to the graph.
-              const query = space.db.query(KanbanType.filter());
+              const query = space.db.query(Filter.schema(KanbanType));
+              subscriptions.add(query.subscribe());
               let previousObjects: KanbanType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -96,7 +100,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isKanban(data.active) ? <KanbanMain kanban={data.active} /> : null;
+              return data.active instanceof KanbanType ? <KanbanMain kanban={data.active} /> : null;
             default:
               return null;
           }
@@ -106,7 +110,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case KanbanAction.CREATE: {
-              return { data: new KanbanType() };
+              return { data: create(KanbanType, { columns: [] }) };
             }
           }
         },

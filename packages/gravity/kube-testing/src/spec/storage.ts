@@ -3,9 +3,11 @@
 //
 
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { AutomergeStorageAdapter } from '@dxos/echo-pipeline';
+import { AutomergeStorageAdapter, LevelDBStorageAdapter } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
@@ -25,7 +27,7 @@ import {
 
 export type StorageTestSpec = {
   platform: Platform;
-  storageAdaptor: 'idb' | 'opfs' | 'node';
+  storageAdaptor: 'idb' | 'opfs' | 'node' | 'leveldb';
 
   filesAmount: number;
   fileSize: number; // in bytes
@@ -41,9 +43,9 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
   defaultSpec(): StorageTestSpec {
     return {
       platform: 'chromium',
-      storageAdaptor: 'idb',
-      filesAmount: 1_000_000,
-      fileSize: 1_000,
+      storageAdaptor: 'leveldb',
+      filesAmount: 10_000,
+      fileSize: 1024,
       batchSize: 100,
     };
   }
@@ -60,23 +62,24 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
   async run(env: AgentEnv<StorageTestSpec, StorageAgentConfig>): Promise<void> {
     const { spec } = env.params;
     const batchSize = spec.batchSize <= 0 ? spec.filesAmount : spec.batchSize;
+    const batches = Array.from({ length: Math.ceil(spec.filesAmount / batchSize) }).map((_, idx) =>
+      PublicKey.random().toHex(),
+    );
 
-    const filesToSave = range(spec.fileSize).map((idx) => {
-      const batchIdx = Math.floor(idx / batchSize);
-      const key = ['file', batchIdx.toString(), idx.toString()];
-      const data = new Uint8Array(range(spec.fileSize).map(() => Math.floor(Math.random() * 256)));
-      return { key, data, batchIdx };
+    const filesToSave = range(spec.filesAmount).map((idx) => {
+      const batch = batches[Math.floor(idx / batchSize)];
+      const key = ['file', batch, idx.toString()];
+      const data = Buffer.from(range(spec.fileSize).map(() => Math.floor(Math.random() * 256)));
+      return { key, data, batch };
     });
 
     {
       // Save.
       performance.mark('save:begin');
-      const storageAdapter = this._createStorage(spec.storageAdaptor);
-      for (const batchIdx of range(Math.ceil(spec.filesAmount / batchSize))) {
+      const storageAdapter = await this._createStorage(spec.storageAdaptor);
+      for (const batch of batches) {
         await Promise.all(
-          filesToSave
-            .filter((file) => file.batchIdx === batchIdx)
-            .map((file) => storageAdapter.save(file.key, file.data)),
+          filesToSave.filter((file) => file.batch === batch).map((file) => storageAdapter.save(file.key, file.data)),
         );
       }
       performance.mark('save:end');
@@ -96,9 +99,9 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
     {
       // Load.
       performance.mark('load:begin');
-      const storageAdapter = this._createStorage(spec.storageAdaptor);
-      for (const batchIdx of range(Math.ceil(spec.filesAmount / batchSize))) {
-        const loadedBatch = await storageAdapter.loadRange(['file', batchIdx.toString()]);
+      const storageAdapter = await this._createStorage(spec.storageAdaptor);
+      for (const batch of batches) {
+        const loadedBatch = await storageAdapter.loadRange(['file', batch]);
         loadedFiles.push(...loadedBatch);
       }
       performance.mark('load:end');
@@ -113,7 +116,7 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
       performance.mark('sanity:begin');
       for (const file of loadedFiles) {
         invariant(
-          filesToSave.find((f) => f.key.join() === file.key.join())!.data.toString() === file.data!.toString(),
+          filesToSave.find((f) => f.key.join() === file.key.join())!.data.equals(Buffer.from(file.data!)),
           `sanity check failed ${file.key.join()}`,
         );
       }
@@ -128,8 +131,9 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
   async finish(params: TestParams<StorageTestSpec>, results: PlanResults): Promise<any> {}
 
   private _storageCtx = new Context();
+  private _testId = PublicKey.random().toHex();
 
-  private _createStorage(kind: StorageTestSpec['storageAdaptor']) {
+  private async _createStorage(kind: StorageTestSpec['storageAdaptor']) {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();
@@ -137,6 +141,14 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
         const storage = createStorage({ type: StorageType.WEBFS });
         this._storageCtx.onDispose(() => storage.close());
         return new AutomergeStorageAdapter(storage.createDirectory('automerge'));
+      }
+      case 'leveldb': {
+        const level = await createLevel({ persistent: true, dataRoot: `/tmp/dxos/${this._testId}` });
+        this._storageCtx.onDispose(() => level.close());
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await adapter.open();
+        this._storageCtx.onDispose(() => adapter.close());
+        return adapter;
       }
       default: {
         throw new Error(`Unsupported storage kind: ${kind}`);

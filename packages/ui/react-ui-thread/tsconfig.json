@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -27,6 +30,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-schema"

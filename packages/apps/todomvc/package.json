@@ -1,6 +1,6 @@
 {
   "name": "@dxos/todomvc",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "private": true,
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",
@@ -8,9 +8,6 @@
   "repository": "github:dxos/dxos",
   "license": "MIT",
   "author": "DXOS.org",
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
@@ -34,7 +31,7 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.1.5",
+    "vite": "^5.2.9",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0"
   }

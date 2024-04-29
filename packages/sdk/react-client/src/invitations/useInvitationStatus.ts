@@ -29,6 +29,7 @@ interface InvitationReducerState {
   id?: string;
   invitationCode?: string;
   authCode?: string;
+  multiUse?: boolean;
 }
 
 export type InvitationAction =
@@ -65,6 +66,7 @@ export type InvitationStatus = {
   type?: Invitation.Type;
   status: Invitation.State;
   haltedAt?: Invitation.State;
+  multiUse?: boolean;
   result: InvitationResult;
   error?: number;
   cancel(): void;
@@ -179,6 +181,7 @@ export const useInvitationStatus = (initialObservable?: CancellableInvitationObs
       connect,
       authenticate,
       id: invitation?.invitationId,
+      multiUse: invitation?.multiUse,
       invitationCode: invitation ? InvitationEncoder.encode(invitation) : undefined,
       authCode: invitation?.authCode,
       authMethod: invitation?.authMethod,

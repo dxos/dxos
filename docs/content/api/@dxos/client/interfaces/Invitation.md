@@ -25,6 +25,22 @@ Type: <code>Date</code>
 Options:
   - proto3_optional = true
 
+### [delegationCredentialId]()
+Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+
+Present on Type.DELEGATED invitations.
+
+Options:
+  - proto3_optional = true
+
+### [guestKeypair]()
+Type: <code>AdmissionKeypair</code>
+
+Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+
+Options:
+  - proto3_optional = true
+
 ### [identityKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
@@ -45,6 +61,14 @@ Kind of access the invitation will grant.
 
 ### [lifetime]()
 Type: <code>number</code>
+
+Options:
+  - proto3_optional = true
+
+### [multiUse]()
+Type: <code>boolean</code>
+
+Whether an invitation can be used multiple times.
 
 Options:
   - proto3_optional = true

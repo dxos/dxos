@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,12 +11,12 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { PublicKey } from '@dxos/react-client';
+import { type PublicKey } from '@dxos/react-client';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/spaces/dir-handle';
+export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -67,6 +68,7 @@ export type SpacePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides & {
+  TranslationsProvides &
+  SchemaProvides & {
     space: Readonly<PluginState>;
   };

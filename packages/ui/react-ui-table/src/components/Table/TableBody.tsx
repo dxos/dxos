@@ -4,9 +4,10 @@
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { flexRender, type Row, type RowData } from '@tanstack/react-table';
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { useTableContext } from './TableContext';
+import { TableRootContext } from './TableRootContext';
 import { tbodyTr } from '../../theme';
 import { Cell } from '../Cell/Cell';
 
@@ -23,15 +24,24 @@ const TableBody = ({ rows }: TableBodyProps) => {
   const domAttributes = useArrowNavigationGroup({ axis: 'grid' });
   const canBeCurrent = !isGrid && !!onDatumClick;
 
+  const { virtualizer } = useContext(TableRootContext);
+
   return (
     <tbody {...(isGrid && domAttributes)}>
       {rows.map((row) => {
         const isCurrent = currentDatum === row.original;
         const isSelected = rowSelection?.[row.id];
+
+        const isPinned = row.getIsPinned();
+
+        const classNames = tbodyTr({ canBeCurrent, isPinned: isPinned !== false });
+
         return (
           <tr
             key={keyAccessor ? keyAccessor(row.original) : row.id}
-            className={tbodyTr({ canBeCurrent })}
+            className={classNames}
+            data-index={row.index}
+            ref={virtualizer.measureElement}
             {...(isCurrent && { 'aria-current': 'location' })}
             {...(isSelected && { 'aria-selected': 'true' })}
             {...(canBeCurrent && {

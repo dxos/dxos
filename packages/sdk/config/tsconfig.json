@@ -22,6 +22,9 @@
       "path": "../../common/node-std"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../core/protocols"
     }
   ]

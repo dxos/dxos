@@ -239,6 +239,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/testbench-app/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/todomvc/package.json",
           "jsonpath": "$.version"
         },
@@ -580,6 +585,11 @@
         {
           "type": "json",
           "path": "packages/experimental/labs-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/labs-workers/package.json",
           "jsonpath": "$.version"
         },
         {

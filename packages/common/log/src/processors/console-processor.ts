@@ -8,6 +8,7 @@ import { inspect } from 'node:util';
 
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
+import { getRelativeFilename } from './common';
 import { type LogConfig, LogLevel, shortLevelName } from '../config';
 import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
 
@@ -22,18 +23,6 @@ const LEVEL_COLORS: Record<LogLevel, typeof chalk.ForegroundColor> = {
 export const truncate = (text?: string, length = 0, right = false) => {
   const str = text && length ? (right ? text.slice(-length) : text.substring(0, length)) : text ?? '';
   return right ? str.padStart(length, ' ') : str.padEnd(length, ' ');
-};
-
-const getRelativeFilename = (filename: string) => {
-  // TODO(burdon): Hack uses "packages" as an anchor (pre-parse NX?)
-  // Including `packages/` part of the path so that excluded paths (e.g. from dist) are clickable in vscode.
-  const match = filename.match(/.+\/(packages\/.+\/.+)/);
-  if (match) {
-    const [, filePath] = match;
-    return filePath;
-  }
-
-  return filename;
 };
 
 // TODO(burdon): Optional package name.
@@ -53,10 +42,9 @@ export type Formatter = (config: LogConfig, parts: FormatParts) => (string | und
 
 export const DEFAULT_FORMATTER: Formatter = (
   config,
-  { path, line, timestamp, level, message, context, error, scope },
-) => {
+  { path, line, level, message, context, error, scope },
+): string[] => {
   const column = config.options?.formatter?.column;
-
   const filepath = path !== undefined && line !== undefined ? chalk.grey(`${path}:${line}`) : undefined;
 
   let instance;
@@ -86,11 +74,13 @@ export const DEFAULT_FORMATTER: Formatter = (
       ];
 };
 
-export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => [
-  chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
-  chalk[LEVEL_COLORS[level]](shortLevelName[level]),
-  message,
-];
+export const SHORT_FORMATTER: Formatter = (config, { path, level, message }) => {
+  return [
+    chalk.grey(truncate(path, 16, true)), // NOTE: Breaks terminal linking.
+    chalk[LEVEL_COLORS[level]](shortLevelName[level]),
+    message,
+  ];
+};
 
 // TODO(burdon): Config option.
 const formatter = DEFAULT_FORMATTER;

@@ -8,13 +8,10 @@ import { Select } from '../components';
 
 type Target = { value: string; label: string };
 
-const targets: Target[] = [
-  undefined,
-  'ws://localhost:5001',
-  'http://localhost:3967',
-  'https://halo.dev.dxos.org',
-  'https://halo.dxos.org',
-].map((value) => ({ value: value ?? '', label: value ?? 'default' }));
+const targets: Target[] = [undefined, 'ws://localhost:5001', 'http://localhost:3967'].map((value) => ({
+  value: value ?? '',
+  label: value ?? 'default',
+}));
 
 const getTarget = (value: string): Target => targets.find((target) => target.value === value) ?? targets[0];
 

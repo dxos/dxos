@@ -8,7 +8,7 @@ import { StateField, type Extension } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { next as A } from '@dxos/automerge/automerge';
-import { type DocAccessor } from '@dxos/echo-schema';
+import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { cursorConverter } from './cursor';
 import { updateHeadsEffect, isReconcile, type State } from './defs';

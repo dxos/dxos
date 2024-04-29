@@ -94,6 +94,7 @@ describe('identity/identity', () => {
       metadataStore,
       snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       snapshotId: undefined,
+      onDelegatedInvitationStatusChange: async () => {},
     });
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);
@@ -206,6 +207,7 @@ describe('identity/identity', () => {
         memberKey: identityKey,
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
+        onDelegatedInvitationStatusChange: async () => {},
       });
       await space.setControlFeed(controlFeed);
       await space.setDataFeed(dataFeed);
@@ -296,6 +298,7 @@ describe('identity/identity', () => {
         memberKey: identityKey,
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
+        onDelegatedInvitationStatusChange: async () => {},
       });
       await space.setControlFeed(controlFeed);
       await space.setDataFeed(dataFeed);

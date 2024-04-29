@@ -18,7 +18,7 @@ export {
 } from '@dxos/protocols/proto/dxos/iframe';
 
 export { getUnixSocket, fromAgent, type FromAgentOptions, AgentClientServiceProvider } from './agent';
-export { createClientServices, Remote } from './client-services-factory';
+export { createClientServices } from './client-services-factory';
 // TODO(wittjosiah): Remove this once this is internal to shell manager.
 export { IFrameManager } from './iframe-manager';
 export { IFrameClientServicesHost, type IFrameClientServicesHostOptions } from './iframe-service-host';
@@ -30,5 +30,5 @@ export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
 export { fromIFrame } from './utils';
 export { fromWorker, WorkerClientServices } from './worker-client-services';
-export { type AgentHostingProviderClient, EldonAgentHostingProviderClient } from './agent-hosting-provider';
+export { type AgentHostingProviderClient, DXOSAgentHostingProviderClient } from './agent-hosting-provider';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider';

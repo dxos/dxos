@@ -58,6 +58,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # TODO: update DO registry name when migration is complete
       - name: Docker meta for agent
         id: agent-meta
         uses: docker/metadata-action@v5
@@ -108,9 +109,6 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
-            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
-            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
-            DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
       - name: Build and push composer
@@ -131,9 +129,6 @@ jobs:
             DX_IPDATA_API_KEY=${{ secrets.IPDATA_API_KEY }}
             DX_SENTRY_DESTINATION=${{ secrets.CLI_SENTRY_DESTINATION }}
             DX_TELEMETRY_API_KEY=${{ secrets.CLI_SEGMENT_API_KEY }}
-            DX_DATADOG_API_KEY=${{ secrets.DATADOG_API_KEY }}
-            DX_DATADOG_APP_KEY=${{ secrets.DATADOG_APP_KEY }}
-            DX_DATADOG_PROXY=${{ secrets.DX_DATADOG_PROXY }}
             COMPOSER_DX_SENTRY_DESTINATION=${{ secrets.COMPOSER_APP_SENTRY_DESTINATION }}
             COMPOSER_DX_TELEMETRY_API_KEY=${{ secrets.COMPOSER_APP_SEGMENT_API_KEY }}
       - name: Update composer Docker Hub repo description

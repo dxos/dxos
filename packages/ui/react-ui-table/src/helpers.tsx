@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { format } from 'date-fns/format';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -102,14 +102,16 @@ const StringBuilderCell = <TData extends RowData>(cellContext: CellContext<TData
 
   // https://tanstack.com/table/v8/docs/examples/react/editable-data
   const initialValue = cellContext.getValue();
-  const [value, setValue] = useState(() => {
-    // TODO(burdon): Temporary shim for automerge.
-    if ((initialValue as any)?.content) {
-      return (initialValue as any)?.content;
-    }
 
-    return initialValue;
-  });
+  const getInitialValue = useCallback(() => {
+    // TODO(burdon): Temporary shim for automerge.
+    return (initialValue as any)?.content ?? initialValue;
+  }, [initialValue]);
+
+  const [value, setValue] = useState(getInitialValue);
+
+  // Update value if initialValue changes externally (cell reactivity).
+  useEffect(() => setValue(getInitialValue()), [getInitialValue]);
 
   const handleSave = () => {
     ref.current && document.activeElement === ref.current && findPrevFocusable(ref.current)?.focus();
@@ -340,7 +342,7 @@ export class ColumnBuilder<TData extends RowData> {
         ...props.meta,
         onUpdate,
         digits,
-        header: { classNames: 'text-end', ...props.meta?.header },
+        header: { ...props.meta?.header },
         cell: { ...props.meta?.cell, classNames },
       },
     };
@@ -496,6 +498,28 @@ export class ColumnBuilder<TData extends RowData> {
         }
       },
       ...props,
+    };
+  }
+
+  /**
+   * This display column type is for nested/unhandled data to appear as JSON.
+   */
+  display({ label, classNames, ...props }: KeyColumnOptions<TData> = {}): Partial<ColumnDef<TData, PublicKey>> {
+    return {
+      size: 120,
+      minSize: 120,
+      header: (cell) => label ?? cell.header.id,
+      cell: (cell) => {
+        const value = cell.getValue();
+
+        return (
+          <div className='overflow-scroll'>
+            <code className='text-xs'>{JSON.stringify(value)}</code>
+          </div>
+        );
+      },
+      ...props,
+      meta: { ...props.meta, cell: { ...props.meta?.cell, classNames: ['font-mono', textPadding, classNames] } },
     };
   }
 }

@@ -6,11 +6,12 @@ import cx from 'classnames';
 import React, { useCallback } from 'react';
 import { useNavigate, Link, generatePath } from 'react-router-dom';
 
+import { create } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { humanize } from '@dxos/util';
 
-import { TodoList } from '../proto';
+import { TodoListType } from '../types';
 
 export const SpaceList = ({ current }: { current?: Space }) => {
   const client = useClient();
@@ -24,7 +25,7 @@ export const SpaceList = ({ current }: { current?: Space }) => {
 
   const handleCreateList = useCallback(async () => {
     const space = await client.spaces.create();
-    await space.db.add(new TodoList());
+    await space.db.add(create(TodoListType, { todos: [] }));
     navigate(generatePath('/:spaceKey', { spaceKey: space.key.toHex() }));
   }, [client, navigate]);
 

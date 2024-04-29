@@ -7,7 +7,6 @@ import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
 import { type FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import {
-  type IndexService,
   type DevicesService,
   type IdentityService,
   type InvitationsService,
@@ -17,6 +16,7 @@ import {
   type SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -34,7 +34,7 @@ export type ClientServices = {
 
   IdentityService: IdentityService;
   InvitationsService: InvitationsService;
-  IndexService: IndexService;
+  QueryService: QueryService;
   DevicesService: DevicesService;
   SpacesService: SpacesService;
   DataService: DataService;
@@ -73,7 +73,7 @@ export const clientServiceBundle = createServiceBundle<ClientServices>({
   LoggingService: schema.getService('dxos.client.services.LoggingService'),
 
   IdentityService: schema.getService('dxos.client.services.IdentityService'),
-  IndexService: schema.getService('dxos.client.services.IndexService'),
+  QueryService: schema.getService('dxos.echo.query.QueryService'),
   InvitationsService: schema.getService('dxos.client.services.InvitationsService'),
   DevicesService: schema.getService('dxos.client.services.DevicesService'),
   SpacesService: schema.getService('dxos.client.services.SpacesService'),

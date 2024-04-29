@@ -8,14 +8,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Tree as TreeType } from '@braneframe/types';
+import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { OutlinerMain, TreeSection } from './components';
 import meta, { OUTLINER_PLUGIN } from './meta';
 import translations from './translations';
-import { OutlinerAction, type OutlinerPluginProvides, isObject } from './types';
+import { OutlinerAction, type OutlinerPluginProvides } from './types';
 
 export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
   return {
@@ -23,11 +25,14 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [TreeType.schema.typename]: {
+          [TreeType.typename]: {
             placeholder: ['object placeholder', { ns: OUTLINER_PLUGIN }],
             icon: (props: IconProps) => <TreeStructure {...props} />,
           },
         },
+      },
+      echo: {
+        schema: [TreeItemType, TreeType],
       },
       translations,
       graph: {
@@ -40,6 +45,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -57,7 +63,8 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
               );
 
               // Add all outlines to the graph.
-              const query = space.db.query(TreeType.filter());
+              const query = space.db.query(Filter.schema(TreeType));
+              subscriptions.add(query.subscribe());
               let previousObjects: TreeType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -125,9 +132,9 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active) ? <OutlinerMain tree={data.active as TreeType} /> : null;
+              return data.active instanceof TreeType ? <OutlinerMain tree={data.active} /> : null;
             case 'section':
-              return isObject(data.object) ? <TreeSection tree={data.object as TreeType} /> : null;
+              return data.object instanceof TreeType ? <TreeSection tree={data.object} /> : null;
           }
 
           return null;
@@ -138,9 +145,10 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
           switch (intent.action) {
             case OutlinerAction.CREATE: {
               return {
-                data: new TreeType({
-                  root: new TreeType.Item({
-                    items: [new TreeType.Item()],
+                data: create(TreeType, {
+                  root: create(TreeItemType, {
+                    text: create(TextV0Type, { content: '' }),
+                    items: [create(TreeItemType, { text: create(TextV0Type, { content: '' }), items: [] })],
                   }),
                 }),
               };

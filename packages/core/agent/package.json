@@ -1,6 +1,6 @@
 {
   "name": "@dxos/agent",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "DXOS Agent",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -45,7 +45,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "date-fns": "^3.3.1",
-    "express": "^4.17.1",
+    "express": "^4.19.2",
     "hnswlib-node": "^1.4.2",
     "isomorphic-ws": "^4.0.1",
     "js-yaml": "^4.1.0",
