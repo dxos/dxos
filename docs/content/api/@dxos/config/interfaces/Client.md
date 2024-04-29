@@ -38,6 +38,12 @@ Type: <code>string</code>
 Options:
   - proto3_optional = true
 
+### [remoteSourceAuthenticationToken]()
+Type: <code>string</code>
+
+Options:
+  - proto3_optional = true
+
 ### [snapshotInterval]()
 Type: <code>number</code>
 
@@ -48,14 +54,6 @@ Options:
 
 ### [storage]()
 Type: <code>[Storage](/api/@dxos/config/interfaces/Storage)</code>
-
-Options:
-  - proto3_optional = true
-
-### [useReactiveObjectApi]()
-Type: <code>boolean</code>
-
-Enable E.object api
 
 Options:
   - proto3_optional = true

@@ -131,6 +131,18 @@ Arguments: none
 
 
 
+### [toJSONL()]()
+
+
+
+
+Returns: <code>string</code>
+
+Arguments: none
+
+
+
+
 ### [toString()]()
 
 
