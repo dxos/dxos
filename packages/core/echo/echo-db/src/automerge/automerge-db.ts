@@ -2,20 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
-  type SpaceState,
-  type SpaceDoc,
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
+  type SpaceDoc,
+  type SpaceState,
 } from '@dxos/echo-pipeline';
-import { isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -47,6 +46,9 @@ export class AutomergeDb {
   private _isOpen = false;
 
   private _ctx = new Context();
+
+  // TODO(dmaretskyi): Refactor this.
+  public readonly opened = new Trigger();
 
   /**
    * @internal
@@ -102,6 +104,8 @@ export class AutomergeDb {
     if (elapsed > 1000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
+
+    this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
@@ -111,6 +115,9 @@ export class AutomergeDb {
       return;
     }
     this._isOpen = false;
+
+    this.opened.throw(new ContextDisposedError());
+    this.opened.reset();
 
     void this._ctx.dispose();
     this._ctx = new Context();
