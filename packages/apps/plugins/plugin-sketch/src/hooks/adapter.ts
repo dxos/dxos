@@ -52,7 +52,7 @@ const safeStorePut = (store: TLStore, records: any[]) => {
       try {
         store.put([record]);
       } catch (err) {
-        log.error('invalid schema', err);
+        log.warn('ignoring record', { record });
       }
     }
   }

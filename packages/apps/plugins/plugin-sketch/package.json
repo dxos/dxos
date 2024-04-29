@@ -35,12 +35,12 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@tldraw/assets": "2.0.0-alpha.19",
-    "@tldraw/editor": "2.0.0-alpha.19",
-    "@tldraw/state": "2.0.0-alpha.19",
-    "@tldraw/store": "2.0.0-alpha.19",
-    "@tldraw/tldraw": "2.0.0-alpha.19",
-    "@tldraw/tlschema": "2.0.0-alpha.19",
+    "@tldraw/assets": "^2.1.4",
+    "@tldraw/editor": "^2.1.4",
+    "@tldraw/state": "^2.1.4",
+    "@tldraw/store": "^2.1.4",
+    "@tldraw/tldraw": "^2.1.4",
+    "@tldraw/tlschema": "^2.1.4",
     "react-resize-detector": "^7.1.2"
   },
   "devDependencies": {
