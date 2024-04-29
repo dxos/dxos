@@ -4,7 +4,7 @@
 
 import '@tldraw/tldraw/tldraw.css';
 
-import { type Editor, Tldraw } from '@tldraw/tldraw';
+import { DefaultGrid, type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -13,14 +13,7 @@ import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
-// TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
-
 import { useStoreAdapter } from '../hooks';
-
-const styles = {
-  background: '[&>div>span>div>div]:bg-white dark:[&>div>span>div>div]:bg-black',
-};
 
 export type SketchComponentProps = {
   sketch: SketchType;
@@ -32,8 +25,6 @@ export type SketchComponentProps = {
 
 const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
   const { themeMode } = useThemeContext();
-
-  // TODO(burdon): Custom fonts.
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -96,34 +87,39 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     return () => subscription();
   }, [editor, width, height]);
 
+  // https://tldraw.dev/docs/user-interface
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
+  // https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+  // TODO(burdon): Fonts are hard coded in TextStylePickerSet.
+  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/ui/components/StylePanel/DefaultStylePanelContent.tsx
+  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/styles.tsx
   return (
     <div
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx(
-        'w-full h-full',
-        // styles.background, // TODO(burdon): ???
-        className,
-      )}
+      className={mx('w-full h-full', className)}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
+      {/*
+        TODO(burdon): Error when navigating between pages.
+          TypeError: Cannot read properties of undefined (reading 'currentPageId')
+          return this.getInstanceState().currentPageId;
+      */}
       <Tldraw
+        // Setting the key forces re-rendering when the content changes.
         key={sketch.id}
         store={store}
-        components={
-          {
-            // DebugPanel: null,
-            // Grid: DefaultGrid,
-            // HelpMenu: null,
-            // MenuPanel: null,
-            // NavigationPanel: null,
-            // TopPanel: null,
-            // ZoomMenu: null,
-          }
-        }
         hideUi={readonly}
+        components={{
+          DebugPanel: null,
+          Grid: DefaultGrid,
+          HelpMenu: null,
+          MenuPanel: null,
+          NavigationPanel: null,
+          TopPanel: null,
+          ZoomMenu: null,
+        }}
         onMount={setEditor}
       />
     </div>
