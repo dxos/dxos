@@ -7,7 +7,7 @@ import { Hono } from 'hono';
 import { log } from '@dxos/log';
 
 import type { Env } from '../defs';
-import { postHandler } from '../exec';
+import { handlePost } from '../exec';
 
 const app = new Hono<Env>();
 
@@ -18,7 +18,7 @@ const app = new Hono<Env>();
  */
 app.post(
   '/',
-  postHandler(async (input) => {
+  handlePost(async (input) => {
     log.info('exec', { input });
   }),
 );

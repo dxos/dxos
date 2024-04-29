@@ -4,7 +4,6 @@
   "sourceRoot": "packages/experimental/labs-workers/src",
   "projectType": "library",
   "targets": {
-    "test": {},
     "__test": {
       "options": {
         "ciEnvironments": [
@@ -12,7 +11,8 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild",
