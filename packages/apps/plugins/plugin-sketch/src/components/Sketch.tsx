@@ -113,7 +113,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         key={sketch.id}
         store={store}
         components={{
-          DebugMenu: () => <div>hello</div>,
+          DebugPanel: null,
           Grid: DefaultGrid,
           HelpMenu: null,
           MenuPanel: null,
