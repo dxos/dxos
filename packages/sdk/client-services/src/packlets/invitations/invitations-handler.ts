@@ -2,31 +2,24 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
+import { Mutex, PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
 import { AuthenticatingInvitation, INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  createTeleportProtocolFactory,
-  type NetworkManager,
-  StarTopology,
-  type SwarmConnection,
-} from '@dxos/network-manager';
+import { createTeleportProtocolFactory, type NetworkManager, type SwarmConnection } from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
 import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { Options } from '@dxos/protocols/proto/dxos/halo/invitations';
 
-import {
-  InvitationGuestExtension,
-  InvitationHostExtension,
-  isAuthenticationRequired,
-  MAX_OTP_ATTEMPTS,
-} from './invitation-extension';
+import { InvitationGuestExtension } from './invitation-guest-extenstion';
+import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
+import { InvitationTopology } from './invitation-topology';
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -67,9 +60,11 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
+    const topology = new InvitationTopology(Options.Role.HOST);
+    const invitationFlowMutex = new Mutex();
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
-      const extension = new InvitationHostExtension({
+      const extension = new InvitationHostExtension(invitationFlowMutex, {
         onStateUpdate: (invitation) => {
           stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
         },
@@ -93,7 +88,7 @@ export class InvitationsHandler {
             return admissionResponse;
           } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            stream.error(err);
+            stream.next({ ...invitation, state: Invitation.State.ERROR });
             throw err; // Propagate error to guest.
           }
         },
@@ -115,9 +110,11 @@ export class InvitationsHandler {
                 stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
               } else {
                 log.error('failed', err);
-                stream.error(err);
+                stream.next({ ...invitation, state: Invitation.State.ERROR });
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
+              // Close connection
+              throw err;
             } finally {
               if (!invitation.multiUse) {
                 // Wait for graceful close before disposing.
@@ -129,6 +126,8 @@ export class InvitationsHandler {
         },
         onError: (err) => {
           if (err instanceof InvalidInvitationExtensionRoleError) {
+            invariant(err.context?.remotePeerId);
+            topology.addWrongRolePeer(err.context.remotePeerId);
             return;
           }
           if (err instanceof TimeoutError) {
@@ -136,7 +135,7 @@ export class InvitationsHandler {
             stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
           } else {
             log.error('failed', err);
-            stream.error(err);
+            stream.next({ ...invitation, state: Invitation.State.ERROR });
           }
         },
       });
@@ -173,7 +172,7 @@ export class InvitationsHandler {
         protocolProvider: createTeleportProtocolFactory(async (teleport) => {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
-        topology: new StarTopology(topic),
+        topology,
         label: invitationLabel,
       });
       ctx.onDispose(() => swarmConnection.close());
@@ -188,7 +187,6 @@ export class InvitationsHandler {
     deviceProfile?: DeviceProfileDocument,
   ): AuthenticatingInvitation {
     const { timeout = INVITATION_TIMEOUT } = invitation;
-    invariant(protocol);
 
     if (deviceProfile) {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
@@ -214,7 +212,7 @@ export class InvitationsHandler {
           setState({ state: Invitation.State.TIMEOUT });
         } else {
           log.warn('auth failed', err);
-          stream.error(err);
+          setState({ state: Invitation.State.ERROR });
         }
         void ctx.dispose();
       },
@@ -225,10 +223,13 @@ export class InvitationsHandler {
       stream.complete();
     });
 
-    const createExtension = (): InvitationGuestExtension => {
-      let connectionCount = 0;
+    const topology = new InvitationTopology(Options.Role.GUEST);
 
-      const extension = new InvitationGuestExtension({
+    const invitationFlowMutex = new Mutex();
+    const createExtension = (): InvitationGuestExtension => {
+      const connectionCount = 0;
+
+      const extension = new InvitationGuestExtension(invitationFlowMutex, {
         onOpen: (extensionCtx) => {
           extensionCtx.onDispose(async () => {
             log('extension disposed', { currentState });
@@ -241,10 +242,6 @@ export class InvitationsHandler {
             const traceId = PublicKey.random().toHex();
             try {
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
-              // TODO(burdon): Bug where guest may create multiple connections.
-              if (++connectionCount > 1) {
-                throw new Error(`multiple connections detected: ${connectionCount}`);
-              }
 
               scheduleTask(ctx, () => ctx.raise(new TimeoutError(timeout)), timeout);
 
@@ -292,7 +289,7 @@ export class InvitationsHandler {
                 setState({ state: Invitation.State.TIMEOUT });
               } else {
                 log('auth failed', err);
-                stream.error(err);
+                setState({ state: Invitation.State.ERROR });
               }
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
@@ -302,6 +299,8 @@ export class InvitationsHandler {
         },
         onError: (err) => {
           if (err instanceof InvalidInvitationExtensionRoleError) {
+            invariant(err.context?.remotePeerId);
+            topology.addWrongRolePeer(err.context.remotePeerId);
             return;
           }
           if (err instanceof TimeoutError) {
@@ -309,7 +308,7 @@ export class InvitationsHandler {
             setState({ state: Invitation.State.TIMEOUT });
           } else {
             log('auth failed', err);
-            stream.error(err);
+            setState({ state: Invitation.State.ERROR });
           }
         },
       });
@@ -330,7 +329,7 @@ export class InvitationsHandler {
           protocolProvider: createTeleportProtocolFactory(async (teleport) => {
             teleport.addExtension('dxos.halo.invitations', createExtension());
           }),
-          topology: new StarTopology(topic),
+          topology,
           label: 'invitation guest',
         });
         ctx.onDispose(() => swarmConnection.close());
