@@ -416,6 +416,12 @@ class Toolbox {
       const projectPath = join(project.path, 'project.json');
       const projectJson = await loadJson<ProjectJson>(projectPath);
 
+      // Skip uncatagorized projects.
+      const relativePath = relative(this.rootDir, project.path);
+      if (!relativePath.startsWith('packages') || relativePath.split('/').length < 3) {
+        continue;
+      }
+
       const scope = project.path.split('/').at(-2);
       if (!scope) {
         continue;
