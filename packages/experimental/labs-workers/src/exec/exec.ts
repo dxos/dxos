@@ -6,13 +6,11 @@ import { type Context } from 'hono';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { safeJson } from '../util';
-
 // TODO(burdon): Simple query manager.
 export type SerializedObject = {
   id: string;
   schema: string;
-  changes: Uint8Array;
+  changes: Buffer;
 };
 
 // TODO(burdon): Replace with ECHO object.
@@ -50,9 +48,10 @@ export type Transform<Input = any, Output = any> = (
 export const handlePost = (fn: Transform) => {
   const mapper = execFunction(fn);
   return async (c: Context) => {
-    const input = await safeJson<Input>(c.req, {});
+    const input = await c.req.json();
     const output = await mapper(input);
-    return c.json<Output>(output);
+    // c.header('Content-Type', 'image/png'); // Means binary data.
+    return c.json(output);
   };
 };
 
@@ -63,9 +62,13 @@ export const execFunction =
   (fn: Transform) =>
   async (input: Input): Promise<Output> => {
     const objects: EchoObject[] =
-      input.objects?.map(({ id, schema, changes }) => ({ id, schema, object: A.load<unknown>(changes) })) ?? [];
+      input.objects?.map(({ id, schema, changes }) => ({ id, schema, object: A.load<unknown>(fromBuffer(changes)) })) ??
+      [];
     const mutated = await fn(objects);
     return {
-      objects: mutated?.map(({ id, schema, object }) => ({ id, schema, changes: A.save(object) })),
+      objects: mutated?.map(({ id, schema, object }) => ({ id, schema, changes: toBuffer(A.save(object)) })),
     };
   };
+
+export const toBuffer = (data: Uint8Array) => Buffer.from(data);
+export const fromBuffer = (data: Buffer) => new Uint8Array(Buffer.from(data));
