@@ -4,7 +4,7 @@
 
 import '@tldraw/tldraw/tldraw.css';
 
-import { DefaultGrid, type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -112,15 +112,17 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       <Tldraw
         key={sketch.id}
         store={store}
-        components={{
-          DebugPanel: null,
-          Grid: DefaultGrid,
-          HelpMenu: null,
-          MenuPanel: null,
-          NavigationPanel: null,
-          TopPanel: null,
-          ZoomMenu: null,
-        }}
+        components={
+          {
+            // DebugPanel: null,
+            // Grid: DefaultGrid,
+            // HelpMenu: null,
+            // MenuPanel: null,
+            // NavigationPanel: null,
+            // TopPanel: null,
+            // ZoomMenu: null,
+          }
+        }
         hideUi={readonly}
         onMount={setEditor}
       />

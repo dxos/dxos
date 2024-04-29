@@ -39,6 +39,25 @@ const STRING_CRDT_LIMIT = 300_000;
 //   }
 // }
 
+/**
+ * Insert records into the store catching possible schema errors.
+ */
+// TODO(burdon): Optionally delete invalid shapes?
+const safeStorePut = (store: TLStore, records: any[]) => {
+  try {
+    store.put(records);
+  } catch (err) {
+    log.error('invalid schema', err);
+    for (const record of records) {
+      try {
+        store.put([record]);
+      } catch (err) {
+        log.error('invalid schema', err);
+      }
+    }
+  }
+};
+
 // TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
 export class AutomergeStoreAdapter {
   private readonly _store: TLStore;
@@ -81,10 +100,14 @@ export class AutomergeStoreAdapter {
         transact(() => {
           log('load initial records', { contentRecords });
           this._store.clear();
-          this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
 
-          const { schema } = this._store.getSnapshot();
-          console.log(JSON.stringify(schema, null, 2));
+          safeStorePut(
+            this._store,
+            Object.values(contentRecords ?? {}).map((record) => decode(record)),
+          );
+
+          // const { schema } = this._store.getSnapshot();
+          // console.log(JSON.stringify(schema, null, 2));
         });
       }
     }
@@ -153,7 +176,7 @@ export class AutomergeStoreAdapter {
           this._store.remove(Array.from(removed));
         }
         if (updated.size) {
-          this._store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
+          safeStorePut(this._store, Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))));
         }
       });
       this._lastHeads = currentHeads;
