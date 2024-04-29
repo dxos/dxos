@@ -5,6 +5,9 @@
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type PublicKey } from '@dxos/keys';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryResponse,
   type QueryService,
@@ -12,12 +15,9 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { EchoReactiveObject } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
-import { QuerySourceProvider } from '../hypergraph';
-import { Filter, QueryResult, QuerySource } from '../query';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { getAutomergeObjectCore } from '../automerge';
+import { type QuerySourceProvider } from '../hypergraph';
+import { type Filter, type QueryResult, type QuerySource } from '../query';
 
 export interface ObjectLoader {
   loadObject(spaceKey: PublicKey, objectId: string): Promise<EchoReactiveObject<any> | undefined>;

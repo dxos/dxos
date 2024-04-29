@@ -8,13 +8,13 @@ import { AutomergeHost, DataServiceImpl, type LevelDB } from '@dxos/echo-pipelin
 import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
 
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
-import { IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,

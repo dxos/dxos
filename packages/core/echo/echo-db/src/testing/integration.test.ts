@@ -1,7 +1,13 @@
-import { afterTest, describe, test } from '@dxos/test';
-import { EchoTestBuilder } from './echo-test-builder';
-import { PublicKey } from '@dxos/keys';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { expect } from 'chai';
+
+import { PublicKey } from '@dxos/keys';
+import { afterTest, describe, test } from '@dxos/test';
+
+import { EchoTestBuilder } from './echo-test-builder';
 
 describe('Integration tests', () => {
   test('read/write to one database', async () => {

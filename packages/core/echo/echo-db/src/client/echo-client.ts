@@ -5,14 +5,14 @@
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
+import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
-import { IndexQuerySourceProvider, ObjectLoader } from './index-query-source-provider';
-import { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 export type EchoClientParams = {};
 

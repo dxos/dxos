@@ -1,10 +1,16 @@
-import { Context, Resource } from '@dxos/context';
-import { EchoHost } from '../host';
-import { EchoClient } from '../client';
-import { LevelDB } from '@dxos/echo-pipeline';
-import { Storage, StorageType, createStorage } from '@dxos/random-access-storage';
-import { PublicKey } from '@dxos/keys';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Level } from 'level';
+
+import { type Context, Resource } from '@dxos/context';
+import { type LevelDB } from '@dxos/echo-pipeline';
+import { PublicKey } from '@dxos/keys';
+import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
+
+import { EchoClient } from '../client';
+import { EchoHost } from '../host';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
