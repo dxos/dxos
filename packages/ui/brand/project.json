@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-icons",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/brand/src",
   "projectType": "library",
   "targets": {

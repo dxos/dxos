@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "app-framework",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/app-framework/src",
   "projectType": "application",
   "targets": {

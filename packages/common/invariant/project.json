@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "invariant",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/invariant/src",
   "projectType": "library",
   "targets": {

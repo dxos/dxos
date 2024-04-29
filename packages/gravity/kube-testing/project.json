@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "kube-testing",
+  "tags": [
+    "scope:gravity"
+  ],
   "sourceRoot": "packages/gravity/kube-testing/src",
   "projectType": "library",
   "targets": {

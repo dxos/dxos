@@ -678,6 +678,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@dxos/web-auth':
+        specifier: ^0.4.28
+        version: 0.4.28
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -694,6 +697,9 @@ importers:
       '@babel/core':
         specifier: ^7.18.13
         version: 7.22.19
+      '@cloudflare/workers-types':
+        specifier: ^4.20240423.0
+        version: 4.20240423.0
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -5062,15 +5068,6 @@ importers:
 
   packages/core/echo/automerge:
     dependencies:
-      '@automerge/automerge':
-        specifier: ^2.1.13
-        version: 2.1.13
-      '@automerge/automerge-repo':
-        specifier: ^1.1.5
-        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      '@automerge/automerge-repo-storage-indexeddb':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
         specifier: ^0.12.0
         version: 0.12.0
@@ -5090,8 +5087,24 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0
       xstate:
-        specifier: ^4.37.0
-        version: 4.37.1
+        specifier: ^5.9.1
+        version: 5.12.0
+    devDependencies:
+      '@automerge/automerge':
+        specifier: ^2.2.0
+        version: 2.2.1
+      '@automerge/automerge-repo':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-network-broadcastchannel':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-network-websocket':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-storage-indexeddb':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
 
   packages/core/echo/echo-db:
     dependencies:
@@ -5119,6 +5132,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5137,6 +5153,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../mesh/teleport
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5152,6 +5171,9 @@ importers:
       effect:
         specifier: 2.4.9
         version: 2.4.9
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5445,9 +5467,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo-db
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
@@ -7304,8 +7323,8 @@ importers:
         version: 0.137.0
     devDependencies:
       '@cloudflare/workers-types':
-        specifier: ^4.20240405.0
-        version: 4.20240419.0
+        specifier: ^4.20240423.0
+        version: 4.20240423.0
       '@types/args':
         specifier: ^5.0.3
         version: 5.0.3
@@ -7329,7 +7348,7 @@ importers:
         version: 1.5.0(@types/node@18.11.9)(@vitest/browser@1.5.0)(@vitest/ui@1.5.0)(happy-dom@13.3.4)(jsdom@20.0.1)
       wrangler:
         specifier: ^3.51.2
-        version: 3.51.2(@cloudflare/workers-types@4.20240419.0)
+        version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -7641,9 +7660,6 @@ importers:
 
   packages/gravity/kube-testing:
     dependencies:
-      '@automerge/automerge-repo-network-websocket':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -9151,9 +9167,6 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
     devDependencies:
-      '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -9599,6 +9612,12 @@ importers:
       '@radix-ui/react-context':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
+      '@radix-ui/react-primitive':
+        specifier: ^1.0.2
+        version: 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.0.0
         version: 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -10449,10 +10468,10 @@ packages:
       leven: 3.1.0
     dev: true
 
-  /@automerge/automerge-repo-network-broadcastchannel@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-aCPtGFz9tMHhzZnpquAf5bhqjarrsVyQXVN7Wdd1AR1gg+RbFhphnITQVMds7c8QogTI2Xdzh+7nhKFyun74qw==}
+  /@automerge/automerge-repo-network-broadcastchannel@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-uPjCdKhenqT89oezT91uwmDQoJcxsGxosJHrfWJUlSLTkMyy4QI+tGKIfvpQQ9Vxkp4M+7CKaAhVYf+TbreXYw==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -10461,10 +10480,10 @@ packages:
       - typescript
     dev: true
 
-  /@automerge/automerge-repo-network-websocket@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-CTo3VvLRnuhE7sAg8oFnMyvfzZolKT8WSizQHIMlv4AlEbOc/e54wEwfZ09ySaabwT8u8eVj5R3WCvfVdkkSBA==}
+  /@automerge/automerge-repo-network-websocket@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-y5YcS2LtYZuHEaqwcMWiH6Z7ufXjoW/JavnXqt1jS7vAsaIx8h2E+gqccbgt1WGa02DLxul/+vhs7IzvzeBCZQ==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
@@ -10478,24 +10497,24 @@ packages:
       - supports-color
       - typescript
       - utf-8-validate
-    dev: false
+    dev: true
 
-  /@automerge/automerge-repo-storage-indexeddb@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-PNravKPsF0wn0XllqwzamRjEF/HgcvwWyExBzKk2WUqIclQzLchlECHwZmq4BjsfJZXbq/6rgDIsTMhyFgvwzQ==}
+  /@automerge/automerge-repo-storage-indexeddb@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-y/9nxCXZNWnnLM30ClaJ12wKB3Cotqw8i011zRB6mKB6cmy9l3QV7hK2d34ReEdRlmJ7gmO54kMvNnmBKcmmeA==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
       - supports-color
       - typescript
-    dev: false
+    dev: true
 
-  /@automerge/automerge-repo@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-EuY/+hwPkR0bLkMzi2obRFzW3fsUtlih7S0Te/nJRvsXS7a5mrzmqnQpFwYZPZzeBsPrxaBC2vVrcNqferlaLQ==}
+  /@automerge/automerge-repo@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-rh8PEgC0tDULrfnS5Gcq0U8yxqU0kuwcfx/JkQnOtp0FU/1IoalGAc3qgvceruRMOrzfXaktZ/r9a13I5UtiTQ==}
     dependencies:
-      '@automerge/automerge': 2.1.13
+      '@automerge/automerge': 2.2.1
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
@@ -10504,43 +10523,29 @@ packages:
       tiny-typed-emitter: 2.1.0
       ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       uuid: 9.0.1
-      xstate: 4.37.1
+      xstate: 5.12.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
       - supports-color
       - typescript
-
-  /@automerge/automerge-repo@1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-SwXWwkasugfdGwQy4RuS/pn2FrI+YDtzrwvUbXkLVRiX83Zt3UQBXlL+QW+5QbH7uQ2mK0l3rOkRlQwnsYHUNg==}
-    dependencies:
-      '@automerge/automerge': 2.1.13
-      bs58check: 3.0.1
-      cbor-x: 1.5.4
-      debug: 4.3.4(supports-color@8.1.1)
-      eventemitter3: 5.0.1
-      fast-sha256: 1.3.0
-      tiny-typed-emitter: 2.1.0
-      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      uuid: 9.0.1
-      xstate: 4.37.1
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - supports-color
-      - typescript
-    dev: false
+    dev: true
 
   /@automerge/automerge-wasm@0.12.0:
     resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
+    dev: false
 
-  /@automerge/automerge@2.1.13:
-    resolution: {integrity: sha512-9t185MgkFvwvqccmA45yKq61If2KCpKxZg19gukwO9G15bvxuh5ulWv2PWvMZ+iTvhDYCH+pZwXmFkD4nufScw==}
+  /@automerge/automerge-wasm@0.16.0:
+    resolution: {integrity: sha512-yYQ8WJED8f4cCnbIq+5SM8Q2tLK2VawDqLKptW+FTI5asklN8NEsHUHvDzqWUQARqGp6O9BnNd7ifQ0FPdks7A==}
+    dev: true
+
+  /@automerge/automerge@2.2.1:
+    resolution: {integrity: sha512-LJwvVapEgAox0sEp0iDihE4wqsDAUyKt41Y5m3z1hHdF5DHa7IhqiHhGNCc59H8t3Zl3fnbTgtKabcMWFffvCQ==}
     dependencies:
-      '@automerge/automerge-wasm': 0.12.0
+      '@automerge/automerge-wasm': 0.16.0
       uuid: 9.0.1
+    dev: true
 
   /@aw-web-design/x-default-browser@1.4.126:
     resolution: {integrity: sha512-Xk1sIhyNC/esHGGVjL/niHLowM0csl/kFO5uawBy4IrWwy0o1G8LGt3jP6nmWGz+USxeeqbihAmp/oVZju6wug==}
@@ -13247,6 +13252,12 @@ packages:
     resolution: {integrity: sha512-4iri8i1AqYHJE2DstZYkyEprg6Pq6sKx3xn5FpySk9sNhH7qN2LLlHJCfDTZRILNwQNPD7mATWM0TBui7uC1pA==}
     dev: true
 
+  /@baselime/edge-logger@0.3.2:
+    resolution: {integrity: sha512-Z7vAtFx7Ld8+Um1PSxUyEP0Wx/T43EYm0zD3lM1h59bJeC+I8Uh90KkAkZckwNnaC3R0tjW6h5DQdSmtRLhSXQ==}
+    dependencies:
+      '@opentelemetry/api': 1.6.0
+    dev: false
+
   /@baselime/node-opentelemetry@0.5.8(@trpc/server@10.45.2):
     resolution: {integrity: sha512-wF3119LuxWLqCg1od6qHWqzz8fdod9HIB03Aa8EZNoxcGY7kxFXdDW8v1iz8jCx2bCRHw6ZYSL9Hpg8AwDnzyg==}
     peerDependencies:
@@ -13454,8 +13465,8 @@ packages:
     resolution: {integrity: sha512-CiYtVpQURPgQqtBKkmOAnfPElVZuD7Xyf1IxKtKp2B4aB9gnooapwJhzeY8c4Ls4u17SgMS0MprOkrgYwzZ6xg==}
     dev: true
 
-  /@cloudflare/workers-types@4.20240419.0:
-    resolution: {integrity: sha512-UM16sr4HEe0mDj6C5OFcodzdj/CnEp0bfncAq3g7OpDsoZ1sBrfsMrb7Yc4f8J81EemvmQZyE6sSanpURtVkcQ==}
+  /@cloudflare/workers-types@4.20240423.0:
+    resolution: {integrity: sha512-ssuccb3j+URp6mP2p0PcQE9vmS3YeKBQnALHF9P3yQfUAFozuhTsDTbqmL+zPrJvUcG7SL2xVQkNDF9QJeKDZw==}
     dev: true
 
   /@cnakazawa/watch@1.0.4:
@@ -13957,6 +13968,32 @@ packages:
       react: 18.2.0
       tslib: 2.6.0
 
+  /@dxos/async@0.4.9:
+    resolution: {integrity: sha512-bS4s7xod4yZRL2ZS4Ylf5r21HmHjlclQRGgqecm8zbkyv/j+ii7rtJjnyjptzvYHd7awBzxgOwZq7s0twAwi6w==}
+    dependencies:
+      '@dxos/context': 0.4.9
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/log': 0.4.9
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      zen-observable: 0.10.0
+      zen-push: 0.3.1
+    dev: false
+
+  /@dxos/context@0.4.9:
+    resolution: {integrity: sha512-4rdh3ZBnspOyiAc3pMOsRr3dhjK0bsSVM9vzLpMf+dyuKNmVurpjzJ1FOmCcEbxxs5ITottHARys6hEWm/EPww==}
+    dependencies:
+      '@dxos/log': 0.4.9
+      '@dxos/util': 0.4.9
+    dev: false
+
+  /@dxos/debug@0.4.9:
+    resolution: {integrity: sha512-nnnmDqII7/9LnbnVdwEzmcq9FqFTe5vaM5Qc0JvZo3/BMhPc3pFZkMqtQpGn7DQJq4/xes09c/6Vw19MjW4SIA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+    dev: false
+
   /@dxos/esbuild-book-knobs@2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-io/I+4uKdotdiIpE7OAYWtIUOhx4VWP7yGweprM1flQZXmDfwglAavxKlEcqafEoimquX+K5UWYGnBPYh+a0RQ==}
     deprecated: Versions published prior to open sourcing are no longer supported
@@ -14004,6 +14041,68 @@ packages:
       - '@types/react'
       - supports-color
     dev: true
+
+  /@dxos/invariant@0.4.9:
+    resolution: {integrity: sha512-BXpmvZmX6uweggeTQW+d30/S9A1fcl8V+IfotV0TADAbgOE4LLXiNXlbDuFhlL7XQQg1AYv6efJ4OMnyur9/EA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/keys@0.4.9:
+    resolution: {integrity: sha512-8jFH8O1gOubbHjVLMLTGdCyXzMqPIn59ez4oj/jC4DJaJ7xKLSWEd3aSAkdk+ZQ5yR8HPQX6dXTz6JPOSP9oJA==}
+    dependencies:
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/log@0.4.9:
+    resolution: {integrity: sha512-MOGKh7gcgO8maNnTtjtbwybqz8GvNBRaqA/huSlafg8NGOXBPy3yga00qVeA0aIp3E1NazVN4LebVVyHZlQOuA==}
+    dependencies:
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      chalk: 4.1.2
+      js-yaml: 4.1.0
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+      lodash.pick: 4.4.0
+      lodash.pickby: 4.6.0
+    dev: false
+
+  /@dxos/node-std@0.4.9:
+    resolution: {integrity: sha512-mKwOT1lndx0fAperkOdz0b/DAPbYlq0bzSBBccIWXqmCdE7rC4bxU6Yudklvp0NKZkT3d7N1Z5uZyxEUg4JsKg==}
+    dependencies:
+      assert: 2.1.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.0
+      util: 0.12.5
+    dev: false
+
+  /@dxos/util@0.4.9:
+    resolution: {integrity: sha512-830DFvs0gHvuzHRZgFYNorKz77L6/wj4S7vyYaFe1ZedyywX4KfGDxtqP0OatT8h03NpupLU8n8ih3tRkLE/aQ==}
+    dependencies:
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/keys': 0.4.9
+      '@dxos/node-std': 0.4.9
+    dev: false
+
+  /@dxos/web-auth@0.4.28:
+    resolution: {integrity: sha512-lNBUQi/MMZ6pMyVkSnNAA+EWzlmrsTKZ1tErnleTdBwTrZWWPCr1Wig0hkVVxZom4Wgnf56dMca6BOni9mzbHQ==}
+    dependencies:
+      '@baselime/edge-logger': 0.3.2
+      '@dxos/async': 0.4.9
+      '@dxos/debug': 0.4.9
+      '@dxos/invariant': 0.4.9
+      '@dxos/keys': 0.4.9
+      '@dxos/log': 0.4.9
+      '@dxos/node-std': 0.4.9
+      '@dxos/util': 0.4.9
+      cookie: 0.6.0
+      hono: 4.2.9
+      lodash.pick: 4.4.0
+    dev: false
 
   /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
     resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
@@ -18265,6 +18364,11 @@ packages:
     engines: {node: '>=14'}
     dependencies:
       '@opentelemetry/api': 1.8.0
+    dev: false
+
+  /@opentelemetry/api@1.6.0:
+    resolution: {integrity: sha512-OWlrQAnWn9577PhVgqjUvMr1pg57Bc4jv0iL4w0PRuOSRvq67rvHW9Ie/dZVMvCzhSCB+UxhcY/PmCmFj33Q+g==}
+    engines: {node: '>=8.0.0'}
     dev: false
 
   /@opentelemetry/api@1.8.0:
@@ -26736,7 +26840,6 @@ packages:
       object-is: 1.1.5
       object.assign: 4.1.4
       util: 0.12.5
-    dev: true
 
   /assertion-error@1.1.0:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
@@ -33920,6 +34023,11 @@ packages:
     engines: {node: '>=16.0.0'}
     dev: false
 
+  /hono@4.2.9:
+    resolution: {integrity: sha512-59FAv52UxDWUt/NlC0NzrRCjeVCThUnVlqlrKYm+k80XujBu6uJwBIa5gACKKZWobjA0MJ6Vds0I3URKf383Cw==}
+    engines: {node: '>=16.0.0'}
+    dev: false
+
   /hosted-git-info@2.8.9:
     resolution: {integrity: sha512-mxIDAb9Lsm6DoOJ7xH+5+X4y1LU/4Hi50L9C5sIswK3JzULS4bwk1FvjdBgvYR4bzT4tuUQiC15FE2f5HbLvYw==}
 
@@ -35368,7 +35476,7 @@ packages:
       ws: '*'
     dependencies:
       ws: 8.14.2
-    dev: false
+    dev: true
 
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
@@ -45741,6 +45849,7 @@ packages:
 
   /tiny-typed-emitter@2.1.0:
     resolution: {integrity: sha512-qVtvMxeXbVej0cQWKqVSSAHmKZEHAvxdF8HEUBFWts8h+xEo5m/lEiPakuyZ3BnCBjOD8i24kzNOiOLLgsSxhA==}
+    dev: true
 
   /tinybench@2.6.0:
     resolution: {integrity: sha512-N8hW3PG/3aOoZAN5V/NSAEDz0ZixDSSt5b/a05iqtpgfLWMSVuCo7w0k2vVvEjdrIoeGqZzweX2WlyioNIHchA==}
@@ -49016,7 +49125,7 @@ packages:
     resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
     dev: true
 
-  /wrangler@3.51.2(@cloudflare/workers-types@4.20240419.0):
+  /wrangler@3.51.2(@cloudflare/workers-types@4.20240423.0):
     resolution: {integrity: sha512-8TRUwzPHj6+uPDzY0hBJ9/YwniEF9pqMGe5qbqLP/XsHTCWxIFib5go374zyCkmuVh23AwV7NuTA6gUtSqZ8pQ==}
     engines: {node: '>=16.17.0'}
     hasBin: true
@@ -49027,7 +49136,7 @@ packages:
         optional: true
     dependencies:
       '@cloudflare/kv-asset-handler': 0.3.1
-      '@cloudflare/workers-types': 4.20240419.0
+      '@cloudflare/workers-types': 4.20240423.0
       '@esbuild-plugins/node-globals-polyfill': 0.2.3(esbuild@0.17.19)
       '@esbuild-plugins/node-modules-polyfill': 0.2.2(esbuild@0.17.19)
       blake3-wasm: 2.1.5
@@ -49296,6 +49405,10 @@ packages:
 
   /xstate@4.37.1:
     resolution: {integrity: sha512-MuB7s01nV5vG2CzaBg2msXLGz7JuS+x/NBkQuZAwgEYCnWA8iQMiRz2VGxD3pcFjZAOih3fOgDD3kDaFInEx+g==}
+    dev: false
+
+  /xstate@5.12.0:
+    resolution: {integrity: sha512-4W/Hj553mwVnTLQ1itc3rni/cGtM5OkjyavTjaxCelc0ZZKE/ks6tYllc98KbekIoUrEPm4CJH/wTB5p5pPGEw==}
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}

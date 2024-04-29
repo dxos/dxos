@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "chain",
+  "tags": [
+    "scope:core"
+  ],
   "sourceRoot": "packages/core/chain/src",
   "projectType": "library",
   "targets": {

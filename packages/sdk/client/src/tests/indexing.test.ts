@@ -5,23 +5,17 @@
 import { expect } from 'chai';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { getHeads } from '@dxos/automerge/automerge';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
-import { warnAfterTimeout } from '@dxos/debug';
 import { Filter } from '@dxos/echo-db';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { create } from '@dxos/echo-schema';
-import { QueryServiceImpl, IndexStore, Indexer } from '@dxos/indexing';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { idCodec } from '@dxos/protocols';
-import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, openAndClose, test } from '@dxos/test';
+import { afterTest, test } from '@dxos/test';
 
 import { Client } from '../client';
 import { QueryOptions } from '../echo';
-import { IndexQuerySourceProvider } from '../echo/index-query-source-provider';
 import { ContactType, TestBuilder } from '../testing';
 
 describe('Index queries', () => {
@@ -70,52 +64,6 @@ describe('Index queries', () => {
     expect(contact.name).to.equal(john);
     return contact;
   };
-
-  test('indexing stack', async () => {
-    const builder = new TestBuilder();
-    builder.level = createTestLevel();
-    await openAndClose(builder.level);
-
-    const services = builder.createLocal();
-    const client = await initClient(services);
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity();
-
-    const indexer = new Indexer({
-      db: builder.level,
-      indexStore: new IndexStore({ db: builder.level!.sublevel('index-store') }),
-      metadataStore: services.host!.context.indexMetadata,
-      loadDocuments: async function* (ids: string[]) {
-        for (const id of ids) {
-          const { documentId, objectId } = idCodec.decode(id);
-          const handle = services.host!.context.automergeHost.repo.find(documentId as any);
-          await warnAfterTimeout(1000, 'to long to load doc', () => handle.whenReady());
-          const doc = handle.docSync();
-          const heads = getHeads(doc);
-          yield [{ id, object: doc.objects[objectId], currentHash: heads.at(-1)! }];
-        }
-      },
-    });
-    afterTest(() => indexer.destroy());
-
-    indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-    await indexer.initialize();
-
-    const service = new QueryServiceImpl({ indexer, automergeHost: services.host!.context.automergeHost });
-    await service.open();
-    afterTest(() => service.close());
-
-    const indexQuerySourceProvider = new IndexQuerySourceProvider({
-      service,
-      echo: client.spaces,
-    });
-    client.experimental.graph.registerQuerySourceProvider(indexQuerySourceProvider);
-    const space = await client.spaces.create();
-    await addContact(space, john);
-
-    await queryIndexedContact(space, john);
-  });
 
   test('index queries work with client', async () => {
     const builder = new TestBuilder();

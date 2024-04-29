@@ -47,6 +47,6 @@ const logColumns = (() => {
   return columns;
 })();
 
-export const LogView: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
-  return <Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
+export const LogTable: FC<{ logs: LogEntry[] }> = ({ logs = [] }) => {
+  return <Table.Table<LogEntry> columns={logColumns} data={logs} fullWidth />;
 };

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "protobuf-compiler",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/protobuf-compiler/src",
   "projectType": "library",
   "targets": {

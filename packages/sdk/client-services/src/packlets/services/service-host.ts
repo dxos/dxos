@@ -8,15 +8,8 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import {
-  DataServiceImpl,
-  type ObjectStructure,
-  encodeReference,
-  type SpaceDoc,
-  type LevelDB,
-} from '@dxos/echo-pipeline';
+import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-pipeline';
 import { getTypeReference } from '@dxos/echo-schema';
-import { QueryServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -83,7 +76,6 @@ export class ClientServicesHost {
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
-  private _queryService!: QueryServiceImpl;
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
@@ -263,12 +255,6 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
-    this._queryService = new QueryServiceImpl({
-      indexer: this._serviceContext.indexer,
-      automergeHost: this._serviceContext.automergeHost,
-    });
-    await this._queryService.open(ctx);
-
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
 
@@ -292,9 +278,8 @@ export class ClientServicesHost {
         },
       ),
 
-      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
-
-      QueryService: this._queryService,
+      DataService: this._serviceContext.echoHost.dataService,
+      QueryService: this._serviceContext.echoHost.queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -344,7 +329,6 @@ export class ClientServicesHost {
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
-    await this._queryService.close();
     await this._serviceContext.close();
     await this._level?.close();
     this._open = false;
@@ -373,7 +357,7 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.
@@ -393,7 +377,7 @@ export class ClientServicesHost {
       assignDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._serviceContext.automergeHost.repo.flush();
+    await this._serviceContext.echoHost.flush();
 
     return identity;
   }
