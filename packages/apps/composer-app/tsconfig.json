@@ -16,6 +16,7 @@
   },
   "exclude": [
     "demos/*",
+    "src/functions/*",
     "vite.config.ts"
   ],
   "include": [

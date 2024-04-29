@@ -24,6 +24,7 @@ export const createDatabase = async (graph = new Hypergraph()) => {
   return { db, graph };
 };
 
+// Remove in favour of the new EchoTestBuilder.
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();

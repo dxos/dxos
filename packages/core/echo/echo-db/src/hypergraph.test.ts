@@ -11,6 +11,7 @@ import { describe, test } from '@dxos/test';
 import { getAutomergeObjectCore } from './automerge';
 import { TestBuilder } from './testing';
 
+// TODO(dmaretskyi): Convert to new test builder.
 describe('HyperGraph', () => {
   test('cross-space query', async () => {
     const builder = new TestBuilder();
