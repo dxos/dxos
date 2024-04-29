@@ -31,7 +31,9 @@ export type Output = {
 };
 
 // TODO(burdon): Pass in database?
-export type Transform = (objects: EchoObject<any>[]) => Promise<EchoObject<any>[] | void>;
+export type Transform<Input = any, Output = any> = (
+  objects: EchoObject<Input>[],
+) => Promise<EchoObject<Output>[] | void>;
 
 // TODO(burdon): Standardize POST API (event, state).
 //  https://effect.website/docs/guides/essentials/pipeline

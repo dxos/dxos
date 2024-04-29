@@ -7,7 +7,7 @@ import { Game } from 'js-chess-engine';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { type EchoObject } from '../exec';
+import { type Transform } from '../exec';
 
 // TODO(burdon): Stockfish WASM.
 // import stockfish from 'stockfish.js/stockfish.wasm.js';
@@ -29,8 +29,8 @@ export type ChessTransformOptions = {
   level?: number;
 };
 
-export const chessTransform = ({ level = 1, debug = true }: ChessTransformOptions = {}) => {
-  return async (games: EchoObject<GameType>[]) => {
+export const chessMove = ({ level = 1, debug = true }: ChessTransformOptions = {}): Transform<GameType, GameType> => {
+  return async (games) => {
     return (
       games?.map(({ id, schema, object }) => {
         const game = new Game(object.fen);

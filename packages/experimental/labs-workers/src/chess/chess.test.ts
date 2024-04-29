@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { next as A } from '@dxos/automerge/automerge';
 import { describe, test } from '@dxos/test';
 
-import { chessTransform, type GameType } from './chess';
+import { chessMove, type GameType } from './chess';
 import { execFunction, type SerializedObject } from '../exec';
 
 describe('Chess', () => {
@@ -24,7 +24,7 @@ describe('Chess', () => {
       },
     ];
 
-    const mapper = execFunction(chessTransform());
+    const mapper = execFunction(chessMove());
     const output = await mapper({ objects });
     const object = A.load<GameType>(output.objects![0].changes);
     expect(object.fen).to.exist;
