@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "node-std",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/node-std/src",
   "projectType": "library",
   "targets": {
