@@ -5171,6 +5171,9 @@ importers:
       effect:
         specifier: 2.4.9
         version: 2.4.9
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
