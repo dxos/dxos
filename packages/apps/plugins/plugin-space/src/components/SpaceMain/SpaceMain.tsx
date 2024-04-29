@@ -50,10 +50,6 @@ const KeyShortcuts = () => {
   );
 };
 
-/**
- * @deprecated
- */
-// TODO(wittjosiah): Remove this and re-use space members section as a deck column.
 export const SpaceMain = ({ space }: { space: Space }) => {
   // const { graph } = useGraph();
   // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;

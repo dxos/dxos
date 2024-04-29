@@ -8,13 +8,14 @@ import path from 'node:path';
 import * as process from 'node:process';
 
 import {
-  Collection,
   EventType,
   FileType,
   MailboxType,
   MessageType,
+  StackType,
   ThreadType,
   DocumentType,
+  SectionType,
   ContactType,
   TextV0Type,
 } from '@braneframe/types';
@@ -67,16 +68,17 @@ export const registerTypes = (space: Space | undefined) => {
   }
   const registry = space.db.graph.runtimeSchemaRegistry;
   const schemaList: S.Schema<any>[] = [
-    Collection,
-    ContactType,
+    MessageType,
+    MailboxType,
+    GameType,
+    SectionType,
+    StackType,
     DocumentType,
+    ThreadType,
     EventType,
     FileType,
-    GameType,
-    MailboxType,
-    MessageType,
+    ContactType,
     TextV0Type,
-    ThreadType,
   ];
   for (const type of schemaList) {
     if (!registry.isSchemaRegistered(type)) {
