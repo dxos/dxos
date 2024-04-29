@@ -7,7 +7,7 @@ import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 /**
- * @deprecated
+ * @deprecated To be replaced by a specialized API for each index.
  */
 export type IndexQuery = {
   /**
