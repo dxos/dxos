@@ -8,6 +8,7 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
+import { type ObjectSnapshot, type Indexer, type ConcatenatedHeadHashes } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -18,9 +19,7 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type ObjectSnapshot, type Indexer } from './indexer';
 import { QueryState } from './query-state';
-import { type ConcatenatedHeadHashes } from './types';
 
 export type QueryServiceParams = {
   indexer: Indexer;
