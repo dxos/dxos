@@ -364,7 +364,7 @@ export const LayoutPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
-              const id = firstMainId(intent.data);
+              const id = firstMainId(intent.data?.activeParts);
               const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
                 // TODO(wittjosiah): Factor out.
