@@ -107,8 +107,8 @@ export class EchoClient extends Resource {
     this._automergeContext = undefined;
   }
 
-  // TODO(dmaretskyi): Make async.
-  createDatabase({ spaceKey, owningObject }: CreateDatabaseParams) {
+  // TODO(dmaretskyi): Make async?
+  constructDatabase({ spaceKey, owningObject }: CreateDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceKey), 'Database already exists.');
     const db = new EchoDatabaseImpl({

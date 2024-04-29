@@ -12,7 +12,7 @@ describe('Integration tests', () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     const peer = await builder.createPeer();
-    const db = peer.client.createDatabase({ spaceKey });
+    const db = peer.client.constructDatabase({ spaceKey });
     await db.open();
     afterTest(() => db.close());
 
@@ -38,7 +38,7 @@ describe('Integration tests', () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     const peer = await builder.createPeer();
-    const db = peer.client.createDatabase({ spaceKey });
+    const db = peer.client.constructDatabase({ spaceKey });
     await db.open();
     afterTest(() => db.close());
 
@@ -51,7 +51,7 @@ describe('Integration tests', () => {
     await db.flush();
 
     const client2 = await peer.createClient();
-    const db2 = client2.createDatabase({ spaceKey });
+    const db2 = client2.constructDatabase({ spaceKey });
     await db2.open();
     afterTest(() => db2.close());
     await db2.automerge.open({ rootUrl });
