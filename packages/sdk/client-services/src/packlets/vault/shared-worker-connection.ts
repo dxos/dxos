@@ -57,12 +57,7 @@ export class SharedWorkerConnection {
     return this._shellRuntime;
   }
 
-  async open(
-    /**
-     * @deprecated Only used with iframes.
-     */
-    origin: string,
-  ) {
+  async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
     this._config = await getAsyncValue(this._configProvider);
 
     this._transportService = new SimplePeerTransportService({
@@ -83,7 +78,7 @@ export class SharedWorkerConnection {
 
     let lockKey: string | undefined;
     if (typeof navigator !== 'undefined') {
-      lockKey = this._lockKey(origin);
+      lockKey = this._lockKey(params.origin);
       this._release = new Trigger();
       const ready = new Trigger();
       void navigator.locks.request(lockKey, async () => {
@@ -95,7 +90,7 @@ export class SharedWorkerConnection {
 
     try {
       await this._systemRpc.open();
-      await this._systemRpc.rpc.WorkerService.start({ origin, lockKey });
+      await this._systemRpc.rpc.WorkerService.start({ lockKey, ...params });
     } catch (err) {
       log.catch(err);
       throw new RemoteServiceConnectionError('Failed to connect to worker');

@@ -49,7 +49,7 @@ const initLogProcessor = <S, C>(params: AgentParams<S, C>) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({
-        path: join(params.outDir, AGENT_LOG_FILE),
+        pathOrFd: join(params.outDir, AGENT_LOG_FILE),
         levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
       }),
     );

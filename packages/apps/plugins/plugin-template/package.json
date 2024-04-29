@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-template",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Template for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,12 +35,12 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.5"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

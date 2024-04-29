@@ -8,14 +8,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Mailbox as MailboxType, AddressBook as AddressBookType, Calendar as CalendarType } from '@braneframe/types';
+import { MailboxType, AddressBookType, CalendarType } from '@braneframe/types';
 import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ContactsMain, EventsMain, Mailbox } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
-import { InboxAction, type InboxPluginProvides, isAddressBook, isCalendar, isMailbox } from './types';
+import { InboxAction, type InboxPluginProvides } from './types';
 
 export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
   return {
@@ -23,21 +25,24 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [MailboxType.schema.typename]: {
+          [MailboxType.typename]: {
             placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Envelope {...props} />,
           },
-          [AddressBookType.schema.typename]: {
+          [AddressBookType.typename]: {
             placeholder: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <AddressBook {...props} />,
           },
-          [CalendarType.schema.typename]: {
+          [CalendarType.typename]: {
             placeholder: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
             icon: (props: IconProps) => <Calendar {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [MailboxType, AddressBookType, CalendarType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -48,6 +53,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -92,9 +98,12 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
               );
 
               // Add all documents to the graph.
-              const mailboxQuery = space.db.query(MailboxType.filter());
-              const addressBookQuery = space.db.query(AddressBookType.filter());
-              const calendarQuery = space.db.query(CalendarType.filter());
+              const mailboxQuery = space.db.query(Filter.schema(MailboxType));
+              const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
+              const calendarQuery = space.db.query(Filter.schema(CalendarType));
+              subscriptions.add(mailboxQuery.subscribe());
+              subscriptions.add(addressBookQuery.subscribe());
+              subscriptions.add(calendarQuery.subscribe());
               let previousMailboxes: MailboxType[] = [];
               let previousAddressBooks: AddressBookType[] = [];
               let previousCalendars: CalendarType[] = [];
@@ -175,13 +184,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              if (isMailbox(data.active)) {
+              if (data.active instanceof MailboxType) {
                 return <Mailbox mailbox={data.active} />;
               }
-              if (isAddressBook(data.active)) {
+              if (data.active instanceof AddressBookType) {
                 return <ContactsMain contacts={data.active} />;
               }
-              if (isCalendar(data.active)) {
+              if (data.active instanceof CalendarType) {
                 return <EventsMain calendar={data.active} />;
               }
               return null;
@@ -194,13 +203,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case InboxAction.CREATE_MAILBOX: {
-              return { data: new MailboxType() };
+              return { data: create(MailboxType, { messages: [] }) };
             }
             case InboxAction.CREATE_ADDRESSBOOK: {
-              return { data: new AddressBookType() };
+              return { data: create(AddressBookType, {}) };
             }
             case InboxAction.CREATE_CALENDAR: {
-              return { data: new CalendarType() };
+              return { data: create(CalendarType, {}) };
             }
           }
         },

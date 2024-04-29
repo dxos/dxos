@@ -8,14 +8,15 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { View as ViewType } from '@braneframe/types';
+import { ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
-import { ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
+import { ExplorerAction, type ExplorerPluginProvides } from './types';
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
   return {
@@ -23,13 +24,16 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [ViewType.schema.typename]: {
+          [ViewType.typename]: {
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: (props: IconProps) => <Graph {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ViewType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -40,6 +44,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -57,7 +62,8 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
               );
 
               // Add all views to the graph.
-              const query = space.db.query(ViewType.filter());
+              const query = space.db.query(Filter.schema(ViewType));
+              subscriptions.add(query.subscribe());
               let previousObjects: ViewType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -96,7 +102,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isExplorer(data.active) ? <ExplorerMain view={data.active} /> : null;
+              return data.active instanceof ViewType ? <ExplorerMain view={data.active} /> : null;
             default:
               return null;
           }

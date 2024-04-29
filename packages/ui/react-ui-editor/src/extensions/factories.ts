@@ -21,9 +21,8 @@ import {
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { generateName } from '@dxos/display-name';
-import { type DocAccessor } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type DocAccessor, type Space } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { type HuePalette, hueTokens } from '@dxos/react-ui-theme';
@@ -162,14 +161,14 @@ export const createThemeExtensions = ({ theme, themeMode, slots: _slots }: Theme
 
 export type DataExtensionsProps = {
   id: string;
-  text: DocAccessor;
+  text?: DocAccessor;
   space?: Space;
   identity?: Identity | null;
 };
 
 // TODO(burdon): Move out of react-ui-editor (remove echo deps).
 export const createDataExtensions = ({ id, text, space, identity }: DataExtensionsProps): Extension[] => {
-  const extensions: Extension[] = [automerge(text)];
+  const extensions: Extension[] = text ? [automerge(text)] : [];
 
   if (space && identity) {
     const peerId = identity?.identityKey.toHex();

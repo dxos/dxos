@@ -7,13 +7,13 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import type { Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  useDocAccessor,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx, attentionSurface, focusRing } from '@dxos/react-ui-theme';
@@ -31,8 +31,8 @@ const DeleteItem = ({ onClick }: { onClick: () => void }) => {
 };
 
 export const KanbanCardComponent: FC<{
-  column?: KanbanType.Column;
-  item: KanbanType.Item;
+  column?: KanbanColumnType;
+  item: KanbanItemType;
   debug?: boolean;
   onDelete?: () => void;
 }> = ({ column, item, debug = false, onDelete }) => {
@@ -44,17 +44,16 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const { id, doc, accessor } = useDocAccessor(item.title);
   const { parentRef } = useTextEditor(
     () => ({
-      doc,
+      doc: item.title?.content,
       extensions: [
-        createDataExtensions({ id, text: accessor }),
+        createDataExtensions({ id: item.id, text: item.title && createDocAccessor(item.title, ['content']) }),
         createBasicExtensions({ placeholder: t('item title placeholder') }),
         createThemeExtensions({ themeMode }),
       ],
     }),
-    [id, accessor, themeMode],
+    [item, themeMode],
   );
 
   return (

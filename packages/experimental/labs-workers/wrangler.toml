@@ -1,0 +1,39 @@
+#
+# Workers configuration file.
+# https://developers.cloudflare.com/workers/wrangler/configuration
+#
+# Wrangler configuration file.
+
+name = "labs-workers"
+main = "src/index.ts"
+compatibility_date = "2024-04-19"
+account_id = "950816f3f59b079880a1ae33fb0ec320"
+
+# Configure via Settings > Triggers > Custom Domains.
+routes = [
+  { pattern = "admin.composer.rocks", custom_domain = true }
+]
+
+[vars]
+  WORKER_ENV = "production"
+
+[env]
+  [env.local]
+    [env.local.vars]
+      WORKER_ENV = "local"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dev-users"
+database_id = "98e5b6a0-53f4-468b-b483-6c66a8cf9f15"
+
+[[durable_objects.bindings]]
+name = "SIGNALING"
+class_name = "SignalingServer"
+
+#[ai]
+#binding = "AI"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["SignalingServer"]

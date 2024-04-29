@@ -3,19 +3,24 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Filter } from '@dxos/echo-schema';
+import { type Filter } from '@dxos/echo-db';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-
-export type ObjectType = Record<string, any>;
 
 export interface Index {
   identifier: string;
   kind: IndexKind;
   updated: Event;
 
-  update: (id: string, object: ObjectType) => Promise<void>;
-  remove: (id: string) => Promise<void>;
-  find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
+  open(): Promise<Index>;
+  close(): Promise<Index>;
+
+  /**
+   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   */
+  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
+  remove(id: string): Promise<void>;
+  find(filter: Filter): Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }
@@ -31,5 +36,10 @@ export interface IndexStaticProps {
 export const staticImplements =
   <T>() =>
   <U extends T>(constructor: U) => {
-    constructor;
+    return constructor;
   };
+
+/**
+ * Document head hashes concatenated with a no separator.
+ */
+export type ConcatenatedHeadHashes = string;

@@ -16,7 +16,7 @@ export const checkAppScheme = (url: string) => {
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
 
-  iframe.src = url + window.location.pathname.replace(/^\/+/, '');
+  iframe.src = url + window.location.pathname.replace(/^\/+/, '') + window.location.search;
 
   const timer = setTimeout(() => {
     document.body.removeChild(iframe);

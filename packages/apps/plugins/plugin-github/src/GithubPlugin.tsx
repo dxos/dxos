@@ -9,20 +9,17 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { manageNodes } from '@braneframe/plugin-graph';
 import { isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { type Document } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { SpaceState } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, SpaceState, getMeta } from '@dxos/react-client/echo';
 
 import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
 import { type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
-
-// TODO(dmaretskyi): Meta filters?.
-const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   const settings = new LocalStorageStore<GithubSettingsProps>(GITHUB_PLUGIN);
@@ -52,8 +49,12 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                 return;
               }
 
-              const query = space.db.query(filter);
-              let previousObjects: Document[] = [];
+              // TODO(dmaretskyi): Meta filters?.
+              const query = space.db.query((obj: EchoReactiveObject<any>) =>
+                getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
+              );
+              subscriptions.add(query.subscribe());
+              let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
                   const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.key.toHex()}`;
@@ -75,8 +76,10 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                     ],
                   });
 
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects as Document[];
+                  const removedObjects = previousObjects.filter(
+                    (object) => !(query.objects as EchoReactiveObject<any>[]).includes(object),
+                  );
+                  previousObjects = query.objects as EchoReactiveObject<any>[] as DocumentType[];
 
                   batch(() => {
                     removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));

@@ -36,9 +36,9 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
       log('create', { id });
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
         doc,
-        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.

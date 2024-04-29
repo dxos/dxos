@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -27,6 +27,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
@@ -36,7 +37,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "0.64.7",
     "@langchain/community": "^0.0.26",
     "@langchain/core": "^0.1.22",
     "@langchain/openai": "^0.0.14",

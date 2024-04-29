@@ -20,7 +20,7 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
@@ -44,7 +44,7 @@ export type NavTreePluginProvides = SurfaceProvides &
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   const longestPaths = new Map<string, string[]>();
-  const state = E.object<{ root?: TreeNode }>({});
+  const state = create<{ root?: TreeNode }>({});
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   // Filter for the longest path to a node from the root.
@@ -204,7 +204,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             data: () =>
               intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.SET_LAYOUT,
-                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
+                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands`, dialogBlockAlign: 'start' },
               }),
             properties: {
               label: ['open commands label', { ns: NAVTREE_PLUGIN }],

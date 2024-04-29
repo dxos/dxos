@@ -3,7 +3,7 @@
 //
 
 import { chromium } from '@playwright/test';
-import robot from 'robotjs';
+import robot from 'robotjs'; // TODO(burdon): Abandoned.
 
 import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';

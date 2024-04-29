@@ -5,14 +5,16 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getSpaceForObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { MessageType, TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ScrollArea, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { automerge, createBasicExtensions, createThemeExtensions, useDocAccessor } from '@dxos/react-ui-editor';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, threadLayout } from '@dxos/react-ui-thread';
+import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
@@ -38,25 +40,27 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
 
 export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const space = getSpaceForObject(thread);
+  const space = getSpace(thread);
   const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(0);
+  const rerenderEditor = () => _setCount((count) => count + 1);
   const [autoFocus, setAutoFocus] = useState(autoFocusTextbox);
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
   const { themeMode } = useThemeContext();
 
   const textboxMetadata = getMessageMetadata(thread.id, identity);
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const { doc, accessor } = useDocAccessor(nextMessage.text);
+  const messageRef = useRef('');
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder: t('message placeholder') }),
       createThemeExtensions({ themeMode }),
-      automerge(accessor),
+      listener({ onChange: (text) => (messageRef.current = text) }),
       command,
     ],
-    [themeMode, accessor],
+    [themeMode, _count],
   );
 
   // TODO(thure): Factor out.
@@ -72,40 +76,36 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
 
   // TODO(burdon): Change to model.
   const handleCreate: MessageTextboxProps['onSend'] = () => {
-    const content = nextMessage.text;
-    if (!getTextContent(content)) {
+    if (!messageRef.current?.length) {
       return false;
     }
 
-    const block = {
-      timestamp: new Date().toISOString(),
-      content,
-    };
-
     thread.messages.push(
-      new MessageType({
+      create(MessageType, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
-        blocks: [block],
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: messageRef.current }),
+          },
+        ],
       }),
     );
 
-    setNextMessage(() => {
-      return { text: new TextObject() };
-    });
-
+    messageRef.current = '';
     setAutoFocus(true);
-
     scrollToEnd('smooth');
+    rerenderEditor();
     return true;
   };
 
   const handleDelete = (id: string, index: number) => {
-    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
-      message.blocks.splice(index, 1);
-      if (message.blocks.length === 0) {
+      message?.blocks.splice(index, 1);
+      if (message?.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
     }
@@ -120,7 +120,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
       <ScrollArea.Root classNames='col-span-2'>
         <ScrollArea.Viewport classNames='overflow-anchored after:overflow-anchor after:block after:bs-px after:-mbs-px [&>div]:min-bs-full [&>div]:!grid [&>div]:grid-rows-[1fr_0]'>
           <div role='none' className={mx(threadLayout, 'place-self-end')}>
-            {thread.messages.map((message) => (
+            {thread.messages.filter(nonNullable).map((message) => (
               <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
             ))}
           </div>
@@ -131,13 +131,7 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
           </ScrollArea.Scrollbar>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <MessageTextbox
-        doc={doc}
-        extensions={extensions}
-        autoFocus={autoFocus}
-        onSend={handleCreate}
-        {...textboxMetadata}
-      />
+      <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
     </Thread>
   );

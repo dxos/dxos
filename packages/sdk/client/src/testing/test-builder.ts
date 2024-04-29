@@ -9,6 +9,8 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { type LevelDB } from '@dxos/echo-pipeline';
+import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,10 +26,9 @@ import {
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
-import { defer } from '@dxos/util';
 
 import { Client } from '../client';
-import { Expando, type EchoDatabase } from '../echo';
+import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -51,8 +52,9 @@ export class TestBuilder {
   private readonly _ctx = new Context();
 
   public config: Config;
-
   public storage?: Storage;
+  public level?: LevelDB;
+
   _transport: TransportKind;
 
   // prettier-ignore
@@ -97,9 +99,9 @@ export class TestBuilder {
         transportFactory,
       };
     }
-    if (this._transport !== TransportKind.MEMORY) {
-      // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
-    }
+    // if (this._transport !== TransportKind.MEMORY) {
+    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+    // }
 
     // Memory transport with shared context.
     return {
@@ -115,10 +117,13 @@ export class TestBuilder {
     const services = new ClientServicesHost({
       config: this.config,
       storage: this.storage,
+      level: this.level,
       runtimeParams,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await services.close();
+    });
     return services;
   }
 
@@ -129,9 +134,12 @@ export class TestBuilder {
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
+      level: this.level,
       ...this.networking,
     });
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(async () => {
+      await services.close();
+    });
     return services;
   }
 
@@ -149,32 +157,23 @@ export class TestBuilder {
 
     // TODO(dmaretskyi): Refactor.
 
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
   }
 
-  destroy() {
-    void this._ctx.dispose();
+  async destroy() {
+    await this._ctx.dispose();
+    await this.level?.close();
   }
 }
 
-export const testSpaceAutomerge = async (create: EchoDatabase, check: EchoDatabase = create) => {
-  const object = new Expando();
+export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+  const object = create(Expando, {});
 
-  create.add(object);
+  createDb.add(object);
 
-  const done = new Trigger<void>();
-  const query = check.query((o: Expando) => o.id === object.id);
-  using _ = defer(
-    query.subscribe(() => {
-      if (query.objects.length > 0) {
-        done.wake();
-      }
-    }, true),
-  );
-
-  await done.wait({ timeout: 1000 });
+  await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };

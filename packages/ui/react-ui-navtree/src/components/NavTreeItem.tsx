@@ -121,6 +121,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
+    const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
     useEffect(() => {
       if (current && Path.onPath(current, node.id)) {
@@ -189,6 +190,10 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
                     ...(path === current && { 'aria-current': '' as 'page', 'data-attention': true })
                   }
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setMenuOpen(true);
+                  }}
                 >
                   <NavTreeItemHeading
                     {...{
@@ -228,6 +233,8 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     suppressNextTooltip={suppressNextTooltip}
                     onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
                     testId={`navtree.treeItem.actionsLevel${level}`}
+                    menuOpen={menuOpen}
+                    onChangeMenuOpen={setMenuOpen}
                   />
                   {renderPresence?.(node)}
                 </div>

@@ -13,15 +13,17 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 import { type SignalManager } from './signal-manager';
-import { type CommandTrace, SignalClient, type SignalStatus } from '../signal-client';
+import { type CommandTrace, SignalClient } from '../signal-client';
+import { type SignalClientMethods, type SignalMethods, type SignalStatus } from '../signal-methods';
 
 const MAX_SERVER_FAILURES = 5;
 const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
+
 /**
  * Manages connection to multiple Signal Servers over WebSocket
  */
 export class WebsocketSignalManager implements SignalManager {
-  private readonly _servers = new Map<string, SignalClient>();
+  private readonly _servers = new Map<string, SignalClientMethods>();
 
   private _ctx!: Context;
   private _opened = false;
@@ -42,17 +44,24 @@ export class WebsocketSignalManager implements SignalManager {
 
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor(private readonly _hosts: Runtime.Services.Signal[]) {
+  constructor(
+    private readonly _hosts: Runtime.Services.Signal[],
+    private readonly _getMetadata?: () => any,
+  ) {
     log('Created WebsocketSignalManager', { hosts: this._hosts });
     for (const host of this._hosts) {
       if (this._servers.has(host.server)) {
         continue;
       }
+
+      // TODO(burdon): Create factory to support different variants.
       const server = new SignalClient(
         host.server,
         async (message) => this.onMessage.emit(message),
         async (data) => this.swarmEvent.emit(data),
+        this._getMetadata,
       );
+
       server.statusChanged.on(() => this.statusChanged.emit(this.getStatus()));
 
       this._servers.set(host.server, server);
@@ -71,6 +80,7 @@ export class WebsocketSignalManager implements SignalManager {
 
     this._initContext();
 
+    // TODO(burdon): Await.
     [...this._servers.values()].forEach((server) => server.open());
 
     this._opened = true;
@@ -90,7 +100,7 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   async restartServer(serverName: string) {
-    log('Restarting server', { serverName });
+    log('restarting server', { serverName });
     invariant(this._opened, 'server already closed');
 
     const server = this._servers.get(serverName);
@@ -107,7 +117,7 @@ export class WebsocketSignalManager implements SignalManager {
 
   @synchronized
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('Join', { topic, peerId });
+    log('join', { topic, peerId });
     invariant(this._opened, 'Closed');
     await this._forEachServer((server) => server.join({ topic, peerId }));
   }
@@ -129,7 +139,7 @@ export class WebsocketSignalManager implements SignalManager {
     recipient: PublicKey;
     payload: Any;
   }): Promise<void> {
-    log(`Signal ${recipient.truncate()}`);
+    log('signal', { recipient });
     invariant(this._opened, 'Closed');
 
     void this._forEachServer(async (server, serverName) => {
@@ -151,23 +161,24 @@ export class WebsocketSignalManager implements SignalManager {
   async checkServerFailure(serverName: string) {
     const failureCount = this.failureCount.get(serverName!) ?? 0;
     if (failureCount > MAX_SERVER_FAILURES) {
-      log.warn(`Too many failures sending to ${serverName} (${failureCount} > ${MAX_SERVER_FAILURES}), restarting`);
+      log.warn(`too many failures sending to ${serverName} (${failureCount} > ${MAX_SERVER_FAILURES}), restarting`);
       await this.restartServer(serverName!);
       this.failureCount.set(serverName!, 0);
       return;
     }
+
     this.failureCount.set(serverName!, (this.failureCount.get(serverName!) ?? 0) + 1);
   }
 
   async subscribeMessages(peerId: PublicKey) {
-    log(`Subscribed for message stream peerId=${peerId}`);
+    log('subscribed for message stream', { peerId });
     invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.subscribeMessages(peerId));
   }
 
   async unsubscribeMessages(peerId: PublicKey) {
-    log(`Subscribed for message stream peerId=${peerId}`);
+    log('subscribed for message stream', { peerId });
     invariant(this._opened, 'Closed');
 
     await this._forEachServer(async (server) => server.unsubscribeMessages(peerId));
@@ -180,7 +191,7 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private async _forEachServer<ReturnType>(
-    fn: (server: SignalClient, serverName: string) => Promise<ReturnType>,
+    fn: (server: SignalMethods, serverName: string) => Promise<ReturnType>,
   ): Promise<ReturnType[]> {
     return Promise.all(Array.from(this._servers.entries()).map(([serverName, server]) => fn(server, serverName)));
   }

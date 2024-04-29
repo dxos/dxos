@@ -203,6 +203,8 @@ export class Connection {
       sessionId: this.sessionId,
     });
 
+    await this._transport.open();
+
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
@@ -242,7 +244,7 @@ export class Connection {
 
     // Replay signals that were received before transport was created.
     for (const signal of this._incomingSignalBuffer) {
-      void this._transport.signal(signal); // TODO(burdon): Remove async?
+      void this._transport.onSignal(signal); // TODO(burdon): Remove async?
     }
 
     this._incomingSignalBuffer = [];
@@ -278,7 +280,7 @@ export class Connection {
 
     try {
       // After the transport is closed streams are disconnected.
-      await this._transport?.destroy();
+      await this._transport?.close();
     } catch (err: any) {
       log.catch(err);
     }
@@ -323,7 +325,7 @@ export class Connection {
 
       try {
         // After the transport is closed streams are disconnected.
-        await this._transport?.destroy();
+        await this._transport?.close();
       } catch (err: any) {
         log.catch(err);
       }
@@ -335,7 +337,7 @@ export class Connection {
         log.catch(err);
       }
       try {
-        await this._transport?.destroy();
+        await this._transport?.close();
       } catch (err: any) {
         log.catch(err);
       }
@@ -409,7 +411,7 @@ export class Connection {
       } else {
         invariant(this._transport, 'Connection not ready to accept signals.');
         log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
-        await this._transport.signal(signal);
+        await this._transport.onSignal(signal);
       }
     }
   }

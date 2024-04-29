@@ -4,8 +4,9 @@
 
 import React, { type FC } from 'react';
 
-import { Kanban as KanbanType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type KanbanType, KanbanColumnType, KanbanItemType, TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
@@ -14,7 +15,7 @@ import { type KanbanModel } from '../types';
 
 const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // const { t } = useTranslation(KANBAN_PLUGIN);
-  const space = getSpaceForObject(kanban);
+  const space = getSpace(kanban);
   if (!space) {
     return null;
   }
@@ -22,9 +23,9 @@ const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   // TODO(burdon): Should plugin create and pass in model?
   const model: KanbanModel = {
     root: kanban, // TODO(burdon): How to keep pure?
-    createColumn: () => space.db.add(new KanbanType.Column()),
+    createColumn: () => space.db.add(create(KanbanColumnType, { items: [] })),
     // TODO(burdon): Add metadata from column in the case of projections.
-    createItem: (column) => space.db.add(new KanbanType.Item()),
+    createItem: (column) => space.db.add(create(KanbanItemType, { title: create(TextV0Type, { content: '' }) })),
   };
 
   return (

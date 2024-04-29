@@ -3,10 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "dev": "npm run prebuild && vite",
-    "build": "npm run prebuild && tsc && vite build",
-    "preview": "vite preview",
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@dxos/react-ui": "latest",
@@ -14,7 +13,7 @@
     "@dxos/react-ui-types": "latest",
     "@dxos/react-client": "latest",
     "@dxos/echo-schema": "latest",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -25,6 +24,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "noise-protocol": "3.0.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.5"
+    "vite": "^5.2.9"
   }
 }

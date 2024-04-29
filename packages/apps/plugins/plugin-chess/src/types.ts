@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -9,8 +10,8 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { Game } from '@dxos/chess-app';
-import { isTypedObject } from '@dxos/react-client/echo';
+import { GameType } from '@dxos/chess-app';
+import { isReactiveObject } from '@dxos/echo-schema';
 
 import { CHESS_PLUGIN } from './meta';
 
@@ -26,8 +27,9 @@ export type ChessPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
-  TranslationsProvides;
+  TranslationsProvides &
+  SchemaProvides;
 
-export const isObject = (object: unknown): object is Game => {
-  return isTypedObject(object) && object.__typename === Game.schema.typename;
+export const isObject = (object: unknown): object is GameType => {
+  return isReactiveObject(object) && object instanceof GameType;
 };

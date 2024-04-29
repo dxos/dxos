@@ -20,7 +20,7 @@ describe('DataSpaceManager', () => {
 
     const peer = builder.createPeer();
     await peer.createIdentity();
-    await openAndClose(peer.dataSpaceManager);
+    await openAndClose(peer.automergeHost, peer.dataSpaceManager);
 
     const space = await peer.dataSpaceManager.createSpace();
 
@@ -42,7 +42,7 @@ describe('DataSpaceManager', () => {
     const peer2 = builder.createPeer();
     await peer2.createIdentity();
 
-    await openAndClose(peer1.dataSpaceManager, peer2.dataSpaceManager);
+    await openAndClose(peer1.automergeHost, peer1.dataSpaceManager, peer2.automergeHost, peer2.dataSpaceManager);
 
     const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -111,7 +111,7 @@ describe('DataSpaceManager', () => {
     await peer2.createIdentity();
     await peer2.dataSpaceManager.open();
 
-    await openAndClose(peer1.dataSpaceManager, peer2.dataSpaceManager);
+    await openAndClose(peer1.automergeHost, peer1.dataSpaceManager, peer2.automergeHost, peer2.dataSpaceManager);
 
     const space1 = await peer1.dataSpaceManager.createSpace();
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
@@ -153,7 +153,7 @@ describe('DataSpaceManager', () => {
 
       const peer = builder.createPeer();
       await peer.createIdentity();
-      await openAndClose(peer.dataSpaceManager);
+      await openAndClose(peer.automergeHost, peer.dataSpaceManager);
 
       const space = await peer.dataSpaceManager.createSpace();
       await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);

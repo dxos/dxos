@@ -28,7 +28,11 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
     const actions: ActionLike[] = [];
     graph?.traverse({
       visitor: (node, path) => {
-        if (isAction(node) && !actionMap.has(node.id) && current.startsWith(path.slice(0, -1).join('/'))) {
+        if (
+          (isAction(node) || isActionGroup(node)) &&
+          !actionMap.has(node.id) &&
+          current.startsWith(path.slice(0, -1).join('/'))
+        ) {
           actionMap.add(node.id);
           actions.push(node);
         }
@@ -52,7 +56,7 @@ export const CommandsDialogContent = ({ graph, selected: initial }: { graph?: Gr
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden']}>
+    <Dialog.Content classNames={['md:max-is-[30rem] overflow-hidden mbs-12']}>
       <Dialog.Title>{t('commands dialog title', { ns: NAVTREE_PLUGIN })}</Dialog.Title>
 
       {/* TODO(burdon): BUG: Overscrolls container. */}
