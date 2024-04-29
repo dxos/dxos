@@ -71,7 +71,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
       return;
     }
     this._params.indexer.setIndexConfig(config);
-    await this._params.indexer.initialize();
   }
 
   find(request: QueryRequest): Stream<QueryResponse> {

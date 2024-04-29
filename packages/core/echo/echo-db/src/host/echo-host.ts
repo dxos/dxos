@@ -8,12 +8,18 @@ import { AutomergeHost, DataServiceImpl, type LevelDB } from '@dxos/echo-pipelin
 import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
 
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
+
+const INDEXER_CONFIG: IndexConfig = {
+  enabled: true,
+  indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }],
+};
 
 export type EchoHostParams = {
   kv: LevelDB;
@@ -46,6 +52,7 @@ export class EchoHost extends Resource {
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
     });
+    this._indexer.setIndexConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,
@@ -69,6 +76,7 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
+    await this._indexer.initialize();
     await this._queryService.open(ctx);
   }
 

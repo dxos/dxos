@@ -48,6 +48,7 @@
     "@effect/schema": "0.64.7",
     "@orama/orama": "^2.0.8",
     "effect": "2.4.9",
+    "level": "^8.0.1",
     "lodash.defaultsdeep": "^4.6.1",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0"
