@@ -5068,6 +5068,9 @@ importers:
 
   packages/core/echo/automerge:
     dependencies:
+      '@automerge/automerge-wasm':
+        specifier: ^0.12.0
+        version: 0.12.0
       bs58check:
         specifier: ^3.0.1
         version: 3.0.1
@@ -5102,9 +5105,6 @@ importers:
       '@automerge/automerge-repo-storage-indexeddb':
         specifier: ^1.1.9
         version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      '@automerge/automerge-wasm':
-        specifier: ^0.12.0
-        version: 0.12.0
 
   packages/core/echo/echo-db:
     dependencies:
@@ -10531,7 +10531,7 @@ packages:
 
   /@automerge/automerge-wasm@0.12.0:
     resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
-    dev: true
+    dev: false
 
   /@automerge/automerge-wasm@0.16.0:
     resolution: {integrity: sha512-yYQ8WJED8f4cCnbIq+5SM8Q2tLK2VawDqLKptW+FTI5asklN8NEsHUHvDzqWUQARqGp6O9BnNd7ifQ0FPdks7A==}

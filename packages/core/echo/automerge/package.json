@@ -142,6 +142,7 @@
     "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
+    "@automerge/automerge-wasm": "^0.12.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",
     "debug": "^4.3.4",
@@ -154,8 +155,7 @@
     "@automerge/automerge-repo": "^1.1.9",
     "@automerge/automerge-repo-network-broadcastchannel": "^1.1.9",
     "@automerge/automerge-repo-network-websocket": "^1.1.9",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.9",
-    "@automerge/automerge-wasm": "^0.12.0"
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.9"
   },
   "publishConfig": {
     "access": "public"
