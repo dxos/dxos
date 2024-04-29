@@ -23,5 +23,6 @@ export * from './effect/echo-object-class';
 export * from './effect/dynamic/dynamic-schema';
 export * from './effect/dynamic/stored-schema';
 export { isReactiveProxy } from './effect/proxy';
+export { createEchoReactiveObject } from './effect/echo-handler';
 
 linkDeferred();

@@ -29,7 +29,8 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "vitest.shared.ts"
   ],
   "exclude": [
     "dist",
