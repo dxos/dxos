@@ -11,11 +11,14 @@ import { ComplexMap } from '@dxos/util';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { IndexQuerySourceProvider, ObjectLoader } from './index-query-source-provider';
+import { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 
 export type EchoClientParams = {};
 
 export type ConnectToServiceParams = {
   dataService: DataService;
+  queryService: QueryService;
 };
 
 export type CreateDatabaseParams = {
@@ -39,7 +42,9 @@ export class EchoClient extends Resource {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
 
   private _dataService: DataService | undefined = undefined;
+  private _queryService: QueryService | undefined = undefined;
   private _automergeContext: AutomergeContext | undefined = undefined;
+  private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 
   constructor(params: EchoClientParams) {
     super();
@@ -54,9 +59,10 @@ export class EchoClient extends Resource {
    * Connects to the ECHO service.
    * Must be called before open.
    */
-  connectToService({ dataService }: ConnectToServiceParams) {
+  connectToService({ dataService, queryService }: ConnectToServiceParams) {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._dataService = dataService;
+    this._queryService = queryService;
   }
 
   disconnectFromService() {
@@ -65,13 +71,33 @@ export class EchoClient extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    invariant(this._dataService, 'Invalid state: not connected');
+    invariant(this._dataService && this._queryService, 'Invalid state: not connected');
     this._automergeContext = new AutomergeContext(this._dataService, {
       spaceFragmentationEnabled: true,
     });
+
+    this._indexQuerySourceProvider = new IndexQuerySourceProvider({
+      service: this._queryService,
+      objectLoader: {
+        loadObject: async (spaceKey, objectId) => {
+          const db = this._databases.get(spaceKey);
+          if (!db) {
+            return undefined;
+          }
+
+          // TODO(dmaretskyi): Do we wait/check for DB to be open first?
+          const object = await db.automerge.loadObjectById(objectId);
+          return object;
+        },
+      },
+    });
+    this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    if (this._indexQuerySourceProvider) {
+      this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
+    }
     for (const db of this._databases.values()) {
       this._graph._unregister(db.spaceKey);
       await db.close();

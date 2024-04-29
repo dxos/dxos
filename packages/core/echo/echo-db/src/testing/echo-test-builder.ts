@@ -26,6 +26,7 @@ export class EchoTestPeer extends Resource {
   private readonly _storage: Storage;
   private readonly _echoHost: EchoHost;
   private readonly _echoClient: EchoClient;
+  private readonly _clients = new Set<EchoClient>();
 
   constructor() {
     super();
@@ -37,6 +38,7 @@ export class EchoTestPeer extends Resource {
       storage: this._storage,
     });
     this._echoClient = new EchoClient({});
+    this._clients.add(this._echoClient);
   }
 
   get client() {
@@ -52,19 +54,31 @@ export class EchoTestPeer extends Resource {
 
     this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
-      // TODO(dmaretskyi): ???.
-      // queryService: this._echoHost.queryService,
+      queryService: this._echoHost.queryService,
     });
     await this._echoHost.open(ctx);
     await this._echoClient.open(ctx);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._echoClient.close(ctx);
-    this._echoClient.disconnectFromService();
+    for (const client of this._clients) {
+      await client.close(ctx);
+      client.disconnectFromService();
+    }
     await this._echoHost.close(ctx);
 
     await this._kv.close();
     await this._storage.close();
+  }
+
+  async createClient() {
+    const client = new EchoClient({});
+    this._clients.add(client);
+    client.connectToService({
+      dataService: this._echoHost.dataService,
+      queryService: this._echoHost.queryService,
+    });
+    await client.open();
+    return client;
   }
 }

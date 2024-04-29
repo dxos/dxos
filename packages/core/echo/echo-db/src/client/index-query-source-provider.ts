@@ -3,42 +3,42 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Echo } from '@dxos/client-protocol';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import {
-  type QuerySourceProvider,
-  type Filter,
-  type QueryResult,
-  type QuerySource,
-  getAutomergeObjectCore,
-} from '@dxos/echo-db';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import {
-  type QueryService,
   type QueryResponse,
+  type QueryService,
   type QueryResult as RemoteQueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { type SpaceProxy } from './space-proxy';
+import { EchoReactiveObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
+import { QuerySourceProvider } from '../hypergraph';
+import { Filter, QueryResult, QuerySource } from '../query';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { getAutomergeObjectCore } from '../automerge';
+
+export interface ObjectLoader {
+  loadObject(spaceKey: PublicKey, objectId: string): Promise<EchoReactiveObject<any> | undefined>;
+}
 
 export type IndexQueryProviderParams = {
   service: QueryService;
-  echo: Echo;
+  objectLoader: ObjectLoader;
 };
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
   create(): QuerySource {
-    return new IndexQuerySource({ service: this._params.service, echo: this._params.echo });
+    return new IndexQuerySource({ service: this._params.service, objectLoader: this._params.objectLoader });
   }
 }
 
 export type IndexQuerySourceParams = {
   service: QueryService;
-  echo: Echo;
+  objectLoader: ObjectLoader;
 };
 
 export class IndexQuerySource implements QuerySource {
@@ -128,18 +128,12 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
-    const space = this._params.echo.get(result.spaceKey);
-    if (!space) {
-      return null;
-    }
-
-    await (space as SpaceProxy)._databaseInitialized.wait();
-    const object = await space.db.automerge.loadObjectById(result.id);
-    if (ctx.disposed) {
-      return null;
-    }
-
+    const object = await this._params.objectLoader.loadObject(result.spaceKey, result.id);
     if (!object) {
+      return null;
+    }
+
+    if (ctx.disposed) {
       return null;
     }
 

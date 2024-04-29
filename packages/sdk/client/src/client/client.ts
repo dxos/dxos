@@ -364,6 +364,7 @@ export class Client {
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
     });
     await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -413,8 +414,6 @@ export class Client {
     if (err) {
       throw err;
     }
-
-    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     await this._runtime.open();
 
