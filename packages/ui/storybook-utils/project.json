@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "storybook-utils",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/storybook-utils/src",
   "projectType": "library",
   "targets": {

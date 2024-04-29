@@ -2,9 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
-import { EchoObjectSchema } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 
 export const MoveSchema = S.mutable(
   S.partial(
@@ -16,7 +14,7 @@ export const MoveSchema = S.mutable(
   ),
 );
 
-export class GameType extends EchoObjectSchema({ typename: 'dxos.experimental.chess.Game', version: '0.1.0' })(
+export class GameType extends TypedObject({ typename: 'dxos.experimental.chess.Game', version: '0.1.0' })(
   {
     playerWhite: S.string,
     playerBlack: S.string,

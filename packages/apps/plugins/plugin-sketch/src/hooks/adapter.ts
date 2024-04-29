@@ -16,28 +16,28 @@ import { type Unsubscribe } from '../types';
 const STRING_CRDT_LIMIT = 300_000;
 
 // TODO(burdon): Import/export to JSON.
-interface ObjectSerializer {
-  import(data: string, migrate?: boolean): void;
-  export(data: any): string;
-}
+// interface ObjectSerializer {
+//   import(data: string, migrate?: boolean): void;
+//   export(data: any): string;
+// }
 
-class SketchSerializer implements ObjectSerializer {
-  constructor(private _store: TLStore) {}
-
-  import(data: string, migrate?: boolean) {
-    const s1 = JSON.parse(data);
-    if (migrate) {
-      this._store.migrateSnapshot(s1);
-    } else {
-      this._store.loadSnapshot(s1);
-    }
-  }
-
-  export(data: any) {
-    // NOTE: Includes schema.
-    return JSON.stringify(this._store.getSnapshot());
-  }
-}
+// class SketchSerializer implements ObjectSerializer {
+//   constructor(private _store: TLStore) {}
+//
+//   import(data: string, migrate?: boolean) {
+//     const s1 = JSON.parse(data);
+//     if (migrate) {
+//       this._store.migrateSnapshot(s1);
+//     } else {
+//       this._store.loadSnapshot(s1);
+//     }
+//   }
+//
+//   export(data: any) {
+//     // NOTE: Includes schema.
+//     return JSON.stringify(this._store.getSnapshot());
+//   }
+// }
 
 // TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
 export class AutomergeStoreAdapter {
@@ -82,6 +82,9 @@ export class AutomergeStoreAdapter {
           log('load initial records', { contentRecords });
           this._store.clear();
           this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
+
+          const { schema } = this._store.getSnapshot();
+          console.log(JSON.stringify(schema, null, 2));
         });
       }
     }

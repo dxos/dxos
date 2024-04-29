@@ -10,11 +10,13 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextObject } from '@dxos/echo-schema';
+import { TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Button, DensityProvider, Input, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { baseSurface, defaultTx, getSize, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -49,7 +51,6 @@ import {
   type CommentsOptions,
   type SelectionState,
 } from '../../extensions';
-import { useDocAccessor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
@@ -241,7 +242,7 @@ type StoryProps = {
   comments?: Comment[];
   readonly?: boolean;
   placeholder?: string;
-} & Pick<TextEditorProps, 'extensions'>;
+} & Pick<TextEditorProps, 'selection' | 'extensions'>;
 
 const Story = ({
   id = 'editor-' + PublicKey.random().toHex().slice(0, 8),
@@ -252,7 +253,7 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const { accessor } = useDocAccessor(new TextObject(text));
+  const [object] = useState(createEchoObject(create(TextV0Type, { content: text ?? '' })));
 
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);
@@ -268,10 +269,10 @@ const Story = ({
           editor: { className: 'min-bs-dvh px-8 bg-white dark:bg-black' },
         },
       }),
-      createDataExtensions({ id, text: accessor }),
+      createDataExtensions({ id, text: createDocAccessor(object, ['content']) }),
       _extensions,
     ],
-    [_extensions],
+    [_extensions, object],
   );
 
   return (
@@ -293,6 +294,8 @@ export default {
   render: Story,
   parameters: { translations, layout: 'fullscreen' },
 };
+
+// TODO(burdon): Test invalid inputs (e.g., selection).
 
 const defaults = [
   autocomplete({

@@ -22,10 +22,21 @@ import React, {
   type PropsWithChildren,
   type Dispatch,
   type SetStateAction,
+  type ComponentPropsWithRef,
 } from 'react';
 
-import { Button, DropdownMenu, List, ListItem, useTranslation, type TFunction } from '@dxos/react-ui';
-import { DropDownMenuDragHandleTrigger } from '@dxos/react-ui-deck';
+import {
+  Button,
+  DropdownMenu,
+  List,
+  ListItem,
+  Toolbar,
+  useTranslation,
+  type TFunction,
+  type ThemedClassName,
+  ScrollArea,
+} from '@dxos/react-ui';
+import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -33,7 +44,14 @@ import {
   type MosaicTileProps,
   useMosaic,
 } from '@dxos/react-ui-mosaic';
-import { focusRing, getSize, mx } from '@dxos/react-ui-theme';
+import {
+  focusRing,
+  getSize,
+  hoverableControlItem,
+  hoverableControls,
+  hoverableFocusedWithinControls,
+  mx,
+} from '@dxos/react-ui-theme';
 
 import { CaretDownUp } from './CaretDownUp';
 import { stackColumns } from './style-fragments';
@@ -66,11 +84,15 @@ export type StackItem = MosaicDataItem &
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
+  size?: SectionSize;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
+  isResizable?: boolean;
 };
 
 export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
+
+export type SectionSize = 'intrinsic' | 'extrinsic';
 
 export type SectionProps = PropsWithChildren<
   {
@@ -79,6 +101,7 @@ export type SectionProps = PropsWithChildren<
     title: string;
     separation: boolean;
     icon?: FC<IconProps>;
+    size?: SectionSize;
 
     // Tile props.
     active?: MosaicActiveType;
@@ -86,8 +109,11 @@ export type SectionProps = PropsWithChildren<
     MosaicTileProps,
     'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
   > &
-    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'>
+    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'> &
+    Pick<StackSectionItem, 'isResizable'>
 >;
+
+const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
 
 export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTMLLIElement>> = forwardRef<
   HTMLLIElement,
@@ -98,7 +124,9 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       id,
       title,
       icon: Icon = DotsNine,
+      size = 'intrinsic',
       active,
+      isResizable,
       draggableProps,
       draggableStyle,
       collapsedSections,
@@ -131,63 +159,71 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
-          classNames={['grid col-span-2 group', active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start']}
+          classNames={[
+            'grid col-span-2 group/section',
+            active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
+          ]}
           style={draggableStyle}
         >
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent focus-within:s-outline-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              hoverableControls,
+              hoverableFocusedWithinControls,
               active && 'surface-attention after:separator-separator s-outline-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
             <div
               role='toolbar'
+              aria-orientation='vertical'
               aria-label={t('section controls label')}
               {...(!active && { tabIndex: 0 })}
               {...(!active && sectionActionsToolbar)}
-              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1'
+              className='grid grid-cols-subgrid ch-focus-ring rounded-sm grid-rows-[min-content_min-content_1fr] m-1 group-has-[[role=toolbar][aria-orientation=horizontal]]/section:pbs-[--rail-action]'
             >
-              <DropdownMenu.Root
-                {...{
-                  open: optionsMenuOpen,
-                  onOpenChange: setOptionsMenuOpen,
-                }}
-              >
-                <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
-                  <Icon className={mx(getSize(5), 'transition-opacity')} />
-                </DropDownMenuDragHandleTrigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content>
-                    <DropdownMenu.Viewport>
-                      <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
-                        <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('add section before label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
-                        <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('add section after label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                        <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('navigate to section label')}</span>
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
-                        <X className={mx(getSize(5), 'mr-2')} />
-                        <span className='grow'>{t('remove section label')}</span>
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Viewport>
-                    <DropdownMenu.Arrow />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-              <CollapsiblePrimitive.Trigger asChild>
-                <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
-                  <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
-                  {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
-                </Button>
-              </CollapsiblePrimitive.Trigger>
+              <div role='none' className='sticky -block-start-px bg-[--sticky-bg]'>
+                <DropdownMenu.Root
+                  {...{
+                    open: optionsMenuOpen,
+                    onOpenChange: setOptionsMenuOpen,
+                  }}
+                >
+                  <DropDownMenuDragHandleTrigger active={!!active} variant='ghost' classNames='m-0' {...draggableProps}>
+                    <Icon className={mx(getSize(5), 'transition-opacity')} />
+                  </DropDownMenuDragHandleTrigger>
+                  <DropdownMenu.Portal>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Viewport>
+                        <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
+                          <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('add section before label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
+                          <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('add section after label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                          <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('navigate to section label')}</span>
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
+                          <X className={mx(getSize(5), 'mr-2')} />
+                          <span className='grow'>{t('remove section label')}</span>
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Viewport>
+                      <DropdownMenu.Arrow />
+                    </DropdownMenu.Content>
+                  </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+                <CollapsiblePrimitive.Trigger asChild>
+                  <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
+                    <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
+                    {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
+                  </Button>
+                </CollapsiblePrimitive.Trigger>
+              </div>
             </div>
 
             {/* Main content */}
@@ -207,18 +243,64 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
               */}
               <span className='truncate'>{title}</span>
             </ListItem.Heading>
-            <CollapsiblePrimitive.Content
-              {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
-              className={mx(focusRing, 'rounded-sm mlb-1 mie-1')}
-            >
-              {children}
-            </CollapsiblePrimitive.Content>
+            {size === 'intrinsic' ? (
+              <CollapsiblePrimitive.Content
+                {...(!collapsed && {
+                  ...sectionContentGroup,
+                  tabIndex: 0,
+                })}
+                className={mx('mlb-1 mie-1 rounded-sm', focusRing)}
+              >
+                {children}
+              </CollapsiblePrimitive.Content>
+            ) : (
+              <CollapsiblePrimitive.Content asChild>
+                <ScrollArea.Root
+                  type='always'
+                  {...(!collapsed && { ...sectionContentGroup, tabIndex: 0 })}
+                  classNames={mx(
+                    focusRing,
+                    'rounded-sm mlb-1 mie-1 is-full has-[[data-radix-scroll-area-viewport]]:pbe-4',
+                  )}
+                >
+                  <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+                  <ScrollArea.Scrollbar
+                    orientation='horizontal'
+                    variant='coarse'
+                    classNames='hidden has-[div]:flex !inline-end-[max(.25rem,var(--radix-scroll-area-corner-width))]'
+                  >
+                    <ScrollArea.Thumb />
+                  </ScrollArea.Scrollbar>
+                  <ScrollArea.Scrollbar orientation='vertical' variant='coarse' classNames='hidden has-[div]:flex'>
+                    <ScrollArea.Thumb />
+                  </ScrollArea.Scrollbar>
+                  <ScrollArea.Corner />
+                </ScrollArea.Root>
+              </CollapsiblePrimitive.Content>
+            )}
           </div>
+          {isResizable && !collapsed && (
+            <button className={resizeHandleStyles}>
+              <span className='sr-only'>{t('resize section label')}</span>
+            </button>
+          )}
         </ListItem.Root>
       </CollapsiblePrimitive.Root>
     );
   },
 );
+
+export type SectionToolbarProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
+
+export const sectionToolbarLayout = 'bs-[--rail-action] bg-[--sticky-bg] sticky -block-start-px transition-opacity';
+
+export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) => {
+  return (
+    <Toolbar.Root orientation='horizontal' classNames={[sectionToolbarLayout, hoverableControlItem, classNames]}>
+      {children}
+    </Toolbar.Root>
+  );
+};
 
 export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
   ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
@@ -234,6 +316,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
       SectionContent,
       collapsedSections,
       onCollapseSection,
+      isResizable,
       ...contentItem
     } = {
       ...itemContext,
@@ -263,8 +346,9 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const section = (
       <Section
         ref={forwardedRef}
-        id={transformedItem.id}
         title={title}
+        id={transformedItem.id}
+        size={transformedItem.size}
         icon={transformedItem.icon}
         separation={separation}
         active={active}
@@ -272,6 +356,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         draggableStyle={draggableStyle}
         collapsedSections={collapsedSections}
         onCollapseSection={onCollapseSection}
+        isResizable={isResizable}
         onDelete={() => onDeleteSection?.(path)}
         onNavigate={() => onNavigateToSection?.(itemObject.id)}
         onAddAfter={() => onAddSection?.(path, 'after')}

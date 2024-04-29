@@ -11,6 +11,8 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/protocols';
 import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
+import { RPC_TIMEOUT } from '../common';
+
 /**
  * Public API for MESH services.
  */
@@ -45,7 +47,7 @@ export class MeshProxy {
 
   async updateConfig(swarm: ConnectionState) {
     invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    return this._serviceProvider.services.NetworkService.updateConfig({ swarm });
+    return this._serviceProvider.services.NetworkService.updateConfig({ swarm }, { timeout: RPC_TIMEOUT });
   }
 
   /**
@@ -56,7 +58,9 @@ export class MeshProxy {
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
-    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus();
+    const networkStatusStream = this._serviceProvider.services.NetworkService.queryStatus(undefined, {
+      timeout: RPC_TIMEOUT,
+    });
     networkStatusStream.subscribe((networkStatus: NetworkStatus) => {
       this._networkStatusUpdated.emit(networkStatus);
     });

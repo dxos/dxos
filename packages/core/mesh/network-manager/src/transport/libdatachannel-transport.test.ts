@@ -19,8 +19,9 @@ describe('LibDataChannelTransport', () => {
       sendSignal: async () => {},
     });
 
+    await connection.open();
     const wait = connection.closed.waitForCount(1);
-    await connection.destroy();
+    await connection.close();
     await wait;
   })
     .onlyEnvironments('nodejs')
@@ -34,10 +35,11 @@ describe('LibDataChannelTransport', () => {
       stream: stream1,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection2.signal(signal);
+        await connection2.onSignal(signal);
       },
     });
-    afterTest(() => connection1.destroy());
+    await connection1.open();
+    afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
@@ -46,10 +48,11 @@ describe('LibDataChannelTransport', () => {
       stream: stream2,
       sendSignal: async (signal) => {
         await sleep(10);
-        await connection1.signal(signal);
+        await connection1.onSignal(signal);
       },
     });
-    afterTest(() => connection2.destroy());
+    await connection2.open();
+    afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });
@@ -67,10 +70,11 @@ describe('LibDataChannelTransport', () => {
         log.debug('signal', signal);
 
         await sleep(10);
-        await connection2.signal(signal);
+        await connection2.onSignal(signal);
       },
     });
-    afterTest(() => connection1.destroy());
+    await connection1.open();
+    afterTest(() => connection1.close());
     afterTest(() => connection1.errors.assertNoUnhandledErrors());
 
     const stream2 = new TestStream();
@@ -81,10 +85,11 @@ describe('LibDataChannelTransport', () => {
         log.debug('signal', signal);
 
         await sleep(10);
-        await connection1.signal(signal);
+        await connection1.onSignal(signal);
       },
     });
-    afterTest(() => connection2.destroy());
+    await connection2.open();
+    afterTest(() => connection2.close());
     afterTest(() => connection2.errors.assertNoUnhandledErrors());
 
     await TestStream.assertConnectivity(stream1, stream2, { timeout: 2_000 });

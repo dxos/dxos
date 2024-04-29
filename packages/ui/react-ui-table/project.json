@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-ui-table",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/react-ui-table/src",
   "projectType": "library",
   "targets": {
@@ -15,7 +18,8 @@
         ]
       }
     },
-    "lint": {}
+    "lint": {},
+    "test": {}
   },
   "implicitDependencies": [
     "esbuild"

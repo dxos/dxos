@@ -3,19 +3,36 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Filter } from '@dxos/echo-schema';
+import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-export type ObjectType = Record<string, any>;
+/**
+ * @deprecated To be replaced by a specialized API for each index.
+ */
+export type IndexQuery = {
+  /**
+   * null means all Expando objects.
+   * undefined means all objects (no filter).
+   */
+  typename?: string | null;
+};
 
 export interface Index {
   identifier: string;
   kind: IndexKind;
   updated: Event;
 
-  update: (id: string, object: ObjectType) => Promise<void>;
-  remove: (id: string) => Promise<void>;
-  find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
+  open(): Promise<Index>;
+  close(): Promise<Index>;
+
+  /**
+   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   */
+  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
+  remove(id: string): Promise<void>;
+
+  // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
+  find(filter: IndexQuery): Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }
@@ -33,3 +50,8 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
+
+/**
+ * Document head hashes concatenated with a no separator.
+ */
+export type ConcatenatedHeadHashes = string;

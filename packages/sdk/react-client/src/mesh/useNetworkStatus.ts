@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useSyncExternalStore } from 'react';
-
 import { type NetworkStatus } from '@dxos/client/mesh';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
@@ -13,13 +12,5 @@ import { useClient } from '../client';
  */
 export const useNetworkStatus = (): NetworkStatus => {
   const client = useClient();
-  const networkStatus = useSyncExternalStore(
-    (listener) => {
-      const subscription = client.mesh.networkStatus.subscribe(listener);
-      return () => subscription.unsubscribe();
-    },
-    () => client.mesh.networkStatus.get(),
-  );
-
-  return networkStatus;
+  return useMulticastObservable(client.mesh.networkStatus);
 };

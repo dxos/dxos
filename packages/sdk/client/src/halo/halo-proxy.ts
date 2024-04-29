@@ -34,6 +34,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
+import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
@@ -121,7 +122,9 @@ export class HaloProxy implements Halo {
     await this._invitationProxy.open();
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
+    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
+      timeout: RPC_TIMEOUT,
+    });
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
       data.identity &&
@@ -134,7 +137,9 @@ export class HaloProxy implements Halo {
     this._subscriptions.add(() => identityStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
-    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
+    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
+      timeout: RPC_TIMEOUT,
+    });
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
@@ -187,33 +192,38 @@ export class HaloProxy implements Halo {
    * @param profile - optional display name
    * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  async createIdentity(
-    profile: ProfileDocument = {},
-    deviceProfile: DeviceProfileDocument | undefined = undefined,
-  ): Promise<Identity> {
+  async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const deviceProfileWithDefaults = {
       ...deviceProfile,
       ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),
     };
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
-      profile,
-      deviceProfile: deviceProfileWithDefaults,
-    });
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity(
+      {
+        profile,
+        deviceProfile: deviceProfileWithDefaults,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
+    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(
+      { recoveryKey },
+      { timeout: RPC_TIMEOUT },
+    );
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
+    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile, {
+      timeout: RPC_TIMEOUT,
+    });
     this._identityChanged.emit(identity);
     return identity;
   }
@@ -231,9 +241,12 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
 
-    const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: identity.spaceKey!,
-    });
+    const stream = this._serviceProvider.services.SpacesService.queryCredentials(
+      {
+        spaceKey: identity.spaceKey!,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._subscriptions.add(() => stream.close());
 
     const observable = new ObservableProvider<
@@ -311,10 +324,13 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
 
-    return this._serviceProvider.services.SpacesService.writeCredentials({
-      spaceKey: identity.spaceKey!,
-      credentials,
-    });
+    return this._serviceProvider.services.SpacesService.writeCredentials(
+      {
+        spaceKey: identity.spaceKey!,
+        credentials,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**
@@ -345,11 +361,14 @@ export class HaloProxy implements Halo {
       AUTH_TIMEOUT,
       new ApiError('Timeout while waiting for credentials'),
     );
-    return this._serviceProvider.services.IdentityService.signPresentation({
-      presentation: {
-        credentials,
+    return this._serviceProvider.services.IdentityService.signPresentation(
+      {
+        presentation: {
+          credentials,
+        },
+        nonce,
       },
-      nonce,
-    });
+      { timeout: RPC_TIMEOUT },
+    );
   }
 }

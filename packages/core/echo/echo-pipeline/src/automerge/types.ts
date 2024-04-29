@@ -2,11 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-//
-// Copyright 2023 DXOS.org
-//
+import { type AbstractChainedBatch, type AbstractSublevel } from 'abstract-level';
+import { type Level } from 'level';
 
-import { type Reference } from '@dxos/echo-db';
+import { type EncodedReferenceObject } from './reference';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -79,5 +78,9 @@ export type ObjectSystem = {
   /**
    * Object reference ('protobuf' protocol) type.
    */
-  type?: Reference;
+  type?: EncodedReferenceObject;
 };
+
+export type LevelDB = Level<string, string>;
+export type SubLevelDB = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
+export type BatchLevel = AbstractChainedBatch<any, string, string>;

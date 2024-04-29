@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-metadata",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "DXOS app plugin for collecting and resolving type metadata.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -30,7 +30,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
-    "vite": "^5.1.5"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -38,7 +38,7 @@ void (async () => {
           react: true,
           monorepo,
           storybook: false,
-          proto: false,
+          schema: false,
         },
   });
   await result.apply();

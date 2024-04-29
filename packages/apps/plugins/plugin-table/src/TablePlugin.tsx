@@ -11,8 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -46,6 +46,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -64,6 +65,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
               // Add all tables to the graph.
               const query = space.db.query(Filter.schema(TableType));
+              subscriptions.add(query.subscribe());
               let previousObjects: TableType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -117,7 +119,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: E.object(TableType, { title: '', props: [] }),
+                data: create(TableType, { title: '', props: [] }),
               };
             }
           }

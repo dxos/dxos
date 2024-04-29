@@ -5,13 +5,15 @@
 import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useParams, generatePath, useOutletContext } from 'react-router-dom';
 
-import { type Space, useQuery, SpaceState } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
+import { type Space, useQuery, SpaceState, Filter } from '@dxos/react-client/echo';
+import { nonNullable } from '@dxos/util';
 
 import { Header } from './Header';
 import { TodoFooter } from './TodoFooter';
 import { TodoItem } from './TodoItem';
 import { FILTER } from '../constants';
-import { Todo, TodoList } from '../proto';
+import { TodoListType, TodoType } from '../types';
 
 export const Todos = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -20,17 +22,16 @@ export const Todos = () => {
   const { state } = useParams();
   const completed = state === FILTER.ACTIVE ? false : state === FILTER.COMPLETED ? true : undefined;
   // TODO(wittjosiah): Support multiple lists in a single space.
-  const [list] = useQuery(space, TodoList.filter());
+  const [list] = useQuery<TodoListType>(space, Filter.schema(TodoListType));
 
   useEffect(() => {
     if (space && space.state.get() === SpaceState.READY && !list) {
-      void space.db.add(new TodoList());
+      void space.db.add(create(TodoListType, { todos: [] }));
     }
   }, [space, list]);
 
-  // TODO(wittjosiah): Hide deleted items from `useQuery`?
-  const allTodos = list?.todos.filter((todo) => !todo.__deleted) ?? [];
-  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo.completed : true));
+  const allTodos = list?.todos ?? [];
+  const todos = allTodos.filter((todo) => (completed !== undefined ? completed === !!todo?.completed : true));
 
   const handleNewTodoKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter') {
@@ -41,20 +42,21 @@ export const Todos = () => {
 
     const title = inputRef.current?.value.trim();
     if (title) {
-      list.todos.push(new Todo({ title }));
+      list.todos.push(create(TodoType, { title, completed: false }));
       inputRef.current!.value = '';
     }
   };
 
   const handleToggleAll = (event: ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked;
-    todos.forEach((item) => {
+    todos.filter(nonNullable).forEach((item) => {
       item.completed = checked;
     });
   };
 
   const handleClearCompleted = () => {
     list.todos
+      .filter(nonNullable)
       .filter((item) => item.completed)
       .forEach((item) => {
         void space?.db.remove(item);
@@ -62,7 +64,7 @@ export const Todos = () => {
   };
 
   const activeTodoCount = allTodos.reduce((acc, todo) => {
-    return todo.completed ? acc : acc + 1;
+    return todo?.completed ? acc : acc + 1;
   }, 0);
 
   const completedCount = allTodos.length - activeTodoCount;
@@ -83,7 +85,7 @@ export const Todos = () => {
             Mark all as complete
           </label>
           <ul className='todo-list'>
-            {todos.map((todo) => (
+            {todos.filter(nonNullable).map((todo) => (
               <TodoItem
                 key={todo.id}
                 title={todo.title}

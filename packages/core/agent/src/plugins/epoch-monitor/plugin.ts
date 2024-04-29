@@ -164,8 +164,8 @@ class SpaceMonitor {
       log.info('creating epoch', { key: this._space.key });
       await this._space.internal.createEpoch();
       log.info('epoch created');
-    } catch (e) {
-      log.catch(e);
+    } catch (err) {
+      log.catch(err);
     } finally {
       this._creatingEpoch = false;
       clearTimeout(this._maxTimeoutTask!);

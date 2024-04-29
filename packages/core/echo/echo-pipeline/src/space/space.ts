@@ -3,8 +3,8 @@
 //
 
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
-import { type Context } from '@dxos/context';
-import { type FeedInfo } from '@dxos/credentials';
+import { Resource, type Context, LifecycleState } from '@dxos/context';
+import { type FeedInfo, type DelegateInvitationCredential } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -35,6 +35,8 @@ export type SpaceParams = {
 
   // TODO(dmaretskyi): Superseded by epochs.
   snapshotId?: string | undefined;
+
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
 };
 
 export type CreatePipelineParams = {
@@ -48,7 +50,7 @@ export type CreatePipelineParams = {
 // TODO(dmaretskyi): Extract database stuff.
 @trackLeaks('open', 'close')
 @trace.resource()
-export class Space {
+export class Space extends Resource {
   private readonly _addFeedMutex = new Mutex();
 
   public readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
@@ -64,11 +66,11 @@ export class Space {
 
   private readonly _snapshotManager: SnapshotManager;
 
-  private _isOpen = false;
   private _controlFeed?: FeedWrapper<FeedMessage>;
   private _dataFeed?: FeedWrapper<FeedMessage>;
 
   constructor(params: SpaceParams) {
+    super();
     invariant(params.spaceKey && params.feedProvider);
     this._key = params.spaceKey;
     this._genesisFeedKey = params.genesisFeed.key;
@@ -99,6 +101,14 @@ export class Space {
       log('onCredentialProcessed', { credential });
       this.stateUpdate.emit();
     });
+    this._controlPipeline.onDelegatedInvitation.set(async (invitation) => {
+      log('onDelegatedInvitation', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, true);
+    });
+    this._controlPipeline.onDelegatedInvitationRemoved.set(async (invitation) => {
+      log('onDelegatedInvitationRemoved', { invitation });
+      await params.onDelegatedInvitationStatusChange(invitation, false);
+    });
 
     // Start replicating the genesis feed.
     this.protocol = params.protocol;
@@ -112,7 +122,7 @@ export class Space {
   }
 
   get isOpen() {
-    return this._isOpen;
+    return this._lifecycleState === LifecycleState.OPEN;
   }
 
   get genesisFeedKey(): PublicKey {
@@ -162,40 +172,25 @@ export class Space {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
-  /**
-   * Use for diagnostics.
-   */
-  // getDataFeeds(): FeedInfo[] {
-  //   return this._dataPipeline?.getFeeds();
-  // }
-  @synchronized
   @trace.span()
-  async open(ctx: Context) {
+  protected override async _open(ctx: Context) {
     log('opening...');
-    if (this._isOpen) {
-      return;
-    }
 
     // Order is important.
     await this._controlPipeline.start();
     await this.protocol.start();
 
-    this._isOpen = true;
     log('opened');
   }
 
   @synchronized
-  async close() {
+  protected override async _close() {
     log('closing...', { key: this._key });
-    if (!this._isOpen) {
-      return;
-    }
 
     // Closes in reverse order to open.
     await this.protocol.stop();
     await this._controlPipeline.stop();
 
-    this._isOpen = false;
     log('closed');
   }
 }

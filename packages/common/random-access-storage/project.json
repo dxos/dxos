@@ -1,12 +1,18 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "random-access-storage",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/random-access-storage/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
+        "bundlePackages": [
+          "random-access-idb"
+        ],
         "entryPoints": [
           "packages/common/random-access-storage/src/index.ts"
         ],

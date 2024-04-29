@@ -7,18 +7,13 @@ import '@dxosTheme';
 import React, { useState } from 'react';
 
 import { SketchType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { createEchoReactiveObject } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 
 import SketchComponent from './Sketch';
 
-const createSketch = () => {
-  return createEchoReactiveObject(
-    E.object(SketchType, { data: createEchoReactiveObject(E.object(E.ExpandoType, {})) }),
-  );
-};
+const createSketch = () => create(SketchType, { data: create(Expando, {}) });
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(createSketch());
@@ -26,7 +21,7 @@ const Story = () => {
   return (
     <div className='flex flex-col grow overflow-hidden divide-y'>
       <Toolbar.Root>
-        <Button variant={'ghost'} onClick={() => setSketch(createSketch())}>
+        <Button variant='ghost' onClick={() => setSketch(createSketch())}>
           Change
         </Button>
       </Toolbar.Root>

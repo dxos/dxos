@@ -6,12 +6,13 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
-import { Expando } from '@dxos/react-client/echo';
+import { create } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
+
 // import { EchoKanban } from '../Kanban/testing';
 // import { GraphTree } from '../Tree/testing';
 
@@ -49,7 +50,7 @@ export default {
         const objects = [
           factory.schema,
           ...range(factory.createObject, 10),
-          new Expando({
+          create({
             type: 'kanban',
             title: 'Projects',
             schema: factory.schema,

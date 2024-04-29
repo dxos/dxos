@@ -6,8 +6,9 @@
 
 import { expect } from 'chai';
 
-import { sleep, waitForCondition } from '@dxos/async';
+import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
 import { describe, test, afterTest } from '@dxos/test';
 
@@ -29,6 +30,7 @@ describe('Halo', () => {
     });
 
     const testBuilder = new TestBuilder(config);
+    testBuilder.level = createTestLevel();
 
     {
       const client = new Client({ config, services: testBuilder.createLocal() });
@@ -37,10 +39,9 @@ describe('Halo', () => {
 
       await client.halo.createIdentity({ displayName: 'test-user' });
       expect(client.halo.identity).exist;
+      await client.spaces.isReady.wait();
+      await client.destroy();
     }
-
-    // TODO(mykola): Clean as automerge team updates storage API.
-    await sleep(200);
 
     {
       const client = new Client({ config, services: testBuilder.createLocal() });
@@ -49,8 +50,9 @@ describe('Halo', () => {
 
       await waitForCondition({ condition: () => !!client.halo.identity });
       expect(client.halo.identity).exist;
-      // TODO(burdon): Not working.
-      // expect(client.halo.identity!.displayName).to.eq('test-user');
+      await client.spaces.isReady.wait();
+      expect(client.halo.identity.get()?.profile?.displayName).to.eq('test-user');
+      await client.destroy();
     }
   });
 });

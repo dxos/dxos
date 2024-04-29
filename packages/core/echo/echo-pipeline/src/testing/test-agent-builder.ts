@@ -190,6 +190,7 @@ export class TestAgent {
           this.createGossip().createExtension({ remotePeerId: session.remotePeerId }),
         );
       },
+      onDelegatedInvitationStatusChange: async () => {},
     });
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);

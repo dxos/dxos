@@ -2,100 +2,113 @@
 // Copyright 2024 DXOS.org
 //
 
-import { synchronized, Event } from '@dxos/async';
-import { type MetadataMethods } from '@dxos/echo-pipeline';
-import { log } from '@dxos/log';
-import { type Directory } from '@dxos/random-access-storage';
+import { Event } from '@dxos/async';
+import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
+import { defaultMap } from '@dxos/util';
 
-import { overrideFile } from './util';
+import { type ConcatenatedHeadHashes } from './types';
 
 export type IndexMetadataStoreParams = {
-  directory: Directory;
+  db: SubLevelDB;
 };
 
 export type DocumentMetadata = {
-  id: string;
-  lastIndexedHash?: string;
-  lastAvailableHash?: string;
+  /**
+   * Encoded object pointer: `${documentId}|${objectId}`.
+   */
+  id: ObjectPointerEncoded;
+  lastIndexedHash?: ConcatenatedHeadHashes;
+  lastAvailableHash?: ConcatenatedHeadHashes;
 };
 
 @trace.resource()
-// TODO(mykola): Use snapshot and append only log, not separate file for each document.
-export class IndexMetadataStore implements MetadataMethods {
+export class IndexMetadataStore {
   public readonly dirty = new Event<void>();
   public readonly clean = new Event<void>();
 
-  private readonly _directory: Directory;
-  /** map objectId -> index metadata */
-  private readonly _metadata: Map<string, DocumentMetadata> = new Map();
+  /**
+   * Documents that were saved by automerge-repo but maybe not indexed (also includes indexed documents).
+   *
+   * ObjectPointerEncoded -> ConcatenatedHeadHashes
+   */
+  private readonly _lastSeen: SubLevelDB;
 
-  constructor({ directory }: IndexMetadataStoreParams) {
-    this._directory = directory;
+  /**
+   * Documents that were indexing
+   */
+  private readonly _lastIndexed: SubLevelDB;
+
+  constructor({ db }: IndexMetadataStoreParams) {
+    this._lastSeen = db.sublevel('last-seen');
+    this._lastIndexed = db.sublevel('last-indexed');
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async markDirty(idToLastHash: Map<string, string>) {
-    const tasks = [...idToLastHash.entries()].map(async ([id, lastAvailableHash]) => {
-      const metadata = await this._getMetadata(id);
-      metadata.lastAvailableHash = lastAvailableHash;
-      await this._setMetadata(id, metadata);
-      this.dirty.emit();
-    });
-    await Promise.all(tasks);
-  }
+  async getDirtyDocuments(): Promise<ObjectPointerEncoded[]> {
+    const res = new Map<ObjectPointerEncoded, DocumentMetadata>();
 
-  @trace.span({ showInBrowserTimeline: true })
-  async getDirtyDocuments(): Promise<string[]> {
-    const ids = await this._directory.list();
-    const dirty: string[] = [];
-    await Promise.all(
-      ids.map(async (id) => {
-        const metadata = await this._getMetadata(id);
-        if (metadata.lastIndexedHash !== metadata.lastAvailableHash) {
-          dirty.push(metadata.id);
-        }
-      }),
-    );
-    return dirty;
-  }
+    for await (const [id, lastAvailableHash] of this._lastSeen.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
+      valueEncoding: 'json',
+    })) {
+      defaultMap(res, id, { id, lastAvailableHash });
+    }
 
-  async markClean(id: string, lastIndexedHash: string) {
-    const metadata = await this._getMetadata(id);
-    metadata.lastIndexedHash = lastIndexedHash;
-    await this._setMetadata(id, metadata);
-    this.clean.emit();
-  }
-
-  @synchronized
-  private async _getMetadata(id: string): Promise<DocumentMetadata> {
-    if (this._metadata.has(id)) {
-      return this._metadata.get(id)!;
-    } else {
-      try {
-        const file = this._directory.getOrCreateFile(id);
-        const { size } = await file.stat();
-        const serializedData = (await file.read(0, size)).toString();
-        const metadata: DocumentMetadata = serializedData.length !== 0 ? JSON.parse(serializedData) : { id };
-        this._metadata.set(id, metadata);
-        return metadata;
-      } catch (err) {
-        log.warn('failed to read metadata', err);
-        this._metadata.set(id, { id });
-        return { id };
+    for await (const [id, lastIndexedHash] of this._lastIndexed.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
+      valueEncoding: 'json',
+    })) {
+      if (res.has(id)) {
+        res.get(id)!.lastIndexedHash = lastIndexedHash;
+      } else {
+        defaultMap(res, id, { id, lastIndexedHash });
       }
+    }
+
+    return Array.from(res.values())
+      .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
+      .map((metadata) => metadata.id);
+  }
+
+  /**
+   * @returns All document id's that were already indexed. May include dirty documents.
+   */
+  async getAllIndexedDocuments(): Promise<ObjectPointerEncoded[]> {
+    const tuples = await this._lastIndexed
+      .iterator<ObjectPointerEncoded>({
+        valueEncoding: 'json',
+        values: false,
+      })
+      .all();
+
+    return tuples.map(([id]) => id);
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
+  markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
+    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
+      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
     }
   }
 
-  @synchronized
-  private async _setMetadata(id: string, metadata: DocumentMetadata): Promise<boolean> {
-    try {
-      await overrideFile({ path: id, directory: this._directory, content: Buffer.from(JSON.stringify(metadata)) });
-      this._metadata.set(id, metadata);
-      return true;
-    } catch (err) {
-      log.warn('failed to write metadata', err);
-      return false;
+  /**
+   * Called after leveldb batch commit.
+   */
+  afterMarkDirty() {
+    this.dirty.emit();
+  }
+
+  async markClean(id: ObjectPointerEncoded, lastIndexedHash: ConcatenatedHeadHashes) {
+    await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
+    this.clean.emit();
+  }
+
+  /**
+   * Called on re-indexing.
+   */
+  dropFromClean(ids: ObjectPointerEncoded[], batch: BatchLevel) {
+    for (const id of ids) {
+      batch.del(id, { sublevel: this._lastIndexed });
     }
   }
 }

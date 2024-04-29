@@ -9,6 +9,7 @@ import { warnAfterTimeout } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
 import { type SpaceState, type SpaceDoc } from './types';
 
@@ -16,6 +17,8 @@ type SpaceDocumentLinks = SpaceDoc['links'];
 
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
+
+  getAllHandles(): DocHandle<SpaceDoc>[];
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(objectId: string): void;
@@ -33,6 +36,7 @@ export interface AutomergeDocumentLoader {
 /**
  * Manages object <-> docHandle binding and automerge document loading.
  */
+@trace.resource()
 export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private _spaceRootDocHandle: DocHandle<SpaceDoc> | null = null;
   /**
@@ -52,6 +56,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     private readonly _repo: Repo,
   ) {}
 
+  getAllHandles(): DocHandle<SpaceDoc>[] {
+    return [...new Set(this._objectDocumentHandles.values())];
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
   public async loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void> {
     if (this._spaceRootDocHandle != null) {
       return;

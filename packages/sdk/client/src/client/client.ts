@@ -6,37 +6,34 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
-  types as clientSchema,
   clientServiceBundle,
   DEFAULT_CLIENT_CHANNEL,
-  PropertiesSchema,
+  Properties,
   STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
+  type Echo,
+  type Halo,
 } from '@dxos/client-protocol';
+import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
-import { Config } from '@dxos/config';
+import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { inspectObject } from '@dxos/debug';
-import { Hypergraph, schemaBuiltin } from '@dxos/echo-schema';
+import { inspectObject, raise } from '@dxos/debug';
+import { EchoClient } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import {
-  GetDiagnosticsRequest,
-  SystemStatus,
-  type QueryStatusResponse,
-} from '@dxos/protocols/proto/dxos/client/services';
+import { SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
-import { jsonKeyReplacer, type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { trace } from '@dxos/tracing';
+import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { IndexKind, type SpaceList, type TypeCollection } from '../echo';
-import type { HaloProxy } from '../halo';
-import type { MeshProxy } from '../mesh';
+import { type RuntimeSchemaRegistry } from '../echo';
+import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
@@ -51,8 +48,6 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
   /** Custom model factory. @deprecated */
   modelFactory?: any;
-  /** Types. */
-  types?: TypeCollection;
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -99,10 +94,7 @@ export class Client {
   private _shellManager?: ShellManager;
   private _shellClientProxy?: ProtoRpcPeer<ClientServices>;
 
-  /**
-   * @internal
-   */
-  readonly _graph = new Hypergraph();
+  private readonly _echoClient = new EchoClient({});
 
   /**
    * Unique id of the Client, local to the current peer.
@@ -131,13 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this.addTypes(schemaBuiltin);
-    this.addTypes(clientSchema);
-    if (this._options.types) {
-      this.addTypes(this._options.types);
-    }
-
-    this._graph.types.registerEffectSchema(PropertiesSchema);
+    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -185,7 +171,7 @@ export class Client {
     return this._status;
   }
 
-  get spaces(): SpaceList {
+  get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
   }
@@ -193,7 +179,7 @@ export class Client {
   /**
    * HALO credentials.
    */
-  get halo(): HaloProxy {
+  get halo(): Halo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.halo;
   }
@@ -223,23 +209,22 @@ export class Client {
     const self = this;
     return {
       get graph() {
-        return self._graph;
+        return self._echoClient.graph;
       },
     };
   }
 
-  /**
-   * @deprecated Replaced by addSchema.
-   */
-  addTypes(types: TypeCollection) {
-    this._graph.addTypes(types);
-    return this;
-  }
-
   // TODO(dmaretskyi): Expose `graph` directly?
-  // TODO(burdon): Make idempotent.
-  addSchema(...schemaList: Parameters<TypeCollection['registerEffectSchema']>) {
-    this._graph.types.registerEffectSchema(...schemaList);
+  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+    // TODO(dmaretskyi): Uncomment after release.
+    // if (!this._initialized) {
+    //   throw new ApiError('Client not open.');
+    // }
+
+    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.isSchemaRegistered(s));
+    if (notRegistered.length > 0) {
+      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+    }
     return this;
   }
 
@@ -248,25 +233,7 @@ export class Client {
    */
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    const serviceDiagnostics = await this._services.services.SystemService.getDiagnostics({
-      keys: options.humanize
-        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
-        : options.truncate
-          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-          : undefined,
-    });
-
-    const clientDiagnostics = {
-      config: this._config?.values,
-      trace: TRACE_PROCESSOR.getDiagnostics(),
-    };
-
-    const diagnostics = {
-      client: clientDiagnostics,
-      services: serviceDiagnostics,
-    };
-
-    return JSON.parse(JSON.stringify(diagnostics, jsonKeyReplacer(options)));
+    return DiagnosticsCollector.collect(this._config, this.services, options);
   }
 
   /**
@@ -274,26 +241,67 @@ export class Client {
    */
   async repair(): Promise<any> {
     // TODO(burdon): Factor out.
-    const spaces = this.spaces.get();
-    const docs = spaces
-      .map((space) =>
-        (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
-      )
-      .filter(Boolean);
+    const repairSummary: any = {};
 
-    let removed = 0;
-    if (typeof navigator !== 'undefined' && navigator.storage) {
-      const dir = await navigator.storage.getDirectory();
-      for await (const filename of (dir as any)?.keys()) {
-        if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
-          await dir.removeEntry(filename);
-          removed++;
+    {
+      // Cleanup OPFS.
+      const spaces = this.spaces.get();
+      const docs = spaces
+        .map((space) =>
+          (space as any)._data.pipeline.currentEpoch?.subject.assertion.automergeRoot.slice('automerge:'.length),
+        )
+        .filter(Boolean);
+
+      repairSummary.OPFSRemovedFiles = 0;
+      if (typeof navigator !== 'undefined' && navigator.storage) {
+        const dir = await navigator.storage.getDirectory();
+        for await (const filename of (dir as any)?.keys()) {
+          if (filename.includes('automerge_') && !docs.some((doc) => filename.includes(doc))) {
+            await dir.removeEntry(filename);
+            repairSummary.OPFSRemovedFiles++;
+          }
         }
       }
     }
 
-    log.info('Repair succeeded', { removed });
-    return { removed };
+    {
+      // Fix storage config.
+      const config = {
+        runtime: {
+          client: {
+            storage: {
+              dataStore: this.config.values.runtime?.client?.storage?.dataStore,
+            },
+          },
+        },
+      };
+      await SaveConfig(config);
+
+      repairSummary.storageConfig = config;
+    }
+
+    {
+      repairSummary.levelDBRemovedEntries = 0;
+      // Cleanup old index-data from level db.
+      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
+      const sublevelsToCleanup = [
+        level.sublevel('index-store'),
+        level.sublevel('index-metadata').sublevel('clean'),
+        level.sublevel('index-metadata').sublevel('dirty'),
+      ];
+
+      for (const sublevel of sublevelsToCleanup) {
+        repairSummary.levelDBRemovedEntries += (await sublevel.keys().all()).length;
+        await sublevel.clear();
+      }
+    }
+
+    {
+      await this._services?.services.QueryService?.reIndex(undefined, { timeout: 30_000 });
+    }
+
+    log.info('Repair succeeded', { repairSummary });
+    return repairSummary;
   }
 
   /**
@@ -319,14 +327,13 @@ export class Client {
       : undefined;
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     await this._open();
+    invariant(this._runtime, 'Client runtime initialization failed.');
 
     // TODO(dmaretskyi): Refactor devtools init.
     if (typeof window !== 'undefined') {
       const { mountDevtoolsHooks } = await import('../devtools');
       mountDevtoolsHooks({ client: this });
     }
-
-    await this.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     this._initialized = true;
     log.trace('dxos.sdk.client.open', Trace.end({ id: this._instanceId }));
@@ -335,27 +342,37 @@ export class Client {
   private async _open() {
     log('opening...');
     invariant(this._services);
-    const { SpaceList } = await import('../echo');
-    const { HaloProxy } = await import('../halo');
-    const { MeshProxy } = await import('../mesh');
+    const { SpaceList } = await import('../echo/space-list');
+    const { HaloProxy } = await import('../halo/halo-proxy');
+    const { MeshProxy } = await import('../mesh/mesh-proxy');
     const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
 
-    await this._services.open(this._ctx);
+    const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
+      if (error instanceof ApiError) {
+        log.error('fatal', { error });
+        trigger.wake(error);
+      }
       if (!this._resetting) {
         await this._close();
         await this._open();
         this.reloaded.emit();
       }
     });
+    await this._services.open(this._ctx);
 
+    this._echoClient.connectToService({
+      dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
+    });
+    await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
       this._config,
       this._services,
-      this._graph,
+      this._echoClient,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
@@ -373,7 +390,6 @@ export class Client {
       : undefined;
     this._runtime = new ClientRuntime({ spaces, halo, mesh, shell });
 
-    const trigger = new Trigger<Error | undefined>();
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
     this._statusStream.subscribe(
@@ -424,6 +440,7 @@ export class Client {
 
       await this._shellClientProxy.open();
     }
+
     log('opened');
   }
 
@@ -449,6 +466,7 @@ export class Client {
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
     await this._runtime?.close();
+    await this._echoClient.close(this._ctx);
     await this._services?.close(this._ctx);
     log('closed');
   }

@@ -1,28 +1,21 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { linkDeferred } from './type-collection';
+export * from './dynamic';
+export * from './ast';
+export * from './handler';
+export * from './json';
+export * from './proxy';
+export * from './annotations';
+export * from './expando';
+export * from './getter';
+export * from './typed-object-class';
+export * from './types';
+export * from './reference';
+export { defineHiddenProperty } from './utils';
 
-export * from './database';
-export * from './guarded-scope';
-export * from './hypergraph';
-export * from './object';
-export * from './proto';
-export * from './query';
-export * from './serializer';
-export { TypeCollection } from './type-collection';
-export * from './util';
-export * from './automerge';
-export * from './automerge/key-path';
+export * as S from '@effect/schema/Schema';
+export * as AST from '@effect/schema/AST';
 
-// TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
-export * from './effect/reactive';
-export * from './effect/json-schema';
-export * from './effect/echo-object-class';
-export * from './effect/dynamic/dynamic-schema';
-export * from './effect/dynamic/stored-schema';
-export { isReactiveProxy } from './effect/proxy';
-export { createEchoReactiveObject } from './effect/echo-handler';
-
-linkDeferred();
+// This comment is here to bust NX cache. Remove it after the code changes.

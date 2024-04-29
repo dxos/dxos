@@ -2,10 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
-
-import { DynamicEchoSchema, EchoObjectSchema } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { S, DynamicEchoSchema, TypedObject, ref } from '@dxos/echo-schema';
 
 const TableTypePropSchema = S.partial(
   S.mutable(
@@ -21,8 +18,8 @@ const TableTypePropSchema = S.partial(
 );
 export type TableTypeProp = S.Schema.Type<typeof TableTypePropSchema>;
 
-export class TableType extends EchoObjectSchema({ typename: 'braneframe.Table', version: '0.1.0' })({
+export class TableType extends TypedObject({ typename: 'braneframe.Table', version: '0.1.0' })({
   title: S.string,
-  schema: S.optional(E.ref(DynamicEchoSchema)),
+  schema: S.optional(ref(DynamicEchoSchema)),
   props: S.mutable(S.array(TableTypePropSchema)),
 }) {}

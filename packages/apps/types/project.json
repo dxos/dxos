@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "types",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/types/src",
   "projectType": "library",
   "targets": {
@@ -8,21 +11,12 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/types/src/index.ts",
-          "packages/apps/types/src/proto/index.ts"
+          "packages/apps/types/src/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    }
+    "test": {}
   }
 }

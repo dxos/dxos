@@ -44,6 +44,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -62,6 +63,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
               // Add all views to the graph.
               const query = space.db.query(Filter.schema(ViewType));
+              subscriptions.add(query.subscribe());
               let previousObjects: ViewType[] = [];
               subscriptions.add(
                 effect(() => {

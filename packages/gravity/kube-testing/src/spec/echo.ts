@@ -4,9 +4,10 @@
 
 import { randomBytes } from 'node:crypto';
 
+import { TextV0Type } from '@braneframe/types';
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
-import { type Space, TextObject } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Invitation } from '@dxos/client/invitations';
 import { type LocalClientServices } from '@dxos/client/services';
 import { TestBuilder } from '@dxos/client/testing';
@@ -17,7 +18,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TransportKind } from '@dxos/network-manager';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { Timeframe } from '@dxos/timeframe';
 import { isNode, randomInt, range } from '@dxos/util';
@@ -78,8 +78,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   defaultSpec(): EchoTestSpec {
     return {
-      agents: 4,
-      duration: 1_800_000,
+      agents: 2,
+      duration: 30_000,
       iterationDelay: 2000,
       epochPeriod: 8,
       // measureNewAgentSyncTime: true,
@@ -120,7 +120,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     const { agentIdx, signalUrl } = config;
 
     if (!this.builder) {
-      this.builder = new TestBuilder(undefined, undefined, undefined, spec.transport);
+      this.builder = new TestBuilder(undefined, undefined, spec.transport);
     }
 
     this.builder.config = new Config({
@@ -155,7 +155,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     };
 
     if (config.creator) {
-      this.space.db.add(new TextObject('', TextKind.PLAIN));
+      const { create } = await import('@dxos/echo-schema');
+
+      this.space.db.add(create(TextV0Type, { content: '' }));
       await this.space.db.flush();
     }
 
@@ -269,6 +271,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     this.client = new Client({ services: this.services });
     await this.client.initialize();
 
+    this.client.experimental.graph.runtimeSchemaRegistry.registerSchema(TextV0Type);
+
     if (!this.spaceKey) {
       await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
       if (env.params.config.creator) {
@@ -276,14 +280,16 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         this.space.share({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
+          multiUse: true,
         });
       } else {
         const invitation = this.client.spaces.join({
           swarmKey: PublicKey.from(env.params.config.invitationTopic),
           authMethod: Invitation.AuthMethod.NONE,
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           kind: Invitation.Kind.SPACE,
+          multiUse: true,
         } as any); // TODO(dmaretskyi): Fix types.
         this.space = await new Promise<Space>((resolve) => {
           invitation.subscribe((event) => {

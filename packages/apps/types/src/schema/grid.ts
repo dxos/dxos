@@ -2,13 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
-import * as E from '@dxos/echo-schema';
-import { EchoObjectSchema } from '@dxos/echo-schema';
-
-export class GridItemType extends EchoObjectSchema({ typename: 'braneframe.Grid.Item', version: '0.1.0' })({
-  object: E.ref(E.ExpandoType),
+export class GridItemType extends TypedObject({ typename: 'braneframe.Grid.Item', version: '0.1.0' })({
+  object: ref(Expando),
   position: S.mutable(
     S.struct({
       x: S.number,
@@ -18,7 +15,7 @@ export class GridItemType extends EchoObjectSchema({ typename: 'braneframe.Grid.
   color: S.optional(S.string),
 }) {}
 
-export class GridType extends EchoObjectSchema({ typename: 'braneframe.Grid', version: '0.1.0' })({
+export class GridType extends TypedObject({ typename: 'braneframe.Grid', version: '0.1.0' })({
   title: S.string,
-  items: S.mutable(S.array(E.ref(GridItemType))),
+  items: S.mutable(S.array(ref(GridItemType))),
 }) {}

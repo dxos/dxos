@@ -59,6 +59,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         const invitation = space.share?.({
           type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.SHARED_SECRET,
+          multiUse: false,
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -72,8 +73,9 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       icon: UsersThree,
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.NONE,
+          multiUse: true,
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
