@@ -21,6 +21,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, Filter, type Query } from '@dxos/react-client/echo';
+import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -236,6 +237,28 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
+            case 'article': {
+              if (doc) {
+                return (
+                  <>
+                    <PlankHeading.Root>
+                      <PlankHeading.Button>
+                        <TextAa {...plankHeadingIconProps} />
+                      </PlankHeading.Button>
+                      <PlankHeading.Label>{doc.title}</PlankHeading.Label>
+                    </PlankHeading.Root>
+                    <DocumentMain
+                      readonly={settings.values.state[doc.id]?.readonly}
+                      toolbar={settings.values.toolbar}
+                      document={doc}
+                      extensions={extensions}
+                    />
+                  </>
+                );
+              } else {
+                return null;
+              }
+            }
             case 'main': {
               if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};

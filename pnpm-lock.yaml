@@ -2227,6 +2227,9 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor

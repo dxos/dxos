@@ -82,6 +82,7 @@ export const DeckLayout = ({
     : { main: [location.active] as string[] };
   const sidebarId = firstSidebarId(activeParts);
   const complementaryId = firstComplementaryId(activeParts);
+  const complementaryNode = graph.findNode(complementaryId);
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -112,14 +113,14 @@ export const DeckLayout = ({
         navigationSidebarOpen={context.sidebarOpen}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
         {...(complementarySidebarOpen !== null && {
-          complementarySidebarOpen: context.complementarySidebarOpen as boolean,
+          complementarySidebarOpen: complementaryNode && (context.complementarySidebarOpen as boolean),
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar>
           {sidebarId && sidebarId !== NAV_ID ? (
-            <Surface role='article' data={graph.findNode(sidebarId)} limit={1} />
+            <Surface role='article' data={{ object: graph.findNode(sidebarId) }} limit={1} />
           ) : (
             <Surface role='navigation' name='sidebar' limit={1} />
           )}
@@ -140,11 +141,9 @@ export const DeckLayout = ({
         </Main.Notch>
 
         <Main.ComplementarySidebar>
-          {complementaryId && complementaryId !== NAV_ID ? (
-            <Surface role='article' data={graph.findNode(complementaryId)} limit={1} />
-          ) : (
-            <Surface role='navigation' name='sidebar' limit={1} />
-          )}
+          {complementaryId && complementaryNode ? (
+            <Surface role='article' data={{ object: complementaryNode.data }} limit={1} />
+          ) : null}
         </Main.ComplementarySidebar>
 
         {/* Dialog overlay to dismiss dialogs. */}
@@ -154,9 +153,14 @@ export const DeckLayout = ({
         <Deck.Root>
           {activeParts.main ? (
             (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean).map((id) => {
+              const node = graph.findNode(id);
               return (
                 <Deck.Plank key={id}>
-                  <Surface role='article' data={graph.findNode(id)} limit={1} fallback={<PlankLoading />} />
+                  {node ? (
+                    <Surface role='article' data={{ object: node.data }} limit={1} fallback={<PlankLoading />} />
+                  ) : (
+                    <PlankLoading />
+                  )}
                 </Deck.Plank>
               );
             })
