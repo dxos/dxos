@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "util",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/util/src",
   "projectType": "library",
   "targets": {

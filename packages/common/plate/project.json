@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "plate",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/plate/src",
   "projectType": "library",
   "targets": {
