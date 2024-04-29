@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Mutex, PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
-import { AuthenticatingInvitation, INVITATION_TIMEOUT } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
+import { Mutex, type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos/async';
+import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
+import { type Context } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -182,46 +182,29 @@ export class InvitationsHandler {
   }
 
   acceptInvitation(
+    ctx: Context,
+    stream: PushStream<Invitation>,
     protocol: InvitationProtocol,
     invitation: Invitation,
+    otpEnteredTrigger: Trigger<string>,
     deviceProfile?: DeviceProfileDocument,
-  ): AuthenticatingInvitation {
+  ): void {
     const { timeout = INVITATION_TIMEOUT } = invitation;
 
     if (deviceProfile) {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
     }
-    const authenticated = new Trigger<string>();
-
-    // TODO(dmaretskyi): Turn into state?
-    // Whether the Host has already admitted us and the remote connection is no longer needed.
-    let admitted = false;
 
     let currentState: Invitation.State;
-    const stream = new PushStream<Invitation>();
     const setState = (newData: Partial<Invitation>) => {
       invariant(newData.state !== undefined);
       currentState = newData.state;
       stream.next({ ...invitation, ...newData });
     };
 
-    const ctx = new Context({
-      onError: (err) => {
-        if (err instanceof TimeoutError) {
-          log('timeout', { ...protocol.toJSON() });
-          setState({ state: Invitation.State.TIMEOUT });
-        } else {
-          log.warn('auth failed', err);
-          setState({ state: Invitation.State.ERROR });
-        }
-        void ctx.dispose();
-      },
-    });
-
-    ctx.onDispose(() => {
-      log('complete', { ...protocol.toJSON() });
-      stream.complete();
-    });
+    // TODO(dmaretskyi): Turn into state?
+    // Whether the Host has already admitted us and the remote connection is no longer needed.
+    let admitted = false;
 
     const topology = new InvitationTopology(Options.Role.GUEST);
 
@@ -260,7 +243,7 @@ export class InvitationsHandler {
               if (isAuthenticationRequired(invitation)) {
                 switch (invitation.authMethod) {
                   case Invitation.AuthMethod.SHARED_SECRET:
-                    await this._handleGuestOtpAuth(extension, setState, authenticated, { timeout });
+                    await this._handleGuestOtpAuth(extension, setState, otpEnteredTrigger, { timeout });
                     break;
                   case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
                     await this._handleGuestKpkAuth(extension, setState, invitation, introductionResponse);
@@ -337,21 +320,6 @@ export class InvitationsHandler {
         setState({ state: Invitation.State.CONNECTING });
       }
     });
-
-    const observable = new AuthenticatingInvitation({
-      initialInvitation: invitation,
-      subscriber: stream.observable,
-      onCancel: async () => {
-        setState({ state: Invitation.State.CANCELLED });
-        await ctx.dispose();
-      },
-      onAuthenticate: async (code: string) => {
-        // TODO(burdon): Reset creates a race condition? Event?
-        authenticated.wake(code);
-      },
-    });
-
-    return observable;
   }
 
   private async _handleGuestOtpAuth(

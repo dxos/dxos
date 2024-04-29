@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, PushStream } from '@dxos/async';
+import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
-  type AuthenticatingInvitation,
+  AuthenticatingInvitation,
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitation,
   INVITATION_TIMEOUT,
@@ -117,7 +117,8 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
-    const invitation = this._invitationsHandler.acceptInvitation(handler, options, request.deviceProfile);
+    const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
+    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 
@@ -237,6 +238,40 @@ export class InvitationsManager {
       },
     });
     return { ctx, stream, observableInvitation };
+  }
+
+  private _createObservableAcceptingInvitation(handler: InvitationProtocol, initialState: Invitation) {
+    const otpEnteredTrigger = new Trigger<string>();
+    const stream = new PushStream<Invitation>();
+    const ctx = new Context({
+      onError: (err) => {
+        if (err instanceof TimeoutError) {
+          log('timeout', { ...handler.toJSON() });
+          stream.next({ ...initialState, state: Invitation.State.TIMEOUT });
+        } else {
+          log.warn('auth failed', err);
+          stream.next({ ...initialState, state: Invitation.State.ERROR });
+        }
+        void ctx.dispose();
+      },
+    });
+    ctx.onDispose(() => {
+      log('complete', { ...handler.toJSON() });
+      stream.complete();
+    });
+    const invitation = new AuthenticatingInvitation({
+      initialInvitation: initialState,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...initialState, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      },
+      onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
+        otpEnteredTrigger.wake(code);
+      },
+    });
+    return { ctx, invitation, stream, otpEnteredTrigger };
   }
 
   private async _persistIfRequired(
