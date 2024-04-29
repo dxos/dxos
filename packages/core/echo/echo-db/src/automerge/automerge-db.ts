@@ -48,7 +48,7 @@ export class AutomergeDb {
   private _ctx = new Context();
 
   // TODO(dmaretskyi): Refactor this.
-  public readonly openTrigger = new Trigger();
+  public readonly opened = new Trigger();
 
   /**
    * @internal
@@ -105,7 +105,7 @@ export class AutomergeDb {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
-    this.openTrigger.wake();
+    this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
@@ -116,8 +116,8 @@ export class AutomergeDb {
     }
     this._isOpen = false;
 
-    this.openTrigger.throw(new ContextDisposedError());
-    this.openTrigger.reset();
+    this.opened.throw(new ContextDisposedError());
+    this.opened.reset();
 
     void this._ctx.dispose();
     this._ctx = new Context();

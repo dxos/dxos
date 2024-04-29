@@ -89,7 +89,7 @@ export class EchoClient extends Resource {
           // Waiting for the database to open since the query can run before the database is ready.
           // TODO(dmaretskyi): Refactor this.
           try {
-            await db.automerge.openTrigger.wait();
+            await db.automerge.opened.wait();
           } catch (err) {
             if (err instanceof ContextDisposedError) {
               return undefined;
