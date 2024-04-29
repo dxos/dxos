@@ -49,6 +49,7 @@ type Project = {
 };
 
 type ProjectJson = {
+  tags?: string[];
   sourceRoot: string;
   projectType: string;
   targets: {
@@ -410,6 +411,26 @@ class Toolbox {
     console.log(inspect(stats, { depth: null }));
   }
 
+  async updateTags() {
+    for (const project of this.projects) {
+      const projectPath = join(project.path, 'project.json');
+      const projectJson = await loadJson<ProjectJson>(projectPath);
+
+      const scope = project.path.split('/').at(-2);
+      if (!scope) {
+        continue;
+      }
+
+      const scopeTag = `scope:${scope}`;
+      const tags = (projectJson.tags ??= []);
+      if (!tags.includes(scopeTag)) {
+        tags.push(scopeTag);
+
+        await saveJson(projectPath, projectJson, this.options.verbose);
+      }
+    }
+  }
+
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
@@ -428,6 +449,7 @@ const run = async () => {
   await toolbox.updatePackages();
   await toolbox.updateTsConfig();
   await toolbox.updateTsConfigPaths();
+  await toolbox.updateTags();
 
   // await toolbox.printStats();
 };
