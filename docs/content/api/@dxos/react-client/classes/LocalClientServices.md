@@ -26,6 +26,11 @@ The connection to the services provider was termintaed.
 
 This should fire if the services disconnect unexpectedly or during a client reset.
 
+### [signalMetadataTags]()
+Type: <code>any</code>
+
+
+
 ### [descriptors]()
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/react-client/types/ClientServices)&gt;</code>
 

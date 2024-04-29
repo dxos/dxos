@@ -1,4 +1,4 @@
-# Class `EldonAgentHostingProviderClient`
+# Class `DXOSAgentHostingProviderClient`
 <sub>Declared in [packages/sdk/client/dist/types/src/services/agent-hosting-provider.d.ts:18]()</sub>
 
 
@@ -10,7 +10,7 @@
 
 
 
-Returns: <code>[EldonAgentHostingProviderClient](/api/@dxos/react-client/classes/EldonAgentHostingProviderClient)</code>
+Returns: <code>[DXOSAgentHostingProviderClient](/api/@dxos/react-client/classes/DXOSAgentHostingProviderClient)</code>
 
 Arguments: 
 
