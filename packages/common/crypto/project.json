@@ -19,5 +19,8 @@
   "implicitDependencies": [
     "esbuild",
     "test"
+  ],
+  "tags": [
+    "scope:common"
   ]
 }

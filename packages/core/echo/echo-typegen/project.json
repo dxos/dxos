@@ -24,5 +24,8 @@
     },
     "lint": {},
     "test": {}
-  }
+  },
+  "tags": [
+    "scope:echo"
+  ]
 }

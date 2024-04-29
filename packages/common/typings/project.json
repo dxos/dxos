@@ -23,5 +23,8 @@
     "outputs": [
       "{options.outputFile}"
     ]
-  }
+  },
+  "tags": [
+    "scope:common"
+  ]
 }

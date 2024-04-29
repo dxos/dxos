@@ -23,5 +23,8 @@
   },
   "implicitDependencies": [
     "test"
+  ],
+  "tags": [
+    "scope:sdk"
   ]
 }

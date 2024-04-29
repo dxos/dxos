@@ -19,5 +19,8 @@
   },
   "implicitDependencies": [
     "protobuf-compiler"
+  ],
+  "tags": [
+    "scope:executors"
   ]
 }

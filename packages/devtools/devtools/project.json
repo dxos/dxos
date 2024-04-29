@@ -51,5 +51,8 @@
   },
   "implicitDependencies": [
     "esbuild"
+  ],
+  "tags": [
+    "scope:devtools"
   ]
 }

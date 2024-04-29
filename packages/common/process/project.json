@@ -23,5 +23,8 @@
         "{options.outputFile}"
       ]
     }
-  }
+  },
+  "tags": [
+    "scope:common"
+  ]
 }

@@ -16,5 +16,8 @@
       }
     },
     "lint": {}
-  }
+  },
+  "tags": [
+    "scope:common"
+  ]
 }

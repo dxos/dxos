@@ -18,5 +18,8 @@
   },
   "implicitDependencies": [
     "log-hook"
+  ],
+  "tags": [
+    "scope:executors"
   ]
 }

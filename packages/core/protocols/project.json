@@ -67,5 +67,8 @@
   "implicitDependencies": [
     "nx-protobuf-compiler",
     "test"
+  ],
+  "tags": [
+    "scope:core"
   ]
 }

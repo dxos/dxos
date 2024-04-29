@@ -55,5 +55,8 @@
         "buildTarget": "halo-app:bundle"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:apps"
+  ]
 }

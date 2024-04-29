@@ -32,5 +32,8 @@
   },
   "implicitDependencies": [
     "esbuild"
+  ],
+  "tags": [
+    "scope:plugins"
   ]
 }

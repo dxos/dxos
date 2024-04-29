@@ -81,5 +81,8 @@
         "{projectRoot}/apidoc.json"
       ]
     }
-  }
+  },
+  "tags": [
+    "scope:protocols"
+  ]
 }

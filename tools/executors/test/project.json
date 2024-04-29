@@ -20,5 +20,8 @@
   "implicitDependencies": [
     "esbuild-plugins",
     "log-hook"
+  ],
+  "tags": [
+    "scope:executors"
   ]
 }

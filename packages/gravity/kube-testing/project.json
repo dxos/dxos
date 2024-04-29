@@ -26,5 +26,8 @@
       }
     },
     "lint": {}
-  }
+  },
+  "tags": [
+    "scope:gravity"
+  ]
 }

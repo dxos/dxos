@@ -21,5 +21,8 @@
   "implicitDependencies": [
     "log-hook",
     "test"
+  ],
+  "tags": [
+    "scope:executors"
   ]
 }

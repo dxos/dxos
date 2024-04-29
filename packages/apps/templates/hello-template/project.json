@@ -26,5 +26,8 @@
         "forceExit": true
       }
     }
-  }
+  },
+  "tags": [
+    "scope:templates"
+  ]
 }

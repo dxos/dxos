@@ -67,5 +67,8 @@
   },
   "implicitDependencies": [
     "esbuild"
+  ],
+  "tags": [
+    "scope:common"
   ]
 }

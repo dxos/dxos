@@ -15,5 +15,8 @@
     },
     "lint": {},
     "test": {}
-  }
+  },
+  "tags": [
+    "scope:apps"
+  ]
 }

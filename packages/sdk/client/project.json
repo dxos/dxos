@@ -38,5 +38,8 @@
   "implicitDependencies": [
     "esbuild",
     "test"
+  ],
+  "tags": [
+    "scope:sdk"
   ]
 }

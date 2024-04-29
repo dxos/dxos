@@ -42,5 +42,8 @@
   },
   "implicitDependencies": [
     "test"
+  ],
+  "tags": [
+    "scope:devtools"
   ]
 }

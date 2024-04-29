@@ -65,5 +65,8 @@
   },
   "implicitDependencies": [
     "esbuild"
+  ],
+  "tags": [
+    "scope:ui"
   ]
 }

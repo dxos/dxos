@@ -11,5 +11,8 @@
         "tsConfig": "packages/experimental/spyglass/tsconfig.json"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:experimental"
+  ]
 }

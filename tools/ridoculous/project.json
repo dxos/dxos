@@ -15,5 +15,8 @@
       }
     },
     "lint": {}
-  }
+  },
+  "tags": [
+    "scope:tools"
+  ]
 }

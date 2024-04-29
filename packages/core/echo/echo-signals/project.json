@@ -21,5 +21,8 @@
   "implicitDependencies": [
     "esbuild",
     "test"
+  ],
+  "tags": [
+    "scope:echo"
   ]
 }

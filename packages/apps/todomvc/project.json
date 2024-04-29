@@ -54,5 +54,8 @@
         "buildTarget": "todomvc:bundle"
       }
     }
-  }
+  },
+  "tags": [
+    "scope:apps"
+  ]
 }

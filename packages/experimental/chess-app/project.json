@@ -30,5 +30,8 @@
   },
   "implicitDependencies": [
     "test"
+  ],
+  "tags": [
+    "scope:experimental"
   ]
 }

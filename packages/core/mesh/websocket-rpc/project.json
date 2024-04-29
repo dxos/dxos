@@ -25,5 +25,8 @@
   "implicitDependencies": [
     "esbuild",
     "test"
+  ],
+  "tags": [
+    "scope:mesh"
   ]
 }

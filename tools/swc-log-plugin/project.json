@@ -4,5 +4,8 @@
   "sourceRoot": "tools/swc-log-plugin/src",
   "projectType": "library",
   "targets": {},
-  "implicitDependencies": []
+  "implicitDependencies": [],
+  "tags": [
+    "scope:tools"
+  ]
 }

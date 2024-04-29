@@ -12,5 +12,8 @@
       }
     },
     "lint": {}
-  }
+  },
+  "tags": [
+    "scope:gravity"
+  ]
 }

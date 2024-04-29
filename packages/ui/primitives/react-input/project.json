@@ -39,5 +39,8 @@
   },
   "implicitDependencies": [
     "esbuild"
+  ],
+  "tags": [
+    "scope:primitives"
   ]
 }

@@ -10,5 +10,8 @@
       }
     },
     "lint": {}
-  }
+  },
+  "tags": [
+    "scope:initializers"
+  ]
 }
