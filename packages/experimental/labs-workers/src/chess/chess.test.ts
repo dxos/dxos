@@ -29,4 +29,6 @@ describe('Chess', () => {
     const object = A.load<GameType>(output.objects![0].changes);
     expect(object.fen).to.exist;
   });
+
+  // TODO(burdon): Create worker test that actually posts to CF.
 });
