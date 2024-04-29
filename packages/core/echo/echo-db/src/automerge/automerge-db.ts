@@ -3,30 +3,30 @@
 //
 
 import { Event, Trigger, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
-  type SpaceState,
-  type SpaceDoc,
   AutomergeDocumentLoaderImpl,
   type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
+  type SpaceDoc,
+  type SpaceState,
 } from '@dxos/echo-pipeline';
-import { isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { type EchoDatabase } from '../database';
+import { isEchoObject } from '../echo-handler';
+import { type Hypergraph } from '../hypergraph';
 import { type AutomergeContext } from './automerge-context';
 import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { type EchoDatabase } from '../database';
-import { isEchoObject } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
@@ -290,7 +290,10 @@ export class AutomergeDb {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      documentIds: this._automergeDocLoader.getAllHandles().map((handle) => handle.documentId),
+      states: this._automergeDocLoader.getAllHandles().map((handle) => ({
+        heads: getHeads(handle.docSync()),
+        documentId: handle.documentId,
+      })),
     });
   }
 
