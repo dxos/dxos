@@ -61,14 +61,18 @@ export const handlePost = (fn: Transform) => {
 export const execFunction =
   (fn: Transform) =>
   async (input: Input): Promise<Output> => {
-    const objects: EchoObject[] =
-      input.objects?.map(({ id, schema, changes }) => ({ id, schema, object: A.load<unknown>(fromBuffer(changes)) })) ??
-      [];
+    const objects: EchoObject[] = deserializeObjects(input.objects ?? []);
     const mutated = await fn(objects);
     return {
-      objects: mutated?.map(({ id, schema, object }) => ({ id, schema, changes: toBuffer(A.save(object)) })),
+      objects: serializeObjects(mutated ?? []),
     };
   };
+
+export const deserializeObjects = <T = any>(objects: SerializedObject[]): EchoObject<T>[] =>
+  objects.map(({ id, schema, changes }) => ({ id, schema, object: A.load<T>(fromBuffer(changes)) }));
+
+export const serializeObjects = <T = any>(objects: EchoObject<T>[]): SerializedObject[] =>
+  objects.map(({ id, schema, object }) => ({ id, schema, changes: toBuffer(A.save<T>(object)) }));
 
 export const toBuffer = (data: Uint8Array) => Buffer.from(data);
 export const fromBuffer = (data: Buffer) => new Uint8Array(Buffer.from(data));

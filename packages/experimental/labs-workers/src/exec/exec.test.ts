@@ -7,7 +7,17 @@ import { expect } from 'chai';
 import { next as A } from '@dxos/automerge/automerge';
 import { describe, test } from '@dxos/test';
 
-import { execFunction, type SerializedObject, type Transform } from './exec';
+import {
+  deserializeObjects,
+  type EchoObject,
+  execFunction,
+  fromBuffer,
+  type Input,
+  type SerializedObject,
+  serializeObjects,
+  toBuffer,
+  type Transform,
+} from './exec';
 
 type TestType = {
   name: string;
@@ -25,26 +35,28 @@ describe('Test', () => {
 
     const mutation: SerializedObject = {
       id: 'test',
-      schema: 'example.com/type/test',
-      changes: A.save(doc2),
+      schema: 'example.com/type/Test',
+      changes: toBuffer(A.save(doc2)),
     };
 
-    const doc3 = A.load<TestType>(mutation.changes);
+    const doc3 = A.load<TestType>(fromBuffer(mutation.changes));
     expect(doc2.name).to.eq(doc3.name);
   });
 
-  test('function invocation', async () => {
-    const objects: SerializedObject[] = [
+  test('call function', async () => {
+    const testObjects: EchoObject<TestType>[] = [
       {
-        id: 'test',
-        schema: 'example.com/type/test',
-        changes: A.save(
-          A.change<TestType>(A.init<TestType>(), (doc) => {
-            doc.name = 'hello';
-          }),
-        ),
+        id: 'game-1',
+        schema: 'example.com/type/Test',
+        object: A.change<TestType>(A.init<TestType>(), (obj) => {
+          obj.name = 'hello';
+        }),
       },
     ];
+
+    const input: Input = {
+      objects: serializeObjects(testObjects),
+    };
 
     const fn: Transform<TestType, TestType> = async (objects) => {
       return objects.map(({ id, schema, object }) => {
@@ -59,8 +71,9 @@ describe('Test', () => {
     };
 
     const mapper = execFunction(fn);
-    const output = await mapper({ objects });
-    const object = A.load<TestType>(output.objects![0].changes);
-    expect(object.name).to.eq('hello world!');
+    const output = await mapper(input);
+
+    const objects = deserializeObjects(output.objects ?? []);
+    expect(objects[0].object.name).to.eq('hello world!');
   });
 });
