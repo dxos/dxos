@@ -43,7 +43,8 @@ export type TriggerOptions = {
  */
 export class Trigger<T = void> {
   private _promise!: Promise<T>;
-  private _wake!: (value: T | PromiseLike<T>) => void;
+  private _resolve!: (value: T | PromiseLike<T>) => void;
+  private _reject!: (error: Error) => void;
 
   constructor(private _options: TriggerOptions = { autoReset: false }) {
     this.reset();
@@ -64,7 +65,7 @@ export class Trigger<T = void> {
    * Wake blocked callers (if any).
    */
   wake(value: T) {
-    this._wake(value);
+    this._resolve(value);
     if (this._options.autoReset) {
       return this.reset();
     }
@@ -76,8 +77,9 @@ export class Trigger<T = void> {
    * Reset promise (new waiters will wait).
    */
   reset() {
-    this._promise = new Promise<T>((resolve) => {
-      this._wake = resolve;
+    this._promise = new Promise<T>((resolve, reject) => {
+      this._resolve = resolve;
+      this._reject = reject;
     });
     this._promise.catch(() => {}); // Prevent unhandled promise rejections.
 
@@ -88,7 +90,7 @@ export class Trigger<T = void> {
    * Throw error to blocked callers (if any).
    */
   throw(error: Error) {
-    this._wake(Promise.reject(error));
+    this._reject(error);
     if (this._options.autoReset) {
       return this.reset();
     }
