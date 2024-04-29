@@ -3201,6 +3201,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
       '@dxos/local-storage':
         specifier: workspace:*
         version: link:../../../common/local-storage
@@ -3241,6 +3244,9 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
@@ -10849,7 +10855,7 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
-      resolve: 1.22.8
+      resolve: 1.22.5
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -13138,7 +13144,7 @@ packages:
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.23.5
+      '@babel/code-frame': 7.18.6
       '@babel/parser': 7.21.3
       '@babel/types': 7.21.3
 
@@ -13163,7 +13169,7 @@ packages:
     resolution: {integrity: sha512-XLyopNeaTancVitYZe2MlUEvgKb6YVVPXzofHgqHijCImG33b/uTurMS488ht/Hbsb2XK3U2BnSTxKVNGV3nGQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.23.5
+      '@babel/code-frame': 7.18.6
       '@babel/generator': 7.21.3
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.21.0
@@ -13180,7 +13186,7 @@ packages:
     resolution: {integrity: sha512-XLyopNeaTancVitYZe2MlUEvgKb6YVVPXzofHgqHijCImG33b/uTurMS488ht/Hbsb2XK3U2BnSTxKVNGV3nGQ==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.23.5
+      '@babel/code-frame': 7.18.6
       '@babel/generator': 7.21.3
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.21.0
@@ -36303,7 +36309,7 @@ packages:
       jest-pnp-resolver: 1.2.2(jest-resolve@28.1.3)
       jest-util: 28.1.3
       jest-validate: 28.1.3
-      resolve: 1.22.8
+      resolve: 1.22.5
       resolve.exports: 1.1.0
       slash: 3.0.0
     dev: true
