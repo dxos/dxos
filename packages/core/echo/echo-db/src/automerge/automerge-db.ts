@@ -20,13 +20,13 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EchoDatabase } from '../database';
-import { isEchoObject } from '../echo-handler';
-import { type Hypergraph } from '../hypergraph';
 import { type AutomergeContext } from './automerge-context';
 import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
+import { type EchoDatabase } from '../database';
+import { isEchoObject } from '../echo-handler';
+import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
 
