@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, manageNodes } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { FolderType, getSpaceProperty } from '@braneframe/types';
+import { Collection, getSpaceProperty } from '@braneframe/types';
 import {
   getPlugin,
   parseGraphPlugin,
@@ -223,17 +223,17 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       return;
                     }
 
-                    const folder =
+                    const collection =
                       active.space.state.get() === SpaceState.READY &&
-                      getSpaceProperty(active.space, FolderType.typename);
-                    if (!(folder instanceof FolderType)) {
+                      getSpaceProperty(active.space, Collection.typename);
+                    if (!(collection instanceof Collection)) {
                       return;
                     }
 
                     void intentPlugin?.provides.intent.dispatch(
                       objects.map((object) => ({
                         action: SpaceAction.ADD_OBJECT,
-                        data: { target: folder, object },
+                        data: { target: collection, object },
                       })),
                     );
                   }}

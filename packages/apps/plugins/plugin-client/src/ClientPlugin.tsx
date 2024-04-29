@@ -31,7 +31,10 @@ export enum ClientAction {
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
 }
 
-export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean };
+export type ClientPluginOptions = ClientOptions & {
+  appKey: string;
+  onClientInitialized?: (client: Client) => Promise<void>;
+};
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
@@ -58,6 +61,7 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
 
 export const ClientPlugin = ({
   appKey,
+  onClientInitialized,
   ...options
 }: ClientPluginOptions): PluginDefinition<
   Omit<ClientPluginProvides, 'client' | 'firstRun'>,
@@ -79,6 +83,7 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
+        await onClientInitialized?.(client);
         client.addSchema(TextV0Type);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.

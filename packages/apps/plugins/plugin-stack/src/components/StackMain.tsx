@@ -3,9 +3,10 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback, type FC, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
+import { useGraph } from '@braneframe/plugin-graph';
+import { type Collection, FileType, StackView } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -16,11 +17,16 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
-import { Main, Button, ButtonGroup } from '@dxos/react-ui';
+import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
+import { Main, Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
+import {
+  Stack,
+  type StackProps,
+  type CollapsedSections,
+  type AddSectionPosition,
+  type StackSectionItem,
+} from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -31,32 +37,51 @@ import {
 import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
-import { STACK_PLUGIN } from '../meta';
+import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
   return <Surface role='section' data={{ object: data }} placeholder={<></>} />;
 };
 
-const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
+type StackMainProps = {
+  collection: Collection;
+  separation?: boolean;
+};
+
+const StackMain = ({ collection, separation }: StackMainProps) => {
   const { dispatch } = useIntent();
+  const { graph } = useGraph();
+  const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
+  const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
+  const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
-  const id = `stack-${stack.id}`;
-  const items = stack.sections
-    .filter(nonNullable)
-    // TODO(wittjosiah): Should the database handle this differently?
-    // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => object)
-    .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
-      return { id, object: object as SectionType, ...rest };
-    });
-  const space = getSpace(stack);
-  const [folder] = useQuery(space, Filter.schema(FolderType));
+  useEffect(() => {
+    if (!collection.views[StackView.typename]) {
+      collection.views[StackView.typename] = stack;
+    }
+  }, [collection, stack]);
 
-  const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
+  const id = `stack-${collection.id}`;
+  const items =
+    collection.objects
+      // TODO(wittjosiah): Should the database handle this differently?
+      // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
+      .filter(nonNullable)
+      .map((object) => {
+        const metadata = metadataPlugin?.provides.metadata.resolver(
+          getType(object)?.itemId ?? 'never',
+        ) as StackSectionItem['metadata'];
+        const view = {
+          ...stack.sections[object.id],
+          collapsed: collapsedSections[object.id],
+          title: object.title ?? toLocalizedString(graph.findNode(object.id)?.properties.label, t),
+        } as StackSectionItem['view'];
+        return { id: object.id, object, metadata, view };
+      }) ?? [];
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -64,7 +89,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveObject(data) || data instanceof StackType) {
+    if (!isReactiveObject(data)) {
       return 'reject';
     }
 
@@ -81,34 +106,35 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
       (active.path === Path.create(id, active.item.id) || active.path === id) &&
       (operation !== 'copy' || over.path === Path.create(id, over.item.id) || over.path === id)
     ) {
-      stack.sections.splice(active.position!, 1);
+      collection.objects.splice(active.position!, 1);
+      delete stack.sections[active.item.id];
     }
 
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
     const object = parseData?.(active.item, 'object');
-    // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, create(SectionType, { object }));
+      collection.objects.splice(over.position!, 0, object);
     } else if (object && over.path === id) {
-      stack.sections.push(create(SectionType, { object }));
+      collection.objects.push(object);
+    }
+
+    if (!stack.sections[object.id]) {
+      stack.sections[object.id] = {};
     }
   };
 
   const handleDelete = (path: string) => {
-    const index = stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
+    const index = collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
-      stack.sections.splice(index, 1);
+      collection.objects.splice(index, 1);
+      delete stack.sections[Path.last(path)];
     }
   };
 
-  const handleAdd = useCallback(
-    (sectionObject: SectionType['object']) => {
-      stack.sections.push(create(SectionType, { object: sectionObject }));
-      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
-      folder?.objects.push(sectionObject);
-    },
-    [stack, stack.sections],
-  );
+  const handleAdd = (sectionObject: EchoReactiveObject<any>) => {
+    collection.objects.push(sectionObject);
+    stack.sections[sectionObject.id] = {};
+  };
 
   // TODO(wittjosiah): Factor out.
   const handleFileUpload = fileManagerPlugin?.provides.file.upload
@@ -140,9 +166,13 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
       data: {
         element: 'dialog',
         component: `${STACK_PLUGIN}/AddSectionDialog`,
-        subject: { path, position, stack },
+        subject: { path, position, collection },
       },
     });
+  };
+
+  const handleCollapseSection = (id: string, collapsed: boolean) => {
+    setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
   };
 
   return (
@@ -151,7 +181,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={SectionType.typename}
+        type={SECTION_IDENTIFIER}
         items={items}
         separation={separation}
         transform={handleTransform}
@@ -160,8 +190,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
         onAddSection={handleAddSection}
-        collapsedSections={collapsedSections}
-        onChangeCollapsedSections={onChangeCollapsedSections}
+        onCollapseSection={handleCollapseSection}
       />
 
       <div role='none' className='flex justify-center mbs-4 pbe-4'>
@@ -175,7 +204,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                 data: {
                   element: 'dialog',
                   component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', stack },
+                  subject: { position: 'afterAll', collection },
                 },
               })
             }
