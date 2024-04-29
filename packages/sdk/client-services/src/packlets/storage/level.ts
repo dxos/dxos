@@ -14,6 +14,7 @@ export const createLevel = async (config: Runtime.Client.Storage) => {
   const persistent = isPersistent(config);
   const storagePath = persistent ? path.join(getRootPath(config), 'level') : `/tmp/dxos-${PublicKey.random().toHex()}`;
   const level = new Level<string, string>(storagePath);
+  // TODO(dmaretskyi): This function shouldn't call open - .
   await level.open();
   return level;
 };
