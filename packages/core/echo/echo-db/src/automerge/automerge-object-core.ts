@@ -285,7 +285,7 @@ export class AutomergeObjectCore {
     } else {
       invariant(this.linkCache);
 
-      // Can be caused not using `object(Expando, { ... })` constructor.
+      // Can be caused not using `create(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
       invariant(obj.id != null);
 

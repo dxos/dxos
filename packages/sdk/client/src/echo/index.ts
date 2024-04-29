@@ -26,6 +26,7 @@ export {
   getTextInRange,
   fromCursor,
   toCursor,
+  toCursorRange,
   DocAccessor,
   isEchoObject,
   RuntimeSchemaRegistry,

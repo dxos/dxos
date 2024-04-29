@@ -4,9 +4,17 @@
 
 import { expect } from 'chai';
 
-import { Collection, getSpaceProperty, setSpaceProperty } from '@braneframe/types';
+import {
+  Collection,
+  DocumentType,
+  MessageType,
+  TextV0Type,
+  ThreadType,
+  getSpaceProperty,
+  setSpaceProperty,
+} from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
-import { type Space, Filter } from '@dxos/client/echo';
+import { type Space, Filter, toCursorRange, createDocAccessor } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
@@ -22,7 +30,17 @@ describe('Composer migrations', () => {
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
-    client.addSchema(FolderType, Expando, SectionType, StackType, Collection);
+    client.addSchema(
+      FolderType,
+      Expando,
+      SectionType,
+      StackType,
+      Collection,
+      DocumentType,
+      TextV0Type,
+      ThreadType,
+      MessageType,
+    );
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;
@@ -69,6 +87,33 @@ describe('Composer migrations', () => {
   });
 
   test(migrations[2].version.toString(), async () => {
+    const doc1 = space.db.add(
+      create(DocumentType, {
+        content: create(TextV0Type, { content: 'object1' }),
+        comments: [],
+      }),
+    );
+    const thread1 = space.db.add(
+      create(ThreadType, {
+        messages: [
+          create(MessageType, {
+            from: { identityKey: PublicKey.random().toHex() },
+            blocks: [
+              // {
+              //   timestamp: new Date().toISOString(),
+              //   content: create(TextV0Type, { content: 'comment1' }),
+              // },
+            ],
+          }),
+        ],
+      }),
+    );
+    doc1.comments?.push({
+      cursor: toCursorRange(createDocAccessor(doc1.content!, ['content']), 0, 3),
+      thread: thread1,
+    });
+    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
+
     const folder1 = space.db.add(
       create(FolderType, {
         name: 'folder1',
@@ -80,7 +125,7 @@ describe('Composer migrations', () => {
               create(StackType, {
                 title: 'stack1',
                 sections: [
-                  create(SectionType, { object: create(Expando, { key: 'object1' }) }),
+                  create(SectionType, { object: doc1 }),
                   create(SectionType, { object: create(Expando, { key: 'object2' }) }),
                 ],
               }),
@@ -89,6 +134,7 @@ describe('Composer migrations', () => {
         ],
       }),
     );
+    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
     setSpaceProperty(space, FolderType.typename, folder1);
 
     const folderQuery = space.db.query(Filter.schema(FolderType));
@@ -106,5 +152,7 @@ describe('Composer migrations', () => {
     expect(rootCollection.objects[0]?.objects[0] instanceof Collection).to.be.true;
     expect(rootCollection.objects[0]?.objects[1] instanceof Collection).to.be.true;
     expect(rootCollection.objects[0]?.objects[1]?.objects).to.have.lengthOf(2);
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof DocumentType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
 });
