@@ -9,6 +9,7 @@ import React, {
   type CSSProperties,
   type HTMLAttributes,
   type PropsWithChildren,
+  forwardRef,
 } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -24,6 +25,7 @@ type WithRequiredProperty<Type, Key extends keyof Type> = Type & {
 
 export const DEFAULT_TRANSITION = 200;
 export const DEFAULT_TYPE = 'unknown';
+export const DEFAULT_COMPONENT = forwardRef(() => <>missing component</>);
 
 export type MosaicTileOverlayProps = {
   grow?: boolean;
@@ -108,11 +110,12 @@ export type MosaicContainerProps<TData extends MosaicDataItem = MosaicDataItem, 
 export type MosaicContainerContextType<
   TData extends MosaicDataItem = MosaicDataItem,
   TPosition = unknown,
-> = WithRequiredProperty<Omit<MosaicContainerProps<TData, TPosition>, 'children'>, 'type'>;
+> = WithRequiredProperty<Omit<MosaicContainerProps<TData, TPosition>, 'children'>, 'type' | 'Component'>;
 
 export const MosaicContainerContext = createContext<MosaicContainerContextType<any>>({
   id: 'never',
   type: DEFAULT_TYPE,
+  Component: DEFAULT_COMPONENT,
 });
 
 /**
@@ -123,7 +126,7 @@ export const MosaicContainer = ({
   id,
   debug,
   type = DEFAULT_TYPE,
-  Component,
+  Component = DEFAULT_COMPONENT,
   transitionDuration = DEFAULT_TRANSITION,
   modifier,
   getOverlayProps,

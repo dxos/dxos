@@ -5,7 +5,7 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { useLayout } from '@braneframe/plugin-layout';
-import { type StackType } from '@braneframe/types';
+import { type Collection } from '@braneframe/types';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
@@ -14,7 +14,7 @@ import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
-const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
+const PresenterMain: FC<{ collection: Collection }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
@@ -38,11 +38,11 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, !fullscreen && topbarBlockPaddingStart]}>
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
-        bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
+        bottomRight={<PageNumber index={slide} count={collection.objects.length} />}
         bottomLeft={
           <Pager
             index={slide}
-            count={stack.sections.length}
+            count={collection.objects.length}
             keys={running}
             onChange={setSlide}
             onExit={() => handleSetRunning(false)}
@@ -50,7 +50,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: stack.sections[slide]?.object }} placeholder={<></>} />
+        <Surface role='slide' data={{ slide: collection.objects[slide] }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );

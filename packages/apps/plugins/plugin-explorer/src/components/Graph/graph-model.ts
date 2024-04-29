@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FolderType } from '@braneframe/types';
+import { Collection } from '@braneframe/types';
 import { getSchema, type S, getType } from '@dxos/echo-schema';
 import { AST, DynamicEchoSchema, StoredEchoSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
@@ -54,7 +54,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
       // TODO(burdon): Filter.
-      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof FolderType));
+      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof Collection));
 
       this._subscription = query.subscribe(
         ({ objects }) => {

@@ -26,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {
@@ -63,6 +66,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-settings"
