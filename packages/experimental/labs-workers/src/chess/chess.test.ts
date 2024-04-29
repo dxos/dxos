@@ -10,10 +10,12 @@ import { describe, test } from '@dxos/test';
 import { chessMove, type GameType } from './chess';
 import { deserializeObjects, type EchoObject, execFunction, type Input, type Output, serializeObjects } from '../exec';
 
-const mapper = execFunction(chessMove());
+const WORKER_ENDPOINT = 'https://labs-workers.dxos.workers.dev';
+
+const map = execFunction(chessMove());
 
 const post = async (input: Input) => {
-  const result = await fetch('https://labs-workers.dxos.workers.dev/chess/move', {
+  const result = await fetch(`${WORKER_ENDPOINT}/chess/move`, {
     method: 'POST',
     body: JSON.stringify(input),
     headers: {
@@ -41,7 +43,7 @@ describe('Chess', () => {
       objects: serializeObjects(testObjects),
     };
 
-    const output = await mapper(input);
+    const output = await map(input);
     expect(input.objects?.length).to.eq(output.objects?.length);
 
     const objects = deserializeObjects(output.objects ?? []);
