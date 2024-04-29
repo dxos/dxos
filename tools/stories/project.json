@@ -1,9 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "stories",
-  "tags": [
-    "scope:tools"
-  ],
   "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {

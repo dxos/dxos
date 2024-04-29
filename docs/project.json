@@ -1,9 +1,6 @@
 {
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "name": "docs",
-  "tags": [
-    "scope:protocols"
-  ],
   "projectType": "application",
   "targets": {
     "apidoc": {

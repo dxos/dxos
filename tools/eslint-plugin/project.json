@@ -1,9 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "eslint-plugin",
-  "tags": [
-    "scope:tools"
-  ],
   "sourceRoot": "tools/eslint-plugin",
   "projectType": "library",
   "targets": {

@@ -1,9 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "protobuf-test",
-  "tags": [
-    "scope:tools"
-  ],
   "sourceRoot": "tools/protobuf-test/src",
   "projectType": "library",
   "targets": {

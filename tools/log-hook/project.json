@@ -1,9 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "log-hook",
-  "tags": [
-    "scope:tools"
-  ],
   "sourceRoot": "tools/log-hook/src",
   "projectType": "library",
   "targets": {

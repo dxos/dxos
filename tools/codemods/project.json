@@ -1,9 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "codemods",
-  "tags": [
-    "scope:tools"
-  ],
   "sourceRoot": "tools/codemods/src",
   "projectType": "library",
   "targets": {

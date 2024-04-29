@@ -1,9 +1,6 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "serve-with-vault",
-  "tags": [
-    "scope:executors"
-  ],
   "sourceRoot": "tools/executors/serve-with-vault/src",
   "targets": {
     "compile": {
