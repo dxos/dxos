@@ -21,6 +21,8 @@ for (const platform of ['node', 'browser'] as const) {
             'src/automerge/next.ts',
             'src/automerge-repo.ts',
             'src/automerge-repo-storage-indexeddb.ts',
+            'src/automerge-repo-network-broadcastchannel.ts',
+            'src/automerge-repo-network-websocket.ts'
           ]
         : {
             // automerge_wasm_bg: join(
@@ -32,6 +34,8 @@ for (const platform of ['node', 'browser'] as const) {
             'automerge/next': 'src/automerge/next.ts',
             'automerge-repo': 'src/automerge-repo.ts',
             'automerge-repo-storage-indexeddb': 'src/automerge-repo-storage-indexeddb.ts',
+            'automerge-repo-network-broadcastchannel': 'src/automerge-repo-network-broadcastchannel.ts',
+            'automerge-repo-network-websocket': 'src/automerge-repo-network-websocket.ts',
           },
     bundle: true,
     format: 'esm',
