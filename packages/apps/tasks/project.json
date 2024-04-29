@@ -15,7 +15,7 @@
       "outputs": ["{options.outputPath}"]
     },
     "bundle": {
-      "dependsOn": ["^build", "^bundle", "prebuild"],
+      "dependsOn": ["^build", "^bundle"],
       "executor": "@nx/vite:build",
       "options": {
         "outputPath": "packages/apps/tasks/out/tasks",
@@ -30,13 +30,6 @@
         "lintFilePatterns": ["packages/apps/tasks/**/*.{ts,js}?(x)"]
       },
       "outputs": ["{options.outputFile}"]
-    },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": ["{projectRoot}/src/proto/gen"]
     },
     "preview": {
       "executor": "@nx/web:file-server",

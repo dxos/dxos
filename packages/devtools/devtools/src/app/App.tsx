@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { createClientServices, Remote } from '@dxos/client/services';
+import { createClientServices } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { type Observability, initializeAppObservability } from '@dxos/observability';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, type ClientServices, Config, Defaults, DEFAULT_VAULT_ORIGIN } from '@dxos/react-client';
+import { Client, type ClientServices, Config, Defaults, DEFAULT_VAULT_ORIGIN, Remote } from '@dxos/react-client';
 
 import { Devtools } from './Devtools';
 import { namespace } from '../hooks';
@@ -20,7 +20,8 @@ export const App = () => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
       const target = searchParams.get('target') ?? DEFAULT_VAULT_ORIGIN;
-      const config = new Config(Remote(target), Defaults());
+      // TODO(nf): read wsAuthToken from localStorage?
+      const config = new Config(Remote(target, searchParams.get('wsAuthToken') ?? undefined), Defaults());
       const services = await createClientServices(config);
       const client = new Client({ config, services });
       await client.initialize();

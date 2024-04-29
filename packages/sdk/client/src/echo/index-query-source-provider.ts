@@ -3,106 +3,165 @@
 //
 
 import { Event } from '@dxos/async';
-import { warnAfterTimeout } from '@dxos/debug';
+import { type Echo } from '@dxos/client-protocol';
+import { type Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import {
   type QuerySourceProvider,
-  db,
-  type EchoObject,
   type Filter,
   type QueryResult,
   type QuerySource,
-  filterMatch,
-  base,
   getAutomergeObjectCore,
-} from '@dxos/echo-schema';
-import { log } from '@dxos/log';
-import { type IndexService } from '@dxos/protocols/proto/dxos/client/services';
+} from '@dxos/echo-db';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import {
+  type QueryService,
+  type QueryResponse,
+  type QueryResult as RemoteQueryResult,
+} from '@dxos/protocols/proto/dxos/echo/query';
+import { nonNullable } from '@dxos/util';
 
-import { type SpaceList } from './space-list';
 import { type SpaceProxy } from './space-proxy';
 
 export type IndexQueryProviderParams = {
-  service: IndexService;
-  spaceList: SpaceList;
+  service: QueryService;
+  echo: Echo;
 };
 
-// TODO(mykola): Separate by client-services barrier.
 export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
-  private async find(filter: Filter): Promise<QueryResult<EchoObject>[]> {
-    const start = Date.now();
-    const response = await this._params.service.find({ filter: filter.toProto() });
-
-    if (!response.results || response.results.length === 0) {
-      return [];
-    }
-
-    const results: (QueryResult<EchoObject> | undefined)[] = await Promise.all(
-      response.results!.map(async (result) => {
-        const space = this._params.spaceList.get(result.spaceKey);
-        if (!space) {
-          return;
-        }
-
-        const object = await warnAfterTimeout(2000, 'Loading object', async () => {
-          await (space as SpaceProxy)._databaseInitialized.wait();
-          return space.db.automerge.loadObjectById(result.id);
-        });
-
-        if (!object) {
-          return;
-        }
-
-        if (!filterMatch(filter, getAutomergeObjectCore(object[base]))) {
-          return;
-        }
-
-        return {
-          id: object.id,
-          spaceKey: object[db]!.spaceKey,
-          object,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - start },
-        };
-      }),
-    );
-
-    return results.filter(Boolean) as QueryResult<EchoObject>[];
-  }
-
   create(): QuerySource {
-    return new IndexQuerySource({ find: (params) => this.find(params) });
+    return new IndexQuerySource({ service: this._params.service, echo: this._params.echo });
   }
 }
 
 export type IndexQuerySourceParams = {
-  find: (filter: Filter) => Promise<QueryResult<EchoObject>[]>;
+  service: QueryService;
+  echo: Echo;
 };
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
-  private _results?: QueryResult<EchoObject>[] = [];
+  private _results?: QueryResult[] = [];
+  private _stream?: Stream<QueryResponse>;
 
   constructor(private readonly _params: IndexQuerySourceParams) {}
 
-  getResults(): QueryResult<EchoObject>[] {
+  getResults(): QueryResult[] {
     return this._results ?? [];
   }
 
-  update(filter: Filter<EchoObject>): void {
+  async run(filter: Filter): Promise<QueryResult[]> {
+    return new Promise((resolve, reject) => {
+      this._queryIndex(
+        filter,
+        (results) => {
+          resolve(results);
+          return OnResult.CLOSE_STREAM;
+        },
+        reject,
+      );
+    });
+  }
+
+  update(filter: Filter): void {
+    if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
+      return;
+    }
+
+    this._closeStream();
     this._results = [];
     this.changed.emit();
-
-    this._params
-      .find(filter)
-      .then((results) => {
-        if (results.length === 0) {
-          return;
-        }
-        this._results = results;
-        this.changed.emit();
-      })
-      .catch((error) => log.catch(error));
+    this._queryIndex(filter, (results) => {
+      this._results = results;
+      this.changed.emit();
+      return OnResult.CONTINUE;
+    });
   }
+
+  close(): void {
+    this._results = undefined;
+    this._closeStream();
+  }
+
+  private _queryIndex(
+    filter: Filter,
+    onResult: (results: QueryResult[]) => OnResult,
+    onError?: (error: Error) => void,
+  ) {
+    const start = Date.now();
+    const stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
+    let currentCtx: Context;
+    stream.subscribe(
+      async (response) => {
+        await currentCtx?.dispose();
+        const ctx = new Context();
+        currentCtx = ctx;
+
+        const results: QueryResult[] =
+          (response.results?.length ?? 0) > 0
+            ? (
+                await Promise.all(
+                  response.results!.map(async (result) => {
+                    return this._filterMapResult(ctx, start, result);
+                  }),
+                )
+              ).filter(nonNullable)
+            : [];
+
+        const next = onResult(results);
+        if (next === OnResult.CLOSE_STREAM) {
+          void stream.close().catch();
+        }
+      },
+      (err) => {
+        if (err != null && onError != null) {
+          onError(err);
+        }
+      },
+    );
+  }
+
+  private async _filterMapResult(
+    ctx: Context,
+    queryStartTimestamp: number,
+    result: RemoteQueryResult,
+  ): Promise<QueryResult | null> {
+    const space = this._params.echo.get(result.spaceKey);
+    if (!space) {
+      return null;
+    }
+
+    await (space as SpaceProxy)._databaseInitialized.wait();
+    const object = await space.db.automerge.loadObjectById(result.id);
+    if (ctx.disposed) {
+      return null;
+    }
+
+    if (!object) {
+      return null;
+    }
+
+    const core = getAutomergeObjectCore(object);
+
+    const queryResult: QueryResult = {
+      id: object.id,
+      spaceKey: core.database!.spaceKey,
+      object,
+      match: { rank: result.rank },
+      resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
+    };
+    return queryResult;
+  }
+
+  private _closeStream() {
+    void this._stream?.close().catch();
+    this._stream = undefined;
+  }
+}
+
+enum OnResult {
+  CONTINUE,
+  CLOSE_STREAM,
 }

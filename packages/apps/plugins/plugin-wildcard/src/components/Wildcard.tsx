@@ -4,7 +4,6 @@
 
 import React, { forwardRef } from 'react';
 
-import { getTextContent } from '@dxos/react-client/echo';
 import { DropdownMenu, Input } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -20,8 +19,8 @@ const Wildcard: MosaicTileComponent<any> = forwardRef(
     }
 
     // TODO(burdon): Parse schema.
-    const label = getTextContent(object.title ?? object.label ?? object.name);
-    const content = getTextContent(object.description ?? object.content);
+    const label = object.title ?? object.label ?? object.name;
+    const content = object.description ?? object.content;
 
     const handleSetLabel = (label: string) => {
       if (object.title) {

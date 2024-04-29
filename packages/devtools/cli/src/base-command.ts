@@ -24,10 +24,10 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
-import { type ConfigProto } from '@dxos/config';
+import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { log, LogLevel } from '@dxos/log';
+import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
   type Observability,
   getObservabilityState,
@@ -36,14 +36,10 @@ import {
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
-import { FriendlyError, PublisherConnectionError } from './errors';
+import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
 import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
-
-// Set config if not overridden by env.
-// TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
-log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 
@@ -108,6 +104,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
+    target: Flags.string({
+      description: 'Target websocket server.',
+    }),
+
     // TODO(burdon): '--no-' prefix is not working.
     'no-agent': Flags.boolean({
       description: 'Run command without using or starting agent.',
@@ -122,6 +122,18 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     'no-wait': Flags.boolean({
       description: 'Do not wait for space to be ready.',
+    }),
+
+    // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
+    // Use stdout for user-facing interaction, and potentially JSON formatted output.
+    // TODO: unify output/logging with oclif
+    'json-log': Flags.boolean({
+      description: 'When running in foreground, log JSON format',
+    }),
+
+    'json-logfile': Flags.string({
+      description: "JSON log file destination, or 'stdout' or 'stderr'",
+      default: 'stderr',
     }),
   };
 
@@ -169,9 +181,47 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
 
-    // Load user config file.
-    await this._loadConfig();
-    await this._initObservability();
+    if (this.flags['json-log']) {
+      let pathOrFd: number | string;
+      switch (this.flags['json-logfile']) {
+        case '-':
+        case 'stdout':
+          pathOrFd = process.stdout.fd;
+          break;
+        case 'stderr':
+          pathOrFd = process.stderr.fd;
+          break;
+        default:
+          pathOrFd = this.flags['json-logfile'];
+      }
+      log.addProcessor(
+        createFileProcessor({
+          pathOrFd,
+          // avoid collision with log's getConfig usage of LOG_FILTER for CONSOLE_LOGGER
+          levels: process.env.JSON_LOG_FILTER ? [] : [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO],
+          filters: process.env.JSON_LOG_FILTER ? parseFilter(process.env.JSON_LOG_FILTER) : [],
+        }),
+      );
+      // TODO(nf): disable console log completely?
+      log.config({ filter: LogLevel.ERROR });
+    } else {
+      // Set config if not overridden by env.
+      // TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
+      log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
+    }
+
+    if (this.flags.target) {
+      this.log('Using remote target:', this.flags.target);
+      await this._loadConfigFromFile(Remote(this.flags.target, process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN));
+    } else {
+      // Load user config file.
+      await this._loadConfigFromFile();
+    }
+    await this._initObservability(
+      this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
+        ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
+        : undefined,
+    );
   }
 
   async readStdin(): Promise<string> {
@@ -189,7 +239,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  private async _initObservability() {
+  private async _initObservability(
+    logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
+  ) {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
 
@@ -203,7 +255,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       }
 
       await showObservabilityBanner(DX_DATA, (input: string) => {
-        process.stderr.write(chalk`{bold {magenta ${input} }}`);
+        // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+        logCb(input);
       });
     }
 
@@ -232,7 +285,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Load or create config file from defaults.
    * @private
    */
-  private async _loadConfig() {
+  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]) {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
@@ -258,7 +311,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     // TODO(burdon): Use Profile()?
-    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto, ...additionalConfig);
   }
 
   // TODO(burdon): Reconcile internal/external logging.
@@ -366,17 +419,25 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     invariant(this._clientConfig);
     if (!this._client) {
-      if (this.flags['no-agent']) {
-        this._client = new Client({ config: this._clientConfig });
-      } else {
-        await this.maybeStartDaemon();
-        this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
+      try {
+        if (this.flags['no-agent'] || this.flags.target) {
+          this._client = new Client({ config: this._clientConfig });
+        } else {
+          await this.maybeStartDaemon();
+          this._client = new Client({
+            config: this._clientConfig,
+            services: fromAgent({ profile: this.flags.profile }),
+          });
+        }
+
+        await this._client.initialize();
+      } catch (err: any) {
+        if (err.message.includes('401')) {
+          throw new ClientInitializationError('error authenticating with remote service', err);
+        }
+        throw new ClientInitializationError('error initializing client', err);
       }
-
-      await this._client.initialize();
-      log('Client initialized', { profile: this.flags.profile });
     }
-
     return this._client;
   }
 
@@ -475,6 +536,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
+      this.log('Publisher failed: ', err);
       this.catch(new PublisherConnectionError());
     } finally {
       if (rpc) {

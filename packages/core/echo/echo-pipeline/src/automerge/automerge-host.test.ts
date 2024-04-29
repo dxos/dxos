@@ -25,35 +25,50 @@ import { arrayToBuffer, bufferToArray } from '@dxos/util';
 import { AutomergeHost } from './automerge-host';
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { createTestLevel } from '../testing';
 
 describe('AutomergeHost', () => {
-  test('can create documents', () => {
-    const host = new AutomergeHost({ directory: createStorage({ type: StorageType.RAM }).createDirectory() });
+  test('can create documents', async () => {
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
+    const host = new AutomergeHost({
+      db: level.sublevel('automerge'),
+    });
+    await host.open();
+    afterTest(() => host.close());
 
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
+    await host.repo.flush();
     expect(handle.docSync().text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
-    const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
 
-    const host = new AutomergeHost({ directory: storageDirectory });
+    const host = new AutomergeHost({ db: level.sublevel('automerge') });
+    await host.open();
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     const url = handle.url;
 
-    // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
-    await sleep(100);
+    await host.repo.flush();
+    await host.close();
 
-    const host2 = new AutomergeHost({ directory: storageDirectory });
+    const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
+    await host2.open();
+    afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
+    await host2.repo.flush();
   });
 
   test('basic networking', async () => {
@@ -168,7 +183,6 @@ describe('AutomergeHost', () => {
     const secondHandle = host.create();
     secondHandle.change((doc: any) => (doc.text = 'Hello world'));
     await host.find(secondHandle.url).whenReady();
-    // await sleep(100);
     allowedDocs.push(secondHandle.documentId);
 
     {

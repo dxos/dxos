@@ -7,7 +7,7 @@
 import { type EditorState, type StateField, type Transaction, type Text } from '@codemirror/state';
 
 import { next as A, type Heads } from '@dxos/automerge/automerge';
-import { type IDocHandle } from '@dxos/echo-schema';
+import { type IDocHandle } from '@dxos/react-client/echo';
 
 import { type State } from './defs';
 

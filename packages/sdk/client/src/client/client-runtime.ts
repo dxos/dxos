@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { SpaceList } from '../echo';
-import type { HaloProxy } from '../halo';
-import type { MeshProxy } from '../mesh';
+import type { SpaceList } from '../echo/space-list';
+import type { HaloProxy } from '../halo/halo-proxy';
+import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { Shell } from '../services';
 
 export class ClientRuntime {

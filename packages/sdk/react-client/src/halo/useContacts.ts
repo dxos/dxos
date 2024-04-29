@@ -2,9 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
-import { useSyncExternalStore } from 'react';
-
 import type { Contact } from '@dxos/client/halo';
+import { useMulticastObservable } from '@dxos/react-async';
 
 import { useClient } from '../client';
 
@@ -15,13 +14,5 @@ import { useClient } from '../client';
  */
 export const useContacts = (): Contact[] => {
   const client = useClient();
-  const contacts = useSyncExternalStore(
-    (listener) => {
-      const subscription = client.halo.contacts.subscribe(listener);
-      return () => subscription.unsubscribe();
-    },
-    () => client.halo.contacts.get(),
-  );
-
-  return contacts;
+  return useMulticastObservable(client.halo.contacts);
 };

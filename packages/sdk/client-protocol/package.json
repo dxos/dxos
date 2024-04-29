@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-protocol",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -16,9 +16,6 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -30,9 +27,7 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
-    "@effect/schema": "0.64.7",
-    "base-x": "~3.0.9",
-    "effect": "2.4.9"
+    "base-x": "~3.0.9"
   },
   "devDependencies": {
     "@dxos/echo-typegen": "workspace:*"

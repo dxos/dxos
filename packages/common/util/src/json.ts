@@ -9,7 +9,10 @@ import { PublicKey } from '@dxos/keys';
 import { humanize } from './human-hash';
 import { arrayToBuffer } from './uint8array';
 
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+
 const MAX_DEPTH = 5;
+const LOG_MAX_DEPTH = 7;
 
 /**
  * JSON.stringify replacer.
@@ -62,6 +65,46 @@ export const jsonify = (value: any, depth = 0, visitedObjects = new WeakSet<any>
         const res: any = {};
         for (const key of Object.keys(value)) {
           res[key] = jsonify(value[key], depth + 1, visitedObjects);
+        }
+        return res;
+      }
+    } finally {
+      visitedObjects.delete(value);
+    }
+  } else {
+    return value;
+  }
+};
+
+/**
+ * Recursively converts an object into a JSON-compatible object appropriate for logging.
+ */
+
+// TODO(nf): use util.inspect/[util.inspect.custom] instead?
+export const jsonlogify = (value: any, depth = 0, visitedObjects = new WeakSet<any>()): any => {
+  if (depth > LOG_MAX_DEPTH) {
+    return null;
+  } else if (typeof value === 'function') {
+    return null;
+  } else if (typeof value === 'object' && value !== null) {
+    if (visitedObjects.has(value)) {
+      return null;
+    }
+    visitedObjects.add(value);
+
+    try {
+      if (value instanceof Uint8Array) {
+        return arrayToBuffer(value).toString('hex');
+      } else if (Array.isArray(value)) {
+        return value.map((x) => jsonlogify(x, depth + 1, visitedObjects));
+      } else if (typeof value.toJSONL === 'function') {
+        return value.toJSONL();
+      } else if (typeof value.toJSON === 'function') {
+        return value.toJSON();
+      } else {
+        const res: any = {};
+        for (const key of Object.keys(value)) {
+          res[key] = jsonlogify(value[key], depth + 1, visitedObjects);
         }
         return res;
       }

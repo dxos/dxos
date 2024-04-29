@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-pipeline",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,7 +42,7 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -64,7 +64,10 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/util": "workspace:*",
-    "crc-32": "^1.2.2"
+    "abstract-level": "^1.0.2",
+    "crc-32": "^1.2.2",
+    "level": "^8.0.1",
+    "level-transcoder": "^1.0.1"
   },
   "devDependencies": {
     "fast-check": "^3.15.1",

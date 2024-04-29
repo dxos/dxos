@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-testing",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "private": true,
   "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
@@ -17,7 +17,8 @@
     "run-tests": "pnpm -w nx compile kube-testing && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
-    "@automerge/automerge-repo-network-websocket": "^1.1.1",
+    "@automerge/automerge-repo-network-websocket": "^1.1.4",
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
@@ -25,6 +26,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/invariant": "workspace:*",

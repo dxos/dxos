@@ -1,5 +1,5 @@
 {
-  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "examples",
   "projectType": "application",
   "targets": {
@@ -34,15 +34,6 @@
         ],
         "quiet": true
       }
-    },
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
     },
     "preview": {
       "executor": "@nx/web:file-server",

@@ -19,6 +19,7 @@
         "envVariables": {
           "SIGNAL_PORT": 12000
         },
+        "forceExit": true,
         "setupOptions": {
           "port": 12000
         }

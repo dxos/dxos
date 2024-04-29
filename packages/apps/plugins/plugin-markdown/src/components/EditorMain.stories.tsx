@@ -3,11 +3,11 @@
 //
 
 import '@dxosTheme';
-import React, { type FC, useMemo } from 'react';
+import React, { useMemo, type FC } from 'react';
 
-import { TextObject } from '@dxos/react-client/echo';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { Tooltip } from '@dxos/react-ui';
-import { automerge, useDocAccessor } from '@dxos/react-ui-editor';
+import { automerge } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { EditorMain } from './EditorMain';
@@ -17,13 +17,13 @@ const Story: FC<{
   content: string;
   toolbar?: boolean;
 }> = ({ content = '# Test', toolbar }) => {
-  const { doc, accessor } = useDocAccessor(new TextObject(content));
-  const extensions = useMemo(() => [automerge(accessor)], [doc, accessor]);
+  const doc = useMemo(() => createEchoObject({ content }), [content]);
+  const extensions = useMemo(() => [automerge(createDocAccessor(doc, ['content']))], [doc]);
 
   return (
     <Tooltip.Provider>
       <MainLayout toolbar={toolbar}>
-        <EditorMain id='test' doc={doc} extensions={extensions} toolbar={toolbar} />
+        <EditorMain id='test' doc={doc.content} extensions={extensions} toolbar={toolbar} />
       </MainLayout>
     </Tooltip.Provider>
   );

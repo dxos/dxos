@@ -63,7 +63,6 @@ export default class Publish extends BaseCommand<typeof Publish> {
         skipExisting,
         accessToken,
       });
-
       result?.modules?.forEach(({ module, urls }) => {
         // TODO(zhenyasav): This is to de-advertise any non localhost urls because of security sandboxes
         //  in the browser requiring https for those domains to support halo vault

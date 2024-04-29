@@ -4,14 +4,14 @@
 
 import React, { forwardRef } from 'react';
 
-import type { Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui-card';
 import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  useDocAccessor,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import type { MosaicTileComponent } from '@dxos/react-ui-mosaic';
@@ -48,14 +48,16 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
     const { themeMode } = useThemeContext();
-    const { doc, accessor } = useDocAccessor(object.content);
     const { parentRef } = useTextEditor(
       () => ({
-        doc,
+        doc: object.content?.content,
         extensions: [
           createBasicExtensions({ placeholder: t('editor placeholder') }),
           createThemeExtensions({ themeMode }),
-          createDataExtensions({ id: object.id, text: accessor }),
+          createDataExtensions({
+            id: object.id,
+            text: object.content && createDocAccessor(object.content, ['content']),
+          }),
           getExtensions({
             document: object,
             debug: settings.debug,
@@ -63,7 +65,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
           }),
         ],
       }),
-      [object, accessor, themeMode],
+      [object, themeMode],
     );
 
     return (

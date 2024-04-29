@@ -7,3 +7,4 @@ export * from './invitation-protocol';
 export * from './invitations-handler';
 export * from './invitations-service';
 export * from './space-invitation-protocol';
+export * from './invitations-manager';

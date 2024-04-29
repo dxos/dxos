@@ -75,13 +75,14 @@ export const theadResizeRoot: ComponentFunction<{ isResizing: boolean }> = ({ is
 export type TbodyStyleProps = Partial<TableContextValue<any>>;
 export const tbodyRoot: ComponentFunction<TbodyStyleProps> = (_props, ...etc) => mx(...etc);
 
-export type TbodyTrStyleProps = Partial<{ canBeCurrent?: boolean }>;
-export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent }, ...etc) =>
+export type TbodyTrStyleProps = Partial<{ canBeCurrent?: boolean; isPinned?: boolean }>;
+export const tbodyTr: ComponentFunction<TbodyTrStyleProps> = ({ canBeCurrent, isPinned }, ...etc) =>
   mx(
     'group',
     canBeCurrent ? ghostSelectedCurrent : ghostSelected,
     canBeCurrent && focusRing,
     canBeCurrent && 'cursor-pointer rounded',
+    isPinned && 'sticky z-1 bottom-[-1px] base-surface',
     ...etc,
   );
 

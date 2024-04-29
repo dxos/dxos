@@ -3,7 +3,7 @@
 //
 
 import { type Action, type ActionGroup, isAction, type Node, type NodeFilter } from '@dxos/app-graph';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 
 import { type TreeNodeAction, type TreeNode, type TreeNodeActionGroup } from './types';
 
@@ -36,7 +36,7 @@ export const getTreeNode = (tree: TreeNode, path?: string[]): TreeNode => {
 export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNodeOptions = {}): TreeNode => {
   const { filter, path = [] } = options;
 
-  const treeNode = E.object<TreeNode>({
+  const treeNode = create<TreeNode>({
     id: node.id,
     data: node.data,
     get label() {
@@ -77,7 +77,7 @@ export const treeNodeFromGraphNode = (node: Node, options: TreeNodeFromGraphNode
 export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
   const { icon, label, keyBinding, ...properties } = action.properties;
   const node = action.nodes({ direction: 'inbound' })[0];
-  const treeAction = E.object<TreeNodeAction>({
+  const treeAction = create<TreeNodeAction>({
     id: action.id,
     label,
     icon,
@@ -94,7 +94,7 @@ export const treeActionFromGraphAction = (action: Action): TreeNodeAction => {
  */
 export const treeActionGroupFromGraphActionGroup = (actionGroup: ActionGroup): TreeNodeActionGroup => {
   const { icon, label, ...properties } = actionGroup.properties;
-  const treeActionGroup = E.object<TreeNodeActionGroup>({
+  const treeActionGroup = create<TreeNodeActionGroup>({
     id: actionGroup.id,
     label,
     icon,

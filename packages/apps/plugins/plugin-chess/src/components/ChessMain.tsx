@@ -5,12 +5,12 @@
 import { Chess } from 'chess.js';
 import React, { useEffect, useState } from 'react';
 
-import { Chessboard, type ChessModel, type ChessMove, type Game } from '@dxos/chess-app';
+import { Chessboard, type ChessModel, type ChessMove, type GameType } from '@dxos/chess-app';
 import { invariant } from '@dxos/invariant';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-const ChessMain = ({ game }: { game: Game }) => {
+const ChessMain = ({ game }: { game: GameType }) => {
   const [model, setModel] = useState<ChessModel>();
   useEffect(() => {
     if (!model || game.pgn !== model?.chess.pgn()) {

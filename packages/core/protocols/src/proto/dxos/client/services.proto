@@ -10,8 +10,6 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/config.proto";
-import "dxos/agent/query.proto";
-import "dxos/echo/indexing.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
@@ -356,6 +354,9 @@ message CreateEpochRequest {
 
     /// Init new automerge root by clonning the current space root. History is pruned.
     PRUNE_AUTOMERGE_ROOT_HISTORY = 2;
+
+    /// Create a new space root and move objects from the current space root to separate automerge documents and.
+    FRAGMENT_AUTOMERGE_ROOT = 3;
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -382,15 +383,6 @@ service SpacesService {
 }
 
 //
-// Indexing
-//
-
-service IndexService {
-  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc Find(dxos.agent.query.QueryRequest) returns (dxos.agent.query.QueryResponse);
-}
-
-//
 // Invitations (Halo and Data Spaces).
 //
 
@@ -401,9 +393,12 @@ message Invitation {
   enum Type {
     /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
-    /// Guest's identity key is known; invitation can be accepted by any valid peer.
-    OFFLINE = 1;
-    /// Multiple-use interactive invitation.
+    /// Invitation can be accepted by any valid peer.
+    DELEGATED = 1;
+    /**
+     * Multi-use interactive invitations.
+     * @deprecated use multiUse flag with type=interactive instead.
+     */
     MULTIUSE = 2;
   }
 
@@ -418,6 +413,9 @@ message Invitation {
 
     /// Guest should call `Authenticate` with the shared secret.
     SHARED_SECRET = 1;
+
+    /// Guest should prove they possess a private key corresponding to the known public key recorded in an invitation.
+    KNOWN_PUBLIC_KEY = 2;
   }
 
   enum State {
@@ -476,6 +474,20 @@ message Invitation {
   // TODO(nf): some feedback mechanism or GC for immortal invitations?
   // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
   optional int32 lifetime = 14;
+
+  /// Whether an invitation can be used multiple times.
+  optional bool multi_use = 15;
+
+  /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+  optional AdmissionKeypair guest_keypair = 16;
+
+  /// Present on Type.DELEGATED invitations.
+  optional dxos.keys.PublicKey delegation_credential_id = 17;
+}
+
+message AdmissionKeypair {
+  dxos.keys.PublicKey public_key = 1;
+  optional dxos.keys.PrivateKey private_key = 2;
 }
 
 message AcceptInvitationRequest {
@@ -530,7 +542,6 @@ service InvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-  rpc LoadPersistentInvitations(google.protobuf.Empty) returns (LoadPersistentInvitationsResponse);
 }
 
 //

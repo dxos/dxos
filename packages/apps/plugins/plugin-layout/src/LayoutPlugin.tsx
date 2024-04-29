@@ -29,7 +29,7 @@ import {
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -76,6 +76,7 @@ export const LayoutPlugin = ({
 
     dialogContent: null,
     dialogOpen: false,
+    dialogBlockAlign: undefined,
 
     popoverContent: null,
     popoverAnchorId: undefined,
@@ -84,7 +85,7 @@ export const LayoutPlugin = ({
     toasts: [],
   });
 
-  const location = E.object<NavigationState>({
+  const location = create<NavigationState>({
     active: undefined,
     previous: undefined,
 
@@ -99,7 +100,14 @@ export const LayoutPlugin = ({
     },
   });
 
-  const handleSetLayout = ({ element, state, component, subject, anchorId }: LayoutAction.SetLayout) => {
+  const handleSetLayout = ({
+    element,
+    state,
+    component,
+    subject,
+    anchorId,
+    dialogBlockAlign,
+  }: LayoutAction.SetLayout) => {
     switch (element) {
       case 'fullscreen': {
         layout.values.fullscreen = state ?? !layout.values.fullscreen;
@@ -120,6 +128,7 @@ export const LayoutPlugin = ({
       case 'dialog': {
         layout.values.dialogOpen = state ?? Boolean(component);
         layout.values.dialogContent = component ? { component, subject } : null;
+        layout.values.dialogBlockAlign = dialogBlockAlign ?? 'center';
         return { data: true };
       }
 

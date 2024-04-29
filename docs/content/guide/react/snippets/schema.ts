@@ -8,7 +8,7 @@
 
 import * as dxos_echo_schema from '@dxos/echo-schema';
 
-export const types = new dxos_echo_schema.TypeCollection();
+export const types = new dxos_echo_schema.RuntimeSchemaRegistry();
 
 export type TaskProps = {
   title: string;

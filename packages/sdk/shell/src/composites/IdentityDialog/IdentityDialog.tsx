@@ -16,7 +16,7 @@ export interface IdentityDialogProps
 }
 
 export const IdentityDialog = (props: IdentityDialogProps) => {
-  const titleId = useId('spaceDialog__title');
+  const titleId = useId('identityDialog__title', props.title);
   return (
     <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
       <Dialog.Portal>

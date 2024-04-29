@@ -13,7 +13,7 @@ import { createColumnBuilder, type TableColumnDef } from '@dxos/react-ui-table';
 import { getSize } from '@dxos/react-ui-theme';
 
 import { Bitbar, MasterDetailTable, PanelContainer, PublicKeySelector } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsDispatch, useDevtoolsState, useFeedMessages } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SubscribeToFeedBlocksResponse.Block>();
@@ -76,7 +76,7 @@ export const FeedsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
           <PublicKeySelector
             placeholder='Select feed'
             getLabel={getLabel}
@@ -93,7 +93,11 @@ export const FeedsPanel = () => {
     >
       <div className='flex flex-col overflow-hidden'>
         <Bitbar value={feed?.downloaded ?? new Uint8Array()} length={feed?.length ?? 0} className='m-4' />
-        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block> columns={columns} data={messages} />
+        <MasterDetailTable<SubscribeToFeedBlocksResponse.Block>
+          columns={columns}
+          data={messages}
+          widths={['is-1/4 shrink-0', '']}
+        />
       </div>
     </PanelContainer>
   );

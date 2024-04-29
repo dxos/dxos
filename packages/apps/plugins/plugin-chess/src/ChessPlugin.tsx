@@ -10,7 +10,9 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Game } from '@dxos/chess-app';
+import { GameType } from '@dxos/chess-app';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -23,11 +25,14 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [Game.schema.typename]: {
+          [GameType.typename]: {
             placeholder: ['game title placeholder', { ns: CHESS_PLUGIN }],
             icon: (props: IconProps) => <ShieldChevron {...props} />,
           },
         },
+      },
+      echo: {
+        schema: [GameType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -39,6 +44,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -56,8 +62,9 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
               );
 
               // Add all games to the graph.
-              const query = space.db.query(Game.filter());
-              let previousObjects: Game[] = [];
+              const query = space.db.query(Filter.schema(GameType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: GameType[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -106,7 +113,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ChessAction.CREATE: {
-              return { data: new Game() };
+              return { data: create(GameType, {}) };
             }
           }
         },

@@ -16,13 +16,13 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/dxos/circleci-node
-  DEFAULT_NODE_VERSION: 20.11.1 # 21.4.0 broken, see https://github.com/dxos/dxos/issues/4946
+  DEFAULT_NODE_VERSION: 20.12.1
 
 jobs:
   build_and_publish_matrix:
     strategy:
       matrix:
-        node_version: [ "18.19.1", "20.11.1", "21.6.2" ]
+        node_version: [ "18.20.1", "20.12.1", "21.7.2" ]
     runs-on: ubuntu-latest
 
     steps:

@@ -2,7 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
+import {
+  createAdmissionCredentials,
+  createDelegatedSpaceInvitationCredential,
+  getCredentialAssertion,
+} from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -11,7 +15,7 @@ import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
@@ -43,7 +47,11 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async admit(request: AdmissionRequest, guestProfile?: ProfileDocument | undefined): Promise<AdmissionResponse> {
+  async admit(
+    invitation: Invitation,
+    request: AdmissionRequest,
+    guestProfile?: ProfileDocument | undefined,
+  ): Promise<AdmissionResponse> {
     invariant(this._spaceKey);
     const space = await this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
@@ -59,6 +67,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       space.inner.genesisFeedKey,
       guestProfile,
+      invitation.delegationCredentialId,
     );
 
     // TODO(dmaretskyi): Refactor.
@@ -74,6 +83,39 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         controlTimeframe: space.inner.controlPipeline.state.timeframe,
       },
     };
+  }
+
+  async delegate(invitation: Invitation): Promise<PublicKey> {
+    invariant(this._spaceKey);
+    const space = await this._spaceManager.spaces.get(this._spaceKey);
+    invariant(space);
+    if (invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY) {
+      invariant(invitation.guestKeypair?.publicKey);
+    }
+
+    log('writing delegate space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
+    const credential = await createDelegatedSpaceInvitationCredential(
+      this._signingContext.credentialSigner,
+      space.key,
+      {
+        invitationId: invitation.invitationId,
+        authMethod: invitation.authMethod,
+        swarmKey: invitation.swarmKey,
+        role: SpaceMember.Role.ADMIN,
+        expiresOn: invitation.lifetime
+          ? new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime)
+          : undefined,
+        multiUse: invitation.multiUse ?? false,
+        guestKey:
+          invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY
+            ? invitation.guestKeypair!.publicKey
+            : undefined,
+      },
+    );
+
+    invariant(credential.credential);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
+    return credential.credential.credential.id!;
   }
 
   checkInvitation(invitation: Partial<Invitation>) {

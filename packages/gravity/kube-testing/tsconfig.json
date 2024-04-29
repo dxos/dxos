@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -62,6 +65,9 @@
     },
     {
       "path": "../../core/echo/echo-pipeline"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/halo/keyring"

@@ -2,11 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Schema, TextObject } from '@dxos/react-client/echo';
+import { TextV0Type } from '@braneframe/types';
+import { getSchema, type S } from '@dxos/echo-schema';
+import { AST } from '@dxos/echo-schema';
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (schema: Schema): string | undefined => {
-  const keys = schema.props.map((prop) => prop.id);
+const getIcon = (schema: S.Schema<any> | undefined): string | undefined => {
+  if (!(schema && AST.isTypeLiteral(schema.ast))) {
+    return undefined;
+  }
+  const keys = schema.ast.propertySignatures.map((p) => p.name);
   if (keys.indexOf('email') !== -1) {
     return 'user';
   }
@@ -40,7 +45,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (!object.__meta) {
+    if (object instanceof TextV0Type) {
       return results;
     }
 
@@ -53,7 +58,7 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
 
         results.push({
           id: object.id,
-          type: object.__schema ? getIcon(object.__schema) : undefined,
+          type: getIcon(getSchema(object)),
           label,
           match,
           // TODO(burdon): Truncate.
@@ -106,7 +111,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof TextObject) {
+    if (typeof value === 'string' || value instanceof TextV0Type) {
       try {
         fields[key] = String(value);
       } catch (err) {
