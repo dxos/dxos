@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "todomvc",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/todomvc/src",
   "projectType": "library",
   "targets": {
