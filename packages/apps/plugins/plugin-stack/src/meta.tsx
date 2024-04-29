@@ -6,7 +6,6 @@ import { type IconProps, StackSimple } from '@phosphor-icons/react';
 import React from 'react';
 
 export const STACK_PLUGIN = 'dxos.org/plugin/stack';
-export const SECTION_IDENTIFIER = 'dxos.Stack.Section';
 
 export default {
   id: STACK_PLUGIN,

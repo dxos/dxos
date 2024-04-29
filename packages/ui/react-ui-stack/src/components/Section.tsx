@@ -20,6 +20,8 @@ import React, {
   type RefAttributes,
   type FC,
   type PropsWithChildren,
+  type Dispatch,
+  type SetStateAction,
   type ComponentPropsWithRef,
 } from 'react';
 
@@ -30,10 +32,9 @@ import {
   ListItem,
   Toolbar,
   useTranslation,
+  type TFunction,
   type ThemedClassName,
   ScrollArea,
-  toLocalizedString,
-  type Label,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -66,42 +67,30 @@ export type AddSectionPosition = 'before' | 'after' | 'beforeAll' | 'afterAll';
 
 export type StackContextValue<TData extends StackSectionContent = StackSectionContent> = {
   SectionContent: FC<{ data: TData }>;
-  separation?: boolean;
-  isResizable?: boolean;
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onAddSection?: (path: string, position: AddSectionPosition) => void;
   onNavigateToSection?: (id: string) => void;
-  onCollapseSection?: (id: string, collapsed: boolean) => void;
+  collapsedSections?: CollapsedSections;
+  // TODO(thure): Sections only need to know about and modify their own collapsed state. This should be improved when
+  //  refactored to implement longer persistence.
+  onCollapseSection?: Dispatch<SetStateAction<CollapsedSections>>;
 };
 
-export type StackItem = MosaicDataItem & {
-  items: StackSectionItem[];
-};
+export type StackItem = MosaicDataItem &
+  StackContextValue & {
+    items: StackSectionItem[];
+  };
 
 export type StackSectionItem = MosaicDataItem & {
   object: StackSectionContent;
-  // TODO(wittjosiah): Use effect schema? Share schema with echo.
-  view?: {
-    title?: string;
-    size?: SectionSize;
-    height?: number;
-    collapsed?: boolean;
-    custom?: Record<string, any>;
-  };
-  // TODO(wittjosiah): Common type? Factor out?
-  metadata?: {
-    icon?: FC<IconProps>;
-    placeholder?: Label;
-    viewActions?: (item: StackSectionItem) => StackAction;
-  };
+  size?: SectionSize;
+  icon?: FC<IconProps>;
+  placeholder?: string | [string, Parameters<TFunction>[1]];
+  isResizable?: boolean;
 };
 
-export type StackAction = {
-  icon: FC<IconProps>;
-  label: Label;
-  onClick: () => void;
-};
+export type StackSectionItemWithContext = StackSectionItem & StackContextValue;
 
 export type SectionSize = 'intrinsic' | 'extrinsic';
 
@@ -110,6 +99,9 @@ export type SectionProps = PropsWithChildren<
     // Data props.
     id: string;
     title: string;
+    separation: boolean;
+    icon?: FC<IconProps>;
+    size?: SectionSize;
 
     // Tile props.
     active?: MosaicActiveType;
@@ -117,9 +109,8 @@ export type SectionProps = PropsWithChildren<
     MosaicTileProps,
     'draggableProps' | 'draggableStyle' | 'onDelete' | 'onNavigate' | 'onAddAfter' | 'onAddBefore'
   > &
-    Pick<StackContextValue, 'separation' | 'isResizable' | 'onCollapseSection'> &
-    Pick<Required<StackSectionItem>['view'], 'collapsed' | 'size'> &
-    Pick<Required<StackSectionItem>['metadata'], 'icon'>
+    Pick<StackContextValue, 'collapsedSections' | 'onCollapseSection'> &
+    Pick<StackSectionItem, 'isResizable'>
 >;
 
 const resizeHandleStyles = mx(resizeHandle, resizeHandleHorizontal, 'is-full bs-[--rail-action] col-start-2');
@@ -134,16 +125,16 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       title,
       icon: Icon = DotsNine,
       size = 'intrinsic',
-      collapsed,
       active,
       isResizable,
       draggableProps,
       draggableStyle,
+      collapsedSections,
+      onCollapseSection,
       onDelete,
       onNavigate,
       onAddBefore,
       onAddAfter,
-      onCollapseSection,
       children,
     },
     forwardedRef,
@@ -157,11 +148,13 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     });
     const sectionContentGroup = useFocusableGroup({});
 
+    const collapsed = !!collapsedSections?.[id];
+
     return (
       <CollapsiblePrimitive.Root
         asChild
         open={!collapsed}
-        onOpenChange={(nextOpen) => onCollapseSection?.(id, !nextOpen)}
+        onOpenChange={(nextOpen) => onCollapseSection?.({ ...(collapsedSections ?? {}), [id]: !nextOpen })}
       >
         <ListItem.Root
           ref={forwardedRef}
@@ -309,53 +302,70 @@ export const SectionToolbar = ({ children, classNames }: SectionToolbarProps) =>
   );
 };
 
-export const SectionTile: MosaicTileComponent<
-  StackSectionItem,
-  HTMLLIElement
-  // TODO(wittjosiah): If props is specified there is a type error with Mosaic.Container.
-  // { itemContext: StackContextValue }
-> = forwardRef(({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const { activeItem } = useMosaic();
+export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLLIElement> = forwardRef(
+  ({ path, type, active, draggableStyle, draggableProps, item, itemContext }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { activeItem } = useMosaic();
 
-  const separation = !!itemContext?.separation;
-  const isResizable = !!itemContext?.isResizable;
-  const { transform, onDeleteSection, onNavigateToSection, onAddSection, onCollapseSection, SectionContent } =
-    itemContext as StackContextValue;
+    const separation = !!itemContext?.separation;
+    const {
+      transform,
+      onDeleteSection,
+      onNavigateToSection,
+      onAddSection,
+      SectionContent,
+      collapsedSections,
+      onCollapseSection,
+      isResizable,
+      ...contentItem
+    } = {
+      ...itemContext,
+      ...item,
+    };
 
-  const transformedItem = transform
-    ? transform(
-        item,
-        // TODO(wittjosiah): `active` doesn't always seem to be accurate here.
-        activeItem?.item.id === item.id ? activeItem?.type : type,
-      )
-    : item;
+    const transformedItem = transform
+      ? transform(
+          contentItem,
+          // TODO(wittjosiah): `active` doesn't always seem to be accurate here.
+          activeItem?.item.id === contentItem.id ? activeItem?.type : type,
+        )
+      : contentItem;
 
-  const placeholder = transformedItem.metadata?.placeholder ?? ['untitled section title', { ns: translationKey }];
-  const title = transformedItem.view?.title ?? toLocalizedString(placeholder, t);
+    // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
+    const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
-  const section = (
-    <Section
-      ref={forwardedRef}
-      title={title}
-      id={transformedItem.id}
-      size={transformedItem.view?.size}
-      icon={transformedItem.metadata?.icon}
-      collapsed={transformedItem.view?.collapsed}
-      separation={separation}
-      active={active}
-      draggableProps={draggableProps}
-      draggableStyle={draggableStyle}
-      onCollapseSection={onCollapseSection}
-      isResizable={isResizable}
-      onDelete={() => onDeleteSection?.(path)}
-      onNavigate={() => onNavigateToSection?.(transformedItem.id)}
-      onAddAfter={() => onAddSection?.(path, 'after')}
-      onAddBefore={() => onAddSection?.(path, 'before')}
-    >
-      {SectionContent && <SectionContent data={transformedItem.object} />}
-    </Section>
-  );
+    const title =
+      itemObject?.title ??
+      // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
+      ((typeof transformedItem.placeholder === 'string'
+        ? transformedItem.placeholder
+        : transformedItem.placeholder
+          ? t(...transformedItem.placeholder)
+          : t('untitled section title')) as string);
 
-  return active === 'overlay' ? <List>{section}</List> : section;
-});
+    const section = (
+      <Section
+        ref={forwardedRef}
+        title={title}
+        id={transformedItem.id}
+        size={transformedItem.size}
+        icon={transformedItem.icon}
+        separation={separation}
+        active={active}
+        draggableProps={draggableProps}
+        draggableStyle={draggableStyle}
+        collapsedSections={collapsedSections}
+        onCollapseSection={onCollapseSection}
+        isResizable={isResizable}
+        onDelete={() => onDeleteSection?.(path)}
+        onNavigate={() => onNavigateToSection?.(itemObject.id)}
+        onAddAfter={() => onAddSection?.(path, 'after')}
+        onAddBefore={() => onAddSection?.(path, 'before')}
+      >
+        {SectionContent && <SectionContent data={itemObject} />}
+      </Section>
+    );
+
+    return active === 'overlay' ? <List>{section}</List> : section;
+  },
+);

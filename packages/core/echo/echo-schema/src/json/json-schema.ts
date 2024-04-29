@@ -5,7 +5,7 @@
 import { JSONSchema } from '@effect/schema';
 import * as AST from '@effect/schema/AST';
 import { JSONSchemaAnnotationId } from '@effect/schema/AST';
-import { type JsonSchema7Object, type JsonSchema7Root, type JsonSchema7Any } from '@effect/schema/JSONSchema';
+import { type JsonSchema7Object, type JsonSchema7Root } from '@effect/schema/JSONSchema';
 import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
@@ -18,7 +18,6 @@ import {
   EchoObjectFieldMetaAnnotationId,
   ReferenceAnnotation,
 } from '../annotations';
-import { createEchoReferenceSchema } from '../ref-annotation';
 
 const ECHO_REFINEMENT_KEY = '$echo';
 interface EchoRefinement {
@@ -167,14 +166,6 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
   return schema.annotations(annotations) as any;
 };
 
-const parseJsonSchemaAny = (root: JsonSchema7Any): S.Schema<any> => {
-  const echoRefinement: EchoRefinement = (root as any)[ECHO_REFINEMENT_KEY];
-  if (echoRefinement?.reference != null) {
-    return createEchoReferenceSchema(echoRefinement.reference);
-  }
-  return S.any;
-};
-
 export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSchema7Root['$defs']): S.Schema<any> => {
   const defs = root.$defs ? { ...definitions, ...root.$defs } : definitions ?? {};
   if ('type' in root && root.type === 'object') {
@@ -184,7 +175,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   if ('$id' in root) {
     switch (root.$id) {
       case '/schemas/any':
-        result = parseJsonSchemaAny(root);
+        result = S.any;
         break;
       case '/schemas/unknown':
         result = S.unknown;
