@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import { Event, Trigger, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
 import {
@@ -46,6 +46,9 @@ export class AutomergeDb {
   private _isOpen = false;
 
   private _ctx = new Context();
+
+  // TODO(dmaretskyi): Refactor this.
+  public readonly openTrigger = new Trigger();
 
   /**
    * @internal
@@ -101,6 +104,8 @@ export class AutomergeDb {
     if (elapsed > 1000) {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
+
+    this.openTrigger.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
@@ -110,6 +115,9 @@ export class AutomergeDb {
       return;
     }
     this._isOpen = false;
+
+    this.openTrigger.throw(new ContextDisposedError());
+    this.openTrigger.reset();
 
     void this._ctx.dispose();
     this._ctx = new Context();

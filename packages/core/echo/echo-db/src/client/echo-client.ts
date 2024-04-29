@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -85,7 +85,17 @@ export class EchoClient extends Resource {
             return undefined;
           }
 
-          // TODO(dmaretskyi): Do we wait/check for DB to be open first?
+          // Waiting for the database to open since the query can run before the database is ready.
+          // TODO(dmaretskyi): Refactor this.
+          try {
+            await db.automerge.openTrigger.wait();
+          } catch (err) {
+            if (err instanceof ContextDisposedError) {
+              return undefined;
+            }
+            throw err;
+          }
+
           const object = await db.automerge.loadObjectById(objectId);
           return object;
         },
