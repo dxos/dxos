@@ -63,6 +63,7 @@ export class Trigger<T = void> {
 
   /**
    * Wake blocked callers (if any).
+   * NOOP if the trigger is already resolved.
    */
   wake(value: T) {
     this._resolve(value);
@@ -88,6 +89,7 @@ export class Trigger<T = void> {
 
   /**
    * Throw error to blocked callers (if any).
+   * NOOP if the trigger is already resolved.
    */
   throw(error: Error) {
     this._reject(error);
