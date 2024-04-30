@@ -5,22 +5,16 @@
 import { expect } from 'chai';
 
 import { PublicKey } from '@dxos/keys';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { EchoTestBuilder } from './echo-test-builder';
 
 describe('Integration tests', () => {
   test('read/write to one database', async () => {
-    const builder = new EchoTestBuilder();
-    await builder.open();
-    afterTest(() => builder.close());
-
+    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
-
-    const peer = await builder.createPeer();
-
-    const [db] = await peer.createDatabase(spaceKey);
-    afterTest(() => db.close());
+    await using peer = await builder.createPeer();
+    await using db = await peer.createDatabase(spaceKey);
 
     const object = db.add({ type: 'task', title: 'A' });
     await db.flush();
@@ -30,24 +24,17 @@ describe('Integration tests', () => {
   });
 
   test('2 clients', async () => {
-    const builder = new EchoTestBuilder();
-    await builder.open();
-    afterTest(() => builder.close());
-
+    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
 
     const peer = await builder.createPeer();
-
-    const [db, { rootUrl }] = await peer.createDatabase(spaceKey);
-    afterTest(() => db.close());
+    await using db = await peer.createDatabase(spaceKey);
 
     const object = db.add({ type: 'task', title: 'A' });
     await db.flush();
 
     const client2 = await peer.createClient();
-    const [db2] = await peer.openDatabase(spaceKey, rootUrl, { client: client2 });
-    await db2.open();
-    afterTest(() => db2.close());
+    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, { client: client2 });
 
     const { objects } = await db2.query({ type: 'task' }).run();
     expect(objects).to.have.length(1);

@@ -26,13 +26,6 @@ export class EchoTestBuilder extends Resource {
   }
 }
 
-/**
- * Generic options on a test method for a peer.
- */
-export type PeerMethodOptions = {
-  client?: EchoClient;
-};
-
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
   private readonly _storage: Storage;
@@ -94,22 +87,18 @@ export class EchoTestPeer extends Resource {
     return client;
   }
 
-  async createDatabase(spaceKey: PublicKey, { client = this.client }: PeerMethodOptions = {}) {
+  async createDatabase(spaceKey: PublicKey, { client = this.client }: { client?: EchoClient } = {}) {
     const rootUrl = await this.host.createSpaceRoot(spaceKey);
     const db = client.constructDatabase({ spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
-
-    // Sticking to a pattern of [mainResult, { ...secondaryResults }]
-    return [db, { rootUrl }] as const;
+    return db;
   }
 
-  async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: PeerMethodOptions = {}) {
+  async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
     const db = client.constructDatabase({ spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
-
-    // Sticking to a pattern of [mainResult, { ...secondaryResults }]
-    return [db] as const;
+    return db;
   }
 }

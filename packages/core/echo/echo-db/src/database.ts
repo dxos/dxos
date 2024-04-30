@@ -103,6 +103,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
+  get rootUrl(): string | undefined {
+    return this._rootUrl;
+  }
+
   @synchronized
   protected override async _open(ctx: Context): Promise<void> {
     if (this._rootUrl !== undefined) {
