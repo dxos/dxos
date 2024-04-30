@@ -106,8 +106,8 @@ export class AutomergeStoreAdapter {
             Object.values(contentRecords ?? {}).map((record) => decode(record)),
           );
 
-          // const { schema } = this._store.getSnapshot();
-          // console.log(JSON.stringify(schema, null, 2));
+          const snapshot = this._store.getSnapshot();
+          console.log(JSON.stringify(snapshot, null, 2));
         });
       }
     }

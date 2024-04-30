@@ -15,7 +15,6 @@ const handler = authMiddleware({ service: 'composer-app-worker', cookie: 'COMPOS
  */
 export default {
   fetch: async (request, env, c)=> {
-    console.log('###', env);
     return handler(request, env, c)
   },
 } as ExportedHandler<Env>;
