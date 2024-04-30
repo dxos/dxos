@@ -10,7 +10,11 @@ import { next as A } from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
+// @ts-ignore
+import SCHEMA_V1 from '../data/schema_v1.json?json';
 import { type Unsubscribe } from '../types';
+
+console.log(SCHEMA_V1);
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -45,6 +49,8 @@ const STRING_CRDT_LIMIT = 300_000;
 // TODO(burdon): Optionally delete invalid shapes?
 const safeStorePut = (store: TLStore, records: any[]) => {
   try {
+    // store.migrateSnapshot(sn);
+
     store.put(records);
   } catch (err) {
     log.error('invalid schema', err);
@@ -56,6 +62,11 @@ const safeStorePut = (store: TLStore, records: any[]) => {
       }
     }
   }
+};
+
+export type TLDrawStoreData = {
+  schema?: string; // Undefined means version 1.
+  content: Record<string, any>;
 };
 
 // TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
@@ -72,7 +83,7 @@ export class AutomergeStoreAdapter {
     return this._store;
   }
 
-  open(accessor: DocAccessor<{ content: Record<string, any> }>) {
+  open(accessor: DocAccessor<TLDrawStoreData>) {
     if (this._subscriptions.length) {
       this.close();
     }
@@ -88,6 +99,7 @@ export class AutomergeStoreAdapter {
       if (Object.entries(contentRecords ?? {}).length === 0) {
         // Sync the store records to the automerge doc.
         accessor.handle.change((doc) => {
+          // TODO(burdon): Types.
           const content: Record<string, TLRecord> = getAndInit(doc, path, {});
           const allRecords = this._store.allRecords();
           log('seed initial records', { allRecords });
@@ -254,6 +266,7 @@ const getDeep = (obj: any, path: readonly (string | number)[]) => {
   for (const key of path) {
     value = value?.[key];
   }
+
   return value;
 };
 
@@ -263,6 +276,7 @@ const getAndInit = (obj: any, path: readonly (string | number)[], value: any) =>
     parent[key] ??= {};
     parent = parent[key];
   }
+
   return parent;
 };
 
@@ -281,12 +295,13 @@ const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[
 };
 
 // TLDraw -> Automerge
+// TODO(burdon): Types?
 const encode = (value: any): any => {
   if (Array.isArray(value)) {
     return value.map(encode);
   }
   if (value instanceof A.RawString) {
-    throw new Error('encode called on automerge data');
+    throw new Error('Encode called on automerge data.');
   }
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
@@ -294,6 +309,7 @@ const encode = (value: any): any => {
   if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);
   }
+
   return value;
 };
 
@@ -308,5 +324,6 @@ const decode = (value: any): any => {
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
   }
+
   return value;
 };
