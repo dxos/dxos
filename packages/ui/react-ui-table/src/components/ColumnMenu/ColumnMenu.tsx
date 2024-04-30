@@ -104,39 +104,21 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
 
-          <ColumnSettingsPanel {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
+          <Popover.Portal>
+            <Popover.Content>
+              <Popover.Viewport classNames='w-60'>
+                <DensityProvider density='fine'>
+                  <ColumnSettingsForm {...props} column={column} onClose={() => setIsColumnSettingsOpen(false)} />
+                </DensityProvider>
+              </Popover.Viewport>
+              <Popover.Arrow />
+            </Popover.Content>
+          </Popover.Portal>
         </Popover.Root>
       </DropdownMenu.Root>
     </div>
   );
 };
-
-export const ColumnSettingsPanel = <TData extends RowData, TValue>({
-  tableDefs,
-  tableDef,
-  column,
-  onUpdate,
-  onDelete,
-  onClose,
-}: ColumnMenuProps<TData, TValue> & { onClose: () => void }) => (
-  <Popover.Portal>
-    <Popover.Content>
-      <Popover.Viewport classNames='w-60'>
-        <DensityProvider density='fine'>
-          <ColumnSettingsForm
-            column={column}
-            tableDefs={tableDefs}
-            tableDef={tableDef}
-            onUpdate={onUpdate}
-            onDelete={onDelete}
-            onClose={onClose}
-          />
-        </DensityProvider>
-      </Popover.Viewport>
-      <Popover.Arrow />
-    </Popover.Content>
-  </Popover.Portal>
-);
 
 export const SortIndicator = ({
   direction,
