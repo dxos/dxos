@@ -39,13 +39,25 @@ export const create: {
     const schema: S.Schema<T> = schemaOrObj as S.Schema<T>;
     const echoAnnotation = getEchoObjectAnnotation(schema);
     if (echoAnnotation) {
-      if ('id' in (obj as any)) {
-        throw new Error(
-          'Provided object already has an `id` field. `id` field is reserved and will be automatically generated.',
-        );
+      const anyObj = obj as any;
+      if ('id' in anyObj) {
+        const fromResult = PublicKey.safeFrom(anyObj.id);
+        if (fromResult) {
+          anyObj.id = fromResult.toHex();
+        } else if (PublicKey.isPublicKey(anyObj.id)) {
+          anyObj.id = anyObj.id.toHex();
+        } else {
+          throw new Error(
+            [
+              'Provided object has an `id` field that is not a valid `PublicKey`.',
+              '- Omit `id` field for automatic key generation.',
+              '- Supply a `PublicKey` instance or `PublicKeyLike` value for explicit control.',
+            ].join('\n'),
+          );
+        }
+      } else {
+        anyObj.id = generateId();
       }
-
-      (obj as any).id = generateId();
     }
 
     initMeta(obj);
