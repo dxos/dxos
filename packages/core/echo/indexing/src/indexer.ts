@@ -186,9 +186,9 @@ export class Indexer {
     const documentsUpdated: ObjectSnapshot[] = [];
     const saveIndexChanges = async () => {
       await this._saveIndexes();
-      await Promise.all(
-        documentsUpdated.map(async (document) => this._metadataStore.markClean(document.id, document.hash)),
-      );
+      const batch = this._db.batch();
+      this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.hash])), batch);
+      await batch.write();
     };
 
     const updates: boolean[] = [];

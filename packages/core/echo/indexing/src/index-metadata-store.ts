@@ -7,7 +7,7 @@ import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
-import { type IdsWithHash, type ConcatenatedHeadHashes } from './types';
+import { type IdsWithHash } from './types';
 
 export type IndexMetadataStoreParams = {
   db: SubLevelDB;
@@ -48,9 +48,9 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToLastHash: IdsWithHash, batch: BatchLevel) {
-    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
-      batch.put<string, string>(id, lastAvailableHash, { sublevel: this._lastSeen });
+  markDirty(idToHash: IdsWithHash, batch: BatchLevel) {
+    for (const [id, hash] of idToHash.entries()) {
+      batch.put(id, hash, { sublevel: this._lastSeen });
     }
   }
 
@@ -61,10 +61,12 @@ export class IndexMetadataStore {
     this.dirty.emit();
   }
 
-  async markClean(id: ObjectPointerEncoded, lastIndexedHash: ConcatenatedHeadHashes) {
-    await this._lastIndexed.put<ObjectPointerEncoded, ConcatenatedHeadHashes>(id, lastIndexedHash, {});
-    await this._lastSeen.del(id);
-    this.clean.emit();
+  @trace.span({ showInBrowserTimeline: true })
+  markClean(idToHash: IdsWithHash, batch: BatchLevel) {
+    for (const [id, hash] of idToHash.entries()) {
+      batch.put(id, hash, { sublevel: this._lastIndexed });
+      batch.del(id, { sublevel: this._lastSeen });
+    }
   }
 
   /**
