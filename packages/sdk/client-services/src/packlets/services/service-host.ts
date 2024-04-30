@@ -238,12 +238,12 @@ export class ClientServicesHost {
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
 
+    await this._resourceLock?.acquire();
+
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
     await this._level.open();
-
-    await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
