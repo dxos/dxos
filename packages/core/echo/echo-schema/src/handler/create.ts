@@ -44,8 +44,6 @@ export const create: {
         const fromResult = PublicKey.safeFrom(anyObj.id);
         if (fromResult) {
           anyObj.id = fromResult.toHex();
-        } else if (PublicKey.isPublicKey(anyObj.id)) {
-          anyObj.id = anyObj.id.toHex();
         } else {
           throw new Error(
             [
