@@ -19,11 +19,7 @@ describe('Integration tests', () => {
 
     const peer = await builder.createPeer();
 
-    // TODO(dmaretskyi): There must be a better way...
-    const rootUrl = await peer.host.createSpaceRoot(spaceKey);
-    const db = peer.client.constructDatabase({ spaceKey });
-    await db.setSpaceRoot(rootUrl);
-    await db.open();
+    const [db] = await peer.createDatabase(spaceKey);
     afterTest(() => db.close());
 
     const object = db.add({ type: 'task', title: 'A' });
@@ -41,20 +37,15 @@ describe('Integration tests', () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     const peer = await builder.createPeer();
-    const db = peer.client.constructDatabase({ spaceKey });
 
-    // TODO(dmaretskyi): There must be a better way...
-    const rootUrl = await peer.host.createSpaceRoot(spaceKey);
-    await db.setSpaceRoot(rootUrl);
-    await db.open();
+    const [db, { rootUrl }] = await peer.createDatabase(spaceKey);
     afterTest(() => db.close());
 
     const object = db.add({ type: 'task', title: 'A' });
     await db.flush();
 
     const client2 = await peer.createClient();
-    const db2 = client2.constructDatabase({ spaceKey });
-    await db2.setSpaceRoot(rootUrl);
+    const [db2] = await peer.openDatabase(spaceKey, rootUrl, { client: client2 });
     await db2.open();
     afterTest(() => db2.close());
 

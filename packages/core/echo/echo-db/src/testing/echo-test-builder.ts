@@ -9,6 +9,7 @@ import { type Storage, StorageType, createStorage } from '@dxos/random-access-st
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
+import { PublicKey } from '@dxos/keys';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -24,6 +25,13 @@ export class EchoTestBuilder extends Resource {
     return peer;
   }
 }
+
+/**
+ * Generic options on a test method for a peer.
+ */
+export type PeerMethodOptions = {
+  client?: EchoClient;
+};
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
@@ -84,5 +92,24 @@ export class EchoTestPeer extends Resource {
     });
     await client.open();
     return client;
+  }
+
+  async createDatabase(spaceKey: PublicKey, { client = this.client }: PeerMethodOptions = {}) {
+    const rootUrl = await this.host.createSpaceRoot(spaceKey);
+    const db = client.constructDatabase({ spaceKey });
+    await db.setSpaceRoot(rootUrl);
+    await db.open();
+
+    // Sticking to a pattern of [mainResult, { ...secondaryResults }]
+    return [db, { rootUrl }] as const;
+  }
+
+  async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: PeerMethodOptions = {}) {
+    const db = client.constructDatabase({ spaceKey });
+    await db.setSpaceRoot(rootUrl);
+    await db.open();
+
+    // Sticking to a pattern of [mainResult, { ...secondaryResults }]
+    return [db] as const;
   }
 }
