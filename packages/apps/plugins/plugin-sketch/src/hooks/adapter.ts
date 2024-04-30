@@ -10,59 +10,11 @@ import { next as A } from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-// @ts-ignore
-import SCHEMA_V1 from '../data/schema_v1.json?json';
+import { DEFAULT_VERSION, schema } from './schema';
 import { type Unsubscribe } from '../types';
-
-console.log(SCHEMA_V1);
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
-
-// TODO(burdon): Import/export to JSON.
-// interface ObjectSerializer {
-//   import(data: string, migrate?: boolean): void;
-//   export(data: any): string;
-// }
-
-// class SketchSerializer implements ObjectSerializer {
-//   constructor(private _store: TLStore) {}
-//
-//   import(data: string, migrate?: boolean) {
-//     const s1 = JSON.parse(data);
-//     if (migrate) {
-//       this._store.migrateSnapshot(s1);
-//     } else {
-//       this._store.loadSnapshot(s1);
-//     }
-//   }
-//
-//   export(data: any) {
-//     // NOTE: Includes schema.
-//     return JSON.stringify(this._store.getSnapshot());
-//   }
-// }
-
-/**
- * Insert records into the store catching possible schema errors.
- */
-// TODO(burdon): Optionally delete invalid shapes?
-const safeStorePut = (store: TLStore, records: any[]) => {
-  try {
-    // store.migrateSnapshot(sn);
-
-    store.put(records);
-  } catch (err) {
-    log.error('invalid schema', err);
-    for (const record of records) {
-      try {
-        store.put([record]);
-      } catch (err) {
-        log.warn('ignoring record', { record });
-      }
-    }
-  }
-};
 
 export type TLDrawStoreData = {
   schema?: string; // Undefined means version 1.
@@ -113,13 +65,10 @@ export class AutomergeStoreAdapter {
           log('load initial records', { contentRecords });
           this._store.clear();
 
-          safeStorePut(
+          maybeMigrateSnapshot(
             this._store,
             Object.values(contentRecords ?? {}).map((record) => decode(record)),
           );
-
-          const snapshot = this._store.getSnapshot();
-          console.log(JSON.stringify(snapshot, null, 2));
         });
       }
     }
@@ -188,7 +137,7 @@ export class AutomergeStoreAdapter {
           this._store.remove(Array.from(removed));
         }
         if (updated.size) {
-          safeStorePut(this._store, Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))));
+          maybeMigrateSnapshot(this._store, Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))));
         }
       });
       this._lastHeads = currentHeads;
@@ -326,4 +275,21 @@ const decode = (value: any): any => {
   }
 
   return value;
+};
+
+/**
+ * Insert records into the store catching possible schema errors.
+ */
+const maybeMigrateSnapshot = (store: TLStore, records: any[]) => {
+  try {
+    store.put(records);
+  } catch (err) {
+    log.warn('auto-migrating schema', err);
+    const serialized = records.reduce<Record<string, any>>((acc, record) => {
+      acc[record.id] = record;
+      return acc;
+    }, {});
+    const snapshot = store.migrateSnapshot({ schema: schema[DEFAULT_VERSION], store: serialized });
+    store.loadSnapshot(snapshot);
+  }
 };
