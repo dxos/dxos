@@ -6,7 +6,7 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type LevelDB, type ObjectStructure } from '@dxos/echo-pipeline';
+import { type LevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -17,25 +17,18 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type ConcatenatedHeadHashes, type Index } from './types';
+import {
+  type IndexQuery,
+  type ConcatenatedHeadHashes,
+  type Index,
+  type IdsWithHash,
+  type ObjectSnapshot,
+} from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
  */
 const INDEX_UPDATE_BATCH_SIZE = 100;
-
-export type ObjectSnapshot = {
-  /**
-   * Index ID.
-   */
-  id: ObjectPointerEncoded;
-  object: Partial<ObjectStructure>;
-};
-
-export type PointerWithHash = {
-  id: ObjectPointerEncoded;
-  hash: ConcatenatedHeadHashes;
-};
 
 export type IndexerParams = {
   db: LevelDB;
@@ -43,7 +36,10 @@ export type IndexerParams = {
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
 
-  loadDocuments: (ids: PointerWithHash[]) => AsyncGenerator<ObjectSnapshot[]>;
+  /**
+   * Load documents by their pointers at specific hash.
+   */
+  loadDocuments: (ids: IdsWithHash) => AsyncGenerator<ObjectSnapshot[]>;
 };
 
 @trace.resource()
@@ -73,7 +69,7 @@ export class Indexer {
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: PointerWithHash[]) => AsyncGenerator<ObjectSnapshot[]>;
+  private readonly _loadDocuments: (ids: IdsWithHash) => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     this._db = db;
@@ -189,8 +185,8 @@ export class Indexer {
     if (this._ctx.disposed) {
       return;
     }
-    const ids = await this._metadataStore.getDirtyDocuments();
-    if (ids.length === 0 || this._ctx.disposed) {
+    const pointersWithHashes = await this._metadataStore.getDirtyDocuments();
+    if (pointersWithHashes.size === 0 || this._ctx.disposed) {
       return;
     }
 
@@ -198,12 +194,12 @@ export class Indexer {
     const saveIndexChanges = async () => {
       await this._saveIndexes();
       await Promise.all(
-        documentsUpdated.map(async (document) => this._metadataStore.markClean(document.id, document.currentHash)),
+        documentsUpdated.map(async (document) => this._metadataStore.markClean(document.id, document.hash)),
       );
     };
 
     const updates: boolean[] = [];
-    for await (const documents of this._loadDocuments(ids)) {
+    for await (const documents of this._loadDocuments(pointersWithHashes)) {
       if (this._ctx.disposed) {
         return;
       }

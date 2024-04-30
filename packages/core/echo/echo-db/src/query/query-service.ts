@@ -117,8 +117,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
     const iterator = createDocumentsIterator(this._params.automergeHost);
     const ids = new Map<ObjectPointerEncoded, ConcatenatedHeadHashes>();
     for await (const documents of iterator()) {
-      for (const { id, currentHash } of documents) {
-        ids.set(id, currentHash);
+      for (const { id, hash } of documents) {
+        ids.set(id, hash);
       }
     }
 
@@ -155,7 +155,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           return {
             id: idCodec.encode({ documentId: handle.documentId, objectId }),
             object,
-            currentHash: headsCodec.encode(getHeads(doc)),
+            hash: headsCodec.encode(getHeads(doc)),
           };
         });
       }

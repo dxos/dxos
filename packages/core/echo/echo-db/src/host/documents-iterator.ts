@@ -5,7 +5,7 @@
 import { type Doc, view } from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc, type AutomergeHost } from '@dxos/echo-pipeline';
-import { headsCodec, type PointerWithHash } from '@dxos/indexing';
+import { type ObjectSnapshot, headsCodec, type PointerWithHash } from '@dxos/indexing';
 import { idCodec } from '@dxos/protocols';
 
 /**
@@ -16,7 +16,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
    * Get object data blobs from Automerge Repo by ids.
    */
   // TODO(mykola): Unload automerge handles after usage.
-  async function* loadDocuments(objects: PointerWithHash[]) {
+  async function* loadDocuments(objects: PointerWithHash[]): AsyncGenerator<ObjectSnapshot[], void, void> {
     for (const { id, hash } of objects) {
       const { documentId, objectId } = idCodec.decode(id);
       const handle =
@@ -28,6 +28,6 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
         await handle.whenReady();
       }
       const doc: Doc<SpaceDoc> = view(handle.docSync(), heads);
-      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], currentHash: hash }] : [];
+      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], hash }] : [];
     }
   };

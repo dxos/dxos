@@ -5,6 +5,7 @@
 import { type Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 /**
@@ -17,6 +18,17 @@ export type IndexQuery = {
    */
   typename?: string | null;
 };
+
+export type ObjectSnapshot = {
+  /**
+   * Index ID.
+   */
+  id: ObjectPointerEncoded;
+  object: Partial<ObjectStructure>;
+  hash: ConcatenatedHeadHashes;
+};
+
+export type IdsWithHash = Map<ObjectPointerEncoded, ConcatenatedHeadHashes>;
 
 export interface Index {
   identifier: string;

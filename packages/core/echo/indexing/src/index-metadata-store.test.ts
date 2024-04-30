@@ -20,13 +20,16 @@ describe('IndexMetadataStore', () => {
     });
 
     const ids = ['1', '2', '3'];
-    const dirtyMap = new Map(ids.map((id) => [id, `hash-${id}`]));
+    const pointersWithHashes = new Map(ids.map((id) => [id, `hash-${id}`]));
     const batch = level.batch();
-    metadataStore.markDirty(dirtyMap, batch);
+    metadataStore.markDirty(pointersWithHashes, batch);
     await batch.write();
-    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(ids);
+    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(pointersWithHashes);
 
     await metadataStore.markClean('1', 'hash-1');
-    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(['2', '3']);
+    expect((await metadataStore.getDirtyDocuments()).size).to.deep.equal(2);
+    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(
+      new Map(ids.slice(1).map((id) => [id, `hash-${id}`])),
+    );
   });
 });
