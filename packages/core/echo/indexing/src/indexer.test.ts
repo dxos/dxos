@@ -61,7 +61,7 @@ describe('Indexer', () => {
     const { metadataStore, indexer, level, schemaURI, documents } = await setup();
 
     {
-      const doneIndexing = metadataStore.clean.waitForCount(1);
+      const doneIndexing = indexer.updated.waitForCount(1);
 
       const dirtyMap = new Map(documents.map(({ id }) => [id, 'hash']));
       const batch = level.batch();
@@ -113,7 +113,7 @@ describe('Indexer', () => {
     }
 
     {
-      const doneIndexing = metadataStore.clean.waitForCount(1);
+      const doneIndexing = indexer.updated.waitForCount(1);
 
       const newHash = 'new-hash';
       documents[0].hash = newHash;
