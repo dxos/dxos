@@ -2,8 +2,6 @@
 order: 4
 ---
 
-[foo](lakjwelfjkawe)
-
 # Spaces
 
 ::: info Spaces are collections of content that can be shared with others.
