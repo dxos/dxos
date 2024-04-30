@@ -5,7 +5,7 @@
 import { sleep } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { describe, test } from 'vitest'
+import { describe, test } from 'vitest';
 
 import { Connection } from './connection';
 import { TestWireProtocol } from '../testing/test-wire-protocol';
