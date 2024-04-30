@@ -11,7 +11,7 @@ import { EchoTestBuilder } from './echo-test-builder';
 import { async } from 'effect/Stream';
 import { EchoReactiveObject } from '@dxos/echo-schema';
 
-describe('Integration tests', () => {
+describe.only('Integration tests', () => {
   test('read/write to one database', async () => {
     await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
@@ -42,6 +42,32 @@ describe('Integration tests', () => {
 
     await peer.close();
     await peer.open();
+
+    {
+      await using db = await peer.openDatabase(spaceKey, rootUrl);
+
+      const { objects } = await db.query().run();
+      expect(objects).to.have.length(1);
+      expect({ ...objects[0] }).to.deep.eq({ ...object });
+    }
+  });
+
+  test.skip('reload peer', async () => {
+    await using builder = await new EchoTestBuilder().open();
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    let object: EchoReactiveObject<any>;
+    let rootUrl: string;
+    {
+      await using db = await peer.createDatabase(spaceKey);
+      rootUrl = db.rootUrl!;
+
+      object = db.add({ type: 'task', title: 'A' });
+      await db.flush();
+    }
+
+    await peer.reload();
 
     {
       await using db = await peer.openDatabase(spaceKey, rootUrl);

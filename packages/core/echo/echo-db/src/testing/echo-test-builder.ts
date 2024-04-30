@@ -27,11 +27,11 @@ export class EchoTestBuilder extends Resource {
 }
 
 export class EchoTestPeer extends Resource {
+  private readonly _clients = new Set<EchoClient>();
   private readonly _kv: LevelDB;
   private readonly _storage: Storage;
-  private readonly _echoHost: EchoHost;
-  private readonly _echoClient: EchoClient;
-  private readonly _clients = new Set<EchoClient>();
+  private _echoHost!: EchoHost;
+  private _echoClient!: EchoClient;
 
   constructor() {
     super();
@@ -42,6 +42,17 @@ export class EchoTestPeer extends Resource {
       kv: this._kv,
       storage: this._storage,
     });
+    this._kv = createTestLevel();
+    this._storage = createStorage({ type: StorageType.RAM });
+    this._initEcho();
+  }
+
+  private _initEcho() {
+    this._echoHost = new EchoHost({
+      kv: this._kv,
+      storage: this._storage,
+    });
+    this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient({});
     this._clients.add(this._echoClient);
   }
@@ -74,6 +85,15 @@ export class EchoTestPeer extends Resource {
 
     await this._kv.close();
     await this._storage.close();
+  }
+
+  /**
+   * Simulates a reload of the process by re-creation ECHO.
+   */
+  async reload() {
+    await this.close();
+    this._initEcho();
+    await this.open();
   }
 
   async createClient() {
