@@ -6,13 +6,13 @@ fi
 
 [ -f $HOME/.agent-invitation-complete ] && exit 0
 
+export LOG_FILTER=debug
 while true; do
-  if [ -f /tmp/dx/run/profile/default/lockfile ] && dx halo identity --no-agent; then
+  if [ -f /tmp/dx/run/profile/default/lockfile ] && dx agent status; then
     break
   fi
   sleep 1
 done
 
-export LOG_FILTER=debug
 dx halo join --verbose --invitation=$DXOS_AGENT_INVITATION --managed-agent --device-label "agent running in ${DX_AGENT_ENVIRONMENT-}"
 touch $HOME/.agent-invitation-complete
