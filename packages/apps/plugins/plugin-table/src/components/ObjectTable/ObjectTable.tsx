@@ -69,19 +69,15 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader })
   }
 };
 
+const makeNewObject = () => ({ id: PublicKey.random() });
+
 const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
   const space = getSpace(table);
 
   const objects = useTableObjects(space, table.schema);
   const tables = useQuery<TableType>(space, Filter.schema(TableType));
 
-  const newObject = useRef({});
-  const newObjectKey = '__new';
-  const keyAccessor = useCallback(
-    (row: any) => (row === newObject.current ? newObjectKey : row?.id ?? 'KEY'),
-    [newObjectKey],
-  );
-
+  const newObject = useRef(makeNewObject());
   const rows = useMemo(() => [...objects, newObject.current], [objects]);
 
   const onColumnUpdate = useCallback(
@@ -111,7 +107,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
       object[prop] = value;
       if (object === newObject.current) {
         space!.db.add(create(table.schema!, { ...newObject.current }));
-        newObject.current = {};
+        newObject.current = makeNewObject();
       }
     },
     [space, table.schema, newObject],
@@ -160,7 +156,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
   return (
     <DensityProvider density='fine'>
       <Table.Table<any>
-        keyAccessor={keyAccessor}
+        keyAccessor={(row: any) => row.id}
         columns={columns}
         data={rows}
         border
