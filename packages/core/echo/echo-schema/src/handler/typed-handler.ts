@@ -186,10 +186,13 @@ export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
 
 const makeArraysReactive = (target: any) => {
   for (const key in target) {
+    if (target[symbolIsProxy]) {
+      continue;
+    }
     if (Array.isArray(target[key])) {
       target[key] = ReactiveArray.from(target[key]);
     }
-    if (typeof target[key] === 'object' && !target[symbolIsProxy]) {
+    if (typeof target[key] === 'object') {
       makeArraysReactive(target[key]);
     }
   }
