@@ -8,8 +8,17 @@ import { describe, test } from '@dxos/test';
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
 describe('Integration tests', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('read/write to one database', async () => {
-    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion({ referenceEquality: true });
     await using peer = await builder.createPeer();
@@ -21,7 +30,6 @@ describe('Integration tests', () => {
 
   // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
   test.skip('reopen peer', async () => {
-    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -38,7 +46,6 @@ describe('Integration tests', () => {
 
   // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
   test.skip('reload peer', async () => {
-    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -53,7 +60,6 @@ describe('Integration tests', () => {
   });
 
   test('2 clients', async () => {
-    await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
 
