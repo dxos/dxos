@@ -30,7 +30,11 @@ export type ObjectSnapshot = {
    */
   id: ObjectPointerEncoded;
   object: Partial<ObjectStructure>;
-  currentHash: string;
+};
+
+export type PointerWithHash = {
+  id: ObjectPointerEncoded;
+  hash: ConcatenatedHeadHashes;
 };
 
 export type IndexerParams = {
@@ -39,7 +43,7 @@ export type IndexerParams = {
   metadataStore: IndexMetadataStore;
   indexStore: IndexStore;
 
-  loadDocuments: (ids: ObjectPointerEncoded[]) => AsyncGenerator<ObjectSnapshot[]>;
+  loadDocuments: (ids: PointerWithHash[]) => AsyncGenerator<ObjectSnapshot[]>;
 };
 
 @trace.resource()
@@ -69,7 +73,7 @@ export class Indexer {
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: string[]) => AsyncGenerator<ObjectSnapshot[]>;
+  private readonly _loadDocuments: (ids: PointerWithHash[]) => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     this._db = db;

@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type Heads } from '@dxos/automerge/automerge';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -52,6 +53,11 @@ export const staticImplements =
   };
 
 /**
- * Document head hashes concatenated with a no separator.
+ * Document head hashes concatenated with `|` as separator.
  */
 export type ConcatenatedHeadHashes = string;
+
+export const headsCodec = {
+  encode: (heads: Heads): ConcatenatedHeadHashes => heads.join('|'),
+  decode: (hash: ConcatenatedHeadHashes): Heads => hash.split('|'),
+};
