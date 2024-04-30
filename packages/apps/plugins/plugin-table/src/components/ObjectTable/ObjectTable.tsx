@@ -12,12 +12,18 @@ import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
 import { useTableObjects } from './hooks';
-import { createColumns, updateTableProp } from './utils';
+import { createColumns, deleteTableProp, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
   table: TableType;
+};
+
+const makeStarterTableSchema = () => {
+  return TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+    title: S.optional(S.string),
+  });
 };
 
 export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
@@ -34,11 +40,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader })
       }
 
       if (!table.schema) {
-        table.schema = space.db.schemaRegistry.add(
-          TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-            title: S.optional(S.string),
-          }),
-        );
+        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
+        updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
       }
 
       setShowSettings(false);
@@ -94,7 +97,13 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
     [table.props, table.schema, tables],
   );
 
-  const onColumnDelete = useCallback((id: string) => table.schema?.removeColumns([id]), [table.schema]);
+  const onColumnDelete = useCallback(
+    (id: string) => {
+      table.schema?.removeColumns([id]);
+      deleteTableProp(table.props, id);
+    },
+    [table.schema, table.props],
+  );
 
   const onRowUpdate = useCallback(
     (object: any, prop: string, value: any) => {

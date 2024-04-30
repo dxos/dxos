@@ -82,6 +82,11 @@ export const ColumnSettingsForm = ({
     onClose?.();
   };
 
+  const handleDelete = () => {
+    onDelete?.(column.id);
+    onClose?.();
+  };
+
   return (
     <div className='flex flex-col gap-1'>
       <Section>
@@ -203,7 +208,7 @@ export const ColumnSettingsForm = ({
           <div className='grow' />
           <X className={getSize(5)} />
         </Button>
-        <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
+        <Button classNames='is-full flex gap-2' onClick={handleDelete}>
           <span>{t('delete label')}</span>
           <div className='grow' />
           <Trash className={getSize(5)} />
