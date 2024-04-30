@@ -10,6 +10,14 @@ export default mergeConfig(
   configShared,
   defineConfig({
     test: {
+      // libdatachannel hard crashes otherwise.
+      pool: 'forks',
+      poolOptions: {
+        forks: {
+          singleFork: true,
+        },
+      },
+
       globalSetup: [require.resolve('packages/core/mesh/signal/testing/setup-vitest.js')],
     },
   }),
