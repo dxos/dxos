@@ -5,13 +5,13 @@
 import { create, echoObject } from '@dxos/echo-schema';
 import { TestSchema } from '@dxos/echo-schema/testing';
 
-import { reactiveProxyTests } from './proxy.blueprint-test';
 import { Hypergraph } from '../hypergraph';
 import { createDatabase } from '../testing';
+import { reactiveProxyTests } from './proxy.blueprint-test';
 
 describe('Echo reactive proxy', () => {
-  reactiveProxyTests((schema) => {
-    const testSetup = createDatabase(new Hypergraph());
+  reactiveProxyTests((builder, schema) => {
+    const testSetup = builder.createDatabase();
     return {
       objectsHaveId: true,
       createObjectFn: async (props = {}) => {

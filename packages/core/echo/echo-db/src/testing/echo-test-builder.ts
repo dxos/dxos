@@ -11,7 +11,7 @@ import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { PublicKey } from '@dxos/keys';
 import { EchoDatabase } from '../database';
-import { EchoReactiveObject } from '@dxos/echo-schema';
+import { EchoReactiveObject, S } from '@dxos/echo-schema';
 import { expect } from 'chai';
 
 export class EchoTestBuilder extends Resource {
@@ -26,6 +26,15 @@ export class EchoTestBuilder extends Resource {
     this._peers.push(peer);
     await peer.open();
     return peer;
+  }
+
+  /**
+   * Shorthand for creating a peer and a database.
+   */
+  async createDatabase() {
+    const peer = await this.createPeer();
+    const db = await peer.createDatabase(PublicKey.random());
+    return { db, graph: db.graph };
   }
 }
 

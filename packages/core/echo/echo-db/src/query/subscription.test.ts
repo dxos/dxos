@@ -6,18 +6,27 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 
 import { Trigger, sleep } from '@dxos/async';
-import { type ReactiveObject } from '@dxos/echo-schema';
-import { Expando, create } from '@dxos/echo-schema';
+import { Expando, create, type ReactiveObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
+import { EchoTestBuilder } from '../testing';
 import { createSubscription } from './subscription';
-import { createDatabase } from '../testing';
 
 describe('create subscription', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('updates are propagated', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando();
     db.add(task);
 
@@ -31,7 +40,7 @@ describe('create subscription', () => {
   });
 
   test('updates are synchronous', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando();
     db.add(task);
 
@@ -54,7 +63,7 @@ describe('create subscription', () => {
   test('signal updates are synchronous', async () => {
     registerSignalRuntime();
 
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando();
     db.add(task);
 
@@ -78,7 +87,7 @@ describe('create subscription', () => {
   });
 
   test('latest value is available in subscription', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando();
     db.add(task);
 
@@ -102,7 +111,7 @@ describe('create subscription', () => {
   });
 
   test('updates for nested objects', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando({ nested: { title: 'Test title' } });
     db.add(task);
 
@@ -114,7 +123,7 @@ describe('create subscription', () => {
   });
 
   test('updates for deep nested objects', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando({
       nested: { deep_nested: { title: 'Test title' } },
     });
@@ -128,7 +137,7 @@ describe('create subscription', () => {
   });
 
   test('updates for array objects', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const task = createExpando({ array: ['Test value'] });
     db.add(task);
 
@@ -138,31 +147,31 @@ describe('create subscription', () => {
     task.array[0] = 'New value';
     expect(counter.value).to.equal(2);
   });
-});
 
-test('updates for automerge array object fields', async () => {
-  const { db } = await createDatabase();
-  const task = createExpando({ array: [{ title: 'Test value' }] });
-  db.add(task);
+  test('updates for automerge array object fields', async () => {
+    const { db } = await builder.createDatabase();
+    const task = createExpando({ array: [{ title: 'Test value' }] });
+    db.add(task);
 
-  const counter = createUpdateCounter(task);
+    const counter = createUpdateCounter(task);
 
-  expect(counter.value).to.equal(1);
-  task.array[0].title = 'New value';
-  expect(counter.value).to.equal(2);
-});
+    expect(counter.value).to.equal(1);
+    task.array[0].title = 'New value';
+    expect(counter.value).to.equal(2);
+  });
 
-test('updates for nested automerge array object fields', async () => {
-  const { db } = await createDatabase();
-  const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
-  const task = createExpando({ array: [nestedArrayHolder] });
-  db.add(task);
+  test('updates for nested automerge array object fields', async () => {
+    const { db } = await builder.createDatabase();
+    const nestedArrayHolder = { nested_array: [{ title: 'Test value' }] };
+    const task = createExpando({ array: [nestedArrayHolder] });
+    db.add(task);
 
-  const counter = createUpdateCounter(task);
+    const counter = createUpdateCounter(task);
 
-  expect(counter.value).to.equal(1);
-  task.array[0].nested_array[0].title = 'New value';
-  expect(counter.value).to.equal(2);
+    expect(counter.value).to.equal(1);
+    task.array[0].nested_array[0].title = 'New value';
+    expect(counter.value).to.equal(2);
+  });
 });
 
 const createUpdateCounter = (object: any) => {

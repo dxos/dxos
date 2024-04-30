@@ -9,11 +9,21 @@ import { Reference, TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { compareType, Filter, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { createDatabase } from '../testing';
+import { EchoTestBuilder } from '../testing';
+import { Filter, compareType, filterMatch } from './filter';
 
 describe('Filter', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('properties', () => {
     const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
@@ -100,7 +110,7 @@ describe('Filter', () => {
   test('dynamic schema', async () => {
     class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
 
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);
 
     const obj = db.add(create(schema, { title: 'test' }));

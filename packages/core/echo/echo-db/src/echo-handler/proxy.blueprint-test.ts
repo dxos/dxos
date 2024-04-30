@@ -18,7 +18,7 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
 }
 
-export type TestConfigurationFactory = (schema: S.Schema<any> | undefined) => TestConfiguration | null;
+export type TestConfigurationFactory = (builder: TestBschema: S.Schema<any> | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [undefined, TestSchema, TestSchemaClass]) {
