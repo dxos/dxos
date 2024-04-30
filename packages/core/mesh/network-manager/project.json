@@ -27,7 +27,8 @@
           "port": 12005
         }
       }
-    }
+    },
+    "vitest": {}
   },
   "implicitDependencies": ["esbuild", "test"]
 }
