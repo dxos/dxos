@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols';
 import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
+import { TaskContext, afterAll, beforeAll, describe, test } from 'vitest';
 
 import { SignalRPCClient } from './signal-rpc-client';
 
@@ -26,15 +26,15 @@ describe('SignalRPCClient', () => {
   });
 
   // TODO(burdon): Convert to TestBuilder pattern.
-  const setupClient = async () => {
+  const setupClient = async (t: TaskContext) => {
     const client = new SignalRPCClient({ url: broker.url() });
-    afterTest(async () => await client.close());
+    t.onTestFinished(async () => await client.close());
     return client;
   };
 
-  test('signal between 2 peers', async () => {
-    const client1 = await setupClient();
-    const client2 = await setupClient();
+  test('signal between 2 peers', { timeout: 2_000, retry: 2 }, async (t) => {
+    const client1 = await setupClient(t);
+    const client2 = await setupClient(t);
 
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -68,13 +68,11 @@ describe('SignalRPCClient', () => {
     expect((await received).author).toEqual(peerId2.asUint8Array());
     expect((await received).payload).toBeAnObjectWith(payload);
     void stream1.close();
-  })
-    .timeout(2_000)
-    .retries(2);
+  });
 
-  test('join', async () => {
-    const client1 = await setupClient();
-    const client2 = await setupClient();
+  test('join', { timeout: 2_000, retry: 2 }, async (t) => {
+    const client1 = await setupClient(t);
+    const client2 = await setupClient(t);
 
     const peerId1 = PublicKey.random();
     const peerId2 = PublicKey.random();
@@ -101,7 +99,5 @@ describe('SignalRPCClient', () => {
     expect((await promise).peerAvailable?.peer).toEqual(peerId2.asBuffer());
     void stream1.close();
     void stream2.close();
-  })
-    .timeout(2_000)
-    .retries(2);
+  });
 });

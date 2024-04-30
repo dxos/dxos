@@ -9,8 +9,9 @@ import { type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
+import { afterAll, beforeAll, describe, test } from 'vitest';
 import { range } from '@dxos/util';
+import { tagEnabled } from '@dxos/test/testutils';
 
 import { Messenger } from './messenger';
 import { WebsocketSignalManager } from './signal-manager';
@@ -46,9 +47,9 @@ describe('Messenger', () => {
     void broker.stop();
   });
 
-  test('Message between peers', async () => {
+  test('Message between peers', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -65,11 +66,11 @@ describe('Messenger', () => {
     await peer1.messenger.sendMessage(message);
 
     await asyncTimeout(promise, 1_000);
-  }).timeout(1_000);
+  });
 
-  test('Message 3 peers', async () => {
+  test('Message 3 peers', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -112,11 +113,11 @@ describe('Messenger', () => {
       await peer2.messenger.sendMessage(message);
       await asyncTimeout(promise, 1_000);
     }
-  }).timeout(1_000);
+  });
 
-  test('Message routing', async () => {
+  test('Message routing', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -162,11 +163,11 @@ describe('Messenger', () => {
       expect(onMessage2).toHaveBeenCalledWith([message]);
       expect(onMessage3).not.toHaveBeenCalledWith([message]);
     }
-  }).timeout(1_000);
+  });
 
-  test('Unsubscribe listener', async () => {
+  test.runIf(tagEnabled('flaky'))('Unsubscribe listener', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -229,13 +230,11 @@ describe('Messenger', () => {
       expect(messages1.length).toEqual(2);
       expect(messages2.length).toEqual(1);
     }
-  })
-    .tag('flaky')
-    .timeout(1_000);
+  });
 
-  test('re-entrant message', async () => {
+  test('re-entrant message', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -267,11 +266,11 @@ describe('Messenger', () => {
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  }).timeout(1_000);
+  });
 
-  test('Message with broken signal server', async () => {
+  test('Message with broken signal server', { timeout: 1_000 }, async (t) => {
     const builder = new TestBuilder({ signalHosts: [{ server: 'ws://broken.kube.' }, { server: broker.url() }] });
-    afterTest(() => builder.close());
+    t.onTestFinished(() => builder.close());
     const peer1 = builder.createPeer();
     await peer1.open();
     const peer2 = builder.createPeer();
@@ -288,10 +287,10 @@ describe('Messenger', () => {
       await peer1.messenger.sendMessage(message);
       await asyncTimeout(receivePromise, 1_000);
     }
-  }).timeout(1_000);
+  });
 
-  describe('Reliability', () => {
-    test('message with non reliable connection', async () => {
+  describe('Reliability', { timeout: 1_000 }, () => {
+    test('message with non reliable connection', async (t) => {
       // Simulate unreliable connection.
       // Only each 3rd message is sent.
       let i = 0;
@@ -307,7 +306,7 @@ describe('Messenger', () => {
         signalHosts: [{ server: broker.url() }],
         messageDisruption: unreliableConnection,
       });
-      afterTest(() => builder.close());
+      t.onTestFinished(() => builder.close());
       const peer1 = builder.createPeer();
       await peer1.open();
       const peer2 = builder.createPeer();
@@ -329,14 +328,14 @@ describe('Messenger', () => {
 
       // expect to receive 3 messages.
       await receivePromise;
-    }).timeout(5_000);
+    });
 
-    test('ignoring doubled messages', async () => {
+    test('ignoring doubled messages', { timeout: 1_000 }, async (t) => {
       // Message got doubled going through signal network.
       const doublingMessage = (data: Message) => [data, data];
 
       const builder = new TestBuilder({ signalHosts: [{ server: broker.url() }], messageDisruption: doublingMessage });
-      afterTest(() => builder.close());
+      t.onTestFinished(() => builder.close());
       const peer1 = builder.createPeer();
       await peer1.open();
       const peer2 = builder.createPeer();
@@ -357,10 +356,10 @@ describe('Messenger', () => {
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);
     });
-  }).timeout(5_000);
+  });
 
   describe('load', () => {
-    test('many connections to KUBE', async () => {
+    test.runIf(tagEnabled('stress'))('many connections to KUBE', { timeout: 5_000 }, async () => {
       // let numReceived = 0;
       void range(100).map(async () => {
         const peerId = PublicKey.random();
@@ -391,8 +390,6 @@ describe('Messenger', () => {
       });
 
       await sleep(1000000);
-    })
-      .tag('stress')
-      .timeout(5_000);
+    });
   });
 });

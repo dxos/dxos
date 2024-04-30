@@ -9,7 +9,7 @@ import { type Any, type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
+import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { SignalClient } from './signal-client';
 
@@ -41,7 +41,7 @@ describe('SignalClient', () => {
     );
   };
 
-  test('message between 2 clients', async () => {
+  test('message between 2 clients', { timeout: 500, retry: 2 }, async (t) => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
@@ -53,10 +53,10 @@ describe('SignalClient', () => {
       async () => {},
     );
     api1.open();
-    afterTest(() => api1.close());
+    t.onTestFinished(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
     api2.open();
-    afterTest(() => api2.close());
+    t.onTestFinished(() => api2.close());
 
     await api1.subscribeMessages(peer1);
     await waitForSubscription(api1, peer1);
@@ -68,11 +68,9 @@ describe('SignalClient', () => {
     };
     await api2.sendMessage(message);
     expect(await received.wait()).toEqual(message);
-  })
-    .timeout(500)
-    .retries(2);
+  });
 
-  test('join', async () => {
+  test('join', { timeout: 500, retry: 2 }, async (t) => {
     const topic = PublicKey.random();
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
@@ -88,7 +86,7 @@ describe('SignalClient', () => {
       },
     );
     api1.open();
-    afterTest(() => api1.close());
+    t.onTestFinished(() => api1.close());
 
     const trigger2 = new Trigger();
     const api2 = new SignalClient(
@@ -101,17 +99,14 @@ describe('SignalClient', () => {
       },
     );
     api2.open();
-    afterTest(() => api2.close());
+    t.onTestFinished(() => api2.close());
     await api1.join({ topic, peerId: peer1 });
     await api2.join({ topic, peerId: peer2 });
 
     await trigger1.wait();
     await trigger2.wait();
-  })
-    .timeout(500)
-    .retries(2);
-
-  test('signal to self', async () => {
+  });
+  test('signal to self', { timeout: 500 }, async (t) => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
     const received = new Trigger<any>();
@@ -123,7 +118,7 @@ describe('SignalClient', () => {
       async () => {},
     );
     api1.open();
-    afterTest(() => api1.close());
+    t.onTestFinished(() => api1.close());
 
     await api1.subscribeMessages(peer1);
     await waitForSubscription(api1, peer1);
@@ -136,9 +131,9 @@ describe('SignalClient', () => {
     await api1.sendMessage(message);
 
     expect(await received.wait()).toEqual(message);
-  }).timeout(500);
+  });
 
-  test('unsubscribe from messages', async () => {
+  test('unsubscribe from messages', { timeout: 1_000, retry: 2 }, async (t) => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
 
@@ -151,11 +146,11 @@ describe('SignalClient', () => {
       async () => {},
     );
     client1.open();
-    afterTest(() => client1.close());
+    t.onTestFinished(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
     client2.open();
-    afterTest(() => client2.close());
+    t.onTestFinished(() => client2.close());
 
     await client1.subscribeMessages(peer1);
     await client2.subscribeMessages(peer2);
@@ -187,11 +182,9 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await expect(asyncTimeout(promise, 200)).toBeRejected();
     }
-  })
-    .timeout(1_000)
-    .retries(2);
+  });
 
-  test('signal after re-entrance', async () => {
+  test('signal after re-entrance', { timeout: 500, retry: 2 }, async (t) => {
     const peer1 = PublicKey.random();
     const peer2 = PublicKey.random();
 
@@ -204,11 +197,11 @@ describe('SignalClient', () => {
       async () => {},
     );
     client1.open();
-    afterTest(() => client1.close());
+    t.onTestFinished(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
     client2.open();
-    afterTest(() => client2.close());
+    t.onTestFinished(() => client2.close());
 
     const message = {
       author: peer2,
@@ -244,85 +237,79 @@ describe('SignalClient', () => {
       await client2.sendMessage(message);
       await promise;
     }
-  })
-    .timeout(1_000)
-    .retries(2);
+  });
 
-  test
-    .skip('join across multiple signal servers', async () => {
-      const topic = PublicKey.random();
-      const peer1 = PublicKey.random();
-      const peer2 = PublicKey.random();
-      // This feature is not implemented yet.
-      const api1 = new SignalClient(
-        broker1.url(),
-        async () => {},
-        async () => {},
-      );
-      api1.open();
-      afterTest(() => api1.close());
-      const api2 = new SignalClient(
-        broker2.url(),
-        async () => {},
-        async () => {},
-      );
-      api2.open();
-      afterTest(() => api2.close());
+  test.skip('join across multiple signal servers', { timeout: 5_000 }, async (t) => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+    // This feature is not implemented yet.
+    const api1 = new SignalClient(
+      broker1.url(),
+      async () => {},
+      async () => {},
+    );
+    api1.open();
+    t.onTestFinished(() => api1.close());
+    const api2 = new SignalClient(
+      broker2.url(),
+      async () => {},
+      async () => {},
+    );
+    api2.open();
+    t.onTestFinished(() => api2.close());
 
-      await api1.join({ topic, peerId: peer1 });
-      await api2.join({ topic, peerId: peer2 });
+    await api1.join({ topic, peerId: peer1 });
+    await api2.join({ topic, peerId: peer2 });
 
-      // await waitForExpect(async () => {
-      //   const peers = await api2.lookup(topic);
-      //   expect(peers.length).toEqual(2);
-      // }, 4_000);
+    // await waitForExpect(async () => {
+    //   const peers = await api2.lookup(topic);
+    //   expect(peers.length).toEqual(2);
+    // }, 4_000);
 
-      // await waitForExpect(async () => {
-      //   const peers = await api1.lookup(topic);
-      //   expect(peers.length).toEqual(2);
-      // }, 4_000);
-    })
-    .timeout(5_000);
+    // await waitForExpect(async () => {
+    //   const peers = await api1.lookup(topic);
+    //   expect(peers.length).toEqual(2);
+    // }, 4_000);
+  });
 
   // Skip because communication between signal servers is not yet implemented.
-  test
-    .skip('newly joined peer can receive signals from other signal servers', async () => {
-      const topic = PublicKey.random();
-      const peer1 = PublicKey.random();
-      const peer2 = PublicKey.random();
-      const signalMock =
-        mockFn<
-          ({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
-        >().resolvesTo();
+  test.skip('newly joined peer can receive signals from other signal servers', { timeout: 5_000 }, async (t) => {
+    const topic = PublicKey.random();
+    const peer1 = PublicKey.random();
+    const peer2 = PublicKey.random();
+    const signalMock =
+      mockFn<
+        ({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) => Promise<void>
+      >().resolvesTo();
 
-      const api1 = new SignalClient(
-        broker1.url(),
-        async () => {},
-        async () => {},
-      );
-      api1.open();
-      afterTest(() => api1.close());
-      const api2 = new SignalClient(broker2.url(), signalMock, async () => {});
-      api2.open();
-      afterTest(() => api2.close());
+    const api1 = new SignalClient(
+      broker1.url(),
+      async () => {},
+      async () => {},
+    );
+    api1.open();
+    t.onTestFinished(() => api1.close());
+    const api2 = new SignalClient(broker2.url(), signalMock, async () => {});
+    api2.open();
+    t.onTestFinished(() => api2.close());
 
-      await api1.join({ topic, peerId: peer1 });
-      await sleep(3000);
-      await api2.join({ topic, peerId: peer2 });
+    await api1.join({ topic, peerId: peer1 });
+    await sleep(3000);
+    await api2.join({ topic, peerId: peer2 });
 
-      const message = {
-        author: peer2,
-        recipient: peer1,
-        payload: {
-          type_url: 'something',
-          value: Buffer.from('0'),
-        },
-      };
-      await api1.sendMessage(message);
+    const message = {
+      author: peer2,
+      recipient: peer1,
+      payload: {
+        type_url: 'something',
+        value: Buffer.from('0'),
+      },
+    };
+    await api1.sendMessage(message);
 
-      // await waitForExpect(() => {
-      // expect(signalMock).toHaveBeenCalledWith([message]);
-      // }, 4_000);
-    })
-    .timeout(5_000);
+    // await waitForExpect(() => {
+    // expect(signalMock).toHaveBeenCalledWith([message]);
+    // }, 4_000);
+  });
 });

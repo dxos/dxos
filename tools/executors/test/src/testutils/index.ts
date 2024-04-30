@@ -24,3 +24,17 @@ export const waitForDebugger = async () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 };
+
+/**
+ * Open resources and close them after the test is finished.
+ */
+// TODO(dmaretskyi): Import those types from somewhere.
+export const openAndClose = async (
+  t: { onTestFinished: (cb: () => any) => void },
+  ...resources: { open(): Promise<any>; close(): Promise<any> }[]
+): Promise<void> => {
+  for (const resourceLike of resources) {
+    await resourceLike.open();
+    t.onTestFinished(() => resourceLike.close());
+  }
+};

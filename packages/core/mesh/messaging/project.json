@@ -7,23 +7,17 @@
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/core/mesh/messaging/src/index.ts"
-        ],
+        "entryPoints": ["packages/core/mesh/messaging/src/index.ts"],
         "injectGlobals": true
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": [
-          "nodejs"
-        ]
+        "ciEnvironments": ["nodejs"]
       }
-    }
+    },
+    "vitest": {}
   },
-  "implicitDependencies": [
-    "esbuild",
-    "test"
-  ]
+  "implicitDependencies": ["esbuild", "test"]
 }
