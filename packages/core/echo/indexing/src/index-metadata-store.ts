@@ -48,7 +48,7 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
+  markDirty(idToLastHash: IdsWithHash, batch: BatchLevel) {
     for (const [id, lastAvailableHash] of idToLastHash.entries()) {
       batch.put<string, string>(id, lastAvailableHash, { sublevel: this._lastSeen });
     }

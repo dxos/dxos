@@ -9,7 +9,6 @@ import { Context } from '@dxos/context';
 import { type LevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
@@ -17,13 +16,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import {
-  type IndexQuery,
-  type ConcatenatedHeadHashes,
-  type Index,
-  type IdsWithHash,
-  type ObjectSnapshot,
-} from './types';
+import { type IndexQuery, type Index, type IdsWithHash, type ObjectSnapshot } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -157,7 +150,7 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
-  async reIndex(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>) {
+  async reIndex(idToLastHash: IdsWithHash) {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToLastHash, batch);
     this._metadataStore.dropFromClean(Array.from(idToLastHash.keys()), batch);
