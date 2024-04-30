@@ -5,7 +5,7 @@
 import { randomBytes } from 'crypto';
 
 import { PublicKey } from '@dxos/keys';
-import { test } from 'vitest';
+import { test, describe } from 'vitest';
 import { range } from '@dxos/util';
 
 import { basicTestSuite } from './basic-test-suite';

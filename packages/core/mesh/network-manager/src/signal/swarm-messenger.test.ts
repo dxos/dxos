@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { runTestSignalServer } from '@dxos/signal';
-import { afterAll, beforeAll, describe, test, onTestFinished } from 'vitest';
+import { afterAll, beforeAll, describe, test, onTestFinished, beforeEach } from 'vitest';
 
 import { type OfferMessage, type SignalMessage } from './signal-messenger';
 import { SwarmMessenger } from './swarm-messenger';
