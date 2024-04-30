@@ -234,7 +234,7 @@ jobs:
   #
   # Check for dead links
   #
-  lychee:
+  dead_links_check:
     docker:
       - image: 'lycheeverse/lychee'
     steps:
@@ -253,7 +253,7 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
-      - lychee:
+      - dead_links_check:
           context:
             - Github
       # Only run e2e and browser tests on pushes to main & release branches.
