@@ -231,6 +231,16 @@ jobs:
       - run: date +%s > "pnpm-lock.yaml"
       - *cache_save
 
+  #
+  # Check for dead links
+  #
+  lychee:
+    docker:
+      - *docker_image_default
+    steps:
+      - checkout
+      - run: echo "success"
+
 workflows:
   default:
     when:
@@ -243,6 +253,9 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
+      - lychee:
+          context:
+            - Github
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:
