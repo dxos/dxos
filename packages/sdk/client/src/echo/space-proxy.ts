@@ -235,7 +235,7 @@ export class SpaceProxy implements Space {
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
         // NOOP if the root is the same.
-        await this._db.automerge.update({ rootUrl: automergeRoot });
+        await this._db.setSpaceRoot(automergeRoot);
       }
     }
 
@@ -282,9 +282,10 @@ export class SpaceProxy implements Space {
         automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
       }
 
-      await this._db.automerge.open({
-        rootUrl: automergeRoot,
-      });
+      if (automergeRoot !== undefined) {
+        await this._db.setSpaceRoot(automergeRoot);
+      }
+      await this._db.open();
     }
 
     log('ready');
@@ -327,7 +328,7 @@ export class SpaceProxy implements Space {
     log('destroying...');
     await this._ctx.dispose();
     await this._invitationsProxy.close();
-    await this._db.automerge.close();
+    await this._db.close();
     this._databaseOpen = false;
     log('destroyed');
   }

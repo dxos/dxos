@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, type ReadOnlyEvent } from '@dxos/async';
+import { Event, synchronized, type ReadOnlyEvent } from '@dxos/async';
 import { type EchoReactiveObject, getSchema, type ReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,6 +13,8 @@ import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
+import { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
@@ -73,7 +75,7 @@ export type EchoDatabaseParams = {
  * API for the database.
  * Implements EchoDatabase interface.
  */
-export class EchoDatabaseImpl implements EchoDatabase {
+export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
@@ -81,7 +83,10 @@ export class EchoDatabaseImpl implements EchoDatabase {
 
   public readonly schemaRegistry: DynamicSchemaRegistry;
 
+  private _rootUrl: string | undefined = undefined;
+
   constructor(params: EchoDatabaseParams) {
+    super();
     const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
       initEchoReactiveObjectRootProxy(core);
     };
@@ -98,11 +103,28 @@ export class EchoDatabaseImpl implements EchoDatabase {
     return this._automerge.spaceKey;
   }
 
-  // TODO(dmaretskyi): Stubs for future use.
-  async open() {}
+  @synchronized
+  protected override async _open(ctx: Context): Promise<void> {
+    if (this._rootUrl !== undefined) {
+      await this._automerge.open({ rootUrl: this._rootUrl });
+    }
+  }
 
-  // TODO(dmaretskyi): Stubs for future use.
-  async close() {}
+  @synchronized
+  protected override async _close(ctx: Context): Promise<void> {}
+
+  @synchronized
+  async setSpaceRoot(rootUrl: string) {
+    const firstTime = this._rootUrl === undefined;
+    this._rootUrl = rootUrl;
+    if (this._lifecycleState === LifecycleState.OPEN) {
+      if (firstTime) {
+        await this._automerge.open({ rootUrl });
+      } else {
+        await this._automerge.update({ rootUrl });
+      }
+    }
+  }
 
   getObjectById<T extends EchoReactiveObject<any>>(id: string): T | undefined {
     return this._automerge.getObjectById(id) as T | undefined;

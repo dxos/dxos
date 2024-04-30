@@ -18,13 +18,13 @@ describe('Integration tests', () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     const peer = await builder.createPeer();
-    const db = peer.client.constructDatabase({ spaceKey });
-    await db.open();
-    afterTest(() => db.close());
 
     // TODO(dmaretskyi): There must be a better way...
     const rootUrl = await peer.host.createSpaceRoot(spaceKey);
-    await db.automerge.open({ rootUrl });
+    const db = peer.client.constructDatabase({ spaceKey });
+    await db.setSpaceRoot(rootUrl);
+    await db.open();
+    afterTest(() => db.close());
 
     const object = db.add({ type: 'task', title: 'A' });
     await db.flush();
@@ -42,23 +42,21 @@ describe('Integration tests', () => {
 
     const peer = await builder.createPeer();
     const db = peer.client.constructDatabase({ spaceKey });
-    await db.open();
-    afterTest(() => db.close());
 
     // TODO(dmaretskyi): There must be a better way...
     const rootUrl = await peer.host.createSpaceRoot(spaceKey);
-    await db.automerge.open({ rootUrl });
-    afterTest(() => db.automerge.close());
+    await db.setSpaceRoot(rootUrl);
+    await db.open();
+    afterTest(() => db.close());
 
     const object = db.add({ type: 'task', title: 'A' });
     await db.flush();
 
     const client2 = await peer.createClient();
     const db2 = client2.constructDatabase({ spaceKey });
+    await db2.setSpaceRoot(rootUrl);
     await db2.open();
     afterTest(() => db2.close());
-    await db2.automerge.open({ rootUrl });
-    afterTest(() => db.automerge.close());
 
     const { objects } = await db2.query({ type: 'task' }).run();
     expect(objects).to.have.length(1);
