@@ -6,7 +6,11 @@ import { type ExportedHandler } from '@cloudflare/workers-types';
 
 import { authMiddleware, type Env } from '@dxos/web-auth';
 
-const handler = authMiddleware({ service: 'composer-app-worker', cookie: 'COMPOSER-BETA' });
+const handler = authMiddleware({
+  cookie: 'COMPOSER-BETA',
+  service: 'composer-app-worker',
+  redirectUrl: 'https://dxos.org/composer/#beta',
+});
 
 /**
  * Cloudflare Pages Functions Advanced mode set-up.
