@@ -10,6 +10,9 @@ import { type Storage, StorageType, createStorage } from '@dxos/random-access-st
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { PublicKey } from '@dxos/keys';
+import { EchoDatabase } from '../database';
+import { EchoReactiveObject } from '@dxos/echo-schema';
+import { expect } from 'chai';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -122,3 +125,28 @@ export class EchoTestPeer extends Resource {
     return db;
   }
 }
+
+export const createDataAssertion = ({
+  referenceEquality = false,
+  onlyObject = true,
+}: { referenceEquality?: boolean; onlyObject?: boolean } = {}) => {
+  let seedObject: EchoReactiveObject<any>;
+
+  return {
+    seed: async (db: EchoDatabase) => {
+      seedObject = db.add({ type: 'task', title: 'A' });
+      await db.flush();
+    },
+    verify: async (db: EchoDatabase) => {
+      const { objects } = await db.query().run();
+      const received = objects.find((object) => object.id === seedObject.id);
+      if (onlyObject) {
+        expect(objects).to.have.length(1);
+      }
+      expect({ ...received }).to.deep.eq({ ...seedObject });
+      if (referenceEquality) {
+        expect(received === seedObject).to.be.true;
+      }
+    },
+  };
+};

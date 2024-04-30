@@ -2,97 +2,67 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
-
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { EchoTestBuilder } from './echo-test-builder';
-import { async } from 'effect/Stream';
-import { EchoReactiveObject } from '@dxos/echo-schema';
+import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
-describe.only('Integration tests', () => {
+describe('Integration tests', () => {
   test('read/write to one database', async () => {
     await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion({ referenceEquality: true });
     await using peer = await builder.createPeer();
+
     await using db = await peer.createDatabase(spaceKey);
-
-    const object = db.add({ type: 'task', title: 'A' });
-    await db.flush();
-
-    const { objects } = await db.query().run();
-    expect(objects).to.deep.eq([object]);
+    await dataAssertion.seed(db);
+    await dataAssertion.verify(db);
   });
 
+  // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
   test.skip('reopen peer', async () => {
     await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    let object: EchoReactiveObject<any>;
-    let rootUrl: string;
-    {
-      await using db = await peer.createDatabase(spaceKey);
-      rootUrl = db.rootUrl!;
-
-      object = db.add({ type: 'task', title: 'A' });
-      await db.flush();
-    }
+    await using db = await peer.createDatabase(spaceKey);
+    await dataAssertion.seed(db);
 
     await peer.close();
     await peer.open();
 
-    {
-      await using db = await peer.openDatabase(spaceKey, rootUrl);
-
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(1);
-      expect({ ...objects[0] }).to.deep.eq({ ...object });
-    }
+    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await dataAssertion.verify(db2);
   });
 
+  // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
   test.skip('reload peer', async () => {
     await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
 
-    let object: EchoReactiveObject<any>;
-    let rootUrl: string;
-    {
-      await using db = await peer.createDatabase(spaceKey);
-      rootUrl = db.rootUrl!;
-
-      object = db.add({ type: 'task', title: 'A' });
-      await db.flush();
-    }
+    await using db = await peer.createDatabase(spaceKey);
+    await dataAssertion.seed(db);
 
     await peer.reload();
 
-    {
-      await using db = await peer.openDatabase(spaceKey, rootUrl);
-
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(1);
-      expect({ ...objects[0] }).to.deep.eq({ ...object });
-    }
+    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await dataAssertion.verify(db2);
   });
 
   test('2 clients', async () => {
     await using builder = await new EchoTestBuilder().open();
     const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
 
     await using peer = await builder.createPeer();
     await using db = await peer.createDatabase(spaceKey);
-
-    const object = db.add({ type: 'task', title: 'A' });
-    await db.flush();
+    await dataAssertion.seed(db);
 
     await using client2 = await peer.createClient();
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, { client: client2 });
-
-    const { objects } = await db2.query().run();
-    expect(objects).to.have.length(1);
-    expect({ ...objects[0] }).to.deep.eq({ ...object });
+    await dataAssertion.verify(db2);
   });
 });
