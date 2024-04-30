@@ -236,10 +236,10 @@ jobs:
   #
   lychee:
     docker:
-      - *docker_image_default
+      - image: 'lycheeverse/lychee'
     steps:
       - checkout
-      - run: echo "success"
+      - run: lychee --offline ./docs/content/composer
 
 workflows:
   default:
