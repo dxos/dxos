@@ -1,3 +1,14 @@
+#
+# Config file docs: https://lychee.cli.rs/usage/config/
+#
+# Run with `lychee --offline .` to only check local links.
+#
+
+# Based on this lychee.example.toml:
+# https://github.com/lycheeverse/lychee/blob/0a54079d01ba9a4ff9850d8e46d3ba64743d2c8d/lychee.example.toml
+#
+# From lychee-0.15.1
+
 #############################  Display  #############################
 
 # Verbose program output
@@ -8,7 +19,7 @@ verbose = "info"
 no_progress = false
 
 # Path to summary output file.
-output = ".config.dummy.report.md"
+output = ".lychee.report.md"
 
 #############################  Cache  ###############################
 
@@ -72,7 +83,7 @@ method = "get"
 headers = []
 
 # Remap URI matching pattern to different URI.
-remap = ["https://example.com http://example.invalid"]
+remap = []
 
 # Base URL or website root directory to check relative URLs.
 base = "https://example.com"
@@ -80,7 +91,7 @@ base = "https://example.com"
 # HTTP basic auth support. This will be the username and password passed to the
 # authorization HTTP header. See
 # <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization>
-basic_auth = ["example.com user:pwd"]
+basic_auth = []
 
 #############################  Exclusions  ##########################
 
@@ -95,13 +106,17 @@ include_verbatim = false
 glob_ignore_case = false
 
 # Exclude URLs and mail addresses from checking (supports regex).
-exclude = ['^https://www\.linkedin\.com', '^https://web\.archive\.org/web/']
+#
+# NOTE: For more information on the ".proto" exclude see: https://github.com/dxos/dxos/issues/6375
+exclude = [".proto"]
 
 # Exclude these filesystem paths from getting checked.
-exclude_path = ["file/path/to/Ignore", "./other/file/path/to/Ignore"]
+exclude_path = []
 
 # URLs to check (supports regex). Has preference over all excludes.
-include = ['gist\.github\.com.*']
+#
+# NOTE: This can also be an array, the default example was ['gist\.github\.com.*']
+include = true
 
 # Exclude all private IPs from checking.
 # Equivalent to setting `exclude_private`, `exclude_link_local`, and
