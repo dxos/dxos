@@ -44,6 +44,7 @@ export class AutomergeDb {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
   private _isOpen = false;
+  private _isInitialized = false;
 
   private _ctx = new Context();
 
@@ -105,6 +106,7 @@ export class AutomergeDb {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
+    this._isInitialized = true;
     this.opened.wake();
   }
 
@@ -115,6 +117,7 @@ export class AutomergeDb {
       return;
     }
     this._isOpen = false;
+    this._isInitialized = false;
 
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
@@ -143,7 +146,7 @@ export class AutomergeDb {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
-    if (!this._isOpen) {
+    if (!this._isInitialized) {
       return [];
     }
     const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
