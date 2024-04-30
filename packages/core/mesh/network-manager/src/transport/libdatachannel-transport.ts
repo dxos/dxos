@@ -61,7 +61,7 @@ export class LibDataChannelTransport implements Transport {
 
     // TODO(burdon): Move to factory?
     /* eslint-disable @typescript-eslint/consistent-type-imports */
-    const { RTCPeerConnection } = (await importESM('node-datachannel/polyfill'))
+    const { RTCPeerConnection } = (await importLibDataChannelPolyfill())
       .default as typeof import('node-datachannel/polyfill');
 
     // workaround https://github.com/murat-dogan/node-datachannel/pull/207
@@ -158,7 +158,7 @@ export class LibDataChannelTransport implements Transport {
   async close() {
     await this._close();
     if (--LibDataChannelTransport._instanceCount === 0) {
-      (await importESM('node-datachannel')).cleanup();
+      (await importLibDataChannel()).cleanup();
     }
   }
 
@@ -358,3 +358,21 @@ export class LibDataChannelTransport implements Transport {
 
 // eslint-disable-next-line no-new-func
 const importESM = Function('path', 'return import(path)');
+
+const importLibDataChannel = async () => {
+  // Vitest detection
+  if (typeof process.env.VITEST_POOL_ID !== undefined) {
+    return import('node-datachannel');
+  } else {
+    return importESM('node-datachannel');
+  }
+};
+
+const importLibDataChannelPolyfill = async () => {
+  // Vitest detection
+  if (typeof process.env.VITEST_POOL_ID !== undefined) {
+    return import('node-datachannel/polyfill');
+  } else {
+    return importESM('node-datachannel/polyfill');
+  }
+};
