@@ -2,9 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
+import { synchronized, Trigger } from '@dxos/async';
+import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { schema } from '@dxos/protocols';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type AgentManager, InitAuthSequenceResponse } from '@dxos/protocols/proto/dxos/service/agentmanager';
+import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
   name: string;
@@ -25,7 +32,15 @@ const defaultConfig: AgentHostingProvider = {
   username: 'dxos',
 };
 
+const CREDENTIAL_QUERY_TIMEOUT = 5_000;
+
 export interface AgentHostingProviderClient {
+  /**
+   * Initialize the client, potentially using the authToken to check authorization.
+   */
+
+  // TODO: will need to be async?
+  init(authToken?: any): boolean;
   createAgent(invitationCode: string, identityKey: string): Promise<string>;
   getAgent(agentID: string): Promise<string | null>;
   destroyAgent(agentID: string): Promise<boolean>;
@@ -35,7 +50,24 @@ export interface AgentHostingProviderClient {
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
 export class DXOSAgentHostingProviderClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
-  constructor(private readonly _clientConfig: Config) {
+  private readonly DXRPC_PATH = 'dxrpc';
+  private _rpc: WebsocketRpcClient<{ AgentManager: AgentManager }, {}> | undefined;
+  private _rpcState: 'connected' | 'disconnected' = 'disconnected';
+
+  // TODO(nf): convert to attribute when shell is updated
+  get _authToken() {
+    if ((globalThis as any).agentManagerAuthToken) {
+      return (globalThis as any).agentManagerAuthToken;
+    }
+    return null;
+  }
+  // private _authToken: string | null = null;
+
+  // TODO(nf): just accept Client instead?
+  constructor(
+    private readonly _clientConfig: Config,
+    private readonly _halo: Halo,
+  ) {
     const runtimeAgentHostingConfig = this._clientConfig.get('runtime.services.agentHosting');
     invariant(runtimeAgentHostingConfig, 'agentHosting config not found');
     invariant(runtimeAgentHostingConfig.server, 'agentHosting server not found');
@@ -44,7 +76,44 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
       baseURL: runtimeAgentHostingConfig.server,
       password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
     };
-    log.info('AgentHostingProviderClient initialized', { config: this._config });
+  }
+
+  init(authToken?: any) {
+    if (!this._checkAuthorization(authToken)) {
+      return false;
+    }
+
+    if (!this._config.baseURL.endsWith('/')) {
+      this._config.baseURL += '/';
+    }
+    const wsBaseURL = new URL(this.DXRPC_PATH, this._config.baseURL.replace('http', 'ws'));
+
+    this._rpc = new WebsocketRpcClient({
+      url: wsBaseURL.href,
+      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      noHandshake: true,
+    });
+
+    this._rpc.connected.on(() => {
+      this._rpcState = 'connected';
+    });
+
+    this._rpc.disconnected.on(() => {
+      this._rpcState = 'disconnected';
+    });
+    return true;
+  }
+
+  /**
+   * Check auth token from CF worker whether identity is allowed to create agent.
+   *
+   * Note: This will prevent the client from making unnecessary requests to the AgentHostingProvider API. The
+   * AgentHostingProvider will also validate the auth token on its own.
+   */
+
+  _checkAuthorization(authToken: any) {
+    // TODO(nf): implement
+    return true;
   }
 
   public requestInitWithCredentials(req: RequestInit): RequestInit {
@@ -57,10 +126,114 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
     };
   }
 
+  public requestInitWithAuthToken(req: RequestInit): RequestInit {
+    return {
+      ...req,
+      headers: {
+        ...req.headers,
+        Authorization: 'Bearer ' + this._authToken,
+      },
+    };
+  }
+
+  public async checkEligibility(authToken: any) {
+    // TODO: Check auth token from CF worker whether identity is allowed to create agent.
+    return true;
+  }
+
+  @synchronized
+  async _ensureAuthenticated() {
+    if (this._authToken) {
+      return;
+    }
+    const { deviceKey } = this._halo.device!;
+
+    invariant(deviceKey, 'deviceKey not found');
+    const authDeviceCreds = await this._queryCredentials('dxos.halo.credentials.AuthorizedDevice', (cred) =>
+      PublicKey.equals(cred.subject.id, deviceKey),
+    );
+
+    invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
+    invariant(this._rpc, 'RPC not initialized');
+    // TODO: factor out RPC operations and state management
+    if (this._rpcState === 'disconnected') {
+      await this._rpc.open();
+    }
+    await this._agentManagerAuth(authDeviceCreds[0]);
+  }
+
+  async _agentManagerAuth(authDeviceCreds: Credential) {
+    invariant(this._rpc, 'RPC not initialized');
+    const { result, nonce, agentmanagerKey, initAuthResponseReason } =
+      // TODO: resend BETA JWT cookie
+      await this._rpc.rpc.AgentManager.initAuthSequence({ authToken: 'foo' });
+
+    if (result !== InitAuthSequenceResponse.InitAuthSequenceResult.SUCCESS || !nonce || !agentmanagerKey) {
+      log('auth init failed', { result, nonce, agentmanagerKey, initAuthResponseReason });
+      throw new Error('Failed to initialize auth sequence');
+    }
+    // TODO(nf): verify agentmanagerKey with configured service?
+
+    // TODO: rename credential
+    const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServerAccess', (cred) =>
+      PublicKey.equals(cred.issuer, agentmanagerKey),
+    );
+    if (!agentmanagerAccessCreds.length) {
+      log.info('no access credentials - requesting...');
+    } else {
+      log.info('access credentials found - requesting session token..');
+    }
+
+    const credsToPresent = [authDeviceCreds.id, agentmanagerAccessCreds[0]?.id].filter(Boolean);
+    const presentation = await this._halo.presentCredentials({
+      ids: credsToPresent as PublicKey[],
+      nonce,
+    });
+
+    const { token, credential } = await this._rpc.rpc.AgentManager.authenticate({ presentation });
+    if (token) {
+      // TODO(nf): convert to attribute when shell is updated
+      (globalThis as any).agentManagerAuthToken = token;
+      // this._authToken = token;
+    } else {
+      invariant(credential, 'No credential or token received');
+      log('received credential, writing to HALO', { credential });
+      await this._halo.writeCredentials([credential]);
+      // re-do authentication now that we have a credential.
+      await this._agentManagerAuth(authDeviceCreds);
+    }
+  }
+
+  public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean) {
+    const credentialsQuery = this._halo.queryCredentials({ type });
+    const trigger = new Trigger<Credential[]>();
+    let result: Credential[] = [];
+    credentialsQuery.subscribe({
+      onUpdate: (credentials: Credential[]) => {
+        if (predicate) {
+          result = credentials.filter(predicate);
+        } else {
+          result = credentials;
+        }
+      },
+      onError: (err) => {
+        throw err;
+      },
+    });
+
+    setTimeout(() => {
+      trigger.wake(result);
+    }, CREDENTIAL_QUERY_TIMEOUT);
+
+    await trigger.wait();
+    return result;
+  }
+
   public async createAgent(invitationCode: string, identityKey: string) {
+    await this._ensureAuthenticated();
     const res = await fetch(
       new URL('agent', this._config.baseURL),
-      this.requestInitWithCredentials({
+      this.requestInitWithAuthToken({
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,19 +259,30 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   }
 
   public async getAgent(agentID: string) {
+    await this._ensureAuthenticated();
     const res = await fetch(
       new URL('agent/' + agentID, this._config.baseURL),
-      this.requestInitWithCredentials({
+      this.requestInitWithAuthToken({
         method: 'GET',
       }),
     );
     // TODO(nf): is Sentry logging this and causing the log message?
-    if (res.status === 404) {
-      return null;
-    }
-    if (res.status !== 200) {
-      log.warn('request to agent get failed', { res });
-      throw new ProviderApiError('bad response from hosting provider');
+    switch (res.status) {
+      // TODO(nf): other status codes?
+      case 200:
+        break;
+      case 404:
+        return null;
+      case 401:
+        throw new ProviderApiError('unauthorized');
+      case 403:
+        throw new ProviderApiError('forbidden');
+      case 500:
+        log.warn('request to agent get failed', { res });
+        throw new ProviderApiError('internal server error from hosting provider');
+      default:
+        log.warn('request to agent get failed', { res });
+        throw new ProviderApiError('unknown API error');
     }
 
     log.info('getAgent', { res });
@@ -117,18 +301,29 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   }
 
   public async destroyAgent(agentID: string) {
+    await this._ensureAuthenticated();
     const res = await fetch(
       new URL('agent/' + agentID, this._config.baseURL),
-      this.requestInitWithCredentials({
+      this.requestInitWithAuthToken({
         method: 'DELETE',
       }),
     );
 
-    if (res.status === 204) {
-      return true;
+    switch (res.status) {
+      // TODO(nf): other status codes?
+      case 204:
+        return true;
+      case 404:
+        log.warn('requested destroy on non-existent agent');
+        return false;
+      case 403:
+        throw new ProviderApiError('forbidden');
+      case 500:
+        log.warn('request to agent destroy failed', { res });
+        throw new ProviderApiError('internal server error from hosting provider');
+      default:
+        log.warn('request to agent destroy failed', { res });
+        throw new ProviderApiError('unknown API error');
     }
-
-    log.warn('failed to send destroy request', { status: res.status, statusText: res.statusText });
-    throw new ProviderApiError('bad response from hosting provider');
   }
 }

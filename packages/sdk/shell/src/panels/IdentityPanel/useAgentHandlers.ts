@@ -23,7 +23,7 @@ export const useAgentHandlers = ({
   const [validationMessage, setValidationMessage] = useState('');
   const [agentStatus, setAgentStatus] = useState('');
   const [agentActive, setAgentActive] = useState(false);
-  const agentHostingProviderClient = useAgentHostingProviderClient(client.config);
+  const agentHostingProviderClient = useAgentHostingProviderClient(client.config, client.halo);
 
   useEffect(() => {
     const fetchAgentStatus = async () => {

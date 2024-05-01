@@ -18,7 +18,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
-  const agentHostingProviderClient = useAgentHostingProviderClient(client.config);
+  const agentHostingProviderClient = useAgentHostingProviderClient(client.config, client.halo);
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
