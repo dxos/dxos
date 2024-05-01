@@ -27,8 +27,7 @@ export const createStorageCallbacks = ({
       return;
     }
 
-    const heads = getHeads(doc);
-    const lastAvailableHash = heads.join('');
+    const lastAvailableHash = getHeads(doc);
 
     const getDocumentObjects = (doc: SpaceDoc): string[] => Object.keys(doc.objects ?? {});
 
