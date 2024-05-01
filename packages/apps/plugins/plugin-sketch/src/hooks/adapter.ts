@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
+import { CURRENT_VERSION, schema } from './schema';
 import { type Unsubscribe } from '../types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -138,7 +138,12 @@ export class AutomergeStoreAdapter {
         }
 
         if (updated.size) {
-          maybeMigrateSnapshot(this._store, Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))));
+          const currentVersion = accessor.handle.docSync()?.schema;
+          maybeMigrateSnapshot(
+            this._store,
+            Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
+            currentVersion !== undefined ? parseInt(currentVersion) : undefined,
+          );
         }
       });
 
@@ -286,21 +291,19 @@ const decode = (value: any): any => {
 // TODO(burdon): What if sync with peer on different version?
 const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | void => {
   try {
-    log.info('loading', { records: records.length, version });
+    log.info('loading', { records: records.length, schema: version });
     store.put(records);
-    log.info('ok');
   } catch (err) {
-    log.catch(err);
-    log.info('auto-migrating schema...', err);
+    log.info('migrating schema...', err);
     const serialized = records.reduce<Record<string, any>>((acc, record) => {
       acc[record.id] = record;
       return acc;
     }, {});
 
     // const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
-    const snapshot = store.migrateSnapshot({ schema: schema[DEFAULT_VERSION], store: serialized });
+    const snapshot = store.migrateSnapshot({ schema: schema[version], store: serialized });
     try {
-      log.info('loading', { snapshot });
+      log.info('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
       store.loadSnapshot(snapshot);
       log.info('migrated schema', { version: CURRENT_VERSION });
       return CURRENT_VERSION;
@@ -310,7 +313,6 @@ const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number):
       log.info('loading records...');
       for (const record of Object.values(serialized)) {
         try {
-          log.info('put', { record });
           store.put([record]);
         } catch (err) {
           log.catch(err, { record });
