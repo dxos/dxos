@@ -8,6 +8,7 @@ import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
@@ -84,13 +85,20 @@ export class IndexMetadataStore {
 }
 
 const headsCodec = schema.getCodecForType('dxos.echo.query.Heads');
+let counterOfFailedDecodings = 0;
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
   encode: (value: Heads): Uint8Array => headsCodec.encode({ hashes: value }),
   decode: (encodedValue: Uint8Array): Heads => {
     try {
       return headsCodec.decode(encodedValue).hashes!;
     } catch (err) {
+      // TODO(mykola): remove this before 0.7 release.
       // Migration from old format.
+      counterOfFailedDecodings++;
+      if (counterOfFailedDecodings > 1000) {
+        counterOfFailedDecodings = 0;
+        log.warn('Heads decoding failed, trying to decode old format. \nRun `await dxos.client.repair()`');
+      }
       /**
        * Document head hashes concatenated with no  separator.
        */
