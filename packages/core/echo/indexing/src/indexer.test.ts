@@ -36,7 +36,7 @@ describe('Indexer', () => {
     const level = createTestLevel();
     await openAndClose(level);
 
-    const metadataStore = new IndexMetadataStore({ db: level.sublevel('indexer-metadata') });
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
     const indexStore = new IndexStore({ db: level.sublevel('index-store') });
 
     const indexer = new Indexer({

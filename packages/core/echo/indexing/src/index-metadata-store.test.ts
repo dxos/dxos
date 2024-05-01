@@ -15,9 +15,7 @@ describe('IndexMetadataStore', () => {
     await level.open();
     afterTest(() => level.close());
 
-    const metadataStore = new IndexMetadataStore({
-      db: level.sublevel('index-metadata'),
-    });
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
 
     const ids = ['1', '2', '3'];
     const pointersWithHashes = new Map(ids.map((id) => [id, [`hash-${id}`]]));
