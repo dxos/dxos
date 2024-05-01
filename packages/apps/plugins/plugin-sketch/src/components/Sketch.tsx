@@ -119,12 +119,12 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         hideUi={readonly}
         components={{
           DebugPanel: null,
-          Grid: DefaultGrid,
+          Grid: DefaultGrid, // TODO(burdon): Customize.
           HelpMenu: null,
           MenuPanel: null,
           NavigationPanel: null,
           TopPanel: null,
-          ZoomMenu: null,
+          // ZoomMenu: null,
         }}
         onMount={setEditor}
       />
