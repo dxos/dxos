@@ -6,6 +6,7 @@ import { type RowData, type RowSelectionState, type Table, type VisibilityState 
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
+import { type ColumnSorting } from '../../hooks';
 import { type KeyValue, type TableColumnDef } from '../../types';
 
 export type TableFlags = Partial<{
@@ -56,4 +57,4 @@ export type TableContextValue<TData> = TableFlags &
   Pick<TableProps<TData>, 'keyAccessor'> & {
     table: Table<TData>;
     isGrid: boolean;
-  };
+  } & ColumnSorting;
