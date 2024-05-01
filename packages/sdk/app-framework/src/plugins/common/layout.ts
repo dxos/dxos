@@ -98,7 +98,7 @@ export namespace LayoutAction {
     /**
      * Element to set the state of.
      */
-    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast' | 'main' | 'article';
+    element: 'fullscreen' | 'sidebar' | 'complementary' | 'dialog' | 'popover' | 'toast';
 
     /**
      * Whether the element is on or off.

@@ -2,12 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
+import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
   Button,
+  ButtonGroup,
+  type ButtonGroupProps,
   type ButtonProps,
   DropdownMenu,
   type ThemedClassName,
@@ -188,12 +190,74 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
   },
 );
 
+type PartIdentifier = [string, number, number];
+
+type PlankControlEventType = `${'pin' | 'increment'}-${'start' | 'end'}`;
+
+type PlankControlHandler = (event: { type: PlankControlEventType; part: PartIdentifier }) => void;
+
+type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'children' | 'onClick'> & {
+  part: [string, number, number];
+  onClick?: PlankControlHandler;
+  variant?: 'hide-disabled' | 'default';
+  increment?: boolean;
+  pin?: 'start' | 'end' | 'both';
+};
+
+const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
+  ({ part, onClick, variant = 'default', increment = true, pin = 'both', ...props }, forwardedRef) => {
+    const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
+    return (
+      <ButtonGroup {...props} ref={forwardedRef}>
+        {pin && ['both', 'start'].includes(pin) && (
+          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-start', part })}>
+            <CaretLineLeft />
+          </Button>
+        )}
+        {increment && (
+          <>
+            <Button
+              disabled={part[1] < 1}
+              variant='ghost'
+              classNames={buttonClassNames}
+              onClick={() => onClick?.({ type: 'increment-start', part })}
+            >
+              <CaretLeft />
+            </Button>
+            <Button
+              disabled={part[1] > part[2] - 2}
+              variant='ghost'
+              classNames={buttonClassNames}
+              onClick={() => onClick?.({ type: 'increment-end', part })}
+            >
+              <CaretRight />
+            </Button>
+          </>
+        )}
+        {pin && ['both', 'end'].includes(pin) && (
+          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-end', part })}>
+            <CaretLineRight />
+          </Button>
+        )}
+      </ButtonGroup>
+    );
+  },
+);
+
 export const PlankHeading = {
   Root: PlankRoot,
   Button: PlankHeadingButton,
   Label: PlankHeadingLabel,
   ActionsMenu: PlankHeadingActionsMenu,
+  Controls: PlankHeadingControls,
 };
 export { plankHeadingIconProps };
 
-export type { PlankHeadingButtonProps, PlankHeadingActionsMenuProps };
+export type {
+  PlankHeadingButtonProps,
+  PlankHeadingActionsMenuProps,
+  PlankHeadingControlsProps,
+  PartIdentifier,
+  PlankControlEventType,
+  PlankControlHandler,
+};

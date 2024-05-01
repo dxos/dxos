@@ -12,6 +12,7 @@ import {
   type Location,
   isActiveParts,
   type ActiveParts,
+  type PartIdentifier,
 } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
 import { Deck } from '@dxos/react-ui-deck';
@@ -38,15 +39,15 @@ export type DeckLayoutProps = {
 
 export const NAV_ID = 'NavTree';
 
-export const firstSidebarId = (active: Location['active']): string =>
-  isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : active ?? '';
+export const firstSidebarId = (active: Location['active']): string | undefined =>
+  isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
 
-export const firstComplementaryId = (active: Location['active']): string =>
+export const firstComplementaryId = (active: Location['active']): string | undefined =>
   isActiveParts(active)
     ? Array.isArray(active.complementary)
       ? active.complementary[0]
       : active.complementary
-    : active ?? '';
+    : undefined;
 
 const PlankLoading = () => {
   return (
@@ -78,11 +79,14 @@ export const DeckLayout = ({
   const { graph } = useGraph();
 
   const activeParts: ActiveParts = isActiveParts(location.active)
-    ? location.active
-    : { main: [location.active] as string[] };
+    ? Object.keys(location.active).length < 1
+      ? { sidebar: NAV_ID }
+      : location.active
+    : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarId = firstSidebarId(activeParts);
+  const sidebarNode = sidebarId ? graph.findNode(sidebarId) : null;
   const complementaryId = firstComplementaryId(activeParts);
-  const complementaryNode = graph.findNode(complementaryId);
+  const complementaryNode = complementaryId ? graph.findNode(complementaryId) : null;
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -110,20 +114,38 @@ export const DeckLayout = ({
       </div>
 
       <Main.Root
-        navigationSidebarOpen={context.sidebarOpen}
+        navigationSidebarOpen={(sidebarId === NAV_ID || !!sidebarNode) && (context.sidebarOpen as boolean)}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
         {...(complementarySidebarOpen !== null && {
-          complementarySidebarOpen: complementaryNode && (context.complementarySidebarOpen as boolean),
+          complementarySidebarOpen:
+            (complementaryId === NAV_ID || !!complementaryNode) && (context.complementarySidebarOpen as boolean),
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar>
-          {sidebarId && sidebarId !== NAV_ID ? (
-            <Surface role='article' data={{ object: graph.findNode(sidebarId) }} limit={1} />
-          ) : (
-            <Surface role='navigation' name='sidebar' limit={1} />
-          )}
+          {sidebarId ? (
+            sidebarId === NAV_ID ? (
+              <Surface
+                role='navigation'
+                data={{
+                  part: ['sidebar', 0, 1] satisfies PartIdentifier,
+                  popoverAnchorId,
+                }}
+                limit={1}
+              />
+            ) : (
+              <Surface
+                role='article'
+                data={{
+                  object: graph.findNode(sidebarId),
+                  part: ['sidebar', 0, 1] satisfies PartIdentifier,
+                  popoverAnchorId,
+                }}
+                limit={1}
+              />
+            )
+          ) : null}
         </Main.NavigationSidebar>
 
         {/* Notch */}
@@ -141,8 +163,25 @@ export const DeckLayout = ({
         </Main.Notch>
 
         <Main.ComplementarySidebar>
-          {complementaryId && complementaryNode ? (
-            <Surface role='article' data={{ object: complementaryNode.data }} limit={1} />
+          {complementaryId === NAV_ID ? (
+            <Surface
+              role='navigation'
+              data={{
+                part: ['complementary', 0, 1] satisfies PartIdentifier,
+                popoverAnchorId,
+              }}
+              limit={1}
+            />
+          ) : complementaryNode ? (
+            <Surface
+              role='article'
+              data={{
+                object: complementaryNode.data,
+                part: ['complementary', 0, 1] satisfies PartIdentifier,
+                popoverAnchorId,
+              }}
+              limit={1}
+            />
           ) : null}
         </Main.ComplementarySidebar>
 
@@ -152,18 +191,38 @@ export const DeckLayout = ({
         {/* Main content surface. */}
         <Deck.Root>
           {activeParts.main ? (
-            (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main]).filter(Boolean).map((id) => {
-              const node = graph.findNode(id);
-              return (
-                <Deck.Plank key={id}>
-                  {node ? (
-                    <Surface role='article' data={{ object: node.data }} limit={1} fallback={<PlankLoading />} />
-                  ) : (
-                    <PlankLoading />
-                  )}
-                </Deck.Plank>
-              );
-            })
+            (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
+              .filter(Boolean)
+              .map((id, index, main) => {
+                const node = graph.findNode(id);
+                return (
+                  <Deck.Plank key={id}>
+                    {id === NAV_ID ? (
+                      <Surface
+                        role='navigation'
+                        data={{
+                          part: ['main', index, main.length] satisfies PartIdentifier,
+                          popoverAnchorId,
+                        }}
+                        limit={1}
+                      />
+                    ) : node ? (
+                      <Surface
+                        role='article'
+                        data={{
+                          object: node.data,
+                          part: ['main', index, main.length] satisfies PartIdentifier,
+                          popoverAnchorId,
+                        }}
+                        limit={1}
+                        fallback={<PlankLoading />}
+                      />
+                    ) : (
+                      <PlankLoading />
+                    )}
+                  </Deck.Plank>
+                );
+              })
           ) : (
             <ContentEmpty />
           )}

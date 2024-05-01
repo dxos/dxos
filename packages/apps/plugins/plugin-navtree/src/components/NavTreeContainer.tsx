@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { NavigationAction, Surface, useIntent } from '@dxos/app-framework';
+import { NavigationAction, Surface, useIntent, type PartIdentifier } from '@dxos/app-framework';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -37,11 +37,13 @@ export const NavTreeContainer = ({
   paths,
   activeId,
   popoverAnchorId,
+  part,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
   activeId?: string;
   popoverAnchorId?: string;
+  part?: PartIdentifier;
 }) => {
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
@@ -173,7 +175,10 @@ export const NavTreeContainer = ({
 
   return (
     <ElevationProvider elevation='chrome'>
-      <div role='none' className='bs-full overflow-hidden grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'>
+      <div
+        role='none'
+        className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
+      >
         <Surface role='search-input' limit={1} />
         <div role='none' className='overflow-y-auto p-0.5'>
           <NavTree
@@ -188,7 +193,7 @@ export const NavTreeContainer = ({
             renderPresence={renderPresence}
           />
         </div>
-        <NavTreeFooter />
+        <NavTreeFooter part={part} />
       </div>
     </ElevationProvider>
   );

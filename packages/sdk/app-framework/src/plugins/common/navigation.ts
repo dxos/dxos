@@ -31,9 +31,18 @@ export const Location = z.object({
 
 export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
+/**
+ * Composed of [ part name, index within the part, size of the part ]
+ */
+export type PartIdentifier = [string, number, number];
+export type NavigationAdjustmentType = `${'pin' | 'increment'}-${'start' | 'end'}`;
+export type NavigationAdjustment = { part: PartIdentifier; type: NavigationAdjustmentType };
 
 export const isActiveParts = (active: string | ActiveParts | undefined): active is ActiveParts =>
   !!active && typeof active !== 'string';
+
+export const isAdjustTransaction = (data: IntentData | undefined): data is NavigationAdjustment =>
+  !!data && 'part' in data && 'type' in data;
 
 export const firstMainId = (active: Location['active']): string =>
   isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
@@ -78,6 +87,7 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
+  ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
 }
 
@@ -85,6 +95,16 @@ export enum NavigationAction {
  * Expected payload for navigation actions.
  */
 export namespace NavigationAction {
+  /**
+   * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
+   */
   export type Open = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
+   */
   export type Close = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
+   */
+  export type Adjust = IntentData<NavigationAdjustment>;
 }
