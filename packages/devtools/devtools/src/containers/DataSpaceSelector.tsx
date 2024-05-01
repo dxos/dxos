@@ -40,7 +40,7 @@ export const DataSpaceSelector = () => {
 
   const getLabel = (key: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(key));
-    return space?.properties.name ?? humanize(key);
+    return space?.isOpen ? space?.properties.name ?? humanize(key) : `${humanize(key)} (closed)`;
   };
 
   return (
