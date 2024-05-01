@@ -8541,9 +8541,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8614,6 +8611,9 @@ importers:
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
