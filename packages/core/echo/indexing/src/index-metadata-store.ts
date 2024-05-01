@@ -7,6 +7,7 @@ import { type MixedEncoding } from 'level-transcoder';
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
@@ -93,9 +94,10 @@ const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
       /**
        * Document head hashes concatenated with no  separator.
        */
-      const concatenatedHeads = Buffer.from(encodedValue).toString('utf8');
+      const concatenatedHeads = Buffer.from(encodedValue).toString('utf8').replace('"', '');
 
       // Split concatenated heads into individual hashes by 64 characters.
+      invariant(concatenatedHeads.length % 64 === 0, 'Invalid concatenated heads length');
       const heads = [];
       for (let i = 0; i < concatenatedHeads.length; i += 64) {
         heads.push(concatenatedHeads.slice(i, i + 64));
