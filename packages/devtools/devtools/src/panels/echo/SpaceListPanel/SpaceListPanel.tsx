@@ -42,9 +42,9 @@ export const SpaceListPanel: FC = () => {
   const handleToggleOpen = async (spaceKey: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(spaceKey))!;
     if (space.isOpen) {
-      await space.internal.close();
+      await space.close();
     } else {
-      await space.internal.open();
+      await space.open();
     }
   };
 
