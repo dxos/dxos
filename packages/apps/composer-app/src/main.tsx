@@ -55,6 +55,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 
 import './globals';
 
+import { meta as BetaMeta } from './BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
@@ -120,6 +121,7 @@ const main = async () => {
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
       isSocket ? NativeMeta : PwaMeta,
+      BetaMeta,
 
       // UX
       LayoutMeta,
@@ -165,6 +167,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
+      [BetaMeta.id]: Plugin.lazy(() => import('./BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
@@ -233,6 +236,7 @@ const main = async () => {
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
