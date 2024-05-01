@@ -30,13 +30,13 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
-import { arrayMove } from '@dxos/util';
 
 import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
+import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
 const isSocket = !!(globalThis as any).__args;
 // TODO(mjamesderocher): Can we get this directly from Socket?
@@ -377,158 +377,11 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.ADJUST: {
-              console.log('[adjust]', intent.data);
               return batch(() => {
                 if (isAdjustTransaction(intent.data)) {
-                  const {
-                    type,
-                    part: [partName, index, size],
-                  } = intent.data;
-                  const [action, direction] = type.split('-');
-                  switch (action) {
-                    case 'increment':
-                      switch (partName) {
-                        case 'main':
-                          // increment is irrelevant with a monolithic location.active or location.active.main
-                          if (isActiveParts(location.active) && Array.isArray(location.active.main)) {
-                            switch (direction) {
-                              case 'start':
-                                if (index < 1) {
-                                  return {};
-                                } else {
-                                  return (location.active = {
-                                    ...location.active,
-                                    main: arrayMove(location.active.main, index, index + 1),
-                                  });
-                                }
-                              case 'end':
-                                if (index > size - 2) {
-                                  return {};
-                                } else {
-                                  return (location.active = {
-                                    ...location.active,
-                                    main: arrayMove(location.active.main, index, index - 1),
-                                  });
-                                }
-                              default:
-                                return {};
-                            }
-                          } else {
-                            return {};
-                          }
-                        default:
-                          return {};
-                      }
-                    case 'pin':
-                      switch (partName) {
-                        case 'sidebar':
-                          switch (direction) {
-                            case 'end':
-                              // Un-pin the item in the navigation sidebar
-                              return (location.active = isActiveParts(location.active)
-                                ? {
-                                    main: [
-                                      ...(Object.keys(location.active).length < 1
-                                        ? [NAV_ID]
-                                        : Array.isArray(location.active.sidebar)
-                                          ? [location.active.sidebar[0]]
-                                          : [location.active.sidebar]),
-                                      ...(Array.isArray(location.active.main)
-                                        ? location.active.main
-                                        : [location.active.main]),
-                                    ].filter(Boolean),
-                                    ...(location.active.complementary && {
-                                      complementary: Array.isArray(location.active.complementary)
-                                        ? location.active.complementary[0]
-                                        : location.active.complementary,
-                                    }),
-                                  }
-                                : { main: [NAV_ID, location.active].filter(Boolean) as string[] });
-                            case 'start':
-                            default:
-                              return {};
-                          }
-                        case 'complementary':
-                          switch (direction) {
-                            case 'start':
-                              // Un-pin the item in the complementary sidebar, which is only supported if location.active is ActiveParts
-                              if (isActiveParts(location.active)) {
-                                return (location.active = {
-                                  main: [
-                                    ...(Array.isArray(location.active.main)
-                                      ? location.active.main
-                                      : [location.active.main]),
-                                    ...(Array.isArray(location.active.complementary)
-                                      ? [location.active.complementary[0]]
-                                      : [location.active.complementary]),
-                                  ],
-                                  ...(location.active.sidebar && {
-                                    sidebar: Array.isArray(location.active.sidebar)
-                                      ? location.active.sidebar[0]
-                                      : location.active.sidebar,
-                                  }),
-                                });
-                              } else {
-                                return {};
-                              }
-                            case 'end':
-                            default:
-                              return {};
-                          }
-                        case 'main':
-                          if (isActiveParts(location.active)) {
-                            const subject = location.active.main[index];
-                            if (subject) {
-                              // Pin the subject from main and evict anything previously pinned there into main
-                              const nextMain = [
-                                ...(Array.isArray(location.active.main)
-                                  ? location.active.main
-                                  : [location.active.main]),
-                              ];
-                              nextMain.splice(nextMain.indexOf(subject), 1);
-                              return (location.active = {
-                                ...(direction === 'start' && { sidebar: subject }),
-                                main: [
-                                  ...(direction === 'start'
-                                    ? Array.isArray(location.active.sidebar)
-                                      ? location.active.sidebar
-                                      : [location.active.sidebar]
-                                    : []),
-                                  ...nextMain,
-                                  ...(direction === 'end'
-                                    ? Array.isArray(location.active.complementary)
-                                      ? location.active.complementary
-                                      : [location.active.complementary]
-                                    : []),
-                                ],
-                                ...(direction === 'end' && { complementary: subject }),
-                              });
-                            } else {
-                              return {};
-                            }
-                          } else {
-                            if (location.active) {
-                              switch (direction) {
-                                case 'start':
-                                  return (location.active = {
-                                    sidebar: location.active,
-                                    main: [NAV_ID],
-                                  });
-                                case 'end':
-                                  return (location.active = {
-                                    sidebar: NAV_ID,
-                                    main: [],
-                                    complementary: location.active,
-                                  });
-                                default:
-                                  return {};
-                              }
-                            } else {
-                              return {};
-                            }
-                          }
-                      }
-                  }
+                  const nextActive = applyActiveAdjustment(location.active, intent.data);
+                  console.log('[next active]', nextActive);
+                  location.active = nextActive;
                 }
               });
             }
