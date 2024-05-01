@@ -16,7 +16,7 @@ describe('IndexMetadataStore', () => {
     afterTest(() => level.close());
 
     const metadataStore = new IndexMetadataStore({
-      db: level.sublevel('index-metadata-store'),
+      db: level.sublevel('index-metadata'),
     });
 
     const ids = ['1', '2', '3'];
