@@ -16,7 +16,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type Index, type IdsWithHash, type ObjectSnapshot } from './types';
+import { type IndexQuery, type Index, type IdsWithHeads, type ObjectSnapshot } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -32,7 +32,7 @@ export type IndexerParams = {
   /**
    * Load documents by their pointers at specific hash.
    */
-  loadDocuments: (ids: IdsWithHash) => AsyncGenerator<ObjectSnapshot[]>;
+  loadDocuments: (ids: IdsWithHeads) => AsyncGenerator<ObjectSnapshot[]>;
 };
 
 @trace.resource()
@@ -62,7 +62,7 @@ export class Indexer {
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: IdsWithHash) => AsyncGenerator<ObjectSnapshot[]>;
+  private readonly _loadDocuments: (ids: IdsWithHeads) => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     this._db = db;
@@ -150,10 +150,10 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
-  async reIndex(idToLastHash: IdsWithHash) {
+  async reIndex(idToHeads: IdsWithHeads) {
     const batch = this._db.batch();
-    this._metadataStore.markDirty(idToLastHash, batch);
-    this._metadataStore.dropFromClean(Array.from(idToLastHash.keys()), batch);
+    this._metadataStore.markDirty(idToHeads, batch);
+    this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
     await batch.write();
     this._run.schedule();
   }
@@ -187,7 +187,7 @@ export class Indexer {
     const saveIndexChanges = async () => {
       await this._saveIndexes();
       const batch = this._db.batch();
-      this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.hash])), batch);
+      this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.heads])), batch);
       await batch.write();
     };
 

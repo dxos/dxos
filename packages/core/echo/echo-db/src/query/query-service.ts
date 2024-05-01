@@ -8,7 +8,7 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
-import { type ObjectSnapshot, type Indexer, type IdsWithHash } from '@dxos/indexing';
+import { type ObjectSnapshot, type Indexer, type IdsWithHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -115,10 +115,10 @@ export class QueryServiceImpl extends Resource implements QueryService {
    */
   async reIndex() {
     const iterator = createDocumentsIterator(this._params.automergeHost);
-    const ids: IdsWithHash = new Map();
+    const ids: IdsWithHeads = new Map();
     for await (const documents of iterator()) {
-      for (const { id, hash } of documents) {
-        ids.set(id, hash);
+      for (const { id, heads } of documents) {
+        ids.set(id, heads);
       }
     }
 
@@ -155,7 +155,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           return {
             id: idCodec.encode({ documentId: handle.documentId, objectId }),
             object,
-            hash: getHeads(doc),
+            heads: getHeads(doc),
           };
         });
       }

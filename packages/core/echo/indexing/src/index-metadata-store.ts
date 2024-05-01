@@ -52,9 +52,9 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToHash: IdsWithHeads, batch: BatchLevel) {
-    for (const [id, hash] of idToHash.entries()) {
-      batch.put(id, hash, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
+  markDirty(idToHeads: IdsWithHeads, batch: BatchLevel) {
+    for (const [id, heads] of idToHeads.entries()) {
+      batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
     }
   }
 
@@ -66,9 +66,9 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markClean(idToHash: IdsWithHeads, batch: BatchLevel) {
-    for (const [id, hash] of idToHash.entries()) {
-      batch.put(id, hash, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
+  markClean(idToHeads: IdsWithHeads, batch: BatchLevel) {
+    for (const [id, heads] of idToHeads.entries()) {
+      batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
       batch.del(id, { sublevel: this._lastSeen });
     }
   }
@@ -105,4 +105,5 @@ const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
       return heads;
     }
   },
+  format: 'buffer',
 };

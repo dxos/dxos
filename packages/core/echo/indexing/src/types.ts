@@ -25,7 +25,7 @@ export type ObjectSnapshot = {
    */
   id: ObjectPointerEncoded;
   object: Partial<ObjectStructure>;
-  hash: Heads;
+  heads: Heads;
 };
 
 export type IdsWithHeads = Map<ObjectPointerEncoded, Heads>;

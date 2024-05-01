@@ -27,7 +27,11 @@ describe('Indexer', () => {
         system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
       },
     ];
-    const documents: ObjectSnapshot[] = objects.map((object, index) => ({ id: String(index), object, hash: ['hash'] }));
+    const documents: ObjectSnapshot[] = objects.map((object, index) => ({
+      id: String(index),
+      object,
+      heads: ['hash'],
+    }));
 
     const level = createTestLevel();
     await openAndClose(level);
@@ -40,7 +44,7 @@ describe('Indexer', () => {
       indexStore,
       metadataStore,
       loadDocuments: async function* (pointersWithHash): AsyncGenerator<ObjectSnapshot[], void, void> {
-        yield Array.from(pointersWithHash.entries()).map(([id, hash]) => documents.find((doc) => doc.id === id)!);
+        yield Array.from(pointersWithHash.entries()).map(([id]) => documents.find((doc) => doc.id === id)!);
       },
     });
     afterTest(() => indexer.destroy());
@@ -98,8 +102,8 @@ describe('Indexer', () => {
 
     {
       const newHash = 'new-hash';
-      documents[0].hash = newHash;
-      const dirtyMap = new Map(documents.map(({ id }) => [id, 'hash']));
+      documents[0].heads = [newHash];
+      const dirtyMap = new Map(documents.map(({ id }) => [id, ['hash']]));
       const batch = level.batch();
       metadataStore.markDirty(dirtyMap, batch);
       await batch.write();
@@ -114,7 +118,7 @@ describe('Indexer', () => {
       const doneIndexing = indexer.updated.waitForCount(1);
 
       const newHash = 'new-hash';
-      documents[0].hash = newHash;
+      documents[0].heads = [newHash];
       // Not mark dirty, simulates a change that were not saved yet.
       metadataStore.afterMarkDirty();
 
