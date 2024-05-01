@@ -82,5 +82,5 @@ export type ObjectSystem = {
 };
 
 export type LevelDB = Level<string, string>;
-export type SubLevelDB = AbstractSublevel<any, string | Buffer | Uint8Array, string, string>;
+export type SubLevelDB = AbstractSublevel<any, string | Buffer | Uint8Array, string, any>;
 export type BatchLevel = AbstractChainedBatch<any, string, string>;

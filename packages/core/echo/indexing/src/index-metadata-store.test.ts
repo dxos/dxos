@@ -15,18 +15,26 @@ describe('IndexMetadataStore', () => {
     await level.open();
     afterTest(() => level.close());
 
-    const metadataStore = new IndexMetadataStore({
-      db: level.sublevel('indexer-metadata'),
-    });
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
 
     const ids = ['1', '2', '3'];
-    const dirtyMap = new Map(ids.map((id) => [id, `hash-${id}`]));
-    const batch = level.batch();
-    metadataStore.markDirty(dirtyMap, batch);
-    await batch.write();
-    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(ids);
+    const pointersWithHashes = new Map(ids.map((id) => [id, [`hash-${id}`]]));
+    {
+      const batch = level.batch();
+      metadataStore.markDirty(pointersWithHashes, batch);
+      await batch.write();
 
-    await metadataStore.markClean('1', 'hash-1');
-    expect(await metadataStore.getDirtyDocuments()).to.deep.equal(['2', '3']);
+      expect(await metadataStore.getDirtyDocuments()).to.deep.equal(pointersWithHashes);
+    }
+
+    {
+      const batch = level.batch();
+      metadataStore.markClean(new Map([['1', ['hash-1']]]), batch);
+      await batch.write();
+      expect((await metadataStore.getDirtyDocuments()).size).to.deep.equal(2);
+      expect(await metadataStore.getDirtyDocuments()).to.deep.equal(
+        new Map(ids.slice(1).map((id) => [id, [`hash-${id}`]])),
+      );
+    }
   });
 });
