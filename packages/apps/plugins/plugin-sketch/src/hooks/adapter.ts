@@ -17,6 +17,7 @@ import { type Unsubscribe } from '../types';
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+// TODO(burdon): Move to SketchType?
 export type TLDrawStoreData = {
   schema?: string; // Undefined means version 1.
   content: Record<string, any>;
