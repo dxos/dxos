@@ -190,7 +190,8 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         <Deck.Root>
-          {activeParts.main ? (
+          {activeParts.main &&
+          ((Array.isArray(activeParts.main) && activeParts.main.length > 0) || !!activeParts.main) ? (
             (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
               .filter(Boolean)
               .map((id, index, main) => {

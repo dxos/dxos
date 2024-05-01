@@ -4,7 +4,7 @@
 
 import { type Location, isActiveParts, type ActiveParts } from '@dxos/app-framework';
 
-// NOTE(thure): These are chosen fromRFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
+// NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
 const LIST_SEPARATOR = '.';
 const ENTRY_SEPARATOR = '_';
 const KEY_VALUE_SEPARATOR = '-';
@@ -27,7 +27,11 @@ export const activeToUri = (active?: Location['active']) =>
   `/${
     active
       ? Object.entries(active)
-          .map(([part, ids]) => `${part}${KEY_VALUE_SEPARATOR}${Array.isArray(ids) ? ids.join(LIST_SEPARATOR) : ids}`)
+          .map(([part, ids]) =>
+            (Array.isArray(ids) ? ids.filter(Boolean).length > 0 : !!ids)
+              ? `${part}${KEY_VALUE_SEPARATOR}${Array.isArray(ids) ? ids.filter(Boolean).join(LIST_SEPARATOR) : ids}`
+              : '',
+          )
           .join(ENTRY_SEPARATOR)
       : ''
   }`;
