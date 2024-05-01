@@ -8,7 +8,7 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
-import { type ObjectSnapshot, type Indexer, headsCodec, type IdsWithHash } from '@dxos/indexing';
+import { type ObjectSnapshot, type Indexer, type IdsWithHash } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -155,7 +155,7 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
           return {
             id: idCodec.encode({ documentId: handle.documentId, objectId }),
             object,
-            hash: headsCodec.encode(getHeads(doc)),
+            hash: getHeads(doc),
           };
         });
       }

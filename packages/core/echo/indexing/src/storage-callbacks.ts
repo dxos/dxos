@@ -8,7 +8,6 @@ import { type SpaceDoc, type AutomergeHost, type StorageCallbacks } from '@dxos/
 import { idCodec } from '@dxos/protocols';
 
 import { type IndexMetadataStore } from './index-metadata-store';
-import { headsCodec } from './types';
 
 export const createStorageCallbacks = ({
   host,
@@ -28,7 +27,7 @@ export const createStorageCallbacks = ({
       return;
     }
 
-    const lastAvailableHash = headsCodec.encode(getHeads(doc));
+    const lastAvailableHash = getHeads(doc);
 
     const getDocumentObjects = (doc: SpaceDoc): string[] => Object.keys(doc.objects ?? {});
 

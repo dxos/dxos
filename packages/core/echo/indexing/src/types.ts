@@ -25,10 +25,10 @@ export type ObjectSnapshot = {
    */
   id: ObjectPointerEncoded;
   object: Partial<ObjectStructure>;
-  hash: ConcatenatedHeadHashes;
+  hash: Heads;
 };
 
-export type IdsWithHash = Map<ObjectPointerEncoded, ConcatenatedHeadHashes>;
+export type IdsWithHeads = Map<ObjectPointerEncoded, Heads>;
 
 export interface Index {
   identifier: string;
@@ -63,13 +63,3 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
-
-/**
- * Document head hashes concatenated with `|` as separator.
- */
-export type ConcatenatedHeadHashes = string;
-
-export const headsCodec = {
-  encode: (heads: Heads): ConcatenatedHeadHashes => heads.join('|'),
-  decode: (hash: ConcatenatedHeadHashes): Heads => hash.split('|'),
-};

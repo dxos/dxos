@@ -27,7 +27,7 @@ describe('Indexer', () => {
         system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
       },
     ];
-    const documents: ObjectSnapshot[] = objects.map((object, index) => ({ id: String(index), object, hash: 'hash' }));
+    const documents: ObjectSnapshot[] = objects.map((object, index) => ({ id: String(index), object, hash: ['hash'] }));
 
     const level = createTestLevel();
     await openAndClose(level);
@@ -40,9 +40,7 @@ describe('Indexer', () => {
       indexStore,
       metadataStore,
       loadDocuments: async function* (pointersWithHash): AsyncGenerator<ObjectSnapshot[], void, void> {
-        yield Array.from(pointersWithHash.entries()).map(
-          ([id, hash]) => documents.find((doc) => doc.id === id && doc.hash === hash)!,
-        );
+        yield Array.from(pointersWithHash.entries()).map(([id, hash]) => documents.find((doc) => doc.id === id)!);
       },
     });
     afterTest(() => indexer.destroy());
@@ -63,7 +61,7 @@ describe('Indexer', () => {
     {
       const doneIndexing = indexer.updated.waitForCount(1);
 
-      const dirtyMap = new Map(documents.map(({ id }) => [id, 'hash']));
+      const dirtyMap = new Map(documents.map(({ id }) => [id, ['hash']]));
       const batch = level.batch();
       metadataStore.markDirty(dirtyMap, batch);
       await batch.write();
@@ -84,7 +82,7 @@ describe('Indexer', () => {
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      await indexer.reIndex(new Map(documents.map(({ id }) => [id, 'hash'])));
+      await indexer.reIndex(new Map(documents.map(({ id }) => [id, ['hash']])));
       await asyncTimeout(doneIndexing, 1000);
     }
 

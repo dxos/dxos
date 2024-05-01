@@ -5,7 +5,7 @@
 import { type Doc, view } from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc, type AutomergeHost } from '@dxos/echo-pipeline';
-import { type ObjectSnapshot, headsCodec, type IdsWithHash } from '@dxos/indexing';
+import { type ObjectSnapshot, type IdsWithHash } from '@dxos/indexing';
 import { idCodec } from '@dxos/protocols';
 
 /**
@@ -17,17 +17,16 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
    */
   // TODO(mykola): Unload automerge handles after usage.
   async function* loadDocuments(objects: IdsWithHash): AsyncGenerator<ObjectSnapshot[], void, void> {
-    for (const [id, hash] of objects.entries()) {
+    for (const [id, heads] of objects.entries()) {
       const { documentId, objectId } = idCodec.decode(id);
       const handle =
         automergeHost.repo.handles[documentId as DocumentId] ?? automergeHost.repo.find(documentId as DocumentId);
 
-      const heads = headsCodec.decode(hash);
       if (!handle.isReady()) {
         // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
         await handle.whenReady();
       }
       const doc: Doc<SpaceDoc> = view(handle.docSync(), heads);
-      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], hash }] : [];
+      yield doc.objects?.[objectId] ? [{ id, object: doc.objects[objectId], hash: heads }] : [];
     }
   };

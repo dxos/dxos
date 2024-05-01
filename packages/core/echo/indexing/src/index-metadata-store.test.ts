@@ -20,7 +20,7 @@ describe('IndexMetadataStore', () => {
     });
 
     const ids = ['1', '2', '3'];
-    const pointersWithHashes = new Map(ids.map((id) => [id, `hash-${id}`]));
+    const pointersWithHashes = new Map(ids.map((id) => [id, [`hash-${id}`]]));
     {
       const batch = level.batch();
       metadataStore.markDirty(pointersWithHashes, batch);
@@ -31,11 +31,11 @@ describe('IndexMetadataStore', () => {
 
     {
       const batch = level.batch();
-      metadataStore.markClean(new Map([['1', 'hash-1']]), batch);
+      metadataStore.markClean(new Map([['1', ['hash-1']]]), batch);
       await batch.write();
       expect((await metadataStore.getDirtyDocuments()).size).to.deep.equal(2);
       expect(await metadataStore.getDirtyDocuments()).to.deep.equal(
-        new Map(ids.slice(1).map((id) => [id, `hash-${id}`])),
+        new Map(ids.slice(1).map((id) => [id, [`hash-${id}`]])),
       );
     }
   });
