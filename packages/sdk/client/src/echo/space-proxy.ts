@@ -408,6 +408,13 @@ export class SpaceProxy implements Space {
     // });
   }
 
+  toJSON() {
+    return {
+      key: this.key.toHex(),
+      state: SpaceState[this.state.get()],
+    };
+  }
+
   private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
   }
