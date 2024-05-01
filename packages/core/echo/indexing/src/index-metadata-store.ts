@@ -85,7 +85,7 @@ export class IndexMetadataStore {
 }
 
 const headsCodec = schema.getCodecForType('dxos.echo.query.Heads');
-let counterOfFailedDecodings = 0;
+const showedWarning = false;
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
   encode: (value: Heads): Uint8Array => headsCodec.encode({ hashes: value }),
   decode: (encodedValue: Uint8Array): Heads => {
@@ -94,10 +94,9 @@ const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
     } catch (err) {
       // TODO(mykola): remove this before 0.7 release.
       // Migration from old format.
-      counterOfFailedDecodings++;
-      if (counterOfFailedDecodings > 1000) {
-        counterOfFailedDecodings = 0;
-        log.warn('Heads decoding failed, trying to decode old format. \nRun `await dxos.client.repair()`');
+      if (!showedWarning) {
+        showedWarning = true;
+        log.warn('Detected legacy encoding of heads in the indexer. \nRun `await dxos.client.repair()`');
       }
       /**
        * Document head hashes concatenated with no  separator.
