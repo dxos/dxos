@@ -47,11 +47,6 @@ export default template.define.script({
                 </a>
               </li>
               <li>
-                <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank' rel='noreferrer'>
-                  Deploying to KUBE
-                </a>
-              </li>
-              <li>
                 <a href='https://docs.dxos.org' target='_blank' rel='noreferrer'>
                   DXOS Documentation
                 </a>
