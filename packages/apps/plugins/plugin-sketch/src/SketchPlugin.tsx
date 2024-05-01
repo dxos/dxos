@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -32,8 +33,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       },
       translations,
       echo: {
-        // TODO(wittjosiah): Expando shouldn't need to be registered.
-        schema: [SketchType, E.ExpandoType],
+        schema: [SketchType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -45,6 +45,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -62,7 +63,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               );
 
               // Add all sketches to the graph.
-              const query = space.db.query(E.Filter.schema(SketchType));
+              const query = space.db.query(Filter.schema(SketchType));
+              subscriptions.add(query.subscribe());
               let previousObjects: SketchType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -122,13 +124,14 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
+            case 'section':
+              // TODO(burdon): Hide tools unless selected.
+              return data.object instanceof SketchType ? (
+                <SketchComponent sketch={data.object} autoZoom={true} className={'h-[400px]'} />
+              ) : null;
             case 'slide':
               return data.slide instanceof SketchType ? (
                 <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
-              ) : null;
-            case 'section':
-              return data.object instanceof SketchType ? (
-                <SketchComponent sketch={data.object} readonly={true} autoZoom={true} className={'h-[400px]'} />
               ) : null;
             default:
               return null;
@@ -140,8 +143,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (intent.action) {
             case SketchAction.CREATE: {
               return {
-                data: E.object(SketchType, {
-                  data: E.object(E.ExpandoType, {}),
+                data: create(SketchType, {
+                  data: create(Expando, {}),
                 }),
               };
             }

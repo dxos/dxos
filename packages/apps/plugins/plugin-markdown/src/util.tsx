@@ -4,13 +4,12 @@
 
 import { type DocumentType } from '@braneframe/types';
 import { type Plugin } from '@dxos/app-framework';
-import { isEchoReactiveObject } from '@dxos/echo-schema';
-import { isTypedObject } from '@dxos/react-client/echo'; // TODO(burdon): Should not expose.
+import { isEchoObject } from '@dxos/react-client/echo';
 
 import { type MarkdownProperties, type MarkdownExtensionProvides } from './types';
 
 export const isMarkdownProperties = (data: unknown): data is MarkdownProperties =>
-  isTypedObject(data) || isEchoReactiveObject(data)
+  isEchoObject(data)
     ? true
     : data && typeof data === 'object'
       ? 'title' in data && typeof data.title === 'string'

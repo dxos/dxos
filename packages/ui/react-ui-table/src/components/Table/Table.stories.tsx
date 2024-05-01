@@ -5,12 +5,13 @@
 import '@dxosTheme';
 
 import { Plugs, PlugsConnected } from '@phosphor-icons/react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
-import { AnchoredOverflow, DensityProvider } from '@dxos/react-ui';
+import { Button, DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 import { range } from '@dxos/util';
 
@@ -35,7 +36,7 @@ faker.seed(911);
 const createItems = (count: number) =>
   range(count).map(
     () =>
-      E.object<Item>({
+      create<Item>({
         publicKey: PublicKey.random(),
         name: faker.commerce.productName(),
         count: faker.datatype.boolean({ probability: 0.9 }) ? faker.number.int({ min: 0, max: 10_000 }) : undefined,
@@ -115,9 +116,19 @@ const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, a
 // Tests
 //
 
+const MinimalTable = (props: any) => {
+  return (
+    <Table.Root>
+      <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Table<any> {...props} />
+      </Table.Viewport>
+    </Table.Root>
+  );
+};
+
 export default {
   title: 'react-ui-table/Table',
-  component: Table,
+  component: MinimalTable,
   args: {
     header: true,
     keyAccessor: (item: Item) => item.publicKey.toHex(),
@@ -186,7 +197,6 @@ export const Empty = {
 
 export const Dynamic = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(50));
 
     useEffect(() => {
@@ -204,26 +214,27 @@ export const Dynamic = {
     const columns = useMemo(() => makeColumns(), []);
 
     return (
-      <AnchoredOverflow.Root classNames='max-bs-[80dvh]' ref={containerRef}>
-        <Table<Item>
-          rowsSelectable='multi'
-          keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns}
-          data={items}
-          fullWidth
-          footer
-          stickyHeader
-          getScrollElement={() => containerRef.current}
-        />
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+            pinLastRow
+          />
+        </Table.Viewport>
+      </Table.Root>
     );
   },
 };
 
 export const Editable = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(200));
 
     const onUpdate: ValueUpdater<Item, any> = useCallback(
@@ -234,26 +245,27 @@ export const Editable = {
     const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
 
     return (
-      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
-        <Table<Item>
-          role='grid'
-          rowsSelectable='multi'
-          keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns}
-          data={items}
-          fullWidth
-          stickyHeader
-          border
-          getScrollElement={() => containerRef.current}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+            pinLastRow
+          />
+        </Table.Viewport>
+      </Table.Root>
     );
   },
 };
 
 export const PinnedLastRow = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(200));
 
     const onUpdate: ValueUpdater<Item, any> = useCallback(
@@ -264,19 +276,75 @@ export const PinnedLastRow = {
     const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
 
     return (
-      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
-        <Table<Item>
-          role='grid'
-          rowsSelectable='multi'
-          keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns}
-          data={items}
-          fullWidth
-          stickyHeader
-          border
-          getScrollElement={() => containerRef.current}
-          pinLastRow
-        />
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+            pinLastRow
+          />
+        </Table.Viewport>
+      </Table.Root>
+    );
+  },
+};
+
+export const InsertDelete = {
+  render: () => {
+    const [items, setItems] = useState<Item[]>(createItems(10));
+
+    const onUpdate: ValueUpdater<Item, any> = useCallback(
+      (item, prop, value) => setItems((items) => updateItems(items, item.publicKey, prop, value)),
+      [setItems],
+    );
+
+    const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
+
+    const onInsertFirst = () => {
+      setItems((items) => [...createItems(1), ...items]);
+    };
+
+    const onInsertLast = () => {
+      setItems((items) => [...items, ...createItems(1)]);
+    };
+
+    const onDeleteFirst = () => {
+      setItems(([_first, ...rest]) => rest);
+    };
+
+    const onDeleteLast = () => {
+      setItems((items) => [...items.slice(0, items.length - 1)]);
+    };
+
+    return (
+      <div>
+        <div className='flex flex-row gap-2'>
+          <Button onClick={onInsertFirst}>Insert first</Button>
+          <Button onClick={onInsertLast}>Insert last</Button>
+          <Button onClick={onDeleteFirst}>Delete first</Button>
+          <Button onClick={onDeleteLast}>Delete last</Button>
+        </div>
+        <Table.Root>
+          <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+            <Table.Table<Item>
+              role='grid'
+              rowsSelectable='multi'
+              keyAccessor={(row) => row.publicKey.toHex()}
+              columns={columns}
+              data={items}
+              fullWidth
+              stickyHeader
+              border
+              pinLastRow
+            />
+          </Table.Viewport>
+        </Table.Root>
       </div>
     );
   },
@@ -284,7 +352,6 @@ export const PinnedLastRow = {
 
 export const Resizable = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(10));
 
     const onUpdate: ValueUpdater<Item, any> = useCallback(
@@ -293,25 +360,24 @@ export const Resizable = {
     );
 
     return (
-      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
-        <Table<Item>
-          rowsSelectable='multi'
-          keyAccessor={(row) => row.publicKey.toHex()}
-          columns={makeColumns(onUpdate)}
-          data={items}
-          fullWidth
-          stickyHeader
-          getScrollElement={() => containerRef.current}
-          // onColumnResize={handleColumnResize}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={makeColumns(onUpdate)}
+            data={items}
+            fullWidth
+            stickyHeader
+          />
+        </Table.Viewport>
+      </Table.Root>
     );
   },
 };
 
 export const TenThousandRows = {
   render: () => {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const [items, setItems] = useState<Item[]>(createItems(10000));
 
     const onUpdate: ValueUpdater<Item, any> = useCallback(
@@ -322,19 +388,123 @@ export const TenThousandRows = {
     const columns = useMemo(() => makeColumns(onUpdate), [onUpdate]);
 
     return (
-      <div ref={containerRef} className='fixed inset-0 overflow-auto'>
-        <Table<Item>
-          role='grid'
-          rowsSelectable='multi'
-          keyAccessor={(row) => row.publicKey.toHex()}
-          columns={columns}
-          data={items}
-          fullWidth
-          stickyHeader
-          border
-          getScrollElement={() => containerRef.current}
-        />
-      </div>
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={items}
+            fullWidth
+            stickyHeader
+            border
+          />{' '}
+        </Table.Viewport>
+      </Table.Root>
+    );
+  },
+};
+
+registerSignalRuntime();
+const state = create({ items: createItems(10) });
+
+export const RealTimeUpdates = {
+  args: {
+    periodicMutations: true,
+    mutationInterval: 1000,
+    periodicDeletions: false,
+    deletionInterval: 5000,
+    periodicInsertions: false,
+    insertionInterval: 3000,
+  },
+  argTypes: {
+    mutationInterval: { control: 'number' },
+    periodicDeletions: { control: 'boolean' },
+    deletionInterval: { control: 'number' },
+    periodicInsertions: { control: 'boolean' },
+    insertionInterval: { control: 'number' },
+  },
+  render: ({
+    periodicMutations,
+    mutationInterval,
+    periodicDeletions,
+    deletionInterval,
+    periodicInsertions,
+    insertionInterval,
+  }: any) => {
+    useEffect(() => {
+      if (!periodicMutations) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        if (state.items.length === 0) {
+          return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        console.log('Mutating row', randomIndex);
+        state.items[randomIndex].name = faker.commerce.productName();
+        state.items[randomIndex].count = Math.floor(Math.random() * 1000);
+        state.items[randomIndex].started = new Date();
+      }, mutationInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicMutations, mutationInterval, state.items]);
+
+    useEffect(() => {
+      if (!periodicInsertions) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        console.log('Inserting...');
+        state.items.push(createItems(1)[0]);
+      }, insertionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicInsertions, insertionInterval, state.items]);
+
+    useEffect(() => {
+      if (!periodicDeletions) {
+        return;
+      }
+
+      const interval = setInterval(() => {
+        if (state.items.length === 0) {
+          return;
+        }
+
+        console.log('Deleting');
+
+        // Randomly delete a row from state.items
+        const randomIndex = Math.floor(Math.random() * state.items.length);
+        state.items.splice(randomIndex, 1);
+      }, deletionInterval);
+
+      return () => clearInterval(interval);
+    }, [periodicDeletions, deletionInterval, state.items]);
+
+    const onUpdate = useCallback((...args: any[]) => {}, []);
+    const columns = useMemo(() => makeColumns(onUpdate), []);
+
+    return (
+      <Table.Root>
+        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Table<Item>
+            role='grid'
+            rowsSelectable='multi'
+            keyAccessor={(row) => row.publicKey.toHex()}
+            columns={columns}
+            data={state.items}
+            fullWidth
+            stickyHeader
+            border
+            pinLastRow
+          />
+        </Table.Viewport>
+      </Table.Root>
     );
   },
 };

@@ -67,7 +67,11 @@ export const useAgentHandlers = ({
     invitations.forEach((invitation) => invitation.cancel());
 
     // TODO(nf): do this work in the hosting provider client?
-    const invitation = client.halo.share({ type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE });
+    const invitation = client.halo.share({
+      type: Invitation.Type.INTERACTIVE,
+      authMethod: Invitation.AuthMethod.NONE,
+      multiUse: true,
+    });
 
     invitation.subscribe(handleAgentCreate);
   };

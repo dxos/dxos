@@ -10,4 +10,4 @@ export type TestSchemaMap<T extends string> = Record<T, DynamicEchoSchema>;
 
 export type TestGeneratorMap<T extends string> = Record<T, (provider: TestObjectProvider<T> | undefined) => any>;
 
-export type TestObjectProvider<T extends string> = (type: T) => ReactiveObject<any>[];
+export type TestObjectProvider<T extends string> = (type: T) => Promise<ReactiveObject<any>[]>;

@@ -7,7 +7,7 @@ import React from 'react';
 import { type Step } from 'react-joyride';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
@@ -21,7 +21,7 @@ export type HelpPluginOptions = { steps?: Step[] };
 
 export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<HelpPluginProvides> => {
   const settings = new LocalStorageStore<HelpSettingsProps>(HELP_PLUGIN, { showHints: true, showWelcome: true });
-  const state = E.object<{ running: boolean }>({ running: false });
+  const state = create<{ running: boolean }>({ running: false });
 
   return {
     meta,

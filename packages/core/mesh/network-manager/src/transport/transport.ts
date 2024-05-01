@@ -9,32 +9,46 @@ import { type Signal } from '@dxos/protocols/proto/dxos/mesh/swarm';
 
 export enum TransportKind {
   SIMPLE_PEER = 'SIMPLE_PEER',
-  LIBDATACHANNEL = 'LIBDATACHANNEL',
   SIMPLE_PEER_PROXY = 'SIMPLE_PEER_PROXY',
+  LIBDATACHANNEL = 'LIBDATACHANNEL',
   MEMORY = 'MEMORY',
   TCP = 'TCP',
 }
 
 /**
- * Abstraction over a P2P connection transport. Currently either WebRTC or in-memory.
+ * Abstraction over a P2P connection transport.
+ * Currently, WebRTC or in-memory.
  */
+// TODO(burdon): Create abstract base class for common logging and error handling?
 export interface Transport {
   closed: Event;
   connected: Event;
   errors: ErrorStream;
 
+  open(): Promise<void>;
+  close(): Promise<void>;
+
+  get isOpen(): boolean;
+
   /**
-   * Transport-specfic stats.
+   * Handle message from signaling.
+   */
+  onSignal(signal: Signal): Promise<void>;
+
+  /**
+   * Transport-specific stats.
    */
   getStats(): Promise<TransportStats>;
+
   /**
-   * Transport-specfic connection details.
+   * Transport-specific connection details.
    */
   getDetails(): Promise<string>;
-  destroy(): Promise<void>;
-  signal(signal: Signal): void;
 }
 
+/**
+ * Common options for all transports.
+ */
 export type TransportOptions = {
   /**
    * Did local node initiate this connection.
@@ -42,23 +56,20 @@ export type TransportOptions = {
   initiator: boolean;
 
   /**
-   * Wire protocol.
+   * Wire protocol for data stream.
    */
   stream: NodeJS.ReadWriteStream;
 
   /**
-   * Send a signal message to remote peer.
+   * Sends signal message to remote peer.
    */
-  sendSignal: (signal: Signal) => Promise<void>; // TODO(burdon): Remove async?
-
-  timeout?: number;
+  sendSignal: (signal: Signal) => Promise<void>;
 
   sessionId?: PublicKey;
+
+  timeout?: number;
 };
 
-/**
- *
- */
 export interface TransportFactory {
   createTransport(options: TransportOptions): Transport;
 }

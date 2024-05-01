@@ -5,7 +5,7 @@
 import base from 'base-x';
 
 import { schema } from '@dxos/protocols';
-import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 // Encode with URL-safe alpha-numeric characters.
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
@@ -17,7 +17,12 @@ const codec = schema.getCodecForType('dxos.client.services.Invitation');
  */
 export class InvitationEncoder {
   static decode(text: string): Invitation {
-    return codec.decode(base62.decode(text));
+    const decodedInvitation = codec.decode(base62.decode(text));
+    if (decodedInvitation.type === Invitation.Type.MULTIUSE) {
+      decodedInvitation.type = Invitation.Type.INTERACTIVE;
+      decodedInvitation.multiUse = true;
+    }
+    return decodedInvitation;
   }
 
   static encode(invitation: Invitation): string {
@@ -30,6 +35,7 @@ export class InvitationEncoder {
         swarmKey: invitation.swarmKey,
         state: invitation.state,
         timeout: invitation.timeout,
+        guestKeypair: invitation.guestKeypair,
         // TODO(wittjosiah): Make these optional to encode for greater privacy.
         ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
         ...(invitation.target ? { target: invitation.target } : {}),

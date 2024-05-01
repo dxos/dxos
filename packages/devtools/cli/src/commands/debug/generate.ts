@@ -6,7 +6,7 @@ import { Args, Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { Expando } from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
 import { BaseCommand } from '../../base-command';
@@ -56,12 +56,12 @@ export default class Generate extends BaseCommand<typeof Generate> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
-        space?.db.add(new Expando({ type, title: faker.lorem.word() }));
+        space?.db.add(create({ type, title: faker.lorem.word() }));
         await space.db.flush();
         await pause();
       }
 
-      const { objects } = space?.db.query({ type });
+      const { objects } = await space?.db.query({ type })?.run();
       if (objects.length) {
         for (let i = 0; i < this.flags.mutations; i++) {
           const object = faker.helpers.arrayElement(objects);

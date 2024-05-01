@@ -20,9 +20,6 @@
       "@braneframe/plugin-client/meta": [
         "packages/apps/plugins/plugin-client/src/meta.ts"
       ],
-      "@braneframe/plugin-client/space-properties": [
-        "packages/apps/plugins/plugin-client/src/space-properties.ts"
-      ],
       "@braneframe/plugin-debug": [
         "packages/apps/plugins/plugin-debug/src/index.ts"
       ],

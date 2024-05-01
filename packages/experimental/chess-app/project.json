@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "chess-app",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {
@@ -9,21 +12,11 @@
       "options": {
         "entryPoints": [
           "packages/experimental/chess-app/src/index.ts",
-          "packages/experimental/chess-app/src/proto/index.ts",
           "packages/experimental/chess-app/src/types.ts"
         ]
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
     "serve": {
       "executor": "@nx/vite:dev-server",
       "options": {

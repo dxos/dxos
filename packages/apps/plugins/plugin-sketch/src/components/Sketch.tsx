@@ -10,18 +10,10 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { type SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
-import { type TextObject } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
-// TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
-
 import { useStoreAdapter } from '../hooks';
-
-const styles = {
-  background: '[&>div>span>div>div]:bg-white dark:[&>div>span>div>div]:bg-black',
-};
 
 export type SketchComponentProps = {
   sketch: SketchType;
@@ -33,8 +25,6 @@ export type SketchComponentProps = {
 
 const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
   const { themeMode } = useThemeContext();
-
-  // TODO(burdon): Custom fonts.
 
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
@@ -50,7 +40,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     }
   }, [editor, themeMode]);
 
-  const store = useStoreAdapter(sketch.data as unknown as TextObject);
+  // TODO(dmaretskyi): Handle nullability.
+  const store = useStoreAdapter(sketch.data!);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -61,6 +52,12 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     if (!autoZoom) {
       return;
     }
+
+    // TODO(burdon): Supported in 2.1.4
+    // const zoomToContent = (animate = true) => {
+    //   editor?.zoomToContent({ duration: animate ? 250 : 0 });
+    //   setReady(true);
+    // };
 
     const zoomToContent = (animate = true) => {
       if (!editor) {
@@ -96,32 +93,39 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     return () => subscription();
   }, [editor, width, height]);
 
+  // https://tldraw.dev/docs/user-interface
   // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
+  // https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+  // TODO(burdon): Fonts are hard coded in TextStylePickerSet.
+  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/ui/components/StylePanel/DefaultStylePanelContent.tsx
+  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/styles.tsx
   return (
     <div
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx(
-        'w-full h-full',
-        // styles.background, // TODO(burdon): ???
-        className,
-      )}
+      className={mx('w-full h-full', className)}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
+      {/*
+        TODO(burdon): Error when navigating between pages.
+          TypeError: Cannot read properties of undefined (reading 'currentPageId')
+          return this.getInstanceState().currentPageId;
+      */}
       <Tldraw
+        // Setting the key forces re-rendering when the content changes.
         key={sketch.id}
         store={store}
+        hideUi={readonly}
         components={{
-          DebugMenu: null,
-          Grid: DefaultGrid,
+          DebugPanel: null,
+          Grid: DefaultGrid, // TODO(burdon): Customize.
           HelpMenu: null,
           MenuPanel: null,
           NavigationPanel: null,
           TopPanel: null,
-          ZoomMenu: null,
+          // ZoomMenu: null,
         }}
-        hideUi={readonly}
         onMount={setEditor}
       />
     </div>

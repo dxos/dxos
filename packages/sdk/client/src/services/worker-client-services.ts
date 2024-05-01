@@ -4,7 +4,7 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { SharedWorkerConnection } from '@dxos/client-services';
+import { type SharedWorkerConnection } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
@@ -15,6 +15,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
 import { ClientServicesProxy } from './service-proxy';
+import { RPC_TIMEOUT } from '../common';
 import { LOCK_KEY } from '../lock-key';
 
 /**
@@ -117,9 +118,12 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs({
-      filters: this._logFilter,
-    });
+    this._loggingStream = this._services.services.LoggingService.queryLogs(
+      {
+        filters: this._logFilter,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:

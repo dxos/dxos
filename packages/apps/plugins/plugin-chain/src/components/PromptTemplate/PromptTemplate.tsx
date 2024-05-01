@@ -5,14 +5,13 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
-import * as E from '@dxos/echo-schema';
-import { getTextContent } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
   createDataExtensions,
   createThemeExtensions,
-  useDocAccessor,
   useTextEditor,
 } from '@dxos/react-ui-editor';
 import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
@@ -59,7 +58,7 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = getTextContent(prompt.source) ?? '';
+  const text = prompt.source?.content ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -88,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(E.object(ChainInput, { name }));
+        prompt.inputs.push(create(ChainInput, { name }));
       }
     });
 
@@ -108,13 +107,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
-  const { doc, accessor } = useDocAccessor(prompt.source!);
-
   const { parentRef } = useTextEditor(
     () => ({
-      doc,
+      doc: prompt.source?.content,
       extensions: [
-        createDataExtensions({ id: prompt.id, text: accessor }),
+        createDataExtensions({ id: prompt.id, text: prompt.source && createDocAccessor(prompt.source, ['content']) }),
         createBasicExtensions({
           bracketMatching: false,
           lineWrapping: true,
@@ -129,7 +126,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         promptExtension,
       ],
     }),
-    [themeMode, accessor, prompt.id],
+    [themeMode, prompt],
   );
   usePromptInputs(prompt);
 

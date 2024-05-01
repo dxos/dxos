@@ -57,8 +57,9 @@ export default class Open extends BaseCommand<typeof Open> {
 
       if (this.flags.invite) {
         const observable = client.halo.share({
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.NONE,
+          multiUse: true,
         });
 
         const invitationSuccess = hostInvitation({

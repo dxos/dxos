@@ -71,22 +71,8 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const handleRepair = async () => {
     try {
       const info = await client.repair();
-      {
-        // Fix storage config.
-        const config = {
-          runtime: {
-            client: {
-              storage: {
-                dataStore: client.config.values.runtime?.client?.storage?.dataStore,
-              },
-            },
-          },
-        };
-        setStorageConfig(config);
-        await SaveConfig(config);
+      setStorageConfig(await Storage());
 
-        info.storageConfig = storageConfig;
-      }
       handleToast({ title: t('settings repair success'), description: JSON.stringify(info, undefined, 2) });
     } catch (err: any) {
       handleToast({ title: t('settings repair failed'), description: err.message });

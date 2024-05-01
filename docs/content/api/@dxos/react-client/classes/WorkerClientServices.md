@@ -1,5 +1,5 @@
 # Class `WorkerClientServices`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/worker-client-services.d.ts:19]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/worker-client-services.d.ts:21]()</sub>
 
 
 Proxy to host client service in worker.

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "client-protocol",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/client-protocol/src",
   "projectType": "library",
   "targets": {
@@ -13,15 +16,6 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
     "test": {}
   },
   "implicitDependencies": [

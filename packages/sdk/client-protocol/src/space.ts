@@ -3,7 +3,8 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
   type Invitation,
@@ -17,11 +18,6 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
-  /**
-   * @deprecated
-   */
-  get db(): never;
-
   get data(): SpaceData;
 
   /**
@@ -73,6 +69,10 @@ export interface Space {
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get members(): MulticastObservable<SpaceMember[]>;
 
+  /**
+   * @deprecated
+   */
+  // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
   open(): Promise<void>;

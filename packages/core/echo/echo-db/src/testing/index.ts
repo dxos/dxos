@@ -1,5 +1,7 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2020 DXOS.org
 //
 
-export {};
+export * from './testing';
+export * from './schema';
+export * from './echo-test-builder';

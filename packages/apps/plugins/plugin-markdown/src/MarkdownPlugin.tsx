@@ -18,9 +18,9 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/echo-schema';
-import * as E from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { getSpace, Filter, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -55,17 +55,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
     experimental: false,
   });
 
-  const state = E.object<MarkdownPluginState>({ extensions: [] });
+  const state = create<MarkdownPluginState>({ extensions: [] });
 
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   // TODO(burdon): Move downstream outside of plugin.
-  const getCustomExtensions = (document?: DocumentType) => {
+  const getCustomExtensions = (document?: DocumentType, query?: Query<DocumentType>) => {
     // Configure extensions.
     const extensions = getExtensions({
       dispatch: intentPlugin?.provides.intent.dispatch,
       settings: settings.values,
       document,
+      query,
     });
 
     // Add extensions from other plugins.
@@ -122,6 +123,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           const subscriptions = new EventSubscriptions();
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
             spaces.forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
@@ -140,6 +142,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               // Add all documents to the graph.
               const query = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -218,15 +221,18 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         component: ({ data, role, ...props }, forwardedRef) => {
           // TODO(wittjosiah): Ideally this should only be called when the editor is actually being used.
           //   We probably want a better pattern for splitting this surface resolver up.
-          const extensions = useMemo(
-            () =>
-              data.active instanceof DocumentType
-                ? getCustomExtensions(data.active)
-                : data.object instanceof DocumentType
-                  ? getCustomExtensions(data.object)
-                  : getCustomExtensions(),
-            [data.active, data.object, settings.values.editorMode],
-          );
+          const doc =
+            data.active instanceof DocumentType
+              ? data.active
+              : data.object instanceof DocumentType
+                ? data.object
+                : undefined;
+          const space = doc && getSpace(doc);
+          const extensions = useMemo(() => {
+            const query = space?.db.query(Filter.schema(DocumentType));
+            query?.subscribe();
+            return getCustomExtensions(doc, query);
+          }, [doc, space, settings.values.editorMode]);
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
@@ -305,10 +311,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               return {
-                data: E.object(DocumentType, {
-                  content: E.object(TextV0Type, { content: '' }),
+                data: create(DocumentType, {
+                  content: create(TextV0Type, { content: '' }),
                   comments: [],
-                }) satisfies E.ReactiveObject<DocumentType>,
+                }) satisfies ReactiveObject<DocumentType>,
               };
             }
 

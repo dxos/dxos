@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "labs-functions",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/labs-functions/src",
   "projectType": "library",
   "targets": {

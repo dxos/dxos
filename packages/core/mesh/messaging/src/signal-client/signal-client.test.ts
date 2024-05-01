@@ -52,10 +52,10 @@ describe('SignalClient', () => {
       },
       async () => {},
     );
-    api1.open();
+    void api1.open();
     afterTest(() => api1.close());
     const api2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
-    api2.open();
+    void api2.open();
     afterTest(() => api2.close());
 
     await api1.subscribeMessages(peer1);
@@ -87,7 +87,7 @@ describe('SignalClient', () => {
         }
       },
     );
-    api1.open();
+    void api1.open();
     afterTest(() => api1.close());
 
     const trigger2 = new Trigger();
@@ -100,7 +100,7 @@ describe('SignalClient', () => {
         }
       },
     );
-    api2.open();
+    void api2.open();
     afterTest(() => api2.close());
     await api1.join({ topic, peerId: peer1 });
     await api2.join({ topic, peerId: peer2 });
@@ -122,7 +122,7 @@ describe('SignalClient', () => {
       },
       async () => {},
     );
-    api1.open();
+    void api1.open();
     afterTest(() => api1.close());
 
     await api1.subscribeMessages(peer1);
@@ -150,11 +150,11 @@ describe('SignalClient', () => {
       },
       async () => {},
     );
-    client1.open();
+    void client1.open();
     afterTest(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
-    client2.open();
+    void client2.open();
     afterTest(() => client2.close());
 
     await client1.subscribeMessages(peer1);
@@ -203,11 +203,11 @@ describe('SignalClient', () => {
       },
       async () => {},
     );
-    client1.open();
+    void client1.open();
     afterTest(() => client1.close());
 
     const client2 = new SignalClient(broker1.url(), (async () => {}) as any, async () => {});
-    client2.open();
+    void client2.open();
     afterTest(() => client2.close());
 
     const message = {
@@ -233,7 +233,7 @@ describe('SignalClient', () => {
     //
 
     await client1.close();
-    client1.open();
+    void client1.open();
     await waitForSubscription(client1, peer1);
 
     {
@@ -259,14 +259,14 @@ describe('SignalClient', () => {
         async () => {},
         async () => {},
       );
-      api1.open();
+      void api1.open();
       afterTest(() => api1.close());
       const api2 = new SignalClient(
         broker2.url(),
         async () => {},
         async () => {},
       );
-      api2.open();
+      void api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });
@@ -300,10 +300,10 @@ describe('SignalClient', () => {
         async () => {},
         async () => {},
       );
-      api1.open();
+      void api1.open();
       afterTest(() => api1.close());
       const api2 = new SignalClient(broker2.url(), signalMock, async () => {});
-      api2.open();
+      void api2.open();
       afterTest(() => api2.close());
 
       await api1.join({ topic, peerId: peer1 });

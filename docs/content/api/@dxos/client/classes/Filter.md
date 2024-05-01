@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/query/filter.d.ts:23]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:21]()</sub>
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 ## Properties
 ### [and]()
-Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[EchoObject](/api/@dxos/client/interfaces/EchoObject)&gt;[]</code>
+Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;[]</code>
 
 
 
@@ -37,7 +37,7 @@ Type: <code>[QueryOptions](/api/@dxos/client/interfaces/QueryOptions)</code>
 
 
 ### [or]()
-Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[EchoObject](/api/@dxos/client/interfaces/EchoObject)&gt;[]</code>
+Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;[]</code>
 
 
 
@@ -111,7 +111,7 @@ Arguments:
 
 
 
-Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[EchoObject](/api/@dxos/client/interfaces/EchoObject)&gt;</code>
+Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;</code>
 
 Arguments: 
 
@@ -147,13 +147,13 @@ Arguments:
 
 
 
-Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[Expando](/api/@dxos/client/types/Expando)&gt;</code>
+Returns: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;Mutable&lt;T&gt;&gt;</code>
 
 Arguments: 
 
-`schema`: <code>[Schema](/api/@dxos/client/classes/Schema)</code>
+`schema`: <code>Schema&lt;T, T, never&gt;</code>
 
-`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;any&gt;</code>
+`filter`: <code>Record&lt;string, any&gt; | OperatorFilter&lt;T&gt;</code>
 
 
 ### [typename(typename, \[filter\])]()
