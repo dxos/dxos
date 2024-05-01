@@ -26,20 +26,26 @@ export const applyActiveAdjustment = (
             switch (direction) {
               case 'start':
                 if (index < 1) {
+                  console.log('[don’t move left]', index, size);
                   return active;
                 } else {
+                  const nextMain = arrayMove(active.main, index, index - 1);
+                  console.log('[move left]', active.main, index, size, nextMain);
                   return {
                     ...active,
-                    main: arrayMove(active.main, index, index + 1),
+                    main: [...nextMain],
                   };
                 }
               case 'end':
                 if (index > size - 2) {
+                  console.log('[don’t move right]', index, size);
                   return active;
                 } else {
+                  const nextMain = arrayMove(active.main, index, index + 1);
+                  console.log('[move right]', active.main, index, size, nextMain);
                   return {
                     ...active,
-                    main: arrayMove(active.main, index, index - 1),
+                    main: [...nextMain],
                   };
                 }
               default:
