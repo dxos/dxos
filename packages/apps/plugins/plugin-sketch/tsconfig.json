@@ -24,6 +24,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/invariant"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -34,6 +37,9 @@
     },
     {
       "path": "../../../core/echo/automerge"
+    },
+    {
+      "path": "../../../core/echo/echo-db"
     },
     {
       "path": "../../../core/echo/echo-schema"
