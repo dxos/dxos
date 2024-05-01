@@ -16,7 +16,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type Index, type IdsWithHeads, type ObjectSnapshot } from './types';
+import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -32,7 +32,7 @@ export type IndexerParams = {
   /**
    * Load documents by their pointers at specific hash.
    */
-  loadDocuments: (ids: IdsWithHeads) => AsyncGenerator<ObjectSnapshot[]>;
+  loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
 };
 
 @trace.resource()
@@ -62,7 +62,7 @@ export class Indexer {
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
-  private readonly _loadDocuments: (ids: IdsWithHeads) => AsyncGenerator<ObjectSnapshot[]>;
+  private readonly _loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     this._db = db;
@@ -150,7 +150,7 @@ export class Indexer {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
-  async reIndex(idToHeads: IdsWithHeads) {
+  async reIndex(idToHeads: IdToHeads) {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
@@ -178,8 +178,8 @@ export class Indexer {
     if (this._ctx.disposed) {
       return;
     }
-    const pointersWithHashes = await this._metadataStore.getDirtyDocuments();
-    if (pointersWithHashes.size === 0 || this._ctx.disposed) {
+    const idToHeads = await this._metadataStore.getDirtyDocuments();
+    if (idToHeads.size === 0 || this._ctx.disposed) {
       return;
     }
 
@@ -192,7 +192,7 @@ export class Indexer {
     };
 
     const updates: boolean[] = [];
-    for await (const documents of this._loadDocuments(pointersWithHashes)) {
+    for await (const documents of this._loadDocuments(idToHeads)) {
       if (this._ctx.disposed) {
         return;
       }

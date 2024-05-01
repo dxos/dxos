@@ -28,7 +28,7 @@ export type ObjectSnapshot = {
   heads: Heads;
 };
 
-export type IdsWithHeads = Map<ObjectPointerEncoded, Heads>;
+export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
 
 export interface Index {
   identifier: string;

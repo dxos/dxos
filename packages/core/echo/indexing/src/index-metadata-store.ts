@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
 
-import { type IdsWithHeads } from './types';
+import { type IdToHeads } from './types';
 
 export type IndexMetadataStoreParams = {
   db: SubLevelDB;
@@ -41,19 +41,19 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async getDirtyDocuments(): Promise<IdsWithHeads> {
+  async getDirtyDocuments(): Promise<IdToHeads> {
     return new Map(await this._lastSeen.iterator<ObjectPointerEncoded>({}).all());
   }
 
   /**
    * @returns All document id's that were already indexed. May include dirty documents.
    */
-  async getAllIndexedDocuments(): Promise<IdsWithHeads> {
+  async getAllIndexedDocuments(): Promise<IdToHeads> {
     return new Map(await this._lastIndexed.iterator<ObjectPointerEncoded>({}).all());
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToHeads: IdsWithHeads, batch: BatchLevel) {
+  markDirty(idToHeads: IdToHeads, batch: BatchLevel) {
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
     }
@@ -67,7 +67,7 @@ export class IndexMetadataStore {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markClean(idToHeads: IdsWithHeads, batch: BatchLevel) {
+  markClean(idToHeads: IdToHeads, batch: BatchLevel) {
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
       batch.del(id, { sublevel: this._lastSeen });
