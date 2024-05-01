@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { CURRENT_VERSION, schema } from './schema';
+import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
 import { type Unsubscribe } from '../types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
@@ -300,8 +300,7 @@ const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number):
       return acc;
     }, {});
 
-    // const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
-    const snapshot = store.migrateSnapshot({ schema: schema[version], store: serialized });
+    const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
     try {
       log.info('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
       store.loadSnapshot(snapshot);

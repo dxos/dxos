@@ -53,6 +53,12 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       return;
     }
 
+    // TODO(burdon): Supported in 2.1.4
+    // const zoomToContent = (animate = true) => {
+    //   editor?.zoomToContent({ duration: animate ? 250 : 0 });
+    //   setReady(true);
+    // };
+
     const zoomToContent = (animate = true) => {
       if (!editor) {
         return;
