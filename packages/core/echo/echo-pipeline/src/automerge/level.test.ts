@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 import { Level } from 'level';
+import { type MixedEncoding } from 'level-transcoder';
 
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
@@ -78,5 +79,36 @@ describe('Level', () => {
       const sublevel2 = sublevel.sublevel('');
       expect(sublevel2.prefixKey('', 'utf8')).to.equal('!!!!');
     }
+  });
+
+  test('swap encoding', async () => {
+    const level = createTestLevel();
+    await openAndClose(level);
+
+    const encoding: MixedEncoding<string, string, string> = {
+      encode: (value: string): string => value + '_old',
+      decode: (encodedValue: string): string => encodedValue.replace('_old', ''),
+      format: 'utf8',
+    };
+
+    const subLevel = level.sublevel('sublevel');
+
+    const key = 'key';
+    const value = 'value';
+
+    await subLevel.put(key, value, { valueEncoding: encoding });
+    expect(await subLevel.get(key, { valueEncoding: encoding })).to.equal(value);
+
+    // Swap encoding
+    const newEncoding: MixedEncoding<string, string, string> = {
+      encode: (value: string): string => value + '_new',
+      decode: (encodedValue: string): string => {
+        expect(encodedValue.endsWith('_old')).to.be.true;
+        return encodedValue.replace('_old', '');
+      },
+      format: 'utf8',
+    };
+
+    expect(await subLevel.get(key, { valueEncoding: newEncoding })).to.equal(value);
   });
 });
