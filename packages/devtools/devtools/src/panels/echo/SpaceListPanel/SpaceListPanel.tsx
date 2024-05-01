@@ -126,7 +126,7 @@ export const SpaceListPanel: FC = () => {
     const { open, ready } = space.internal.data.metrics ?? {};
     return {
       key: space.key,
-      name: space.properties.name,
+      name: space.isOpen ? space.properties.name : undefined,
       objects: space.db.objects.length,
       members: space.members.get().length,
       startup: open && ready ? ready.getTime() - open.getTime() : -1,
