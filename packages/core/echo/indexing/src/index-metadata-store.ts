@@ -85,7 +85,7 @@ export class IndexMetadataStore {
 }
 
 const headsCodec = schema.getCodecForType('dxos.echo.query.Heads');
-const showedWarning = false;
+let showedWarning = false;
 const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
   encode: (value: Heads): Uint8Array => headsCodec.encode({ hashes: value }),
   decode: (encodedValue: Uint8Array): Heads => {
