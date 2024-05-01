@@ -85,8 +85,10 @@ export const DeckLayout = ({
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarId = firstSidebarId(activeParts);
   const sidebarNode = sidebarId ? graph.findNode(sidebarId) : null;
+  const sidebarAvailable = sidebarId === NAV_ID || !!sidebarNode;
   const complementaryId = firstComplementaryId(activeParts);
   const complementaryNode = complementaryId ? graph.findNode(complementaryId) : null;
+  const complementaryAvailable = complementaryId === NAV_ID || !!complementaryNode;
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -114,11 +116,10 @@ export const DeckLayout = ({
       </div>
 
       <Main.Root
-        navigationSidebarOpen={(sidebarId === NAV_ID || !!sidebarNode) && (context.sidebarOpen as boolean)}
+        navigationSidebarOpen={sidebarAvailable && (context.sidebarOpen as boolean)}
         onNavigationSidebarOpenChange={(next) => (context.sidebarOpen = next)}
         {...(complementarySidebarOpen !== null && {
-          complementarySidebarOpen:
-            (complementaryId === NAV_ID || !!complementaryNode) && (context.complementarySidebarOpen as boolean),
+          complementarySidebarOpen: complementaryAvailable && (context.complementarySidebarOpen as boolean),
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
@@ -152,12 +153,22 @@ export const DeckLayout = ({
         <Main.Notch>
           <Surface role='notch-start' />
           <Button
+            disabled={!sidebarAvailable}
             onClick={() => (context.sidebarOpen = !context.sidebarOpen)}
             variant='ghost'
-            classNames='p-0 is-[--rail-action] border-bs-4 border-be-4 border-transparent bg-clip-padding'
+            classNames='p-1'
           >
             <span className='sr-only'>{t('open navigation sidebar label')}</span>
             <MenuIcon weight='light' className={getSize(5)} />
+          </Button>
+          <Button
+            disabled={!complementaryAvailable}
+            onClick={() => (context.complementarySidebarOpen = !context.complementarySidebarOpen)}
+            variant='ghost'
+            classNames='p-1'
+          >
+            <span className='sr-only'>{t('open complementary sidebar label')}</span>
+            <MenuIcon mirrored weight='light' className={getSize(5)} />
           </Button>
           <Surface role='notch-end' />
         </Main.Notch>

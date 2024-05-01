@@ -300,11 +300,10 @@ export const DeckPlugin = ({
                     ? Object.entries(intent.data.activeParts).reduce(
                         (acc: ActiveParts, [part, ids]) => {
                           const partMembers = new Set<string>();
-                          // Add opened members first so they appear at the beginning.
-                          (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
                           (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
                             partMembers.add(id),
                           );
+                          (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
                           acc[part] = Array.from(partMembers).filter(Boolean);
                           return acc;
                         },

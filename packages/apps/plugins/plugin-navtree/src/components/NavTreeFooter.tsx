@@ -33,7 +33,10 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
   return (
     <div
       role='none'
-      className='bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end'
+      className={mx(
+        'bs-[--rail-size] pbe-[env(safe-area-inset-bottom)] box-content separator-separator border-bs pli-1 flex justify-end',
+        part[0] === 'complementary' && 'md:justify-end flex-row-reverse',
+      )}
     >
       <Popover.Root>
         <Popover.Trigger asChild>
@@ -122,8 +125,8 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
       <PlankHeading.Controls
         part={part}
         variant='hide-disabled'
-        increment={false}
-        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'end' : 'both'}
+        increment={part[0] === 'main'}
+        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
       />
     </div>
