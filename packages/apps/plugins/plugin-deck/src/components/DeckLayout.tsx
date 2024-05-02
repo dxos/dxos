@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React from 'react';
+import { Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import React, { Fragment } from 'react';
 
-import { useGraph } from '@braneframe/plugin-graph';
+import { useGraph, type Node } from '@braneframe/plugin-graph';
 import {
   Surface,
   type Toast as ToastSchema,
@@ -13,9 +13,20 @@ import {
   isActiveParts,
   type ActiveParts,
   type PartIdentifier,
+  NavigationAction,
+  useIntent,
 } from '@dxos/app-framework';
-import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
-import { Deck } from '@dxos/react-ui-deck';
+import {
+  Button,
+  Main,
+  Dialog,
+  useTranslation,
+  DensityProvider,
+  Popover,
+  Status,
+  toLocalizedString,
+} from '@dxos/react-ui';
+import { Deck, PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
 import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -54,6 +65,50 @@ const PlankLoading = () => {
     <div role='none' className='grid bs-[100dvh] place-items-center'>
       <Status indeterminate aria-label='Initializing' />
     </div>
+  );
+};
+
+const complementaryPart = ['complementary', 0, 1] satisfies PartIdentifier;
+const sidebarPart = ['sidebar', 0, 1] satisfies PartIdentifier;
+
+const NodePlankHeading = ({
+  node,
+  part,
+  popoverAnchorId,
+}: {
+  node: Node;
+  part: PartIdentifier;
+  popoverAnchorId?: string;
+}) => {
+  const { t } = useTranslation(DECK_PLUGIN);
+  const Icon = node.properties?.icon ?? Placeholder;
+  const label = toLocalizedString(node.properties?.label ?? '', t);
+  const { dispatch } = useIntent();
+  const ActionRoot = popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+  return (
+    <PlankHeading.Root>
+      <ActionRoot>
+        <PlankHeading.ActionsMenu
+          actions={node.actions()}
+          onAction={(action) =>
+            typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
+          }
+        >
+          <PlankHeading.Button>
+            <span className='sr-only'>{label}</span>
+            <Icon {...plankHeadingIconProps} />
+          </PlankHeading.Button>
+        </PlankHeading.ActionsMenu>
+      </ActionRoot>
+      <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
+      <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      <PlankHeading.Controls
+        part={part}
+        increment={part[0] === 'main'}
+        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
+        onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
+      />
+    </PlankHeading.Root>
   );
 };
 
@@ -123,32 +178,6 @@ export const DeckLayout = ({
           onComplementarySidebarOpenChange: (next) => (context.complementarySidebarOpen = next),
         })}
       >
-        {/* Left navigation sidebar. */}
-        <Main.NavigationSidebar>
-          {sidebarId ? (
-            sidebarId === NAV_ID ? (
-              <Surface
-                role='navigation'
-                data={{
-                  part: ['sidebar', 0, 1] satisfies PartIdentifier,
-                  popoverAnchorId,
-                }}
-                limit={1}
-              />
-            ) : (
-              <Surface
-                role='article'
-                data={{
-                  object: graph.findNode(sidebarId),
-                  part: ['sidebar', 0, 1] satisfies PartIdentifier,
-                  popoverAnchorId,
-                }}
-                limit={1}
-              />
-            )
-          ) : null}
-        </Main.NavigationSidebar>
-
         {/* Notch */}
         <Main.Notch>
           <Surface role='notch-start' />
@@ -173,26 +202,55 @@ export const DeckLayout = ({
           <Surface role='notch-end' />
         </Main.Notch>
 
+        {/* Sidebars */}
+        <Main.NavigationSidebar>
+          {sidebarId === NAV_ID ? (
+            <Surface
+              role='navigation'
+              data={{
+                part: sidebarPart,
+                popoverAnchorId,
+              }}
+              limit={1}
+            />
+          ) : sidebarNode ? (
+            <>
+              <NodePlankHeading node={sidebarNode} part={sidebarPart} popoverAnchorId={popoverAnchorId} />
+              <Surface
+                role='article'
+                data={{
+                  object: sidebarNode.data,
+                  part: sidebarPart,
+                  popoverAnchorId,
+                }}
+                limit={1}
+              />
+            </>
+          ) : null}
+        </Main.NavigationSidebar>
         <Main.ComplementarySidebar>
           {complementaryId === NAV_ID ? (
             <Surface
               role='navigation'
               data={{
-                part: ['complementary', 0, 1] satisfies PartIdentifier,
+                part: complementaryPart,
                 popoverAnchorId,
               }}
               limit={1}
             />
           ) : complementaryNode ? (
-            <Surface
-              role='article'
-              data={{
-                object: complementaryNode.data,
-                part: ['complementary', 0, 1] satisfies PartIdentifier,
-                popoverAnchorId,
-              }}
-              limit={1}
-            />
+            <>
+              <NodePlankHeading node={complementaryNode} part={complementaryPart} popoverAnchorId={popoverAnchorId} />
+              <Surface
+                role='article'
+                data={{
+                  object: complementaryNode.data,
+                  part: complementaryPart,
+                  popoverAnchorId,
+                }}
+                limit={1}
+              />
+            </>
           ) : null}
         </Main.ComplementarySidebar>
 
@@ -206,28 +264,25 @@ export const DeckLayout = ({
               .filter(Boolean)
               .map((id, index, main) => {
                 const node = graph.findNode(id);
+                const part = ['main', index, main.length] satisfies PartIdentifier;
                 return (
                   <Deck.Plank key={id}>
                     {id === NAV_ID ? (
-                      <Surface
-                        role='navigation'
-                        data={{
-                          part: ['main', index, main.length] satisfies PartIdentifier,
-                          popoverAnchorId,
-                        }}
-                        limit={1}
-                      />
+                      <Surface role='navigation' data={{ part, popoverAnchorId }} limit={1} />
                     ) : node ? (
-                      <Surface
-                        role='article'
-                        data={{
-                          object: node.data,
-                          part: ['main', index, main.length] satisfies PartIdentifier,
-                          popoverAnchorId,
-                        }}
-                        limit={1}
-                        fallback={<PlankLoading />}
-                      />
+                      <>
+                        <NodePlankHeading node={node} part={part} popoverAnchorId={popoverAnchorId} />
+                        <Surface
+                          role='article'
+                          data={{
+                            object: node.data,
+                            part,
+                            popoverAnchorId,
+                          }}
+                          limit={1}
+                          fallback={<PlankLoading />}
+                        />
+                      </>
                     ) : (
                       <PlankLoading />
                     )}

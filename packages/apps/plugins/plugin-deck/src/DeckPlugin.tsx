@@ -296,24 +296,32 @@ export const DeckPlugin = ({
 
               batch(() => {
                 if (intent.data) {
-                  location.active = isActiveParts(location.active)
-                    ? Object.entries(intent.data.activeParts).reduce(
-                        (acc: ActiveParts, [part, ids]) => {
-                          const partMembers = new Set<string>();
-                          (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                            partMembers.add(id),
-                          );
-                          (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
-                          acc[part] = Array.from(partMembers).filter(Boolean);
-                          return acc;
-                        },
-                        { ...location.active },
-                      )
-                    : {
-                        sidebar: NAV_ID,
-                        ...intent.data.activeParts,
-                        main: [...(intent.data.activeParts.main ?? []), ...(location.active ? [location.active] : [])],
-                      };
+                  location.active =
+                    isActiveParts(location.active) && Object.keys(location.active).length > 0
+                      ? Object.entries(intent.data.activeParts).reduce(
+                          (acc: ActiveParts, [part, ids]) => {
+                            const partMembers = new Set<string>();
+                            (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                              partMembers.add(id),
+                            );
+                            (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
+                            acc[part] = Array.from(partMembers).filter(Boolean);
+                            return acc;
+                          },
+                          { ...location.active },
+                        )
+                      : {
+                          sidebar: NAV_ID,
+                          ...intent.data.activeParts,
+                          main: [
+                            ...(intent.data.activeParts.main ?? []),
+                            ...(location.active
+                              ? isActiveParts(location.active)
+                                ? [location.active.main].filter(Boolean)
+                                : [location.active]
+                              : []),
+                          ],
+                        };
                 }
               });
 

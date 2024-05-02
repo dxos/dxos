@@ -26,11 +26,9 @@ export const applyActiveAdjustment = (
             switch (direction) {
               case 'start':
                 if (index < 1) {
-                  console.log('[don’t move left]', index, size);
                   return active;
                 } else {
                   const nextMain = arrayMove(active.main, index, index - 1);
-                  console.log('[move left]', active.main, index, size, nextMain);
                   return {
                     ...active,
                     main: [...nextMain],
@@ -38,11 +36,9 @@ export const applyActiveAdjustment = (
                 }
               case 'end':
                 if (index > size - 2) {
-                  console.log('[don’t move right]', index, size);
                   return active;
                 } else {
                   const nextMain = arrayMove(active.main, index, index + 1);
-                  console.log('[move right]', active.main, index, size, nextMain);
                   return {
                     ...active,
                     main: [...nextMain],
@@ -113,6 +109,7 @@ export const applyActiveAdjustment = (
               const nextMain = [...(Array.isArray(active.main) ? active.main : [active.main])];
               nextMain.splice(nextMain.indexOf(subject), 1);
               return {
+                ...active,
                 ...(direction === 'start' && { sidebar: subject }),
                 main: [
                   ...(direction === 'start' ? (Array.isArray(active.sidebar) ? active.sidebar : [active.sidebar]) : []),

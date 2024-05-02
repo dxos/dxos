@@ -95,84 +95,90 @@ type PlankHeadingActionsMenuProps = PropsWithChildren<{
   onAction?: (action: PlankHeadingAction) => void;
 }>;
 
-const PlankHeadingActionsMenu = ({ actions, onAction, triggerLabel, children }: PlankHeadingActionsMenuProps) => {
-  const { t } = useTranslation(translationKey);
-  const suppressNextTooltip = useRef(false);
+const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
+  ({ actions, onAction, triggerLabel, children }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const suppressNextTooltip = useRef(false);
 
-  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
+    const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+    const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
-  return (
-    <Tooltip.Root
-      open={triggerTooltipOpen}
-      onOpenChange={(nextOpen) => {
-        if (suppressNextTooltip.current) {
-          setTriggerTooltipOpen(false);
-          suppressNextTooltip.current = false;
-        } else {
-          setTriggerTooltipOpen(nextOpen);
-        }
-      }}
-    >
-      <DropdownMenu.Root
-        {...{
-          open: optionsMenuOpen,
-          onOpenChange: (nextOpen: boolean) => {
-            if (!nextOpen) {
-              suppressNextTooltip.current = true;
-            }
-            return setOptionsMenuOpen(nextOpen);
-          },
+    return (
+      <Tooltip.Root
+        open={triggerTooltipOpen}
+        onOpenChange={(nextOpen) => {
+          if (suppressNextTooltip.current) {
+            setTriggerTooltipOpen(false);
+            suppressNextTooltip.current = false;
+          } else {
+            setTriggerTooltipOpen(nextOpen);
+          }
         }}
       >
-        <Tooltip.Trigger asChild>
-          <DropdownMenu.Trigger asChild>{children}</DropdownMenu.Trigger>
-        </Tooltip.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content classNames='z-[31]'>
-            <DropdownMenu.Viewport>
-              {actions?.map((action) => {
-                const shortcut =
-                  typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
-                return (
-                  <DropdownMenu.Item
-                    key={action.id}
-                    onClick={(event) => {
-                      if (action.properties.disabled) {
-                        return;
-                      }
-                      event.stopPropagation();
-                      // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                      suppressNextTooltip.current = true;
-                      setOptionsMenuOpen(false);
-                      onAction?.(action);
-                    }}
-                    classNames='gap-2'
-                    disabled={action.properties.disabled}
-                    {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                  >
-                    {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                    <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
-                    {shortcut && (
-                      <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
-                    )}
-                  </DropdownMenu.Item>
-                );
-              })}
-            </DropdownMenu.Viewport>
-            <DropdownMenu.Arrow />
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
-      <Tooltip.Portal>
-        <Tooltip.Content style={{ zIndex: 70 }}>
-          {triggerLabel}
-          <Tooltip.Arrow />
-        </Tooltip.Content>
-      </Tooltip.Portal>
-    </Tooltip.Root>
-  );
-};
+        <DropdownMenu.Root
+          {...{
+            open: optionsMenuOpen,
+            onOpenChange: (nextOpen: boolean) => {
+              if (!nextOpen) {
+                suppressNextTooltip.current = true;
+              }
+              return setOptionsMenuOpen(nextOpen);
+            },
+          }}
+        >
+          <Tooltip.Trigger asChild>
+            <DropdownMenu.Trigger asChild ref={forwardedRef}>
+              {children}
+            </DropdownMenu.Trigger>
+          </Tooltip.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content classNames='z-[31]'>
+              <DropdownMenu.Viewport>
+                {actions?.map((action) => {
+                  const shortcut =
+                    typeof action.properties.keyBinding === 'string'
+                      ? action.properties.keyBinding
+                      : action.properties.keyBinding?.[getHostPlatform()];
+                  return (
+                    <DropdownMenu.Item
+                      key={action.id}
+                      onClick={(event) => {
+                        if (action.properties.disabled) {
+                          return;
+                        }
+                        event.stopPropagation();
+                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                        suppressNextTooltip.current = true;
+                        setOptionsMenuOpen(false);
+                        onAction?.(action);
+                      }}
+                      classNames='gap-2'
+                      disabled={action.properties.disabled}
+                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                    >
+                      {action.properties.icon && <action.properties.icon className={mx(getSize(4), 'shrink-0')} />}
+                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                      {shortcut && (
+                        <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>
+                      )}
+                    </DropdownMenu.Item>
+                  );
+                })}
+              </DropdownMenu.Viewport>
+              <DropdownMenu.Arrow />
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+        <Tooltip.Portal>
+          <Tooltip.Content style={{ zIndex: 70 }}>
+            {triggerLabel}
+            <Tooltip.Arrow />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    );
+  },
+);
 
 type PlankHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId;
 
@@ -254,6 +260,7 @@ export const PlankHeading = {
 export { plankHeadingIconProps };
 
 export type {
+  PlankHeadingAction,
   PlankHeadingButtonProps,
   PlankHeadingActionsMenuProps,
   PlankHeadingControlsProps,
