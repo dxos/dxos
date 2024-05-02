@@ -21,13 +21,16 @@ export type SpaceToolbarProps = {
 export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
   const client = useClient();
   const spaces = useSpaces().filter((space) => space !== client.spaces.default);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(_spaceKey ?? spaces[0]?.key);
-
+  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(_spaceKey);
   useEffect(() => {
     if (_spaceKey) {
       setSpaceKey(_spaceKey);
+    } else {
+      if (spaces.length) {
+        onSelect(spaces[0]?.key);
+      }
     }
-  }, [_spaceKey]);
+  }, [_spaceKey, spaces]);
 
   const handleChange = (value: string) => {
     const key = spaces.find((space) => space.key.toHex() === value)?.key;
