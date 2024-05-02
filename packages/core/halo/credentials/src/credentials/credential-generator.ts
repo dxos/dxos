@@ -249,3 +249,18 @@ export const createDelegatedSpaceInvitationCredential = async (
   });
   return { credential: { credential } };
 };
+
+export const createCancelDelegatedSpaceInvitationCredential = async (
+  signer: CredentialSigner,
+  subject: PublicKey,
+  invitationCredentialId: PublicKey,
+): Promise<FeedMessage.Payload> => {
+  const credential = await signer.createCredential({
+    subject,
+    assertion: {
+      '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
+      credentialId: invitationCredentialId,
+    },
+  });
+  return { credential: { credential } };
+};

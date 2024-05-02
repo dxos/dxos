@@ -150,6 +150,10 @@ export class InvitationsManager {
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
+      if (created.get().type === Invitation.Type.DELEGATED) {
+        const handler = this._getHandler(created.get());
+        await handler.cancelDelegation(created.get());
+      }
       await created.cancel();
       this._createInvitations.delete(invitationId);
       this.removedCreated.emit(created.get());
