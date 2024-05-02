@@ -5,15 +5,14 @@
 import { expect } from 'chai';
 
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { afterTest, describe, test } from '@dxos/test';
+import { describe, openAndClose, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
 
 describe('IndexMetadataStore', () => {
   test('basic', async () => {
     const level = createTestLevel();
-    await level.open();
-    afterTest(() => level.close());
+    await openAndClose(level);
 
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
 
@@ -36,5 +35,22 @@ describe('IndexMetadataStore', () => {
         new Map(ids.slice(1).map((id) => [id, [`hash-${id}`]])),
       );
     }
+  });
+
+  test('decoding migration works', async () => {
+    const level = createTestLevel();
+    await openAndClose(level);
+
+    // Automerge heads format.
+    const heads = [Array(64).fill(0).join(''), Array(64).fill(1).join('')];
+    const id = '1';
+
+    // Setup storage as if there were some data in the old format.
+    level.sublevel('index-metadata').sublevel('last-seen').put(id, heads.join(''), { valueEncoding: 'json' });
+
+    // Check if data is accessible with the new format.
+    const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
+    const dirty = await metadataStore.getDirtyDocuments();
+    expect(dirty).to.deep.equal(new Map([[id, heads]]));
   });
 });
