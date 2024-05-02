@@ -6,7 +6,7 @@ import { expect } from 'chai';
 
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-protocol';
-import { Reference } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';

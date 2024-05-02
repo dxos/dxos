@@ -11,8 +11,8 @@ import {
   isEncodedReferenceObject,
   type ObjectStructure,
   type SpaceDoc,
-} from '@dxos/echo-pipeline';
-import { Reference } from '@dxos/echo-schema';
+} from '@dxos/echo-protocol';
+import { Reference } from '@dxos/echo-protocol';
 import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';

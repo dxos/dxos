@@ -5,7 +5,6 @@
 import { expect } from 'chai';
 
 import { type Context, Resource } from '@dxos/context';
-import { type LevelDB } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';

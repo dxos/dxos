@@ -5,7 +5,8 @@
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
-import { Reference, TypedObject, create } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 

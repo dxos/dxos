@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-pipeline';
-import { Reference, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-protocol';
+import { Reference } from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable, stripUndefinedValues } from '@dxos/util';

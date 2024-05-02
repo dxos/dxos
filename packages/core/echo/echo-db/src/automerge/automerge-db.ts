@@ -19,9 +19,8 @@ import {
   type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
-  type SpaceDoc,
-  type SpaceState,
 } from '@dxos/echo-pipeline';
+import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';

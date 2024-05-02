@@ -5,7 +5,8 @@
 import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
-import { Reference, DynamicEchoSchema, requireTypeReference } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { DynamicEchoSchema, requireTypeReference } from '@dxos/echo-schema';
 import { getSchema, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
