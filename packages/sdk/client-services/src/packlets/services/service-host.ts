@@ -8,7 +8,7 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-pipeline';
+import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-protocol';
 import { getTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
