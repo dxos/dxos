@@ -3,8 +3,7 @@
 //
 
 import { Reference } from '@dxos/echo-protocol';
-import { getProxyHandlerSlot } from '@dxos/echo-schema';
-import { type ForeignKey, type EchoReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
+import { type ForeignKey, type EchoReactiveObject, type ReactiveObject, getProxyHandlerSlot } from '@dxos/echo-schema';
 
 import { isEchoObject } from './create';
 import { getObjectCoreFromEchoTarget } from './echo-handler';
