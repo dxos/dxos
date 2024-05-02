@@ -40,6 +40,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
     "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
@@ -55,7 +56,6 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
-    "level": "^8.0.1",
     "platform": "^1.3.6"
   },
   "devDependencies": {

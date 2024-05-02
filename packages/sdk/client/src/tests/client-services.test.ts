@@ -9,7 +9,7 @@ import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';

@@ -8,10 +8,10 @@ import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { EchoHost } from '@dxos/echo-db';
 import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { type LevelDB } from '@dxos/echo-protocol';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import { type LevelDB } from '@dxos/kv-store';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';

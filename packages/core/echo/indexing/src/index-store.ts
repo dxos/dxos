@@ -4,8 +4,8 @@
 
 import isEqual from 'lodash.isequal';
 
-import { type SubLevelDB } from '@dxos/kv-store';
 import { invariant } from '@dxos/invariant';
+import { type SubLevelDB } from '@dxos/kv-store';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { IndexConstructors } from './index-constructors';

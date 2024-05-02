@@ -8,7 +8,7 @@ import { asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
