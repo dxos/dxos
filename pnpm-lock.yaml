@@ -3817,6 +3817,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -5502,6 +5505,9 @@ importers:
       level:
         specifier: ^8.0.1
         version: 8.0.1
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -8540,9 +8546,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8613,6 +8616,9 @@ importers:
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
