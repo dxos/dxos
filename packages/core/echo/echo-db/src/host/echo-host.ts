@@ -5,7 +5,7 @@
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
-import { type LevelDB } from '@dxos/echo-protocol';
+import { type LevelDB } from '@dxos/kv-store';
 import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
