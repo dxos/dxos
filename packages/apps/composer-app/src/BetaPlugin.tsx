@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
   LayoutAction,
   type SurfaceProvides,
@@ -18,24 +19,37 @@ export const meta = {
 };
 
 const DEPRECATED_DEPLOYMENT = window.location.origin === 'https://composer.dxos.org';
+const BETA_DEPLOYMENT = window.location.origin === 'https://composer.space';
 
 const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      if (!DEPRECATED_DEPLOYMENT) {
+      if (DEPRECATED_DEPLOYMENT) {
+        const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+        await dispatch?.({
+          action: LayoutAction.SET_LAYOUT,
+          data: {
+            element: 'dialog',
+            state: true,
+            component: `${meta.id}/BetaDialog`,
+          },
+        });
+
         return;
       }
 
-      const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-      await dispatch?.({
-        action: LayoutAction.SET_LAYOUT,
-        data: {
-          element: 'dialog',
-          state: true,
-          component: `${meta.id}/BetaDialog`,
-        },
-      });
+      const firstRun = resolvePlugin(plugins, parseClientPlugin)?.provides.firstRun;
+      const identityKey = resolvePlugin(plugins, parseClientPlugin)
+        ?.provides.client.halo.identity.get()
+        ?.identityKey.toHex();
+      if (firstRun && identityKey && BETA_DEPLOYMENT) {
+        void fetch('/beta/connect', {
+          method: 'POST',
+          headers: new Headers({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ identityKey }),
+        });
+      }
     },
     provides: {
       surface: {
