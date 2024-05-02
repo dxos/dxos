@@ -6,7 +6,7 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
-import { type SubLevelDB, type BatchLevel } from '@dxos/echo-protocol';
+import { type SubLevelDB, type BatchLevel } from '@dxos/kv-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';

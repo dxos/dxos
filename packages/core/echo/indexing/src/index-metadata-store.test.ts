@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
