@@ -10,6 +10,7 @@ import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';
+import { useFileDownload } from '@dxos/react-ui';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
@@ -19,6 +20,7 @@ import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
+import { exportData, importData } from '../util';
 // TODO(burdon): [API]: Import syntax?
 
 // const dateRange = {
@@ -43,6 +45,7 @@ export const Main = () => {
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
   const flushingPromise = useRef<Promise<void>>();
+  const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
@@ -141,6 +144,25 @@ export const Main = () => {
     setSpace(space);
   };
 
+  const handleSpaceImport = async (backup: Blob) => {
+    // Validate backup.
+    try {
+      const backupString = await backup.text();
+      JSON.parse(backupString);
+    } catch (err) {
+      log.catch(err);
+    }
+
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+    await importData(space, backup);
+  };
+
+  const handleSpaceSelect = (spaceKey?: PublicKey) => {
+    const space = spaceKey ? client.spaces.get(spaceKey) : undefined;
+    setSpace(space);
+  };
+
   const handleSpaceToggleOpen = async (spaceKey: PublicKey) => {
     const space = client.spaces.get(spaceKey);
     if (space) {
@@ -148,9 +170,15 @@ export const Main = () => {
     }
   };
 
-  const handleSpaceSelect = (spaceKey?: PublicKey) => {
-    const space = spaceKey ? client.spaces.get(spaceKey) : undefined;
-    setSpace(space);
+  const handleSpaceExport = async (spaceKey: PublicKey) => {
+    const space = client.spaces.get(spaceKey);
+    if (space) {
+      await space.waitUntilReady();
+      const backupBlob = await exportData(space);
+      const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
+
+      download(backupBlob, `${filename}.json`);
+    }
   };
 
   const handleSpaceInvite = (spaceKey: PublicKey) => {
@@ -174,8 +202,10 @@ export const Main = () => {
         spaces={spaces}
         selected={space?.key ?? spaces[0]?.key}
         onCreate={handleSpaceCreate}
-        onToggleOpen={handleSpaceToggleOpen}
+        onImport={handleSpaceImport}
         onSelect={handleSpaceSelect}
+        onToggleOpen={handleSpaceToggleOpen}
+        onExport={handleSpaceExport}
         onInvite={handleSpaceInvite}
       />
       <div className='flex flex-col grow overflow-hidden'>
