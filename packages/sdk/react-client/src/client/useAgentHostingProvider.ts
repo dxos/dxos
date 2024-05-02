@@ -3,11 +3,7 @@
 //
 
 import { type Halo } from '@dxos/client/halo';
-import {
-  type AgentHostingProviderClient,
-  DXOSAgentHostingProviderClient,
-  FakeAgentHostingProvider,
-} from '@dxos/client/services';
+import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
@@ -34,7 +30,7 @@ export const useAgentHostingProviderClient = (config: Config, halo: Halo): Agent
         log.info('dxos.org/shell/features/agentHosting not enabled');
         return null;
       }
-      agentHostingProviderClient = new DXOSAgentHostingProviderClient(config, halo);
+      agentHostingProviderClient = new AgentManagerClient(config, halo);
       if (agentHostingProviderClient.init()) {
         return agentHostingProviderClient;
       } else {

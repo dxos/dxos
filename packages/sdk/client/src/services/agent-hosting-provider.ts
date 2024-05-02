@@ -15,7 +15,7 @@ import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 export type AgentHostingProvider = {
   name: string;
-  baseURL: string;
+  baseUrl: string;
   username: string;
   password?: string;
 };
@@ -28,7 +28,7 @@ export class ProviderApiError extends Error {}
 // TODO: Load from config or dynamically discover
 const defaultConfig: AgentHostingProvider = {
   name: 'default',
-  baseURL: 'http://localhost:8082/v1alpha1/',
+  baseUrl: 'http://localhost:8082/v1alpha1/',
   username: 'dxos',
 };
 
@@ -48,9 +48,10 @@ export interface AgentHostingProviderClient {
 
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
-export class DXOSAgentHostingProviderClient implements AgentHostingProviderClient {
+export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
+  private readonly _wsDxrpcUrl: string;
   private _rpc: WebsocketRpcClient<{ AgentManager: AgentManager }, {}> | undefined;
   private _rpcState: 'connected' | 'disconnected' = 'disconnected';
 
@@ -73,9 +74,15 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
     invariant(runtimeAgentHostingConfig.server, 'agentHosting server not found');
     this._config = {
       ...defaultConfig,
-      baseURL: runtimeAgentHostingConfig.server,
+      baseUrl: runtimeAgentHostingConfig.server,
       password: this._clientConfig.get('runtime.app.env.DX_AGENTHOSTING_PASSWORD'),
     };
+
+    // Ensure trailing slash to ensure proper path joining with URL() constructor.
+    if (!this._config.baseUrl.endsWith('/')) {
+      this._config.baseUrl += '/';
+    }
+    this._wsDxrpcUrl = new URL(this.DXRPC_PATH, this._config.baseUrl.replace('http', 'ws')).href;
   }
 
   init(authToken?: any) {
@@ -83,13 +90,8 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
       return false;
     }
 
-    if (!this._config.baseURL.endsWith('/')) {
-      this._config.baseURL += '/';
-    }
-    const wsBaseURL = new URL(this.DXRPC_PATH, this._config.baseURL.replace('http', 'ws'));
-
     this._rpc = new WebsocketRpcClient({
-      url: wsBaseURL.href,
+      url: this._wsDxrpcUrl,
       requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
       noHandshake: true,
     });
@@ -107,8 +109,8 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   /**
    * Check auth token from CF worker whether identity is allowed to create agent.
    *
-   * Note: This will prevent the client from making unnecessary requests to the AgentHostingProvider API. The
-   * AgentHostingProvider will also validate the auth token on its own.
+   * Note: This will prevent the client from making unnecessary requests to the AgentHostingProvider API.
+   * The AgentHostingProvider will also validate the auth token on its own.
    */
 
   _checkAuthorization(authToken: any) {
@@ -155,13 +157,14 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
     invariant(this._rpc, 'RPC not initialized');
-    // TODO: factor out RPC operations and state management
+    // TODO: factor out RPC operations and state management.
     if (this._rpcState === 'disconnected') {
       await this._rpc.open();
     }
     await this._agentManagerAuth(authDeviceCreds[0]);
   }
 
+  // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
   async _agentManagerAuth(authDeviceCreds: Credential) {
     invariant(this._rpc, 'RPC not initialized');
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
@@ -175,7 +178,7 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
     // TODO(nf): verify agentmanagerKey with configured service?
 
     // TODO: rename credential
-    const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServerAccess', (cred) =>
+    const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServiceAccess', (cred) =>
       PublicKey.equals(cred.issuer, agentmanagerKey),
     );
     if (!agentmanagerAccessCreds.length) {
@@ -232,7 +235,7 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   public async createAgent(invitationCode: string, identityKey: string) {
     await this._ensureAuthenticated();
     const res = await fetch(
-      new URL('agent', this._config.baseURL),
+      new URL('agent', this._config.baseUrl),
       this.requestInitWithAuthToken({
         method: 'POST',
         headers: {
@@ -261,7 +264,7 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   public async getAgent(agentID: string) {
     await this._ensureAuthenticated();
     const res = await fetch(
-      new URL('agent/' + agentID, this._config.baseURL),
+      new URL('agent/' + agentID, this._config.baseUrl),
       this.requestInitWithAuthToken({
         method: 'GET',
       }),
@@ -303,7 +306,7 @@ export class DXOSAgentHostingProviderClient implements AgentHostingProviderClien
   public async destroyAgent(agentID: string) {
     await this._ensureAuthenticated();
     const res = await fetch(
-      new URL('agent/' + agentID, this._config.baseURL),
+      new URL('agent/' + agentID, this._config.baseUrl),
       this.requestInitWithAuthToken({
         method: 'DELETE',
       }),

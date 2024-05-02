@@ -16,16 +16,17 @@ option go_package = "github.com/dxos/kube/proto/def/dxos/service/agentmanager";
 
 message InitAuthSequenceRequest {
   // Auth token for the agentmanager to validate authorization.
-  // TODO: any?
   optional string auth_token = 1;
 }
+
 message InitAuthSequenceResponse {
   enum InitAuthSequenceResult {
     UNKNOWN = 0;
-      SUCCESS = 1;
-      NOT_AUTHORIZED = 2;
-      ERROR = 3;
+    SUCCESS = 1;
+    NOT_AUTHORIZED = 2;
+    ERROR = 3;
   }
+
   InitAuthSequenceResult result = 1;
     optional bytes nonce = 2;
     optional dxos.keys.PublicKey agentmanager_key = 3;
@@ -34,20 +35,17 @@ message InitAuthSequenceResponse {
 }
 
 message Authentication {
-    dxos.halo.credentials.Presentation presentation = 1;
+  dxos.halo.credentials.Presentation presentation = 1;
 }
 
 message AuthenticateResponse {
-    optional string token = 1;
-    optional dxos.halo.credentials.Credential credential = 2;
+  optional string token = 1;
+  optional dxos.halo.credentials.Credential credential = 2;
 }
 
 service AgentManager {
-    // Authenticate with KUBE.
-    rpc Authenticate(Authentication) returns (AuthenticateResponse);
-
-    // Init authentication sequence. Used to obtain nonce & KUBE identity (public key).
-    rpc InitAuthSequence(InitAuthSequenceRequest) returns (InitAuthSequenceResponse);
-
-   //rpc RegisterIdentity(RegistrationRequest) returns (RegistrationResponse);
+  // Initialize the authentication sequence. Send an optional authentication token to permit the server to authorize the request.
+  // Receive a nonce (challenge) necessary to call Authenticate to prevent replay attacks.
+  rpc InitAuthSequence(InitAuthSequenceRequest) returns (InitAuthSequenceResponse);
+  rpc Authenticate(Authentication) returns (AuthenticateResponse);
 }
