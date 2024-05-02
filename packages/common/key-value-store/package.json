@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/level",
+  "name": "@dxos/key-value-store",
   "version": "0.5.0",
   "description": "DXOS wrapper around level DB.",
   "homepage": "https://dxos.org",
@@ -33,6 +33,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/keys": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "abstract-level": "^1.0.2",
     "level": "^8.0.1"

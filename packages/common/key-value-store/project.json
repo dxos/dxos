@@ -1,18 +1,18 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "level",
+  "name": "key-value-store",
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/level/src",
+  "sourceRoot": "packages/common/key-value-store/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/level/src/index.ts",
-          "packages/common/level/src/testing/index.ts"
+          "packages/common/key-value-store/src/index.ts",
+          "packages/common/key-value-store/src/testing/index.ts"
         ]
       }
     },
