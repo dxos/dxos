@@ -9,7 +9,7 @@ import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
+import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
@@ -28,7 +28,15 @@ import { defs } from '../defs';
 
 export const Main = () => {
   const client = useClient();
+  // TODO(wittjosiah): Why filter out the default space?
+  const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
+
+  useEffect(() => {
+    if (!space && spaces.length) {
+      setSpace(spaces[0]);
+    }
+  }, []);
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
@@ -133,10 +141,11 @@ export const Main = () => {
     setSpace(space);
   };
 
-  const handleSpaceClose = async (spaceKey: PublicKey) => {
+  const handleSpaceToggleOpen = async (spaceKey: PublicKey) => {
     const space = client.spaces.get(spaceKey);
-    await space?.close(); // TODO(burdon): [BUG] Not implemented error.
-    setSpace(undefined);
+    if (space) {
+      await (space.isOpen ? space.close() : space.open());
+    }
   };
 
   const handleSpaceSelect = (spaceKey?: PublicKey) => {
@@ -161,17 +170,16 @@ export const Main = () => {
           void client.shell.open();
         }}
       />
-
       <SpaceToolbar
-        spaceKey={space?.key}
+        spaces={spaces}
+        selected={space?.key ?? spaces[0]?.key}
         onCreate={handleSpaceCreate}
-        onClose={handleSpaceClose}
+        onToggleOpen={handleSpaceToggleOpen}
         onSelect={handleSpaceSelect}
         onInvite={handleSpaceInvite}
       />
-
       <div className='flex flex-col grow overflow-hidden'>
-        {space && (
+        {space?.isOpen && (
           <>
             <DataToolbar
               types={Array.from(typeMap.keys())}
@@ -187,7 +195,6 @@ export const Main = () => {
           </>
         )}
       </div>
-
       <div className='flex p-2 items-center text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
