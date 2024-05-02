@@ -22,6 +22,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",

@@ -6,7 +6,7 @@ import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type LevelDB } from '@dxos/echo-pipeline';
+import { type LevelDB } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';

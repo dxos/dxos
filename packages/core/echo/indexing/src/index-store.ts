@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { type SubLevelDB } from '@dxos/echo-pipeline';
+import { type SubLevelDB } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 

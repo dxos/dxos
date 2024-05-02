@@ -4,7 +4,8 @@
 
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocumentId, type StorageKey } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc, type AutomergeHost, type StorageCallbacks } from '@dxos/echo-pipeline';
+import { type AutomergeHost, type StorageCallbacks } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { idCodec } from '@dxos/protocols';
 
 import { type IndexMetadataStore } from './index-metadata-store';

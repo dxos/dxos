@@ -56,6 +56,9 @@
       "path": "../echo-pipeline"
     },
     {
+      "path": "../echo-protocol"
+    },
+    {
       "path": "../echo-schema"
     }
   ]

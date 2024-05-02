@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
+import { encodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { Reference } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
