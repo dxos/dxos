@@ -20,21 +20,6 @@ export type SpaceToolbarProps = {
   onInvite: (space: PublicKey) => void;
 };
 
-<<<<<<< HEAD
-export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
-  const client = useClient();
-  const spaces = useSpaces().filter((space) => space !== client.spaces.default);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(_spaceKey);
-  useEffect(() => {
-    if (_spaceKey) {
-      setSpaceKey(_spaceKey);
-    } else {
-      if (spaces.length) {
-        onSelect(spaces[0]?.key);
-      }
-    }
-  }, [_spaceKey, spaces]);
-=======
 export const SpaceToolbar = ({
   spaces = [],
   selected,
@@ -46,7 +31,6 @@ export const SpaceToolbar = ({
   onInvite,
 }: SpaceToolbarProps) => {
   const space = selected && spaces.find((space) => space.key.equals(selected));
->>>>>>> origin/main
 
   const handleChange = (value: string) => {
     onSelect(PublicKey.from(value));

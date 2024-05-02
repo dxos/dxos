@@ -21,7 +21,6 @@ import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
-// TODO(burdon): [API]: Import syntax?
 
 // const dateRange = {
 //   from: new Date(),
