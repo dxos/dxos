@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createLevel as createKV } from '@dxos/kv-store';
 import path from 'node:path';
 
 import { PublicKey } from '@dxos/keys';
+import { createLevel as createKV } from '@dxos/kv-store';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 
 import { getRootPath, isPersistent } from './util';

@@ -4,9 +4,9 @@
 
 import { expect } from 'chai';
 
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { Reference } from '@dxos/echo-protocol';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';

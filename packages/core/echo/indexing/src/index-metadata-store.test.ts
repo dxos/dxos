@@ -46,7 +46,7 @@ describe('IndexMetadataStore', () => {
     const id = '1';
 
     // Setup storage as if there were some data in the old format.
-    level.sublevel('index-metadata').sublevel('last-seen').put(id, heads.join(''), { valueEncoding: 'json' });
+    await level.sublevel('index-metadata').sublevel('last-seen').put(id, heads.join(''), { valueEncoding: 'json' });
 
     // Check if data is accessible with the new format.
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
