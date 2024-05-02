@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { log } from '@dxos/log';
-import { useAgentHostingProviderClient, useClient } from '@dxos/react-client';
+import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { useHaloInvitations } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
@@ -18,7 +18,7 @@ export const IdentityActionChooser = (props: IdentityPanelStepProps) => {
   const { send } = props;
   const client = useClient();
   const invitations = useHaloInvitations();
-  const agentHostingProviderClient = useAgentHostingProviderClient(client.config, client.halo);
+  const agentHostingProviderClient = useAgentHostingClient();
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {

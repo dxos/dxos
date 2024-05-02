@@ -7,23 +7,22 @@ import { useCallback, useEffect, useState } from 'react';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { useAgentHostingProviderClient, type Client } from '@dxos/react-client';
+import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 export const useAgentHandlers = ({
-  client,
   invitations,
   identity,
 }: {
-  client: Client;
   invitations: CancellableInvitation[];
   identity: Identity | null;
 }) => {
   const [validationMessage, setValidationMessage] = useState('');
   const [agentStatus, setAgentStatus] = useState('');
   const [agentActive, setAgentActive] = useState(false);
-  const agentHostingProviderClient = useAgentHostingProviderClient(client.config, client.halo);
+  const agentHostingProviderClient = useAgentHostingClient();
+  const client = useClient();
 
   useEffect(() => {
     const fetchAgentStatus = async () => {

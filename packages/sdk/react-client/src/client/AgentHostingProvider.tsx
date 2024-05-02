@@ -2,16 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
+import React, { createContext, type PropsWithChildren, useContext, useState } from 'react';
+
 import { type Halo } from '@dxos/client/halo';
 import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client/services';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
+import { useClient } from './ClientContext';
+
 /*
  * Interface for invoking the agent hosting provider client.
  * @experimental
  */
-export const useAgentHostingProviderClient = (config: Config, halo: Halo): AgentHostingProviderClient | null => {
+
+export type AgentHostingProviderProps = { config: Config; halo: Halo };
+
+export const AgentHostingContext = createContext<AgentHostingProviderClient | null>(null);
+
+export const AgentHostingProvider = (props: PropsWithChildren<{}>) => {
+  const client = useClient();
+  const [agentHostingProviderClient] = useState(makeClient(client));
+  return (
+    <AgentHostingContext.Provider value={agentHostingProviderClient}> {props.children}</AgentHostingContext.Provider>
+  );
+};
+
+export const useAgentHostingClient = () => {
+  return useContext(AgentHostingContext);
+};
+
+const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   const agentHostingConfig = config.get('runtime.services.agentHosting');
   if (!agentHostingConfig) {
     log.info('no agent hosting configured');

@@ -54,15 +54,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _wsDxrpcUrl: string;
   private _rpc: WebsocketRpcClient<{ AgentManager: AgentManager }, {}> | undefined;
   private _rpcState: 'connected' | 'disconnected' = 'disconnected';
-
-  // TODO(nf): convert to attribute when shell is updated
-  get _authToken() {
-    if ((globalThis as any).agentManagerAuthToken) {
-      return (globalThis as any).agentManagerAuthToken;
-    }
-    return null;
-  }
-  // private _authToken: string | null = null;
+  private _authToken: string | null = null;
 
   // TODO(nf): just accept Client instead?
   constructor(
@@ -195,9 +187,8 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
     const { token, credential } = await this._rpc.rpc.AgentManager.authenticate({ presentation });
     if (token) {
-      // TODO(nf): convert to attribute when shell is updated
-      (globalThis as any).agentManagerAuthToken = token;
-      // this._authToken = token;
+      // (globalThis as any).agentManagerAuthToken = token;
+      this._authToken = token;
     } else {
       invariant(credential, 'No credential or token received');
       log('received credential, writing to HALO', { credential });
