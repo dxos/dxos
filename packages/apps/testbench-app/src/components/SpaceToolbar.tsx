@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ClockCounterClockwise, Plus, Trash, UserPlus } from '@phosphor-icons/react';
+import { ArrowSquareIn, ArrowSquareOut, ClockCounterClockwise, Plus, Trash, UserPlus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { PublicKey } from '@dxos/client';
@@ -13,8 +13,10 @@ export type SpaceToolbarProps = {
   spaces?: Space[];
   selected?: PublicKey;
   onCreate: () => void;
-  onToggleOpen: (space: PublicKey) => void;
+  onImport: (blob: Blob) => void;
   onSelect: (space: PublicKey | undefined) => void;
+  onToggleOpen: (space: PublicKey) => void;
+  onExport: (space: PublicKey) => void;
   onInvite: (space: PublicKey) => void;
 };
 
@@ -22,8 +24,10 @@ export const SpaceToolbar = ({
   spaces = [],
   selected,
   onCreate,
-  onToggleOpen,
+  onImport,
   onSelect,
+  onToggleOpen,
+  onExport,
   onInvite,
 }: SpaceToolbarProps) => {
   const space = selected && spaces.find((space) => space.key.equals(selected));
@@ -32,10 +36,26 @@ export const SpaceToolbar = ({
     onSelect(PublicKey.from(value));
   };
 
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        onImport(file);
+      }
+    };
+    input.click();
+  };
+
   return (
     <Toolbar.Root classNames='p-1'>
       <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
         <Plus />
+      </Toolbar.Button>
+      <Toolbar.Button title='Import space.' onClick={handleImport}>
+        <ArrowSquareIn />
       </Toolbar.Button>
       <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
@@ -62,6 +82,9 @@ export const SpaceToolbar = ({
         <>
           <Toolbar.Button onClick={() => onToggleOpen(selected)} title={space.isOpen ? 'Close space.' : 'Open space.'}>
             {space.isOpen ? <Trash /> : <ClockCounterClockwise />}
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => onExport(selected)} title='Download backup.'>
+            <ArrowSquareOut />
           </Toolbar.Button>
           <Toolbar.Button onClick={() => onInvite(selected)} title='Create space.'>
             <UserPlus />
