@@ -531,9 +531,6 @@ importers:
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
-      '@braneframe/plugin-deck':
-        specifier: workspace:*
-        version: link:../plugins/plugin-deck
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
@@ -1212,79 +1209,6 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.5
         version: 15.5.5
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-      vite:
-        specifier: ^5.2.9
-        version: 5.2.9(@types/node@18.11.9)
-
-  packages/apps/plugins/plugin-deck:
-    dependencies:
-      '@braneframe/plugin-settings':
-        specifier: workspace:*
-        version: link:../plugin-settings
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../../core/echo/echo-schema
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../../common/invariant
-      '@dxos/keyboard':
-        specifier: workspace:*
-        version: link:../../../common/keyboard
-      '@dxos/local-storage':
-        specifier: workspace:*
-        version: link:../../../common/local-storage
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
-      '@dxos/react-ui-mosaic':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-mosaic
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
-      '@preact/signals-core':
-        specifier: ^1.6.0
-        version: 1.6.0
-    devDependencies:
-      '@braneframe/plugin-graph':
-        specifier: workspace:*
-        version: link:../plugin-graph
-      '@braneframe/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
-      '@braneframe/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui
-      '@dxos/react-ui-theme':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-theme
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../../ui/storybook-utils
-      '@phosphor-icons/react':
-        specifier: ^2.1.5
-        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
-      '@types/react':
-        specifier: ^18.0.21
-        version: 18.0.21
-      '@types/react-dom':
-        specifier: ^18.0.6
-        version: 18.0.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2227,9 +2151,6 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
-      '@dxos/react-ui-deck':
-        specifier: workspace:*
-        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -5579,6 +5500,9 @@ importers:
       level:
         specifier: ^8.0.1
         version: 8.0.1
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -8617,9 +8541,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8690,6 +8611,9 @@ importers:
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils

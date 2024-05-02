@@ -329,7 +329,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
