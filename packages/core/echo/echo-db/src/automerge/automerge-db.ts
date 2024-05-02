@@ -22,7 +22,7 @@ import {
   type SpaceDoc,
   type SpaceState,
 } from '@dxos/echo-pipeline';
-import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject, isDeleted } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -249,8 +249,10 @@ export class AutomergeDb {
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
       const object = this.getObjectById(objectId);
-      if (object != null) {
-        result[i] = isDeleted(object) ? undefined : object;
+      if (this._objects.get(objectId)?.isDeleted()) {
+        result[i] = undefined;
+      } else if (object != null) {
+        result[i] = object;
       } else {
         objectsToLoad.push({ id: objectId, resultIndex: i });
       }
@@ -276,8 +278,9 @@ export class AutomergeDb {
           const objectToLoad = objectsToLoad[i];
           if (updatedIds.includes(objectToLoad.id)) {
             clearTimeout(inactivityTimeoutTimer);
-            const loadedObject = this.getObjectById(objectToLoad.id)!;
-            result[objectToLoad.resultIndex] = isDeleted(loadedObject) ? undefined : loadedObject;
+            result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
+              ? undefined
+              : this.getObjectById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
             scheduleInactivityTimeout();
           }
