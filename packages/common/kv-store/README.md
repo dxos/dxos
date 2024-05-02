@@ -1,11 +1,11 @@
-# @dxos/invariant
+# @dxos/kv-store
 
 Invariant assertion compatible with DXOS logger.
 
 ## Installation
 
 ```bash
-pnpm i @dxos/invariant
+pnpm i @dxos/kv-store
 ```
 
 ## DXOS Resources
