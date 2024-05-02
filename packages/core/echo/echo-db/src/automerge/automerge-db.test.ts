@@ -307,6 +307,20 @@ describe('AutomergeDb', () => {
       expect(loadedObject).to.deep.eq(object);
     });
 
+    test('batch load object timeout', async () => {
+      const object = createExpando({ title: 'Hello' });
+      const peer = await createPeerInSpaceWithObject(object);
+      let threw = false;
+      try {
+        await peer.db.automerge.batchLoadObjects(['123', object.id], {
+          inactivityTimeout: 20,
+        });
+      } catch (e) {
+        threw = true;
+      }
+      expect(threw).to.be.true;
+    });
+
     describe('loadObjectReferences', () => {
       test('loads a field', async () => {
         const nestedValue = 'test';
