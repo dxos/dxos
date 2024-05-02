@@ -104,6 +104,9 @@
     },
     {
       "path": "../echo-schema"
+    },
+    {
+      "path": "../indexing"
     }
   ]
 }

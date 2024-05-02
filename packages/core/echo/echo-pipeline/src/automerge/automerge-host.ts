@@ -3,7 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Doc, next as automerge, getBackend, type Heads } from '@dxos/automerge/automerge';
+import { type Doc, next as automerge, getBackend, type Heads, getHeads } from '@dxos/automerge/automerge';
 import {
   type DocHandle,
   Repo,
@@ -11,14 +11,17 @@ import {
   type PeerId,
   type StorageAdapterInterface,
   type DocHandleChangePayload,
+  type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
+import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SubLevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
+import { idCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
   type HostInfo,
@@ -30,7 +33,7 @@ import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-rep
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
+import { type BeforeSaveParams, LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
@@ -44,11 +47,13 @@ export type AutomergeHostParams = {
    * For migration purposes.
    */
   directory?: Directory;
-  storageCallbacks?: StorageCallbacks;
+
+  indexMetadataStore: IndexMetadataStore;
 };
 
 @trace.resource()
 export class AutomergeHost {
+  private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
   private readonly _db: SubLevelDB;
@@ -69,10 +74,10 @@ export class AutomergeHost {
 
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, db, storageCallbacks }: AutomergeHostParams) {
+  constructor({ directory, db, indexMetadataStore }: AutomergeHostParams) {
     this._directory = directory;
     this._db = db;
-    this._storageCallbacks = storageCallbacks;
+    this._indexMetadataStore = indexMetadataStore;
   }
 
   async open() {
@@ -80,7 +85,10 @@ export class AutomergeHost {
     this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
       db: this._db,
-      callbacks: this._storageCallbacks,
+      callbacks: {
+        beforeSave: async (params) => this._beforeSave(params),
+        afterSave: async () => this._afterSave(),
+      },
     });
     await this._storage.open?.();
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
@@ -157,6 +165,31 @@ export class AutomergeHost {
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  private async _beforeSave({ path, batch }: BeforeSaveParams) {
+    const getDocumentIdFromPath = (path: StorageKey): DocumentId => path[0] as DocumentId;
+    const handle = this._repo.handles[getDocumentIdFromPath(path)];
+    if (!handle) {
+      return;
+    }
+    const doc = handle.docSync();
+    if (!doc) {
+      return;
+    }
+
+    const lastAvailableHash = getHeads(doc);
+
+    const getDocumentObjects = (doc: SpaceDoc): string[] => Object.keys(doc.objects ?? {});
+
+    const objectIds = getDocumentObjects(doc);
+    const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: handle.documentId, objectId }));
+    const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
+    this._indexMetadataStore.markDirty(idToLastHash, batch);
+  }
+
+  private async _afterSave() {
+    this._indexMetadataStore.afterMarkDirty();
   }
 
   @trace.info({ depth: null })
