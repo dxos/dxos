@@ -28,7 +28,7 @@ export const runShell = async (config: Config = new Config()) => {
         <ClientContext.Provider value={{ client, status: SystemStatus.ACTIVE }}>
           <ClipboardProvider>
             <Tooltip.Provider>
-              <Shell runtime={runtime} origin={location.origin} />
+              <Shell runtime={runtime} />
             </Tooltip.Provider>
           </ClipboardProvider>
         </ClientContext.Provider>

@@ -175,6 +175,13 @@ const main = async () => {
         config,
         services,
         shell: './shell.html',
+        onClientInitialized: async (client) => {
+          await client.shell.setInvitationUrl({
+            invitationUrl: new URL('', window.location.origin).toString(),
+            deviceInvitationParam: 'deviceInvitationCode',
+            spaceInvitationParam: 'spaceInvitationCode',
+          });
+        },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
