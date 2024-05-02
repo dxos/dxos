@@ -5,7 +5,7 @@
 
 name = "composer-app"
 compatibility_date = "2024-04-05"
-pages_build_output_dir = "./out"
+pages_build_output_dir = "./out/composer"
 
 d1_databases = [
   { binding = "DB", database_name = "dev-users", database_id = "98e5b6a0-53f4-468b-b483-6c66a8cf9f15" }
