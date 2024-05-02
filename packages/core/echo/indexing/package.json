@@ -34,6 +34,7 @@
     "@orama/orama": "^2.0.8",
     "abstract-level": "^1.0.2",
     "level": "^8.0.1",
+    "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
