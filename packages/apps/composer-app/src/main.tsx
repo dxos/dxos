@@ -176,11 +176,18 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          await client.shell.setInvitationUrl({
-            invitationUrl: new URL('', window.location.origin).toString(),
-            deviceInvitationParam: 'deviceInvitationCode',
-            spaceInvitationParam: 'spaceInvitationCode',
-          });
+          try {
+            const response = await fetch('/beta/info');
+            const { payload } = await response.json();
+
+            await client.shell.setInvitationUrl({
+              invitationUrl: new URL(`?accessToken=${payload.access_token}`, window.location.origin).toString(),
+              deviceInvitationParam: 'deviceInvitationCode',
+              spaceInvitationParam: 'spaceInvitationCode',
+            });
+          } catch {
+            // Ignore.
+          }
         },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
