@@ -45,6 +45,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       file: {
         upload: async (file) => {
           try {
+            // TODO(burdon): Need API KEY.
             const config = clientPlugin?.provides.client.config;
 
             // TODO(nf): Dedupe with publish.ts in @dxos/cli.

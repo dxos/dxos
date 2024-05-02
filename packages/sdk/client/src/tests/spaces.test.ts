@@ -285,13 +285,13 @@ describe('Spaces', () => {
     const { id } = space.db.add(createEchoObject({ data: 'test' }));
     await space.db.flush();
 
-    await space.internal.close();
+    await space.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space.internal.open();
+    await space.open();
     await space.waitUntilReady();
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.READY);
@@ -331,13 +331,13 @@ describe('Spaces', () => {
       expect(space2.db.getObjectById(id)).to.exist;
     });
 
-    await space1.internal.close();
+    await space1.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space1.internal.open();
+    await space1.open();
 
     await space2.waitUntilReady();
     await waitForExpect(() => {

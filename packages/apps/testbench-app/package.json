@@ -12,6 +12,7 @@
     "@baselime/node-opentelemetry": "^0.5.8",
     "@baselime/react-rum": "^0.2.9",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
