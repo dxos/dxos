@@ -45,6 +45,37 @@ describe('Serializer', () => {
     }
   });
 
+  test('Deleted objects', async () => {
+    const serializer = new Serializer();
+    const objValue = { value: 42 };
+    let data: SerializedSpace;
+
+    {
+      const { db } = await createDatabase();
+      const preserved = db.add(create(objValue));
+      const deleted = db.add(create({ value: objValue.value + 1 }));
+      db.remove(deleted);
+      await db.flush();
+
+      data = await serializer.export(db);
+      expect(data.objects).to.have.length(1);
+      expect(data.objects[0]).to.deep.include({
+        '@id': preserved.id,
+        '@meta': { keys: [] },
+        ...objValue,
+      });
+    }
+
+    {
+      const { db } = await createDatabase();
+      await serializer.import(db, data);
+
+      const { objects } = await db.query().run();
+      expect(objects).to.have.length(1);
+      expect(objects[0].value).to.eq(42);
+    }
+  });
+
   test('Nested objects', async () => {
     const serializer = new Serializer();
 
