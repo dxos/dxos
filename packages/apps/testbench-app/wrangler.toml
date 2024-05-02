@@ -1,0 +1,8 @@
+#
+# Pages Functions configuration.
+# https://developers.cloudflare.com/pages/functions/wrangler-configuration
+#
+
+name = "testbench-app"
+compatibility_date = "2024-04-05"
+pages_build_output_dir = "./out"

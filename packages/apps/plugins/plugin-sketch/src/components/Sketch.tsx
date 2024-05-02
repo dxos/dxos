@@ -89,8 +89,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
 
     zoomToContent(false);
     const onUpdate = debounce(zoomToContent, 200);
-    const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
-    return () => subscription();
+    const subscription = readonly ? undefined : store.listen(() => onUpdate(true), { scope: 'document' });
+    return () => subscription?.();
   }, [editor, width, height]);
 
   // https://tldraw.dev/docs/user-interface

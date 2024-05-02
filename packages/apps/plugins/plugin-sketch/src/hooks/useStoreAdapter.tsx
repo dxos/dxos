@@ -10,16 +10,16 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter } from './adapter';
 
-export const useStoreAdapter = (data: EchoReactiveObject<any>, options = { timeout: 250 }): TLStore => {
+export const useStoreAdapter = (object: EchoReactiveObject<any>, options = { timeout: 250 }): TLStore => {
   const [adapter] = useState(() => new AutomergeStoreAdapter(options));
 
   useEffect(() => {
-    adapter.open(createDocAccessor(data, ['content']));
+    adapter.open(createDocAccessor(object, ['content']));
     return () => {
       // TODO(burdon): Throws error if still mounted.
-      // adapter.close();
+      adapter.close();
     };
-  }, [data]);
+  }, [object]);
 
   return adapter.store;
 };
