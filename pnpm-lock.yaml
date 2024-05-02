@@ -3815,6 +3815,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
