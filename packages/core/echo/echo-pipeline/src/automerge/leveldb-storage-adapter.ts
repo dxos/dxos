@@ -6,7 +6,7 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { type StorageAdapterInterface, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type BatchLevel, type SubLevelDB } from '@dxos/echo-protocol';
+import { type BatchLevel, type SubLevelDB } from '@dxos/kv-store';
 import { type MaybePromise } from '@dxos/util';
 
 export type LevelDBStorageAdapterParams = {

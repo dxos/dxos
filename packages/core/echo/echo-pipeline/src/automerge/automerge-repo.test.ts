@@ -10,7 +10,7 @@ import { randomBytes } from '@dxos/crypto';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { createTestLevel } from '../testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 
 describe('AutomergeRepo', () => {
   test('flush', async () => {

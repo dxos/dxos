@@ -12,7 +12,7 @@ import { type MaybePromise } from '@dxos/util';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { createTestLevel } from '../testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 
 const runTests = (
   testNamespace: string,

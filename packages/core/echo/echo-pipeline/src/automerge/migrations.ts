@@ -4,7 +4,7 @@
 
 import { type StorageKey } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
-import { type SubLevelDB } from '@dxos/echo-protocol';
+import { type SubLevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 

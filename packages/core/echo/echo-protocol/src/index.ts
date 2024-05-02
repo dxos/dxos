@@ -3,5 +3,4 @@
 //
 
 export * from './document-structure';
-export * from './level';
 export * from './reference';

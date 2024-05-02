@@ -324,7 +324,7 @@
         },
         {
           "type": "json",
-          "path": "packages/common/level/package.json",
+          "path": "packages/common/kv-store/package.json",
           "jsonpath": "$.version"
         },
         {
