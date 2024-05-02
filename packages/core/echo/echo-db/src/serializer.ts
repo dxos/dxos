@@ -6,7 +6,7 @@ import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-pipelin
 import { Reference, TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { stripUndefinedValues } from '@dxos/util';
+import { nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
@@ -93,7 +93,7 @@ export class Serializer {
     const objects = await Promise.all(ids.map(async (id) => database.automerge.loadObjectById(id)));
 
     const data = {
-      objects: objects.map((object) => {
+      objects: objects.filter(nonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
 
