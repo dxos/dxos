@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-protocol",
+  "tags": [
+    "scope:echo"
+  ],
+  "sourceRoot": "packages/core/echo/echo-protocol/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/echo-protocol/src/index.ts"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

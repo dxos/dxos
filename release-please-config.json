@@ -429,6 +429,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-protocol/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-query/package.json",
           "jsonpath": "$.version"
         },
