@@ -6,10 +6,10 @@ import { expect } from 'chai';
 import { Level } from 'level';
 import { type MixedEncoding } from 'level-transcoder';
 
+import { type SubLevelDB } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { type SubLevelDB } from './types';
 import { createTestLevel } from '../testing';
 
 describe('Level', () => {

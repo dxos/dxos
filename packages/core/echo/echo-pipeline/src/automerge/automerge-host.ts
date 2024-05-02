@@ -14,6 +14,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
+import { type SpaceDoc, type SubLevelDB } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,7 +33,6 @@ import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type SpaceDoc, type SubLevelDB } from './types';
 
 // TODO: Remove
 export type { DocumentId };

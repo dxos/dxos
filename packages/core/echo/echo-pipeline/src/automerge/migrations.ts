@@ -4,12 +4,12 @@
 
 import { type StorageKey } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { type SubLevelDB } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { StorageType, type Directory } from '@dxos/random-access-storage';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { encodingOptions } from './leveldb-storage-adapter';
-import { type SubLevelDB } from './types';
 
 export const levelMigration = async ({ db, directory }: { db: SubLevelDB; directory: Directory }) => {
   // Note: Make automigration from previous storage to leveldb here.
