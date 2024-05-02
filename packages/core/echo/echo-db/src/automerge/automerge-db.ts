@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, Trigger, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import {
+  Event,
+  Trigger,
+  UpdateScheduler,
+  asyncTimeout,
+  synchronized,
+  TimeoutError,
+  type UnsubscribeCallback,
+} from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
@@ -14,7 +22,7 @@ import {
   type SpaceDoc,
   type SpaceState,
 } from '@dxos/echo-pipeline';
-import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject, isDeleted } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -230,6 +238,58 @@ export class AutomergeDb {
         .then(() => this.getObjectById(objectId)),
       timeout,
     );
+  }
+
+  async batchLoadObjects(
+    objectIds: string[],
+    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+  ): Promise<Array<EchoReactiveObject<any> | undefined>> {
+    const result = new Array(objectIds.length);
+    const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
+    for (let i = 0; i < objectIds.length; i++) {
+      const objectId = objectIds[i];
+      const object = this.getObjectById(objectId);
+      if (object != null) {
+        result[i] = isDeleted(object) ? undefined : object;
+      } else {
+        objectsToLoad.push({ id: objectId, resultIndex: i });
+      }
+    }
+    if (objectsToLoad.length === 0) {
+      return result;
+    }
+    const idsToLoad = objectsToLoad.map((v) => v.id);
+    this._automergeDocLoader.loadObjectDocument(idsToLoad);
+
+    return new Promise((resolve, reject) => {
+      let unsubscribe: UnsubscribeCallback | null = null;
+      let inactivityTimeoutTimer: any | undefined;
+      const scheduleInactivityTimeout = () => {
+        inactivityTimeoutTimer = setTimeout(() => {
+          unsubscribe?.();
+          reject(new TimeoutError(inactivityTimeout));
+        }, inactivityTimeout);
+      };
+      unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
+        const updatedIds = itemsUpdated.map((v) => v.id);
+        for (let i = objectsToLoad.length - 1; i >= 0; i--) {
+          const objectToLoad = objectsToLoad[i];
+          if (updatedIds.includes(objectToLoad.id)) {
+            clearTimeout(inactivityTimeoutTimer);
+            const loadedObject = this.getObjectById(objectToLoad.id)!;
+            result[objectToLoad.resultIndex] = isDeleted(loadedObject) ? undefined : loadedObject;
+            objectsToLoad.splice(i, 1);
+            scheduleInactivityTimeout();
+          }
+        }
+        if (objectsToLoad.length === 0) {
+          clearTimeout(inactivityTimeoutTimer);
+          unsubscribe?.();
+          resolve(result);
+        }
+      });
+      scheduleInactivityTimeout();
+    });
   }
 
   addCore(core: AutomergeObjectCore) {
