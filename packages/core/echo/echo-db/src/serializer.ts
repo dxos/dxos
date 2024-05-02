@@ -12,6 +12,8 @@ import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 
+const EXPORT_TIMEOUT = 60_000;
+
 /**
  * Archive of echo objects.
  *
@@ -90,7 +92,10 @@ export class Serializer {
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const ids = database.automerge.getAllObjectIds();
-    const objects = await Promise.all(ids.map(async (id) => database.automerge.loadObjectById(id)));
+    // TODO(wittjosiah): Ideally batch to reduce load on services, but for now just provide a large timeout.
+    const objects = await Promise.all(
+      ids.map(async (id) => database.automerge.loadObjectById(id, { timeout: EXPORT_TIMEOUT })),
+    );
 
     const data = {
       objects: objects.map((object) => {
