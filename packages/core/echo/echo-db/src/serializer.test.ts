@@ -4,9 +4,14 @@
 
 import { expect } from 'chai';
 
+import type { SpaceDoc } from '@dxos/echo-pipeline';
 import { getSchema, create, Expando } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
+import { AutomergeContext } from './automerge';
+import { EchoDatabaseImpl } from './database';
+import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
 import { Serializer, type SerializedSpace } from './serializer';
 import { createDatabase, Contact } from './testing';
@@ -145,6 +150,31 @@ describe('Serializer', () => {
       expect(contact.name).to.eq(name);
       expect(contact instanceof Contact).to.be.true;
       expect(getSchema(contact)).to.eq(Contact);
+    }
+  });
+
+  test('Loading many objects on db restart chunk load', async () => {
+    const totalObjects = 123;
+    const serializer = new Serializer();
+    let data: SerializedSpace;
+
+    const spaceKey = PublicKey.random();
+    const graph = new Hypergraph();
+    const automergeContext = new AutomergeContext();
+    const doc = automergeContext.repo.create<SpaceDoc>();
+    {
+      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      await db._automerge.open({ rootUrl: doc.url });
+      for (let i = 0; i < totalObjects; i++) {
+        db.add(create({ value: i }));
+      }
+      await db.flush();
+    }
+    {
+      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      await db._automerge.open({ rootUrl: doc.url });
+      data = await serializer.export(db);
+      expect(data.objects.length).to.eq(totalObjects);
     }
   });
 });
