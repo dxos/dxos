@@ -179,7 +179,7 @@ export const DeckLayout = ({
         })}
       >
         {/* Notch */}
-        <Main.Notch>
+        <Main.Notch classNames='z-[21]'>
           <Surface role='notch-start' />
           <Button
             disabled={!sidebarAvailable}

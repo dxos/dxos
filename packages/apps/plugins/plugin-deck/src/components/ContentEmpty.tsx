@@ -15,7 +15,7 @@ export const ContentEmpty = () => {
   return (
     <div
       role='none'
-      className='min-bs-screen is-full flex items-center justify-center p-8'
+      className='min-bs-screen is-dvw flex items-center justify-center p-8'
       data-testid='layoutPlugin.firstRunMessage'
     >
       <div role='none' className='grid place-items-center grid-rows-[min-content_min-content]'>
