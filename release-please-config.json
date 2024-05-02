@@ -324,6 +324,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/level/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/local-storage/package.json",
           "jsonpath": "$.version"
         },
