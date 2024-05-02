@@ -1,18 +1,18 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "key-value-store",
+  "name": "kv-store",
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/key-value-store/src",
+  "sourceRoot": "packages/common/kv-store/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/key-value-store/src/index.ts",
-          "packages/common/key-value-store/src/testing/index.ts"
+          "packages/common/kv-store/src/index.ts",
+          "packages/common/kv-store/src/testing/index.ts"
         ]
       }
     },
