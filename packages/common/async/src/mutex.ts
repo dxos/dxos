@@ -6,6 +6,7 @@ import { warnAfterTimeout } from '@dxos/debug';
 
 // Import explicit resource management polyfill.
 import '@dxos/util';
+import { cancelWithContext, type Context } from '@dxos/context';
 
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
@@ -25,11 +26,16 @@ import '@dxos/util';
  */
 export class Mutex {
   private _queue = Promise.resolve();
+  private _queueLength = 0;
 
   private _tag: string | null = null;
 
   get tag() {
     return this._tag;
+  }
+
+  isLocked(): boolean {
+    return this._queueLength > 0;
   }
 
   /**
@@ -43,8 +49,10 @@ export class Mutex {
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
     let guard!: MutexGuard;
+    this._queueLength++;
     this._queue = new Promise((resolve) => {
       guard = new MutexGuard(() => {
+        this._queueLength--;
         this._tag = null;
         resolve();
       });
@@ -132,4 +140,32 @@ export const synchronized = (
     }
   };
   Object.defineProperty(descriptor.value, 'name', { value: propertyName + '$synchronized' });
+};
+
+export const acquireInContext = async (
+  ctx: Context,
+  mutex: Mutex,
+  options: { releaseOnDispose: boolean } = { releaseOnDispose: true },
+): Promise<MutexGuard> => {
+  let guard: MutexGuard | undefined;
+  try {
+    return await cancelWithContext(
+      ctx,
+      (async () => {
+        guard = await mutex.acquire();
+        if (ctx.disposed) {
+          guard.release();
+          guard = undefined;
+          throw new Error('Guard released because acquired after context was disposed.');
+        }
+        if (options.releaseOnDispose) {
+          ctx.onDispose(() => guard?.release());
+        }
+        return guard;
+      })(),
+    );
+  } catch (e) {
+    guard?.release();
+    throw e;
+  }
 };
