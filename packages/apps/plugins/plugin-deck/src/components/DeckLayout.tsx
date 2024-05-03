@@ -106,7 +106,14 @@ const NodePlankHeading = ({
         part={part}
         increment={part[0] === 'main'}
         pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
+        onClick={({ type, part }) =>
+          dispatch(
+            type === 'close'
+              ? { action: NavigationAction.CLOSE, data: { [part[0]]: node.id } }
+              : { action: NavigationAction.ADJUST, data: { type, part } },
+          )
+        }
+        close
       />
     </PlankHeading.Root>
   );
@@ -258,9 +265,9 @@ export const DeckLayout = ({
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Deck.Root>
-          {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
-            (Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
+        {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
+          <Deck.Root>
+            {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
               .filter(Boolean)
               .map((id, index, main) => {
                 const node = graph.findNode(id);
@@ -288,11 +295,13 @@ export const DeckLayout = ({
                     )}
                   </Deck.Plank>
                 );
-              })
-          ) : (
+              })}
+          </Deck.Root>
+        ) : (
+          <Main.Content>
             <ContentEmpty />
-          )}
-        </Deck.Root>
+          </Main.Content>
+        )}
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}

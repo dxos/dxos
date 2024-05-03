@@ -13,7 +13,6 @@ export default [
         'open complementary sidebar label': 'Open complementary sidebar.',
         'open settings label': 'Show settings',
         'plugin error message': 'Content failed to render.',
-        'first run message': 'Nothing selected.',
         'content fallback message': 'Unsupported',
         'content fallback description':
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',

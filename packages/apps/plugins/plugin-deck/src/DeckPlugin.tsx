@@ -387,7 +387,7 @@ export const DeckPlugin = ({
               return batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  console.log('[next active]', nextActive);
+                  // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
