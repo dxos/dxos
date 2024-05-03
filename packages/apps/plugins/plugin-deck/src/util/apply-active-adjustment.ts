@@ -15,7 +15,6 @@ export const applyActiveAdjustment = (
     type,
     part: [partName, index, size],
   } = adjustment;
-  console.log('[adjust]', adjustment, active);
   const [action, direction] = type.split('-');
   switch (action) {
     case 'increment':
