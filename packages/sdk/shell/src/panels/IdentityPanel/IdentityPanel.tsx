@@ -53,8 +53,8 @@ const IdentityHeading = ({
   const fallbackValue = keyToFallback(identity.identityKey);
   const { t } = useTranslation('os');
   const [displayName, setDisplayName] = useState(identity.profile?.displayName ?? '');
-  const [emoji, setEmoji] = useState<string>(getEmojiValue(identity));
-  const [hue, setHue] = useState<string>(getHueValue(identity));
+  const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
+  const [hue, setHueDirectly] = useState<string>(getHueValue(identity));
   const { textValue, setTextValue } = useClipboardContext();
   const identityHex = identity.identityKey.toHex();
   const copied = textValue === identityHex;
@@ -67,9 +67,15 @@ const IdentityHeading = ({
     return onUpdateProfile?.(nextProfile);
   };
 
-  useEffect(() => {
+  const setEmoji = (nextEmoji: string) => {
+    setEmojiDirectly(nextEmoji);
     void handleUpdateProfile();
-  }, [emoji, hue]);
+  };
+
+  const setHue = (nextHue: string) => {
+    setHueDirectly(nextHue);
+    void handleUpdateProfile();
+  };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
 
@@ -229,7 +235,7 @@ export const IdentityPanel = ({
   const devices = useDevices();
   const identity = useIdentity();
   const invitations = useHaloInvitations();
-  const agentProps = useAgentHandlers({ client, identity, invitations });
+  const agentProps = useAgentHandlers({ identity, invitations });
   if (!identity) {
     log.error('IdentityPanel rendered with no active identity.');
     return null;

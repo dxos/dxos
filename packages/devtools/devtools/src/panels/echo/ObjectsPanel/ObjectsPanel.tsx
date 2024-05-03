@@ -11,7 +11,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
 const textFilter = (text?: string) => {
@@ -55,7 +55,7 @@ export const ObjectsPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
       }

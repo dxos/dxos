@@ -16,7 +16,7 @@ export default class Close extends BaseCommand<typeof Close> {
     const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, key, false);
-      await space.internal.close();
+      await space.close();
     });
   }
 }

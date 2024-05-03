@@ -7,6 +7,9 @@ export type ObjectPointerDecoded = {
   objectId: string;
 };
 
+/**
+ * Encoded object pointer: `${documentId}|${objectId}`.
+ */
 export type ObjectPointerEncoded = string;
 
 export const idCodec = {

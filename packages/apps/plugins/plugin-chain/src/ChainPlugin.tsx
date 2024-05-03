@@ -64,6 +64,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
 
               // Add all chains to the graph.
               const query = space.db.query(Filter.schema(ChainType));
+              subscriptions.add(query.subscribe());
               let previousObjects: ChainType[] = [];
               subscriptions.add(
                 effect(() => {

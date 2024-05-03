@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 import "dxos/client/services.proto";
 import "dxos/echo/timeframe.proto";
@@ -72,6 +73,21 @@ message SpaceAdmissionRequest {
   dxos.keys.PublicKey device_key = 2;
   dxos.keys.PublicKey control_feed_key = 3;
   dxos.keys.PublicKey data_feed_key = 4;
+}
+
+message DelegateSpaceInvitation {
+  string invitation_id = 1;
+  dxos.client.services.Invitation.AuthMethod auth_method = 2;
+  dxos.keys.PublicKey swarm_key = 3;
+  dxos.halo.credentials.SpaceMember.Role role = 4;
+  /// Present for AuthMethod.KNOWN_PUBLIC_KEY, where guess needs to prove possession of a corresponding private key
+  optional dxos.keys.PublicKey guest_key = 5;
+  optional google.protobuf.Timestamp expires_on = 6;
+  bool multi_use = 7;
+}
+
+message CancelDelegatedInvitation {
+  dxos.keys.PublicKey credential_id = 1;
 }
 
 message AdmissionRequest {

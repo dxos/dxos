@@ -4,15 +4,15 @@
 
 import '@dxosTheme';
 
-import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import '@preact/signals-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
 import { Repo } from '@dxos/automerge/automerge-repo';
-import { Filter, DocAccessor, create, createDocAccessor, type Expando } from '@dxos/echo-schema';
+import { BroadcastChannelNetworkAdapter } from '@dxos/automerge/automerge-repo-network-broadcastchannel';
+import { create, type Expando } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
+import { Filter, DocAccessor, createDocAccessor, useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';

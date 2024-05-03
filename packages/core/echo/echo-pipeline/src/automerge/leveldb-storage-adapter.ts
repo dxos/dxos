@@ -107,6 +107,7 @@ const keyEncoder: MixedEncoding<StorageKey, Uint8Array, StorageKey> = {
       .toString()
       .split('-')
       .map((k) => k.replaceAll('%2D', '-').replaceAll('%25', '%')),
+  format: 'buffer',
 };
 
 export const encodingOptions = {

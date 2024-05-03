@@ -8,7 +8,7 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,

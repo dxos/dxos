@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { type PluginDefinition, resolvePlugin, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { GameType } from '@dxos/chess-app';
-import { Filter, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -62,6 +63,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
               // Add all games to the graph.
               const query = space.db.query(Filter.schema(GameType));
+              subscriptions.add(query.subscribe());
               let previousObjects: GameType[] = [];
               subscriptions.add(
                 effect(() => {

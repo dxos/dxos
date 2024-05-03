@@ -4,7 +4,8 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { getDatabaseFromObject, type ReactiveObject } from '@dxos/echo-schema';
+import { getDatabaseFromObject } from '@dxos/echo-db';
+import { type ReactiveObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
 

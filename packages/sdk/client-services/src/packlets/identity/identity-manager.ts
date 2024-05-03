@@ -385,6 +385,7 @@ export class IdentityManager {
         log.warn('auth failure');
       },
       memberKey: identityKey,
+      onDelegatedInvitationStatusChange: async () => {}, // TODO: will be used for recovery keys
     });
   }
 }

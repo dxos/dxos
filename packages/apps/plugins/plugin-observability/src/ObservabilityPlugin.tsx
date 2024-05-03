@@ -22,7 +22,7 @@ import {
   parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,

@@ -3,7 +3,8 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoDatabase, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
   type Invitation,
@@ -18,19 +19,6 @@ import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
   get data(): SpaceData;
-
-  /**
-   * Activates the space enabling the use of the database and starts replication with peers.
-   * The setting is persisted on the local device.
-   */
-  open(): Promise<void>;
-
-  /**
-   * Deactivates the space stopping replication with other peers.
-   * The space will not auto-open on the next app launch.
-   * The setting is persisted on the local device.
-   */
-  close(): Promise<void>;
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
@@ -74,7 +62,17 @@ export interface Space {
   // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
+  // TODO(wittjosiah): Rename activate/deactivate?
+  /**
+   * Activates the space enabling the use of the database and starts replication with peers.
+   * The setting is persisted on the local device.
+   */
   open(): Promise<void>;
+  /**
+   * Deactivates the space stopping replication with other peers.
+   * The space will not auto-open on the next app launch.
+   * The setting is persisted on the local device.
+   */
   close(): Promise<void>;
 
   /**

@@ -163,22 +163,24 @@ class QueryModel implements SearchListQueryModel<EchoReactiveObject<any>> {
   }
 
   async query(text?: string) {
-    const { objects = [] } = this._db.query((object: EchoReactiveObject<any>) => {
-      if (!text?.length) {
-        return null;
-      }
+    const { objects = [] } = await this._db
+      .query((object: EchoReactiveObject<any>) => {
+        if (!text?.length) {
+          return null;
+        }
 
-      if (getType(object)?.itemId !== this._schemaId) {
-        return false;
-      }
+        if (getType(object)?.itemId !== this._schemaId) {
+          return false;
+        }
 
-      const label = this.getText(object);
-      if (!label || !label.toLowerCase().includes(text.toLowerCase())) {
-        return false;
-      }
+        const label = this.getText(object);
+        if (!label || !label.toLowerCase().includes(text.toLowerCase())) {
+          return false;
+        }
 
-      return true;
-    });
+        return true;
+      })
+      .run();
 
     return objects;
   }

@@ -7,8 +7,8 @@ import '@dxosTheme';
 import React, { useEffect, useMemo } from 'react';
 
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { createDocAccessor, createEchoObject } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
 // @ts-ignore
@@ -35,7 +35,7 @@ const Story = () => {
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
+    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
   }, []);
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.

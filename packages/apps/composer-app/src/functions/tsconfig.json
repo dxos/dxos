@@ -1,0 +1,12 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "rootDir": ".",
+    "outDir": "../../dist",
+    "types": [
+      "@cloudflare/workers-types",
+    ]
+  }
+}

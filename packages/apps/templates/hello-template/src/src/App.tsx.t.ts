@@ -9,8 +9,16 @@ export default template.define.script({
       ...rest,
       slots: {
         content: ({ imports }) => plate`<${imports.use('Welcome', './Welcome')} name="${context.input.name}" />`,
-        extraImports: 'import "./index.css";'
-      }
+        extraImports: `
+          import "./index.css";
+          import { create, Expando } from '@dxos/react-client/echo';
+        `,
+        onClientInitialized: '',
+        onCreateIdentity: `
+          await client.spaces.isReady.wait();
+          client.spaces.default.db.add(create(Expando, { type: 'counter', count: 0 }));
+        `,
+      },
     });
     return inherited.files?.[0]?.content;
   },

@@ -6,8 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
@@ -42,7 +41,10 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
     };
   }, [doc]);
 
-  const comments = doc.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
+  const comments =
+    doc.comments
+      ?.filter((comment) => comment.thread?.id && comment.cursor)
+      .map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
 
   if (!doc.content) {
     return null;

@@ -4,10 +4,9 @@
 
 import { expect } from 'chai';
 
-import { Reference } from '@dxos/echo-db';
 import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { type Filter } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-schema';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
@@ -35,7 +34,7 @@ describe('IndexStore', () => {
     {
       await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
 
       expect(ids[0].id).to.equal('0');
@@ -45,7 +44,7 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -81,7 +80,7 @@ describe('IndexStore', () => {
       const identifier = [...kinds.keys()][0];
       const loadedIndex = await store.load(identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
 
@@ -95,7 +94,7 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(2);
       expect(ids.map(({ id }) => id)).to.deep.eq(['0', '3']);
     }

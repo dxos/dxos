@@ -7,7 +7,8 @@ import { promisify } from 'node:util';
 import textract from 'textract';
 
 import { DocumentType, FileType } from '@braneframe/types';
-import { type EchoReactiveObject, Filter, hasType, loadObjectReferences } from '@dxos/echo-schema';
+import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -68,17 +69,17 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       await add(objects.filter(hasType(DocumentType)));
       await add(objects.filter(hasType(FileType)));
     } else {
-      const { objects: documents } = space.db.query(Filter.schema(DocumentType));
+      const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
       await add(documents);
-      const { objects: files } = space.db.query(Filter.schema(FileType));
+      const { objects: files } = await space.db.query(Filter.schema(FileType)).run();
       await add(files);
     }
   } else {
     const spaces = client.spaces.get();
     for (const space of spaces) {
-      const { objects: documents } = space.db.query(Filter.schema(DocumentType));
+      const { objects: documents } = await space.db.query(Filter.schema(DocumentType)).run();
       await addDocuments(space.key)(documents);
-      const { objects: files } = space.db.query(Filter.schema(FileType));
+      const { objects: files } = await space.db.query(Filter.schema(FileType)).run();
       await addDocuments(space.key)(files);
     }
   }

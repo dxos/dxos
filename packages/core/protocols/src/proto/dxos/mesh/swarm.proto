@@ -9,14 +9,19 @@ import "dxos/keys.proto";
 
 package dxos.mesh.swarm;
 
+/**
+ * Use for:
+ * - Initial peer discovery (initiate session id between two peers).
+ * - RTC negotiation (SDP offer/answer and ICE).
+ */
 message SwarmMessage {
-  /// Swarm identefier.
+  /// Swarm identifier.
   dxos.keys.PublicKey topic = 3;
   /// Unique connection identifier.
   dxos.keys.PublicKey session_id = 4;
   /// Message payload.
   MessageData data = 5;
-  /// Unique message identifier. Used for Acknolegment and matching Anwers to Offers.
+  /// Unique message identifier. Used for ACK and matching Answers to Offers.
   dxos.keys.PublicKey message_id = 6;
 }
 
@@ -29,7 +34,6 @@ message MessageData {
      * @deprecated Use SignalBatch instead.
      */
     Signal signal = 3;
-    
     SignalBatch signal_batch = 4;
   }
 }
@@ -42,6 +46,10 @@ message Answer {
   /// MessageId of the Offer being answered.
   optional dxos.keys.PublicKey offer_message_id = 2;
 }
+
+//
+// RTC messages.
+//
 
 message Signal {
   google.protobuf.Struct payload = 1;

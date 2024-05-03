@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-thread",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "A set of components to use with threads, including comments and messages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

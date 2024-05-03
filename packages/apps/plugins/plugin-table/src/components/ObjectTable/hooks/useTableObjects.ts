@@ -3,8 +3,8 @@
 //
 
 import { useFilteredObjects } from '@braneframe/plugin-search';
-import { type EchoReactiveObject, Filter, type S } from '@dxos/echo-schema';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
 // TODO(Zan): Consolidate.
 const Stable = {

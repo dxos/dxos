@@ -8,15 +8,8 @@ import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import {
-  DataServiceImpl,
-  type ObjectStructure,
-  encodeReference,
-  type SpaceDoc,
-  type LevelDB,
-} from '@dxos/echo-pipeline';
+import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-pipeline';
 import { getTypeReference } from '@dxos/echo-schema';
-import { IndexServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -245,12 +238,12 @@ export class ClientServicesHost {
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
 
+    await this._resourceLock?.acquire();
+
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
     await this._level.open();
-
-    await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
@@ -285,12 +278,8 @@ export class ClientServicesHost {
         },
       ),
 
-      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
-
-      IndexService: new IndexServiceImpl({
-        indexer: this._serviceContext.indexer,
-        automergeHost: this._serviceContext.automergeHost,
-      }),
+      DataService: this._serviceContext.echoHost.dataService,
+      QueryService: this._serviceContext.echoHost.queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -368,7 +357,7 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.
@@ -388,7 +377,7 @@ export class ClientServicesHost {
       assignDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._serviceContext.automergeHost.repo.flush();
+    await this._serviceContext.echoHost.flush();
 
     return identity;
   }

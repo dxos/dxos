@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-settings",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "DXOS app plugin for aggregating and rendering plugin settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,7 +23,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/local-storage": "workspace:*"
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -57,6 +57,7 @@ const spaceBuilderExtension = (graph: Graph) => {
       );
 
       const query = space.db.query();
+      subscriptions.add(query.subscribe());
       subscriptions.add(
         effect(() => {
           query.objects.forEach((object) => {
@@ -95,6 +96,7 @@ const objectBuilderExtension = (graph: Graph) => {
     subscriptions.clear();
     spaces.forEach((space) => {
       const query = space.db.query({ type: 'test' });
+      subscriptions.add(query.subscribe());
       let previousObjects: EchoReactiveObject<any>[] = [];
       subscriptions.add(
         effect(() => {
@@ -169,7 +171,7 @@ const runAction = (action: Action) => {
       break;
 
     case Action.CLOSE_SPACE:
-      void getSpace()?.internal.close();
+      void getSpace()?.close();
       break;
 
     case Action.RENAME_SPACE: {

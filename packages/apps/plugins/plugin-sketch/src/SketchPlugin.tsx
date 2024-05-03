@@ -11,7 +11,8 @@ import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { SketchType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, Expando, Filter } from '@dxos/echo-schema';
+import { create, Expando } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { SketchMain, SketchComponent } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
@@ -63,6 +64,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
               // Add all sketches to the graph.
               const query = space.db.query(Filter.schema(SketchType));
+              subscriptions.add(query.subscribe());
               let previousObjects: SketchType[] = [];
               subscriptions.add(
                 effect(() => {

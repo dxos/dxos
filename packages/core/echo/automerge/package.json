@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,6 +41,20 @@
       "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
       "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
       "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
+    },
+    "#automerge-repo-network-broadcastchannel": {
+      "browser": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
+      "import": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
+      "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+      "node": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts"
+    },
+    "#automerge-repo-network-websocket": {
+      "browser": "./dist/lib/browser/automerge-repo-network-websocket.js",
+      "import": "./dist/lib/browser/automerge-repo-network-websocket.js",
+      "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+      "node": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts"
     }
   },
   "exports": {
@@ -78,6 +92,20 @@
       "require": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
       "node": "./dist/lib/node/automerge-repo-storage-indexeddb.cjs",
       "types": "./dist/types/src/automerge-repo-storage-indexeddb.d.ts"
+    },
+    "./automerge-repo-network-broadcastchannel": {
+      "browser": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
+      "import": "./dist/lib/browser/automerge-repo-network-broadcastchannel.js",
+      "require": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+      "node": "./dist/lib/node/automerge-repo-network-broadcastchannel.cjs",
+      "types": "./dist/types/src/automerge-repo-network-broadcastchannel.d.ts"
+    },
+    "./automerge-repo-network-websocket": {
+      "browser": "./dist/lib/browser/automerge-repo-network-websocket.js",
+      "import": "./dist/lib/browser/automerge-repo-network-websocket.js",
+      "require": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+      "node": "./dist/lib/node/automerge-repo-network-websocket.cjs",
+      "types": "./dist/types/src/automerge-repo-network-websocket.d.ts"
     }
   },
   "typesVersions": {
@@ -96,6 +124,12 @@
       ],
       "automerge-repo-storage-indexeddb": [
         "dist/types/src/automerge-repo-storage-indexeddb.d.ts"
+      ],
+      "automerge-repo-network-broadcastchannel": [
+        "dist/types/src/automerge-repo-network-broadcastchannel.d.ts"
+      ],
+      "automerge-repo-network-websocket": [
+        "dist/types/src/automerge-repo-network-websocket.d.ts"
       ]
     }
   },
@@ -108,16 +142,22 @@
     "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
-    "@automerge/automerge": "^2.1.13",
-    "@automerge/automerge-repo": "^1.1.5",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.4",
     "@automerge/automerge-wasm": "^0.12.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.1",
     "fast-sha256": "^1.3.0",
-    "xstate": "^4.37.0"
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.14.2",
+    "xstate": "^5.9.1"
+  },
+  "devDependencies": {
+    "@automerge/automerge": "^2.2.0",
+    "@automerge/automerge-repo": "^1.1.9",
+    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.9",
+    "@automerge/automerge-repo-network-websocket": "^1.1.9",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.9"
   },
   "publishConfig": {
     "access": "public"
