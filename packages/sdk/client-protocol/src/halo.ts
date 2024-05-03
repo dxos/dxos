@@ -32,6 +32,11 @@ export interface Halo {
   share(options?: Partial<Invitation>): CancellableInvitation;
   join(invitation: Invitation, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
 
+  /*
+   * query Credentials currently known to the identity.
+   * Note: Will return an empty or incomplete result if called before credentials have been loaded.
+   * @experimental
+   */
   queryCredentials(options: { ids?: PublicKey[]; type?: string }): Credential[];
   writeCredentials(credentials: Credential[]): Promise<void>;
   presentCredentials(options: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation>;
