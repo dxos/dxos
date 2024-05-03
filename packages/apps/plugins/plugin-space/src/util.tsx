@@ -129,6 +129,10 @@ export const updateGraphWithSpace = ({
   const getId = (id: string) => `${id}/${space.key.toHex()}`;
 
   const unsubscribeSpace = effect(() => {
+    const hasPendingMigration =
+      space.state.get() === SpaceState.READY &&
+      !!Migrations.versionProperty &&
+      space.properties[Migrations.versionProperty] !== Migrations.targetVersion;
     const collection = space.state.get() === SpaceState.READY && getSpaceProperty(space, Collection.typename);
     const partials =
       space.state.get() === SpaceState.READY && collection instanceof Collection
@@ -149,7 +153,7 @@ export const updateGraphWithSpace = ({
               label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
               description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
-              disabled: space.state.get() === SpaceState.INACTIVE,
+              disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
               // TODO(burdon): Change to semantic classes that are customizable.
               palette: isPersonalSpace ? 'teal' : undefined,
               testId: isPersonalSpace ? 'spacePlugin.personalSpace' : 'spacePlugin.space',
@@ -161,7 +165,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: collection instanceof Collection && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: collection instanceof Collection && space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -183,7 +187,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: collection instanceof Collection && (hidden ? true : space.state.get() === SpaceState.READY),
+        condition: collection instanceof Collection && space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -211,10 +215,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition:
-          space.state.get() === SpaceState.READY &&
-          !!Migrations.versionProperty &&
-          space.properties[Migrations.versionProperty] !== Migrations.targetVersion,
+        condition: hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -223,6 +224,7 @@ export const updateGraphWithSpace = ({
             properties: {
               label: ['migrate space label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <Database {...props} />,
+              disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
             },
             edges: [[space.key.toHex(), 'inbound']],
@@ -232,7 +234,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: !isPersonalSpace && space.state.get() === SpaceState.READY,
+        condition: !isPersonalSpace && space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {

@@ -227,15 +227,17 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       caller={NAV_TREE_ITEM}
                     />
                   )}
-                  <NavTreeItemActionDropdownMenu
-                    icon={DotsThreeVertical}
-                    actions={actions}
-                    suppressNextTooltip={suppressNextTooltip}
-                    onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
-                    testId={`navtree.treeItem.actionsLevel${level}`}
-                    menuOpen={menuOpen}
-                    onChangeMenuOpen={setMenuOpen}
-                  />
+                  {actions.length ? (
+                    <NavTreeItemActionDropdownMenu
+                      icon={DotsThreeVertical}
+                      actions={actions}
+                      suppressNextTooltip={suppressNextTooltip}
+                      onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
+                      testId={`navtree.treeItem.actionsLevel${level}`}
+                      menuOpen={menuOpen}
+                      onChangeMenuOpen={setMenuOpen}
+                    />
+                  ) : null}
                   {renderPresence?.(node)}
                 </div>
               </ActionRoot>
