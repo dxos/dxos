@@ -115,7 +115,7 @@ export class RpcPeer {
   private readonly _byeTrigger = new Trigger();
 
   private _nextId = 0;
-  private _state = RpcState.INITIAL;
+  private _state: RpcState = RpcState.INITIAL;
   private _unsubscribeFromPort: (() => void) | undefined = undefined;
   private _clearOpenInterval: (() => void) | undefined = undefined;
 
@@ -155,7 +155,7 @@ export class RpcPeer {
       return;
     }
 
-    log('sending open message');
+    log('sending open message', { state: this._state });
     await this._sendMessage({ open: true });
 
     if (this._state !== RpcState.OPENING) {
@@ -170,16 +170,15 @@ export class RpcPeer {
     await Promise.race([this._remoteOpenTrigger.wait(), this._closingTrigger.wait()]);
 
     this._clearOpenInterval?.();
-    this._state = RpcState.OPENED;
 
-    if (this._state !== RpcState.OPENED) {
+    if ((this._state as RpcState) !== RpcState.OPENED) {
       // Closed while opening.
       return; // TODO(dmaretskyi): Throw error?
     }
 
     // TODO(burdon): This seems error prone.
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    log('sending second open message');
+    log('sending second open message', { state: this._state });
     await this._sendMessage({ openAck: true });
   }
 
@@ -251,7 +250,7 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = RpcMessage.decode(msg, { preserveAny: true });
-    log('received message', { type: Object.keys(decoded)[0] });
+    logIfEnabled('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
@@ -281,10 +280,10 @@ export class RpcPeer {
           });
         });
       } else {
-        log('request', { method: req.method });
+        logIfEnabled('request', { method: req.method });
         const response = await this._callHandler(req);
 
-        log('sending response', {
+        logIfEnabled('sending response', {
           method: req.method,
           response: response.payload?.type_url,
           error: response.error,
@@ -310,21 +309,22 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      log('response', { type_url: decoded.response.payload?.type_url });
+      logIfEnabled('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
-      log('received open message');
+      log('received open message', { state: this._state });
       if (this._params.noHandshake) {
         return;
       }
 
       await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
-      log('received openAck message');
+      log('received openAck message', { state: this._state });
       if (this._params.noHandshake) {
         return;
       }
 
+      this._state = RpcState.OPENED;
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (this._state !== RpcState.OPENED) {
@@ -364,7 +364,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    log('calling', { method });
+    logIfEnabled('calling', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;
@@ -469,7 +469,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage, timeout?: number) {
-    log('sending message', { type: Object.keys(message)[0] });
+    logIfEnabled('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
   }
 
@@ -538,6 +538,14 @@ export class RpcPeer {
     }
   }
 }
+
+const DEBUG_LOG_ALL_CALLS = true;
+
+const logIfEnabled = (message: string, context: any) => {
+  if (DEBUG_LOG_ALL_CALLS) {
+    log(message, context);
+  }
+};
 
 const throwIfNotOpen = (state: RpcState) => {
   switch (state) {

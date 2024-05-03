@@ -32,7 +32,7 @@ type StateUpdateSink = PushStream<Invitation> & {
   waitFor(state: Invitation.State): Promise<void>;
 };
 
-describe.only('InvitationHandler', () => {
+describe('InvitationHandler', () => {
   let testBuilder: TestBuilder;
   beforeEach(() => {
     testBuilder = new TestBuilder();
@@ -152,7 +152,6 @@ describe.only('InvitationHandler', () => {
         hosts.push(await createNewHost(invitation));
       }
 
-      console.log('hello 23');
       const guest = await createPeer(host.spaceKey);
       const codeInput = await acceptInvitation(guest, invitation);
       while (!guest.ctx.disposed) {
@@ -307,6 +306,8 @@ describe.only('InvitationHandler', () => {
     return {
       sink,
       next: sink.push.bind(sink),
+      error: () => {},
+      complete: () => {},
       hasState,
       get lastState() {
         return sink[sink.length - 1]?.state;

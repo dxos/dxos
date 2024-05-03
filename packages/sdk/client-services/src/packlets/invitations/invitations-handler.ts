@@ -4,7 +4,7 @@
 
 import { Mutex, type PushStream, scheduleTask, TimeoutError, type Trigger } from '@dxos/async';
 import { INVITATION_TIMEOUT } from '@dxos/client-protocol';
-import { type Context } from '@dxos/context';
+import { type Context, ContextDisposedError } from '@dxos/context';
 import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -88,7 +88,7 @@ export class InvitationsHandler {
             return admissionResponse;
           } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            guardedState.set(extension, Invitation.State.ERROR);
+            guardedState.setError(extension, err);
             throw err; // Propagate error to guest.
           }
         },
@@ -97,7 +97,7 @@ export class InvitationsHandler {
           let admitted = false;
           connectionCtx.onDispose(() => {
             if (!admitted) {
-              guardedState.set(extension, Invitation.State.ERROR);
+              guardedState.setError(extension, new ContextDisposedError());
             }
           });
 
@@ -121,7 +121,7 @@ export class InvitationsHandler {
                 guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
                 log.error('failed', err);
-                guardedState.set(extension, Invitation.State.ERROR);
+                guardedState.setError(extension, err);
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
@@ -139,7 +139,7 @@ export class InvitationsHandler {
             guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
             log.error('failed', err);
-            guardedState.set(extension, Invitation.State.ERROR);
+            guardedState.setError(extension, err);
           }
         },
       });
@@ -212,14 +212,18 @@ export class InvitationsHandler {
         onOpen: (connectionCtx: Context, extensionCtx: ExtensionContext) => {
           triedPeersIds.add(extensionCtx.remotePeerId);
 
+          if (admitted) {
+            extensionCtx.close();
+            return;
+          }
+
           connectionCtx.onDispose(async () => {
-            log('extension disposed', { currentState: guardedState.current.state });
-            if (admitted || shouldCancelInvitationFlow(extension)) {
-              guardedState.set(extension, admitted ? Invitation.State.SUCCESS : Invitation.State.ERROR);
-              log('disposing guest invitation context');
-              await ctx.dispose();
-            } else {
-              guardedState.set(extension, Invitation.State.ERROR);
+            log('extension disposed', { admitted, currentState: guardedState.current.state });
+            if (!admitted) {
+              guardedState.setError(extension, new ContextDisposedError());
+              if (shouldCancelInvitationFlow(extension)) {
+                await ctx.dispose();
+              }
             }
           });
 
@@ -290,7 +294,7 @@ export class InvitationsHandler {
                 guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
                 log('auth failed', err);
-                guardedState.set(extension, Invitation.State.ERROR);
+                guardedState.setError(extension, err);
               }
               extensionCtx.close(err);
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
@@ -306,7 +310,7 @@ export class InvitationsHandler {
             guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
             log('auth failed', err);
-            guardedState.set(extension, Invitation.State.ERROR);
+            guardedState.setError(extension, err);
           }
         },
       });
@@ -317,7 +321,7 @@ export class InvitationsHandler {
     scheduleTask(ctx, async () => {
       const error = protocol.checkInvitation(invitation);
       if (error) {
-        guardedState.set(null, Invitation.State.ERROR);
+        stream.error(error);
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
@@ -364,8 +368,18 @@ export class InvitationsHandler {
       },
       set: (extension: InvitationHostExtension | InvitationGuestExtension | null, newState: Invitation.State) => {
         if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
-          currentInvitation = { ...currentInvitation, state: newState };
+          if (currentInvitation.state !== newState) {
+            currentInvitation = { ...currentInvitation, state: newState };
+            stream.next(currentInvitation);
+          }
+        }
+        return currentInvitation;
+      },
+      setError: (extension: InvitationHostExtension | InvitationGuestExtension | null, error: any) => {
+        if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
+          currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
           stream.next(currentInvitation);
+          stream.error(error);
         }
         return currentInvitation;
       },

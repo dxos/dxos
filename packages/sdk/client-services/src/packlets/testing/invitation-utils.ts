@@ -216,8 +216,10 @@ const acceptInvitation = (
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
-    const guestHandler = guest.getInvitationHandler({ kind: invitation.kind });
-    return guest.invitations.acceptInvitation(guestHandler, invitation, guestDeviceProfile);
+    return guest.invitationsManager.acceptInvitation({
+      invitation,
+      deviceProfile: guestDeviceProfile,
+    });
   }
 
   return guest.join(invitation, guestDeviceProfile);
