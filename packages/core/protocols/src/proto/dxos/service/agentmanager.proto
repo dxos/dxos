@@ -1,0 +1,51 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "dxos/config.proto";
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+
+package dxos.service.agentmanager;
+
+option go_package = "github.com/dxos/kube/proto/def/dxos/service/agentmanager";
+
+message InitAuthSequenceRequest {
+  // Auth token for the agentmanager to validate authorization.
+  optional string auth_token = 1;
+}
+
+message InitAuthSequenceResponse {
+  enum InitAuthSequenceResult {
+    UNKNOWN = 0;
+    SUCCESS = 1;
+    NOT_AUTHORIZED = 2;
+    ERROR = 3;
+  }
+
+  InitAuthSequenceResult result = 1;
+    optional bytes nonce = 2;
+    optional dxos.keys.PublicKey agentmanager_key = 3;
+    // Reason why initializing the auth sequence failed (e.g. invalid access token)
+    optional string init_auth_response_reason = 4;
+}
+
+message Authentication {
+  dxos.halo.credentials.Presentation presentation = 1;
+}
+
+message AuthenticateResponse {
+  optional string token = 1;
+  optional dxos.halo.credentials.Credential credential = 2;
+}
+
+service AgentManager {
+  // Initialize the authentication sequence. Send an optional authentication token to permit the server to authorize the request.
+  // Receive a nonce (challenge) necessary to call Authenticate to prevent replay attacks.
+  rpc InitAuthSequence(InitAuthSequenceRequest) returns (InitAuthSequenceResponse);
+  rpc Authenticate(Authentication) returns (AuthenticateResponse);
+}

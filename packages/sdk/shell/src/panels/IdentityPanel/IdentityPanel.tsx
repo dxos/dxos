@@ -235,7 +235,7 @@ export const IdentityPanel = ({
   const devices = useDevices();
   const identity = useIdentity();
   const invitations = useHaloInvitations();
-  const agentProps = useAgentHandlers({ client, identity, invitations });
+  const agentProps = useAgentHandlers({ identity, invitations });
   if (!identity) {
     log.error('IdentityPanel rendered with no active identity.');
     return null;
