@@ -10,7 +10,7 @@ import { Button, DensityProvider, Popover, DropdownMenu } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ColumnSettingsForm } from './ColumnSettingsForm';
-import { useColumnSorting } from '../../hooks';
+import { useSortColumn } from '../../hooks';
 import { type TableDef, type ColumnProps } from '../../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
@@ -26,7 +26,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
   const title = column.label?.length ? column.label : column.id;
   const header = props.context.header;
 
-  const { canSort, sortDirection, onSelectSort, onToggleSort, onClearSort } = useColumnSorting(header.column);
+  const { canSort, sortDirection, onSelectSort, onToggleSort, onClearSort } = useSortColumn(header.column);
 
   const columnSettingsAnchorRef = useRef<any>(null);
 
@@ -83,7 +83,7 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
                         <ArrowDown className={getSize(4)} />
                       </span>
                     </DropdownMenu.Item>
-                    {sortDirection !== false && (
+                    {sortDirection && (
                       <DropdownMenu.Item onClick={onClearSort}>
                         <span className='grow'>Clear sort</span>
                         <span className='opacity-50'>
@@ -124,10 +124,10 @@ export const SortIndicator = ({
   direction,
   onClick,
 }: {
-  direction: SortDirection | false;
+  direction: SortDirection | undefined;
   onClick: (e: any) => void;
 }) => {
-  if (direction === false) {
+  if (direction === undefined) {
     return null;
   }
 

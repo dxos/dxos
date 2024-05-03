@@ -1,17 +1,17 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "kube-testing",
+  "name": "blade-runner",
   "tags": [
     "scope:gravity"
   ],
-  "sourceRoot": "packages/gravity/kube-testing/src",
+  "sourceRoot": "packages/gravity/blade-runner/src",
   "projectType": "library",
   "targets": {
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/gravity/kube-testing/src/index.ts",
-          "packages/gravity/kube-testing/src/main.ts"
+          "packages/gravity/blade-runner/src/index.ts",
+          "packages/gravity/blade-runner/src/main.ts"
         ]
       }
     },
@@ -21,10 +21,10 @@
           "nodejs"
         ],
         "testPatterns": [
-          "packages/gravity/kube-testing/src/**/*.test.{ts,js}"
+          "packages/gravity/blade-runner/src/**/*.test.{ts,js}"
         ],
         "watchPatterns": [
-          "packages/gravity/kube-testing/src/**/*"
+          "packages/gravity/blade-runner/src/**/*"
         ]
       }
     },
