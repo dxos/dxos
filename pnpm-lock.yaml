@@ -5087,7 +5087,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.14.2)
       ws:
-        specifier: ^8.14.0
+        specifier: ^8.14.2
         version: 8.14.2
       xstate:
         specifier: ^5.9.1
