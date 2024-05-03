@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { synchronized, Trigger } from '@dxos/async';
+import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { invariant } from '@dxos/invariant';
@@ -31,8 +31,6 @@ const defaultConfig: AgentHostingProvider = {
   baseUrl: 'http://localhost:8082/v1alpha1/',
   username: 'dxos',
 };
-
-const CREDENTIAL_QUERY_TIMEOUT = 5_000;
 
 export interface AgentHostingProviderClient {
   /**
@@ -159,17 +157,14 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
   async _agentManagerAuth(authDeviceCreds: Credential) {
     invariant(this._rpc, 'RPC not initialized');
+    // TODO(nf): pass authToken to initAuthSequence
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
-      // TODO: resend BETA JWT cookie
-      await this._rpc.rpc.AgentManager.initAuthSequence({ authToken: 'foo' });
+      await this._rpc.rpc.AgentManager.initAuthSequence({});
 
     if (result !== InitAuthSequenceResponse.InitAuthSequenceResult.SUCCESS || !nonce || !agentmanagerKey) {
       log('auth init failed', { result, nonce, agentmanagerKey, initAuthResponseReason });
       throw new Error('Failed to initialize auth sequence');
     }
-    // TODO(nf): verify agentmanagerKey with configured service?
-
-    // TODO: rename credential
     const agentmanagerAccessCreds = await this._queryCredentials('dxos.halo.credentials.ServiceAccess', (cred) =>
       PublicKey.equals(cred.issuer, agentmanagerKey),
     );
@@ -199,28 +194,18 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean) {
-    const credentialsQuery = this._halo.queryCredentials({ type });
-    const trigger = new Trigger<Credential[]>();
-    let result: Credential[] = [];
-    credentialsQuery.subscribe({
-      onUpdate: (credentials: Credential[]) => {
-        if (predicate) {
-          result = credentials.filter(predicate);
-        } else {
-          result = credentials;
-        }
-      },
-      onError: (err) => {
-        throw err;
-      },
+    // assumes all credentials are already loaded. should client.spaces.isReady.wait()?
+    const haloCredentials = this._halo.credentials.get();
+
+    return haloCredentials.filter((cred) => {
+      if (type && cred.subject.assertion['@type'] !== type) {
+        return false;
+      }
+      if (predicate && !predicate(cred)) {
+        return false;
+      }
+      return true;
     });
-
-    setTimeout(() => {
-      trigger.wake(result);
-    }, CREDENTIAL_QUERY_TIMEOUT);
-
-    await trigger.wait();
-    return result;
   }
 
   public async createAgent(invitationCode: string, identityKey: string) {

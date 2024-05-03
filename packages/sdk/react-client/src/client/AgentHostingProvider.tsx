@@ -47,6 +47,7 @@ const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
       return new FakeAgentHostingProvider(config, halo);
 
     case 'AGENTHOSTING_API':
+      // TODO(nf): remove once hub agent authz is in place
       if (localStorage.getItem('dxos.org/shell/features/agentHosting') !== 'true') {
         log.info('dxos.org/shell/features/agentHosting not enabled');
         return null;
