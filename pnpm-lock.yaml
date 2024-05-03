@@ -7587,78 +7587,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/gravity/gravity-dashboard:
-    dependencies:
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
-      d3:
-        specifier: ^7.8.5
-        version: 7.8.5
-      use-resize-observer:
-        specifier: ^9.0.0
-        version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.18.13
-        version: 7.21.3
-      '@dxos/esbuild-book-knobs':
-        specifier: ~2.28.3
-        version: 2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0)
-      '@dxos/esbuild-plugins':
-        specifier: workspace:*
-        version: link:../../common/esbuild-plugins
-      '@dxos/esbuild-server':
-        specifier: ~2.29.0
-        version: 2.29.0(@types/react@18.0.21)
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@emotion/css':
-        specifier: ^11.7.1
-        version: 11.10.0(@babel/core@7.21.3)
-      '@emotion/react':
-        specifier: ^11.9.0
-        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
-      '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
-      '@types/lodash':
-        specifier: ^4.14.182
-        version: 4.14.191
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-
-  packages/gravity/kube-publishing:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-    devDependencies:
-      '@dxos/cli':
-        specifier: workspace:*
-        version: link:../../devtools/cli
-      '@types/node':
-        specifier: ^18.11.9
-        version: 18.11.9
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
-  packages/gravity/kube-testing:
+  packages/gravity/blade-runner:
     dependencies:
       '@braneframe/types':
         specifier: workspace:*
@@ -7761,7 +7690,7 @@ importers:
         version: 4.1.0
       playwright:
         specifier: ^1.36.2
-        version: 1.40.0
+        version: 1.42.1
       plotly.js-dist-min:
         specifier: ^2.25.1
         version: 2.27.1
@@ -7789,7 +7718,7 @@ importers:
         version: 4.0.5
       '@types/node':
         specifier: ^18.11.9
-        version: 18.11.9
+        version: 18.18.9
       '@types/seedrandom':
         specifier: ^3.0.5
         version: 3.0.5
@@ -7799,6 +7728,77 @@ importers:
       chart.js:
         specifier: ^3.9.1
         version: 3.9.1
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.18.9)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.4.5
+
+  packages/gravity/gravity-dashboard:
+    dependencies:
+      '@dxos/gem-core':
+        specifier: workspace:*
+        version: link:../../experimental/gem-core
+      d3:
+        specifier: ^7.8.5
+        version: 7.8.5
+      use-resize-observer:
+        specifier: ^9.0.0
+        version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.18.13
+        version: 7.21.3
+      '@dxos/esbuild-book-knobs':
+        specifier: ~2.28.3
+        version: 2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0)
+      '@dxos/esbuild-plugins':
+        specifier: workspace:*
+        version: link:../../common/esbuild-plugins
+      '@dxos/esbuild-server':
+        specifier: ~2.29.0
+        version: 2.29.0(@types/react@18.0.21)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@emotion/css':
+        specifier: ^11.7.1
+        version: 11.10.0(@babel/core@7.21.3)
+      '@emotion/react':
+        specifier: ^11.9.0
+        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
+      '@types/d3':
+        specifier: ^7.4.2
+        version: 7.4.2
+      '@types/lodash':
+        specifier: ^4.14.182
+        version: 4.14.191
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/gravity/kube-publishing:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+    devDependencies:
+      '@dxos/cli':
+        specifier: workspace:*
+        version: link:../../devtools/cli
+      '@types/node':
+        specifier: ^18.11.9
+        version: 18.11.9
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -28312,7 +28312,7 @@ packages:
     dependencies:
       canvas: 2.11.2
       chart.js: 3.9.1
-      tslib: 2.6.0
+      tslib: 2.6.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -29864,7 +29864,7 @@ packages:
     dependencies:
       '@tensorflow/tfjs-node': 3.21.1(seedrandom@3.0.5)
       mathjs: 9.5.2
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       papaparse: 5.4.1
       request: 2.88.2
       stream-json: 1.7.5
@@ -30533,6 +30533,7 @@ packages:
   /domexception@2.0.1:
     resolution: {integrity: sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==}
     engines: {node: '>=8'}
+    deprecated: Use your platform's native DOMException instead
     dependencies:
       webidl-conversions: 5.0.0
     dev: false
@@ -31507,7 +31508,6 @@ packages:
       esutils: 2.0.3
     optionalDependencies:
       source-map: 0.6.1
-    dev: true
 
   /eslint-config-semistandard@17.0.0(eslint-config-standard@17.1.0)(eslint-plugin-import@2.28.1)(eslint-plugin-n@16.1.0)(eslint-plugin-promise@6.1.1)(eslint@8.49.0):
     resolution: {integrity: sha512-tLi0JYmfiiJgtmRhoES55tENatR7y/5aXOh6cBeW+qjzl1+WwyV0arDqR65XN3/xrPZt+/1EG+xNLknV/0jWsQ==}
@@ -32754,7 +32754,6 @@ packages:
 
   /fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
-    dev: true
 
   /fragment-cache@0.2.1:
     resolution: {integrity: sha512-GMBAbW9antB8iZRHLoGw0b3HANt57diZYFO/HL1JGIC1MjKrdmhxvrJbupnVvpys0zsz7yBApXdQyfepKly2kA==}
@@ -36803,7 +36802,7 @@ packages:
       data-urls: 2.0.0
       decimal.js: 10.4.2
       domexception: 2.0.1
-      escodegen: 2.0.0
+      escodegen: 2.1.0
       form-data: 3.0.1
       html-encoding-sniffer: 2.0.1
       http-proxy-agent: 4.0.1
@@ -38292,7 +38291,7 @@ packages:
       complex.js: 2.1.1
       decimal.js: 10.4.2
       escape-latex: 1.2.0
-      fraction.js: 4.2.0
+      fraction.js: 4.3.7
       javascript-natural-sort: 0.7.1
       seedrandom: 3.0.5
       tiny-emitter: 2.1.0
@@ -41416,27 +41415,10 @@ packages:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
     dev: false
 
-  /playwright-core@1.40.0:
-    resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dev: false
-
   /playwright-core@1.42.1:
     resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
     engines: {node: '>=16'}
     hasBin: true
-    dev: true
-
-  /playwright@1.40.0:
-    resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dependencies:
-      playwright-core: 1.40.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
 
   /playwright@1.42.1:
     resolution: {integrity: sha512-PgwB03s2DZBcNRoW+1w9E+VkLBxweib6KTXM0M3tkiT4jVxKSi6PmVJ591J+0u10LUrgxB7dLRbiJqO5s2QPMg==}
@@ -41446,7 +41428,6 @@ packages:
       playwright-core: 1.42.1
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /plotly.js-dist-min@2.27.1:
     resolution: {integrity: sha512-fFPFityhOkDtjoIVd/9IJQbEEuKEjfmNALBVLZyHwLIkry5ygE4ZC/XENRqLnWR3rNJdTtEaxhM5zflcWTRlDA==}
@@ -46231,6 +46212,39 @@ packages:
       diff: 4.0.2
       make-error: 1.3.6
       typescript: 5.3.3
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+    patched: true
+
+  /ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.18.9)(typescript@5.4.5):
+    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@swc/core': 1.4.0
+      '@tsconfig/node10': 1.0.9
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.3
+      '@types/node': 18.18.9
+      acorn: 8.11.3
+      acorn-walk: 8.3.2
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.4.5
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true

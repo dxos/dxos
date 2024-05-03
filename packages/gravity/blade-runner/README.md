@@ -1,5 +1,5 @@
 
-# @dxos/kube-testing
+# @dxos/blade-runne
 
 KUBE Testing.
 
