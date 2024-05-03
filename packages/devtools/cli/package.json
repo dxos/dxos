@@ -65,7 +65,7 @@
     "ink": "^3.2.0",
     "ink-table": "~3.0.0",
     "inquirer": "^8.2.0",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
     "kubo-rpc-client": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",

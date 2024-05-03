@@ -174,7 +174,7 @@ export class EchoDatabaseImpl implements EchoDatabase {
 }
 
 const createSchemaNotRegisteredError = (schema?: any) => {
-  const message = 'Schema not registered in Hypergraph. Call registerEffectSchema before adding an object.';
+  const message = 'Schema not registered';
 
   if (schema?.typename) {
     return new Error(`${message} Schema: ${schema.typename}`);

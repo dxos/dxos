@@ -55,14 +55,14 @@
         {
             "language": "typescript",
             "source": [
-                "import { LogReader } from '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/dist/lib/node/index.cjs' "
+                "import { LogReader } from '/Users/dmaretskyi/Projects/protocols/packages/gravity/blade-runner/dist/lib/node/index.cjs' "
             ],
             "outputs": []
         },
         {
             "language": "typescript",
             "source": [
-                "import { readFileSync } from 'fs';\nimport { LogReader } from '/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/dist/lib/node/index.cjs' \nconst dfd = require('danfojs-node');\nconst reader = new LogReader();\nconst { results } = JSON.parse(readFileSync('/Users/dmaretskyi/Projects/protocols/packages/gravity/kube-testing/out/results/2023-05-09T10:41:20-0a6f/test.json', 'utf-8'))\nfor(const { logFile } of Object.values(results.agents)) {\n  // console.log('add', { logFile })\n  reader.addFile(logFile)\n}\n\nconst messages = new Map<string, { sent: number, received: number }>();\n\nfor await(const entry of reader) {\n  if(entry.message !== 'dxos.test.signal') {\n    continue;\n  }\n  const data: TraceEvent = entry.context;\n\n  switch(data.type) {\n    case 'SENT_MESSAGE':\n      if(!messages.has(data.message)) {\n        messages.set(data.message, { sent: 0, received: 0})\n      }\n      messages.get(data.message)!.sent = entry.timestamp;\n      break;\n    case 'RECEIVE_MESSAGE':\n      if(!messages.has(data.message)) {\n        messages.set(data.message, { sent: 0, received: 0})\n      }\n      messages.get(data.message)!.received = entry.timestamp;\n      break;\n  }\n}\n\nconst lagTimes = new dfd.Series(Array.from(messages.values()).map(x => x.received - x.sent).filter(x => x > 0 && x < 100))\nlagTimes.plot(\"plot_div\").hist()\n// lagTimes"
+                "import { readFileSync } from 'fs';\nimport { LogReader } from '/Users/dmaretskyi/Projects/protocols/packages/gravity/blade-runner/dist/lib/node/index.cjs' \nconst dfd = require('danfojs-node');\nconst reader = new LogReader();\nconst { results } = JSON.parse(readFileSync('/Users/dmaretskyi/Projects/protocols/packages/gravity/blade-runner/out/results/2023-05-09T10:41:20-0a6f/test.json', 'utf-8'))\nfor(const { logFile } of Object.values(results.agents)) {\n  // console.log('add', { logFile })\n  reader.addFile(logFile)\n}\n\nconst messages = new Map<string, { sent: number, received: number }>();\n\nfor await(const entry of reader) {\n  if(entry.message !== 'dxos.test.signal') {\n    continue;\n  }\n  const data: TraceEvent = entry.context;\n\n  switch(data.type) {\n    case 'SENT_MESSAGE':\n      if(!messages.has(data.message)) {\n        messages.set(data.message, { sent: 0, received: 0})\n      }\n      messages.get(data.message)!.sent = entry.timestamp;\n      break;\n    case 'RECEIVE_MESSAGE':\n      if(!messages.has(data.message)) {\n        messages.set(data.message, { sent: 0, received: 0})\n      }\n      messages.get(data.message)!.received = entry.timestamp;\n      break;\n  }\n}\n\nconst lagTimes = new dfd.Series(Array.from(messages.values()).map(x => x.received - x.sent).filter(x => x > 0 && x < 100))\nlagTimes.plot(\"plot_div\").hist()\n// lagTimes"
             ],
             "outputs": [
                 {

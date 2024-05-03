@@ -25,11 +25,6 @@ export default template.define.text({
   npm run build
   \`\`\`
 
-  Deploy the app to a [DXOS Kube](https://docs.dxos.org/guide/kube):
-  \`\`\`bash
-  npm run deploy
-  \`\`\`
-
   ${
     storybook &&
     plate`
