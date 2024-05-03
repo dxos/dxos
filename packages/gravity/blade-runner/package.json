@@ -48,7 +48,7 @@
     "esbuild": "^0.19.6",
     "esbuild-plugin-wasm": "^1.1.0",
     "ioredis": "^5.3.2",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
     "playwright": "^1.36.2",
     "plotly.js-dist-min": "^2.25.1",
