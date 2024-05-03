@@ -8,6 +8,7 @@ module.exports = {
   },
   "ignorePatterns": [
     "demos/*",
+    "functions/*",
     "tailwind.ts"
   ]
 }

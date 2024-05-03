@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -57,8 +57,8 @@
     "style-mod": "^4.1.0"
   },
   "devDependencies": {
-    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.4",
     "@braneframe/types": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/echo-typegen": "workspace:*",

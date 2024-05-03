@@ -27,15 +27,15 @@ describe('services/ServiceContext', () => {
   test('joined space is synchronized on device invitations', async () => {
     const networkContext = new MemorySignalManagerContext();
     const device1 = await createServiceContext({ signalContext: networkContext });
-    await openAndClose(device1.automergeHost);
+    await openAndClose(device1.echoHost);
     await device1.createIdentity();
 
     const device2 = await createServiceContext({ signalContext: networkContext });
-    await openAndClose(device2.automergeHost);
+    await openAndClose(device2.echoHost);
     await Promise.all(performInvitation({ host: device1, guest: device2, options: { kind: Invitation.Kind.DEVICE } }));
 
     const identity2 = await createServiceContext({ signalContext: networkContext });
-    await openAndClose(identity2.automergeHost);
+    await openAndClose(identity2.echoHost);
     await identity2.createIdentity();
     const space1 = await identity2.dataSpaceManager!.createSpace();
     await Promise.all(

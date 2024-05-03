@@ -146,6 +146,7 @@ export class Filter<T extends {} = any> {
   // TODO(burdon): Make plain immutable object (unless generics are important).
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
+  // TODO(dmaretskyi): Support expando.
   public readonly type?: Reference;
   public readonly properties?: Record<string, any>;
   public readonly text?: string;

@@ -195,8 +195,6 @@ For example, with [Netlify](https://netlify.com):
 3. Set the build command and output directory.
 4. Publish!
 
-If you would like to host the application yourself, see our guide on [using KUBE for self-sovereign hosting](./kube/deploying.md).
-
 ## Next steps
 
 * Step-by-step [React tutorial](./tutorial.md)

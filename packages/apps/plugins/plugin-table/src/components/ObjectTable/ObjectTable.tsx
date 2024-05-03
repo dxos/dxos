@@ -12,15 +12,21 @@ import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
 import { useTableObjects } from './hooks';
-import { createColumns, updateTableProp } from './utils';
+import { createColumns, deleteTableProp, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
-export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
+export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
   table: TableType;
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+const makeStarterTableSchema = () => {
+  return TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+    title: S.optional(S.string),
+  });
+};
+
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
   const space = getSpace(table);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -34,11 +40,8 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
       }
 
       if (!table.schema) {
-        table.schema = space.db.schemaRegistry.add(
-          TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-            title: S.optional(S.string),
-          }),
-        );
+        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
+        updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
       }
 
       setShowSettings(false);
@@ -61,13 +64,11 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, g
   if (showSettings) {
     return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
   } else {
-    return (
-      <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} getScrollElement={getScrollElement} />
-    );
+    return <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} />;
   }
 };
 
-const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
+const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
   const space = getSpace(table);
 
   const objects = useTableObjects(space, table.schema);
@@ -96,7 +97,13 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader, getS
     [table.props, table.schema, tables],
   );
 
-  const onColumnDelete = useCallback((id: string) => table.schema?.removeColumns([id]), [table.schema]);
+  const onColumnDelete = useCallback(
+    (id: string) => {
+      table.schema?.removeColumns([id]);
+      deleteTableProp(table.props, id);
+    },
+    [table.schema, table.props],
+  );
 
   const onRowUpdate = useCallback(
     (object: any, prop: string, value: any) => {
@@ -131,14 +138,13 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader, getS
 
   return (
     <DensityProvider density='fine'>
-      <Table<any>
+      <Table.Table<any>
         keyAccessor={keyAccessor}
         columns={columns}
         data={rows}
         border
         role={role ?? 'grid'}
         stickyHeader={stickyHeader}
-        getScrollElement={getScrollElement}
         onColumnResize={handleColumnResize}
         pinLastRow
       />

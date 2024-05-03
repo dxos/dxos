@@ -9,22 +9,12 @@ Type: object
 
 
 ### [`Expando`]()
-Type: ExpandoConstructor
+Type: Schema&lt;[Expando](/api/@dxos/react-client/interfaces/Expando), [Expando](/api/@dxos/react-client/interfaces/Expando), never&gt; & object
 
 
 
-### [`TypedObject`]()
-Type: TypedObjectConstructor
-
-
-
-### [`base`]()
-Type: unique symbol
-
-
-
-### [`debug`]()
-Type: unique symbol
+### [`Properties`]()
+Type: Schema&lt;object, object, never&gt;
 
 
 
@@ -33,12 +23,7 @@ Type: "__DEFAULT__"
 
 
 
-### [`subscribe`]()
-Type: unique symbol
-
-
-
-### [`ClientContext`](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
+### [`ClientContext`](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 
@@ -54,7 +39,7 @@ Type: string
 
 
 ### [`DXOS_VERSION`]()
-Type: "0.4.9"
+Type: "0.5.0"
 
 
 

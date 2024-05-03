@@ -27,7 +27,7 @@ import { type Env } from '../defs';
  * https://developers.cloudflare.com/durable-objects/platform/pricing/#example-2
  * Example: $300/mo for 10,000 peers (very actively connected).
  */
-export class WebSocketServer extends DurableObject {
+export class SignalingServer extends DurableObject {
   // This is reset whenever the constructor runs because regular WebSockets do not survive Durable Object resets.
   // WebSockets accepted via the Hibernation API can survive a certain type of eviction, but we will not cover that here.
   constructor(state: DurableObjectState, env: Env) {
