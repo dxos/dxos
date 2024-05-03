@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type LevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
@@ -57,6 +57,7 @@ export class Indexer {
       await this._promoteNewIndexes();
     }
     await this._indexUpdatedObjects();
+    await sleep(300);
   });
 
   private readonly _db: LevelDB;
