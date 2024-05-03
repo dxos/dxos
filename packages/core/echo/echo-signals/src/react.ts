@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { signal, batch } from '@preact/signals-react';
+import { signal, batch, untracked } from '@preact/signals-react';
 
 import { registerSignalRuntime as registerRuntimeForEcho } from './runtime';
 
@@ -15,8 +15,9 @@ export const registerSignalRuntime = () => {
   registered = true;
 
   registerRuntimeForEcho({
-    createSignal: () => {
+    createSignal: (debugInfo) => {
       const thisSignal = signal({});
+      (thisSignal as any).__debugInfo = debugInfo;
 
       return {
         notifyRead: () => {
@@ -28,6 +29,7 @@ export const registerSignalRuntime = () => {
       };
     },
     batch,
+    untracked,
   });
 
   return true;

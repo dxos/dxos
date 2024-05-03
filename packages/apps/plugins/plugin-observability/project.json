@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-observability",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-observability/src",
   "projectType": "library",
   "targets": {
@@ -16,9 +21,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "plugin-observability"
+  ]
 }

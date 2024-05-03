@@ -4,7 +4,8 @@
 
 import { type DraggableAttributes, useDraggable, useDroppable } from '@dnd-kit/core';
 import { defaultAnimateLayoutChanges, useSortable } from '@dnd-kit/sortable';
-import React from 'react';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import React, { forwardRef } from 'react';
 import type { CSSProperties, ForwardRefExoticComponent, HTMLAttributes, RefAttributes } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -45,6 +46,8 @@ export type MosaicTileProps<TData extends MosaicDataItem = MosaicDataItem, TPosi
     onSelect?: () => void;
     onDelete?: (force?: boolean) => void;
     onNavigate?: () => void;
+    onAddBefore?: () => void;
+    onAddAfter?: () => void;
     onAction?: (action: MosaicTileAction) => void;
   };
 
@@ -104,37 +107,34 @@ export const DraggableTile = ({
 /**
  * Basic droppable mosaic tile.
  */
-export const DroppableTile = ({
-  path: parentPath,
-  type = DEFAULT_TYPE,
-  item,
-  Component = DefaultComponent,
-  position,
-  ...props
-}: MosaicTileProps<any>) => {
-  const { operation } = useMosaic();
-  const path =
-    parentPath === item.id
-      ? parentPath // If the path is the same as the item id, then this is the root tile.
-      : Path.create(parentPath, item.id);
-  const { setNodeRef, isOver } = useDroppable({
-    id: path,
-    data: { path, type, item, position } satisfies MosaicDraggedItem,
-  });
+export const DroppableTile = forwardRef<HTMLDivElement | null, MosaicTileProps<any>>(
+  ({ path: parentPath, type = DEFAULT_TYPE, item, Component = DefaultComponent, position, ...props }, forwardedRef) => {
+    const { operation } = useMosaic();
+    const path =
+      parentPath === item.id
+        ? parentPath // If the path is the same as the item id, then this is the root tile.
+        : Path.create(parentPath, item.id);
+    const { setNodeRef, isOver } = useDroppable({
+      id: path,
+      data: { path, type, item, position } satisfies MosaicDraggedItem,
+    });
 
-  return (
-    <Component
-      ref={setNodeRef}
-      item={item}
-      path={path}
-      type={type}
-      position={position}
-      operation={operation}
-      isOver={isOver}
-      {...props}
-    />
-  );
-};
+    const ref = useComposedRefs<HTMLDivElement | null>(setNodeRef, forwardedRef);
+
+    return (
+      <Component
+        item={item}
+        path={path}
+        type={type}
+        position={position}
+        operation={operation}
+        isOver={isOver}
+        {...props}
+        ref={ref}
+      />
+    );
+  },
+);
 
 /**
  * Mosaic tile that can be sorted.

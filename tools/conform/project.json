@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "conform",
   "sourceRoot": "tools/conform/src",
   "targets": {
     "build": {
@@ -21,7 +23,5 @@
       }
     },
     "lint": {}
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "conform"
+  }
 }

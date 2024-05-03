@@ -1,0 +1,40 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": false,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist",
+    "types": [
+      "@dxos/test",
+      "node"
+    ]
+  },
+  "exclude": [
+    "dist",
+    "node_modules"
+  ],
+  "include": [
+    "package.json",
+    "src",
+    "src/.storybook/*",
+    "src/.vscode/*",
+    "test"
+  ],
+  "references": [
+    {
+      "path": "../../../common/plate"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
+      "path": "../../../sdk/shell"
+    }
+  ]
+}

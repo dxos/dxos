@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-registry",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-registry/src",
   "projectType": "library",
   "targets": {
@@ -21,9 +26,7 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "plugin-registry"
+  ]
 }

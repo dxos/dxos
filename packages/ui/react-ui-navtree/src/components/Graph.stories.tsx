@@ -4,53 +4,82 @@
 
 import '@dxosTheme';
 
+import { batch } from '@preact/signals-core';
 import React from 'react';
 
-import { type Graph as GraphType, GraphBuilder } from '@dxos/app-graph';
-import { buildGraph } from '@dxos/app-graph/testing';
+import { Graph } from '@dxos/app-graph';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
 import { DensityProvider, Tooltip } from '@dxos/react-ui';
-import { type MosaicDropEvent, Path } from '@dxos/react-ui-mosaic';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicOperation } from '@dxos/react-ui-mosaic';
+import { arrayMove } from '@dxos/util';
 
 import { NavTree } from './NavTree';
+import { treeNodeFromGraphNode } from '../helpers';
 
 faker.seed(3);
-
-const ROOT_ID = 'root';
+registerSignalRuntime();
 
 const createGraph = () => {
-  const content = [...Array(2)].map((_, i) => ({
-    id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-    label: faker.lorem.words(2),
-    description: faker.lorem.sentence(),
-    properties: { index: `a${i}` },
-    children: [...Array(2)].map((_, j) => ({
-      id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-      label: faker.lorem.words(2),
-      description: faker.lorem.sentence(),
-      properties: { index: `a${j}` },
-      children: [...Array(2)].map((_, k) => ({
-        id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-        label: faker.lorem.words(2),
-        description: faker.lorem.sentence(),
-        properties: { index: `a${k}` },
-      })),
-    })),
-  }));
+  const graph = new Graph();
 
-  return buildGraph(new GraphBuilder().build(), 'tree', content);
+  batch(() => {
+    graph.addNodes({
+      id: ROOT_ID,
+      nodes: [...Array(2)].map((_, i) => ({
+        id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
+        properties: { index: `a${i}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+        nodes: [...Array(2)].map((_, j) => ({
+          id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
+          properties: { index: `a${j}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+          nodes: [...Array(2)].map((_, k) => ({
+            id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
+            properties: { index: `a${k}`, label: faker.lorem.words(2), description: faker.lorem.sentence() },
+          })),
+        })),
+      })),
+    });
+  });
+
+  return graph;
 };
 
-const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string; graph?: GraphType }) => {
-  // TODO(wittjosiah): This graph does not handle order currently.
+const ROOT_ID = 'root';
+const graph = createGraph();
+const tree = treeNodeFromGraphNode(graph.root);
+
+const StorybookNavTree = ({ id = ROOT_ID }: { id?: string }) => {
+  const handleOver = ({ active, over }: MosaicMoveEvent<number>): MosaicOperation => {
+    // Reject all operations that don’t match the graph’s root id
+    if (Path.first(active.path) !== id || Path.first(over.path) !== Path.first(active.path)) {
+      return 'reject';
+    }
+    // Rearrange if rearrange is supported and active and over are siblings
+    else if (Path.siblings(over.path, active.path)) {
+      return graph.findNode(Path.last(Path.parent(over.path)))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+    }
+    // Rearrange if rearrange is supported and active is or would be a child of over
+    else if (Path.hasChild(over.path, active.path)) {
+      return graph.findNode(Path.last(over.path))?.properties.onRearrangeChildren ? 'rearrange' : 'reject';
+    }
+    // Check if transfer is supported
+    else {
+      const overNode = graph.findNode(Path.last(over.path));
+      const activeNode = graph.findNode(Path.last(active.path));
+      if (overNode && activeNode) {
+        return 'transfer';
+      } else {
+        return 'reject';
+      }
+    }
+  };
+
   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    // Moving within the tree.
-    if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
+    batch(() => {
       const activeNode = graph.findNode(active.item.id);
       const overNode = graph.findNode(over.item.id);
-      const activeParent = activeNode?.parent;
-      const overParent = overNode?.parent;
+      const activeParent = activeNode?.nodes({ direction: 'inbound' })[0];
+      const overParent = overNode?.nodes({ direction: 'inbound' })[0];
       if (
         activeNode &&
         overNode &&
@@ -60,16 +89,22 @@ const StorybookNavTree = ({ id = ROOT_ID, graph = createGraph() }: { id?: string
         activeNode.id !== overNode.id &&
         operation === 'rearrange'
       ) {
-        // This is a rearrange operation
-        console.warn('[react-ui-navtree]', 'Graph', 'rearrange', 'needs implementation');
+        const ids = activeParent.nodes().map((node) => node.id);
+        const activeIndex = ids.indexOf(activeNode.id);
+        const overIndex = ids.indexOf(overNode.id);
+        graph.sortEdges(
+          activeParent.id,
+          'outbound',
+          arrayMove(ids, activeIndex, overIndex > -1 ? overIndex : ids.length - 1),
+        );
       } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-        activeParent.removeNode(active.item.id);
-        overNode.addNode('tree', { ...activeNode });
+        graph.removeEdge({ source: activeParent.id, target: activeNode.id });
+        graph.addEdge({ source: overNode.id, target: activeNode.id });
       }
-    }
+    });
   };
 
-  return <NavTree node={graph.root} onDrop={handleDrop} />;
+  return <NavTree node={tree} onDrop={handleDrop} onOver={handleOver} />;
 };
 
 export default {

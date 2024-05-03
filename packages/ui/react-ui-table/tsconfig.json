@@ -26,10 +26,19 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../react-ui"

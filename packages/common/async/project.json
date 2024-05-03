@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "async",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/async/src",
   "projectType": "library",
   "targets": {
@@ -13,10 +18,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "async"
+  ]
 }

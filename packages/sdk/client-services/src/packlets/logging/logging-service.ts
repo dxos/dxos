@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { PublicKey } from '@dxos/keys';
 import {
   type LogLevel,
   type LogProcessor,
@@ -21,14 +22,15 @@ import {
   type QueryMetricsRequest,
   type QueryMetricsResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { jsonify, numericalValues, tracer } from '@dxos/util';
+import { getDebugName, jsonify, numericalValues, tracer } from '@dxos/util';
 
 /**
  * Logging service used to spy on logs of the host.
  */
 export class LoggingServiceImpl implements LoggingService {
   private readonly _logs = new Event<NaturalLogEntry>();
-  private readonly _started = new Date();
+  private readonly _started = Date.now();
+  private readonly _sessionId = PublicKey.random().toHex();
 
   async open() {
     log.runtimeConfig.processors.push(this._logProcessor);
@@ -116,6 +118,11 @@ export class LoggingServiceImpl implements LoggingService {
             // TODO(dmaretskyi): Fix proto.
             file: entry.meta?.F ?? '',
             line: entry.meta?.L ?? 0,
+            scope: {
+              hostSessionId: this._sessionId,
+              uptimeSeconds: (Date.now() - this._started) / 1000,
+              name: getDebugName(entry.meta?.S),
+            },
           },
         };
 

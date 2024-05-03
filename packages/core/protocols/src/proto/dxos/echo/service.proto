@@ -47,7 +47,16 @@ message MutationReceipt {
 }
 
 message FlushRequest {
-  dxos.keys.PublicKey space_key = 1;
+  message DocState {
+    string document_id = 1;
+    repeated string heads = 2;
+  }
+
+  optional dxos.keys.PublicKey space_key = 1;
+  /**
+   * Automerge specific document ids to wait to flush.
+   */
+  repeated DocState states = 2;
 }
 
 // Automerge specific.

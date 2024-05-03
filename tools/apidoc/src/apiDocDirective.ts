@@ -7,12 +7,13 @@ import memoize from 'lodash.memoize';
 import type MdIt from 'markdown-it';
 import type Renderer from 'markdown-it/lib/renderer';
 import remarkParse from 'remark-parse';
+import { type JSONOutput } from 'typedoc';
 import { unified } from 'unified';
-import unifiedPrettier from 'unified-prettier';
 import { visit } from 'unist-util-visit';
 
 import { loadConfig as _loadConfig } from './config.js';
 import { loadTypedocJson as _loadTypedocJson } from './loadTypedocJson.js';
+import { warn } from './log.js';
 import { Stringifier, packagesInProject, findReflection } from './templates/api/util.t/index.js';
 
 export namespace Remark {
@@ -46,34 +47,30 @@ export namespace Remark {
         const directiveLabelNode = node?.children?.find((c: any) => !!c?.data?.directiveLabel);
         const label = directiveLabelNode?.children?.find((c: any) => c.type === 'text')?.value;
         if (!label) {
-          console.warn(`problem in in ${vfile.path}: invalid apidoc directive, no [label] found`);
+          warn(`problem in in ${vfile.path}: invalid apidoc directive, no [label] found`);
           return tree;
         }
         const [packageName, symbolName, ...restMembers]: string[] = label.split('.');
         const pkage = packagesInProject(api)?.find((p) => p.name === packageName);
         if (!pkage) {
-          console.warn(
-            `problem in file ${vfile.path}: package ${packageName} not found while processing apidoc directive.`,
-          );
+          warn(`problem in file ${vfile.path}: package ${packageName} not found.`);
           return tree;
         }
-        let symbol = findReflection(pkage, (node) => node.name === symbolName);
+        let symbol = findReflection(pkage, (node) => node.name === symbolName) as JSONOutput.DeclarationReflection;
         if (!symbol) {
-          console.warn(
-            `problem in file ${vfile.path}: symbol ${symbolName} of package ${packageName} not found while processing apidoc directive`,
-          );
+          warn(`problem in file ${vfile.path}: symbol ${symbolName} of package ${packageName} not found.`);
           return tree;
         }
         let next: string | undefined;
         const restMembers2 = [...restMembers];
         while ((next = restMembers2.shift())) {
-          symbol = findReflection(symbol as any, (node) => node.name === next);
+          symbol = findReflection(symbol as any, (node) => node.name === next) as JSONOutput.DeclarationReflection;
         }
         if (!symbol) {
-          console.warn(
+          warn(
             `problem in file ${vfile.path}: member '${restMembers.join(
               '.',
-            )}' of ${symbolName} of package ${packageName} not found while processing apidoc directive`,
+            )}' of ${symbolName} of package ${packageName} not found`,
           );
           return tree;
         }
@@ -84,7 +81,7 @@ export namespace Remark {
         });
         const insertedAst = await unified()
           .use(remarkParse)
-          .use(unifiedPrettier as any)
+          // .use(unifiedPrettier as any)
           .parse(content);
         node.children = [directiveLabelNode, ...(insertedAst as any).children];
       });

@@ -1,17 +1,21 @@
 {
   "name": "@dxos/node-std",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
   "exports": {
+    "./_/config": {
+      "import": "./dist/lib/browser/_/config.mjs",
+      "require": "./dist/lib/node/_/config.cjs"
+    },
+    "./globals": "./dist/lib/browser/globals.mjs",
+    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
     "./assert": "./dist/lib/browser/assert.mjs",
     "./crypto": "./dist/lib/browser/crypto.mjs",
     "./events": "./dist/lib/browser/events.mjs",
-    "./globals": "./dist/lib/browser/globals.mjs",
-    "./inject-globals": "./dist/lib/browser/inject-globals.mjs",
     "./path": "./dist/lib/browser/path.mjs",
     "./stream": "./dist/lib/browser/stream.mjs",
     "./util": "./dist/lib/browser/util.mjs",
@@ -19,8 +23,16 @@
     "./fs/promises": "./dist/lib/browser/fs/promises.mjs",
     "./buffer": "./dist/lib/browser/buffer.mjs"
   },
+  "typesVersions": {
+    "*": {
+      "_/config": [
+        "types/_/config.ts"
+      ]
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "dependencies": {
     "assert": "^2.0.0",

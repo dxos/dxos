@@ -22,9 +22,11 @@ export const Markdown = {
 
   getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionInfo'),
 
-  getMarkdownActiveLineText: (page: Page) =>
+  getMarkdownLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)
-      .locator('.cm-activeLine > span:not([class=cm-collab-selectionCaret])')
+      // NOTE(thure): There will be two `span`s in the one `.cm-line`, and one of them is the selection caret containing
+      // the peer’s name; we instead want the in-flow text content which is an unadorned `span`.
+      .locator('.cm-line > span:not([class=cm-collab-selectionCaret])')
       .first()
       .textContent(),
 };

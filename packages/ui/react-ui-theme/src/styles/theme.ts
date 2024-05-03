@@ -28,6 +28,7 @@ import {
   tooltipTheme,
   tagTheme,
 } from './components';
+import { hueTheme } from './fragments';
 
 export const defaultTheme: Theme<Record<string, any>> = {
   themeName: () => 'default',
@@ -52,6 +53,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   toast: toastTheme,
   toolbar: toolbarTheme,
   tooltip: tooltipTheme,
+  hue: hueTheme,
 };
 
 export const bindTheme = <P extends Record<string, any>>(theme: Theme<Record<string, any>>) => {

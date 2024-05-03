@@ -6,6 +6,7 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
+import "dxos/client/services.proto";
 import "dxos/echo/model/document.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/keys.proto";
@@ -29,6 +30,8 @@ message EchoMetadata {
 
   /// List of the data spaces.
   repeated SpaceMetadata spaces = 11;
+
+  repeated dxos.client.services.Invitation invitations = 12;
 }
 
 /// Per-space metadata. Frequent updates. Keep small.

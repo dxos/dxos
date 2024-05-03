@@ -80,22 +80,22 @@ export const Small = (props: MemberPresenceProps) => {
     <Tooltip.Provider>
       <div className='p-4'>
         <div className='p-3'>
-          <SmallPresence {...p} />
+          <SmallPresence count={0} {...p} />
         </div>
         <div className='p-3'>
-          <SmallPresence members={nViewers(1)} {...p} />
+          <SmallPresence count={1} {...p} />
         </div>
         <div className='p-3'>
-          <SmallPresence members={nViewers(2)} {...p} />
+          <SmallPresence count={2} {...p} />
         </div>
         <div className='p-3'>
-          <SmallPresence members={nViewers(3)} {...p} />
+          <SmallPresence count={3} {...p} />
         </div>
         <div className='p-3'>
-          <SmallPresence members={nViewers(4)} {...p} />
+          <SmallPresence count={4} {...p} />
         </div>
         <div className='p-3'>
-          <SmallPresence members={nViewers(5)} {...p} />
+          <SmallPresence count={5} {...p} />
         </div>
       </div>
     </Tooltip.Provider>

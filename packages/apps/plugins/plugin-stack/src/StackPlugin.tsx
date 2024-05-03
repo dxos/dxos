@@ -3,27 +3,23 @@
 //
 
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
-import { deepSignal } from 'deepsignal/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Stack as StackType } from '@braneframe/types';
-import {
-  resolvePlugin,
-  type Plugin,
-  type PluginDefinition,
-  parseIntentPlugin,
-  NavigationAction,
-} from '@dxos/app-framework';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { SectionType, StackType } from '@braneframe/types';
+import { resolvePlugin, type Plugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { Filter } from '@dxos/react-client/echo';
 
-import { StackMain, StackSettings } from './components';
+import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
 import translations from './translations';
 import {
   StackAction,
-  isStack,
   type StackPluginProvides,
   type StackProvides,
   type StackState,
@@ -32,12 +28,12 @@ import {
 
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
-  const stackState: StackState = deepSignal({ creators: [] });
+  const stackState = create<StackState>({ creators: [] });
 
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$separation!, 'separation', LocalStorageStore.bool);
+      settings.prop({ key: 'separation', type: LocalStorageStore.bool() });
 
       for (const plugin of plugins) {
         if (plugin.meta.id === STACK_PLUGIN) {
@@ -53,15 +49,16 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       settings: settings.values,
       metadata: {
         records: {
-          [StackType.schema.typename]: {
+          [StackType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
-          [StackType.Section.schema.typename]: {
-            parse: (section: StackType.Section, type: string) => {
+          [SectionType.typename]: {
+            parse: (section: SectionType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: section.object.id, label: section.object.title, data: section.object };
+                  // TODO(wittjosiah): Remove cast.
+                  return { id: section.object?.id, label: (section.object as any).title, data: section.object };
                 case 'object':
                   return section.object;
                 case 'view-object':
@@ -72,43 +69,81 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [StackType, SectionType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${STACK_PLUGIN}/create`,
-            label: ['create stack label', { ns: STACK_PLUGIN }],
-            icon: (props) => <StackSimple {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
+                  dispatch,
                   plugin: STACK_PLUGIN,
                   action: StackAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'stackPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create stack label', { ns: STACK_PLUGIN }],
+                    icon: (props: IconProps) => <StackSimple {...props} />,
+                    testId: 'stackPlugin.createObject',
+                  },
+                }),
+              );
+
+              // Add all stacks to the graph.
+              const query = space.db.query(Filter.schema(StackType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: StackType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['stack title placeholder', { ns: STACK_PLUGIN }],
+                          icon: (props: IconProps) => <StackSimple {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       surface: {
         component: ({ data, role }) => {
+          switch (data.component) {
+            case `${STACK_PLUGIN}/AddSectionDialog`:
+              return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
+          }
           switch (role) {
             case 'main':
-              return isStack(data.active) ? (
+              return data.active instanceof StackType ? (
                 <StackMain stack={data.active} separation={settings.values.separation} />
               ) : null;
             case 'settings': {
@@ -123,7 +158,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case StackAction.CREATE: {
-              return { data: new StackType() };
+              return { data: create(StackType, { sections: [] }) };
             }
           }
         },

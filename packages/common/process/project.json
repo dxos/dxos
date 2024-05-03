@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "process",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/process/src",
   "projectType": "library",
   "targets": {
@@ -21,7 +26,5 @@
         "{options.outputFile}"
       ]
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "process"
+  }
 }

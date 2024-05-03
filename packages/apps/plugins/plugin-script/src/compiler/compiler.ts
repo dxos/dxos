@@ -17,12 +17,14 @@ export type Import = {
 export type CompilerResult = {
   timestamp: number;
   sourceHash: Buffer;
-  imports: Import[];
-  bundle: string;
+  imports?: Import[];
+  bundle?: string;
+  error?: any;
 };
 
 export type CompilerOptions = {
   platform: BuildOptions['platform'];
+  providedModules: string[];
 };
 
 let initialized: Promise<void>;
@@ -38,48 +40,80 @@ export const initializeCompiler = async (options: { wasmURL: string }) => {
 export class Compiler {
   constructor(private readonly _options: CompilerOptions) {}
 
-  // TODO(burdon): Error handling.
   async compile(source: string): Promise<CompilerResult> {
+    const { providedModules, ...options } = this._options;
+
+    const createResult = async (result?: Partial<CompilerResult>) => {
+      return {
+        timestamp: Date.now(),
+        sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
+        ...result,
+      };
+    };
+
     if (this._options.platform === 'browser') {
       invariant(initialized, 'Compiler not initialized.');
       await initialized;
     }
 
+    const imports = analyzeSourceFileImports(source);
+
     // https://esbuild.github.io/api/#build
-    const result = await build({
-      ...this._options,
-      metafile: true,
-      write: false,
-      entryPoints: ['memory:main.tsx'],
-      plugins: [
-        {
-          name: 'memory',
-          setup: (build) => {
-            build.onResolve({ filter: /^memory:/ }, ({ path }) => {
-              return { path: path.split(':')[1], namespace: 'memory' };
-            });
-            build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
-              const imports = ["import React from 'react';"];
-              if (path === 'main.tsx') {
+    try {
+      const result = await build({
+        ...options,
+        metafile: true,
+        write: false,
+        entryPoints: ['memory:main.tsx'],
+        bundle: true,
+        format: 'esm',
+        plugins: [
+          {
+            name: 'memory',
+            setup: (build) => {
+              build.onResolve({ filter: /^memory:/ }, ({ path }) => {
+                return { path: path.split(':')[1], namespace: 'memory' };
+              });
+
+              build.onLoad({ filter: /.*/, namespace: 'memory' }, ({ path }) => {
+                const imports = ["import React from 'react';"];
+                if (path === 'main.tsx') {
+                  return {
+                    contents: [...imports, source].join('\n'),
+                    loader: 'tsx',
+                  };
+                }
+              });
+
+              for (const module of providedModules) {
+                build.onResolve({ filter: new RegExp(`^${module}$`) }, ({ path }) => {
+                  return { path, namespace: 'injected-module' };
+                });
+              }
+
+              build.onLoad({ filter: /.*/, namespace: 'injected-module' }, ({ path }) => {
+                const namedImports = imports.find((entry) => entry.moduleIdentifier === path)?.namedImports ?? [];
                 return {
-                  contents: [...imports, source].join('\n'),
+                  contents: `
+                  const { ${namedImports.join(',')} } = window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(path)}];
+                  export { ${namedImports.join(',')} };
+                  export default window.__DXOS_SANDBOX_MODULES__[${JSON.stringify(path)}].default;
+                `,
                   loader: 'tsx',
                 };
-              }
-            });
+              });
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
 
-    // console.log(result.outputFiles![0].text);
-
-    return {
-      timestamp: Date.now(),
-      sourceHash: Buffer.from(await subtleCrypto.digest('SHA-256', Buffer.from(source))),
-      imports: this.analyzeImports(result),
-      bundle: result.outputFiles![0].text,
-    };
+      return await createResult({
+        imports: this.analyzeImports(result),
+        bundle: result.outputFiles![0].text,
+      });
+    } catch (err) {
+      return await createResult({ error: err });
+    }
   }
 
   // TODO(dmaretskyi): In the future we can replace the compiler with SWC with plugins running in WASM.
@@ -109,6 +143,20 @@ export class Compiler {
       };
     });
   }
+
+  analyzeSourceFileImports(code: string) {
+    // TODO(dmaretskyi): Support import aliases and wildcard imports.
+    const parsedImports = allMatches(IMPORT_REGEX, code);
+    return parsedImports.map((capture) => {
+      return {
+        defaultImportName: capture[1],
+        namedImports: capture[2]?.split(',').map((importName) => importName.trim()),
+        wildcardImportName: capture[3],
+        moduleIdentifier: capture[4],
+        quotes: capture[5],
+      };
+    });
+  }
 }
 
 // https://regex101.com/r/FEN5ks/1
@@ -133,4 +181,30 @@ const allMatches = (regex: RegExp, str: string) => {
   }
 
   return matches;
+};
+
+type ParsedImport = {
+  defaultImportName?: string;
+  namedImports: string[];
+  wildcardImportName?: string;
+  moduleIdentifier: string;
+  quotes: string;
+};
+
+const analyzeSourceFileImports = (code: string): ParsedImport[] => {
+  // TODO(dmaretskyi): Support import aliases and wildcard imports.
+  const parsedImports = allMatches(IMPORT_REGEX, code);
+  return parsedImports.map((capture) => {
+    return {
+      defaultImportName: capture[1],
+      namedImports: capture[2]
+        ?.trim()
+        .slice(1, -1)
+        .split(',')
+        .map((importName) => importName.trim()),
+      wildcardImportName: capture[3],
+      moduleIdentifier: capture[4],
+      quotes: capture[5],
+    };
+  });
 };

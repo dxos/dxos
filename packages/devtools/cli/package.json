@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -26,6 +26,7 @@
     "bin": "./bin/dx",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
+    "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
   },
   "dependencies": {
@@ -64,25 +65,28 @@
     "ink": "^3.2.0",
     "ink-table": "~3.0.0",
     "inquirer": "^8.2.0",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
     "kubo-rpc-client": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0",
+    "platform": "^1.3.6",
     "react": "^18.2.0",
     "uuid": "^8.3.2",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "wtfnode": "^0.9.1"
   },
   "devDependencies": {
     "@oclif/test": "^2.3.31",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/node": "^18.11.9",
     "@types/node-fetch": "^2.5.10",
+    "@types/platform": "^1.3.4",
     "@types/react-dom": "^18.0.6",
     "fast-check": "^3.15.1",
     "oclif": "^3.7.0",

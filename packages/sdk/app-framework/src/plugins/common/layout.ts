@@ -37,10 +37,13 @@ export type Toast = z.infer<typeof Toast>;
 export const Layout = z.object({
   fullscreen: z.boolean(),
   sidebarOpen: z.boolean(),
+
   complementarySidebarOpen: z.boolean(),
+  complementarySidebarContent: z.any().optional().describe('Data to be passed to the complementary sidebar Surface.'),
 
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
+  dialogBlockAlign: z.union([z.literal('start'), z.literal('center')]).optional(),
 
   popoverOpen: z.boolean(),
   popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
@@ -112,5 +115,10 @@ export namespace LayoutAction {
      * Anchor ID for the popover.
      */
     anchorId?: string;
+
+    /**
+     * Block alignment for the dialog.
+     */
+    dialogBlockAlign?: 'start' | 'center';
   }>;
 }

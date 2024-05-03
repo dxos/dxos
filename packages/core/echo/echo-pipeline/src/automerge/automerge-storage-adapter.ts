@@ -5,20 +5,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { StorageAdapter, type Chunk, type StorageKey } from '@dxos/automerge/automerge-repo';
+import { type Chunk, type StorageKey, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { type Directory } from '@dxos/random-access-storage';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
-export class AutomergeStorageAdapter extends StorageAdapter {
+export class AutomergeStorageAdapter implements StorageAdapterInterface {
   // TODO(mykola): Hack for restricting automerge Repo to access storage if Host is `closed`.
   //               Automerge Repo do not have any lifetime management.
   private _state: 'opened' | 'closed' = 'opened';
 
-  constructor(private readonly _directory: Directory) {
-    super();
-  }
+  constructor(private readonly _directory: Directory) {}
 
-  override async load(key: StorageKey): Promise<Uint8Array | undefined> {
+  async load(key: StorageKey): Promise<Uint8Array | undefined> {
     if (this._state !== 'opened') {
       return undefined;
     }
@@ -32,7 +30,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     return bufferToArray(buffer);
   }
 
-  override async save(key: StorageKey, data: Uint8Array): Promise<void> {
+  async save(key: StorageKey, data: Uint8Array): Promise<void> {
     if (this._state !== 'opened') {
       return undefined;
     }
@@ -44,7 +42,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     await file.flush?.();
   }
 
-  override async remove(key: StorageKey): Promise<void> {
+  async remove(key: StorageKey): Promise<void> {
     if (this._state !== 'opened') {
       return undefined;
     }
@@ -54,7 +52,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     await file.destroy();
   }
 
-  override async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
+  async loadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     if (this._state !== 'opened') {
       return [];
     }
@@ -75,7 +73,7 @@ export class AutomergeStorageAdapter extends StorageAdapter {
     );
   }
 
-  override async removeRange(keyPrefix: StorageKey): Promise<void> {
+  async removeRange(keyPrefix: StorageKey): Promise<void> {
     if (this._state !== 'opened') {
       return undefined;
     }

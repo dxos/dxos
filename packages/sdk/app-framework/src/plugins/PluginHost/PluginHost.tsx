@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { shallow } from 'deepsignal/react';
 import React, { useEffect, type FC, type PropsWithChildren, type ReactNode, useState } from 'react';
 
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -48,14 +47,15 @@ export const PluginHost = ({
     available: order.filter(({ id }) => !core.includes(id)),
     setPlugin: (id: string, enabled: boolean) => {
       if (enabled) {
-        state.values.enabled = [...state.values.enabled, id];
+        state.values.enabled.push(id);
       } else {
-        state.values.enabled = state.values.enabled.filter((enabled) => enabled !== id);
+        const index = state.values.enabled.findIndex((enabled) => enabled === id);
+        index !== -1 && state.values.enabled.splice(index, 1);
       }
     },
   });
 
-  state.prop(state.values.$enabled!, 'enabled', LocalStorageStore.json);
+  state.prop({ key: 'enabled', type: LocalStorageStore.json<string[]>() });
 
   return {
     meta: {
@@ -118,7 +118,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
         const plugins = await Promise.all(
           enabled.map(async (definition) => {
             const plugin = await initializePlugin(definition).catch((err) => {
-              console.error('Failed to initialize plugin:', definition.meta.id, err);
+              log.error('Failed to initialize plugin:', { id: definition.meta.id, err });
               return undefined;
             });
             return plugin;
@@ -129,7 +129,7 @@ const Root = ({ order, core: corePluginIds, definitions, state, placeholder }: R
         await Promise.all(enabled.map((pluginDefinition) => pluginDefinition.ready?.(plugins)));
         log('plugins ready', { plugins });
 
-        state.plugins = shallow(plugins);
+        state.plugins = plugins;
         state.ready = true;
       } catch (err) {
         setError(err);

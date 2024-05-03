@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-input",
+  "tags": [
+    "scope:primitives"
+  ],
   "sourceRoot": "packages/ui/primitives/react-input/src",
   "projectType": "library",
   "targets": {
@@ -35,9 +40,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-input"
+  ]
 }

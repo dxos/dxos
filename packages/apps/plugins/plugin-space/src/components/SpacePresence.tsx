@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
+import { type Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
-import { type PublicKey, useClient } from '@dxos/react-client';
-import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { PublicKey, useClient } from '@dxos/react-client';
+import { getSpace, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -19,72 +20,80 @@ import {
   Tooltip,
   useDensityContext,
   useTranslation,
-  Button,
-  useJdenticonHref,
   List,
   ListItem,
+  useDefaultValue,
 } from '@dxos/react-ui';
-import { getColorForValue, mx } from '@dxos/react-ui-theme';
-import { ComplexMap } from '@dxos/util';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
-import type { SpacePluginProvides } from '../types';
+import type { ObjectViewerProps, SpacePluginProvides } from '../types';
+
+// TODO(thure): Get/derive these values from protocol
+const REFRESH_INTERVAL = 10_000;
+const ACTIVITY_DURATION = 30_000;
+
+// TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
+const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; spaceKey?: PublicKey }) => {
+export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
   const dispatch = useIntentDispatcher();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
   const defaultSpace = useSpace();
-  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
+  const [moment, setMoment] = useState(Date.now());
+
+  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
+  useEffect(() => {
+    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
+  // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
+  //  prevents reactivity?
   if (!identity || !spacePlugin || !space || defaultSpace?.key.equals(space.key)) {
     return null;
   }
 
-  // TODO(wittjosiah): This isn't working because of issue w/ deepsignal state.
-  //  Assigning plugin to deepsignal seems to create a new instance of objects in provides and breaks the reference.
-  const viewers = spacePlugin.provides.space.viewers
-    .filter((viewer) => {
-      return (
-        space.key.equals(viewer.spaceKey) && object.id === viewer.objectId && Date.now() - viewer.lastSeen < 30_000
-      );
-    })
-    .reduce(
-      (viewers, viewer) => {
-        viewers.set(viewer.identityKey, viewer.lastSeen);
-        return viewers;
-      },
-      new ComplexMap<PublicKey, number>((key) => key.toHex()),
-    );
+  const spaceState = spacePlugin.provides.space;
+  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
     .map((member) => ({
       ...member,
-      match: viewers.has(member.identity.identityKey),
-      lastSeen: viewers.get(member.identity.identityKey) ?? Infinity,
+      match: currentObjectViewers.has(member.identity.identityKey),
+      // Infinity if not seen before on this document, to ensure that all online members are included.
+      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
     }))
+    .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
-    <SmallPresence members={members.filter((member) => member.match)} />
+    <SmallPresence count={members.filter((member) => member.match).length} />
   ) : (
     <FullPresence
       members={members}
       onMemberClick={(member) => {
-        const viewing = spacePlugin.provides.space.viewers.find((viewer) =>
-          viewer.identityKey.equals(member.identity.identityKey),
-        )?.objectId;
-        if (viewing) {
+        if (
+          !currentObjectViewers.has(member.identity.identityKey) &&
+          (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
+        ) {
           void dispatch({
             action: NavigationAction.ACTIVATE,
-            data: { id: viewing },
+            // TODO(thure): Multitasking will make this multifarious; implement a way to follow other members that
+            //  doesn’t assume they can only view one object at a time.
+            data: { id: Array.from(viewing.get(member.identity.identityKey)!)[0] },
           });
         } else {
           log.warn('No viewing object found for member');
@@ -114,7 +123,8 @@ export type MemberPresenceProps = ThemedClassName<{
 }>;
 
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 9, onMemberClick } = props;
+  const { size = 9, onMemberClick } = props;
+  const members = useDefaultValue(props.members, []);
 
   if (members.length === 0) {
     return null;
@@ -145,7 +155,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
       {members.length > 3 && (
         <Tooltip.Root>
           <Tooltip.Trigger>
-            <AvatarGroupItem.Root color='#ccc' status='inactive'>
+            <AvatarGroupItem.Root status='inactive'>
               <Avatar.Frame style={{ zIndex: members.length - 4 }}>
                 {/* TODO(wittjosiah): Make text fit. */}
                 <Avatar.Fallback text={`+${members.length - 3}`} />
@@ -186,48 +196,49 @@ type PresenceAvatarProps = {
 
 const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: PresenceAvatarProps) => {
   const Root = group ? AvatarGroupItem.Root : Avatar.Root;
-  const memberHex = identity.identityKey.toHex();
   const status = match ? 'current' : 'active';
-  const jdenticon = useJdenticonHref(memberHex ?? '', 12);
+  const fallbackValue = keyToFallback(identity.identityKey);
   return (
-    <Root status={status}>
+    <Root status={status} hue={identity.profile?.data?.hue || fallbackValue.hue}>
       <Avatar.Frame
         data-testid='spacePlugin.presence.member'
         data-status={status}
         {...(index ? { style: { zIndex: index } } : {})}
         onClick={() => onClick?.()}
       >
-        <Avatar.Fallback href={jdenticon} />
+        <Avatar.Fallback text={identity.profile?.data?.emoji || fallbackValue.emoji} />
       </Avatar.Frame>
       {showName && <Avatar.Label classNames='text-sm truncate pli-2'>{getName(identity)}</Avatar.Label>}
     </Root>
   );
 };
 
-export const SmallPresence = (props: MemberPresenceProps) => {
-  const { members = [], size = 2, classNames } = props;
+export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
+  const [moment, setMoment] = useState(Date.now());
+
+  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
+  useEffect(() => {
+    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeViewers = viewers
+    ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
+    : [];
+
+  return <SmallPresence count={activeViewers.length} />;
+};
+
+export const SmallPresence = ({ count }: { count: number }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
-  return members.length === 0 ? (
-    <div role='none' className={mx(classNames)} />
-  ) : (
+  return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <Button variant='ghost' classNames={['pli-0', classNames]}>
-          <AvatarGroup.Root size={size} classNames='m-1 mie-2'>
-            {members.slice(0, 3).map((viewer, i) => {
-              const viewerHex = viewer.identity.identityKey.toHex();
-              return (
-                <AvatarGroupItem.Root key={viewerHex} color={getColorForValue({ value: viewerHex, type: 'color' })}>
-                  <Avatar.Frame style={{ zIndex: members.length - i }} />
-                </AvatarGroupItem.Root>
-              );
-            })}
-          </AvatarGroup.Root>
-        </Button>
+        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>
-          <span>{t('presence label', { count: members.length })}</span>
+          <span>{t('presence label', { count })}</span>
           <Tooltip.Arrow />
         </Tooltip.Content>
       </Tooltip.Portal>

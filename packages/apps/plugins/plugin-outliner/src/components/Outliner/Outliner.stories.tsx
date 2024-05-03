@@ -4,18 +4,16 @@
 
 import '@dxosTheme';
 
-import { deepSignal, type RevertDeepSignal } from 'deepsignal/react';
 import React, { useState } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
-import { PublicKey } from '@dxos/keys';
+import { TextV0Type, TreeItemType } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { DensityProvider } from '@dxos/react-ui';
 import { attentionSurface } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Outliner, type OutlinerRootProps } from './Outliner';
-import { type Item } from './types';
 
 faker.seed(100);
 
@@ -24,38 +22,42 @@ const Story = ({
   count = 1,
   data,
 }: Pick<OutlinerRootProps, 'isTasklist'> & { count?: number; data?: 'words' | 'sentences' }) => {
-  const [root] = useState<Item>(
-    deepSignal<Item>({
+  const [root] = useState<TreeItemType>(
+    create<TreeItemType>({
       id: 'root',
+      text: create(TextV0Type, { content: '' }),
       items: faker.helpers.multiple(
         () => {
           let text = '';
           switch (data) {
-            case 'words':
+            case 'words': {
               text = faker.lorem.words();
               break;
-            case 'sentences':
+            }
+            case 'sentences': {
               text = faker.lorem
                 .sentences({ min: 1, max: 3 })
                 .split(/\. \s*/)
                 .join('.\n');
               break;
+            }
           }
 
-          return {
-            id: PublicKey.random().toHex(),
-            text: new TextObject(text),
-          };
+          return create(TreeItemType, {
+            text: create(TextV0Type, { content: text }),
+            items: [],
+          });
         },
         { count },
       ),
-    }) as RevertDeepSignal<Item>,
+    }),
   );
 
-  const handleCreate = (text = '') => ({
-    id: PublicKey.random().toHex(),
-    text: new TextObject(text),
-  });
+  const handleCreate = (text = '') =>
+    create(TreeItemType, {
+      text: create(TextV0Type, { content: text }),
+      items: [],
+    });
 
   const handleDelete = () => {};
 

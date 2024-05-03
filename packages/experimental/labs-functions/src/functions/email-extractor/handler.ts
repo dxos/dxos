@@ -2,18 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Contact as ContactType, Message as MessageType } from '@braneframe/types';
-import { hasType } from '@dxos/echo-schema';
+import { ContactType, MessageType, type RecipientType } from '@braneframe/types';
+import { Filter, hasType } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
+import { registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
   let i = 0;
   invariant(space);
-  const { objects: contacts } = space.db.query(ContactType.filter());
+  const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();
   const objectsByEmail = new Map<string, ContactType>();
+  registerTypes(space);
 
-  const getOrCreateContact = (recipient: MessageType.Recipient): ContactType | undefined => {
+  const getOrCreateContact = (recipient: RecipientType): ContactType | undefined => {
     invariant(recipient.email);
     let contact =
       objectsByEmail.get(recipient.email.toLowerCase()) ??
@@ -24,7 +29,10 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
       );
 
     if (!contact) {
-      contact = new ContactType({ name: recipient.name, identifiers: [{ type: 'email', value: recipient.email }] });
+      contact = create(ContactType, {
+        name: recipient.name,
+        identifiers: [{ type: 'email', value: recipient.email }],
+      });
       objectsByEmail.set(recipient.email.toLowerCase(), contact);
       space.db.add(contact);
     }
@@ -35,16 +43,16 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   let messages: MessageType[] = [];
   if (objects === undefined) {
-    messages = space.db.query(MessageType.filter({ type: 'email' })).objects;
+    messages = (await space.db.query(Filter.schema(MessageType, { type: 'email' }))).objects;
   } else if (objects.length) {
     // Only if undefined.
-    messages = objects.filter(hasType<MessageType>(MessageType.schema));
+    messages = objects.filter(hasType(MessageType));
   }
 
   // Lookup contacts.
   for (const message of messages ?? []) {
     message.from.contact = getOrCreateContact(message.from);
-    message.to.forEach((to) => {
+    message.to?.forEach((to) => {
       to.contact = getOrCreateContact(to);
     });
     message.cc?.forEach((cc) => {
@@ -54,7 +62,7 @@ export const handler = subscriptionHandler(async ({ event: { space, objects } })
 
   // TODO(burdon): Auto-flush (in wrapper).
   // TODO(burdon): Causes recursion. Scheduler must check. Also check that there are NO mutations if nothing changed.
-  console.log('>>>', i);
+  log.info(`>>> ${i}`);
   await space.db.flush();
-  console.log('<<<', i);
+  log.info(`<<< ${i}`);
 });

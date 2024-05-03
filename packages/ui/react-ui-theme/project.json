@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-theme",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/react-ui-theme/src",
   "projectType": "library",
   "targets": {
@@ -61,9 +66,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui-theme"
+  ]
 }

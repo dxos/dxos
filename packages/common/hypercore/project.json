@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "hypercore",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/hypercore/src",
   "projectType": "library",
   "targets": {
@@ -70,10 +75,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "hypercore"
+  ]
 }

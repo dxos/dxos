@@ -4,7 +4,13 @@
 
 import { DeferredTask, sleepWithContext, trackLeaks } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { SpaceStateMachine, type SpaceState, type MemberInfo, type FeedInfo } from '@dxos/credentials';
+import {
+  SpaceStateMachine,
+  type SpaceState,
+  type MemberInfo,
+  type FeedInfo,
+  type DelegateInvitationCredential,
+} from '@dxos/credentials';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -50,6 +56,8 @@ export class ControlPipeline {
   public readonly onFeedAdmitted = new Callback<AsyncCallback<FeedInfo>>();
   public readonly onMemberAdmitted: Callback<AsyncCallback<MemberInfo>>;
   public readonly onCredentialProcessed: Callback<AsyncCallback<Credential>>;
+  public readonly onDelegatedInvitation: Callback<AsyncCallback<DelegateInvitationCredential>>;
+  public readonly onDelegatedInvitationRemoved: Callback<AsyncCallback<DelegateInvitationCredential>>;
 
   @trace.metricsCounter()
   private _usage = new TimeUsageCounter();
@@ -78,7 +86,9 @@ export class ControlPipeline {
         queueMicrotask(async () => {
           try {
             const feed = await feedProvider(info.key);
-            await this._pipeline.addFeed(feed);
+            if (!this._pipeline.hasFeed(feed.key)) {
+              await this._pipeline.addFeed(feed);
+            }
           } catch (err: any) {
             log.catch(err);
           }
@@ -90,6 +100,8 @@ export class ControlPipeline {
 
     this.onMemberAdmitted = this._spaceStateMachine.onMemberAdmitted;
     this.onCredentialProcessed = this._spaceStateMachine.onCredentialProcessed;
+    this.onDelegatedInvitation = this._spaceStateMachine.onDelegatedInvitation;
+    this.onDelegatedInvitationRemoved = this._spaceStateMachine.onDelegatedInvitationRemoved;
   }
 
   get spaceState(): SpaceState {
@@ -100,7 +112,8 @@ export class ControlPipeline {
     return this._pipeline;
   }
 
-  setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+  async setWriteFeed(feed: FeedWrapper<FeedMessage>) {
+    await this._pipeline.addFeed(feed);
     this._pipeline.setWriteFeed(feed);
   }
 

@@ -5,6 +5,8 @@
 import { DragOverlay } from '@dnd-kit/core';
 import React, { Component, type PropsWithChildren, useEffect, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
+
 import { type MosaicContainerProps } from './Container';
 import { DefaultComponent } from './DefaultComponent';
 import { type MosaicTileComponent } from './Tile';
@@ -31,7 +33,9 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
-    if (activeItem) {
+    // Only attempt to resolve a foreign overlay tile if the operation is not rejected, since droppables *should* reject
+    // items they don’t recognize and therefore wouldn’t be able to render a tile for. See dxos/dxos#5082.
+    if (activeItem && operation !== 'reject') {
       let container: MosaicContainerProps<any> | undefined;
       let OverlayComponent: MosaicTileComponent<any> | undefined;
       if (overItem?.path) {
@@ -120,7 +124,7 @@ class OverlayErrorBoundary extends Component<OverlayErrorBoundaryProps> {
   };
 
   override componentDidCatch(error: any, info: any) {
-    console.warn(error, info);
+    log.catch(error, { info });
   }
 
   override render() {

@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-kanban",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-kanban/src",
   "projectType": "library",
   "targets": {
@@ -29,9 +34,7 @@
     },
     "test": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "plugin-kanban"
+  ]
 }

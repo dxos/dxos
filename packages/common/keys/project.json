@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "keys",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/keys/src",
   "projectType": "library",
   "targets": {
@@ -8,16 +13,13 @@
         "entryPoints": [
           "packages/common/keys/src/index.ts"
         ],
-        "injectGlobals": true
+        "injectGlobals": false
       }
     },
     "lint": {},
-    "test": {}
+    "vitest": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
-    "esbuild",
-    "test"
-  ],
-  "name": "keys"
+    "esbuild"
+  ]
 }

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "stories",
   "sourceRoot": "tools/stories/src",
   "projectType": "library",
   "targets": {
@@ -180,7 +182,5 @@
         "configDir": "tools/stories/examples-stories"
       }
     }
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "stories"
+  }
 }

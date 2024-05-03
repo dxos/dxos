@@ -6,7 +6,7 @@ import { ArrowsCounterClockwise, CheckCircle, Warning } from '@phosphor-icons/re
 import React, { useEffect, useState } from 'react';
 
 import { debounce } from '@dxos/async';
-import { type EchoDatabase } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/react-client/echo';
 import { Tooltip, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, staticPlaceholderText, warningText } from '@dxos/react-ui-theme';
 
@@ -23,19 +23,20 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
   const [displayMessage, setDisplayMessage] = useState(false);
   const [status, naturalSetStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
   const [prevStatus, setPrevStatus] = useState<Status>(Status.PERSISTED_LOCALLY);
-  const setStatus = debounce(naturalSetStatus, 500);
+  const _setStatus = debounce(naturalSetStatus, 500);
 
-  useEffect(() => {
-    return db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setStatus(Status.ERROR);
-      } else if (duration === undefined) {
-        setStatus(Status.PENDING);
-      } else {
-        setStatus(Status.PERSISTED_LOCALLY);
-      }
-    });
-  }, [db]);
+  // TODO(dmaretskyi): Fix this when we have save status for automerge.
+  // useEffect(() => {
+  //   return db.pendingBatch.on(({ duration, error }) => {
+  //     if (error) {
+  //       setStatus(Status.ERROR);
+  //     } else if (duration === undefined) {
+  //       setStatus(Status.PENDING);
+  //     } else {
+  //       setStatus(Status.PERSISTED_LOCALLY);
+  //     }
+  //   });
+  // }, [db]);
 
   useEffect(() => {
     // If this is changed outside the effect it's batched with setStatus and the following condition will never be true.
@@ -74,7 +75,7 @@ export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
             )}
           </Tooltip.Trigger>
           <Tooltip.Portal>
-            <Tooltip.Content>
+            <Tooltip.Content classNames='z-10'>
               {t('persisted locally message')}
               <Tooltip.Arrow />
             </Tooltip.Content>

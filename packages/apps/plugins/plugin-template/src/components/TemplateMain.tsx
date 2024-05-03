@@ -5,12 +5,12 @@
 import React, { type FC } from 'react';
 
 import { PublicKey } from '@dxos/react-client';
-import { getSpaceForObject, type TypedObject } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
 
-export const TemplateMain: FC<{ object: TypedObject }> = ({ object }) => {
-  const space = getSpaceForObject(object);
+export const TemplateMain: FC<{ object: EchoReactiveObject<any> }> = ({ object }) => {
+  const space = getSpace(object);
 
   return (
     // TODO(burdon): Boilerplate.

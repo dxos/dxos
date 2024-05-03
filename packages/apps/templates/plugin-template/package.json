@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/plugin-template",
+  "version": "0.5.0",
+  "description": "An template project for prototyping plugins for the DXOS app framework.",
+  "keywords": [
+    "dxos",
+    "plugin",
+    "template",
+    "composer",
+    "local-first",
+    "offline",
+    "multiplayer"
+  ],
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "info@dxos.org",
+  "main": "dist/src/template.t.js",
+  "types": "dist/src/template.t.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@dxos/plate": "workspace:*",
+    "chalk": "^4.1.0",
+    "lodash.merge": "^4.6.2",
+    "sanitize-filename": "1.6.3"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/shell": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/lodash.merge": "^4.6.6",
+    "tmp-promise": "^3.0.3",
+    "ts-node": "10.9.1",
+    "types-package-json": "^2.0.39",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

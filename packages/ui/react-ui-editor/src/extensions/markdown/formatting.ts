@@ -7,16 +7,15 @@ import { syntaxTree } from '@codemirror/language';
 import {
   type Extension,
   type StateCommand,
-  RangeSetBuilder,
   type EditorState,
   type ChangeSpec,
   type Text,
   EditorSelection,
   type Line,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, keymap, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, keymap } from '@codemirror/view';
 import { type SyntaxNodeRef, type SyntaxNode } from '@lezer/common';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 // Markdown refs:
 // https://github.github.com/gfm
@@ -57,7 +56,7 @@ export type Formatting = {
   listStyle: null | 'ordered' | 'bullet' | 'task';
 };
 
-export const compareFormatting = (a: Formatting, b: Formatting) =>
+export const formattingEquals = (a: Formatting, b: Formatting) =>
   a.blockType === b.blockType &&
   a.strong === b.strong &&
   a.emphasis === b.emphasis &&
@@ -84,9 +83,8 @@ export enum List {
 // Headings
 //
 
-export const setHeading =
-  (level: number): StateCommand =>
-  ({ state, dispatch }) => {
+export const setHeading = (level: number): StateCommand => {
+  return ({ state, dispatch }) => {
     const {
       selection: { ranges },
       doc,
@@ -94,6 +92,7 @@ export const setHeading =
     const changes: ChangeSpec[] = [];
     let prevBlock = -1;
     for (const range of ranges) {
+      let sawBlock = false;
       syntaxTree(state).iterate({
         from: range.from,
         to: range.to,
@@ -101,6 +100,7 @@ export const setHeading =
           if (!Object.hasOwn(Textblocks, node.name) || prevBlock === node.from) {
             return;
           }
+          sawBlock = true;
           prevBlock = node.from;
           const blockType = Textblocks[node.name];
           const isHeading = /heading(\d)/.exec(blockType);
@@ -129,26 +129,38 @@ export const setHeading =
           }
         },
       });
+      let line;
+      if (!sawBlock && range.empty && level > 0 && !/\S/.test((line = state.doc.lineAt(range.from)).text)) {
+        changes.push({ from: line.from, to: line.to, insert: '#'.repeat(level) + ' ' });
+      }
     }
 
     if (!changes.length) {
       return false;
     }
 
-    dispatch(state.update({ changes, userEvent: 'format.setHeading', scrollIntoView: true }));
+    const changeSet = state.changes(changes);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.setHeading',
+        scrollIntoView: true,
+      }),
+    );
     return true;
   };
+};
 
 //
 // Styles
 //
 
-export const setStyle =
-  (type: Inline, enable: boolean): StateCommand =>
-  ({ state, dispatch }) => {
+export const setStyle = (type: Inline, enable: boolean): StateCommand => {
+  return ({ state, dispatch }) => {
     const marker = inlineMarkerText(type);
     const changes = state.changeByRange((range) => {
-      // Special case for markers directly around the cursor, which will often not be parsed as valid styling
+      // Special case for markers directly around the cursor, which will often not be parsed as valid styling.
       if (!enable && range.empty) {
         const after = state.doc.sliceString(range.head, range.head + 6);
         const found = after.indexOf(marker);
@@ -174,19 +186,19 @@ export const setStyle =
       const changesAtEnd: ChangeSpec[] = [];
       let blockStart = -1;
       let blockEnd = -1;
-      let startCovered: boolean | 'adjacent' = false;
-      let endCovered: boolean | 'adjacent' = false;
+      let startCovered: boolean | { from: number; to: number } = false;
+      let endCovered: boolean | { from: number; to: number } = false;
       let { from, to } = range;
-      // Iterate the selected range. For each textblock, determine a
-      // start and end position, the overlap of the selected range and
-      // the block's extent, that should be styled/unstyled.
+
+      // Iterate the selected range. For each textblock, determine a start and end position,
+      // the overlap of the selected range and the block's extent, that should be styled/unstyled.
       syntaxTree(state).iterate({
         from,
         to,
         enter: (node) => {
           const { name } = node;
           if (Object.hasOwn(Textblocks, name) && Textblocks[name] !== 'codeblock') {
-            // Set up for this textblock
+            // Set up for this textblock.
             blockStart = blockContentStart(node);
             blockEnd = blockContentEnd(node, state.doc);
             startCovered = endCovered = false;
@@ -218,14 +230,19 @@ export const setStyle =
             // by this.
             if (markType === type) {
               if (openEnd <= from && closeStart >= from) {
-                startCovered = openEnd === from ? 'adjacent' : true;
+                startCovered =
+                  !enable && openEnd === skipMarkers(from, node.node, -1, openEnd)
+                    ? { from: node.from, to: openEnd }
+                    : true;
               }
               if (openEnd <= to && closeStart >= to) {
-                endCovered = closeStart === to ? 'adjacent' : true;
+                endCovered =
+                  !enable && closeStart === skipMarkers(to, node.node, 1, closeStart)
+                    ? { from: closeStart, to: node.to }
+                    : true;
               }
             }
-            // Marks of the same type in range, or any mark if we're
-            // adding code style, need to be removed.
+            // Marks of the same type in range, or any mark if we're adding code style, need to be removed.
             if (markType === type || (type === Inline.Code && enable)) {
               if (node.from >= from && openEnd <= to) {
                 changes.push({ from: node.from, to: openEnd });
@@ -252,7 +269,7 @@ export const setStyle =
         },
         leave: (node) => {
           if (Object.hasOwn(Textblocks, node.name) && Textblocks[node.name] !== 'codeblock') {
-            // Finish opening/closing the marks for this textblock
+            // Finish opening/closing the marks for this textblock.
             const rangeStart = Math.max(from, blockStart);
             const rangeEnd = Math.min(to, blockEnd);
             if (enable) {
@@ -263,13 +280,13 @@ export const setStyle =
                 changes.push({ from: rangeEnd, insert: marker });
               }
             } else {
-              if (startCovered === 'adjacent') {
-                changes.push({ from: from - marker.length, to: from });
+              if (typeof startCovered === 'object') {
+                changes.push(startCovered);
               } else if (startCovered) {
                 changes.push({ from: skipSpaces(rangeStart, state.doc, -1, blockStart), insert: marker });
               }
-              if (endCovered === 'adjacent') {
-                changes.push({ from: to, to: to + marker.length });
+              if (typeof endCovered === 'object') {
+                changes.push(endCovered);
               } else if (endCovered) {
                 changes.push({ from: skipSpaces(rangeEnd, state.doc, 1, blockEnd), insert: marker });
               }
@@ -277,6 +294,14 @@ export const setStyle =
           }
         },
       });
+
+      if (blockStart < 0 && range.empty && enable && !/\S/.test(state.doc.lineAt(range.from).text)) {
+        return {
+          changes: { from: range.head, insert: marker + marker },
+          range: EditorSelection.cursor(range.head + marker.length),
+        };
+      }
+
       const changeSet = state.changes(changes.concat(changesAtEnd));
       return {
         changes: changeSet,
@@ -288,18 +313,22 @@ export const setStyle =
     });
 
     dispatch(
-      state.update(changes, { userEvent: enable ? 'format.style.add' : 'format.style.remove', scrollIntoView: true }),
+      state.update(changes, {
+        userEvent: enable ? 'format.style.add' : 'format.style.remove',
+        scrollIntoView: true,
+      }),
     );
+
     return true;
   };
+};
 
 export const addStyle = (style: Inline): StateCommand => setStyle(style, true);
 
 export const removeStyle = (style: Inline): StateCommand => setStyle(style, false);
 
-export const toggleStyle =
-  (style: Inline): StateCommand =>
-  (arg) => {
+export const toggleStyle = (style: Inline): StateCommand => {
+  return (arg) => {
     const form = getFormatting(arg.state);
     return setStyle(
       style,
@@ -312,6 +341,7 @@ export const toggleStyle =
             : !form.code,
     )(arg);
   };
+};
 
 export const toggleStrong = toggleStyle(Inline.Strong);
 export const toggleEmphasis = toggleStyle(Inline.Emphasis);
@@ -348,6 +378,20 @@ const skipSpaces = (pos: number, doc: Text, dir: -1 | 1, limit?: number) => {
     pos += dir;
   }
   return pos;
+};
+
+const skipMarkers = (pos: number, tree: SyntaxNode, dir: -1 | 1, limit?: number) => {
+  for (;;) {
+    const next = tree.resolve(pos, dir);
+    if (!IgnoreInline.has(next.name)) {
+      return pos;
+    }
+    const moveTo = dir < 0 ? next.from : next.to;
+    if (limit != null && (dir < 0 ? moveTo < limit : moveTo > limit)) {
+      return pos;
+    }
+    pos = moveTo;
+  }
 };
 
 // TODO(burdon): Define and trigger snippets for codeblock, table, etc.
@@ -425,107 +469,115 @@ export const removeLink: StateCommand = ({ state, dispatch }) => {
   return true;
 };
 
-// Add link markup around the selection
-export const addLink: StateCommand = ({ state, dispatch }) => {
-  const changes = state.changeByRange((range) => {
-    let { from, to } = range;
-    const cutStyles: SyntaxNode[] = [];
-    let okay: boolean | null = null;
-    // Check whether this range is in a position where a link makes sense
-    syntaxTree(state).iterate({
-      from,
-      to,
-      enter: (node) => {
-        if (Object.hasOwn(Textblocks, node.name)) {
-          // If the selection spans multiple textblocks or is in a
-          // code block, abort
-          okay =
-            Textblocks[node.name] !== 'codeblock' &&
-            from >= blockContentStart(node) &&
-            to <= blockContentEnd(node, state.doc);
-        } else if (Object.hasOwn(InlineMarker, node.name)) {
-          // Look for inline styles that partially overlap the range.
-          // Expand the range over them if they start directly
-          // outside, otherwise mark them for later
-          const sNode = node.node;
-          if (node.from < from && node.to <= to) {
-            if (sNode.firstChild!.to === from) {
-              from = node.from;
-            } else {
-              cutStyles.push(sNode);
-            }
-          } else if (node.from >= from && node.to > to) {
-            if (sNode.lastChild!.from === to) {
-              to = node.to;
-            } else {
-              cutStyles.push(sNode);
+// Add link markup around the selection.
+export const addLink = ({ url, image }: { url?: string; image?: boolean } = {}): StateCommand => {
+  return ({ state, dispatch }) => {
+    const changes = state.changeByRange((range) => {
+      let { from, to } = range;
+      const cutStyles: SyntaxNode[] = [];
+      let okay: boolean | null = null;
+      // Check whether this range is in a position where a link makes sense.
+      syntaxTree(state).iterate({
+        from,
+        to,
+        enter: (node) => {
+          if (Object.hasOwn(Textblocks, node.name)) {
+            // If the selection spans multiple textblocks or is in a code block, abort.
+            okay =
+              Textblocks[node.name] !== 'codeblock' &&
+              from >= blockContentStart(node) &&
+              to <= blockContentEnd(node, state.doc);
+          } else if (Object.hasOwn(InlineMarker, node.name)) {
+            // Look for inline styles that partially overlap the range.
+            // Expand the range over them if they start directly outside, otherwise mark them for later.
+            const sNode = node.node;
+            if (node.from < from && node.to <= to) {
+              if (sNode.firstChild!.to === from) {
+                from = node.from;
+              } else {
+                cutStyles.push(sNode);
+              }
+            } else if (node.from >= from && node.to > to) {
+              if (sNode.lastChild!.from === to) {
+                to = node.to;
+              } else {
+                cutStyles.push(sNode);
+              }
             }
           }
+        },
+      });
+
+      if (okay === null) {
+        // No textblock found around selection. Check if the rest of the line is empty.
+        const line = state.doc.lineAt(from);
+        okay = to <= line.to && !/\S/.test(line.text.slice(from - line.from));
+      }
+      if (!okay) {
+        return { range };
+      }
+
+      const changes: ChangeSpec[] = [];
+      // Some changes must be moved to end of change array so that they are applied in the right order.
+      const changesAfter: ChangeSpec[] = [];
+      // Clear existing links.
+      removeLinkInner(from, to, changesAfter, state);
+      let cursorOffset = 1;
+      // Close and reopen inline styles that partially overlap the range.
+      for (const style of cutStyles) {
+        const type = InlineMarker[style.name];
+        const mark = inlineMarkerText(type);
+        if (style.from < from) {
+          // Extends before.
+          changes.push({ from: skipSpaces(from, state.doc, -1), insert: mark });
+          changesAfter.push({ from: skipSpaces(from, state.doc, 1, to), insert: mark });
+        } else {
+          changes.push({ from: skipSpaces(to, state.doc, -1, from), insert: mark });
+          const after = skipSpaces(to, state.doc, 1);
+          if (after === to) {
+            cursorOffset += mark.length;
+          }
+          changesAfter.push({ from: after, insert: mark });
         }
-      },
+      }
+
+      // Add the link markup.
+      changes.push({ from, insert: image ? '![' : '[' }, { from: to, insert: `](${url ?? ''})` });
+      const changeSet = state.changes(changes.concat(changesAfter));
+      // Put the cursor between the title or parenthesis.
+      return {
+        changes: changeSet,
+        range: EditorSelection.cursor(changeSet.mapPos(to, 1) - cursorOffset - (url ? url.length + 2 : 0)),
+      };
     });
 
-    if (okay === null) {
-      // No textblock found around selection. Check if the rest of the line is empty.
-      const line = state.doc.lineAt(from);
-      okay = to <= line.to && !/\S/.test(line.text.slice(from - line.from));
-    }
-    if (!okay) {
-      return { range };
+    if (changes.changes.empty) {
+      return false;
     }
 
-    const changes: ChangeSpec[] = [];
-    // Some changes must be moved to end of change array so that they are applied in the right order
-    const changesAfter: ChangeSpec[] = [];
-    // Clear existing links.
-    removeLinkInner(from, to, changesAfter, state);
-    let cursorOffset = 1;
-    // Close and reopen inline styles that partially overlap the range.
-    for (const style of cutStyles) {
-      const type = InlineMarker[style.name];
-      const mark = inlineMarkerText(type);
-      if (style.from < from) {
-        // Extends before.
-        changes.push({ from: skipSpaces(from, state.doc, -1), insert: mark });
-        changesAfter.push({ from: skipSpaces(from, state.doc, 1, to), insert: mark });
-      } else {
-        changes.push({ from: skipSpaces(to, state.doc, -1, from), insert: mark });
-        const after = skipSpaces(to, state.doc, 1);
-        if (after === to) {
-          cursorOffset += mark.length;
-        }
-        changesAfter.push({ from: after, insert: mark });
-      }
-    }
-    // Add the link markup.
-    changes.push({ from, insert: '[' }, { from: to, insert: ']()' });
-    const changeSet = state.changes(changes.concat(changesAfter));
-    // Put the cursor between the parenthesis.
-    return { changes: changeSet, range: EditorSelection.cursor(changeSet.mapPos(to, 1) - cursorOffset) };
-  });
-  if (changes.changes.empty) {
-    return false;
-  }
-
-  dispatch(state.update(changes, { userEvent: 'format.link.add', scrollIntoView: true }));
-  return true;
+    dispatch(
+      state.update(changes, {
+        userEvent: 'format.link.add',
+        scrollIntoView: true,
+      }),
+    );
+    return true;
+  };
 };
 
 //
 // Lists
 //
 
-// TODO(burdon): Cursor is positioned incorrectly.
-export const addList =
-  (type: List): StateCommand =>
-  ({ state, dispatch }) => {
+export const addList = (type: List): StateCommand => {
+  return ({ state, dispatch }) => {
     let lastBlock = -1;
     let counter = 1;
     let first = true;
     let parentColumn: number | null = null;
-    const blocks: { node: SyntaxNode; counter: number; parentColumn: number | null }[] = [];
 
     // Scan the syntax tree to locate textblocks that can be wrapped.
+    const blocks: { node: SyntaxNode; counter: number; parentColumn: number | null }[] = [];
     for (const { from, to } of state.selection.ranges) {
       syntaxTree(state).iterate({
         from,
@@ -557,6 +609,7 @@ export const addList =
             if (node.from === lastBlock) {
               return;
             }
+
             lastBlock = node.from;
             blocks.push({ node: node.node, counter, parentColumn });
             counter++;
@@ -591,7 +644,6 @@ export const addList =
             scrollIntoView: true,
           }),
         );
-
         return true;
       }
 
@@ -633,7 +685,7 @@ export const addList =
       }
 
       changes.push({ from: nodeFrom, insert: mark });
-      // Add indentation for the other lines in this block
+      // Add indentation for the other lines in this block.
       while (line.to < node.to) {
         line = state.doc.lineAt(line.to + 1);
         const open = /^[\s>]*/.exec(line.text)![0].length;
@@ -653,14 +705,22 @@ export const addList =
         renumberListItems(next.firstChild, last.counter + 1, changes, state.doc);
       }
     }
-
-    dispatch(state.update({ changes, userEvent: 'format.list.add', scrollIntoView: true }));
+    ('Oeswe');
+    const changeSet = state.changes(changes);
+    dispatch(
+      state.update({
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
+        userEvent: 'format.list.add',
+        scrollIntoView: true,
+      }),
+    );
     return true;
   };
+};
 
-export const removeList =
-  (type: List): StateCommand =>
-  ({ state, dispatch }) => {
+export const removeList = (type: List): StateCommand => {
+  return ({ state, dispatch }) => {
     let lastBlock = -1;
     const changes: ChangeSpec[] = [];
     const stack: string[] = [];
@@ -716,15 +776,16 @@ export const removeList =
     dispatch(state.update({ changes, userEvent: 'format.list.remove', scrollIntoView: true }));
     return true;
   };
+};
 
-export const toggleList =
-  (type: List): StateCommand =>
-  (target) => {
+export const toggleList = (type: List): StateCommand => {
+  return (target) => {
     const formatting = getFormatting(target.state);
     const active =
       formatting.listStyle === (type === List.Bullet ? 'bullet' : type === List.Ordered ? 'ordered' : 'task');
     return (active ? removeList(type) : addList(type))(target);
   };
+};
 
 const renumberListItems = (item: SyntaxNode | null, counter: number, changes: ChangeSpec[], doc: Text) => {
   for (; item; item = item.nextSibling) {
@@ -745,12 +806,12 @@ const renumberListItems = (item: SyntaxNode | null, counter: number, changes: Ch
 // Block quotes
 //
 
-export const setBlockquote =
-  (enable: boolean): StateCommand =>
-  ({ state, dispatch }) => {
+export const setBlockquote = (enable: boolean): StateCommand => {
+  return ({ state, dispatch }) => {
     const lines: Line[] = [];
     let lastBlock = -1;
     for (const { from, to } of state.selection.ranges) {
+      const sawBlock = false;
       syntaxTree(state).iterate({
         from,
         to,
@@ -786,6 +847,10 @@ export const setBlockquote =
           }
         },
       });
+      let line;
+      if (!sawBlock && enable && from === to && !/\S/.test((line = state.doc.lineAt(from)).text)) {
+        lines.push(line);
+      }
     }
 
     const changes: ChangeSpec[] = [];
@@ -803,15 +868,18 @@ export const setBlockquote =
       return false;
     }
 
+    const changeSet = state.changes(changes);
     dispatch(
       state.update({
-        changes,
+        changes: changeSet,
+        selection: state.selection.map(changeSet, 1),
         userEvent: enable ? 'format.blockquote.add' : 'format.blockquote.remove',
         scrollIntoView: true,
       }),
     );
     return true;
   };
+};
 
 export const addBlockquote = setBlockquote(true);
 
@@ -882,9 +950,10 @@ export const addCodeblock: StateCommand = (target) => {
 };
 
 export const removeCodeblock: StateCommand = ({ state, dispatch }) => {
-  const changes: ChangeSpec[] = [];
   let lastBlock = -1;
-  // Find all code blocks, remove their markup
+
+  // Find all code blocks, remove their markup.
+  const changes: ChangeSpec[] = [];
   for (const { from, to } of state.selection.ranges) {
     syntaxTree(state).iterate({
       from,
@@ -903,7 +972,7 @@ export const removeCodeblock: StateCommand = ({ state, dispatch }) => {
               });
             }
           } else {
-            // Indented code block
+            // Indented code block.
             const column = node.from - firstLine.from;
             for (let line = firstLine; ; line = state.doc.line(line.number + 1)) {
               changes.push({ from: line.from + column - 4, to: line.from + column });
@@ -934,7 +1003,7 @@ export const toggleCodeblock: StateCommand = (target) => {
 
 export type FormattingOptions = {};
 
-export const formatting = (options: FormattingOptions = {}): Extension => {
+export const formattingKeymap = (options: FormattingOptions = {}): Extension => {
   return [
     keymap.of([
       {
@@ -942,68 +1011,6 @@ export const formatting = (options: FormattingOptions = {}): Extension => {
         run: toggleStrong,
       },
     ]),
-    styling(),
-  ];
-};
-
-const styling = (): Extension => {
-  const buildDecorations = (view: EditorView): DecorationSet => {
-    const builder = new RangeSetBuilder<Decoration>();
-    const { state } = view;
-    const cursor = state.selection.main.head;
-
-    // TODO(burdon): Bug if '***foo***' (since StrongEmphasis is nested inside EmphasisMark).
-    //  Ranges must be added sorted by `from` position and `startSide`.
-    const replace = (node: SyntaxNodeRef, marks: SyntaxNode[]) => {
-      if (cursor <= node.from || cursor >= node.to) {
-        for (const mark of marks) {
-          builder.add(mark.from, mark.to, Decoration.replace({}));
-        }
-      }
-    };
-
-    for (const { from, to } of view.visibleRanges) {
-      syntaxTree(state).iterate({
-        enter: (node) => {
-          switch (node.name) {
-            case 'Emphasis':
-            case 'StrongEmphasis': {
-              const marks = node.node.getChildren('EmphasisMark');
-              replace(node, marks);
-              break;
-            }
-
-            case 'Strikethrough': {
-              const marks = node.node.getChildren('StrikethroughMark');
-              replace(node, marks);
-              break;
-            }
-          }
-        },
-        from,
-        to,
-      });
-    }
-
-    return builder.finish();
-  };
-
-  return [
-    ViewPlugin.fromClass(
-      class {
-        decorations: DecorationSet;
-        constructor(view: EditorView) {
-          this.decorations = buildDecorations(view);
-        }
-
-        update(update: ViewUpdate) {
-          this.decorations = buildDecorations(update.view);
-        }
-      },
-      {
-        decorations: (value) => value.decorations,
-      },
-    ),
   ];
 };
 
@@ -1050,7 +1057,7 @@ const Textblocks: { [name: string]: NonNullable<Formatting['blockType']> } = {
 };
 
 /**
- * Query an editor state for the active formatting at the selection.
+ * Query the editor state for the active formatting at the selection.
  */
 export const getFormatting = (state: EditorState): Formatting => {
   // These will track the formatting we've seen so far.
@@ -1061,7 +1068,7 @@ export const getFormatting = (state: EditorState): Formatting => {
   const inline: (boolean | null)[] = [null, null, null, null];
   let link: boolean = false;
   let blockQuote: boolean | null = null;
-  // False indicates mixed list styles
+  // False indicates mixed list styles.
   let listStyle: Formatting['listStyle'] | null | false = null;
 
   // Track block context for list/blockquote handling.
@@ -1220,21 +1227,25 @@ export const getFormatting = (state: EditorState): Formatting => {
 };
 
 /**
- * Hook computes the current formatting state.
+ * Hook provides an extension to compute the current formatting state.
  */
-export const useFormattingState = (): [Formatting | null, Extension] => {
-  const [state, setState] = useState<Formatting | null>(null);
+export const useFormattingState = (): [Formatting | undefined, Extension] => {
+  const [state, setState] = useState<Formatting>();
+
   const observer = useMemo(
     () =>
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) {
-          const newState = getFormatting(update.state);
-          if (!state || !compareFormatting(state, newState)) {
-            setState(newState);
-          }
+          setState((prevState) => {
+            const newState = getFormatting(update.state);
+            if (!prevState || !formattingEquals(prevState, newState)) {
+              return newState;
+            }
+            return prevState;
+          });
         }
       }),
-    [],
+    [setState],
   );
 
   return [state, observer];

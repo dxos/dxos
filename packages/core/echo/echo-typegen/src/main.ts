@@ -7,6 +7,7 @@ import path from 'node:path';
 import { argv } from 'node:process';
 import * as pb from 'protobufjs';
 
+import { log } from '@dxos/log';
 import { ts } from '@dxos/plate';
 
 import { generate } from './codegen';
@@ -82,7 +83,7 @@ const loadProtobufBuiltins = () => {
 };
 
 const main = async (source: string, out: string, schemaPackage: string) => {
-  console.log(`Reading: ${source}`);
+  log.info(`Reading: ${source}`);
   const root = new pb.Root();
   root.loadSync(source);
 
@@ -96,7 +97,7 @@ const main = async (source: string, out: string, schemaPackage: string) => {
 
   mkdirSync(path.dirname(out), { recursive: true });
   writeFileSync(out, code);
-  console.log(`Output: ${out}`);
+  log.info(`Output: ${out}`);
 };
 
 // TODO(burdon): Yargs

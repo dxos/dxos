@@ -8,7 +8,6 @@ import React from 'react';
 
 import { faker } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
-import { DeviceKind } from '@dxos/react-client/halo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -49,45 +48,6 @@ export const IdentityActionChooser = () => {
         activeView='identity action chooser'
         IdentityActionChooser={IdentityActionChooserImpl}
       />
-    </StorybookDialog>
-  );
-};
-
-export const UpdateProfileForm = () => {
-  return (
-    <StorybookDialog inOverlayLayout>
-      <IdentityPanelImpl
-        {...noOpProps}
-        activeView='update profile form'
-        IdentityActionChooser={IdentityActionChooserImpl}
-      />
-    </StorybookDialog>
-  );
-};
-
-export const DeviceManager = () => {
-  return (
-    <StorybookDialog inOverlayLayout>
-      <IdentityPanelImpl
-        {...{
-          ...noOpProps,
-          devices: [
-            { deviceKey: PublicKey.random(), kind: DeviceKind.CURRENT },
-            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
-            { deviceKey: PublicKey.random(), kind: DeviceKind.TRUSTED },
-          ],
-        }}
-        activeView='device manager'
-        IdentityActionChooser={IdentityActionChooserImpl}
-      />
-    </StorybookDialog>
-  );
-};
-
-export const DeviceManagerEmpty = () => {
-  return (
-    <StorybookDialog inOverlayLayout>
-      <IdentityPanelImpl {...noOpProps} activeView='device manager' IdentityActionChooser={IdentityActionChooserImpl} />
     </StorybookDialog>
   );
 };
@@ -143,13 +103,3 @@ export const DeviceInvitationManagerCancelled = () =>
   DeviceInvitationManagerWithState({
     status: Invitation.State.CANCELLED,
   });
-
-// export const IdentityActionChooser = {
-//   decorators: [ClientDecorator()],
-//   args: { activeView: 'identity action chooser' },
-// };
-
-// export const DeviceManager = {
-//   decorators: [ClientDecorator()],
-//   args: { activeView: 'device manager' },
-// };

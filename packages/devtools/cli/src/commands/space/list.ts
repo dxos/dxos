@@ -21,11 +21,16 @@ export default class List extends BaseCommand<typeof List> {
     live: Flags.boolean({
       description: 'Live update.',
     }),
+    timeout: Flags.integer({
+      description: 'Timeout (ms).',
+      default: 1_000,
+      aliases: ['t'],
+    }),
   };
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client, false);
+      const spaces = await this.getSpaces(client, true);
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {

@@ -16,9 +16,7 @@ const getComponentNames = (module: any): string[] =>
   Object.getOwnPropertyNames(module).filter((name) => !(name === 'default' || name.startsWith('__')));
 
 const getComponents = (module: any): React.FC[] => {
-  const components = getComponentNames(module).map((name) => module[name]);
-  console.log(module);
-  return components;
+  return getComponentNames(module).map((name) => module[name]);
 };
 
 const camelCaseToSpacedName = (camelCase: string) => {

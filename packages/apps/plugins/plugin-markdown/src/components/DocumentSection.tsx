@@ -2,44 +2,75 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, type HTMLAttributes } from 'react';
+import React, { type FC } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type DocumentType } from '@braneframe/types';
+import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { type Extension, MarkdownEditor, useTextModel } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx } from '@dxos/react-ui-theme';
+import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  type Extension,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useTextEditor,
+  createMarkdownExtensions,
+  Toolbar,
+  useActionHandler,
+  useFormattingState,
+} from '@dxos/react-ui-editor';
+import { sectionToolbarLayout } from '@dxos/react-ui-stack';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
 const DocumentSection: FC<{
   document: DocumentType;
   extensions: Extension[];
+  toolbar?: boolean;
 }> = ({ document, extensions }) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const identity = useIdentity();
-  const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document?.content });
-  if (!model) {
-    return null;
-  }
+  const space = getSpace(document);
+
+  const { themeMode } = useThemeContext();
+  const [formattingState, formattingObserver] = useFormattingState();
+  const { parentRef, view: editorView } = useTextEditor(
+    () => ({
+      doc: document.content?.content,
+      extensions: [
+        formattingObserver,
+        createBasicExtensions({ placeholder: t('editor placeholder') }),
+        createMarkdownExtensions({ themeMode }),
+        createThemeExtensions({
+          themeMode,
+        }),
+        createDataExtensions({
+          id: document.id,
+          text: document.content && createDocAccessor(document.content, ['content']),
+          space,
+          identity,
+        }),
+        ...extensions,
+      ],
+    }),
+    [document, extensions, themeMode],
+  );
+  const handleAction = useActionHandler(editorView);
 
   return (
-    <MarkdownEditor
-      model={model}
-      extensions={extensions}
-      placeholder={t('editor placeholder')}
-      slots={{
-        root: {
-          className: mx('flex flex-col grow m-0.5 min-bs-[8rem]', attentionSurface, focusRing),
-          'data-testid': 'composer.markdownRoot',
-        } as HTMLAttributes<HTMLDivElement>,
-        editor: {
-          className: 'h-full py-4',
-        },
-      }}
-    />
+    <div role='none' className='contents group'>
+      {toolbar && (
+        <Toolbar.Root
+          state={formattingState}
+          onAction={handleAction}
+          classNames={['z-[1] invisible group-focus-within:visible', sectionToolbarLayout]}
+        >
+          <Toolbar.Markdown />
+          <Toolbar.Separator />
+        </Toolbar.Root>
+      )}
+      <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />
+    </div>
   );
 };
 

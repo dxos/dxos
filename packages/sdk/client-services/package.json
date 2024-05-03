@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -10,6 +10,7 @@
   "browser": {
     "jsondown": false,
     "./src/packlets/locks/node.ts": "./src/packlets/locks/browser.ts",
+    "./src/packlets/diagnostics/diagnostics-broadcast.ts": "./src/packlets/diagnostics/browser-diagnostics-broadcast.ts",
     "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs",
     "./testing.js": "./dist/lib/browser/packlets/testing/index.mjs"
   },
@@ -22,6 +23,7 @@
   ],
   "dependencies": {
     "@dxos/async": "workspace:*",
+    "@dxos/automerge": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -29,18 +31,17 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/crypto": "workspace:*",
     "@dxos/debug": "workspace:*",
-    "@dxos/document-model": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/feed-store": "workspace:*",
+    "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -49,11 +50,11 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
     "@dxos/teleport-extension-object-sync": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/timeframe": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
+    "level": "^8.0.1",
     "platform": "^1.3.6"
   },
   "devDependencies": {

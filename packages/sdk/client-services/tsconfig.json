@@ -62,7 +62,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/document-model"
+      "path": "../../core/echo/automerge"
     },
     {
       "path": "../../core/echo/echo-db"
@@ -74,10 +74,7 @@
       "path": "../../core/echo/echo-schema"
     },
     {
-      "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/text-model"
+      "path": "../../core/echo/indexing"
     },
     {
       "path": "../../core/halo/credentials"

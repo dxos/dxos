@@ -7,42 +7,42 @@ functions:
   - id: 'dxos.org/function/calendar'
     name: 'calendar'
     handler: 'calendar'
-    description: 'Calendar Sync'
+    description: 'Calendar Sync.'
 
   - id: 'dxos.org/function/chat'
     name: 'chat'
     handler: 'chat'
-    description: 'AI Chat'
+    description: 'GPT Chat.'
 
   - id: 'dxos.org/function/chess'
     name: 'chess'
     handler: 'chess'
-    description: 'Chess'
+    description: 'Chess.'
 
   - id: 'dxos.org/function/email'
     name: 'email'
     handler: 'email'
-    description: 'Email Sync'
+    description: 'Email Sync.'
 
   - id: 'dxos.org/function/email-extractor'
     name: 'email-extractor'
     handler: 'email-extractor'
-    description: 'Email Extractor'
+    description: 'Email Extractor.'
 
   - id: 'dxos.org/function/embedding'
     name: 'embedding'
     handler: 'embedding'
-    description: 'Text embedding'
+    description: 'Text embedding.'
 
   - id: 'dxos.org/function/hello'
     name: 'hello'
     handler: 'hello'
-    description: 'Hello world'
+    description: 'Hello world.'
 
   - id: 'dxos.org/function/github'
     name: 'github'
     handler: 'github'
-    description: 'Github Sync'
+    description: 'Github Sync.'
 
 triggers:
 #  - function: 'dxos.org/function/calendar'

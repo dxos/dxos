@@ -9,7 +9,7 @@ export default [
     'en-US': {
       [OUTLINER_PLUGIN]: {
         'plugin name': 'Outliner',
-        'object placeholder': 'New outline',
+        'object title placeholder': 'New outline',
         'create object label': 'Create outline',
         'delete object label': 'Delete item',
         'create stack section label': 'Create outline',

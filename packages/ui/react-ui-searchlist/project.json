@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-searchlist",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/react-ui-searchlist/src",
   "projectType": "library",
   "targets": {
@@ -15,9 +20,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui-searchlist"
+  ]
 }

@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -39,6 +42,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-space"

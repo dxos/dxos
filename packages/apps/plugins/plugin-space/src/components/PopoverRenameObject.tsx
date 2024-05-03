@@ -4,20 +4,26 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { type TypedObject } from '@dxos/react-client/echo';
+import { FolderType } from '@braneframe/types';
+import { type ReactiveObject } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRenameObject = ({ object }: { object: TypedObject }) => {
+export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<any> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const doneButton = useRef<HTMLButtonElement>(null);
-  // TODO(wittjosiah): Normalize title vs name.
-  // TODO(burdon): Field should not be hard-code 'title' field.
-  const [name, setName] = useState(object.title || '');
+  // TODO(wittjosiah): Use schema here.
+  const object = obj as any;
+  // TODO(burdon): Field should not be hardcoded field.
+  const [name, setName] = useState(object.title || object.name || '');
 
   const handleDone = useCallback(() => {
-    object.title = name;
+    if (object instanceof FolderType) {
+      object.name = name;
+    } else {
+      object.title = name;
+    }
   }, [object, name]);
 
   return (

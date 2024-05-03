@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "config",
+  "tags": [
+    "scope:sdk"
+  ],
   "sourceRoot": "packages/sdk/config/src",
   "projectType": "library",
   "targets": {
@@ -53,10 +58,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "config"
+  ]
 }

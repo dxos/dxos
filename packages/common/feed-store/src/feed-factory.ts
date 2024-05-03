@@ -55,7 +55,7 @@ export class FeedFactory<T extends {}> {
       throw new Error('Signer required to create writable feeds.');
     }
     if (options?.secretKey) {
-      console.warn('Secret key ignored due to signer.');
+      log.warn('Secret key ignored due to signer.');
     }
 
     // Required due to hypercore's 32-byte key limit.

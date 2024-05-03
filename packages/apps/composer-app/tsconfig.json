@@ -15,6 +15,8 @@
     ]
   },
   "exclude": [
+    "demos/*",
+    "src/functions/*",
     "vite.config.ts"
   ],
   "include": [
@@ -34,6 +36,9 @@
     },
     {
       "path": "../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../core/echo/echo-signals"
     },
     {
       "path": "../../core/mesh/rpc-tunnel"

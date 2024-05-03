@@ -3,12 +3,16 @@
 //
 
 import { type IconProps, Table } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Table as TableType, Folder } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { TableType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { TableMain, TableSection, TableSlide } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
@@ -18,10 +22,14 @@ import { TableAction, type TablePluginProvides, isTable } from './types';
 export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
   return {
     meta,
+    ready: async (plugins) => {
+      const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
+      clientPlugin?.provides.client.addSchema(TableType);
+    },
     provides: {
       metadata: {
         records: {
-          [TableType.schema.typename]: {
+          [TableType.typename]: {
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
@@ -29,35 +37,67 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       },
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${TABLE_PLUGIN}/create`,
-            label: ['create object label', { ns: TABLE_PLUGIN }],
-            icon: (props) => <Table {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: TABLE_PLUGIN,
                   action: TableAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'tablePlugin.createObject',
-            },
+                  properties: {
+                    label: ['create object label', { ns: TABLE_PLUGIN }],
+                    icon: (props: IconProps) => <Table {...props} />,
+                    testId: 'tablePlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all tables to the graph.
+              const query = space.db.query(Filter.schema(TableType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: TableType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
+                          icon: (props: IconProps) => <Table {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       surface: {
@@ -78,7 +118,9 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case TableAction.CREATE: {
-              return { data: new TableType() };
+              return {
+                data: create(TableType, { title: '', props: [] }),
+              };
             }
           }
         },

@@ -120,8 +120,8 @@ export class Keyboard {
       const isInput =
         tagName === 'INPUT' || tagName === 'TEXTAREA' || (event.target as any)?.getAttribute('contenteditable');
 
-      // Normalized key binding.
-      const str = [altKey && 'alt', ctrlKey && 'ctrl', shiftKey && 'shift', metaKey && 'meta', key]
+      // Normalized key binding (order matters, see note above).
+      const str = [ctrlKey && 'ctrl', shiftKey && 'shift', altKey && 'alt', metaKey && 'meta', key]
         .filter(Boolean)
         .join('+');
 

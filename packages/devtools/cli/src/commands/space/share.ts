@@ -27,6 +27,26 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Timeout in milliseconds.',
       default: 5_000,
     }),
+    origin: Flags.string({
+      description: 'Base URL of the application to join the invitation, e.g. https://composer.dxos.org',
+    }),
+    lifetime: Flags.integer({
+      description: 'Lifetime of the invitation in seconds',
+      default: 86400,
+    }),
+    persistent: Flags.boolean({
+      description: 'Invitation should resume if client restarts',
+      default: true,
+    }),
+    // TODO(nf): --no- doesn't work
+    'no-persistent': Flags.boolean({
+      description: "Don't resume invitation if client restarts",
+      default: true,
+    }),
+    'no-wait': Flags.boolean({
+      description: "Don't wait for a peer to connect before exiting CLI.",
+      default: true,
+    }),
   };
 
   async run(): Promise<any> {
@@ -35,9 +55,14 @@ export default class Share extends BaseCommand<typeof Share> {
       const space = await this.getSpace(client, key);
 
       // TODO(burdon): Timeout error not propagated.
-      const type = this.flags.multiple ? Invitation.Type.MULTIUSE : undefined;
       const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
-      const observable = space!.share({ type, authMethod, timeout: this.flags.timeout });
+      const observable = space!.share({
+        authMethod,
+        multiUse: this.flags.multiple,
+        timeout: this.flags.timeout,
+        persistent: this.flags.persistent,
+        lifetime: this.flags.lifetime,
+      });
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
@@ -51,13 +76,18 @@ export default class Share extends BaseCommand<typeof Share> {
             }
           },
         },
+        waitForSuccess: false,
       });
 
-      // TODO(burdon): Display joined peer?
-      ux.action.start('Waiting for peer to connect');
-      await invitationSuccess;
-      ux.action.stop();
-      ux.log(chalk`{green Joined successfully.}`);
+      if (!this.flags['no-wait']) {
+        // TODO(burdon): Display joined peer?
+        ux.action.start('Waiting for peer to connect');
+        await invitationSuccess;
+        ux.action.stop();
+        ux.log(chalk`{green Joined successfully.}`);
+      } else {
+        await invitationSuccess;
+      }
     });
   }
 }

@@ -3,8 +3,7 @@
 //
 
 import { expect } from 'chai';
-
-import { test, describe } from '@dxos/test';
+import { test, describe } from 'vitest';
 
 import { arrayToBuffer, arrayToString, bufferToArray, stringToArray } from './uint8array';
 

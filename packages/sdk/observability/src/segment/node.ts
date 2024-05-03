@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import Analytics from 'analytics-node';
+import { Analytics } from '@segment/analytics-node';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,9 +19,9 @@ export class SegmentTelemetry {
     try {
       invariant(apiKey, 'Key required to send telemetry');
 
-      this._analytics = new Analytics(apiKey, {
+      this._analytics = new Analytics({
+        writeKey: apiKey,
         flushAt: batchSize,
-        enable: true,
       });
     } catch (err) {
       log.catch('Failed to initialize telemetry', err);
@@ -61,7 +61,7 @@ export class SegmentTelemetry {
     try {
       this._analytics.track({
         ...options,
-        context: this._getTags(),
+        properties: { ...options.properties, ...this._getTags() },
         userId,
         anonymousId: anonymousId!,
         event,
@@ -81,11 +81,17 @@ export class SegmentTelemetry {
     }
 
     try {
-      await this._analytics.flush((err) => {
-        captureException(err);
-      });
+      await this._analytics.flush();
     } catch (err) {
-      log.catch('Failed to flush', err);
+      // are these errors worth capturing?
+      captureException(err);
     }
+  }
+
+  async close() {
+    if (!this._analytics) {
+      return;
+    }
+    await this._analytics.closeAndFlush();
   }
 }

@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type PublicKey } from '@dxos/keys';
 import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import type { ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import type { ProfileDocument, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import type {
   AdmissionRequest,
   AdmissionResponse,
@@ -33,7 +34,12 @@ export interface InvitationProtocol {
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
-  admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
+  delegate(invitation: Invitation): Promise<PublicKey>;
+
+  /**
+   * Once authentication is successful, the host can admit the guest to the requested resource.
+   */
+  admit(invitation: Invitation, request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
 
   //
   // Guest
@@ -54,7 +60,7 @@ export interface InvitationProtocol {
   /**
    * Get key information to send to the host in order to create an admission credential for the guest.
    */
-  createAdmissionRequest(): Promise<AdmissionRequest>;
+  createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest>;
 
   /**
    * Redeem the admission credential.

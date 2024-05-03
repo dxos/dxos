@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "phoenix",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/phoenix/src",
   "projectType": "library",
   "targets": {
@@ -21,10 +26,8 @@
       ]
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "phoenix"
+  ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-app",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "private": true,
   "description": "HALO PWA",
   "homepage": "https://dxos.org",
@@ -39,8 +39,8 @@
     "@types/react-dom": "^18.0.6",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
-    "vite": "^5.0.12",
-    "vite-plugin-pwa": "^0.17.5",
+    "vite": "^5.2.9",
+    "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
     "workbox-window": "^7.0.0"

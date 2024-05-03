@@ -18,22 +18,22 @@ import React, { useCallback, useContext, useRef, useState } from 'react';
 import { SPACE_PLUGIN, SpaceAction, getSpaceDisplayName } from '@braneframe/plugin-space';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { useIdentity } from '@dxos/react-client/halo';
+import { getMeta } from '@dxos/react-client/echo';
 import {
   Avatar,
   Button,
   ButtonGroup,
   DensityProvider,
   Dialog,
-  Toggle,
-  Main,
-  useTranslation,
   DropdownMenu,
+  Main,
+  Toggle,
   Tooltip,
-  useJdenticonHref,
+  toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-editor';
 import { defaultTx, descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { hexToFallback } from '@dxos/util';
 
 import { GfmPreview } from './GfmPreview';
 import { useDocGhId } from '../../hooks';
@@ -50,7 +50,6 @@ import {
 const overlayAttrs = { side: 'top' as const, sideOffset: 4 };
 
 const EmbeddedLayoutImpl = () => {
-  const identity = useIdentity();
   const { t } = useTranslation(GITHUB_PLUGIN);
   const { space, source, id, identityHex } = useContext(SpaceResolverContext);
   const { document } = useContext(DocumentResolverContext);
@@ -62,7 +61,8 @@ const EmbeddedLayoutImpl = () => {
   }, []);
 
   const handleSaveAndCloseEmbed = useCallback(() => {
-    document && window.parent.postMessage({ type: 'save-data', content: document.content.text }, 'https://github.com');
+    document &&
+      window.parent.postMessage({ type: 'save-data', content: document.content?.content }, 'https://github.com');
   }, [document]);
 
   const handleCreateSpace = () => dispatch({ action: SpaceAction.CREATE });
@@ -84,15 +84,9 @@ const EmbeddedLayoutImpl = () => {
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [resolverDialogOpen, setResolverDialogOpen] = useState(false);
 
-  const spaceJdenticon = useJdenticonHref(space?.key.toHex() ?? '', 6);
+  const spaceFallbackValue = hexToFallback(space?.key.toHex() ?? '0');
 
-  const model = useTextModel({
-    identity,
-    space: space ?? undefined,
-    text: document ? document.content : undefined,
-  });
-
-  const docGhId = useDocGhId(document?.__meta?.keys ?? []);
+  const docGhId = useDocGhId((document ? getMeta(document)?.keys : []) ?? []);
   const name = space && getSpaceDisplayName(space);
 
   return (
@@ -188,10 +182,10 @@ const EmbeddedLayoutImpl = () => {
                     <Avatar.Root size={5} variant='circle'>
                       <div role='none' className='flex gap-1 mlb-1 items-center'>
                         <Avatar.Frame>
-                          <Avatar.Fallback href={spaceJdenticon} />
+                          <Avatar.Fallback text={spaceFallbackValue.emoji} />
                         </Avatar.Frame>
                         <Avatar.Label classNames='text-sm text-[--surface-text]'>
-                          {Array.isArray(name) ? t(...name) : name}
+                          {name && toLocalizedString(name, t)}
                         </Avatar.Label>
                       </div>
                     </Avatar.Root>
@@ -250,7 +244,8 @@ const EmbeddedLayoutImpl = () => {
               />
             </Main.Content>
           ) : (
-            <Surface role='main' data={{ model, properties: document, view: 'embedded' }} />
+            // TODO(burdon): This will break since model is not defined.
+            <Surface role='main' data={{ properties: document, view: 'embedded' }} />
           )
         ) : source && id && identityHex ? (
           <Dialog.Root open onOpenChange={() => true}>

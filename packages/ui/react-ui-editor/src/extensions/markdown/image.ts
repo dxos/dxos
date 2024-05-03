@@ -40,6 +40,16 @@ export const image = (options: ImageOptions = {}): Extension => {
   });
 };
 
+const preloaded = new Set<string>();
+
+const preloadImage = (url: string) => {
+  if (!preloaded.has(url)) {
+    const img = document.createElement('img');
+    img.src = url;
+    preloaded.add(url);
+  }
+};
+
 const buildDecorations = (from: number, to: number, state: EditorState) => {
   const decorations: Range<Decoration>[] = [];
   const cursor = state.selection.main.head;
@@ -51,6 +61,8 @@ const buildDecorations = (from: number, to: number, state: EditorState) => {
         if (urlNode) {
           const hide = state.readOnly || cursor < node.from || cursor > node.to;
           const url = state.sliceDoc(urlNode.from, urlNode.to);
+          // TODO(burdon): Doesn't load if scrolling with mouse.
+          preloadImage(url);
           decorations.push(
             Decoration.replace({
               block: true, // Prevent cursor from entering.
@@ -85,3 +97,9 @@ class ImageWidget extends WidgetType {
     return img;
   }
 }
+
+export type ImageUploadOptions = {
+  onSelect: () => { url: string };
+};
+
+export const imageUpload = (options: ImageOptions = {}) => {};

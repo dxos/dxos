@@ -2,24 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus, Placeholder } from '@phosphor-icons/react';
-import React, { useCallback, type FC } from 'react';
+import { Plus } from '@phosphor-icons/react';
+import React, { useCallback, type FC, useState } from 'react';
 
-import { File as FileType, Stack as StackType, Folder } from '@braneframe/types';
+import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
 import {
+  LayoutAction,
   NavigationAction,
   Surface,
   defaultFileTypes,
   parseMetadataResolverPlugin,
   parseFileManagerPlugin,
   useIntent,
-  usePlugin,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { getSpaceForObject, isTypedObject, useQuery } from '@dxos/react-client/echo';
-import { Main, Button, useTranslation, DropdownMenu, ButtonGroup } from '@dxos/react-ui';
+import { create, isReactiveObject, getType } from '@dxos/echo-schema';
+import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { Main, Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
-import { Stack, type StackProps } from '@dxos/react-ui-stack';
+import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
 import {
   baseSurface,
   topbarBlockPaddingStart,
@@ -27,10 +28,10 @@ import {
   surfaceElevation,
   staticDefaultButtonColors,
 } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
-import { type StackPluginProvides, isStack } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -38,19 +39,24 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 };
 
 const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
-  const { t } = useTranslation(STACK_PLUGIN);
   const { dispatch } = useIntent();
-  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
+    .filter(nonNullable)
     // TODO(wittjosiah): Should the database handle this differently?
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
-    .filter(({ object }) => Boolean(object));
-  const space = getSpaceForObject(stack);
-  const [folder] = useQuery(space, Folder.filter());
+    .filter(({ object }) => object)
+    .map(({ id, object }) => {
+      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
+      return { id, object: object as SectionType, ...rest };
+    });
+  const space = getSpace(stack);
+  const [folder] = useQuery(space, Filter.schema(FolderType));
+
+  const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
     const parseData = metadataPlugin?.provides.metadata.resolver(active.type)?.parse;
@@ -58,7 +64,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isTypedObject(data) || isStack(data)) {
+    if (!isReactiveObject(data) || data instanceof StackType) {
       return 'reject';
     }
 
@@ -82,34 +88,36 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     const object = parseData?.(active.item, 'object');
     // TODO(wittjosiah): Stop creating new section objects for each drop.
     if (object && over.path === Path.create(id, over.item.id)) {
-      stack.sections.splice(over.position!, 0, new StackType.Section({ object }));
+      stack.sections.splice(over.position!, 0, create(SectionType, { object }));
     } else if (object && over.path === id) {
-      stack.sections.push(new StackType.Section({ object }));
+      stack.sections.push(create(SectionType, { object }));
     }
   };
 
   const handleDelete = (path: string) => {
-    const index = stack.sections.findIndex((section) => section.id === Path.last(path));
+    const index = stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
     if (index >= 0) {
       stack.sections.splice(index, 1);
     }
   };
 
   const handleAdd = useCallback(
-    (sectionObject: StackType.Section['object']) => {
-      stack.sections.push(new StackType.Section({ object: sectionObject }));
+    (sectionObject: SectionType['object']) => {
+      stack.sections.push(create(SectionType, { object: sectionObject }));
       // TODO(wittjosiah): Remove once stack items can be added to folders separately.
       folder?.objects.push(sectionObject);
     },
     [stack, stack.sections],
   );
 
+  // TODO(wittjosiah): Factor out.
   const handleFileUpload = fileManagerPlugin?.provides.file.upload
     ? async (file: File) => {
         const filename = file.name.split('.')[0];
         const info = await fileManagerPlugin.provides.file.upload?.(file);
         if (info) {
-          handleAdd(new FileType({ type: file.type, title: filename, filename, cid: info.cid }));
+          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+          handleAdd(obj);
         }
       }
     : undefined;
@@ -126,13 +134,24 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     return parseData ? parseData(item, 'view-object') : item;
   };
 
+  const handleAddSection = (path: string, position: AddSectionPosition) => {
+    void dispatch?.({
+      action: LayoutAction.SET_LAYOUT,
+      data: {
+        element: 'dialog',
+        component: `${STACK_PLUGIN}/AddSectionDialog`,
+        subject: { path, position, stack },
+      },
+    });
+  };
+
   return (
-    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
       <Stack
         id={id}
         data-testid='main.stack'
         SectionContent={SectionContent}
-        type={StackType.Section.schema.typename}
+        type={SectionType.typename}
         items={items}
         separation={separation}
         transform={handleTransform}
@@ -140,39 +159,29 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onOver={handleOver}
         onDeleteSection={handleDelete}
         onNavigateToSection={handleNavigate}
+        onAddSection={handleAddSection}
+        collapsedSections={collapsedSections}
+        onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='flex justify-center mt-4'>
+      <div role='none' className='flex justify-center mbs-4 pbe-4'>
         <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
-          <DropdownMenu.Root modal={false}>
-            <DropdownMenu.Trigger asChild>
-              <Button variant='ghost' data-testid='stack.createSection'>
-                <Plus className={getSize(6)} />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Arrow />
-              <DropdownMenu.Viewport>
-                {stackPlugin?.provides?.stack.creators?.map(({ id, testId, intent, icon, label }) => {
-                  const Icon = icon ?? Placeholder;
-                  return (
-                    <DropdownMenu.Item
-                      key={id}
-                      id={id}
-                      data-testid={testId}
-                      onClick={async () => {
-                        const { data: nextSection } = (await dispatch(intent)) ?? {};
-                        handleAdd(nextSection);
-                      }}
-                    >
-                      <Icon className={getSize(6)} />
-                      <span>{typeof label === 'string' ? label : t(...(label as [string, { ns: string }]))}</span>
-                    </DropdownMenu.Item>
-                  );
-                })}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          <Button
+            variant='ghost'
+            data-testid='stack.createSection'
+            onClick={() =>
+              dispatch?.({
+                action: LayoutAction.SET_LAYOUT,
+                data: {
+                  element: 'dialog',
+                  component: 'dxos.org/plugin/stack/AddSectionDialog',
+                  subject: { position: 'afterAll', stack },
+                },
+              })
+            }
+          >
+            <Plus className={getSize(6)} />
+          </Button>
           {handleFileUpload && (
             <FileUpload
               fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}

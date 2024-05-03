@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Gear } from '@phosphor-icons/react';
+import { Gear, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import {
@@ -42,7 +42,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop(settings.values.$selected!, 'selected', LocalStorageStore.string);
+      settings.prop({ key: 'selected', type: LocalStorageStore.string() });
     },
     provides: {
       surface: {
@@ -87,22 +87,24 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          parent.addAction({
+          graph.addNodes({
             id: SettingsAction.OPEN,
-            label: ['open settings label', { ns: SETTINGS_PLUGIN }],
-            icon: (props) => <Gear {...props} />,
-            keyBinding: 'meta+,',
-            invoke: () =>
+            data: () =>
               intentPlugin?.provides.intent.dispatch({
                 plugin: SETTINGS_PLUGIN,
                 action: SettingsAction.OPEN,
               }),
+            properties: {
+              label: ['open settings label', { ns: SETTINGS_PLUGIN }],
+              icon: (props: IconProps) => <Gear {...props} />,
+              keyBinding: {
+                macos: 'meta+,',
+                windows: 'alt+,',
+              },
+            },
+            edges: [['root', 'inbound']],
           });
         },
       },

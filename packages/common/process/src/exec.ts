@@ -14,6 +14,7 @@ export type ExecOptions = {
 export const exec = (command: string, options?: Partial<ExecOptions>): Promise<string> => {
   const { verbose, cwd, shell } = { verbose: false, cwd: process.cwd(), shell: true, ...options };
   if (verbose) {
+    // eslint-disable-next-line no-console
     console.log(command);
   }
 

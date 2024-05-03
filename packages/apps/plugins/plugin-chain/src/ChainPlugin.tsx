@@ -3,17 +3,21 @@
 //
 
 import { Brain, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Chain as ChainType, Folder } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, NavigationAction, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { ChainInput, ChainPromptType, ChainType } from '@braneframe/types';
+import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
-import { ChainAction, type ChainPluginProvides, isObject } from './types';
+import { ChainAction, type ChainPluginProvides } from './types';
 
 export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
   return {
@@ -21,41 +25,78 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [ChainType.schema.typename]: {
+          [ChainType.typename]: {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
             icon: (props: IconProps) => <Brain {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ChainType, ChainInput, ChainPromptType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          if (parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-              id: `${CHAIN_PLUGIN}/create`,
-              label: ['create object label', { ns: CHAIN_PLUGIN }],
-              icon: (props) => <Brain {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: CHAIN_PLUGIN,
-                    action: ChainAction.CREATE,
-                  },
-                  {
-                    action: SpaceAction.ADD_OBJECT,
-                    data: { target: parent.data },
-                  },
-                  {
-                    action: NavigationAction.ACTIVATE,
-                  },
-                ]),
-              properties: {
-                testId: 'chainPlugin.createObject',
-              },
-            });
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
+            return;
           }
+
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
+                  plugin: CHAIN_PLUGIN,
+                  action: ChainAction.CREATE,
+                  properties: {
+                    label: ['create object label', { ns: CHAIN_PLUGIN }],
+                    icon: (props: IconProps) => <Brain {...props} />,
+                    testId: 'chainPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all chains to the graph.
+              const query = space.db.query(Filter.schema(ChainType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: ChainType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: CHAIN_PLUGIN }],
+                          icon: (props: IconProps) => <Brain {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
+          });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       stack: {
@@ -76,7 +117,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active) ? <ChainMain chain={data.active as ChainType} /> : null;
+              return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
           }
 
           return null;
@@ -87,7 +128,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                data: new ChainType(),
+                data: create(ChainType, { prompts: [] }),
               };
             }
           }

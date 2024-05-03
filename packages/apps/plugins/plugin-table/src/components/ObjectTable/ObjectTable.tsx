@@ -1,176 +1,157 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 
-import { useFilteredObjects } from '@braneframe/plugin-search';
-import { Table as TableType } from '@braneframe/types';
+import { TableType } from '@braneframe/types';
+import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { Expando, type TypedObject, Schema, getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
-import { Table, type TableDef, type TableProps } from '@dxos/react-ui-table';
+import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 
-// TODO(burdon): Remove deps.
-import { getSchema, schemaPropMapper, TableColumnBuilder } from '../../schema';
+import { useTableObjects } from './hooks';
+import { createColumns, deleteTableProp, updateTableProp } from './utils';
+import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
-// TODO(burdon): Factor out echo fn to update when changed.
-const reactDeps = (...obj: TypedObject[]) => {
-  return JSON.stringify(obj);
-};
-
-export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role' | 'getScrollElement'> & {
+export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
   table: TableType;
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader, getScrollElement }) => {
-  const [, forceUpdate] = useState({});
-  const space = getSpaceForObject(table);
-  const objects = useQuery<TypedObject>(
-    space,
-    // TODO(dmaretskyi): Reference comparison broken by deepsignal wrapping.
-    (object) => table.schema && (object.__schema as any)?.id === table.schema.id,
-    // TODO(burdon): Toggle deleted.
-    {},
-    [table.schema],
+const makeStarterTableSchema = () => {
+  return TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+    title: S.optional(S.string),
+  });
+};
+
+export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
+  const space = getSpace(table);
+  const [showSettings, setShowSettings] = useState(false);
+
+  useEffect(() => setShowSettings(!table.schema), [table.schema]);
+
+  const handleClose = useCallback(
+    (success: boolean) => {
+      // TODO(burdon): If cancel then undo create?
+      if (!success || !space) {
+        return;
+      }
+
+      if (!table.schema) {
+        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
+        updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
+      }
+
+      setShowSettings(false);
+    },
+    [space, table.schema, setShowSettings],
   );
 
-  const [newObject, setNewObject] = useState(new Expando({}, { schema: table.schema }));
-  const rows = [...useFilteredObjects(objects), newObject];
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
 
-  const tables = useQuery<TableType>(space, TableType.filter());
-  const updateSchemaProp = (update: Schema.Prop) => {
-    const idx = table.schema?.props.findIndex((prop) => prop.id === update.id);
-    if (idx !== -1) {
-      const current = table.schema?.props[idx];
-      table.schema?.props.splice(idx, 1, { ...current, ...update });
-    } else {
-      table.schema?.props.push(update);
-    }
-  };
-
-  const updateTableProp = (update: TableType.Prop) => {
-    const idx = table.props?.findIndex((prop) => prop.id === update.id);
-    if (idx !== -1) {
-      const current = table.props![idx];
-      table.props.splice(idx, 1, { ...current, ...update });
-    } else {
-      table.props.push(update);
-    }
-  };
-
-  const columns = useMemo(() => {
-    if (!space || !table.schema || !tables.length) {
-      return [];
-    }
-
-    const tableDefs: TableDef[] = tables
-      .filter((table) => table.schema)
-      .map((table) => ({
-        id: table.schema.id,
-        name: table.schema.typename ?? table.title,
-        columns: table.schema.props.map(schemaPropMapper(table)),
-      }));
-
-    const builder = new TableColumnBuilder(tableDefs, table.schema?.id, space!, {
-      onColumnUpdate: (id, column) => {
-        const { type, refTable, refProp, digits, label } = column;
-        updateTableProp({ id, refProp, label });
-        updateSchemaProp({
-          id,
-          type: getSchema(type),
-          ref: type === 'ref' ? tables.find((table) => table.schema.id === refTable)?.schema : undefined,
-          digits,
-        });
-        forceUpdate({});
-      },
-      onColumnDelete: (id) => {
-        const idx = table.schema?.props.findIndex((prop) => prop.id === id);
-        if (idx !== -1) {
-          table.schema?.props.splice(idx, 1);
-          forceUpdate({});
-        }
-      },
-      onRowUpdate: (object, prop, value) => {
-        object[prop] = value;
-        if (object === newObject) {
-          // TODO(burdon): Silent exception if try to add plain object directly.
-          space!.db.add(newObject);
-          setNewObject(new Expando({}, { schema: table.schema }));
-        }
-      },
-      onRowDelete: (object) => {
-        // TODO(burdon): Rename delete.
-        space!.db.remove(object);
-      },
-    });
-
-    return builder.createColumns();
-  }, [space, tables, reactDeps(table, table.schema), newObject]);
-
-  const handleColumnResize = (state: Record<string, number>) => {
-    Object.entries(state).forEach(([id, size]) => {
-      updateTableProp({ id, size });
-    });
-  };
-
-  const debug = false;
-
-  const [showSettings, setShowSettings] = useState(false);
   useEffect(() => {
-    setShowSettings(!table.schema);
-  }, [table]);
+    if (space) {
+      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+    }
+  }, [showSettings, space]);
 
   if (!space) {
     return null;
   }
 
-  const handleClose = (success: boolean) => {
-    // TODO(burdon): If cancel then undo create?
-    if (!success) {
-      return;
-    }
-
-    if (!table.schema) {
-      table.schema = space.db.add(
-        new Schema({
-          // TODO(burdon): How should user update schema?
-          typename: `example.com/schema/${PublicKey.random().truncate()}`,
-          props: [
-            {
-              id: 'title',
-              type: Schema.PropType.STRING,
-            },
-          ],
-        }),
-      );
-    }
-
-    setShowSettings(false);
-  };
-
   if (showSettings) {
-    const { objects: schemas } = space.db.query(Schema.filter());
     return <TableSettings open={showSettings} table={table} schemas={schemas} onClose={handleClose} />;
+  } else {
+    return <ObjectTableImpl table={table} role={role} stickyHeader={stickyHeader} />;
+  }
+};
+
+const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
+  const space = getSpace(table);
+
+  const objects = useTableObjects(space, table.schema);
+  const tables = useQuery<TableType>(space, Filter.schema(TableType));
+
+  const newObject = useRef({});
+  const newObjectKey = '__new';
+  const keyAccessor = useCallback(
+    (row: any) => (row === newObject.current ? newObjectKey : row?.id ?? 'KEY'),
+    [newObjectKey],
+  );
+
+  const rows = useMemo(() => [...objects, newObject.current], [objects]);
+
+  const onColumnUpdate = useCallback(
+    (oldId: string, column: ColumnProps) => {
+      const { id, type, refTable, refProp, digits, label } = column;
+      updateTableProp(table.props, oldId, { id, refProp, label });
+      table.schema?.updateColumns({
+        [oldId]: getSchema(tables, type, { digits, refTable, refProp }),
+      });
+      if (oldId !== column.id) {
+        table.schema?.updatePropertyName({ before: oldId, after: id });
+      }
+    },
+    [table.props, table.schema, tables],
+  );
+
+  const onColumnDelete = useCallback(
+    (id: string) => {
+      table.schema?.removeColumns([id]);
+      deleteTableProp(table.props, id);
+    },
+    [table.schema, table.props],
+  );
+
+  const onRowUpdate = useCallback(
+    (object: any, prop: string, value: any) => {
+      object[prop] = value;
+      if (object === newObject.current) {
+        space!.db.add(create(table.schema!, { ...newObject.current }));
+        newObject.current = {};
+      }
+    },
+    [space, table.schema, newObject],
+  );
+
+  const onRowDelete = useCallback((object: any) => space!.db.remove(object), [space]);
+
+  const columns = useMemo(
+    () => createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete),
+    [space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete],
+  );
+
+  const handleColumnResize = useCallback(
+    (state: Record<string, number>) => {
+      Object.entries(state).forEach(([id, size]) => updateTableProp(table.props, id, { id, size }));
+    },
+    [updateTableProp],
+  );
+
+  const debug = false;
+
+  if (!space) {
+    return null;
   }
 
   return (
     <DensityProvider density='fine'>
-      <Table<TypedObject>
-        keyAccessor={(row) => row.id ?? '__new'}
+      <Table.Table<any>
+        keyAccessor={keyAccessor}
         columns={columns}
         data={rows}
         border
         role={role ?? 'grid'}
         stickyHeader={stickyHeader}
-        getScrollElement={getScrollElement}
         onColumnResize={handleColumnResize}
+        pinLastRow
       />
       {debug && (
         <div className='flex text-xs'>
-          <pre className='flex-1'>{JSON.stringify(table, undefined, 2)}</pre>
-          <pre className='flex-1'>{JSON.stringify(table.schema, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify(table.props, undefined, 2)}</pre>
+          <pre className='flex-1'>{JSON.stringify((table.schema as any)?._schema, undefined, 2)}</pre>
         </div>
       )}
     </DensityProvider>

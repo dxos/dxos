@@ -14,7 +14,7 @@ export default template.define.group(({ input }) => {
 
       return template.define.text({
         path: path.join(pkage.name, 'values.md'),
-        content: plate`
+        content: !!values?.length && plate`
         ---
         title: Values
         ---

@@ -6,7 +6,7 @@ import { type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type Sketch as SketchType } from '@braneframe/types';
+import { type SketchType } from '@braneframe/types';
 import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -43,7 +43,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     }
   }, [editor, themeMode]);
 
-  const store = useStoreAdapter(sketch.data);
+  // TODO(dmaretskyi): Handle nullability.
+  const store = useStoreAdapter(sketch.data!);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();

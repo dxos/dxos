@@ -2,19 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TextObject } from '@dxos/client/echo';
-
-export type Item = {
-  id: string;
-  done?: boolean;
-  text?: TextObject;
-  items?: Item[];
-};
+import { type TreeItemType } from '@braneframe/types';
+import { nonNullable } from '@dxos/util';
 
 // TODO(burdon): Re-use Tree lib? Integrate with ECHO (e.g., https://d3js.org/d3-hierarchy/hierarchy)
 
-export const getParent = (root: Item, item: Item): Item | undefined => {
+export const getParent = (root: TreeItemType, item: TreeItemType): TreeItemType | undefined => {
   for (const child of root.items ?? []) {
+    if (!child) {
+      continue;
+    }
+
     if (child.id === item.id) {
       return root;
     }
@@ -28,21 +26,21 @@ export const getParent = (root: Item, item: Item): Item | undefined => {
   }
 };
 
-export const getLastDescendent = (item: Item): Item => {
-  if (item.items?.length) {
-    const last = item.items[item.items.length - 1];
+export const getLastDescendent = (item: TreeItemType): TreeItemType => {
+  const last = item.items?.length && item.items[item.items.length - 1];
+  if (last) {
     return getLastDescendent(last);
   }
 
   return item;
 };
 
-export const getPrevious = (root: Item, item: Item): Item | undefined => {
+export const getPrevious = (root: TreeItemType, item: TreeItemType): TreeItemType | undefined => {
   const parent = getParent(root, item)!;
-  const idx = parent.items!.findIndex(({ id }) => id === item.id);
+  const idx = parent.items.filter(nonNullable).findIndex(({ id }) => id === item.id);
   if (idx > 0) {
-    const previous = parent.items![idx - 1];
-    if (previous.items?.length) {
+    const previous = parent.items[idx - 1];
+    if (previous?.items.length) {
       return getLastDescendent(previous);
     }
 
@@ -52,14 +50,14 @@ export const getPrevious = (root: Item, item: Item): Item | undefined => {
   }
 };
 
-export const getNext = (root: Item, item: Item, descend = true): Item | undefined => {
+export const getNext = (root: TreeItemType, item: TreeItemType, descend = true): TreeItemType | undefined => {
   if (item.items?.length && descend) {
     // Go to first child.
     return item.items[0];
   } else {
     const parent = getParent(root, item);
     if (parent) {
-      const idx = parent.items!.findIndex(({ id }) => id === item.id);
+      const idx = parent.items.filter(nonNullable).findIndex(({ id }) => id === item.id);
       if (idx < parent.items!.length - 1) {
         return parent.items![idx + 1];
       } else {
@@ -70,6 +68,10 @@ export const getNext = (root: Item, item: Item, descend = true): Item | undefine
   }
 };
 
-export const getItems = (item: Item): Item[] => {
-  return (item.items ??= []);
+export const getItems = (item: TreeItemType): Array<TreeItemType | undefined> => {
+  if (!item.items) {
+    item.items = [];
+  }
+
+  return item.items;
 };

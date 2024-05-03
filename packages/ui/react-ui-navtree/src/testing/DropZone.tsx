@@ -3,7 +3,7 @@
 //
 import React, { forwardRef, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicDropEvent, type MosaicMoveEvent, type MosaicTileComponent } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/react-ui-theme';
 
@@ -35,7 +35,7 @@ const DropComponent: MosaicTileComponent<NavTreeItemData> = forwardRef(({ isOver
       {item ? (
         <>
           {item.icon && <item.icon />}
-          {Array.isArray(item.label) ? t(...item.label) : item.label}
+          {toLocalizedString(item.label, t)}
         </>
       ) : (
         'Drop Zone'

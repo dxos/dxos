@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AddressBook } from '@phosphor-icons/react';
+import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -13,11 +14,11 @@ import {
   type Plugin,
   type PluginDefinition,
   type TranslationsProvides,
+  filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -30,7 +31,7 @@ export enum ClientAction {
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
 }
 
-export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
+export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean };
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
@@ -46,8 +47,16 @@ export type ClientPluginProvides = IntentResolverProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+export type SchemaProvides = {
+  echo: {
+    schema: Parameters<Client['addSchema']>;
+  };
+};
+
+export const parseSchemaPlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
+
 export const ClientPlugin = ({
-  types,
   appKey,
   ...options
 }: ClientPluginOptions): PluginDefinition<
@@ -65,10 +74,12 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
+      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      client = new Client({ config, ...options });
 
       try {
         await client.initialize();
+        client.addSchema(TextV0Type);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {
@@ -78,10 +89,6 @@ export const ClientPlugin = ({
             }
           });
         });
-
-        if (types) {
-          client.addTypes(types);
-        }
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
@@ -97,10 +104,15 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
+          // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
+          if (typeof getSpaceProperty(client.spaces.default, appKey) === 'boolean') {
+            setSpaceProperty(client.spaces.default, appKey, {});
+          }
+          const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !client.spaces.default.properties[appKey];
-          client.spaces.default.properties[appKey] = true;
+          // firstRun = !getSpaceProperty(client.spaces.default, key);
+          setSpaceProperty(client.spaces.default, key, Date.now());
         }
       } catch (err) {
         error = err;
@@ -124,10 +136,14 @@ export const ClientPlugin = ({
         },
       };
     },
-    ready: async () => {
+    ready: async (plugins) => {
       if (error) {
         throw error;
       }
+
+      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
+        client.addSchema(...plugin.provides.echo.schema);
+      });
     },
     unload: async () => {
       await client.destroy();
@@ -135,22 +151,26 @@ export const ClientPlugin = ({
     provides: {
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          if (parent.id === 'root') {
-            parent.addAction({
-              id: `${CLIENT_PLUGIN}/open-shell`,
+          const id = `${CLIENT_PLUGIN}/open-shell`;
+          graph.addNodes({
+            id,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
+            properties: {
               label: ['open shell label', { ns: CLIENT_PLUGIN }],
-              icon: (props) => <AddressBook {...props} />,
-              keyBinding: 'meta+shift+.',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([{ plugin: CLIENT_PLUGIN, action: ClientAction.OPEN_SHELL }]),
-              properties: {
-                testId: 'clientPlugin.openShell',
+              icon: (props: IconProps) => <AddressBook {...props} />,
+              keyBinding: {
+                macos: 'meta+shift+.',
+                // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                windows: 'alt+shift+.',
+                linux: 'alt+shift+>',
               },
-            });
-          }
+              testId: 'clientPlugin.openShell',
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       intent: {

@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { FakeEmbeddings } from '@langchain/core/utils/testing';
 import { expect } from 'chai';
-import { FakeEmbeddings } from 'langchain/embeddings/fake';
 
 import { describe, test } from '@dxos/test';
 

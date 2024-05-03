@@ -41,6 +41,12 @@ module.exports = {
       ]
     },
     {
+      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
       files: '**/*.{ts,mts,tsx}',
       extends: [
         'plugin:@dxos/typescript'

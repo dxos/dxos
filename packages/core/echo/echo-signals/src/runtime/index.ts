@@ -3,13 +3,34 @@
 //
 
 export interface GenericSignal {
+  /**
+   * Simulate a read operation on the signal.
+   * Subscribes the current computation to the signal.
+   */
   notifyRead(): void;
+
+  /**
+   * Simulate a write operation on the signal.
+   * Notifies all subscribed computations about the change.
+   */
   notifyWrite(): void;
 }
 
 export interface SignalRuntime {
-  createSignal(): GenericSignal;
+  /**
+   * @param debugInfo - Optional string name or owner object of the signal. Used for debugging purposes.
+   */
+  createSignal(debugInfo?: unknown): GenericSignal;
+
+  /**
+   * All writes inside the callback will be batched and notified when the callback is finished.
+   */
   batch(cb: () => void): void;
+
+  /**
+   * @deprecated Temporary measure to prevent ECHO from subscribing to signals within its internals.
+   */
+  untracked<T>(cb: () => T): T;
 }
 
 export const runtimeList: SignalRuntime[] = [];
@@ -37,7 +58,11 @@ export const registerSignalRuntime = (runtime: SignalRuntime) => {
 };
 
 class CompositeSignal implements GenericSignal {
-  constructor(private readonly _signals: GenericSignal[]) {}
+  constructor(
+    private readonly _signals: GenericSignal[],
+
+    public readonly debugInfo: unknown = undefined,
+  ) {}
 
   notifyRead(): void {
     for (const signal of this._signals) {
@@ -67,10 +92,27 @@ class CompositeRuntime implements SignalRuntime {
     return callBatchRecursively(0);
   }
 
-  createSignal(): GenericSignal {
+  createSignal(debugInfo?: unknown): GenericSignal {
     runtimeUsed = true;
 
-    return new CompositeSignal(runtimeList.map((runtime) => runtime.createSignal()));
+    return new CompositeSignal(
+      runtimeList.map((runtime) => runtime.createSignal(debugInfo)),
+      debugInfo,
+    );
+  }
+
+  untracked<T>(cb: () => T): T {
+    runtimeUsed = true;
+
+    const callUntrackedRecursively = (index: number): T => {
+      if (index >= runtimeList.length) {
+        return cb();
+      } else {
+        return runtimeList[index].untracked(() => callUntrackedRecursively(index + 1));
+      }
+    };
+
+    return callUntrackedRecursively(0);
   }
 }
 

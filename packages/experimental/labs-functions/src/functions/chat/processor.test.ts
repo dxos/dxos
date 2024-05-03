@@ -4,13 +4,21 @@
 
 import { expect } from 'chai';
 
-import { Chain as ChainType, Message as MessageType, Thread as ThreadType } from '@braneframe/types';
+import {
+  ChainInput,
+  ChainInputType,
+  ChainPromptType,
+  ChainType,
+  MessageType,
+  TextV0Type,
+  ThreadType,
+} from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { TextObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -88,18 +96,20 @@ describe('RequestProcessor', () => {
     // Add prompts.
     {
       space.db.add(
-        new ChainType({
+        create(ChainType, {
           prompts: [
-            new ChainType.Prompt({
+            create(ChainPromptType, {
               command: 'translate',
-              source: new TextObject(['Translate the following into {language}:', '---', '{input}'].join('\n')),
+              source: create(TextV0Type, {
+                content: ['Translate the following into {language}:', '---', '{input}'].join('\n'),
+              }),
               inputs: [
-                new ChainType.Input({
+                create(ChainInput, {
                   name: 'language',
-                  type: ChainType.Input.Type.VALUE,
-                  value: new TextObject('japanese'),
+                  type: ChainInputType.VALUE,
+                  value: 'japanese',
                 }),
-                new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
+                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
               ],
             }),
           ],
@@ -109,10 +119,12 @@ describe('RequestProcessor', () => {
 
     {
       const thread = new ThreadType();
-      const message = new MessageType({
+      const message = create(MessageType, {
+        from: {},
         blocks: [
           {
-            content: new TextObject('/translate hello world!'),
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: '/translate hello world!' }),
           },
         ],
       });
@@ -136,12 +148,12 @@ describe('RequestProcessor', () => {
     // Add prompts.
     {
       space.db.add(
-        new ChainType({
+        create(ChainType, {
           prompts: [
-            new ChainType.Prompt({
+            create(ChainPromptType, {
               command: 'extract',
-              source: new TextObject(
-                [
+              source: create(TextV0Type, {
+                content: [
                   'List all people and companies mentioned in the content section below.',
                   '',
                   'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
@@ -153,19 +165,19 @@ describe('RequestProcessor', () => {
                   'Content:',
                   '{input}',
                 ].join('\n'),
-              ),
+              }),
               inputs: [
                 //
-                new ChainType.Input({ name: 'input', type: ChainType.Input.Type.PASS_THROUGH }),
-                new ChainType.Input({
+                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+                create(ChainInput, {
                   name: 'company',
-                  type: ChainType.Input.Type.SCHEMA,
-                  value: new TextObject('example.com/schema/organization'),
+                  type: ChainInputType.SCHEMA,
+                  value: 'example.com/schema/organization',
                 }),
-                new ChainType.Input({
+                create(ChainInput, {
                   name: 'contact',
-                  type: ChainType.Input.Type.SCHEMA,
-                  value: new TextObject('example.com/schema/contact'),
+                  type: ChainInputType.SCHEMA,
+                  value: 'example.com/schema/contact',
                 }),
               ],
             }),
@@ -182,11 +194,13 @@ describe('RequestProcessor', () => {
         'Nadella worked at Sun Microsystems as a member of its technology staff before joining Microsoft in 1992.',
       ].join('\n');
 
-      const thread = new ThreadType();
-      const message = new MessageType({
+      const thread = create(ThreadType, { messages: [] });
+      const message = create(MessageType, {
+        from: {},
         blocks: [
           {
-            content: new TextObject(`/extract "${text}"`),
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: `/extract "${text}"` }),
           },
         ],
       });

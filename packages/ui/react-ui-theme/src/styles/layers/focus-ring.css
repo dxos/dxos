@@ -1,0 +1,26 @@
+@layer base {
+  .ch-focus-ring {
+    &:not([disabled]),
+    &[disabled='false'] {
+      &:focus {
+        @apply outline-none;
+      }
+
+      &:focus-visible {
+        @apply z-[1] ring-2 ring-offset-0 ring-primary-350 ring-offset-white;
+
+        .dark & {
+          @apply ring-primary-450 ring-offset-black;
+        }
+
+        &:hover {
+          @apply outline-none;
+
+          .dark & {
+            @apply outline-none;
+          }
+        }
+      }
+    }
+  }
+}

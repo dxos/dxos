@@ -37,7 +37,7 @@ export const getPrototypeSpecificInstanceId = (instance: any): number => {
 };
 
 export const getDebugName = (instance: any): string => {
-  if (instance === null) {
+  if (instance == null) {
     return 'null';
   }
 

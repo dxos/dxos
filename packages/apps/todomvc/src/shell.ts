@@ -11,7 +11,6 @@ import { runShell } from '@dxos/shell';
 import { getConfig } from './config';
 
 const main = async () => {
-  console.log(process.env.NODE_ENV);
   const config = await getConfig();
   await runShell(config);
 };

@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { type IconProps, MagnifyingGlass } from '@phosphor-icons/react';
 import React from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
-import { Folder } from '@braneframe/types';
 import {
   type PluginDefinition,
   type LocationProvides,
@@ -18,7 +17,6 @@ import {
   parseNavigationPlugin,
   LayoutAction,
 } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
 
 import { SearchMain } from './components';
 import { SearchContextProvider } from './context';
@@ -56,24 +54,26 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-          if (parent.id === 'root' || parent.data instanceof Folder || parent.data instanceof SpaceProxy) {
-            parent.addAction({
-              id: SearchAction.SEARCH,
+          graph.addNodes({
+            id: SearchAction.SEARCH,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch({
+                plugin: SEARCH_PLUGIN,
+                action: SearchAction.SEARCH,
+              }),
+            properties: {
               label: ['search action label', { ns: SEARCH_PLUGIN }],
-              icon: (props) => <MagnifyingGlass {...props} />,
-              keyBinding: 'shift+meta+f',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: SEARCH_PLUGIN,
-                  action: SearchAction.SEARCH,
-                }),
-              properties: {
-                testId: 'searchPlugin.search',
+              icon: (props: IconProps) => <MagnifyingGlass {...props} />,
+              keyBinding: {
+                macos: 'shift+meta+f',
+                windows: 'shift+alt+f',
               },
-            });
-          }
+              testId: 'searchPlugin.search',
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
@@ -83,7 +83,7 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
           const graph = graphPlugin?.provides.graph;
           const space = graph && location ? getActiveSpace(graph, location.active) : undefined;
           switch (role) {
-            case 'context-search':
+            case 'search-input':
               return space ? <SearchMain space={space} /> : null;
           }
 

@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Signal } from '@preact/signals-core';
-// NOTE: This needs to use the react entrypoint to be compatible with react-based plugins.
-// The different deepsignal entrypoints are not compatible with each other.
-// Each entrypoint has its own weakmap for tracking instances.
-import { type DeepSignal, deepSignal } from 'deepsignal/react';
+import { effect } from '@preact/signals-core';
 
 import type { UnsubscribeCallback } from '@dxos/async';
+import { type ReactiveObject, create } from '@dxos/echo-schema';
+import { registerSignalRuntime } from '@dxos/echo-signals';
 
 type PropType<T> = {
   get: (key: string) => T | undefined;
@@ -21,71 +19,100 @@ type PropType<T> = {
  * DevTools > Application > Local Storage
  */
 export class LocalStorageStore<T extends object> {
-  static string: PropType<string | undefined> = {
-    get: (key) => {
-      const value = localStorage.getItem(key);
-      return value === null ? undefined : value;
-    },
-    set: (key, value) => {
-      if (value === undefined) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, value);
-      }
-    },
-  };
+  static string(): PropType<string>;
+  static string(params: { allowUndefined: boolean }): PropType<string | undefined>;
+  static string(params?: { allowUndefined: boolean }) {
+    const prop: PropType<string | undefined> = {
+      get: (key) => {
+        const value = localStorage.getItem(key);
+        return value === null ? undefined : value;
+      },
+      set: (key, value) => {
+        if (value === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, value);
+        }
+      },
+    };
 
-  static number: PropType<number | undefined> = {
-    get: (key) => {
-      const value = parseInt(localStorage.getItem(key) ?? '');
-      return isNaN(value) ? undefined : value;
-    },
-    set: (key, value) => {
-      if (value === undefined) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, String(value));
-      }
-    },
-  };
+    return params?.allowUndefined ? (prop as PropType<string | undefined>) : (prop as PropType<string>);
+  }
 
-  static bool: PropType<boolean | undefined> = {
-    get: (key) => {
-      const value = localStorage.getItem(key);
-      return value === 'true' ? true : value === 'false' ? false : undefined;
-    },
-    set: (key, value) => {
-      if (value === undefined) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, String(value));
-      }
-    },
-  };
+  static enum<U>(): PropType<U>;
+  static enum<U>(params: { allowUndefined: boolean }): PropType<U | undefined>;
+  static enum<U>(params?: { allowUndefined: boolean }) {
+    return params?.allowUndefined
+      ? (LocalStorageStore.string(params) as PropType<U | undefined>)
+      : (LocalStorageStore.string() as unknown as PropType<U>);
+  }
 
-  static json: PropType<object | undefined> = {
-    get: (key) => {
-      const value = localStorage.getItem(key);
-      return value ? JSON.parse(value) : undefined;
-    },
-    set: (key, value) => {
-      if (value === undefined) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, JSON.stringify(value));
-      }
-    },
-  };
+  static number(): PropType<number>;
+  static number(params: { allowUndefined: boolean }): PropType<number | undefined>;
+  static number(params?: { allowUndefined: boolean }) {
+    const prop: PropType<number | undefined> = {
+      get: (key) => {
+        const value = parseInt(localStorage.getItem(key) ?? '');
+        return isNaN(value) ? undefined : value;
+      },
+      set: (key, value) => {
+        if (value === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, String(value));
+        }
+      },
+    };
+
+    return params?.allowUndefined ? (prop as PropType<number | undefined>) : (prop as PropType<number>);
+  }
+
+  static bool(): PropType<boolean>;
+  static bool(params: { allowUndefined: boolean }): PropType<boolean | undefined>;
+  static bool(params?: { allowUndefined: boolean }) {
+    const prop: PropType<boolean | undefined> = {
+      get: (key) => {
+        const value = localStorage.getItem(key);
+        return value === 'true' ? true : value === 'false' ? false : undefined;
+      },
+      set: (key, value) => {
+        if (value === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, String(value));
+        }
+      },
+    };
+
+    return params?.allowUndefined ? (prop as PropType<boolean | undefined>) : (prop as PropType<boolean>);
+  }
+
+  static json<U>(): PropType<U> {
+    return {
+      get: (key) => {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : undefined;
+      },
+      set: (key, value) => {
+        if (value === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+      },
+    };
+  }
 
   private readonly _subscriptions = new Map<string, UnsubscribeCallback>();
 
-  public readonly values: DeepSignal<T>;
+  public readonly values: ReactiveObject<T>;
 
   constructor(
     private readonly _prefix: string,
     defaults?: T,
   ) {
-    this.values = deepSignal<T>(defaults ?? ({} as T));
+    registerSignalRuntime();
+    this.values = create(defaults ?? ({} as T));
   }
 
   // TODO(burdon): Reset method (keep track of binders).
@@ -93,24 +120,33 @@ export class LocalStorageStore<T extends object> {
   /**
    * Binds signal property to local storage key.
    */
-  prop<T>(prop: Signal<T>, lkey: string, type: PropType<T>) {
-    const key = this._prefix + '/' + lkey;
-    if (this._subscriptions.has(key)) {
+  prop<K extends keyof T>({
+    key,
+    storageKey: _storageKey,
+    type,
+  }: {
+    key: K;
+    storageKey?: string;
+    type: PropType<T[K]>;
+  }) {
+    const storageKey = this._prefix + '/' + (_storageKey ?? key).toString();
+    if (this._subscriptions.has(storageKey)) {
       return this;
     }
 
-    const current = type.get(key);
+    const current = type.get(storageKey);
     if (current !== undefined) {
-      prop.value = current;
+      this.values[key] = current;
     }
 
     // The subscribe callback is always called.
     this._subscriptions.set(
-      key,
-      prop.subscribe((value) => {
-        const current = type.get(key);
+      storageKey,
+      effect(() => {
+        const value = this.values[key];
+        const current = type.get(storageKey);
         if (value !== current) {
-          type.set(key, value);
+          type.set(storageKey, value);
         }
       }),
     );

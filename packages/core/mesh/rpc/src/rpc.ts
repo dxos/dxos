@@ -20,6 +20,10 @@ type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
   port: RpcPort;
+
+  /**
+   * Time to wait for a response to an RPC call.
+   */
   timeout?: number;
 
   callHandler: (method: string, request: Any) => MaybePromise<Any>;

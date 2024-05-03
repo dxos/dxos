@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/display-name"
     },
     {
@@ -30,6 +33,9 @@
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -54,6 +60,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-space"

@@ -1,4 +1,6 @@
 {
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "x",
   "sourceRoot": "tools/x/src",
   "projectType": "library",
   "targets": {
@@ -20,7 +22,5 @@
         ]
       }
     }
-  },
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "x"
+  }
 }

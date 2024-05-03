@@ -8,9 +8,12 @@ import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
 import { createProtoRpcPeer, type ProtoRpcPeer, type ProtoRpcPeerOptions } from '@dxos/rpc';
 
+import { WebSocketWithTokenAuth } from './token-auth';
+
 export type WebsocketRpcClientParams<C, S> = {
   url: string;
-} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>;
+  authenticationToken?: string;
+} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
 
 export class WebsocketRpcClient<C, S> {
   private _socket?: WebSocket;
@@ -26,6 +29,7 @@ export class WebsocketRpcClient<C, S> {
       requested: this._params.requested,
       exposed: this._params.exposed,
       handlers: this._params.handlers,
+      noHandshake: this._params.noHandshake,
       port: {
         send: (msg) => {
           this._socket!.send(msg);
@@ -49,8 +53,11 @@ export class WebsocketRpcClient<C, S> {
   }
 
   async open() {
-    this._socket = new WebSocket(this._params.url);
-
+    if (this._params.authenticationToken) {
+      this._socket = new WebSocketWithTokenAuth(this._params.url, this._params.authenticationToken);
+    } else {
+      this._socket = new WebSocket(this._params.url);
+    }
     this._socket.onopen = async () => {
       log('Socket open');
       try {
@@ -70,6 +77,7 @@ export class WebsocketRpcClient<C, S> {
     };
 
     this._socket.onerror = (event: WebSocket.ErrorEvent) => {
+      // Browsers do not include the error message in the event object, so we cannot discern 401 errors from other errors.
       log.error(event.message ?? 'Socket error', { url: this._params.url });
       const error = event.error ?? new Error(event.message);
       this.error.emit(error);

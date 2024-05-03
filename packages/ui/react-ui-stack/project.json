@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-stack",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/react-ui-stack/src",
   "projectType": "library",
   "targets": {
@@ -29,9 +34,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui-stack"
+  ]
 }

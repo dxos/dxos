@@ -3,8 +3,11 @@
 //
 
 import { join } from 'path';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { defineConfig, type UserConfig } from 'vitest/config';
+import { type Plugin } from 'vite';
+// import Inspect from 'vite-plugin-inspect';
+import inject from '@rollup/plugin-inject';
+import { GLOBALS, MODULES } from '@dxos/node-std/_/config';
 
 import { FixGracefulFsPlugin } from '@dxos/esbuild-plugins';
 
@@ -15,6 +18,9 @@ const shouldCreateXmlReport = Boolean(process.env.VITEST_XML_REPORT);
 
 const createNodeConfig = () =>
   defineConfig({
+    esbuild: {
+      target: 'es2020',
+    },
     test: {
       ...resolveReporterConfig({ browserMode: false }),
       environment: 'node',
@@ -24,17 +30,20 @@ const createNodeConfig = () =>
 
 const createBrowserConfig = (browserName: 'chrome') =>
   defineConfig({
-    plugins: [nodePolyfills()],
-    resolve: {
-      alias: {
-        buffer: 'buffer/',
-      },
-    },
+    plugins: [
+      nodeStdPlugin(),
+      // Inspect()
+    ],
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
         plugins: [FixGracefulFsPlugin()],
       },
+    },
+    esbuild: {
+      target: 'es2020',
+      // TODO(dmaretskyi): Move into nodeStd plugin.
+      banner: 'import "@dxos/node-std/globals";',
     },
     test: {
       ...resolveReporterConfig({ browserMode: true }),
@@ -62,7 +71,7 @@ const createBrowserConfig = (browserName: 'chrome') =>
 
 const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test'] => {
   if (shouldCreateXmlReport) {
-    const vitestReportDir = `vitest${args.browserMode ? "-browser" : ""}-reports`;
+    const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
       reporters: ['junit', 'verbose'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
@@ -87,3 +96,25 @@ const resolveConfig = () => {
 };
 
 export default resolveConfig();
+
+// TODO(dmaretskyi): Extract.
+/**
+ * Replaces node built-in modules with their browser equivalents.
+ */
+function nodeStdPlugin(): Plugin {
+  return {
+    name: 'node-std',
+    resolveId: {
+      order: 'pre',
+      async handler(source, importer, options) {
+        if (source.startsWith('node:')) {
+          return this.resolve('@dxos/node-std/' + source.slice('node:'.length), importer, options);
+        }
+
+        if (MODULES.includes(source)) {
+          return this.resolve('@dxos/node-std/' + source, importer, options);
+        }
+      },
+    },
+  };
+}

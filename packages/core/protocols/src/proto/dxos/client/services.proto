@@ -137,6 +137,7 @@ message CreateIdentityRequest {
   optional halo.credentials.ProfileDocument profile = 1;
 
   reserved 2; // Removed use_automerge flag.
+  optional halo.credentials.DeviceProfileDocument device_profile = 3;
 }
 
 // TODO(wittjosiah): Align pluralization with other services.
@@ -159,9 +160,16 @@ enum DeviceKind {
 
 // TODO(burdon): Preferences (in database).
 message Device {
+  // TODO(nf): dedupe?
+  enum PresenceState {
+    OFFLINE = 0;
+    ONLINE = 1;
+    REMOVED = 2;
+  }
   dxos.keys.PublicKey device_key = 1;
   DeviceKind kind = 2;
   optional halo.credentials.DeviceProfileDocument profile = 3;
+  PresenceState presence = 4;
 }
 
 message QueryDevicesResponse {
@@ -343,6 +351,12 @@ message CreateEpochRequest {
 
     /// Init empty automerge document as the space root. Disables legacy ECHO snapshot creation.
     INIT_AUTOMERGE = 1;
+
+    /// Init new automerge root by clonning the current space root. History is pruned.
+    PRUNE_AUTOMERGE_ROOT_HISTORY = 2;
+
+    /// Create a new space root and move objects from the current space root to separate automerge documents and.
+    FRAGMENT_AUTOMERGE_ROOT = 3;
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -379,9 +393,12 @@ message Invitation {
   enum Type {
     /// Requires both to be online to complete key exchange.
     INTERACTIVE = 0;
-    /// Guest's identity key is known; invitation can be accepted by any valid peer.
-    OFFLINE = 1;
-    /// Multiple-use interactive invitation.
+    /// Invitation can be accepted by any valid peer.
+    DELEGATED = 1;
+    /**
+     * Multi-use interactive invitations.
+     * @deprecated use multiUse flag with type=interactive instead.
+     */
     MULTIUSE = 2;
   }
 
@@ -396,6 +413,9 @@ message Invitation {
 
     /// Guest should call `Authenticate` with the shared secret.
     SHARED_SECRET = 1;
+
+    /// Guest should prove they possess a private key corresponding to the known public key recorded in an invitation.
+    KNOWN_PUBLIC_KEY = 2;
   }
 
   enum State {
@@ -408,6 +428,7 @@ message Invitation {
     CANCELLED = 6;
     TIMEOUT = 7;
     ERROR = 8;
+    EXPIRED = 9;
   }
 
   /// Local identifier (random).
@@ -428,7 +449,7 @@ message Invitation {
   /// Local state.
   State state = 6;
 
-  /// Timeout (ms).
+  /// Timeout for guest to complete invitation once connected (ms).
   optional int32 timeout = 7;
 
   /// Guest's identity.
@@ -442,6 +463,36 @@ message Invitation {
 
   /// Path or identifier to navigate to after successful authentication.
   optional string target = 11;
+
+  // TODO(nf): should these exist elsewhere since they only have meaning to the host?
+  /// Host should resume invitation on startup until timeout.
+  optional bool persistent = 12;
+
+  optional google.protobuf.Timestamp created = 13;
+
+  /// Number of seconds the host will honor the invitation. 0 means the invitation persists forever.
+  // TODO(nf): some feedback mechanism or GC for immortal invitations?
+  // TODO(nf): should the creator have a way to make an invitation last as long as the client? this was the previous behavior.
+  optional int32 lifetime = 14;
+
+  /// Whether an invitation can be used multiple times.
+  optional bool multi_use = 15;
+
+  /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+  optional AdmissionKeypair guest_keypair = 16;
+
+  /// Present on Type.DELEGATED invitations.
+  optional dxos.keys.PublicKey delegation_credential_id = 17;
+}
+
+message AdmissionKeypair {
+  dxos.keys.PublicKey public_key = 1;
+  optional dxos.keys.PrivateKey private_key = 2;
+}
+
+message AcceptInvitationRequest {
+  Invitation invitation = 1;
+  optional dxos.credentials.DeviceProfileDocument device_profile = 2;
 }
 
 message AuthenticationRequest {
@@ -464,6 +515,8 @@ message QueryInvitationsResponse {
   enum Action {
     ADDED = 0;
     REMOVED = 1;
+    SAVED = 2;
+    LOAD_COMPLETE = 3;
   }
 
   enum Type {
@@ -474,11 +527,18 @@ message QueryInvitationsResponse {
   Action action = 1;
   Type type = 2;
   repeated Invitation invitations = 3;
+  // indicate to caller that invitations of this action/type were existing at time of initial response.
+  optional bool existing = 4;
+}
+
+// Informational, consumers must share invitations to receive CancellableInvitation
+message LoadPersistentInvitationsResponse {
+  repeated Invitation invitations = 1;
 }
 
 service InvitationsService {
   rpc CreateInvitation(Invitation) returns (stream Invitation);
-  rpc AcceptInvitation(Invitation) returns (stream Invitation);
+  rpc AcceptInvitation(AcceptInvitationRequest) returns (stream Invitation);
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);

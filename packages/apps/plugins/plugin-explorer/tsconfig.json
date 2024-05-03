@@ -23,10 +23,19 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
       "path": "../../../core/echo/echo-generator"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../experimental/gem-core"
@@ -54,6 +63,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-search"

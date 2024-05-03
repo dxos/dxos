@@ -78,7 +78,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
 
     return (
       <CommandInput
-        role='textbox'
         {...props}
         className={tx(
           'input.input',

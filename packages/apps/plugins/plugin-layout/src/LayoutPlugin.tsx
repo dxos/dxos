@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowsOut } from '@phosphor-icons/react';
+import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import { type RevertDeepSignal } from 'deepsignal/react';
-import { deepSignal } from 'deepsignal/react';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -31,13 +29,15 @@ import {
   type Layout,
   IntentAction,
 } from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext } from './LayoutContext';
-import { MainLayout, ContextPanel, ContentEmpty, LayoutSettings, ContentFallback } from './components';
+import { MainLayout, ContentEmpty, LayoutSettings, ContentFallback } from './components';
 import { activeToUri, checkAppScheme, uriToActive } from './helpers';
 import meta, { LAYOUT_PLUGIN } from './meta';
 import translations from './translations';
@@ -70,19 +70,22 @@ export const LayoutPlugin = ({
   const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
     fullscreen: false,
     sidebarOpen: true,
+
     complementarySidebarOpen: false,
+    complementarySidebarContent: null,
 
-    dialogContent: 'never',
+    dialogContent: null,
     dialogOpen: false,
+    dialogBlockAlign: undefined,
 
-    popoverContent: 'never',
+    popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
 
     toasts: [],
   });
 
-  const location = deepSignal<NavigationState>({
+  const location = create<NavigationState>({
     active: undefined,
     previous: undefined,
 
@@ -97,7 +100,14 @@ export const LayoutPlugin = ({
     },
   });
 
-  const handleSetLayout = ({ element, state, component, subject, anchorId }: LayoutAction.SetLayout) => {
+  const handleSetLayout = ({
+    element,
+    state,
+    component,
+    subject,
+    anchorId,
+    dialogBlockAlign,
+  }: LayoutAction.SetLayout) => {
     switch (element) {
       case 'fullscreen': {
         layout.values.fullscreen = state ?? !layout.values.fullscreen;
@@ -110,13 +120,15 @@ export const LayoutPlugin = ({
       }
 
       case 'complementary': {
-        layout.values.complementarySidebarOpen = state ?? !layout.values.complementarySidebarOpen;
+        layout.values.complementarySidebarOpen = !!state;
+        layout.values.complementarySidebarContent = component || subject ? { component, subject } : null;
         return { data: true };
       }
 
       case 'dialog': {
         layout.values.dialogOpen = state ?? Boolean(component);
         layout.values.dialogContent = component ? { component, subject } : null;
+        layout.values.dialogBlockAlign = dialogBlockAlign ?? 'center';
         return { data: true };
       }
 
@@ -142,54 +154,51 @@ export const LayoutPlugin = ({
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
 
-      layout
-        .prop(layout.values.$sidebarOpen!, 'sidebar-open', LocalStorageStore.bool)
-        .prop(layout.values.$complementarySidebarOpen!, 'complementary-sidebar-open', LocalStorageStore.bool);
+      layout.prop({ key: 'sidebarOpen', storageKey: 'sidebar-open', type: LocalStorageStore.bool() });
 
+      // prettier-ignore
       settings
-        .prop(settings.values.$showFooter!, 'show-footer', LocalStorageStore.bool)
-        .prop(settings.values.$enableNativeRedirect!, 'enable-native-redirect', LocalStorageStore.bool);
-
-      // TODO(burdon): Create context and plugin.
-      Keyboard.singleton.initialize();
+        .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
     },
     unload: async () => {
-      Keyboard.singleton.destroy();
       layout.close();
     },
     provides: {
       settings: settings.values,
-      layout: layout.values as RevertDeepSignal<Layout>,
-      location: location as RevertDeepSignal<Location>,
+      layout: layout.values,
+      location,
       translations,
       graph: {
-        builder: ({ parent }) => {
-          if (parent.id === 'root') {
-            // TODO(burdon): Root menu isn't visible so nothing bound.
-            parent.addAction({
-              id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+        builder: (_, graph) => {
+          // TODO(burdon): Root menu isn't visible so nothing bound.
+          graph.addNodes({
+            id: `${LayoutAction.SET_LAYOUT}/fullscreen`,
+            data: () =>
+              intentPlugin?.provides.intent.dispatch({
+                plugin: LAYOUT_PLUGIN,
+                action: LayoutAction.SET_LAYOUT,
+                data: { element: 'fullscreen' },
+              }),
+            properties: {
               label: ['toggle fullscreen label', { ns: LAYOUT_PLUGIN }],
-              icon: (props) => <ArrowsOut {...props} />,
-              keyBinding: 'ctrl+meta+f',
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch({
-                  plugin: LAYOUT_PLUGIN,
-                  action: LayoutAction.SET_LAYOUT,
-                  data: { element: 'fullscreen' },
-                }),
-            });
-          }
+              icon: (props: IconProps) => <ArrowsOut {...props} />,
+              keyBinding: {
+                macos: 'ctrl+meta+f',
+                windows: 'shift+ctrl+f',
+              },
+            },
+            edges: [['root', 'inbound']],
+          });
         },
       },
       context: (props: PropsWithChildren) => (
         <Mosaic.Root>
-          <LayoutContext.Provider value={layout.values as RevertDeepSignal<Layout>}>
-            {props.children}
-          </LayoutContext.Provider>
+          <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
         </Mosaic.Root>
       ),
       root: () => {
@@ -242,9 +251,6 @@ export const LayoutPlugin = ({
                     sidebar: {
                       data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                     },
-                    context: {
-                      data: { component: `${LAYOUT_PLUGIN}/ContextView`, active: location.activeNode.data },
-                    },
                     main: { data: { active: location.activeNode.data } },
                     'navbar-start': {
                       data: { activeNode: location.activeNode, popoverAnchorId: layout.values.popoverAnchorId },
@@ -260,9 +266,6 @@ export const LayoutPlugin = ({
                   sidebar: {
                     data: { graph, activeId: location.active, popoverAnchorId: layout.values.popoverAnchorId },
                   },
-                  context: {
-                    data: { component: `${LAYOUT_PLUGIN}/ContextView` },
-                  },
                   main: {
                     data: location.active
                       ? { active: location.active }
@@ -273,11 +276,13 @@ export const LayoutPlugin = ({
                 },
               };
 
+        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
+
         return (
-          <>
+          <AttentionProvider attended={attended}>
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
-          </>
+          </AttentionProvider>
         );
       },
       surface: {
@@ -306,9 +311,6 @@ export const LayoutPlugin = ({
 
             case `${LAYOUT_PLUGIN}/ContentEmpty`:
               return <ContentEmpty />;
-
-            case `${LAYOUT_PLUGIN}/ContextView`:
-              return <ContextPanel />;
           }
 
           switch (role) {
@@ -360,8 +362,9 @@ export const LayoutPlugin = ({
             // TODO(wittjosiah): Factor out.
             case NavigationAction.ACTIVATE: {
               const id = intent.data?.id ?? intent.data?.result?.id;
-              const path = id && graphPlugin?.provides.graph.getPath(id);
+              const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
+                // TODO(wittjosiah): Factor out.
                 Keyboard.singleton.setCurrentContext(path.join('/'));
               }
 

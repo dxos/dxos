@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "esbuild-plugins",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/esbuild-plugins/src",
   "projectType": "library",
   "targets": {
@@ -14,7 +19,5 @@
       }
     },
     "lint": {}
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "esbuild-plugins"
+  }
 }

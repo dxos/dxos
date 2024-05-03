@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-theme",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,7 +36,7 @@
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.merge": "^4.6.6",
     "esbuild": "^0.19.6",
-    "vite": "^5.0.12"
+    "vite": "^5.2.9"
   },
   "publishConfig": {
     "access": "public"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/hello-template",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "An application template for local-first progressive web apps",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

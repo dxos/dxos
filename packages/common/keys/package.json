@@ -1,14 +1,19 @@
 {
   "name": "@dxos/keys",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node/index.cjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "types": "./dist/types/src/index.d.ts"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -18,11 +23,7 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/node-std": "workspace:*",
-    "randombytes": "^2.1.0"
-  },
-  "devDependencies": {
-    "@types/randombytes": "^2.0.0"
+    "@dxos/node-std": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

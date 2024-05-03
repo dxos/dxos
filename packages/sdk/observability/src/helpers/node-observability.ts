@@ -51,18 +51,6 @@ export const getObservabilityState = async (configDir: string): Promise<Persiste
   return initializeState(idPath);
 };
 
-export type TelemetryContext = {
-  mode: Mode;
-  installationId?: string;
-  group?: string;
-  timezone: string;
-  runtime: string;
-  os: string;
-  arch: string;
-  ci: boolean;
-  [key: string]: any;
-};
-
 export type PersistentObservabilityState = {
   installationId: string;
   group?: string;
@@ -101,6 +89,7 @@ export type NodeObservabilityOptions = {
   installationId: string;
   group?: string;
   namespace: string;
+  version: string;
   config: Config;
   mode?: Mode;
   tracingEnable?: boolean;
@@ -110,6 +99,7 @@ export type NodeObservabilityOptions = {
 
 export const initializeNodeObservability = async ({
   namespace,
+  version,
   config,
   installationId,
   group,
@@ -119,11 +109,14 @@ export const initializeNodeObservability = async ({
 }: NodeObservabilityOptions): Promise<Observability> => {
   log('initializeCliObservability', { config });
 
-  const release = `${namespace}@${config.get('runtime.app.build.version')}`;
-  const environment = config.get('runtime.app.env.DX_ENVIRONMENT');
+  // TODO(nf): make CLI build populate runtime.app.build config?
+  const release = `${namespace}@${version}`;
+  const environment = process.env.DX_ENVIRONMENT ?? 'unknown';
 
   const observability = new Observability({
     namespace,
+    release,
+    environment,
     group,
     mode,
     errorLog: {
@@ -133,12 +126,12 @@ export const initializeNodeObservability = async ({
         // TODO(wittjosiah): Configure this.
         sampleRate: 1.0,
       },
-      logProcessor: true,
     },
   });
 
   observability.setTag('installationId', installationId);
 
+  // TODO(nf): cache ipdata to avoid repeated requests
   const IPDATA_API_KEY = config.get('runtime.app.env.DX_IPDATA_API_KEY');
   try {
     const res = await fetch(`https://api.ipdata.co/?api-key=${IPDATA_API_KEY}`);

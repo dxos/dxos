@@ -3,33 +3,23 @@
 //
 
 import { Code, type IconProps } from '@phosphor-icons/react';
-import React from 'react';
+import { batch, effect } from '@preact/signals-core';
+import React, { useMemo } from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Script as ScriptType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import {
-  type Filter,
-  type EchoObject,
-  type Schema,
-  TextObject,
-  isTypedObject,
-  SpaceProxy,
-} from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { ScriptType, TextV0Type } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
-import { ScriptBlock } from './components';
+import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
-
-// TODO(burdon): Make generic and remove need for filter.
-const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
-  return isTypedObject(object) && object.__typename === schema.typename ? (object as T) : undefined;
-};
-
-(globalThis as any)[ScriptType.name] = ScriptType;
 
 export type ScriptPluginProps = {
   containerUrl: string;
@@ -41,43 +31,78 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
     provides: {
       metadata: {
         records: {
-          [ScriptType.schema.typename]: {
+          [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: (props: IconProps) => <Code {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ScriptType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${SCRIPT_PLUGIN}/create`,
-            label: ['create object label', { ns: SCRIPT_PLUGIN }],
-            icon: (props) => <Code {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: SCRIPT_PLUGIN,
                   action: ScriptAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'scriptPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create object label', { ns: SCRIPT_PLUGIN }],
+                    icon: (props: IconProps) => <Code {...props} />,
+                    testId: 'scriptPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all scripts to the graph.
+              const query = space.db.query(Filter.schema(ScriptType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: ScriptType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+                          icon: (props: IconProps) => <Code {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       stack: {
@@ -98,32 +123,32 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
+              return data.active instanceof ScriptType ? (
                 <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-                  <ScriptBlock
-                    id={(data.active as any).id}
-                    source={(data.active as ScriptType).source}
-                    classes={{ toolbar: 'px-2' }}
+                  <ScriptBlockWrapper
+                    // prettier-ignore
+                    script={data.active}
                     containerUrl={containerUrl}
+                    classes={{ toolbar: 'px-1' }}
                   />
                 </Main.Content>
               ) : null;
             case 'slide':
-              return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.slide as any).id}
-                  source={(data.slide as ScriptType).source}
-                  classes={{ root: 'p-24' }}
+              return data.slide instanceof ScriptType ? (
+                <ScriptBlockWrapper
+                  // prettier-ignore
+                  script={data.slide}
+                  containerUrl={containerUrl}
+                  classes={{ toolbar: 'p-24' }}
                   view='preview'
                   hideSelector
-                  containerUrl={containerUrl}
                 />
               ) : null;
             case 'section':
-              return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
-                <ScriptBlock
-                  id={(data.object as any).id}
-                  source={(data.object as ScriptType).source}
+              return data.object instanceof ScriptType ? (
+                <ScriptBlockWrapper
+                  // prettier-ignore
+                  script={data.object}
                   containerUrl={containerUrl}
                   classes={{ root: 'h-[400px] py-2' }}
                 />
@@ -137,13 +162,18 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: new ScriptType({ source: new TextObject(example) }) };
+              return { data: create(ScriptType, { source: create(TextV0Type, { content: example }) }) };
             }
           }
         },
       },
     },
   };
+};
+
+const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
+  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  return source ? <ScriptBlock id={script.id} source={source} {...props} /> : null;
 };
 
 // TODO(burdon): Import.

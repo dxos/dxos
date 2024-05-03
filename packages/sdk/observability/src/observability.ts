@@ -17,10 +17,10 @@ import { type DatadogMetrics } from './datadog';
 import { type IPData, getTelemetryIdentifier, mapSpaces } from './helpers';
 import { type SegmentTelemetry, type EventOptions, type PageOptions } from './segment';
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
+import { SentryLogProcessor } from './sentry/sentry-log-processor';
 
 const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
-// const DATADOG_IDLE_INTERVAL = 1000 * 60 * 5;
-const DATADOG_IDLE_INTERVAL = 1000 * 60 * 1;
+const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 5;
 
 // Secrets? EnvironmentConfig?
 
@@ -40,12 +40,14 @@ export type TagScope = 'errors' | 'telemetry' | 'metrics' | 'all';
 export type ObservabilityOptions = {
   /// The webapp (e.g. 'composer.dxos.org'), 'cli', or 'agent'.
   namespace: string;
+  mode: Mode;
   // TODO(nf): make platform a required extension?
   // platform: Platform;
+  release?: string;
+  environment?: string;
   config?: Config;
   secrets?: Record<string, string>;
   group?: string;
-  mode?: Mode;
 
   telemetry?: {
     batchSize?: number;
@@ -53,7 +55,6 @@ export type ObservabilityOptions = {
 
   errorLog?: {
     sentryInitOptions?: InitOptions;
-    logProcessor?: boolean;
   };
 };
 
@@ -69,38 +70,46 @@ export class Observability {
   private _telemetry?: SegmentTelemetry;
   // TODO(wittjosiah): Generic error logging interface.
   private _errorReportingOptions?: InitOptions;
-  private _errorLogProcessor: boolean;
   private _captureException?: typeof SentryCaptureException;
   private _setTag?: (key: string, value: string) => void;
 
   private _secrets: ObservabilitySecrets;
   private _namespace: string;
+  private _mode: Mode;
   private _config?: Config;
-  private _mode: Mode = 'disabled';
   private _group?: string;
   // TODO(nf): accept upstream context?
   private _ctx = new Context();
   private _tags = new Map<string, { value: string; scope: TagScope }>();
+  private _lastNetworkStatus?: NetworkStatus;
 
   // TODO(nf): make platform a required extension?
-  constructor({ namespace, config, secrets, group, mode, telemetry, errorLog }: ObservabilityOptions) {
+  constructor({
+    namespace,
+    environment,
+    release,
+    config,
+    secrets,
+    group,
+    mode,
+    telemetry,
+    errorLog,
+  }: ObservabilityOptions) {
     this._namespace = namespace;
+    this._mode = mode;
     this._config = config;
-    this._mode = mode ?? 'disabled';
     this._group = group;
     this._secrets = this._loadSecrets(config, secrets);
     this._telemetryBatchSize = telemetry?.batchSize ?? 30;
     this._errorReportingOptions = errorLog?.sentryInitOptions;
-    this._errorLogProcessor = errorLog?.logProcessor ?? false;
 
     if (this._group) {
       this.setTag('group', this._group);
     }
     this.setTag('namespace', this._namespace);
-
-    if (this._mode === 'full') {
-      // TODO(nf): set group and hostname?
-    }
+    environment && this.setTag('environment', environment);
+    release && this.setTag('release', release);
+    this.setTag('mode', this._mode);
   }
 
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
@@ -141,6 +150,9 @@ export class Observability {
   }
 
   async close() {
+    if (this._telemetry) {
+      await this._telemetry.close();
+    }
     await this._ctx.dispose();
 
     // TODO(wittjosiah): Remove telemetry, etc. scripts.
@@ -235,7 +247,7 @@ export class Observability {
               })
               .map(([key, value]) => [key, value.value]),
           ),
-        // TODO(nf): move/refactor from telementryContext, needed to read CORS proxy
+        // TODO(nf): move/refactor from telemetryContext, needed to read CORS proxy
         config: this._config!,
       });
     } else {
@@ -255,12 +267,11 @@ export class Observability {
   // TODO(nf): Refactor into ObservabilityExtensions.
 
   startNetworkMetrics(client: Client) {
-    const updateSignalMetrics = new Event<NetworkStatus>();
-
-    // const lcsh = (csp as LocalClientServices).host;
-    updateSignalMetrics.on(this._ctx, async (networkStatus) => {
+    // TODO(nf): support type in debounce()
+    const updateSignalMetrics = new Event<NetworkStatus>().debounce(NETWORK_METRICS_MIN_INTERVAL);
+    updateSignalMetrics.on(this._ctx, async () => {
       log('send signal metrics');
-      (networkStatus.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
+      (this._lastNetworkStatus?.signaling as NetworkStatus.Signal[]).forEach(({ server, state }) => {
         this.gauge('dxos.client.network.signal.connectionState', state, { server });
       });
 
@@ -274,7 +285,7 @@ export class Observability {
       let totalWriteBufferSize = 0;
       let totalChannelBufferSize = 0;
 
-      networkStatus.connectionInfo?.forEach((connectionInfo) => {
+      this._lastNetworkStatus?.connectionInfo?.forEach((connectionInfo) => {
         swarmCount++;
 
         for (const conn of connectionInfo.connections ?? []) {
@@ -291,20 +302,22 @@ export class Observability {
         for (const state in ConnectionState) {
           this.gauge('dxos.client.network.connection.count', connectionStates.get(state) ?? 0, { state });
         }
-        this.gauge('dxox.client.network.totalReadBufferSize', totalReadBufferSize);
+        this.gauge('dxos.client.network.totalReadBufferSize', totalReadBufferSize);
         this.gauge('dxos.client.network.totalWriteBufferSize', totalWriteBufferSize);
         this.gauge('dxos.client.network.totalChannelBufferSize', totalChannelBufferSize);
       });
     });
 
     client.services.services.NetworkService?.queryStatus().subscribe((networkStatus) => {
-      updateSignalMetrics.emit(networkStatus);
+      this._lastNetworkStatus = networkStatus;
+      updateSignalMetrics.emit();
     });
 
-    // scheduleTaskInterval(ctx, async () => updateSignalMetrics.emit(), DATADOG_IDLE_INTERVAL);
+    scheduleTaskInterval(this._ctx, async () => updateSignalMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
   startSpacesMetrics(client: Client, namespace: string) {
+    // TODO(nf): update subscription on new spaces
     const spaces = client.spaces.get();
     const subscriptions = new Map<string, { unsubscribe: () => void }>();
     this._ctx.onDispose(() => subscriptions.forEach((subscription) => subscription.unsubscribe()));
@@ -349,10 +362,10 @@ export class Observability {
       },
     });
 
-    scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), DATADOG_IDLE_INTERVAL);
+    scheduleTaskInterval(this._ctx, async () => updateSpaceMetrics.emit(), NETWORK_METRICS_MIN_INTERVAL);
   }
 
-  async startRuntimeMetrics(client: Client, frequency: number = DATADOG_IDLE_INTERVAL) {
+  async startRuntimeMetrics(client: Client, frequency: number = NETWORK_METRICS_MIN_INTERVAL) {
     const platform = await client.services.services.SystemService?.getPlatform();
     invariant(platform, 'platform is required');
 
@@ -436,7 +449,7 @@ export class Observability {
 
   private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
-      const { captureException, enableSentryLogProcessor, configureTracing, init, setTag } = await import('./sentry');
+      const { captureException, configureTracing, init, setTag } = await import('./sentry');
       this._captureException = captureException;
       this._setTag = setTag;
 
@@ -445,18 +458,21 @@ export class Observability {
         dest: this._secrets.SENTRY_DESTINATION,
         options: this._errorReportingOptions,
       });
+
+      const logProcessor = new SentryLogProcessor();
       init({
         ...this._errorReportingOptions,
         destination: this._secrets.SENTRY_DESTINATION,
         scrubFilenames: this._mode !== 'full',
+        onError: (event) => logProcessor.addLogBreadcrumbsTo(event),
       });
       if (this._errorReportingOptions?.tracing) {
         configureTracing();
       }
+
       // TODO(nf): set platform at instantiation? needed for node.
-      if (this._errorLogProcessor) {
-        enableSentryLogProcessor();
-      }
+      log.runtimeConfig.processors.push(logProcessor.logProcessor);
+
       // TODO(nf): is this different than passing as properties in options?
       this._tags.forEach((v, k) => {
         if (v.scope === 'all' || v.scope === 'errors') {

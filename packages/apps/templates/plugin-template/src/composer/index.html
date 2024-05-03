@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en" style="overscroll-behavior: none">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content" />
+    <title>Composer</title>
+    <meta name="description" content="DXOS Composer Application" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#003E70" />
+    <meta name="msapplication-TileColor" content="#003E70" />
+    <meta name="theme-color" content="#003E70" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        connect-src https: file: ipc: socket: wss://*.dxos.org ws://localhost:* http://localhost:*;
+        script-src https: socket: http://localhost:* 'unsafe-eval' 'unsafe-inline';
+        frame-src https: socket: http://localhost:* composer:;
+        worker-src https: socket: http://localhost:*;
+        img-src https: data: file: http://localhost:*;
+        child-src 'none';
+        object-src 'none';
+      "
+    />
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+        setTheme(event.matches);
+      });
+    </script>
+    <style>
+      html {
+        font-size: 18px;
+      }
+      @media (min-width: 768px) {
+        html {
+          font-size: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="main.tsx"></script>
+  </body>
+</html>

@@ -26,9 +26,10 @@ export default defineConfig({
             key: './key.pem',
             cert: './cert.pem',
           }
-        : false,
+        : undefined,
     fs: {
       strict: false,
+      cachedChecks: false,
       allow: [
         // TODO(wittjosiah): Not detecting pnpm-workspace?
         //   https://vitejs.dev/config/server-options.html#server-fs-allow
@@ -76,30 +77,6 @@ export default defineConfig({
     tsconfigPaths({
       projects: ['../../../tsconfig.paths.json'],
     }),
-    // Required for the script plugin.
-    {
-      name: 'sandbox-importmap-integration',
-      transformIndexHtml() {
-        return [
-          {
-            tag: 'script',
-            injectTo: 'head-prepend', // Inject before vite's built-in scripts.
-            children: `
-            if (window.location.hash.includes('importMap')) {
-              const urlParams = new URLSearchParams(window.location.hash.slice(1));
-              if (urlParams.get('importMap')) {
-                const importMap = JSON.parse(decodeURIComponent(urlParams.get('importMap')));
-                const mapElement = document.createElement('script');
-                mapElement.type = 'importmap'; 
-                mapElement.textContent = JSON.stringify(importMap, null, 2);
-                document.head.appendChild(mapElement);
-              }
-            }
-          `,
-          },
-        ];
-      },
-    },
     ConfigPlugin(),
     ThemePlugin({
       root: __dirname,
@@ -138,6 +115,10 @@ export default defineConfig({
       ],
     }),
     VitePWA({
+      // No PWA in dev to make it easier to ensure the latest version is being used.
+      // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
+      // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
+      selfDestroying: process.env.DX_ENVIRONMENT === 'development',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
@@ -181,7 +162,7 @@ export default defineConfig({
         assets: './packages/apps/composer-app/out/composer/**',
       },
       authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-      dryRun: process.env.DX_ENVIRONMENT !== 'production',
+      disable: process.env.DX_ENVIRONMENT !== 'production',
     }),
     // https://www.bundle-buddy.com/rollup
     {

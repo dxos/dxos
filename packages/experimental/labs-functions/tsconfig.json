@@ -52,7 +52,7 @@
       "path": "../../core/agent"
     },
     {
-      "path": "../../core/echo/document-model"
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-generator"

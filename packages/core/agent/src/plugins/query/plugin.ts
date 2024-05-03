@@ -5,15 +5,14 @@
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { QueryOptions } from '@dxos/client/echo';
-import { type WithTypeUrl, type ProtoCodec, type Any } from '@dxos/codec-protobuf';
+import { type WithTypeUrl, type Any } from '@dxos/codec-protobuf';
 import { cancelWithContext } from '@dxos/context';
-import { getStateMachineFromItem } from '@dxos/echo-db';
-import { getEchoObjectItem } from '@dxos/echo-schema';
-import { type EchoObject, Filter, base } from '@dxos/echo-schema';
+import { Filter } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/agent/query';
 import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/echo/object';
+import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { Plugin } from '../plugin';
 
@@ -48,7 +47,7 @@ export class QueryPlugin extends Plugin {
     const filter = Filter.fromProto(
       defaultsDeep({}, { options: { dataLocation: QueryOptions.DataLocation.LOCAL } }, request.filter),
     );
-    const { results: queryResults } = this.context.client.spaces.query(filter, filter.options);
+    const { results: queryResults } = await this.context.client.spaces.query(filter, filter.options).run();
 
     const response: QueryResponse = {
       queryId: request.queryId,
@@ -73,17 +72,17 @@ export class QueryPlugin extends Plugin {
   }
 }
 
-const createSnapshot = (object: EchoObject): EchoObjectProto => {
-  const item = getEchoObjectItem(object[base] as any)!;
+const createSnapshot = (item: EchoReactiveObject<any>): EchoObjectProto => {
+  // const item = getEchoObjectItem(object[base] as any)!;
   let model: WithTypeUrl<Any> | undefined;
-  if (!item?.modelMeta?.snapshotCodec) {
-    log.warn('No snapshot codec for model.');
-  } else {
-    model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
-  }
+  // if (!item?.modelMeta?.snapshotCodec) {
+  //   log.warn('No snapshot codec for model.');
+  // } else {
+  //   model = (item.modelMeta.snapshotCodec as ProtoCodec).encodeAsAny(getStateMachineFromItem(item)?.snapshot());
+  // }
 
   return {
-    objectId: object.id,
+    objectId: item.id,
     genesis: {
       modelType: item.modelType,
     },

@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "proto-guard",
+  "tags": [
+    "scope:gravity"
+  ],
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
@@ -35,7 +40,5 @@
         "forceExit": true
       }
     }
-  },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "proto-guard"
+  }
 }

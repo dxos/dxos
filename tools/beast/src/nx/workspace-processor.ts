@@ -6,6 +6,8 @@ import fs from 'fs';
 import minimatch, { Minimatch } from 'minimatch';
 import path from 'path';
 
+import { log } from '@dxos/log';
+
 import { type PackageJson, type Project, type WorkspaceJson } from '../types';
 import { array } from '../util';
 
@@ -92,7 +94,7 @@ export class WorkspaceProcessor {
       package: { dependencies: dependencyMap = {} },
     } = project;
     if (this._options.verbose) {
-      console.log('Processing:', project.package.name);
+      log.info('Processing:', project.package.name);
     }
 
     // Check if already processed (since depth first).
@@ -101,7 +103,7 @@ export class WorkspaceProcessor {
 
       // TODO(burdon): Extra validations?
       if (dependencyMap[project.package.name]) {
-        console.warn(`Invalid dependency on itself: ${project.package.name}`);
+        log.warn(`Invalid dependency on itself: ${project.package.name}`);
       }
 
       // TODO(burdon): Support filtering outside of workspace (e.g., crypto) without recursion.
@@ -117,7 +119,7 @@ export class WorkspaceProcessor {
         const nextChain = [...chain, dep.package.name];
         if (chain.includes(dep.package.name)) {
           project.cycles.push(nextChain);
-          console.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
+          log.warn(`Cycle detected: [${nextChain.join(' => ')}]`);
         } else {
           this.processProject(dep, visited, nextChain);
           array(dep.descendents).forEach((packageName) => project.descendents.add(packageName));

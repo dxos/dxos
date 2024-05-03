@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,12 +11,12 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { PublicKey } from '@dxos/react-client';
-import type { ItemID } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/react-client';
+import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/spaces/dir-handle';
+export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -37,23 +38,27 @@ export enum SpaceAction {
   SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
 }
 
-export type ObjectViewer = {
-  identityKey: PublicKey;
-  spaceKey: PublicKey;
-  objectId: string;
+export type ObjectViewerProps = {
   lastSeen: number;
+  spaceKey: PublicKey;
 };
+
+export type ObjectId = string;
 
 export type PluginState = {
   /**
-   * Which objects peers are currently viewing.
+   * Which objects are currently being viewed by which peers.
    */
-  viewers: ObjectViewer[];
+  viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+  /**
+   * Which peers are currently viewing which objects.
+   */
+  viewersByIdentity: ComplexMap<PublicKey, Set<ObjectId>>;
 
   /**
    * Object that was linked to directly but not found and is being awaited.
    */
-  awaiting: ItemID | undefined;
+  awaiting: string | undefined;
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };
@@ -63,6 +68,7 @@ export type SpacePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides & {
+  TranslationsProvides &
+  SchemaProvides & {
     space: Readonly<PluginState>;
   };

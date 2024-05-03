@@ -42,6 +42,7 @@ RUN pnpm build
 
 
 # Agent
+RUN pnpm run -C packages/devtools/cli prepublishOnly
 RUN pnpm deploy --filter=@dxos/cli --prod /prod/cli
 
 # Composer

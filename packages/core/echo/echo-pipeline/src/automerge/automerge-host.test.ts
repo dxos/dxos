@@ -17,43 +17,57 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { createTestLevel } from '../testing';
 
 describe('AutomergeHost', () => {
-  test('can create documents', () => {
-    const host = new AutomergeHost(createStorage({ type: StorageType.RAM }).createDirectory());
+  test('can create documents', async () => {
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
+    const host = new AutomergeHost({
+      db: level.sublevel('automerge'),
+    });
+    await host.open();
+    afterTest(() => host.close());
 
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
+    await host.repo.flush();
     expect(handle.docSync().text).toEqual('Hello world');
   });
 
   test('changes are preserved in storage', async () => {
-    const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
 
-    const host = new AutomergeHost(storageDirectory);
+    const host = new AutomergeHost({ db: level.sublevel('automerge') });
+    await host.open();
     const handle = host.repo.create();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
     const url = handle.url;
 
-    // TODO(dmaretskyi): Is there a way to know when automerge has finished saving?
-    await sleep(100);
+    await host.repo.flush();
+    await host.close();
 
-    const host2 = new AutomergeHost(storageDirectory);
+    const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
+    await host2.open();
+    afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);
     await handle2.whenReady();
     expect(handle2.docSync().text).toEqual('Hello world');
+    await host2.repo.flush();
   });
 
   test('basic networking', async () => {
@@ -168,7 +182,6 @@ describe('AutomergeHost', () => {
     const secondHandle = host.create();
     secondHandle.change((doc: any) => (doc.text = 'Hello world'));
     await host.find(secondHandle.url).whenReady();
-    // await sleep(100);
     allowedDocs.push(secondHandle.documentId);
 
     {
@@ -318,20 +331,25 @@ describe('AutomergeHost', () => {
   });
 
   describe('storage', () => {
-    test('load range on node', async () => {
+    test('loadRange', async () => {
       const root = `/tmp/${randomBytes(16).toString('hex')}`;
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await level.open();
+        await adapter.open();
 
         await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
         await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
         await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+        await adapter.close();
+        await level.close();
       }
 
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await openAndClose(level, adapter);
 
         const range = await adapter.loadRange(['test']);
         expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual(['one', 'two']);
@@ -342,19 +360,24 @@ describe('AutomergeHost', () => {
       }
     });
 
-    test('removeRange on node', async () => {
+    test('removeRange', async () => {
       const root = `/tmp/${randomBytes(16).toString('hex')}`;
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await level.open();
+        await adapter.open();
         await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
         await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
         await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
+        await adapter.close();
+        await level.close();
       }
 
       {
-        const storage = createStorage({ type: StorageType.NODE, root });
-        const adapter = new AutomergeStorageAdapter(storage.createDirectory());
+        const level = createTestLevel(root);
+        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+        await openAndClose(level, adapter);
         await adapter.removeRange(['test']);
         const range = await adapter.loadRange(['test']);
         expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).toEqual([]);

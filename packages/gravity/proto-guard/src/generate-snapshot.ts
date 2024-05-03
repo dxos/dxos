@@ -5,7 +5,7 @@
 import path from 'node:path';
 
 import { Client } from '@dxos/client';
-import { Expando, TextObject } from '@dxos/client/echo';
+import { Expando, create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 
@@ -28,38 +28,46 @@ const main = async () => {
   {
     // Init client.
     const newStoragePath = path.join(getStorageDir(), STORAGE_VERSION.toString());
-    console.log(`creating snapshot: ${newStoragePath}`);
+    log.info(`creating snapshot: ${newStoragePath}`);
     client = new Client({ config: getConfig(newStoragePath) });
     await client.initialize();
   }
+
+  log.break();
 
   {
     // Init storage.
     await client.halo.createIdentity();
   }
 
+  log.break();
+
   {
     // Create Space and data.
     const space = await client.spaces.create(data.space.properties);
-    await space.waitUntilReady();
+    // await space.waitUntilReady();
 
     // TODO(burdon): Add properties (mutations).
-    space.db.add(new Expando(data.space.expando));
-    await space.db.flush();
+    space.db.add(create(data.space.expando));
+    // await space.db.flush();
 
     // Generate epoch.
     // TODO(burdon): Generate multiple epochs.
-    await space.internal.createEpoch();
+    // await space.internal.createEpoch();
 
     // TODO(burdon): Add mutations.
-    space.db.add(new TextObject(data.space.text.content));
+    space.db.add(create(Expando, { content: data.space.text.content }));
     await space.db.flush();
   }
+
+  log.break();
 
   {
     // Clean up.
     await client.destroy();
   }
+
+  log.break();
 };
 
 main().catch((err) => log.catch(err));

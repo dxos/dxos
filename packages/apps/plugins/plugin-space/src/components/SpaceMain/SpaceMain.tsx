@@ -2,66 +2,36 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Command, Planet } from '@phosphor-icons/react';
+import { Command } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type Action, useGraph } from '@braneframe/plugin-graph';
+import { type Action } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { SpaceState, type Space } from '@dxos/react-client/echo';
-import { Button, Main, useTranslation, Input, DropdownMenu } from '@dxos/react-ui';
+import { Button, Main, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { getSize, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 import { ClipboardProvider } from '@dxos/shell/react';
 
 import { SpaceMembersSection } from './SpaceMembersSection';
 import { SPACE_PLUGIN } from '../../meta';
 
-const InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
+const _InFlowSpaceActions = ({ actionsMap }: { actionsMap: Record<string, Action> }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <section className='mbe-4 col-start-2 col-end-4 md:col-end-7 grid gap-2 auto-rows-min grid-cols-[repeat(auto-fill,minmax(8rem,1fr))]'>
       {Object.entries(actionsMap)
         .filter(([_, { properties }]) => properties?.mainAreaDisposition === 'in-flow')
-        .map(([actionId, { icon: Icon, label, invoke }]) => {
+        .map(([actionId, { data: invoke, properties }]) => {
+          const Icon = properties?.icon;
+          const label = properties?.label;
           return (
-            <Button key={actionId} classNames='block text-center plb-2 font-normal' onClick={() => invoke?.()}>
+            <Button key={actionId} classNames='block text-center plb-2 font-normal'>
               {Icon && <Icon className={mx(getSize(5), 'mli-auto')} />}
-              <p>{typeof label === 'string' ? label : t(...label)}</p>
+              <p>{toLocalizedString(label, t)}</p>
             </Button>
           );
         })}
     </section>
-  );
-};
-
-const MenuSpaceActions = ({ actionsMap }: { actionsMap?: Record<string, Action> }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  const menuActionEntries = Object.entries(actionsMap ?? []).filter(
-    ([_, { properties }]) => properties?.mainAreaDisposition === 'menu',
-  );
-  return menuActionEntries.length ? (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger asChild>
-        <Button variant='ghost' classNames='m-1 p-0'>
-          <span className='sr-only'>{t('more actions label')}</span>
-          <Planet weight='duotone' className={mx(getSize(5), 'place-self-center')} />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
-        <DropdownMenu.Viewport>
-          {menuActionEntries.map(([actionId, { icon: Icon, label, invoke }]) => {
-            return (
-              <DropdownMenu.Item key={actionId} onClick={() => invoke?.()}>
-                {Icon && <Icon />}
-                <span>{typeof label === 'string' ? label : t(...label)}</span>
-              </DropdownMenu.Item>
-            );
-          })}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
-  ) : (
-    <Planet weight='duotone' className={mx(getSize(5), 'place-self-center')} />
   );
 };
 
@@ -81,9 +51,8 @@ const KeyShortcuts = () => {
 };
 
 export const SpaceMain = ({ space }: { space: Space }) => {
-  const { t } = useTranslation(SPACE_PLUGIN);
-  const { graph } = useGraph();
-  const actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
+  // const { graph } = useGraph();
+  // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
   const state = space.state.get();
   const ready = state === SpaceState.READY;
   return (
@@ -91,28 +60,14 @@ export const SpaceMain = ({ space }: { space: Space }) => {
       <Main.Content
         classNames={[
           topbarBlockPaddingStart,
-          'min-bs-dvh grid gap-y-2 auto-rows-min',
+          'min-bs-dvh grid gap-y-2 auto-rows-min before:bs-2 before:col-span-5',
           'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
           'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
         ]}
         data-testid='spacePlugin.main'
+        data-isready={ready ? 'true' : 'false'}
       >
-        <h1 className='contents'>
-          <MenuSpaceActions actionsMap={actionsMap} />
-          <Input.Root>
-            <Input.Label srOnly>{t('rename space label')}</Input.Label>
-            <Input.TextInput
-              variant='subdued'
-              classNames='text-2xl text-light col-span-3 md:col-span-4'
-              data-testid='spacePlugin.main.name'
-              disabled={!ready}
-              value={space.properties.name ?? ''}
-              onChange={({ target: { value } }) => (space.properties.name = value)}
-              placeholder={ready ? t('unnamed space label') : t('loading space label')}
-            />
-          </Input.Root>
-        </h1>
-        {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />}
+        {/* {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />} */}
         {ready && <SpaceMembersSection space={space} />}
         <KeyShortcuts />
       </Main.Content>

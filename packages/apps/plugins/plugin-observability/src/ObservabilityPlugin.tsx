@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, WaveTriangle } from '@phosphor-icons/react';
+import { type IconProps, Info } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
@@ -20,8 +19,10 @@ import {
   parseNavigationPlugin,
   LayoutAction,
   SettingsAction,
+  parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,
@@ -57,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   namespace: string;
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
-  const settings = deepSignal<ObservabilitySettingsProps>({});
+  const settings = create<ObservabilitySettingsProps>({});
   const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN);
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;
@@ -68,9 +69,10 @@ export const ObservabilityPlugin = (options: {
       settings.enabled = !(await isObservabilityDisabled(options.namespace));
       state.values.group = await getObservabilityGroup(options.namespace);
 
-      state.prop(state.values.$notified!, 'notified', LocalStorageStore.bool);
+      state.prop({ key: 'notified', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     ready: async (plugins) => {
+      const pluginHost = resolvePlugin(plugins, parsePluginHost);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
@@ -92,7 +94,7 @@ export const ObservabilityPlugin = (options: {
               description: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast description'],
               duration: Infinity,
               icon: (props: IconProps) => (
-                <WaveTriangle className={mx(getSize(5), props.className)} weight='duotone' {...props} />
+                <Info className={mx(getSize(5), props.className)} weight='duotone' {...props} />
               ),
               actionLabel: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action label'],
               actionAlt: translations[0]['en-US'][OBSERVABILITY_PLUGIN]['observability toast action alt'],
@@ -109,6 +111,11 @@ export const ObservabilityPlugin = (options: {
       // Should not block application startup.
       void options.observability().then(async (obs) => {
         observability = obs;
+
+        // Ensure errors are tagged with enabled plugins to help with reproductions.
+        pluginHost?.provides?.plugins?.enabled?.map((plugin) =>
+          observability?.setTag(`pluginEnabled-${plugin}`, 'true', 'errors'),
+        );
 
         // Start client observability (i.e. not running as shared worker)
         // TODO(nf): how to prevent multiple instances for single shared worker?

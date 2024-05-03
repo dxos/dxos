@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
-import { ContextDisposedError } from './context-disposed';
+import { ContextDisposedError } from './context-disposed-error';
 
 export type ContextErrorHandler = (error: Error) => void;
 
-export type DisposeCallback = () => void | Promise<void>;
+export type DisposeCallback = () => any | Promise<any>;
 
 export type CreateContextParams = {
   onError?: ContextErrorHandler;
@@ -24,6 +26,10 @@ const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
 @safeInstanceof('Context')
 export class Context {
+  static default() {
+    return new Context();
+  }
+
   private readonly _onError: ContextErrorHandler;
   private readonly _disposeCallbacks: DisposeCallback[] = [];
   private _isDisposed = false;
@@ -102,33 +108,35 @@ export class Context {
 
   /**
    * Runs all dispose callbacks.
-   * Sync callbacks are run in the reverse order they were added.
-   * Async callbacks are run in parallel.
+   * Callbacks are run in the reverse order they were added.
    * This function never throws.
    * It is safe to ignore the returned promise if the caller does not wish to wait for callbacks to complete.
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    */
-  dispose(): Promise<void> {
+  async dispose(): Promise<void> {
     if (this._disposePromise) {
       return this._disposePromise;
     }
     this._isDisposed = true;
 
-    const promises = [];
-    for (const callback of this._disposeCallbacks.reverse()) {
-      promises.push(
-        (async () => {
-          try {
-            await callback();
-          } catch (error: any) {
-            log.catch(error);
-          }
-        })(),
-      );
-    }
+    // Set the promise before running the callbacks.
+    let resolveDispose!: () => void;
+    this._disposePromise = new Promise<void>((resolve) => {
+      resolveDispose = resolve;
+    });
+
+    // Clone the array so that any mutations to the original array don't affect the dispose process.
+    const callbacks = Array.from(this._disposeCallbacks).reverse();
     this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => {}));
+    for (const callback of callbacks) {
+      try {
+        await callback();
+      } catch (error: any) {
+        log.catch(error);
+      }
+    }
+    resolveDispose();
   }
 
   /**
@@ -180,5 +188,13 @@ export class Context {
       return this._parent.getAttribute(key);
     }
     return undefined;
+  }
+
+  [Symbol.toStringTag] = 'Context';
+
+  [inspect.custom] = () => this.toString();
+
+  toString() {
+    return `Context(${this._isDisposed ? 'disposed' : 'active'})`;
   }
 }

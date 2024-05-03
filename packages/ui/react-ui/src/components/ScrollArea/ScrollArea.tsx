@@ -19,6 +19,8 @@ import React, { forwardRef } from 'react';
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
+type ScrollAreaVariant = 'coarse' | 'fine';
+
 type ScrollAreaRootProps = ThemedClassName<ScrollAreaPrimitiveRootProps>;
 
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(({ classNames, ...props }, forwardedRef) => {
@@ -47,13 +49,14 @@ const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
   },
 );
 
-type ScrollAreaScrollbarProps = ThemedClassName<ScrollAreaPrimitiveScrollbarProps>;
+type ScrollAreaScrollbarProps = ThemedClassName<ScrollAreaPrimitiveScrollbarProps> & { variant?: ScrollAreaVariant };
 
 const ScrollAreaScrollbar = forwardRef<HTMLDivElement, ScrollAreaScrollbarProps>(
-  ({ classNames, ...props }, forwardedRef) => {
+  ({ classNames, variant = 'fine', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <ScrollAreaPrimitiveScrollbar
+        data-variant={variant}
         {...props}
         className={tx('scrollArea.scrollbar', 'scroll-area__scrollbar', {}, classNames)}
         ref={forwardedRef}

@@ -13,6 +13,9 @@ import { setupPage } from '@dxos/test/playwright';
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
+const isMac = os.platform() === 'darwin';
+const modifier = isMac ? 'Meta' : 'Control';
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -56,29 +59,26 @@ export class AppManager {
 
   // Based on https://github.com/microsoft/playwright/issues/8114#issuecomment-1584033229.
   async copy(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyC`);
   }
 
   async cut(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyX`);
   }
 
   async paste(): Promise<void> {
-    const isMac = os.platform() === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
     await this.page.keyboard.press(`${modifier}+KeyV`);
   }
 
   async openIdentityManager() {
-    await this.page.keyboard.press('Meta+Shift+.');
+    const platform = os.platform();
+    const shortcut = platform === 'darwin' ? 'Meta+Shift+.' : platform === 'win32' ? 'Alt+Shift+.' : 'Alt+Shift+>';
+    await this.page.keyboard.press(shortcut);
   }
 
   async openSpaceManager() {
-    await this.page.keyboard.press('Meta+.');
+    const shortcut = isMac ? 'Meta+.' : 'Alt+.';
+    await this.page.keyboard.press(shortcut);
   }
 
   isAuthenticated({ timeout = 5_000 } = {}) {
@@ -105,18 +105,25 @@ export class AppManager {
   // Spaces
   //
 
-  async createSpace() {
+  async createSpace(timeout = 5_000) {
     await this.page.getByTestId('spacePlugin.createSpace').click();
-    return this.page.getByTestId('navtree.treeItem.openTrigger').last().click();
+    await this.page.getByTestId('spacePlugin.main').waitFor({ timeout });
   }
 
   async joinSpace() {
-    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click({ button: 'right' });
-    return this.page.getByTestId('spacePlugin.joinSpace').click();
+    await this.page.getByTestId('navtree.treeItem.actionsLevel0').nth(1).click();
+    await this.page.getByTestId('spacePlugin.joinSpace').click();
   }
 
-  waitForSpaceReady(params: { interval?: number; timeout?: number } = {}) {
-    return waitFor(() => this.page.getByTestId('spacePlugin.main.name').isEnabled(), params);
+  waitForSpaceReady(params: { interval?: number; timeout?: number } = { timeout: 30_000 }) {
+    return waitFor(
+      () =>
+        this.page
+          .getByTestId('spacePlugin.main')
+          .getAttribute('data-isready')
+          .then((value) => value === 'true'),
+      params,
+    );
   }
 
   getSpacePresenceMembers() {
@@ -159,14 +166,24 @@ export class AppManager {
   }
 
   async renameObject(newName: string, nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
     await this.page.getByTestId('spacePlugin.renameObject.input').fill(newName);
     await this.page.getByTestId('spacePlugin.renameObject.input').press('Enter');
   }
 
   async deleteObject(nth = 0) {
-    await this.page.getByTestId('spacePlugin.object').nth(nth).click({ button: 'right' });
+    await this.page
+      .getByTestId('spacePlugin.object')
+      .nth(nth)
+      .getByTestId('navtree.treeItem.actionsLevel2')
+      .first()
+      .click();
     await this.page.getByTestId('spacePlugin.deleteObject').last().click();
     await this.page.getByTestId('spacePlugin.confirmDeleteObject').last().click();
   }
@@ -228,7 +245,7 @@ export class AppManager {
 // TODO(wittjosiah): Factor out.
 const waitFor = (
   cb: () => Promise<boolean>,
-  { interval: _interval = 1000, timeout: _timeout = 10_000 } = {},
+  { interval: _interval = 1000, timeout: _timeout = 5_000 } = {},
 ): Promise<void> =>
   new Promise<void>((resolve, reject) => {
     const interval = setInterval(async () => {

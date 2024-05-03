@@ -3,75 +3,102 @@
 //
 
 import { X } from '@phosphor-icons/react';
-import React, { useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Message as MessageType } from '@braneframe/types';
-import { TextObject, getTextContent, useMembers } from '@dxos/react-client/echo';
+import { MessageType, TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
+import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { AnchoredOverflow, Button, Tooltip, useTranslation } from '@dxos/react-ui';
-import { useTextModel } from '@dxos/react-ui-editor';
+import { Button, Tooltip, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { createBasicExtensions, createThemeExtensions, listener } from '@dxos/react-ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/react-ui-theme';
 import { MessageTextbox, type MessageTextboxProps, Thread, ThreadFooter, ThreadHeading } from '@dxos/react-ui-thread';
+import { nonNullable } from '@dxos/util';
 
 import { MessageContainer } from './MessageContainer';
 import { command } from './command-extension';
 import { type ThreadContainerProps } from './types';
-import { useStatus, useMessageMetadata } from '../hooks';
+import { useStatus } from '../hooks';
 import { THREAD_PLUGIN } from '../meta';
+import { getMessageMetadata } from '../util';
 
 export const CommentContainer = ({
-  space,
   thread,
   detached,
   context,
   current,
-  autoFocus,
+  autoFocusTextbox,
   onAttend,
   onDelete,
 }: ThreadContainerProps) => {
   const identity = useIdentity()!;
-  const members = useMembers(space.key);
+  const space = getSpace(thread);
+  const members = useMembers(space?.key);
   const activity = useStatus(space, thread.id);
   const { t } = useTranslation(THREAD_PLUGIN);
+  const threadScrollRef = useRef<HTMLDivElement | null>(null);
+  const [autoFocus, setAutoFocus] = useState(!!autoFocusTextbox);
+  const { themeMode } = useThemeContext();
 
-  const [nextMessage, setNextMessage] = useState({ text: new TextObject() });
-  const nextMessageModel = useTextModel({ text: nextMessage.text, identity, space });
-  const autoFocusAfterSend = useRef<boolean>(false);
+  const textboxMetadata = getMessageMetadata(thread.id, identity);
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(0);
+  const rerenderEditor = () => _setCount((count) => count + 1);
+  const messageRef = useRef('');
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ placeholder: t('message placeholder') }),
+      createThemeExtensions({ themeMode }),
+      listener({ onChange: (text) => (messageRef.current = text) }),
+      command,
+    ],
+    [_count],
+  );
 
-  const handleCreate: MessageTextboxProps['onSend'] = () => {
-    const content = nextMessage.text;
-    if (!getTextContent(content)) {
+  // TODO(thure): Because of the way the `autoFocus` property is handled by TextEditor,
+  //  this is the least-bad way of moving focus at the right time, though it is an anti-pattern.
+  //  Refactor to behave more like <input/>’s `autoFocus` or `autofocus` (yes, they’re different).
+  useEffect(() => {
+    setAutoFocus(!!autoFocusTextbox);
+  }, [autoFocusTextbox]);
+
+  // TODO(thure): Factor out.
+  const scrollToEnd = (behavior: ScrollBehavior) =>
+    setTimeout(() => threadScrollRef.current?.scrollIntoView({ behavior, block: 'end' }), 10);
+
+  const handleCreate: MessageTextboxProps['onSend'] = useCallback(() => {
+    if (!messageRef.current) {
       return false;
     }
 
-    const block = {
-      timestamp: new Date().toISOString(),
-      content,
-    };
-
     thread.messages.push(
-      new MessageType({
+      create(MessageType, {
         from: { identityKey: identity.identityKey.toHex() },
         context,
-        blocks: [block],
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: messageRef.current }),
+          },
+        ],
       }),
     );
 
-    setNextMessage(() => {
-      autoFocusAfterSend.current = true;
-      return { text: new TextObject() };
-    });
+    messageRef.current = '';
+    setAutoFocus(true);
+    scrollToEnd('instant');
+    rerenderEditor();
 
     // TODO(burdon): Scroll to bottom.
     return true;
-  };
+  }, [thread, identity]);
 
   const handleDelete = (id: string, index: number) => {
-    const messageIndex = thread.messages.findIndex((message) => message.id === id);
+    const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
       const message = thread.messages[messageIndex];
-      message.blocks.splice(index, 1);
-      if (message.blocks.length === 0) {
+      message?.blocks.splice(index, 1);
+      if (message?.blocks.length === 0) {
         thread.messages.splice(messageIndex, 1);
       }
       if (thread.messages.length === 0) {
@@ -79,8 +106,6 @@ export const CommentContainer = ({
       }
     }
   };
-
-  const textboxMetadata = useMessageMetadata(thread.id, identity);
 
   return (
     <Thread onClickCapture={onAttend} onFocusCapture={onAttend} current={current} id={thread.id}>
@@ -118,23 +143,13 @@ export const CommentContainer = ({
           </Button>
         )}
       </div>
-      {thread.messages.map((message) => (
+      {thread.messages.filter(nonNullable).map((message) => (
         <MessageContainer key={message.id} message={message} members={members} onDelete={handleDelete} />
       ))}
-      {nextMessageModel && (
-        <>
-          <MessageTextbox
-            onSend={handleCreate}
-            autoFocus={autoFocusAfterSend.current || autoFocus}
-            placeholder={t('message placeholder')}
-            {...textboxMetadata}
-            model={nextMessageModel}
-            extensions={[command]}
-          />
-          <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
-          <AnchoredOverflow.Anchor />
-        </>
-      )}
+      <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
+      <ThreadFooter activity={activity}>{t('activity message')}</ThreadFooter>
+      {/* NOTE(thure): This can’t also be the `overflow-anchor` because `ScrollArea` injects an interceding node that contains this necessary ref’d element. */}
+      <div role='none' className='bs-px -mbs-px' ref={threadScrollRef} />
     </Thread>
   );
 };

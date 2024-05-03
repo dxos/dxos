@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
-import React, { type FC, useEffect } from 'react';
-import { HashRouter, useLocation } from 'react-router-dom';
+import React, { type FC, useState } from 'react';
+import { HashRouter } from 'react-router-dom';
 
-import { log } from '@dxos/log';
-import { type Observability, getTelemetryIdentifier, setupTelemetryListeners } from '@dxos/observability';
-import { type Client, ClientContext, type ClientServices, useClient } from '@dxos/react-client';
+import { type Observability } from '@dxos/observability';
+import { type Client, ClientContext, type ClientServices } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
 
@@ -21,32 +19,33 @@ const Routes = () => {
 
 // TODO(wittjosiah): Migrate devtools to use surface plugins.
 const Telemetry = ({ namespace, observability }: { namespace: string; observability?: Observability }) => {
-  const location = useLocation();
-  const client = useClient();
-
-  if (!observability) {
-    log.warn('observability not initialized, cannot initialize devtools observability');
-    return null;
-  }
-
-  useEffect(() => {
-    observability.event({
-      identityId: getTelemetryIdentifier(client),
-      name: `${namespace}.page.load`,
-      properties: {
-        href: window.location.href,
-        loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
-      },
-    });
-
-    return setupTelemetryListeners(namespace, client, observability);
-  }, []);
-
-  useEffect(() => {
-    observability.page({
-      identityId: getTelemetryIdentifier(client),
-    });
-  }, [location]);
+  // https://github.com/dxos/dxos/issues/6339
+  // const location = useLocation();
+  // const client = useClient();
+  //
+  // if (!observability) {
+  //   log.warn('observability not initialized, cannot initialize devtools observability');
+  //   return null;
+  // }
+  //
+  // useEffect(() => {
+  //   observability.event({
+  //     identityId: getTelemetryIdentifier(client),
+  //     name: `${namespace}.page.load`,
+  //     properties: {
+  //       href: window.location.href,
+  //       loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
+  //     },
+  //   });
+  //
+  //   return setupTelemetryListeners(namespace, client, observability);
+  // }, []);
+  //
+  // useEffect(() => {
+  //   observability.page({
+  //     identityId: getTelemetryIdentifier(client),
+  //   });
+  // }, [location]);
 
   return null;
 };
@@ -60,7 +59,7 @@ export const Devtools: FC<{
   namespace?: string;
   observability?: Observability;
 }> = ({ client, services, observability, namespace = observabilityNamespace }) => {
-  const state = deepSignal<{ themeMode: ThemeMode }>({ themeMode: 'dark' });
+  const [themeMode] = useState<ThemeMode>('dark');
   const devtoolsTx = bindTheme({
     ...defaultTheme,
     toolbar: {
@@ -71,7 +70,7 @@ export const Devtools: FC<{
   });
 
   return (
-    <ThemeProvider {...{ tx: devtoolsTx, themeMode: state.themeMode }}>
+    <ThemeProvider {...{ tx: devtoolsTx, themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
           <ClientContext.Provider value={{ client, services }}>

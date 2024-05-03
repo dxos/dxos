@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "typings",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/typings/src",
   "projectType": "library",
   "targets": {
@@ -10,7 +15,6 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
@@ -22,6 +26,5 @@
     "outputs": [
       "{options.outputFile}"
     ]
-  },
-  "name": "typings"
+  }
 }

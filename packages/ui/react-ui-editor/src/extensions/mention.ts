@@ -5,6 +5,8 @@
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
 import type { Extension } from '@codemirror/state';
 
+import { log } from '@dxos/log';
+
 export type MentionOptions = {
   onSearch: (text: string) => string[];
 };
@@ -21,7 +23,7 @@ export const mention = ({ onSearch }: MentionOptions): Extension => {
     icons: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
-        console.log(context);
+        log.info('completion context', { context });
 
         const match = context.matchBefore(/@(\w+)?/);
         if (!match || (match.from === match.to && !context.explicit)) {

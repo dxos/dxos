@@ -2,32 +2,53 @@
 // Copyright 2023 DXOS.org
 //
 
+// TODO(burdon): Typescript.
+// TODO(burdon): Effect schema.
+// TODO(burdon): JSX.
+// TODO(burdon): react-buddy for storybook?
+
+// Marijn
+// - language support for S
+// - hierarchical editor (DND)
+// - virtual document image rendering
+// - mobile rendering error
+
 import '@dxosTheme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 
 import { ScriptEditor } from './ScriptEditor';
 
-// prettier-ignore
-const code = [
-  'export default function() {',
-  '  const value = 100',
-  '  return <div>{value}</div>;',
-  '}',
-].join('\n');
+const examples: string[] = [
+  [
+    '// Example schema.',
+    'export default function() {',
+    '  const value = 100',
+    '  return <div>{value}</div>;',
+    '}',
+  ].join('\n'),
+  [
+    '// Example schema.',
+    'S.struct({',
+    '  timestamp: S.Date,',
+    '  title: S.string,',
+    '  content: R.Text,',
+    "}).pipe(S.identifier('dxos.org/schema/Test'))",
+    '',
+  ].join('\n'),
+];
 
 const Story = () => {
-  const [source, setSource] = useState<TextObject>();
-  useEffect(() => {
-    setSource(new TextObject(code, TextKind.PLAIN));
-  }, []);
-
+  // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
+  const object = useMemo(() => createEchoObject({ content: examples[1] }), []);
+  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   return (
-    <div className={'flex fixed inset-0'}>
-      <ScriptEditor id='test' source={source} />
+    <div className='flex fixed inset-0 bg-neutral-50'>
+      <div className='flex w-[700px] mx-auto'>
+        {accessor && <ScriptEditor source={accessor} className='bg-white text-lg' />}
+      </div>
     </div>
   );
 };

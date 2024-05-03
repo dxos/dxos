@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-db",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/echo-db/src",
   "projectType": "library",
   "targets": {
@@ -6,8 +11,7 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-db/src/index.ts",
-          "packages/core/echo/echo-db/src/testing/index.ts"
+          "packages/core/echo/echo-db/src/index.ts"
         ],
         "injectGlobals": true
       }
@@ -15,21 +19,12 @@
     "lint": {},
     "test": {
       "options": {
-        "envVariables": {
-          "SIGNAL_PORT": 12000
-        },
-        "forceExit": true,
-        "setup": "packages/core/mesh/signal/testing/setup.js",
-        "setupOptions": {
-          "port": 12000
-        }
+        "forceExit": true
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "echo-db"
+  ]
 }

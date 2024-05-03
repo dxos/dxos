@@ -1,0 +1,14 @@
+@layer utilities {
+  .snap-inline {
+    scroll-snap-type: inline var(--tw-scroll-snap-strictness);
+  }
+  .snap-block {
+    scroll-snap-type: block var(--tw-scroll-snap-strictness);
+  }
+}
+
+@layer components {
+  .sticky-top-from-topbar-bottom {
+    --sticky-top: var(--topbar-size);
+  }
+}

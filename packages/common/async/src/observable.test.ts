@@ -147,7 +147,7 @@ describe('multicast observable', () => {
 
   test('lossless concat', async () => {
     const observable = MulticastObservable.of([1, 2, 3]);
-    const concat = observable.losslessConcat((a, b) => a.concat(...b), MulticastObservable.of([4, 5, 6]));
+    const concat = observable.losslessConcat((a: any, b: any) => a.concat(...b), MulticastObservable.of([4, 5, 6]));
     expect(concat.get()).to.deep.equal([1, 2, 3, 4, 5, 6]);
   });
 });

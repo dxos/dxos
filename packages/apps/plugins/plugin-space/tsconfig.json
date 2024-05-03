@@ -50,9 +50,6 @@
       "path": "../../../core/echo/echo-schema"
     },
     {
-      "path": "../../../core/echo/text-model"
-    },
-    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -69,6 +66,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-deck"
     },
     {
       "path": "../../../ui/react-ui-editor"

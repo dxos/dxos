@@ -6,11 +6,14 @@ import { scheduleTask, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { subscriptionHandler } from '@dxos/functions';
 
+import { registerTypes } from '../../util';
+
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event;
   if (!space || !objects?.length) {
     return;
   }
+  registerTypes(space);
 
   // Wait until done otherwise could be shut down prematurely.
   const done = new Trigger();
@@ -30,6 +33,7 @@ export const handler = subscriptionHandler(async ({ event }) => {
             chess.move(move);
             // TODO(burdon): Can we defer committing a batch until the function completes (idempotence?)
             game.pgn = chess.pgn();
+            // eslint-disable-next-line no-console
             console.log(`move: ${chess.history().length}\n` + chess.ascii());
           }
         }

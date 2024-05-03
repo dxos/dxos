@@ -7,8 +7,9 @@
 import { type EditorState, type StateField, type Transaction, type Text } from '@codemirror/state';
 
 import { next as A, type Heads } from '@dxos/automerge/automerge';
+import { type IDocHandle } from '@dxos/react-client/echo';
 
-import { type IDocHandle, type State } from './defs';
+import { type State } from './defs';
 
 export const updateAutomerge = (
   field: StateField<State>,

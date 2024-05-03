@@ -35,10 +35,13 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/react-async"
+    },
+    {
       "path": "../../../common/util"
     },
     {
-      "path": "../../../core/echo/text-model"
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -57,6 +60,9 @@
     },
     {
       "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-stack"
     },
     {
       "path": "../../../ui/react-ui-theme"

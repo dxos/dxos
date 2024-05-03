@@ -2,30 +2,64 @@
 // Copyright 2023 DXOS.org
 //
 
-import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type StorageAdapter, type PeerId, type DocumentId } from '@dxos/automerge/automerge-repo';
-import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
+import { Event } from '@dxos/async';
+import { type Doc, next as automerge, getBackend, type Heads } from '@dxos/automerge/automerge';
+import {
+  type DocHandle,
+  Repo,
+  type DocumentId,
+  type PeerId,
+  type StorageAdapterInterface,
+  type DocHandleChangePayload,
+} from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
+import { Context, type Lifecycle } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type HostInfo, type SyncRepoRequest, type SyncRepoResponse } from '@dxos/protocols/proto/dxos/echo/service';
-import { StorageType, type Directory } from '@dxos/random-access-storage';
+import {
+  type FlushRequest,
+  type HostInfo,
+  type SyncRepoRequest,
+  type SyncRepoResponse,
+} from '@dxos/protocols/proto/dxos/echo/service';
+import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { AutomergeStorageAdapter } from './automerge-storage-adapter';
+import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { levelMigration } from './migrations';
+import { type SpaceDoc, type SubLevelDB } from './types';
 
+// TODO: Remove
 export type { DocumentId };
+
+export type AutomergeHostParams = {
+  db: SubLevelDB;
+  /**
+   * For migration purposes.
+   */
+  directory?: Directory;
+  storageCallbacks?: StorageCallbacks;
+};
 
 @trace.resource()
 export class AutomergeHost {
-  private readonly _repo: Repo;
-  private readonly _meshNetwork: MeshNetworkAdapter;
-  private readonly _clientNetwork: LocalHostNetworkAdapter;
-  private readonly _storage: StorageAdapter;
+  private readonly _ctx = new Context();
+  private readonly _directory?: Directory;
+  private readonly _db: SubLevelDB;
+  private readonly _storageCallbacks?: StorageCallbacks;
+
+  private _repo!: Repo;
+  private _meshNetwork!: MeshNetworkAdapter;
+  private _clientNetwork!: LocalHostNetworkAdapter;
+  private _storage!: StorageAdapterInterface & Lifecycle;
+
+  @trace.info()
+  private _peerId!: string;
 
   /**
    * spaceKey -> deviceKey[]
@@ -34,18 +68,26 @@ export class AutomergeHost {
 
   public _requestedDocs = new Set<string>();
 
-  constructor(storageDirectory: Directory) {
+  constructor({ directory, db, storageCallbacks }: AutomergeHostParams) {
+    this._directory = directory;
+    this._db = db;
+    this._storageCallbacks = storageCallbacks;
+  }
+
+  async open() {
+    // TODO(mykola): remove this before 0.6 release.
+    this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
+    this._storage = new LevelDBStorageAdapter({
+      db: this._db,
+      callbacks: this._storageCallbacks,
+    });
+    await this._storage.open?.();
+    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
+
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
-
-    // TODO(mykola): Delete specific handling of IDB storage.
-    this._storage =
-      storageDirectory.type === StorageType.IDB
-        ? new IndexedDBStorageAdapter(storageDirectory.path, 'data')
-        : new AutomergeStorageAdapter(storageDirectory);
-    const localPeerId = `host-${PublicKey.random().toHex()}` as PeerId;
     this._repo = new Repo({
-      peerId: localPeerId,
+      peerId: this._peerId as PeerId,
       network: [this._clientNetwork, this._meshNetwork],
       storage: this._storage,
 
@@ -53,7 +95,7 @@ export class AutomergeHost {
       // Hosts, running in the worker, don't share documents unless requested by other peers.
       sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
         if (peerId.startsWith('client-')) {
-          return true;
+          return false; // Only send docs to clients if they are requested.
         }
 
         if (!documentId) {
@@ -68,13 +110,13 @@ export class AutomergeHost {
         }
 
         try {
-          if (!doc.experimental_spaceKey) {
+          const spaceKey = getSpaceKeyFromDoc(doc);
+          if (!spaceKey) {
             log('space key not found for share policy check', { peerId, documentId });
             return false;
           }
 
-          const spaceKey = PublicKey.from(doc.experimental_spaceKey);
-          const authorizedDevices = this._authorizedDevices.get(spaceKey);
+          const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
           const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
@@ -86,7 +128,7 @@ export class AutomergeHost {
 
           const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
           log('share policy check', {
-            localPeer: localPeerId,
+            localPeer: this._peerId,
             remotePeer: peerId,
             documentId,
             deviceKey,
@@ -102,6 +144,14 @@ export class AutomergeHost {
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
+
+    await this._clientNetwork.whenConnected();
+  }
+
+  async close() {
+    await this._storage.close?.();
+    await this._clientNetwork.close();
+    await this._ctx.dispose();
   }
 
   get repo(): Repo {
@@ -114,6 +164,23 @@ export class AutomergeHost {
       state: handle.state,
       hasDoc: !!handle.docSync(),
       heads: handle.docSync() ? automerge.getHeads(handle.docSync()) : null,
+      data:
+        handle.docSync() &&
+        mapValues(handle.docSync(), (value, key) => {
+          try {
+            switch (key) {
+              case 'access':
+              case 'links':
+                return value;
+              case 'objects':
+                return Object.keys(value as any);
+              default:
+                return `${value}`;
+            }
+          } catch (err) {
+            return `${err}`;
+          }
+        }),
     }));
   }
 
@@ -122,14 +189,22 @@ export class AutomergeHost {
     return this._repo.peers;
   }
 
-  async close() {
-    this._storage instanceof AutomergeStorageAdapter && (await this._storage.close());
-    await this._clientNetwork.close();
-  }
-
   //
   // Methods for client-services.
   //
+  @trace.span({ showInBrowserTimeline: true })
+  async flush({ states }: FlushRequest): Promise<void> {
+    // Note: Wait for all requested documents to be loaded/synced from thin-client.
+    await Promise.all(
+      states?.map(async ({ heads, documentId }) => {
+        invariant(heads, 'heads are required for flush');
+        const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
+
+    await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
+  }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
     return this._clientNetwork.syncRepo(request);
@@ -156,3 +231,36 @@ export class AutomergeHost {
     defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
   }
 }
+
+export const getSpaceKeyFromDoc = (doc: any): string | null => {
+  // experimental_spaceKey is set on old documents, new ones are created with doc.access.spaceKey
+  const rawSpaceKey = doc.access?.spaceKey ?? doc.experimental_spaceKey;
+  if (rawSpaceKey == null) {
+    return null;
+  }
+
+  return String(rawSpaceKey);
+};
+
+const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
+  await handle.whenReady();
+  const unavailableHeads = new Set(heads);
+
+  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
+    // Check if unavailable heads became available.
+    for (const changeHash of unavailableHeads.values()) {
+      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
+        unavailableHeads.delete(changeHash);
+      }
+    }
+
+    if (unavailableHeads.size === 0) {
+      return true;
+    }
+    return false;
+  });
+};
+
+const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
+  return !!getBackend(doc).getChangeByHash(changeHash);
+};

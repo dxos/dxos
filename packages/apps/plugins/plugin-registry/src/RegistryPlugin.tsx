@@ -23,7 +23,7 @@ export const RegistryPlugin = (): PluginDefinition<RegistryPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop(settings.values.$experimental!, 'experimental', LocalStorageStore.bool);
+      settings.prop({ key: 'experimental', type: LocalStorageStore.bool({ allowUndefined: true }) });
     },
     provides: {
       settings: settings.values,

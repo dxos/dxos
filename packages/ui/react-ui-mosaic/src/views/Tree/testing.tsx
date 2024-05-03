@@ -4,13 +4,12 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type Graph, GraphBuilder } from '@dxos/app-graph';
-import { buildGraph } from '@dxos/app-graph/testing';
+import { Graph } from '@dxos/app-graph';
 import { faker } from '@dxos/random';
 import { arrayMove } from '@dxos/util';
 
 import { Tree, type TreeData, type TreeProps } from './Tree';
-import { type MosaicDropEvent, type MosaicMoveEvent, Path, type MosaicOperation } from '../../mosaic';
+import { type MosaicDropEvent, type MosaicMoveEvent, Path } from '../../mosaic';
 import { TestObjectGenerator } from '../../testing';
 
 export type DemoTreeProps = TreeProps & {
@@ -80,57 +79,64 @@ export const DemoTree = ({ id = 'tree', initialItems, types, debug }: DemoTreePr
 };
 
 export const createGraph = () => {
-  const content = [...Array(2)].map((_, i) => ({
-    id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
-    label: faker.lorem.words(2),
-    description: faker.lorem.sentence(),
-    properties: { index: `a${i}` },
-    children: [...Array(2)].map((_, j) => ({
+  const graph = new Graph();
+  graph.addNodes({
+    id: 'root',
+    nodes: [Array(2)].map((_, i) => ({
       id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
       label: faker.lorem.words(2),
       description: faker.lorem.sentence(),
-      properties: { index: `a${j}` },
-      children: [...Array(2)].map((_, k) => ({
+      properties: { index: `a${i}` },
+      children: [...Array(2)].map((_, j) => ({
         id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
         label: faker.lorem.words(2),
         description: faker.lorem.sentence(),
-        properties: { index: `a${k}` },
+        properties: { index: `a${j}` },
+        children: [...Array(2)].map((_, k) => ({
+          id: faker.string.hexadecimal({ length: 4 }).slice(2).toUpperCase(),
+          label: faker.lorem.words(2),
+          description: faker.lorem.sentence(),
+          properties: { index: `a${k}` },
+        })),
       })),
     })),
-  }));
+  });
 
-  return buildGraph(new GraphBuilder().build(), 'tree', content);
+  return graph;
 };
 
-export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
-  const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
-    // Moving within the tree.
-    if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
-      const activeNode = graph.findNode(active.item.id);
-      const overNode = graph.findNode(over.item.id);
-      const activeParent = activeNode?.parent;
-      const overParent = overNode?.parent;
-      if (
-        activeNode &&
-        overNode &&
-        activeParent &&
-        overParent &&
-        activeParent.id === overParent.id &&
-        activeNode.id !== overNode.id &&
-        operation === 'rearrange'
-      ) {
-        // This is a rearrange operation
-        console.warn('[react-ui-mosaic]', 'Tree', 'rearrange', 'needs implementation');
-      } else if (activeNode && activeParent && overParent && operation === 'transfer') {
-        activeParent.removeNode(active.item.id);
-        overNode.addNode('tree', { ...activeNode });
-      }
-    }
-  };
+// TODO(wittjosiah): This needs to be updated for the new graph api.
+//   Left it for now because the tree needs to be re-implemented flat.
 
-  const handleOver = (): MosaicOperation => 'transfer';
+// export const GraphTree = ({ id, graph = createGraph(), debug }: { id: string; graph?: Graph; debug: boolean }) => {
+//   const handleDrop = ({ operation, active, over }: MosaicDropEvent<number>) => {
+//     // Moving within the tree.
+//     if (Path.hasDescendent(id, active.path) && Path.hasDescendent(id, over.path)) {
+//       const activeNode = graph.findNode(active.item.id);
+//       const overNode = graph.findNode(over.item.id);
+//       const activeParent = activeNode?.parent;
+//       const overParent = overNode?.parent;
+//       if (
+//         activeNode &&
+//         overNode &&
+//         activeParent &&
+//         overParent &&
+//         activeParent.id === overParent.id &&
+//         activeNode.id !== overNode.id &&
+//         operation === 'rearrange'
+//       ) {
+//         // This is a rearrange operation
+//         console.warn('[react-ui-mosaic]', 'Tree', 'rearrange', 'needs implementation');
+//       } else if (activeNode && activeParent && overParent && operation === 'transfer') {
+//         activeParent.removeNode(active.item.id);
+//         overNode.addNode('tree', { ...activeNode });
+//       }
+//     }
+//   };
 
-  return (
-    <Tree id={id} items={graph.root.children as TreeData[]} onDrop={handleDrop} onOver={handleOver} debug={debug} />
-  );
-};
+//   const handleOver = (): MosaicOperation => 'transfer';
+
+//   return (
+//     <Tree id={id} items={graph.root.children as TreeData[]} onDrop={handleDrop} onOver={handleOver} debug={debug} />
+//   );
+// };

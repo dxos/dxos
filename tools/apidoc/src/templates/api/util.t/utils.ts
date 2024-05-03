@@ -47,8 +47,8 @@ export const pathToReflectionId = (
   return pathSoFar;
 };
 
-export const packageOfReflectionId = (root: S.ContainerReflection, id: number) => {
-  return pathToReflectionId(root, id).find((r) => r.kind === ReflectionKind.Module);
+export const packageOfReflectionId = (root: S.Reflection, id: number) => {
+  return pathToReflectionId(root, id).find((r) => r.kind === ReflectionKind.Module) as S.ContainerReflection;
 };
 
 export const reflectionsOfKind = (p: S.ContainerReflection, ...kind: ReflectionKind[]): S.Reflection[] => {
@@ -59,10 +59,6 @@ export const reflectionsOfKind = (p: S.ContainerReflection, ...kind: ReflectionK
 };
 
 export const packagesInProject = (p: S.ContainerReflection): S.ContainerReflection[] => {
-  const modulesGroup = p.groups?.find((g) => g.title === 'Modules');
-  if (modulesGroup) {
-    return modulesGroup.children?.map((c) => reflectionById(p, c)!).filter(Boolean) ?? [];
-  } else {
-    return [p];
-  }
+  const modules = p?.children?.filter((ref) => ref.kind === ReflectionKind.Module);
+  return modules ?? [];
 };

@@ -47,9 +47,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
       );
 
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
-      const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
-
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
+
+      const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
       const server = new DevServer(client, {
         directory,
         manifest,

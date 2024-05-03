@@ -7,8 +7,10 @@ import { storeObservabilityGroup } from '@dxos/observability';
 import { appKey } from './constants';
 
 const run = async () => {
-  await storeObservabilityGroup(appKey, 'dxos');
+  const searchParams = new URLSearchParams(window.location.search);
+  await storeObservabilityGroup(appKey, searchParams.get('observabilityGroup') ?? 'dxos');
   window.location.pathname = '/';
+  localStorage.setItem('dxos.org/shell/features/agentHosting', 'true');
 };
 
 void run();

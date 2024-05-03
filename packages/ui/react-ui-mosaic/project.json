@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-ui-mosaic",
+  "tags": [
+    "scope:ui"
+  ],
   "sourceRoot": "packages/ui/react-ui-mosaic/src",
   "projectType": "library",
   "targets": {
@@ -16,9 +21,7 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-ui-mosaic"
+  ]
 }

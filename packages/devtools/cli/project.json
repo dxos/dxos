@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "cli",
+  "tags": [
+    "scope:devtools"
+  ],
   "sourceRoot": "packages/devtools/cli/src",
   "projectType": "application",
   "targets": {
@@ -31,10 +36,8 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "cli"
+  ]
 }

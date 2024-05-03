@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "bare-template",
+  "tags": [
+    "scope:templates"
+  ],
   "sourceRoot": "packages/apps/templates/bare-template/src",
   "projectType": "library",
   "targets": {
@@ -8,15 +13,6 @@
         "outputPath": "packages/apps/templates/bare-template/dist",
         "tsConfig": "packages/apps/templates/bare-template/tsconfig.json"
       }
-    },
-    "gen": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "gen"
-      },
-      "outputs": [
-        "{projectRoot}/test/variants"
-      ]
     },
     "lint": {},
     "test": {
@@ -28,7 +24,5 @@
         "forceExit": true
       }
     }
-  },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "bare-template"
+  }
 }

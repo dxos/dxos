@@ -21,7 +21,13 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../primitives/react-hooks"

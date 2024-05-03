@@ -8,7 +8,7 @@ export default template.define.group(({ input }) => {
   const stringifier = new Stringifier(input! as any);
   return packages
     .map((pkage) => {
-      const classes = reflectionsOfKind(pkage, ReflectionKind.Class) as S.ContainerReflection[];
+      const classes = reflectionsOfKind(pkage, ReflectionKind.Class) as S.DeclarationReflection[];
       return classes
         .map((aclass) => {
           return [

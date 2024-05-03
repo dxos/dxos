@@ -18,6 +18,7 @@ import { TraceSender } from './trace-sender';
 export type TraceResourceConstructorParams = {
   constructor: { new (...args: any[]): {} };
   instance: any;
+  annotation?: symbol;
 };
 
 export type TraceSpanParams = {
@@ -36,8 +37,9 @@ export class ResourceEntry {
   public readonly sanitizedClassName: string;
 
   constructor(
-    public data: Resource,
-    public instance: WeakRef<any>,
+    public readonly data: Resource,
+    public readonly instance: WeakRef<any>,
+    public readonly annotation?: symbol,
   ) {
     this.sanitizedClassName = sanitizeClassName(data.className);
   }
@@ -101,6 +103,7 @@ export class TraceProcessor {
         metrics: this.getResourceMetrics(params.instance),
       },
       new WeakRef(params.instance),
+      params.annotation,
     );
 
     this.resources.set(id, entry);
@@ -200,13 +203,13 @@ export class TraceProcessor {
   }
 
   findResourcesByClassName(className: string): ResourceEntry[] {
-    const res: ResourceEntry[] = [];
-    for (const entry of this.resources.values()) {
-      if (entry.data.className === className || entry.sanitizedClassName === className) {
-        res.push(entry);
-      }
-    }
-    return res;
+    return [...this.resources.values()].filter(
+      (r) => r.data.className === className || r.sanitizedClassName === className,
+    );
+  }
+
+  findByAnnotation(annotation: symbol): ResourceEntry[] {
+    return [...this.resources.values()].filter((r) => r.annotation === annotation);
   }
 
   getDiagnostics() {

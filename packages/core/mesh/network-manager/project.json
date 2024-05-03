@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "network-manager",
+  "tags": [
+    "scope:mesh"
+  ],
   "sourceRoot": "packages/core/mesh/network-manager/src",
   "projectType": "library",
   "targets": {
@@ -31,10 +36,8 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "network-manager"
+  ]
 }

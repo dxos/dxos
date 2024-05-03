@@ -73,6 +73,7 @@ test.describe('Collaboration tests', () => {
 
     await guest.getObjectLinks().last().click();
     await Markdown.waitForMarkdownTextbox(guest.page);
+    await Markdown.getMarkdownTextbox(guest.page).blur();
     await waitForExpect(async () => {
       expect(await Markdown.getCollaboratorCursors(host.page).count()).to.equal(0);
       expect(await Markdown.getCollaboratorCursors(guest.page).count()).to.equal(0);
@@ -124,8 +125,8 @@ test.describe('Collaboration tests', () => {
     ]);
     await Markdown.getMarkdownTextbox(host.page).getByText(allParts).waitFor();
 
-    const hostContent = await Markdown.getMarkdownActiveLineText(host.page);
-    const guestContent = await Markdown.getMarkdownActiveLineText(guest.page);
+    const hostContent = await Markdown.getMarkdownLineText(host.page);
+    const guestContent = await Markdown.getMarkdownLineText(guest.page);
     expect(hostContent).to.equal(guestContent);
   });
 
@@ -156,10 +157,11 @@ test.describe('Collaboration tests', () => {
     });
 
     await guest.getSpacePresenceMembers().first().click();
+    // TODO(wittjosiah): Second document is taking a while to sync.
     await waitForExpect(async () => {
       expect(await host.page.url()).to.equal(await guest.page.url());
       expect((await host.getSpacePresenceCount()).viewing).to.equal(1);
       expect((await guest.getSpacePresenceCount()).viewing).to.equal(1);
-    });
+    }, 20_000);
   });
 });

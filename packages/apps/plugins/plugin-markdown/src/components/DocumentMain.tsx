@@ -2,31 +2,65 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useMemo } from 'react';
+import { EditorView } from '@codemirror/view';
+import React, { useMemo } from 'react';
 
-import { type Document as DocumentType } from '@braneframe/types';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type DocumentType } from '@braneframe/types';
+import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Comment, useTextModel } from '@dxos/react-ui-editor';
+import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
 import EditorMain, { type EditorMainProps } from './EditorMain';
 
-const DocumentMain: FC<{ document: DocumentType } & Pick<EditorMainProps, 'toolbar' | 'readonly' | 'extensions'>> = ({
-  document,
-  ...props
-}) => {
-  const identity = useIdentity();
-  const space = getSpaceForObject(document);
-  const model = useTextModel({ identity, space, text: document.content });
-  const comments = useMemo<Comment[]>(() => {
-    return document.comments?.map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! }));
-  }, [document.comments]);
+type DocumentMainProps = { document: DocumentType } & Omit<EditorMainProps, 'id'>;
 
-  if (!model) {
+/**
+ * @deprecated
+ */
+const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }: DocumentMainProps) => {
+  const identity = useIdentity();
+  const extensions = useMemo(
+    () => [
+      _extensions,
+      createDataExtensions({
+        id: doc.id,
+        text: doc.content && createDocAccessor(doc.content, ['content']),
+        space: getSpace(doc),
+        identity,
+      }),
+      state(localStorageStateStoreAdapter),
+    ],
+    [doc, _extensions, identity],
+  );
+
+  const { scrollTo, selection } = useMemo(() => {
+    const { scrollTo, selection } = localStorageStateStoreAdapter.getState(doc.id) ?? {};
+    return {
+      scrollTo: scrollTo?.from ? EditorView.scrollIntoView(scrollTo.from, { y: 'start', yMargin: 0 }) : undefined,
+      selection,
+    };
+  }, [doc]);
+
+  const comments =
+    doc.comments
+      ?.filter((comment) => comment.thread?.id && comment.cursor)
+      .map((comment) => ({ id: comment.thread!.id, cursor: comment.cursor! })) ?? [];
+
+  if (!doc.content) {
     return null;
   }
 
-  return <EditorMain model={model} comments={comments} {...props} />;
+  return (
+    <EditorMain
+      id={doc.id}
+      doc={doc.content.content}
+      scrollTo={scrollTo}
+      selection={selection}
+      extensions={extensions}
+      comments={comments}
+      {...props}
+    />
+  );
 };
 
 export default DocumentMain;

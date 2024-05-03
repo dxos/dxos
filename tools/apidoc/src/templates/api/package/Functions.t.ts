@@ -13,7 +13,7 @@ export default template.define.group(({ input }) => {
       const funcs = reflectionsOfKind(pkage, ReflectionKind.Function) as S.DeclarationReflection[];
       return template.define.text({
         path: path.join( pkage.name, 'functions.md'),
-        content: plate`
+        content: !!funcs?.length && plate`
         ---
         title: Functions
         ---

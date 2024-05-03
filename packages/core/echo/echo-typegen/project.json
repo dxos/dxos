@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-typegen",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/echo-typegen/src",
   "projectType": "library",
   "targets": {
@@ -22,7 +27,5 @@
     },
     "lint": {},
     "test": {}
-  },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "echo-typegen"
+  }
 }

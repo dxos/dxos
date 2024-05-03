@@ -5,7 +5,7 @@
 import express from 'express';
 
 import { PublicKey } from '@dxos/client';
-import { Expando } from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Config } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
@@ -48,7 +48,7 @@ export class EchoProxyPlugin extends Plugin {
       if (spaceKey) {
         const space = this.context.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
-          const { objects } = space.db.query();
+          const { objects } = await space.db.query().run();
           Object.assign(result, {
             objects,
           });
@@ -72,7 +72,7 @@ export class EchoProxyPlugin extends Plugin {
           const objects = req.body;
           Object.assign(result, {
             objects: objects.map(async (data: any) => {
-              const object = space.db.add(new Expando(data));
+              const object = space.db.add(create(data));
               return object.id;
             }),
           });
@@ -86,7 +86,7 @@ export class EchoProxyPlugin extends Plugin {
 
     const { port } = this._config.config!;
     const server = app.listen(port, () => {
-      console.log('proxy listening', { port });
+      log.info('proxy listening', { port });
     });
 
     this._ctx.onDispose(() => {

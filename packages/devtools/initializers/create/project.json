@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "create",
+  "tags": [
+    "scope:initializers"
+  ],
   "sourceRoot": "packages/devtools/initializers/create/src",
   "projectType": "library",
   "targets": {
@@ -8,7 +13,5 @@
       }
     },
     "lint": {}
-  },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "create"
+  }
 }

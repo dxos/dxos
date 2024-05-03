@@ -3,182 +3,21 @@
  * https://fontsource.org/?category=sans-serif&variable=true
  */
 
-@import '@fontsource-variable/jetbrains-mono/wght-italic.css';
-@import '@fontsource-variable/jetbrains-mono/wght.css';
-@import '@fontsource-variable/inter/slnt.css';
+@import 'tailwindcss/base';
+@import 'tailwindcss/utilities';
+@import 'tailwindcss/components';
 
-@tailwind base;
-@tailwind utilities;
-@tailwind components;
-
-@layer utilities {
-  /* Font weights & `italic` handling */
-  .not-italic {
-    font-variation-settings: 'wght' 400, 'slnt' 0;
-  }
-  .font-thin, .not-italic.font-thin, .not-italic .font-thin, .font-thin .not-italic {
-    font-variation-settings: 'wght' 100, 'slnt' 0;
-  }
-  .font-extralight, .not-italic.font-extralight, .not-italic .font-extralight, .font-extralight .not-italic {
-    font-variation-settings: 'wght' 200, 'slnt' 0;
-  }
-  .font-light, .not-italic.font-light, .not-italic .font-light, .font-light .not-italic {
-    font-variation-settings: 'wght' 300, 'slnt' 0;
-  }
-  .font-normal, .not-italic.font-normal, .not-italic .font-normal, .font-normal .not-italic {
-    font-variation-settings: 'wght' 400, 'slnt' 0;
-  }
-  .font-medium, .not-italic.font-medium, .not-italic .font-medium, .font-medium .not-italic {
-    font-variation-settings: 'wght' 500, 'slnt' 0;
-  }
-  .font-semibold, .not-italic.font-semibold, .not-italic .font-semibold, .font-semibold .not-italic {
-    font-variation-settings: 'wght' 600, 'slnt' 0;
-  }
-  .font-bold, .not-italic.font-bold, .not-italic .font-bold, .font-bold .not-italic {
-    font-variation-settings: 'wght' 700, 'slnt' 0;
-  }
-  .font-extrabold, .not-italic.font-extrabold, .not-italic .font-extrabold, .font-extrabold .not-italic {
-    font-variation-settings: 'wght' 800, 'slnt' 0;
-  }
-  .font-black, .not-italic.font-black, .not-italic .font-black, .font-black .not-italic {
-    font-variation-settings: 'wght' 900, 'slnt' 0;
-  }
-  .italic {
-    font-variation-settings: 'wght' 400, 'slnt' -10;
-  }
-  .italic.font-thin, .italic .font-thin, .font-thin .italic {
-    font-variation-settings: 'wght' 100, 'slnt' -10;
-  }
-  .italic.font-extralight, .italic .font-extralight, .font-extralight .italic {
-    font-variation-settings: 'wght' 200, 'slnt' -10;
-  }
-  .italic.font-light, .italic .font-light, .font-light .italic {
-    font-variation-settings: 'wght' 300, 'slnt' -10;
-  }
-  .italic.font-normal, .italic .font-normal, .font-normal .italic {
-    font-variation-settings: 'wght' 400, 'slnt' -10;
-  }
-  .italic.font-medium, .italic .font-medium, .font-medium .italic {
-    font-variation-settings: 'wght' 500, 'slnt' -10;
-  }
-  .italic.font-semibold, .italic .font-semibold, .font-semibold .italic {
-    font-variation-settings: 'wght' 600, 'slnt' -10;
-  }
-  .italic.font-bold, .italic .font-bold, .font-bold .italic {
-    font-variation-settings: 'wght' 700, 'slnt' -10;
-  }
-  .italic.font-extrabold, .italic .font-extrabold, .font-extrabold .italic {
-    font-variation-settings: 'wght' 800, 'slnt' -10;
-  }
-  .italic.font-black, .italic .font-black, .font-black .italic {
-    font-variation-settings: 'wght' 900, 'slnt' -10;
-  }
-
-  /* SURFACES */
-
-  .base-surface {
-    background-color: theme(colors.neutral.25);
-    --surface-bg: theme(colors.neutral.25);
-    --input-bg: theme(colors.neutral.50);
-    --input-bg-hover: theme(colors.neutral.75);
-  }
-
-  .dark .base-surface {
-    background-color: theme(colors.neutral.850);
-    --surface-bg: theme(colors.neutral.850);
-    --input-bg: theme(colors.neutral.825);
-    --input-bg-hover: theme(colors.neutral.800);
-  }
-
-  .fixed-surface {
-    background-color: theme(colors.neutral.25 / 90%);
-    --surface-bg: theme(colors.neutral.25);
-    --input-bg: theme(colors.neutral.50);
-    --input-bg-hover: theme(colors.neutral.75);
-  }
-
-  .dark .fixed-surface {
-    background-color: theme(colors.neutral.850 / 90%);
-    --surface-bg: theme(colors.neutral.850);
-    --input-bg: theme(colors.neutral.825);
-    --input-bg-hover: theme(colors.neutral.800);
-  }
-
-  .modal-surface {
-    background-color: #FFFFFF;
-    --surface-bg: white;
-  }
-
-  .dark .modal-surface {
-    background-color: theme(colors.neutral.750);
-    --surface-bg: theme(colors.neutral.750);
-  }
-
-  .attention-surface {
-    background-color: white;
-    --surface-bg: white;
-  }
-
-  .dark .attention-surface {
-    background-color: theme(colors.neutral.900);
-    --surface-bg: theme(colors.neutral.900);
-  }
-
-  /* FEATURES */
-
-  .overflow-anchored * {
-    overflow-anchor: none;
-  }
-
-  .overflow-anchor {
-    overflow-anchor: auto;
-  }
-
-  .sticky-top-from-topbar-bottom {
-    --sticky-top: var(--topbar-size);
-  }
-
-  .attention {
-    --surface-bg: transparent;
-    --surface-separator: transparent;
-  }
-
-  .attention-within:focus-within {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-within:focus-within {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
-  }
-
-  .attention-current[aria-current] {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-current[aria-current] {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
-  }
-
-  .attention-static, .attention-within.attention-static {
-    --surface-bg: white;
-    --surface-separator: theme(colors.neutral.75);
-  }
-
-  .dark .attention-static, .dark .attention-within.attention-static {
-    --surface-bg: theme(colors.neutral.900);
-    --surface-separator: theme(colors.neutral.750);
-  }
-}
+@import './styles/layers/index.css';
 
 /* Base variables */
 
 :root {
   font-synthesis: none;
-  font-variation-settings: 'wght' 400, 'slnt' 0;
+  font-variation-settings:
+    'wght' 400,
+    'slnt' 0;
+  scroll-padding-block-start: theme(spacing.14);
+  scroll-padding-block-end: theme(spacing.2);
   --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
   --input-bg-hover: theme(colors.neutral.75);
@@ -186,8 +25,8 @@
   --description-text: theme(colors.neutral.300);
   --topbar-size: theme(spacing.12);
   --sticky-top: 0;
-  --rail-size: 3rem;
-  --rail-action: 2.5rem;
+  --rail-size: 48px;
+  --rail-action: 40px;
 }
 
 .dark {

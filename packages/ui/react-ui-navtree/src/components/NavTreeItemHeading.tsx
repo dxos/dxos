@@ -6,15 +6,9 @@ import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Button, TreeItem } from '@dxos/react-ui';
-import { getSize, mx, valenceColorText } from '@dxos/react-ui-theme';
+import { getSize, type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
 
-import {
-  navTreeHeading,
-  topLevelHeadingColor,
-  topLevelHeadingHoverColor,
-  topLevelText,
-  treeItemText,
-} from './navtree-fragments';
+import { navTreeHeading, topLevelText, treeItemText } from './navtree-fragments';
 
 export type NavTreeItemHeadingProps = {
   id: string;
@@ -45,8 +39,8 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
         className={mx(
           'grow flex items-center gap-1 pli-0',
           level < 1 && topLevelText,
-          level < 1 && topLevelHeadingColor(palette),
-          level < 1 && topLevelHeadingHoverColor(palette),
+          level < 1 && palette && hueTokens[palette as HuePalette].text,
+          level < 1 && palette && hueTokens[palette as HuePalette].textHover,
           error && valenceColorText('error'),
         )}
       >
@@ -78,7 +72,7 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             onClick={onSelect}
             density='fine'
             variant='ghost'
-            classNames={['grow gap-1 hover:bg-transparent dark:hover:bg-transparent', branch && '-mis-6']}
+            classNames={['grow gap-1 hover:!bg-transparent dark:hover:!bg-transparent', branch && '-mis-6']}
             disabled={disabled}
             {...(current && { 'aria-current': 'page' })}
             ref={forwardedRef}

@@ -5,7 +5,8 @@
 // TODO(burdon): Reconcile with @dxos/plugin-debug, @dxos/aurora/testing.
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
-import { Schema, type Space, TextObject } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
+import { S, DynamicEchoSchema, effectToJsonSchema, StoredEchoSchema, create, ref, echoObject } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -22,111 +23,46 @@ export enum TestSchemaType {
   project = 'example.com/schema/project',
 }
 
-export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
-  const document = new Schema({
-    typename: TestSchemaType.document,
-    props: [
-      {
-        id: 'title',
-        type: Schema.PropType.STRING,
-        description: 'title of the document',
-      },
-      {
-        id: 'content',
-        type: Schema.PropType.STRING, // TODO(burdon): Rich text.
-      },
-    ],
+const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicEchoSchema => {
+  const typeSchema = S.partial(S.struct(fields)).pipe(echoObject(typename, '1.0.0'));
+  return new DynamicEchoSchema(
+    create(StoredEchoSchema, {
+      typename,
+      version: '1.0.0',
+      jsonSchema: effectToJsonSchema(typeSchema),
+    }),
+  );
+};
+
+const testSchemas = (): TestSchemaMap<TestSchemaType> => {
+  const document = createDynamicSchema(TestSchemaType.document, {
+    title: S.string.pipe(S.description('title of the document')),
+    content: S.string,
   });
 
-  const organization = new Schema({
-    typename: TestSchemaType.organization,
-    props: [
-      {
-        id: 'name',
-        type: Schema.PropType.STRING,
-        description: 'name of the company or organization',
-      },
-      {
-        id: 'website',
-        type: Schema.PropType.STRING,
-        description: 'public website URL',
-      },
-      {
-        id: 'description',
-        type: Schema.PropType.STRING,
-        description: 'short summary of the company',
-      },
-    ],
+  const organization = createDynamicSchema(TestSchemaType.organization, {
+    name: S.string.pipe(S.description('name of the company or organization')),
+    website: S.string.pipe(S.description('public website URL')),
+    description: S.string.pipe(S.description('short summary of the company')),
   });
 
-  const contact = new Schema({
-    typename: TestSchemaType.contact,
-    props: [
-      {
-        id: 'name',
-        type: Schema.PropType.STRING,
-        description: 'name of the person',
-      },
-      // TODO(burdon): Support multiple tagged properties.
-      {
-        id: 'email',
-        type: Schema.PropType.STRING,
-      },
-      {
-        id: 'org',
-        type: Schema.PropType.REF,
-        ref: organization,
-      },
-      // TODO(burdon): Convert to object with nested props.
-      {
-        id: 'lat',
-        type: Schema.PropType.NUMBER,
-      },
-      {
-        id: 'lng',
-        type: Schema.PropType.NUMBER,
-      },
-    ],
+  const contact = createDynamicSchema(TestSchemaType.contact, {
+    name: S.string.pipe(S.description('name of the person')),
+    email: S.string,
+    org: ref(organization),
+    lat: S.number,
+    lng: S.number,
   });
 
-  const project = new Schema({
-    typename: TestSchemaType.project,
-    props: [
-      {
-        id: 'name',
-        type: Schema.PropType.STRING,
-        description: 'name of the project',
-      },
-      {
-        id: 'description',
-        type: Schema.PropType.STRING, // TODO(burdon): Text.
-      },
-      {
-        id: 'website',
-        type: Schema.PropType.STRING,
-      },
-      {
-        id: 'repo',
-        type: Schema.PropType.STRING,
-      },
-      {
-        id: 'status',
-        type: Schema.PropType.STRING,
-      },
-      {
-        id: 'priority',
-        type: Schema.PropType.NUMBER,
-      },
-      {
-        id: 'active',
-        type: Schema.PropType.BOOLEAN,
-      },
-      {
-        id: 'org',
-        type: Schema.PropType.REF,
-        ref: organization,
-      },
-    ],
+  const project = createDynamicSchema(TestSchemaType.project, {
+    name: S.string.pipe(S.description('name of the project')),
+    description: S.string,
+    website: S.string,
+    repo: S.string,
+    status: S.string,
+    priority: S.number,
+    active: S.boolean,
+    org: ref(organization),
   });
 
   return {
@@ -137,20 +73,20 @@ export const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   };
 };
 
-export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
-  [TestSchemaType.document]: () => ({
+const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
+  [TestSchemaType.document]: async () => ({
     title: faker.lorem.sentence(3),
     content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
 
-  [TestSchemaType.organization]: () => ({
+  [TestSchemaType.organization]: async () => ({
     name: faker.company.name(),
     website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
-    description: new TextObject(faker.lorem.sentences()),
+    description: faker.lorem.sentences(),
   }),
 
-  [TestSchemaType.contact]: (provider) => {
-    const organizations = provider?.(TestSchemaType.organization);
+  [TestSchemaType.contact]: async (provider) => {
+    const organizations = await provider?.(TestSchemaType.organization);
     const location = faker.datatype.boolean() ? faker.helpers.arrayElement(locations) : undefined;
     return {
       name: faker.person.fullName(),
@@ -163,7 +99,7 @@ export const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
     };
   },
 
-  [TestSchemaType.project]: () => ({
+  [TestSchemaType.project]: async () => ({
     name: faker.commerce.productName(),
     repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     status: faker.helpers.arrayElement(Status),

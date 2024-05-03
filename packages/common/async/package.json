@@ -1,6 +1,6 @@
 {
   "name": "@dxos/async",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Async utilities.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,6 +19,7 @@
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "zen-observable": "^0.10.0",

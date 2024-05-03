@@ -3,11 +3,11 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
-import { type Label } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, DropdownMenu, ContextMenu, Tooltip, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { type MosaicActiveType, useMosaic } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
 import { descriptionText, getSize, hoverableControlItem, hoverableOpenControlItem, mx } from '@dxos/react-ui-theme';
@@ -33,15 +33,24 @@ export const NavTreeItemActionDropdownMenu = ({
   active,
   testId,
   actions,
-  suppressNextTooltip,
   onAction,
+  suppressNextTooltip,
+  menuOpen,
+  defaultMenuOpen,
+  onChangeMenuOpen,
 }: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
+  menuOpen?: boolean;
+  defaultMenuOpen?: boolean;
+  onChangeMenuOpen?: (nextOpen: boolean) => void;
 }) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
-  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
+    prop: menuOpen,
+    defaultProp: defaultMenuOpen,
+    onChange: onChangeMenuOpen,
+  });
 
   return (
     <DropdownMenu.Root
@@ -66,6 +75,7 @@ export const NavTreeItemActionDropdownMenu = ({
               active === 'overlay' && 'invisible',
             ]}
             data-testid={testId}
+            aria-label={t('tree item actions label')}
           >
             <Icon className={getSize(4)} />
           </Button>
@@ -95,7 +105,7 @@ export const NavTreeItemActionDropdownMenu = ({
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
                   {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </DropdownMenu.Item>
               );
@@ -120,7 +130,6 @@ const NavTreeItemActionContextMenuImpl = ({
   children,
 }: PropsWithChildren<Pick<NavTreeItemActionProps, 'actions' | 'onAction'>>) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
   const { activeItem } = useMosaic();
 
   return (
@@ -148,7 +157,7 @@ const NavTreeItemActionContextMenuImpl = ({
                   {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                 >
                   {action.icon && <action.icon className={mx(getSize(4), 'shrink-0')} />}
-                  <span className='grow truncate'>{getLabel(action.label)}</span>
+                  <span className='grow truncate'>{toLocalizedString(action.label, t)}</span>
                   {shortcut && <span className={mx('shrink-0', descriptionText)}>{keySymbols(shortcut).join('')}</span>}
                 </ContextMenu.Item>
               );
@@ -173,15 +182,14 @@ export const NavTreeItemActionSearchList = ({
   suppressNextTooltip: MutableRefObject<boolean>;
 }) => {
   const { t } = useTranslation(translationKey);
-  const getLabel = (label: Label) => (Array.isArray(label) ? t(...label) : label);
 
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const button = useRef<HTMLButtonElement | null>(null);
 
   // TODO(burdon): Optionally sort.
   const sortedActions = actions?.sort(({ label: l1 }, { label: l2 }) => {
-    const t1 = getLabel(l1).toLowerCase();
-    const t2 = getLabel(l2).toLowerCase();
+    const t1 = toLocalizedString(l1, t).toLowerCase();
+    const t2 = toLocalizedString(l2, t).toLowerCase();
     return t1.localeCompare(t2);
   });
 
@@ -231,12 +239,12 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
+          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] pli-2 plb-1'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
-              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='pli-3' />
+              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>
                 {sortedActions?.map((action) => {
-                  const label = getLabel(action.label);
+                  const label = toLocalizedString(action.label, t);
                   const shortcut =
                     typeof action.keyBinding === 'string' ? action.keyBinding : action.keyBinding?.[getHostPlatform()];
                   return (

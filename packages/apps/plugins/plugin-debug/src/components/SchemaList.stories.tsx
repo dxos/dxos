@@ -7,7 +7,6 @@ import '@dxosTheme';
 import React, { type FC, useEffect } from 'react';
 
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type Schema } from '@dxos/echo-schema';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
@@ -22,7 +21,7 @@ const Story: FC = () => {
     }
   }, [space]);
 
-  const handleCreate = (schema: Schema, count: number) => {
+  const handleCreate = (schema: any /* Schema */, count: number) => {
     console.log(schema.id, count);
   };
 

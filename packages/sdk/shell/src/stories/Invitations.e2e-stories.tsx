@@ -7,9 +7,10 @@ import '@dxosTheme';
 import { Laptop, Planet, Plus, PlusCircle, SignIn, QrCode, WifiHigh, WifiSlash } from '@phosphor-icons/react';
 import React, { useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Space, type SpaceMember, SpaceProxy, useSpaces } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
@@ -35,21 +36,21 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
   const spaces = useSpaces();
 
   useMemo(() => {
-    if (panel instanceof SpaceProxy) {
+    if (panel && typeof panel !== 'string') {
       (window as any)[`peer${id}CreateSpaceInvitation`] = (options?: Partial<Invitation>) => {
         const invitation = panel.share(options);
 
         invitation.subscribe((invitation) => {
           const invitationCode = InvitationEncoder.encode(invitation);
           if (invitation.state === Invitation.State.CONNECTING) {
-            console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+            log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
           }
         });
       };
     }
   }, [panel]);
 
-  if (panel instanceof SpaceProxy) {
+  if (panel && typeof panel !== 'string') {
     return <SpacePanel space={panel} createInvitationUrl={createInvitationUrl} />;
   }
 
@@ -126,7 +127,7 @@ const Invitations = (args: { id: number; count: number }) => {
       invitation.subscribe((invitation) => {
         const invitationCode = InvitationEncoder.encode(invitation);
         if (invitation.state === Invitation.State.CONNECTING) {
-          console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+          log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
         }
       });
     };
@@ -215,6 +216,9 @@ const Invitations = (args: { id: number; count: number }) => {
   );
 };
 
+// TODO(wittjosiah): This story fails to start in Safari/Webkit.
+//   The issue appears to be related to dynamic imports during client initialization.
+//   This does not seem to be a problem in other browsers nor in Safari in the app.
 export const Default = {
   render: (args: { id: number }) => (
     <ClipboardProvider>

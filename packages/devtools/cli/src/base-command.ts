@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, type Config as OclifConfig, Flags, type Interfaces } from '@oclif/core';
+import { Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -11,15 +11,7 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import {
-  AgentIsNotStartedByCLIError,
-  AgentWaitTimeoutError,
-  type Daemon,
-  PhoenixDaemon,
-  SystemDaemon,
-  LaunchctlRunner,
-  SystemctlRunner,
-} from '@dxos/agent';
+import { type Daemon, PhoenixDaemon, SystemDaemon, LaunchctlRunner, SystemctlRunner } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
@@ -32,10 +24,10 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
-import { type ConfigProto } from '@dxos/config';
+import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
-import { log, LogLevel } from '@dxos/log';
+import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
   type Observability,
   getObservabilityState,
@@ -44,14 +36,10 @@ import {
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
-import { IdentityWaitTimeoutError, PublisherConnectionError, SpaceWaitTimeoutError } from './errors';
+import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
 import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
-
-// Set config if not overridden by env.
-// TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
-log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
 
 const DEFAULT_CONFIG = 'config/config-default.yml';
 
@@ -116,9 +104,20 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
+    target: Flags.string({
+      description: 'Target websocket server.',
+    }),
+
     // TODO(burdon): '--no-' prefix is not working.
+    // This does not check whether an agent is running or not, and could potentially corrupt data.
+    // https://github.com/dxos/dxos/issues/6473
     'no-agent': Flags.boolean({
-      description: 'Run command without using or starting agent.',
+      description: 'Run command without using an agent.',
+      default: false,
+    }),
+
+    'no-start-agent': Flags.boolean({
+      description: 'Do not automatically start an agent if one is not running.',
       default: false,
     }),
 
@@ -130,6 +129,18 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     'no-wait': Flags.boolean({
       description: 'Do not wait for space to be ready.',
+    }),
+
+    // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
+    // Use stdout for user-facing interaction, and potentially JSON formatted output.
+    // TODO: unify output/logging with oclif
+    'json-log': Flags.boolean({
+      description: 'When running in foreground, log JSON format',
+    }),
+
+    'json-logfile': Flags.string({
+      description: "JSON log file destination, or 'stdout' or 'stderr'",
+      default: 'stderr',
     }),
   };
 
@@ -177,9 +188,47 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     this.flags = flags as Flags<T>;
     this.args = args as Args<T>;
 
-    // Load user config file.
-    await this._loadConfig();
-    await this._initObservability();
+    if (this.flags['json-log']) {
+      let pathOrFd: number | string;
+      switch (this.flags['json-logfile']) {
+        case '-':
+        case 'stdout':
+          pathOrFd = process.stdout.fd;
+          break;
+        case 'stderr':
+          pathOrFd = process.stderr.fd;
+          break;
+        default:
+          pathOrFd = this.flags['json-logfile'];
+      }
+      log.addProcessor(
+        createFileProcessor({
+          pathOrFd,
+          // avoid collision with log's getConfig usage of LOG_FILTER for CONSOLE_LOGGER
+          levels: process.env.JSON_LOG_FILTER ? [] : [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO],
+          filters: process.env.JSON_LOG_FILTER ? parseFilter(process.env.JSON_LOG_FILTER) : [],
+        }),
+      );
+      // TODO(nf): disable console log completely?
+      log.config({ filter: LogLevel.ERROR });
+    } else {
+      // Set config if not overridden by env.
+      // TODO(nf): how to avoid abusive or unintentional spamming of Sentry?
+      log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
+    }
+
+    if (this.flags.target) {
+      this.log('Using remote target:', this.flags.target);
+      await this._loadConfigFromFile(Remote(this.flags.target, process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN));
+    } else {
+      // Load user config file.
+      await this._loadConfigFromFile();
+    }
+    await this._initObservability(
+      this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
+        ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
+        : undefined,
+    );
   }
 
   async readStdin(): Promise<string> {
@@ -197,12 +246,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     });
   }
 
-  private async _initObservability() {
+  private async _initObservability(
+    logCb: (input: string) => void = (input: string) => process.stderr.write(chalk`{bold {magenta ${input} }}`),
+  ) {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
 
     if (mode === 'disabled') {
-      this.log('telemetry disabled by config');
+      this.log('observability disabled by config');
       return;
     }
     {
@@ -211,7 +262,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       }
 
       await showObservabilityBanner(DX_DATA, (input: string) => {
-        process.stderr.write(chalk`{bold {magenta ${input} }}`);
+        // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+        logCb(input);
       });
     }
 
@@ -223,6 +275,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     this._observability = await initializeNodeObservability({
       namespace,
+      version: this.config.version,
       installationId,
       group,
       config: this._clientConfig!,
@@ -239,7 +292,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Load or create config file from defaults.
    * @private
    */
-  private async _loadConfig() {
+  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]) {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
@@ -265,7 +318,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     // TODO(burdon): Use Profile()?
-    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto, ...additionalConfig);
   }
 
   // TODO(burdon): Reconcile internal/external logging.
@@ -296,39 +349,27 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * NOTE: Full stack trace is displayed if `oclif.settings.debug = true` (see bin script).
    * https://oclif.io/docs/error_handling
    */
-  override error(err: string | Error, options?: any): never;
-  override error(err: string | Error, options?: any): void {
+  override catch(err: string | Error, options?: any): never;
+  override catch(err: string | Error, options?: any): void {
     // Will only submit if API key exists (i.e., prod).
     this._observability?.captureException(err);
 
     this._failing = true;
 
-    if (this.flags.verbose) {
+    if (!this.flags || this.flags?.verbose) {
       // NOTE: Default method displays stack trace. And exits the process.
       super.error(err, options as any);
       return;
     }
 
-    // TODO(burdon): Errors should not be imported (polluting base command); just stringify.
     // Convert known errors to human readable messages.
-    if (err instanceof SpaceWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: ${err.message}`);
-    } else if (err instanceof AgentWaitTimeoutError) {
-      // TODO(burdon): Need better diagnostics: might fail for other reasons.
-      this.logToStderr(chalk`{red Error}: Agent may be stale (to restart: 'dx agent restart --force')`);
-    } else if (err instanceof AgentIsNotStartedByCLIError) {
-      this.logToStderr(chalk`{red Error}: Agent may be running in the foreground or as a system daemon.`);
-    } else if (err instanceof PublisherConnectionError) {
-      this.logToStderr(chalk`{red Error}: Could not connect to publisher.`);
-    } else if (err instanceof IdentityWaitTimeoutError) {
-      this.logToStderr(chalk`{red Error}: Identity not initialized.`);
+    if (err instanceof FriendlyError) {
+      this.logToStderr(chalk`{red Error}: ${err.friendlyMessage}`);
+      err.suggestion && this.logToStderr(chalk`{gray Suggestion: ${err.suggestion}}`);
     } else {
-      // Handle unknown errors with default method.
-      super.error(err, options as any);
-      return;
+      this.logToStderr(chalk`{red Error}: Something went wrong. Use --verbose for more details.`);
     }
-
-    this.exit();
+    this.exit(1);
   }
 
   /**
@@ -339,19 +380,36 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     // TODO(nf): move to observability
     const installationId = this._observability?.getTag('installationId');
     const userId = this._observability?.getTag('identityKey');
-    this._observability?.event({
-      installationId: installationId?.value,
-      identityId: userId?.value,
-      name: 'cli.command.run',
-      properties: {
-        status: this._failing ? 'failure' : 'success',
-        duration: endTime.getTime() - this._startTime.getTime(),
-      },
-    });
+    if (this._observability) {
+      this._observability?.event({
+        installationId: installationId?.value,
+        identityId: userId?.value,
+        name: 'cli.command.run',
+        properties: {
+          status: this._failing ? 'failure' : 'success',
+          duration: endTime.getTime() - this._startTime.getTime(),
+        },
+      });
+      await this._observability.close();
+    }
+    if (process.env.DX_TRACK_LEAKS) {
+      (global as any).dxDumpLeaks?.();
+      (globalThis as any).wtf.dump();
+    }
+
+    const stopFailsafe = setTimeout(() => {
+      // TODO: log filter not correctly applied for this
+      if (settings.debug) {
+        this.log('timeout waiting for all promises to resolve, forcing exit');
+      }
+      // This is not a condition worth exiting as a failure for.
+      process.exit(0);
+    }, 1_000);
+    stopFailsafe.unref();
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-agent']) {
+    if (!this.flags['no-start-agent'] && !this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
@@ -368,17 +426,27 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     invariant(this._clientConfig);
     if (!this._client) {
-      if (this.flags['no-agent']) {
-        this._client = new Client({ config: this._clientConfig });
-      } else {
-        await this.maybeStartDaemon();
-        this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
+      try {
+        // Create a client using a LocalClientServices "host mode" or by connecting to a remote ClientServices.
+        if (this.flags['no-agent'] || this.flags.target) {
+          this._client = new Client({ config: this._clientConfig });
+        } else {
+          // Connect to a locally-running agent, possibly starting one if necessary.
+          await this.maybeStartDaemon();
+          this._client = new Client({
+            config: this._clientConfig,
+            services: fromAgent({ profile: this.flags.profile }),
+          });
+        }
+
+        await this._client.initialize();
+      } catch (err: any) {
+        if (err.message.includes('401')) {
+          throw new ClientInitializationError('error authenticating with remote service', err);
+        }
+        throw new ClientInitializationError('error initializing client', err);
       }
-
-      await this._client.initialize();
-      log('Client initialized', { profile: this.flags.profile });
     }
-
     return this._client;
   }
 
@@ -391,7 +459,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.all(
         spaces.map(async (space) => {
           if (space.state.get() === SpaceState.INITIALIZING) {
-            await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+            await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
           }
         }),
       );
@@ -411,10 +479,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     const space = spaces.find((space) => space.key.toHex().startsWith(key!));
     if (!space) {
-      this.error(`Invalid key: ${key}`);
+      this.catch(`Invalid key: ${key}`);
     } else {
       if (wait && !this.flags['no-wait'] && space.state.get() === SpaceState.INITIALIZING) {
-        await waitForSpace(space, this.flags.timeout, (err) => this.error(err));
+        await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
       }
 
       return space;
@@ -477,7 +545,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(new PublisherConnectionError());
+      this.log('Publisher failed: ', err);
+      this.catch(new PublisherConnectionError());
     } finally {
       if (rpc) {
         await rpc.close();
@@ -495,7 +564,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();
@@ -513,7 +582,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       await Promise.race([rpc.connected.waitForCount(1), rpc.error.waitForCount(1).then((err) => Promise.reject(err))]);
       return await callback(rpc);
     } catch (err: any) {
-      this.error(err);
+      this.catch(err);
     } finally {
       if (rpc) {
         await rpc.close();

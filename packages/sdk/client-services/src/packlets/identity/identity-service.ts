@@ -28,7 +28,7 @@ export class IdentityServiceImpl implements IdentityService {
   ) {}
 
   async createIdentity(request: CreateIdentityRequest): Promise<Identity> {
-    await this._createIdentity(request.profile ?? {});
+    await this._createIdentity({ displayName: request.profile?.displayName, deviceProfile: request.deviceProfile });
     return this._getIdentity()!;
   }
 

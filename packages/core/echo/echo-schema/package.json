@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -29,49 +29,22 @@
     }
   },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],
-  "scripts": {
-    "gen-schema": "dxtype --schema-package ../reexports ./src/proto/schema.proto ./src/proto/gen/schema.ts",
-    "gen-test": "dxtype --schema-package ../../.. ./src/tests/proto/test.proto ./src/tests/proto/gen/test.ts",
-    "prebuild": "pnpm gen-schema && pnpm gen-test"
-  },
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/automerge": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/document-model": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/model-factory": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/text-model": "workspace:*",
-    "@dxos/tracing": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.62.1",
-    "effect": "^2.3.1",
-    "lodash.defaultsdeep": "^4.6.1",
+    "@effect/schema": "0.64.7",
+    "@preact/signals-core": "^1.6.0",
+    "effect": "2.4.9",
     "lodash.get": "^4.4.2"
   },
-  "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.7",
-    "fast-check": "^3.15.1",
-    "wait-for-expect": "^3.0.2"
-  },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

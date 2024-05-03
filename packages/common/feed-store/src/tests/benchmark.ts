@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { log } from '@dxos/log';
+
 /**
  * Testing benchmark.
  */
@@ -9,7 +11,7 @@
 //  - Throughput (scaling with concurrent readers/writers).
 //  - Feed data size growth.
 const benchmark = () => {
-  console.log('ok');
+  log.info('ok');
 };
 
 benchmark();

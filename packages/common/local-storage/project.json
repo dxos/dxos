@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "local-storage",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/local-storage/src",
   "projectType": "library",
   "targets": {
@@ -13,10 +18,8 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "local-storage"
+  ]
 }

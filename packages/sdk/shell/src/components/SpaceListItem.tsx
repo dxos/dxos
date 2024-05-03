@@ -5,15 +5,14 @@
 import React, { type ForwardedRef, forwardRef } from 'react';
 
 import type { Space } from '@dxos/react-client/echo';
-import { Avatar, useId, useJdenticonHref } from '@dxos/react-ui';
+import { Avatar, useId } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
-import { humanize } from '@dxos/util';
+import { humanize, keyToEmoji } from '@dxos/util';
 
 export const SpaceListItem = forwardRef(
   ({ space, onClick }: { space: Space; onClick?: () => void }, ref: ForwardedRef<HTMLLIElement>) => {
-    const fallbackValue = space.key.toHex();
+    const fallbackValue = keyToEmoji(space.key);
     const labelId = useId('identityListItem__label');
-    const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
     const displayName = space.properties.name ?? humanize(space.key.toHex());
 
     return (
@@ -25,7 +24,7 @@ export const SpaceListItem = forwardRef(
       >
         <Avatar.Root labelId={labelId}>
           <Avatar.Frame>
-            <Avatar.Fallback href={jdenticon} />
+            <Avatar.Fallback text={fallbackValue} />
           </Avatar.Frame>
           <Avatar.Label classNames='text-sm truncate'>{displayName}</Avatar.Label>
         </Avatar.Root>

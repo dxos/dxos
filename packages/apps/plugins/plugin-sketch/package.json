@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-sketch",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,10 +23,14 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "@tldraw/assets": "2.0.0-alpha.14",
     "@tldraw/editor": "2.0.0-alpha.14",
     "@tldraw/state": "2.0.0-alpha.14",
@@ -38,23 +42,22 @@
     "yjs": "^13.6.10"
   },
   "devDependencies": {
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
-    "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.0.12"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
-    "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",

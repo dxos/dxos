@@ -2,58 +2,57 @@
 // Copyright 2021 DXOS.org
 //
 
+import { type Level } from 'level';
+
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, type ClientServices, defaultKey, Properties } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { DocumentModel } from '@dxos/document-model';
-import { DataServiceImpl } from '@dxos/echo-pipeline';
-import { type TypedObject, base, getRawDoc, type DocStructure } from '@dxos/echo-schema';
+import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-pipeline';
+import { getTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type SignalManager, WebsocketSignalManager } from '@dxos/messaging';
-import { ModelFactory } from '@dxos/model-factory';
-import { createSimplePeerTransportFactory, NetworkManager, type TransportFactory } from '@dxos/network-manager';
+import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
+import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
-import { TextModel } from '@dxos/text-model';
 import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
 import { assignDeep } from '@dxos/util';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
-import { createDiagnostics } from './diagnostics';
-import { ServiceContext } from './service-context';
+import { ServiceContext, type ServiceContextRuntimeParams } from './service-context';
 import { ServiceRegistry } from './service-registry';
 import { DevicesServiceImpl } from '../devices';
-import { DevtoolsServiceImpl, DevtoolsHostEvents } from '../devtools';
+import { DevtoolsHostEvents, DevtoolsServiceImpl } from '../devtools';
+import {
+  type CollectDiagnosticsBroadcastHandler,
+  createCollectDiagnosticsBroadcastHandler,
+  createDiagnostics,
+} from '../diagnostics';
 import { IdentityServiceImpl, type CreateIdentityOptions } from '../identity';
 import { InvitationsServiceImpl } from '../invitations';
 import { Lock, type ResourceLock } from '../locks';
 import { LoggingServiceImpl } from '../logging';
 import { NetworkServiceImpl } from '../network';
 import { SpacesServiceImpl } from '../spaces';
-import { createStorageObjects } from '../storage';
+import { createLevel, createStorageObjects } from '../storage';
 import { SystemServiceImpl } from '../system';
-
-// TODO(burdon): Factor out to spaces.
-export const createDefaultModelFactory = () => {
-  return new ModelFactory().registerModel(DocumentModel).registerModel(TextModel);
-};
 
 export type ClientServicesHostParams = {
   /**
    * Can be omitted if `initialize` is later called.
    */
   config?: Config;
-  modelFactory?: ModelFactory;
   transportFactory?: TransportFactory;
   signalManager?: SignalManager;
   connectionLog?: boolean;
   storage?: Storage;
+  level?: LevelDB;
   lockKey?: string;
   callbacks?: ClientServicesHostCallbacks;
+  runtimeParams?: ServiceContextRuntimeParams;
 };
 
 export type ClientServicesHostCallbacks = {
@@ -80,14 +79,16 @@ export class ClientServicesHost {
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
-  private readonly _modelFactory: ModelFactory;
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
+  private _level?: Level<string, string>;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
   private _serviceContext!: ServiceContext;
+  private readonly _runtimeParams?: ServiceContextRuntimeParams;
+  private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
   private _opening = false;
@@ -97,17 +98,19 @@ export class ClientServicesHost {
 
   constructor({
     config,
-    modelFactory = createDefaultModelFactory(),
     transportFactory,
     signalManager,
     storage,
+    level,
     // TODO(wittjosiah): Turn this on by default.
     lockKey,
     callbacks,
+    runtimeParams,
   }: ClientServicesHostParams = {}) {
     this._storage = storage;
-    this._modelFactory = modelFactory;
+    this._level = level;
     this._callbacks = callbacks;
+    this._runtimeParams = runtimeParams;
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -145,6 +148,7 @@ export class ClientServicesHost {
       },
     });
 
+    this.diagnosticsBroadcastHandler = createCollectDiagnosticsBroadcastHandler(this._systemService);
     this._loggingService = new LoggingServiceImpl();
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
@@ -194,6 +198,9 @@ export class ClientServicesHost {
       }
     }
 
+    if (!options.signalManager) {
+      log.warn('running signaling without telemetry metadata.');
+    }
     const {
       connectionLog = true,
       transportFactory = createSimplePeerTransportFactory({
@@ -230,15 +237,22 @@ export class ClientServicesHost {
 
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
+
     await this._resourceLock?.acquire();
+
+    if (!this._level) {
+      this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
+    }
+    await this._level.open();
 
     await this._loggingService.open();
 
     this._serviceContext = new ServiceContext(
       this._storage,
+      this._level,
       this._networkManager,
       this._signalManager,
-      this._modelFactory,
+      this._runtimeParams,
     );
 
     this._serviceRegistry.setServices({
@@ -251,26 +265,21 @@ export class ClientServicesHost {
         (profile) => this._serviceContext.broadcastProfileUpdate(profile),
       ),
 
-      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitations, (invitation) =>
-        this._serviceContext.getInvitationHandler(invitation),
-      ),
+      InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
       DevicesService: new DevicesServiceImpl(this._serviceContext.identityManager),
 
       SpacesService: new SpacesServiceImpl(
         this._serviceContext.identityManager,
         this._serviceContext.spaceManager,
-        this._serviceContext.dataServiceSubscriptions,
         async () => {
           await this._serviceContext.initialized.wait();
           return this._serviceContext.dataSpaceManager!;
         },
       ),
 
-      DataService: new DataServiceImpl(
-        this._serviceContext.dataServiceSubscriptions,
-        this._serviceContext.automergeHost,
-      ),
+      DataService: this._serviceContext.echoHost.dataService,
+      QueryService: this._serviceContext.echoHost.queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -297,6 +306,7 @@ export class ClientServicesHost {
       });
       void this._devtoolsProxy.open();
     }
+    this.diagnosticsBroadcastHandler.start();
 
     this._opening = false;
     this._open = true;
@@ -315,10 +325,12 @@ export class ClientServicesHost {
 
     const deviceKey = this._serviceContext.identityManager.identity?.deviceKey;
     log('closing...', { deviceKey });
+    this.diagnosticsBroadcastHandler.stop();
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
     await this._serviceContext.close();
+    await this._level?.close();
     this._open = false;
     this._statusUpdate.emit();
     log('closed', { deviceKey });
@@ -343,17 +355,29 @@ export class ClientServicesHost {
     await this._serviceContext.initialized.wait();
     const space = await this._serviceContext.dataSpaceManager!.createSpace();
 
-    const obj: TypedObject = new Properties(undefined);
-    obj[defaultKey] = identity.identityKey.toHex();
-
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.automergeHost.repo.find<DocStructure>(automergeIndex as any);
+    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
-    document.change((doc: DocStructure) => {
-      assignDeep(doc, ['objects', obj[base]._id], getRawDoc(obj).handle.docSync());
+    // TODO(dmaretskyi): Better API for low-level data access.
+    const properties: ObjectStructure = {
+      system: {
+        type: encodeReference(getTypeReference(Properties)!),
+      },
+      data: {
+        [defaultKey]: identity.identityKey.toHex(),
+      },
+      meta: {
+        keys: [],
+      },
+    };
+    const propertiesId = PublicKey.random().toHex();
+    document.change((doc: SpaceDoc) => {
+      assignDeep(doc, ['objects', propertiesId], properties);
     });
+
+    await this._serviceContext.echoHost.flush();
 
     return identity;
   }

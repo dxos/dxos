@@ -53,10 +53,9 @@ export const warningInputValence = 'shadow-warning-500/50 dark:shadow-warning-60
 export const errorInputValence = 'shadow-error-500/50 dark:shadow-error-600/50';
 
 const textInputSurfaceFocus =
-  'transition-colors bg-[--input-bg] focus:surface-attention border-transparent focus:border-transparent';
+  'transition-colors surface-input focus:surface-attention border-transparent focus:border-transparent';
 
-const textInputSurfaceHover =
-  'hover:bg-[--input-bg-hover] dark:hover:bg-[--input-bg-hover] focus:hover:surface-attention';
+const textInputSurfaceHover = 'hover:surface-hover focus:hover:surface-attention';
 
 const booleanInputSurface =
   'shadow-inner transition-colors surface-unAccent aria-checked:surface-accent aria-[checked=mixed]:surface-accent';
@@ -119,18 +118,11 @@ export const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
           ...etc,
         );
 
-export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
-  mx(
-    getSize(size),
-    booleanInputSurface,
-    !disabled && booleanInputSurfaceHover,
-    'shrink-0 flex items-center justify-center rounded text-white',
-    focusRing,
-    ...etc,
-  );
+export const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+  mx('ch-checkbox ch-focus-ring', getSize(size), ...etc);
 
 export const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
-  mx(getSize(computeSize(sizeValue(size) * 0.7, 4)), ...etc);
+  mx(getSize(computeSize(sizeValue(size) * 0.65, 4)), ...etc);
 
 export const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(

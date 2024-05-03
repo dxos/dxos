@@ -6,6 +6,7 @@ module.exports = {
   extends: ['semistandard'],
   plugins: ['prettier', 'unused-imports', '@stayradiated/prefer-arrow-functions', '@dxos/rules'],
   rules: {
+    'no-console': 'error',
     '@dxos/rules/comment': 'off',
     '@dxos/rules/header': 'error',
     '@stayradiated/prefer-arrow-functions/prefer-arrow-functions': [

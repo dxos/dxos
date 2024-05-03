@@ -13,7 +13,6 @@ import {
   ProfileStateMachine,
 } from '@dxos/credentials';
 import { type Signer } from '@dxos/crypto';
-import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -26,6 +25,7 @@ import {
   type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -36,6 +36,7 @@ export type IdentityParams = {
   deviceKey: PublicKey;
   signer: Signer;
   space: Space;
+  presence?: Presence;
 };
 
 /**
@@ -45,6 +46,7 @@ export type IdentityParams = {
 export class Identity {
   public readonly space: Space;
   private readonly _signer: Signer;
+  private readonly _presence?: Presence;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
@@ -54,9 +56,10 @@ export class Identity {
 
   public readonly stateUpdate = new Event();
 
-  constructor({ space, signer, identityKey, deviceKey }: IdentityParams) {
+  constructor({ space, signer, identityKey, deviceKey, presence }: IdentityParams) {
     this.space = space;
     this._signer = signer;
+    this._presence = presence;
 
     this.identityKey = identityKey;
     this.deviceKey = deviceKey;
@@ -94,6 +97,7 @@ export class Identity {
 
   @trace.span()
   async close(ctx: Context) {
+    await this._presence?.destroy();
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);
@@ -129,12 +133,8 @@ export class Identity {
     return this._deviceStateMachine.deviceCredentialChain;
   }
 
-  getAdmissionCredentials(): DeviceAdmissionRequest {
-    return {
-      deviceKey: this.deviceKey,
-      controlFeedKey: this.space.controlFeedKey ?? failUndefined(),
-      dataFeedKey: this.space.dataFeedKey ?? failUndefined(),
-    };
+  get presence() {
+    return this._presence;
   }
 
   /**

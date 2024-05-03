@@ -11,6 +11,7 @@ import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
+// TODO(burdon): from '../util'?
 import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
 
 export type TailwindConfig = Config;

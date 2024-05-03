@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "echo-pipeline",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/echo-pipeline/src",
   "projectType": "library",
   "targets": {
@@ -26,10 +31,8 @@
       }
     }
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "echo-pipeline"
+  ]
 }

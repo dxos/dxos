@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "react-hooks",
+  "tags": [
+    "scope:primitives"
+  ],
   "sourceRoot": "packages/ui/primitives/react-hooks/src",
   "projectType": "library",
   "targets": {
@@ -12,9 +17,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "react-hooks"
+  ]
 }

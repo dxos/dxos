@@ -5,7 +5,7 @@ Instructions and documentation for developer workflows in this DXOS repository.
 ## Prerequisites
 
 - Node v18.x (recommended: [Node Version Manager](https://github.com/nvm-sh/nvm); see `.node-version`).
-- Native libraries: `brew install pkg-config cairo pango libpng jpeg giflib librsvg`
+- Native libraries: `brew install pkg-config cairo pango libpng jpeg giflib librsvg python-setuptools`
 
 ## Monorepo workspace
 
@@ -82,7 +82,7 @@ Playwright tests are written using these [guidelines](./tools/executors/test/PLA
 
 ## Adding new dependencies
 
-Currently, you must manually edit the individual `package.json` files to add packages. 
+Currently, you must manually edit the individual `package.json` files to add packages.
 When adding a package name in `dependencies` or `devDependencies`, `vscode` should suggest package versions via autocomplete.
 
 Once the required changes have been made, re-run `pnpm i`.
@@ -97,7 +97,7 @@ pnpm up --latest -i -r "@codemirror/*"
 
 ## Tasks in `nx` targets
 
-Each package has a `project.json` which describes the "targets" or runnable actions/scripts that package can perform. 
+Each package has a `project.json` which describes the "targets" or runnable actions/scripts that package can perform.
 There are also dependencies and caching information expressed such that performing any action will appropriately perform actions it depends on in the right order, cache-reading where possible.
 
 For example, to run a particular app in dev mode, the target (action) is typically called `serve`:
@@ -108,13 +108,13 @@ pnpm nx serve halo-app
 
 `nx` executes the target, and is aliased as an npm script `pnpm nx` (to avoid an unexpressed global dependency on an `nx` version). See [`nx run`](https://nx.dev/packages/nx/documents/run) for more syntax.
 
-> NOTE: Most `nx` incantations assume you're at the root of the repository. 
-> They may not work if `cwd` is a nested folder. 
+> NOTE: Most `nx` incantations assume you're at the root of the repository.
+> They may not work if `cwd` is a nested folder.
 > To force execution from the root while deeper in the repo, you can use `pnpm -w ...` such as `pnpm -w nx build tasks-app`.
 
 ## Tasks in `scripts`
 
-Packages may also declare scripts in their `package.json` `scripts` field as is traditional for an npm package. 
+Packages may also declare scripts in their `package.json` `scripts` field as is traditional for an npm package.
 This is appropriate when `nx` caching is not suitable or necessary for the task, and when that script does not partake in the `nx` task dependency tree.
 
 ## Folders
@@ -134,33 +134,43 @@ This is appropriate when `nx` caching is not suitable or necessary for the task,
 | `scripts`               | shell scripts for automation                                                                   |
 | `patches`               | pnpm applied patches via `npm-patch`                                                           |
 | `docs`                  | a `vuepress` docs site behind `docs.dxos.org`                                                  |
-| `docs/docs`             | markdown documentation content                                                                 |
-| `docs/docs/guide`       | developer guide as found on `docs.dxos.org/guide`                                              |
-| `docs/docs/api`         | API documentation generated from JSDoc comments in source                                      |
-| `docs/docs/design`      | Design documents for future features in research and development                               |
-| `docs/docs/specs`       | Descriptions of features currently being built                                                 |
+| `docs/content`          | markdown documentation content                                                                 |
+| `docs/content/guide`    | developer guide as found on `docs.dxos.org/guide`                                              |
+| `docs/content/api`      | API documentation generated from JSDoc comments in source                                      |
+| `docs/content/design`   | Design documents for future features in research and development                               |
+| `docs/content/specs`    | Descriptions of features currently being built                                                 |
+
+## Logging
+
+Logging should use the `@dxos/log` package, which can be controlled using using `runtime.client.log` in `@dxos/config`.
+
+For local development, the log filter can be set using the [`LOG_FILTER` environment variable, e.g.](./packages/apps/composer-app/dx-env.yml).
+
+For hosted apps, it can be set in the browser using `localStorage.dxlog`, e.g. `localStorage.dxlog='{ "filter": "messaging:debug,info"}'`.
+
+The filter consists of a series of filename pattern/level tuples separated by commas. For example, `echo:debug,info` will set the log level to `debug` for any filename matching "echo", and `info` for everything else.
 
 ## Branches
 
-*   In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
-*   Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
-*   PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
-*   The default branch for development is `main`, if you are contributing this is where you make PRs to.
-*   Feature branches within the repo are prefixed with the contributors username.
-*   External contributors may contribute by forking the repo and sending PRs from their fork.
-*   All feature branches are squashed when being merged to `main`.
-*   When preparing a new release, a release candidate is cut from `main` using a Github action, these branches are prefixed with `rc-`.
-*   On `rc-` branches Release Please runs and calculates what the next version should be.
-*   Any further bug fixes merged to the `rc-` branch will also be pushed to `main`.
-*   Once the Release Please PR is merged and the release is tagged, the `rc-` branch is merged into `main` and `production` before the branch is deleted.
-*   The workflow for hotfixes is identical except it starts by branching from `production` and the branch is prefixed with `hotfix-`.
-*   The current workflow for `staging` is force pushing any branch there as needed, the expectation is that this would generally be only be done from `rc-` or `hotfix-` branches.
+- In general, features are developed on feature branches starting with the author's nickname e.g.: `alice/some-feature`.
+- Features merge to `main` via PRs and checks like `pnpm test` and `pnpm lint` must pass.
+- PRs have to be [titled conventionally](https://www.conventionalcommits.org/en/v1.0.0/).
+- The default branch for development is `main`, if you are contributing this is where you make PRs to.
+- Feature branches within the repo are prefixed with the contributors username.
+- External contributors may contribute by forking the repo and sending PRs from their fork.
+- All feature branches are squashed when being merged to `main`.
+- When preparing a new release, a release candidate is cut from `main` using a Github action, these branches are prefixed with `rc-`.
+- On `rc-` branches Release Please runs and calculates what the next version should be.
+- Any further bug fixes merged to the `rc-` branch will also be pushed to `main`.
+- Once the Release Please PR is merged and the release is tagged, the `rc-` branch is merged into `main` and `production` before the branch is deleted.
+- The workflow for hotfixes is identical except it starts by branching from `production` and the branch is prefixed with `hotfix-`.
+- The current workflow for `staging` is force pushing any branch there as needed, the expectation is that this would generally be only be done from `rc-` or `hotfix-` branches.
 
 ## Publishing
 
-*   All merges to `main` automatically publish apps to dev.kube.dxos.org.
-*   All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
-*   All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
+- All merges to `main` automatically publish apps to dev.kube.dxos.org and publish npm packages under the `main` tag.
+- All merges to `staging` automatically publish apps to staging.kube.dxos.org and publish npm packages under the `next` tag.
+- All merges to `production` automatically publish apps to kube.dxos.org and publish npm packages under the `latest` tag.
 
 ### Apps
 
@@ -170,6 +180,7 @@ In order to include a new app in the publish loop it needs to be added to the `A
 ## CI
 
 ### CircleCI
+
 - The main CI engine for the repo is CircleCI
 - The config for CircleCI can be found at `.circleci/config.yml`
 
@@ -186,25 +197,26 @@ circleci local execute check
 ```
 
 ### Github Actions
+
 - Github Actions are used for compatibility purposes
 - Release Please publishes a Github action, plus releases are published to Github, so release creation is done as an action
 - Likewise PR title validation is an existing Github action
 
 ## Branch Diagram
 
-![release flow diagram](./docs/docs/design/diagrams/release-flow.drawio.svg)
+![release flow diagram](./docs/content/design/diagrams/release-flow.drawio.svg)
 
 Based on [this post from nvie.com](https://nvie.com/posts/a-successful-git-branching-model/).
 
 ## Workflow:
 
-*   merge release candidates and hot fixes w/ `git merge --no-ff`
-*   merge feature branches by squashing
-*   staging is force pushed to from other branches
-*   main/production maintain history
+- merge release candidates and hot fixes w/ `git merge --no-ff`
+- merge feature branches by squashing
+- staging is force pushed to from other branches
+- main/production maintain history
 
 | branch       | purpose                                                                               |
-|:-------------| :------------------------------------------------------------------------------------ |
+| :----------- | :------------------------------------------------------------------------------------ |
 | `main`       | the only feature integration branch                                                   |
 | `production` | reflects what code is in production (npm, docs sites, apps, etc) e.g. `docs.dxos.org` |
 | `staging`    | reflects what code is in staging `docs.staging.dxos.org`                              |
@@ -239,24 +251,20 @@ Alternatively to autofix all lint errors on save add the following config:
 alias px="pnpm -w nx"
 ```
 
-More custom shell aliases can be included in your shell config via:
-
-```bash
-source $DXOS_ROOT/dxos/tools/zsh/tools-alias.zsh
-```
+More custom shell aliases can be included in your shell config by utilizing the [oh-my-zsh](https://ohmyz.sh) [plugin](./tools/zsh)/
 
 ## Mobile development
 
-Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough. 
-For example, you may want other devices on your local network to be able to access your dev server (particularly useful when debugging issues on mobile devices). 
-In this case you would be accessing the app via the ip address of your host machine rather than `localhost`. 
-IP addresses are not a secure context unless they are served with https and a certificate. The apps in this repo are setup to serve the dev server with https when `HTTPS=true`. 
+Modern browsers treat `localhost` as a secure context, allowing secure apis such a `SubtleCrypto` to be used in an application served from `localhost`, however sometimes this is not enough.
+For example, you may want other devices on your local network to be able to access your dev server (particularly useful when debugging issues on mobile devices).
+In this case you would be accessing the app via the ip address of your host machine rather than `localhost`.
+IP addresses are not a secure context unless they are served with https and a certificate. The apps in this repo are setup to serve the dev server with https when `HTTPS=true`.
 What follows are instructions on how to setup the certificate for your devices to make this work as expected:
 
 1.  Install mkcert following these [instructions](https://github.com/FiloSottile/mkcert#installation).
 2.  Run `mkcert -install` to create a new local CA.
 3.  Generate a cert by running `mkcert localhost $(ipconfig getifaddr en1)`.
-4.  In order for the certificate to be recognized by a mobile device the root CA must be installed on the device. 
+4.  In order for the certificate to be recognized by a mobile device the root CA must be installed on the device.
     Follow these [instructions](https://github.com/FiloSottile/mkcert#mobile-devices) to enable this.
 5.  Rename the cert `cert.pem` and the key `key.pem` (all `.pem` files are in `.gitignore`).
 6.  The vite config uses a path relative from the CWD to load the key files and each app is setup with the following config:
@@ -275,7 +283,7 @@ What follows are instructions on how to setup the certificate for your devices t
       ...
     }
 
-Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there. 
+Given this, the recommended setup is to run `serve` from the repo root and keep the `cert.pem` and `key.pem` files there.
 Alternatively, a copy of them could be kept in each app directory if `serve` is run from the app directory as well.
 
 ## Proxying using https://srv.us
@@ -289,20 +297,20 @@ ssh srv.us -R 1:localhost:5173
 
 TODO(burdon): This doesn't work if the vault is served from a different port.
 
-> NOTE: The amount of files that are needed to be loaded (more than 800 in dev mode) is causing srv.us to bottleneck. 
-  On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
+> NOTE: The amount of files that are needed to be loaded (more than 800 in dev mode) is causing srv.us to bottleneck.
+> On the first time the app takes just under a minute to load, and it might seem like nothing is happening.
 
 ## Service Workers
 
 Observations of service worker behavior related to using apps w/ DXOS vault:
 
-| Page load method                                                                      | In IFrame | Service worker behavior                                                                                 |
-|:--------------------------------------------------------------------------------------| :-------- | :------------------------------------------------------------------------------------------------------ |
-| New tab                                                                               | N/A       | New version waiting for activation is activated                                                         |
-| Reload                                                                                | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
-| Reload                                                                                | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |
-| [Hard reload](https://web.dev/service-worker-lifecycle/#shift-reload)                 | N/A       | New version waiting for activation is activated                                                         |
-| [Update & reload](https://vite-plugin-pwa.netlify.app/frameworks/#prompt-for-update)  | N/A       | New version waiting for activation is activated                                                         |
+| Page load method                                                                     | In IFrame | Service worker behavior                                                                                 |
+| :----------------------------------------------------------------------------------- | :-------- | :------------------------------------------------------------------------------------------------------ |
+| New tab                                                                              | N/A       | New version waiting for activation is activated                                                         |
+| Reload                                                                               | No        | New version is not activated (https://web.dev/service-worker-lifecycle/#waiting)                        |
+| Reload                                                                               | Yes       | New version waiting for activation is activated (Chrome/Firefox), new version is not activated (Webkit) |
+| [Hard reload](https://web.dev/service-worker-lifecycle/#shift-reload)                | N/A       | New version waiting for activation is activated                                                         |
+| [Update & reload](https://vite-plugin-pwa.netlify.app/frameworks/#prompt-for-update) | N/A       | New version waiting for activation is activated                                                         |
 
 Recommended reading for better understanding the service worker lifecycle: https://web.dev/service-worker-lifecycle.
 
@@ -312,5 +320,5 @@ The easiest way to setup a PWA with Vite is to use this plugin https://vite-plug
 
 At present the recommendation would be to avoid the [`autoUpdate` strategy](https://vite-plugin-pwa.netlify.app/guide/auto-update.html) as it does not provide any predictability to users for when the app will update.
 
-NOTE: the [prompt for update strategy](https://vite-plugin-pwa.netlify.app/guide/prompt-for-update.html) can be used without actually providing prompts and the app will update along the lines of the table above. 
+NOTE: the [prompt for update strategy](https://vite-plugin-pwa.netlify.app/guide/prompt-for-update.html) can be used without actually providing prompts and the app will update along the lines of the table above.
 This is currently how the HALO vault's service worker is setup (though it will likely evolve later to [handle migrations](https://web.dev/service-worker-lifecycle/#activate-2)).

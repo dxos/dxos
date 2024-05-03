@@ -4,14 +4,17 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { Trigger } from '@dxos/async';
+import { scheduleTaskInterval, Trigger } from '@dxos/async';
 import { type Any, type Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+
+const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
 interface Services {
   Signal: Signal;
@@ -27,6 +30,7 @@ export type SignalCallbacks = {
   onDisconnected?: () => void;
 
   onError?: (error: Error) => void;
+  getMetadata?: () => any;
 };
 
 export type SignalRPCClientParams = {
@@ -38,11 +42,13 @@ export class SignalRPCClient {
   private _socket?: WebSocket;
   private _rpc?: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
+  private _keepaliveCtx?: Context;
 
   private _closed = false;
 
   private readonly _url: string;
   private readonly _callbacks: SignalCallbacks;
+  private readonly _closeComplete = new Trigger();
 
   constructor({ url, callbacks = {} }: SignalRPCClientParams) {
     const traceId = PublicKey.random().toHex();
@@ -89,6 +95,18 @@ export class SignalRPCClient {
         log(`RPC open ${this._url}`);
         this._callbacks.onConnected?.();
         this._connectTrigger.wake();
+        this._keepaliveCtx = new Context();
+        scheduleTaskInterval(
+          this._keepaliveCtx,
+          async () => {
+            // TODO(nf): use RFC6455 ping/pong once implemented in the browser?
+            // TODO(nf): check for pong response from server (once implemented)
+            // Current implementation of signal server ignores all text data messages, and does not send a response.
+            // However this is enough to detect breakages in the connection as TCP will reset the connection if ACKs are not received.
+            this._socket?.send('__ping__');
+          },
+          SIGNAL_KEEPALIVE_INTERVAL,
+        );
       } catch (err: any) {
         this._callbacks.onError?.(err);
       }
@@ -97,6 +115,7 @@ export class SignalRPCClient {
     this._socket.onclose = async () => {
       log(`Disconnected ${this._url}`);
       this._callbacks.onDisconnected?.();
+      this._closeComplete.wake();
       await this.close();
     };
 
@@ -123,10 +142,16 @@ export class SignalRPCClient {
   }
 
   async close() {
+    await this._keepaliveCtx?.dispose();
     this._closed = true;
     try {
       await this._rpc?.close();
-      this._socket?.close();
+
+      if (this._socket?.readyState === WebSocket.OPEN || this._socket?.readyState === WebSocket.CONNECTING) {
+        // close() only starts the closing handshake.
+        this._socket.close();
+      }
+      await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
       log.warn('close error', err);
     }
@@ -140,6 +165,7 @@ export class SignalRPCClient {
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array(),
+      metadata: this._callbacks?.getMetadata?.(),
     });
     await swarmStream.waitUntilReady();
     return swarmStream;
@@ -166,6 +192,7 @@ export class SignalRPCClient {
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload,
+      metadata: this._callbacks?.getMetadata?.(),
     });
   }
 }

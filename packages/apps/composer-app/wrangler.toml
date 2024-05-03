@@ -1,0 +1,18 @@
+#
+# Pages Functions configuration.
+# https://developers.cloudflare.com/pages/functions/wrangler-configuration
+#
+
+name = "composer-app"
+compatibility_date = "2024-04-05"
+pages_build_output_dir = "./out"
+
+d1_databases = [
+  { binding = "DB", database_name = "dev-users", database_id = "98e5b6a0-53f4-468b-b483-6c66a8cf9f15" }
+]
+
+[env.production]
+
+d1_databases = [
+  { binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }
+]

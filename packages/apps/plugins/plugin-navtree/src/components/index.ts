@@ -4,5 +4,6 @@
 
 export * from './CommandsDialog';
 export * from './NavBarStart';
-export * from './TreeViewContainer';
-export * from './TreeViewDocumentTitle';
+export * from './NavTreeContainer';
+export * from './NavTreeDocumentTitle';
+export * from './NotchStart';

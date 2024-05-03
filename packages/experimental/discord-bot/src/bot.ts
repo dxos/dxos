@@ -86,14 +86,14 @@ export class DiscordBot {
 
               return `CONVERSATION:\n${messagesConcatenated}\n`;
             } catch (err: any) {
-              console.log(`${channel?.name} ${err.message}`);
+              log.info(`${channel?.name} ${err.message}`);
               return '';
             }
           }),
         )
       ).flat();
 
-      console.log(messages.join(''));
+      log.info(messages.join(''));
     }
   }
 

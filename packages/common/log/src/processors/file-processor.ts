@@ -5,35 +5,78 @@
 import { appendFileSync, mkdirSync, openSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { jsonify } from '@dxos/util';
+import { jsonlogify } from '@dxos/util';
 
-import { LogLevel } from '../config';
-import { type LogProcessor, getContextFromEntry } from '../context';
+import { getRelativeFilename } from './common';
+import { type LogFilter, LogLevel } from '../config';
+import { type LogProcessor, getContextFromEntry, shouldLog } from '../context';
 
-export const createFileProcessor = ({ path, levels }: { path: string; levels: LogLevel[] }): LogProcessor => {
+// Amount of time to retry writing after encountering EAGAIN before giving up.
+const EAGAIN_MAX_DURATION = 1000;
+/**
+ * Create a file processor.
+ * @param path - Path to log file to create or append to, or existing open file descriptor e.g. stdout.
+ * @param levels - Log levels to process. Takes preference over Filters.
+ * @param filters - Filters to apply.
+ */
+export const createFileProcessor = ({
+  pathOrFd,
+  levels,
+  filters,
+}: {
+  pathOrFd: string | number;
+  levels: LogLevel[];
+  filters?: LogFilter[];
+}): LogProcessor => {
   let fd: number | undefined;
 
   return (config, entry) => {
-    if (!levels.includes(entry.level)) {
+    if (levels.length > 0 && !levels.includes(entry.level)) {
       return;
     }
-    if (!fd) {
+    if (!shouldLog(entry, filters)) {
+      return;
+    }
+    if (typeof pathOrFd === 'number') {
+      fd = pathOrFd;
+    } else {
       try {
-        mkdirSync(dirname(path));
+        mkdirSync(dirname(pathOrFd));
       } catch {}
-      fd = openSync(path, 'w');
+      fd = openSync(pathOrFd, 'w');
     }
 
     const record = {
       ...entry,
       timestamp: Date.now(),
-      meta: {
-        file: entry.meta?.F,
-        line: entry.meta?.L,
-      },
-      context: jsonify(getContextFromEntry(entry)),
+      ...(entry.meta ? { meta: { file: getRelativeFilename(entry.meta.F), line: entry.meta.L } } : {}),
+      context: jsonlogify(getContextFromEntry(entry)),
     };
-    appendFileSync(fd, JSON.stringify(record) + '\n');
+    let retryTS: number = 0;
+
+    // Retry writing if EAGAIN is encountered.
+    //
+    // Node may set stdout and stderr to non-blocking. https://github.com/nodejs/node/issues/42826
+    // This can cause EAGAIN errors when writing to them.
+    // In order to not drop logs, make log methods asynchronous, or deal with buffering/delayed writes, spin until write succeeds.
+
+    while (true) {
+      try {
+        return appendFileSync(fd, JSON.stringify(record) + '\n');
+      } catch (err: any) {
+        if (err.code !== 'EAGAIN') {
+          throw err;
+        }
+        if (retryTS === 0) {
+          retryTS = performance.now();
+        } else {
+          if (performance.now() - retryTS > EAGAIN_MAX_DURATION) {
+            console.log(`could not write after ${EAGAIN_MAX_DURATION}ms of EAGAIN failures, giving up`);
+            throw err;
+          }
+        }
+      }
+    }
   };
 };
 
@@ -47,6 +90,6 @@ const getLogFilePath = () => {
 };
 
 export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
-  path: getLogFilePath(),
+  pathOrFd: getLogFilePath(),
   levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
 });

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/display-name",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Generate stable pseudononymous display names",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

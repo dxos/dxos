@@ -23,7 +23,13 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../experimental/chess-app"
@@ -45,6 +51,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-space"

@@ -90,9 +90,10 @@ export class MdTypeStringifier implements AllStringifiers {
       typeArgs += '&gt;';
     }
     let href = '';
-    if (node.id) {
-      const referencedNode = reflectionById(this.root, node.id);
-      const referencedPackage = packageOfReflectionId(this.root, node.id);
+    // TODO (zhenyasav): support Schema.ReflectionSymbolId
+    if (typeof node.target === 'number') {
+      const referencedNode = reflectionById(this.root, node.target);
+      const referencedPackage = packageOfReflectionId(this.root, node.target);
       if (referencedNode?.kind === ReflectionKind.Class) {
         href = `/api/${referencedPackage?.name}/classes/${referencedNode?.name}`;
       } else if (referencedNode?.kind === ReflectionKind.TypeAlias) {
@@ -154,7 +155,7 @@ export class MdTypeStringifier implements AllStringifiers {
     return `...${this.type(node.elementType)}`;
   }
 
-  'template-literal'(node: Schema.TemplateLiteralType): string {
+  templateLiteral(node: Schema.TemplateLiteralType): string {
     const { head, tail } = node;
     return [
       head,
@@ -164,7 +165,7 @@ export class MdTypeStringifier implements AllStringifiers {
     ].join('');
   }
 
-  'named-tuple-member'(node: Schema.NamedTupleMemberType): string {
+  namedTupleMember(node: Schema.NamedTupleMemberType): string {
     const { name, isOptional, element } = node;
     return `${name}${isOptional ? '?' : ''}: ${this.type(element)}`;
   }

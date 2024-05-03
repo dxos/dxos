@@ -1,0 +1,73 @@
+/* TODO(thure): Focus is handled by .ch-focus-ring, but should ideally be applied as part of this component.*/
+/* TODO(thure): This should be on the `components` layer, but utility classes like `pli-0` weren’t getting precedence like they should. */
+@layer base {
+  /* Base styles */
+  .ch-button {
+    @apply font-medium text-sm shrink-0 inline-flex select-none items-center justify-center overflow-hidden transition-colors duration-100 ease-linear surface-input min-bs-[2.5rem] pli-4;
+    &[aria-pressed='true'],
+    &[aria-checked='true'] {
+      @apply fg-accent surface-attention;
+    }
+    /* Disabled styles */
+    &[disabled]:not([disabled='false']) {
+      @apply opacity-40 cursor-not-allowed shadow-none;
+    }
+    /* Variants consistent between enabled & disabled */
+    &[data-variant='ghost'] {
+      @apply bg-transparent;
+      &:hover {
+        @apply surface-hover text-inherit;
+      }
+      &[data-state='open'] {
+        @apply surface-input;
+      }
+      &[aria-pressed='true'],
+      &[aria-checked='true'] {
+        @apply surface-base fg-accent;
+      }
+    }
+    &[data-variant='outline'] {
+      @apply border separator-base bg-transparent;
+      &:hover {
+        @apply surface-hover;
+      }
+    }
+    /* Enabled styles */
+    &:not([disabled]),
+    &[disabled='false'] {
+      /* Hover */
+      &:hover {
+        @apply surface-hover;
+      }
+      /* Variants */
+      &[data-variant='primary'] {
+        @apply fg-inverse surface-accent;
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'] &[data-state='open'] {
+          @apply surface-accentHover;
+        }
+      }
+      &[data-variant='destructive'] {
+        @apply fg-inverse bg-error-550;
+        &:hover,
+        &[aria-pressed='true'],
+        &[aria-checked='true'] &[data-state='open'] {
+          @apply bg-error-500;
+        }
+      }
+    }
+  }
+  /* Props */
+  .ch-button:not([data-props~='grouped']) {
+    @apply rounded-sm;
+  }
+  .ch-button:not([data-props~='wrap']) {
+    @apply truncate;
+  }
+  @media (pointer: fine) {
+    .ch-button[data-density='fine'] {
+      @apply min-bs-[2rem] pli-2.5;
+    }
+  }
+}

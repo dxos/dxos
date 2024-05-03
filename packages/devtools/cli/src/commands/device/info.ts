@@ -6,6 +6,7 @@ import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base-command';
 import { IdentityWaitTimeoutError } from '../../errors';
@@ -27,7 +28,10 @@ export default class Info extends BaseCommand<typeof Info> {
       }
 
       this.log(chalk`{magenta Device key:}`, device.deviceKey.toHex());
-      this.log(chalk`{magenta Device profile:}`, device.profile);
+      this.log(chalk`{magenta Device profile:}`, {
+        ...device.profile,
+        type: device.profile?.type ? DeviceType[device.profile?.type] : 'UNKNOWN',
+      });
 
       return device;
     });

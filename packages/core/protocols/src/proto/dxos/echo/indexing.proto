@@ -1,0 +1,28 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+syntax = "proto3";
+
+package dxos.echo.indexing;
+
+message IndexKind {
+  enum Kind {
+    SCHEMA_MATCH = 0;
+    FIELD_MATCH = 1;
+    FULL_TEXT = 2;
+  }
+  
+  Kind kind = 1;
+  optional string field = 2;
+}
+
+message IndexConfig {
+  repeated IndexKind indexes = 1;
+  /**
+    * Is indexing enabled (FEATURE FLAG).
+    * If not set, the default is false.
+    * TODO(mykola): Delete once we promote it as a production feature.
+    */
+  optional bool enabled = 2;
+}

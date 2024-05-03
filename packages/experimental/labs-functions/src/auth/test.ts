@@ -5,6 +5,8 @@
 import fs from 'fs';
 import { join } from 'node:path';
 
+import { log } from '@dxos/log';
+
 import { authenticate } from './oauth';
 
 void authenticate({
@@ -14,5 +16,5 @@ void authenticate({
 }).then((client) => {
   const path = join(process.env.HOME!, '.config/dx/credentials/google.json');
   fs.writeFileSync(path, JSON.stringify(client.credentials, undefined, 2));
-  console.log(`Credentials written to: ${path}`);
+  log.info(`Credentials written to: ${path}`);
 });

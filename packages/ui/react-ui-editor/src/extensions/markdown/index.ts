@@ -2,13 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './action';
 export * from './bundle';
-export * from './code';
+export * from './decorate';
 export * from './formatting';
-export * from './heading';
 export * from './highlight';
-export * from './hr';
 export * from './image';
 export * from './link';
 export * from './table';
-export * from './tasklist';

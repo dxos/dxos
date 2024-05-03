@@ -3,10 +3,9 @@
 //
 
 import type { IconProps } from '@phosphor-icons/react';
-import type { DeepSignal } from 'deepsignal/react';
 import type { FC } from 'react';
 
-import { Stack as StackType } from '@braneframe/types';
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   Intent,
@@ -16,7 +15,6 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import { TypedObject } from '@dxos/react-client/echo';
 
 import { STACK_PLUGIN } from './meta';
 
@@ -44,9 +42,9 @@ export type StackProvides = {
   };
 };
 
-export type StackState = DeepSignal<{
+export type StackState = {
   creators: StackSectionCreator[];
-}>;
+};
 
 export type StackSettingsProps = { separation: boolean };
 
@@ -55,7 +53,5 @@ export type StackPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<StackSettingsProps> &
-  TranslationsProvides & { stack: StackState };
-
-export const isStack = (data: unknown): data is StackType =>
-  data instanceof TypedObject && data.__typename === StackType.schema.typename;
+  TranslationsProvides &
+  SchemaProvides & { stack: StackState };

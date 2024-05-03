@@ -2,13 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-// TODO(burdon): Change to `dxos.org/type/space-properties`.
-export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
-
-export * from './batch';
-export * from './builder';
-export * from './database-proxy';
-export * from './item';
-export * from './item-demuxer';
-export * from './item-manager';
-export * from './queries';
+export * from './automerge';
+export * from './automerge/key-path';
+export * from './database';
+export * from './guarded-scope';
+export * from './hypergraph';
+export * from './query';
+export * from './serializer';
+export * from './runtime-schema-registry';
+export * from './dynamic-schema-registry';
+export * from './util';
+export * from './text';
+export * from './echo-handler';
+export * from './client';
+export * from './host';

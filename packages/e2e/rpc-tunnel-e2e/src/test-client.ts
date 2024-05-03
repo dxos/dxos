@@ -4,10 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
+import { log } from '@dxos/log';
 import { type TestStreamService } from '@dxos/protocols/proto/example/testing/rpc';
-
-// TODO(wittjosiah): @dxos/log.
-const log = console.log;
 
 const STORAGE_KEY = 'testclient';
 
@@ -51,12 +49,12 @@ export class TestClient {
       testCall: (req) =>
         new Stream(({ next, close }) => {
           if (req.data !== 'requestData') {
-            log('Invalid request, closing...');
+            log.info('Invalid request, closing...');
             close();
             return;
           }
 
-          log('Opening stream...');
+          log.info('Opening stream...');
           next({ data: String(this.value) });
 
           setInterval(() => {

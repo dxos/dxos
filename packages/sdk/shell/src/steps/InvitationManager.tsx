@@ -6,9 +6,10 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { type InvitationStatus, Invitation } from '@dxos/react-client/invitations';
+import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
+import { hexToEmoji } from '@dxos/util';
 
 import { type StepProps } from './StepProps';
 import {
@@ -22,7 +23,7 @@ import {
   CopyButton,
   Centered,
 } from '../components';
-import { invitationStatusValue, toEmoji } from '../util';
+import { invitationStatusValue } from '../util';
 
 export type InvitationManagerProps = StepProps &
   Partial<InvitationStatus> & {
@@ -42,15 +43,15 @@ export const InvitationManager = ({
   active,
   send,
   status,
-  type,
+  multiUse,
   authCode,
-  id,
+  id = '0',
 }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
-  const statusValue = type === Invitation.Type.MULTIUSE ? 0 : invitationStatusValue.get(status!) ?? 0;
+  const statusValue = multiUse ? 0 : invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
-  const emoji = toEmoji(id ?? '');
+  const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
     switch (true) {
       case statusValue === 5:
@@ -68,7 +69,7 @@ export const InvitationManager = ({
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
             <p className='text-sm mlb-1 font-normal text-center'>
-              {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
+              {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
             <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
               <QR

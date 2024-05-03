@@ -57,6 +57,11 @@ export const onconnect = async (event: MessageEvent<any>) => {
   const systemChannel = new MessageChannel();
   const appChannel = new MessageChannel();
 
+  // set log configuration forwarded from localStorage setting
+  // TODO(nf): block worker initialization until this is set? we usually win the race.
+  port.onmessage = (event) => {
+    (globalThis as any).localStorage_dxlog = event.data.dxlog;
+  };
   // NOTE: This is intentiontally not using protobuf because it occurs before the rpc connection is established.
   port.postMessage(
     {

@@ -11,6 +11,8 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
+import { PRESENTER_PLUGIN } from './meta';
+
 export type PresenterContextType = {
   running: boolean;
   start: () => void;
@@ -27,3 +29,5 @@ export type PresenterPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   TranslationsProvides;
+
+export const TOGGLE_PRESENTATION = `${PRESENTER_PLUGIN}/toggle-presentation`;

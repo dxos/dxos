@@ -35,10 +35,16 @@
       "path": "../../../common/local-storage"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-deck"
     },
     {
       "path": "../../../ui/react-ui-mosaic"

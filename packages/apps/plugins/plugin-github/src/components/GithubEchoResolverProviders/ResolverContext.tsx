@@ -12,10 +12,11 @@ import React, {
   useState,
 } from 'react';
 
-import { Document } from '@braneframe/types';
+import { DocumentType, TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, TextObject, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceState, useQuery, useSpaces, getMeta } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -76,11 +77,11 @@ const DocumentResolverProviderImpl = ({
   children,
 }: PropsWithChildren<{ space: Space; source: string; id: string }>) => {
   const spaceState = useMulticastObservable(space.state);
-  const [document, setDocument] = useState<Document | null>(null);
+  const [document, setDocument] = useState<DocumentType | null>(null);
   const defaultDisplayName = displayName(source, id);
 
   const documents = useQuery(space, (obj) => {
-    const keys = obj.__meta?.keys;
+    const keys = getMeta(obj)?.keys;
     return keys?.find((key: any) => key.source === source && key.id === id);
   });
 
@@ -91,15 +92,11 @@ const DocumentResolverProviderImpl = ({
       }
 
       if (event.data.type === 'initial-data') {
-        const nextDocument = new Document(
-          {
-            content: new TextObject(event.data.content),
-            title: defaultDisplayName,
-          },
-          {
-            meta: { keys: [{ source, id }] },
-          },
-        );
+        const nextDocument = create(DocumentType, {
+          content: create(TextV0Type, { content: event.data.content }),
+          title: defaultDisplayName,
+        });
+        getMeta(nextDocument).keys = [{ source, id }];
         space.db.add(nextDocument);
         setDocument(nextDocument);
       }
@@ -111,7 +108,7 @@ const DocumentResolverProviderImpl = ({
       window.parent.postMessage({ type: 'request-initial-data' }, 'https://github.com');
       return () => window.removeEventListener('message', handler);
     } else {
-      setDocument(documents[0] as Document);
+      setDocument(documents[0] as DocumentType);
     }
   }, [spaceState, space, documents]);
 

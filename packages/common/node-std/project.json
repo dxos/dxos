@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "node-std",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/node-std/src",
   "projectType": "library",
   "targets": {
@@ -42,6 +47,7 @@
           "which-typed-array"
         ],
         "entryPoints": [
+          "packages/common/node-std/src/_/config.js",
           "packages/common/node-std/src/assert.js",
           "packages/common/node-std/src/buffer.js",
           "packages/common/node-std/src/crypto.js",
@@ -55,15 +61,14 @@
           "packages/common/node-std/src/util.js"
         ],
         "platforms": [
-          "browser"
+          "browser",
+          "node"
         ]
       }
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "node-std"
+  ]
 }

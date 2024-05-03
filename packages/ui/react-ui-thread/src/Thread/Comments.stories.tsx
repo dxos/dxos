@@ -7,22 +7,25 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { MessageType, TextV0Type } from '@braneframe/types';
+import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
-import { Button } from '@dxos/react-ui';
+import { Button, useThemeContext } from '@dxos/react-ui';
 import {
-  MarkdownEditor,
   comments,
   type CommentsOptions,
   focusComment,
   useComments,
   type Comment,
   type Range,
-  useTextModel,
-  type EditorView,
-  TextEditor,
+  useTextEditor,
+  createBasicExtensions,
+  createThemeExtensions,
+  automerge,
+  listener,
 } from '@dxos/react-ui-editor';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -41,7 +44,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: { text: TextObject };
+  item: TextV0Type;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -58,37 +61,39 @@ const Editor: FC<{
   onUpdateComment,
   onSelectComment,
 }) => {
-  const model = useTextModel({ text: item.text });
-  const view = useRef<EditorView>(null);
   const [selected, setSelected] = useState<string>();
+
+  const { themeMode } = useThemeContext();
+  const { parentRef, view } = useTextEditor(
+    () => ({
+      id,
+      doc: item.content,
+      extensions: [
+        createBasicExtensions(),
+        createThemeExtensions({ themeMode }),
+        automerge(createDocAccessor(item, ['content'])),
+        comments({
+          id,
+          onCreate: onCreateComment,
+          onDelete: onDeleteComment,
+          onUpdate: onUpdateComment,
+          onSelect: onSelectComment,
+        }),
+      ],
+    }),
+    [id, item, themeMode],
+  );
+  useComments(view, id, commentRanges);
   useEffect(() => {
-    if (!view.current?.hasFocus && selectedValue !== selected) {
+    if (view && !view.hasFocus && selectedValue !== selected) {
       setSelected(selectedValue);
       if (selectedValue) {
-        focusComment(view.current!, selectedValue);
+        focusComment(view, selectedValue);
       }
     }
-  }, [selected, commentRanges, selectedValue]);
+  }, [view, selected, commentRanges, selectedValue]);
 
-  useComments(view.current, id, commentRanges);
-
-  const extensions = useMemo(() => {
-    return [
-      comments({
-        onCreate: onCreateComment,
-        onDelete: onDeleteComment,
-        onUpdate: onUpdateComment,
-        onSelect: onSelectComment,
-      }),
-    ];
-  }, []);
-
-  if (!model) {
-    return null;
-  }
-
-  // TODO(burdon): Highlight currently selected comment.
-  return <MarkdownEditor ref={view} model={model} extensions={extensions} />;
+  return <div ref={parentRef} />;
 };
 
 //
@@ -100,12 +105,27 @@ type StoryCommentThread = {
   cursor?: string;
   range?: Range;
   yPos?: number;
-  messages: MessageEntity<{ text: TextObject }>[];
+  messages: MessageEntity<{ content?: TextV0Type }>[];
 };
 
-const StoryMessageBlock = (props: MessageBlockProps<{ text: TextObject }>) => {
-  const model = useTextModel({ text: props.block.text });
-  return model ? <TextEditor model={model} slots={{ root: { className: 'col-span-3' } }} /> : null;
+const StoryMessageBlock = (props: MessageBlockProps<{ content?: TextV0Type }>) => {
+  const { themeMode } = useThemeContext();
+  const doc = props.block.content?.content;
+  const accessor = createDocAccessor(props.block.content!, ['content']);
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc,
+      extensions: [
+        //
+        createBasicExtensions(),
+        createThemeExtensions({ themeMode }),
+        automerge(accessor),
+      ],
+    }),
+    [doc, accessor, themeMode],
+  );
+
+  return <div ref={parentRef} className='col-span-3' />;
 };
 
 const StoryThread: FC<{
@@ -114,38 +134,50 @@ const StoryThread: FC<{
   onSelect: () => void;
   onResolve: () => void;
 }> = ({ thread, selected, onSelect, onResolve }) => {
-  const [autoFocus, setAutoFocus] = useState(false);
-  const [item, setItem] = useState({ text: new TextObject() });
-  const model = useTextModel({ text: item.text });
-  const editorRef = useRef<EditorView>(null);
-
   const containerRef = useRef<HTMLDivElement>(null);
+  const { themeMode } = useThemeContext();
+  // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
+  const [_count, _setCount] = useState(0);
+  const rerenderEditor = () => _setCount((count) => count + 1);
+  const messageRef = useRef('');
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions({ placeholder: 'Enter comment' }),
+      createThemeExtensions({ themeMode }),
+      listener({ onChange: (text) => (messageRef.current = text) }),
+    ],
+    [themeMode, _count],
+  );
 
+  const [autoFocus, setAutoFocus] = useState(false);
   useEffect(() => {
     if (selected) {
       containerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       if (thread.messages.length === 0) {
+        // TODO(burdon): Causes thread to be reselected when loses focus.
         setAutoFocus(true);
       }
     }
   }, [selected]);
 
   const handleCreateMessage = () => {
-    const text = model?.text().trim();
-    if (text?.length) {
-      thread.messages.push({
-        id: item.text.id,
-        authorId,
-        blocks: [{ text: item.text, timestamp: new Date().toISOString() }],
+    if (messageRef.current?.length) {
+      const message = create(MessageType, {
+        from: { identityKey: authorId },
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: messageRef.current }),
+          },
+        ],
       });
-      setItem({ text: new TextObject() });
+      thread.messages.push(message);
+
+      messageRef.current = '';
       setAutoFocus(true);
+      rerenderEditor();
     }
   };
-
-  if (!model) {
-    return null;
-  }
 
   return (
     <Thread current={selected} onClickCapture={onSelect}>
@@ -155,21 +187,22 @@ const StoryThread: FC<{
         <span className='grow' />
         {!thread.cursor && <Trash />}
       </div>
+
       <ThreadHeading>
         {thread.range?.from} &ndash; {thread.range?.to}
       </ThreadHeading>
 
       {thread.messages.map((message) => (
-        <Message<{ text: TextObject }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
+        <Message<{ content?: TextV0Type }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
       ))}
 
       <div ref={containerRef} className='contents'>
         <MessageTextbox
+          id={thread.id}
           authorId={authorId}
-          ref={editorRef}
           autoFocus={autoFocus}
+          extensions={extensions}
           onEditorFocus={onSelect}
-          model={model}
           onSend={handleCreateMessage}
         />
         <ThreadFooter />
@@ -220,7 +253,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState({ text: new TextObject(text) });
+  const [item] = useState(createEchoObject(create(TextV0Type, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -246,7 +279,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
                 blocks: [
                   {
                     timestamp: new Date().toISOString(),
-                    text: new TextObject(faker.lorem.sentence()),
+                    content: create(TextV0Type, { content: faker.lorem.sentence() }),
                   },
                 ],
               }),
@@ -255,7 +288,7 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           : [],
       },
     ]);
-    setSelected(id); // TODO(burdon): Not required.
+
     return id;
   };
 
@@ -301,9 +334,10 @@ const Story = ({ text, autoCreate }: StoryProps) => {
       }),
     );
 
-    setSelected(current ?? closest);
+    setSelected(current);
   };
 
+  // TODO(burdon): Focus switches to other thread.
   const handleSelectThread = (id: string) => {
     setSelected(id);
   };
@@ -359,12 +393,5 @@ const document = str(
 export const Default = {
   args: {
     text: document,
-  },
-};
-
-export const Testing = {
-  args: {
-    text: document,
-    autoCreate: true,
   },
 };

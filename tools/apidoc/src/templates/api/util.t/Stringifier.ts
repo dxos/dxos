@@ -3,7 +3,7 @@
 //
 
 import os from 'os';
-import { type Reflection, ReflectionKind, type JSONOutput as Schema } from 'typedoc';
+import { ReflectionKind, type JSONOutput as Schema } from 'typedoc';
 
 import { plate } from '@dxos/plate';
 
@@ -40,7 +40,7 @@ export class Stringifier {
     return kind ? reflectionsOfKind(ref, kind) : ref.children ?? [];
   }
 
-  href(ref: Reflection): string {
+  href(ref: Schema.DeclarationReflection): string {
     if (ref.kind === ReflectionKind.Class) {
       const [source] = ref.sources ?? [];
       return source ? `${source.url}` : '.';
@@ -51,12 +51,12 @@ export class Stringifier {
 
   generic(ref: Schema.ContainerReflection, indent = 0): string {
     return plate`
-    ${tabs(indent)}- ${ref.name} : ${ref.kindString}
+    ${tabs(indent)}- ${ref.name} : ${ReflectionKind.classString(ref.kind)}
     ${this.children(ref).map((e) => this.generic(e, indent + 1))}
     `;
   }
 
-  sources(ref: Schema.ContainerReflection) {
+  sources(ref: Schema.DeclarationReflection) {
     const { sources } = ref;
     return sources?.length
       ? '<sub>Declared in ' +
@@ -117,7 +117,7 @@ export class Stringifier {
 
   property(ref: Schema.DeclarationReflection, options?: StringifyOptions): string {
     const { level = 3 } = { ...options };
-    const template = (nodes: Schema.DeclarationReflection[]): string => {
+    const template = (nodes: (Schema.DeclarationReflection | Schema.SignatureReflection)[]): string => {
       return plate`
       ${pounds(level)} [${ref.name}](${ref.sources?.[0]?.url})
       Type: <code>${nodes
@@ -135,7 +135,7 @@ export class Stringifier {
   }
 
   propertyRow(ref: Schema.DeclarationReflection): string {
-    const template = (nodes: Schema.DeclarationReflection[]): string => {
+    const template = (nodes: (Schema.DeclarationReflection | Schema.SignatureReflection)[]): string => {
       return plate`
       | [**${ref.name}**](${ref.sources?.[0]?.url}) <br /><br /> ${nodes
         .filter(Boolean)
@@ -198,7 +198,10 @@ export class Stringifier {
       ${group.children
         ?.map((child) =>
           atype.type?.type === 'reflection'
-            ? this.stringify(reflectionById(atype.type.declaration!, child as any), { ...options, level: level + 2 })
+            ? this.stringify(reflectionById(atype.type.declaration!, child as any) as Schema.DeclarationReflection, {
+                ...options,
+                level: level + 2,
+              })
             : '',
         )
         .join(os.EOL + os.EOL)}
@@ -220,13 +223,13 @@ export class Stringifier {
       subset,
       style = 'list',
     } = { ...options };
-    const constructors = reflectionsOfKind(aclass, ReflectionKind.Constructor);
+    const constructors = reflectionsOfKind(aclass, ReflectionKind.Constructor) as Schema.DeclarationReflection[];
     const properties = reflectionsOfKind(aclass, ReflectionKind.Property, ReflectionKind.Accessor).filter(
       (r) => !r.flags.isPrivate,
-    );
+    ) as Schema.DeclarationReflection[];
     const functions = reflectionsOfKind(aclass, ReflectionKind.Method, ReflectionKind.Function).filter(
       (r) => !r.flags.isPrivate,
-    );
+    ) as Schema.DeclarationReflection[];
     return plate`
     ${title && `# Class \`${aclass.name}\``}
     ${sources && this.sources(aclass)}
@@ -266,7 +269,7 @@ export class Stringifier {
 
   interface(node: Schema.DeclarationReflection, options?: StringifyOptions) {
     const sourceFileName = node?.sources?.[0]?.fileName;
-    const properties = reflectionsOfKind(node, ReflectionKind.Property);
+    const properties = reflectionsOfKind(node, ReflectionKind.Property) as Schema.DeclarationReflection[];
     return plate`
       # Interface \`${node.name}\`
       > Declared in [\`${sourceFileName}\`]()
@@ -277,7 +280,7 @@ export class Stringifier {
     `;
   }
 
-  stringify(node?: Schema.Reflection | null, options?: StringifyOptions): string {
+  stringify(node?: Schema.DeclarationReflection | null, options?: StringifyOptions): string {
     if (!node) {
       return '';
     }

@@ -19,6 +19,7 @@ export default defineClientConfig({
     const { Observability } = await import('@dxos/observability');
     const observability = new Observability({
       namespace: 'docs',
+      mode: 'basic',
       secrets: { TELEMETRY_API_KEY },
     });
     await observability.initialize();

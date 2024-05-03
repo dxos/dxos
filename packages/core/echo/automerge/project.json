@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "automerge",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/automerge/src",
   "projectType": "library",
   "targets": {
@@ -18,9 +23,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild"
-  ],
-  "name": "automerge"
+  ]
 }

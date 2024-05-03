@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "feed-store",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/feed-store/src",
   "projectType": "library",
   "targets": {
@@ -15,10 +20,8 @@
     "lint": {},
     "test": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "esbuild",
     "test"
-  ],
-  "name": "feed-store"
+  ]
 }

@@ -28,5 +28,6 @@ export const printBanner = (client: Client) => {
   }
 
   bannerPrinted = true;
+  // eslint-disable-next-line no-console
   console.log(`%c${BANNER(client)}`, 'font-family: monospace;');
 };

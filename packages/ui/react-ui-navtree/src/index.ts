@@ -3,5 +3,6 @@
 //
 
 export * from './components';
+export * from './helpers';
 export * from './types';
 export { default as translations } from './translations';

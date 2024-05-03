@@ -143,3 +143,9 @@ tools/intellij-plugin/build/
 
 # Obsidian
 **/.obsidian**
+
+# socket.ini overrides
+.sscrc
+
+# partykit
+.partykit

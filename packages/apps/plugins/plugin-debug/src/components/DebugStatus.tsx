@@ -8,6 +8,7 @@ import React, { type FC, useEffect, useRef, useState } from 'react';
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
+import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -26,7 +27,7 @@ const styles = {
  * Ensure light doesn't flicker immediately after start.
  */
 // TODO(burdon): Move to @dxos/async (debounce?)
-const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
+const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
   const min = options?.min ?? 500;
   let start: number;
   let pending: NodeJS.Timeout;
@@ -60,18 +61,14 @@ const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number
 // TODO(burdon): Integrate with Sentry?
 const ErrorIndicator: FC<IconProps> = (props) => {
   const [, forceUpdate] = useState({});
-  const error = useRef<Error>();
-  const debug = true; // TODO(burdon): From config?
+  const errorRef = useRef<Error>();
   useEffect(() => {
     const errorListener = (event: any) => {
+      const error: Error = event.error ?? event.reason;
       // event.preventDefault();
-      // TODO(burdon): Handler is called twice.
-      if (error.current !== event.error) {
-        console.error(event);
-        error.current = event.error;
-        if (debug) {
-          console.error(event.error);
-        }
+      if (errorRef.current !== error) {
+        log.error('onError', { event });
+        errorRef.current = error;
         forceUpdate({});
       }
     };
@@ -90,13 +87,13 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   }, []);
 
   const handleReset = () => {
-    error.current = undefined;
+    errorRef.current = undefined;
     forceUpdate({});
   };
 
-  if (error.current) {
+  if (errorRef.current) {
     return (
-      <span title={error.current.message} onClick={handleReset}>
+      <span title={errorRef.current.message} onClick={handleReset}>
         <Circle weight='fill' className={mx(styles.error, getSize(3))} {...props} />
       </span>
     );
@@ -138,29 +135,30 @@ const SwarmIndicator: FC<IconProps> = (props) => {
  * Space saving indicator.
  */
 const SavingIndicator: FC<IconProps> = (props) => {
-  const [state, setState] = useState(0);
+  const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const space = location && graph ? getActiveSpace(graph, location.active) : undefined;
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-    const { start, stop } = timer(() => setState(0), { min: 250 });
-    return space.db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setState(2);
-        stop();
-      } else if (duration === undefined) {
-        setState(1);
-        start();
-      } else {
-        stop();
-      }
-    });
-  }, [space]);
+  const _space = location && graph ? getActiveSpace(graph, location.active) : undefined;
+  // TODO(dmaretskyi): Fix this when we have save status for automerge.
+  // useEffect(() => {
+  //   if (!space) {
+  //     return;
+  //   }
+  // const { start, stop } = timer(() => setState(0), { min: 250 });
+  // return space.db.pendingBatch.on(({ duration, error }) => {
+  //   if (error) {
+  //     setState(2);
+  //     stop();
+  //   } else if (duration === undefined) {
+  //     setState(1);
+  //     start();
+  //   } else {
+  //     stop();
+  //   }
+  // });
+  // }, [space]);
 
   switch (state) {
     case 2:

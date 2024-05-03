@@ -3,17 +3,21 @@
 //
 
 import { Compass, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Map as MapType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, NavigationAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { MapType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { create } from '@dxos/echo-schema';
+import { Filter } from '@dxos/react-client/echo';
 
 import { MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
-import { MapAction, type MapPluginProvides, isMap } from './types';
+import { MapAction, type MapPluginProvides } from './types';
 
 export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
   return {
@@ -21,43 +25,78 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [MapType.schema.typename]: {
+          [MapType.typename]: {
             placeholder: ['object title placeholder', { ns: MAP_PLUGIN }],
             icon: (props: IconProps) => <Compass {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [MapType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${MAP_PLUGIN}/create`,
-            label: ['create object label', { ns: MAP_PLUGIN }],
-            icon: (props) => <Compass {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: MAP_PLUGIN,
                   action: MapAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'mapPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create object label', { ns: MAP_PLUGIN }],
+                    icon: (props: IconProps) => <Compass {...props} />,
+                    testId: 'mapPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all maps to the graph.
+              const query = space.db.query(Filter.schema(MapType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: MapType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: MAP_PLUGIN }],
+                          icon: (props: IconProps) => <Compass {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       stack: {
@@ -80,10 +119,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
-              return isMap(data.active) ? <MapMain map={data.active} /> : null;
+              return data.active instanceof MapType ? <MapMain map={data.active} /> : null;
             }
             case 'section': {
-              return isMap(data.object) ? <MapSection map={data.object} /> : null;
+              return data.object instanceof MapType ? <MapSection map={data.object} /> : null;
             }
           }
 
@@ -94,7 +133,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case MapAction.CREATE: {
-              return { data: new MapType() };
+              return { data: create(MapType, {}) };
             }
           }
         },

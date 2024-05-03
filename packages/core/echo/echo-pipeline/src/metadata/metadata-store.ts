@@ -4,24 +4,27 @@
 
 import CRC32 from 'crc-32';
 
-import { synchronized, Event } from '@dxos/async';
+import { Event, scheduleTaskInterval, synchronized } from '@dxos/async';
 import { type Codec } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
+  type ControlPipelineSnapshot,
   EchoMetadata,
   type SpaceMetadata,
   type IdentityRecord,
   type SpaceCache,
-  type ControlPipelineSnapshot,
   LargeSpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNotNullOrUndefined } from '@dxos/util';
+
+const EXPIRED_INVITATION_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 export interface AddSpaceOptions {
   key: PublicKey;
@@ -47,6 +50,7 @@ export class MetadataStore {
   private _metadataFile?: File = undefined;
 
   public readonly update = new Event<EchoMetadata>();
+  private readonly _invitationCleanupCtx = new Context();
 
   /**
    * @internal
@@ -121,6 +125,7 @@ export class MetadataStore {
   }
 
   async close() {
+    await this._invitationCleanupCtx.dispose();
     await this.flush();
     await this._metadataFile?.close();
     this._metadataFile = undefined;
@@ -163,6 +168,19 @@ export class MetadataStore {
           log.error('failed to load space large metadata', { err });
         }
       },
+    );
+
+    // Cleanup expired persistent invitations.
+    scheduleTaskInterval(
+      this._invitationCleanupCtx,
+      async () => {
+        for (const invitation of this._metadata.invitations ?? []) {
+          if (hasInvitationExpired(invitation) || isLegacyInvitationFormat(invitation)) {
+            await this.removeInvitation(invitation.invitationId);
+          }
+        }
+      },
+      EXPIRED_INVITATION_CLEANUP_INTERVAL,
     );
   }
 
@@ -247,6 +265,26 @@ export class MetadataStore {
     await this.flush();
   }
 
+  getInvitations(): Invitation[] {
+    return this._metadata.invitations ?? [];
+  }
+
+  async addInvitation(invitation: Invitation) {
+    if (this._metadata.invitations?.find((i) => i.invitationId === invitation.invitationId)) {
+      return;
+    }
+
+    (this._metadata.invitations ??= []).push(invitation);
+    await this._save();
+    await this.flush();
+  }
+
+  async removeInvitation(invitationId: string) {
+    this._metadata.invitations = (this._metadata.invitations ?? []).filter((i) => i.invitationId !== invitationId);
+    await this._save();
+    await this.flush();
+  }
+
   async addSpace(record: SpaceMetadata) {
     invariant(
       !(this._metadata.spaces ?? []).find((space) => space.key === record.key),
@@ -300,3 +338,17 @@ export class MetadataStore {
 }
 
 const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);
+
+export const hasInvitationExpired = (invitation: Invitation): boolean => {
+  return Boolean(
+    invitation.created &&
+      invitation.lifetime &&
+      invitation.lifetime !== 0 &&
+      invitation.created.getTime() + invitation.lifetime * 1000 < Date.now(),
+  );
+};
+
+// TODO: remove once "multiuse" type invitations get removed from local metadata of existing profiles
+const isLegacyInvitationFormat = (invitation: Invitation): boolean => {
+  return invitation.type === Invitation.Type.MULTIUSE;
+};

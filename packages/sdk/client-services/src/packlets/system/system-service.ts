@@ -16,7 +16,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { jsonKeyReplacer, type MaybePromise } from '@dxos/util';
 
-import { type Diagnostics } from '../services';
+import { type Diagnostics } from '../diagnostics';
 import { getPlatform } from '../services/platform';
 
 export type SystemServiceOptions = {

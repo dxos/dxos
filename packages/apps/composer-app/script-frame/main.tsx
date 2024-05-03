@@ -5,7 +5,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { types } from '@braneframe/types';
 import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -31,8 +30,13 @@ window.__DXOS_SANDBOX_MODULES__ = await init(async () => ({
   '@braneframe/types': await import('@braneframe/types'), // TODO(burdon): Make runtime dep?
 }));
 
-// eslint-disable-next-line no-new-func
-const Component = Function('React', "return React.lazy(() => import('@frame/bundle'))")(React);
+const code = new URLSearchParams(window.location.hash.slice(1)).get('code');
+
+if (!code) {
+  throw new Error('No code provided.');
+}
+
+const Component = React.lazy(() => import(/* @vite-ignore */ `data:text/javascript;base64,${btoa(code)}`));
 
 const services = new ClientServicesProxy(
   createIFramePort({
@@ -42,7 +46,7 @@ const services = new ClientServicesProxy(
 );
 
 createRoot(document.getElementById('root')!).render(
-  <ClientProvider services={() => services} types={types}>
+  <ClientProvider services={() => services}>
     <div className='flex fixed inset-0'>
       <Component />
     </div>

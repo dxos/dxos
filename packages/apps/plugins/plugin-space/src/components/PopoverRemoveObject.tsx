@@ -4,15 +4,15 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Folder } from '@braneframe/types';
+import { getSpaceProperty, FolderType } from '@braneframe/types';
 import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { TypedObject, SpaceProxy, getSpaceForObject } from '@dxos/react-client/echo';
+import { type Expando } from '@dxos/echo-schema';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-// TODO(xxx): folder is of type `any` because it could be a `SpaceProxy` or `Folder` or... something else
-export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder: any }) => {
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: Expando; folder?: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
@@ -20,7 +20,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
   const handleDelete = useCallback(async () => {
-    if (!(object instanceof TypedObject)) {
+    if (!isEchoObject(object)) {
       return;
     }
 
@@ -32,29 +32,19 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
       });
     }
 
+    const space = getSpace(object);
+
     // Remove object from folder it's in.
-    if (propsFolder instanceof Folder) {
-      const index = propsFolder.objects.indexOf(object);
-      index !== -1 && propsFolder.objects.splice(index, 1);
-    }
-
-    const space = getSpaceForObject(object);
-
-    // Remove the folder from the root folder - may be handled by previous condition.
-    const folder = space?.properties[Folder.schema.typename];
-    if (folder instanceof Folder) {
+    const folder = propsFolder ?? getSpaceProperty<FolderType>(space, FolderType.typename);
+    if (folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);
     }
 
     // If the object is a folder, move the objects inside of it to the folder above it.
-    if (object instanceof Folder) {
-      let parentFolder = propsFolder;
-      if (propsFolder instanceof SpaceProxy) {
-        parentFolder = propsFolder.properties[Folder.schema.typename];
-      }
+    if (object instanceof FolderType && folder) {
       object.objects.forEach((obj) => {
-        parentFolder.objects.push(obj);
+        folder.objects.push(obj);
       });
     }
 

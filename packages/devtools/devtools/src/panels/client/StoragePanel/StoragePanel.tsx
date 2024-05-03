@@ -6,6 +6,7 @@ import { GitCommit, HardDrive, Queue, Rows, Bookmarks, Bookmark, Files, FileArch
 import bytes from 'bytes';
 import React, { type FC, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { log } from '@dxos/log';
 import {
   type GetBlobsResponse,
   type GetSnapshotsResponse,
@@ -17,7 +18,7 @@ import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
-import { Tree, TreeItem, Toolbar } from '@dxos/react-ui';
+import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
@@ -134,21 +135,21 @@ export const StoragePanel = () => {
     try {
       storageInfo = await devtoolsHost.getStorageInfo();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 
     try {
       snapshotInfo = await devtoolsHost.getSnapshots();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 
     try {
       blobsInfo = await devtoolsHost.getBlobs();
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       retry = true;
     }
 
@@ -240,16 +241,27 @@ export const StoragePanel = () => {
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
           </Toolbar.Button>
-
           <div className='grow' />
-          <Toolbar.Button
-            onClick={async () => {
-              await services?.SystemService.reset();
-              location.reload();
-            }}
-          >
-            Reset Storage
-          </Toolbar.Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <Toolbar.Button>Reset Storage</Toolbar.Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content side='top' classNames='z-[51]'>
+                <DropdownMenu.Viewport>
+                  <DropdownMenu.Item
+                    onClick={async () => {
+                      await services?.SystemService.reset();
+                      location.reload();
+                    }}
+                  >
+                    Confirm Reset Storage?
+                  </DropdownMenu.Item>
+                </DropdownMenu.Viewport>
+                <DropdownMenu.Arrow />
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
         </Toolbar.Root>
       }
     >

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/docs",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -8,15 +8,16 @@
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
-    "apidoc": "NODE_OPTIONS='--loader ts-node/esm' apidoc",
-    "bundle": "vuepress build docs",
-    "clean:api": "rm -rf docs/api",
+    "apidoc": "rm -rf content/api && NODE_OPTIONS='--loader ts-node/esm' apidoc",
+    "bundle": "vuepress build content",
+    "clean:api": "rm -rf content/api",
     "prerelease": "pnpm typedoc && pnpm clean:api && pnpm apidoc",
-    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev docs",
+    "serve": "VITE_EXAMPLE_BASE_URL=http://localhost:9009 vuepress dev content",
     "typedoc": "typedoc"
   },
   "devDependencies": {
     "@dxos/apidoc": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -57,13 +58,12 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.0",
     "ts-node": "10.9.1",
-    "typedoc": "^0.23.22",
+    "typedoc": "^0.25.10",
     "typescript": "^5.2.2",
-    "vite": "^5.0.12",
+    "vite": "^5.2.9",
     "vue": "^3.3.12",
     "vue-router": "^4.2.5",
     "vuepress": "2.0.0-rc.0",
-    "vuepress-plugin-check-md": "^0.0.3",
     "vuepress-theme-hope": "2.0.0-rc.5"
   }
 }

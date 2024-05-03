@@ -10,7 +10,7 @@ import { type SidebarItem } from 'vuepress-theme-hope';
 
 import { API_SECTIONS, PINNED_PACKAGES, API_PACKAGE_IGNORE } from '../constants';
 
-const apiPath = path.resolve(__dirname, '../../docs/api');
+const apiPath = path.resolve(__dirname, '../../content/api');
 
 export const link = {
   package: (name: string) => `/api/${name}`,

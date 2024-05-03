@@ -6,7 +6,6 @@ import { HELP_PLUGIN } from '@braneframe/plugin-help/meta';
 import { NAVTREE_PLUGIN } from '@braneframe/plugin-navtree/meta';
 import type { Plugin, PluginDefinition } from '@dxos/app-framework';
 import { NavigationAction, SettingsAction, LayoutAction, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
-import { log } from '@dxos/log';
 import { safeParseJson } from '@dxos/util';
 
 import meta from './meta';
@@ -84,7 +83,9 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
     ;
   `;
 
-  await app.setSystemMenu({ index: 0, value: menu });
+  // TODO(wittjosiah): Not awaiting because this never resolves on iOS.
+  //  It should probably throw on iOS and be gated behind a platform check (https://github.com/dxos/dxos/issues/5689).
+  void app.setSystemMenu({ index: 0, value: menu });
 
   window.addEventListener('menuItemSelected', async (event: any) => {
     const id = `${event.detail.parent}:${event.detail.title}`;
@@ -123,10 +124,17 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   // https://github.com/socketsupply/socket/blob/ef7fb5559876e41062d5896aafb7b79989fc96e5/api/internal/events.js#L6
   window.addEventListener('applicationurl', ({ url }: any) => {
     appWindow.restore();
-    void intentPlugin?.provides.intent.dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id: url.host },
-    });
+    const location = url.toString().replace('composer://', '');
+    if (location.includes('InvitationCode')) {
+      // TODO(mjamesderocher): Integrate this with app routing.
+      // Currently, the dialogs are controlled by Client Plugin and not the Layout Plugin.
+      window.location.href = location;
+    } else {
+      void intentPlugin?.provides.intent.dispatch({
+        action: NavigationAction.ACTIVATE,
+        data: { id: location },
+      });
+    }
   });
 
   // Global hotkey listener
@@ -139,7 +147,6 @@ const initializeNativeApp = async (plugins: Plugin[]) => {
   });
 
   // TODO(burdon): Initial url has index.html, which must be caught/redirected.
-  log.info('native setup complete');
 };
 
 export const NativePlugin = (): PluginDefinition => ({

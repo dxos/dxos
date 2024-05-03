@@ -26,7 +26,7 @@ export const PwaPlugin = (): PluginDefinition => ({
               id: `${PWA_PLUGIN}/need-refresh`,
               title: translations[0]['en-US'][PWA_PLUGIN]['need refresh label'],
               description: translations[0]['en-US'][PWA_PLUGIN]['need refresh description'],
-              duration: 240e3, // 4 minutes
+              duration: 4 * 60 * 1000, // 4m
               actionLabel: translations[0]['en-US'][PWA_PLUGIN]['refresh label'],
               actionAlt: translations[0]['en-US'][PWA_PLUGIN]['refresh alt'],
               onAction: () => updateSW(true),

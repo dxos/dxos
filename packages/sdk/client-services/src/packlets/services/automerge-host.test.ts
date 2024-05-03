@@ -4,10 +4,11 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout, sleep } from '@dxos/async';
-import { AutomergeHost, DataServiceImpl, type DataServiceSubscriptions } from '@dxos/echo-pipeline';
-import { AutomergeContext } from '@dxos/echo-schema';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { asyncTimeout } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
+import { AutomergeContext } from '@dxos/echo-db';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
@@ -19,14 +20,17 @@ describe('AutomergeHost', () => {
     // creates repo and document | replicates repo | finds document in repo
     //
 
-    const storageDirectory = createStorage({ type: StorageType.RAM }).createDirectory();
+    const level = createTestLevel();
+    await level.open();
+    afterTest(() => level.close());
 
-    const host = new AutomergeHost(storageDirectory);
+    const host = new AutomergeHost({
+      db: level.sublevel('automerge'),
+    });
+    await host.open();
     afterTest(() => host.close());
-    const dataService = new DataServiceImpl(
-      {} as DataServiceSubscriptions, // is not used in this test, just required argument
-      host,
-    );
+
+    const dataService = new DataServiceImpl(host);
     const client = new AutomergeContext(dataService);
     afterTest(() => client.close());
 
@@ -47,9 +51,8 @@ describe('AutomergeHost', () => {
     doc.change((doc: any) => {
       doc.text = newText;
     });
+    await client.flush({ states: [{ documentId: doc.documentId, heads: getHeads(doc.docSync()) }] });
 
-    // TODO(mykola): Is there a way to know when automerge has started replication?
-    await sleep(100);
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.docSync().text).to.equal(newText);
   });

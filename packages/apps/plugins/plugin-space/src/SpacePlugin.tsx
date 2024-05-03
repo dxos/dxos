@@ -4,13 +4,12 @@
 
 import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
-import { type RevertDeepSignal, deepSignal } from 'deepsignal/react';
 import localforage from 'localforage';
 import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { Folder } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -24,16 +23,17 @@ import {
   LayoutAction,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { Expando, TypedObject, isTypedObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpaceForObject, type PropertiesProps } from '@dxos/react-client/echo';
+import { type Space, getSpace, type PropertiesProps, isSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
-import { inferRecordOrder } from '@dxos/util';
+import { ComplexMap } from '@dxos/util';
 
 import {
   AwaitingObject,
@@ -46,12 +46,13 @@ import {
   PopoverRenameObject,
   PopoverRenameSpace,
   ShareSpaceButton,
+  SmallPresence,
+  SmallPresenceLive,
   SpaceMain,
   SpacePresence,
   SpaceSettings,
 } from './components';
 import meta, { SPACE_PLUGIN } from './meta';
-import { saveSpaceToDisk, loadSpaceFromDisk, clone } from './serializer';
 import translations from './translations';
 import {
   SpaceAction,
@@ -60,12 +61,11 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, spaceToGraphNode } from './util';
+import { SHARED, getActiveSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
 export type SpacePluginOptions = {
-  version?: string;
   /**
    * Root folder structure is created on application first run if it does not yet exist.
    * This callback is invoked immediately following the creation of the root folder structure.
@@ -78,31 +78,35 @@ export type SpacePluginOptions = {
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
-    personalSpaceFolder: Folder;
+    personalSpaceFolder: FolderType;
     dispatch: IntentDispatcher;
-  }) => void;
+  }) => Promise<void>;
 };
 
-export const SpacePlugin = ({
-  version,
-  onFirstRun,
-}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = deepSignal<PluginState>({
+  const state = create<PluginState>({
     awaiting: undefined,
-    viewers: [],
-  }) as RevertDeepSignal<PluginState>;
+    viewersByObject: {},
+    viewersByIdentity: new ComplexMap(PublicKey.hash),
+  });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-  let directory: FileSystemDirectoryHandle | null;
+
+  const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
 
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$showHidden!, 'show-hidden', LocalStorageStore.bool);
+      settings.prop({
+        key: 'showHidden',
+        storageKey: 'show-hidden',
+        type: LocalStorageStore.bool({ allowUndefined: true }),
+      });
+
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
@@ -119,9 +123,12 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = defaultSpace.db.add(new Folder());
-        defaultSpace.properties[Folder.schema.typename] = personalSpaceFolder;
-        onFirstRun?.({
+        const personalSpaceFolder = create(FolderType, { objects: [] });
+        setSpaceProperty(defaultSpace, FolderType.typename, personalSpaceFolder);
+        if (Migrations.versionProperty) {
+          setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
+        }
+        await onFirstRun?.({
           client,
           defaultSpace,
           personalSpaceFolder,
@@ -140,7 +147,7 @@ export const SpacePlugin = ({
 
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
-          const [name] = params.find(([name, value]) => value === spaceInvitationCode) ?? [null, null];
+          const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
@@ -160,12 +167,16 @@ export const SpacePlugin = ({
             const identity = client.halo.identity.get();
             const space = getActiveSpace(graph, location.active);
             if (identity && space && location.active) {
-              void space.postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
-                spaceKey: space.key.toHex(),
-                added: [location.active],
-                removed: [location.previous],
-              });
+              void space
+                .postMessage('viewing', {
+                  identityKey: identity.identityKey.toHex(),
+                  spaceKey: space.key.toHex(),
+                  added: [location.active],
+                  removed: [location.previous],
+                })
+                .catch((err) => {
+                  log.warn('Failed to broadcast active node for presence', { err: err.message });
+                });
             }
           };
 
@@ -185,25 +196,27 @@ export const SpacePlugin = ({
                 const identityKey = PublicKey.safeFrom(message.payload.identityKey);
                 const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
                 if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  const newViewers = [
-                    ...state.viewers.filter(
-                      (viewer) =>
-                        !viewer.identityKey.equals(identityKey) ||
-                        !viewer.spaceKey.equals(spaceKey) ||
-                        (viewer.identityKey.equals(identityKey) &&
-                          viewer.spaceKey.equals(spaceKey) &&
-                          !removed.some((objectId) => objectId === viewer.objectId) &&
-                          !added.some((objectId) => objectId === viewer.objectId)),
-                    ),
-                    ...added.map((objectId) => ({
-                      identityKey,
-                      spaceKey,
-                      objectId,
-                      lastSeen: Date.now(),
-                    })),
-                  ];
-                  newViewers.sort((a, b) => b.lastSeen - a.lastSeen);
-                  state.viewers = newViewers;
+                  added.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      if (!(objectId in state.viewersByObject)) {
+                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+                      }
+                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                      if (!state.viewersByIdentity.has(identityKey)) {
+                        state.viewersByIdentity.set(identityKey, new Set());
+                      }
+                      state.viewersByIdentity.get(identityKey)!.add(objectId);
+                    }
+                  });
+                  removed.forEach((objectIdAny) => {
+                    if (objectIdAny) {
+                      const objectId = objectIdAny.toString();
+                      state.viewersByObject[objectId]?.delete(identityKey);
+                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                      // It’s okay for these to be empty sets/maps, reduces churn.
+                    }
+                  });
                 }
               }),
             );
@@ -219,17 +232,20 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      space: state as RevertDeepSignal<PluginState>,
+      space: state,
       settings: settings.values,
       translations: [...translations, osTranslations],
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
-          [Folder.schema.typename]: {
+          [FolderType.typename]: {
             placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <FolderIcon {...props} />,
           },
         },
+      },
+      echo: {
+        schema: [FolderType],
       },
       surface: {
         component: ({ data, role }) => {
@@ -238,7 +254,7 @@ export const SpacePlugin = ({
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(data.active) ? (
                 <SpaceMain space={data.active} />
-              ) : data.active instanceof Folder ? (
+              ) : data.active instanceof FolderType ? (
                 <FolderMain folder={data.active} />
               ) : typeof data.active === 'string' && data.active.length === 64 ? (
                 <MissingObject id={data.active} />
@@ -270,14 +286,14 @@ export const SpacePlugin = ({
                 return <PopoverRenameSpace space={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                isTypedObject(data.subject)
+                isReactiveObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
                 data.subject &&
                 typeof data.subject === 'object' &&
-                isTypedObject((data.subject as Record<string, any>)?.object)
+                isReactiveObject((data.subject as Record<string, any>)?.object)
               ) {
                 return (
                   <PopoverRemoveObject
@@ -288,20 +304,28 @@ export const SpacePlugin = ({
               } else {
                 return null;
               }
+            case 'presence--glyph': {
+              return isReactiveObject(data.object) ? (
+                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+              ) : (
+                <SmallPresence count={0} />
+              );
+            }
             case 'navbar-start': {
               const space =
-                isGraphNode(data.activeNode) && isTypedObject(data.activeNode.data)
-                  ? getSpaceForObject(data.activeNode.data)
+                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
+                  ? getSpace(data.activeNode.data)
                   : undefined;
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
             case 'navbar-end': {
-              if (!isTypedObject(data.object)) {
+              if (!isEchoObject(data.object)) {
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
-              const space = getSpaceForObject(data.object);
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
+              const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
                     node: (
@@ -322,11 +346,7 @@ export const SpacePlugin = ({
         },
       },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (parent.id !== 'root') {
-            return;
-          }
-
+        builder: (plugins, graph) => {
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
@@ -343,38 +363,59 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.key.toHex())?.();
           graphSubscriptions.set(
             client.spaces.default.key.toHex(),
-            spaceToGraphNode({ space: client.spaces.default, parent, dispatch, resolve }),
+            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch, resolve }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
-          let spacesOrder: Expando | undefined;
-          const [groupNode] = parent.addNode(SPACE_PLUGIN, {
+          let spacesOrder: EchoReactiveObject<Record<string, any>> | undefined;
+          const [groupNode] = graph.addNodes({
             id: SHARED,
-            label: ['shared spaces label', { ns: SPACE_PLUGIN }],
-            actions: [
+            properties: {
+              label: ['shared spaces label', { ns: SPACE_PLUGIN }],
+              testId: 'spacePlugin.sharedSpaces',
+              role: 'branch',
+              palette: 'pink',
+              childrenPersistenceClass: 'echo',
+              onRearrangeChildren: (nextOrder: Space[]) => {
+                if (!spacesOrder) {
+                  const nextObjectOrder = client.spaces.default.db.add(
+                    create({
+                      key: SHARED,
+                      order: nextOrder.map(({ key }) => key.toHex()),
+                    }),
+                  );
+                  spacesOrder = nextObjectOrder;
+                } else {
+                  spacesOrder.order = nextOrder.map(({ key }) => key.toHex());
+                }
+                updateSpacesOrder(spacesOrder);
+              },
+            },
+            edges: [['root', 'inbound']],
+            nodes: [
               {
-                id: 'create-space',
-                label: ['create space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <Plus {...props} />,
+                id: SpaceAction.CREATE,
+                data: () =>
+                  dispatch([
+                    {
+                      plugin: SPACE_PLUGIN,
+                      action: SpaceAction.CREATE,
+                    },
+                    {
+                      action: NavigationAction.ACTIVATE,
+                    },
+                  ]),
                 properties: {
+                  label: ['create space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <Plus {...props} />,
                   disposition: 'toolbar',
                   testId: 'spacePlugin.createSpace',
                 },
-                invoke: () =>
-                  dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.CREATE,
-                  }),
               },
               {
-                id: 'join-space',
-                label: ['join space label', { ns: SPACE_PLUGIN }],
-                icon: (props) => <SignIn {...props} />,
-                properties: {
-                  testId: 'spacePlugin.joinSpace',
-                },
-                invoke: () =>
+                id: SpaceAction.JOIN,
+                data: () =>
                   dispatch([
                     {
                       plugin: SPACE_PLUGIN,
@@ -384,42 +425,30 @@ export const SpacePlugin = ({
                       action: NavigationAction.ACTIVATE,
                     },
                   ]),
+                properties: {
+                  label: ['join space label', { ns: SPACE_PLUGIN }],
+                  icon: (props: IconProps) => <SignIn {...props} />,
+                  testId: 'spacePlugin.joinSpace',
+                },
               },
             ],
-            properties: {
-              testId: 'spacePlugin.sharedSpaces',
-              role: 'branch',
-              palette: 'pink',
-              childrenPersistenceClass: 'echo',
-              onRearrangeChildren: (nextOrder: Space[]) => {
-                if (!spacesOrder) {
-                  const nextObjectOrder = new Expando({
-                    key: SHARED,
-                    order: nextOrder.map(({ key }) => key.toHex()),
-                  });
-                  client.spaces.default.db.add(nextObjectOrder);
-                  spacesOrder = nextObjectOrder;
-                } else {
-                  spacesOrder.order = nextOrder.map(({ key }) => key.toHex());
-                }
-                updateSpacesOrder(spacesOrder);
-              },
-            },
           });
 
-          const updateSpacesOrder = (spacesOrder?: Expando) => {
+          const updateSpacesOrder = (orderObject?: EchoReactiveObject<Record<string, any>>) => {
             if (!spacesOrder) {
+              spacesOrder = orderObject;
+            }
+
+            if (!orderObject) {
               return;
             }
 
-            groupNode.childrenMap = inferRecordOrder(groupNode.childrenMap, spacesOrder.order);
+            graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
-          spacesOrder = spacesOrderQuery.objects[0];
-          updateSpacesOrder(spacesOrderQuery.objects[0]);
           graphSubscriptions.set(
             SHARED,
-            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0])),
+            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),
           );
 
           const createSpaceNodes = (spaces: Space[]) => {
@@ -427,10 +456,11 @@ export const SpacePlugin = ({
               graphSubscriptions.get(space.key.toHex())?.();
               graphSubscriptions.set(
                 space.key.toHex(),
-                spaceToGraphNode({
+                updateGraphWithSpace({
+                  graph,
                   space,
-                  parent: space === client.spaces.default ? parent : groupNode,
                   hidden: settings.values.showHidden,
+                  isPersonalSpace: space === client.spaces.default,
                   dispatch,
                   resolve,
                 }),
@@ -441,7 +471,7 @@ export const SpacePlugin = ({
           };
 
           const { unsubscribe } = client.spaces.subscribe((spaces) => createSpaceNodes(spaces));
-          const unsubscribeHidden = settings.values.$showHidden!.subscribe(() => createSpaceNodes(client.spaces.get()));
+          const unsubscribeHidden = effect(() => createSpaceNodes(client.spaces.get()));
 
           return () => {
             unsubscribe();
@@ -468,14 +498,18 @@ export const SpacePlugin = ({
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
-              } = defaultSpace.db.query({ key: SHARED });
+              } = await defaultSpace.db.query({ key: SHARED }).run();
               const space = await client.spaces.create(intent.data as PropertiesProps);
-              const folder = new Folder();
-              space.properties[Folder.schema.typename] = folder;
+
+              const folder = create(FolderType, { objects: [] });
+              setSpaceProperty(space, FolderType.typename, folder);
+              await space.waitUntilReady();
+
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
-                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
+                setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
+
               return { data: { space, id: space.key.toHex() } };
             }
 
@@ -502,7 +536,7 @@ export const SpacePlugin = ({
 
             case SpaceAction.RENAME: {
               const { caller, space } = intent.data ?? {};
-              if (typeof caller === 'string' && space instanceof SpaceProxy) {
+              if (typeof caller === 'string' && isSpace(space)) {
                 return {
                   intents: [
                     [
@@ -524,8 +558,8 @@ export const SpacePlugin = ({
 
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                await space.internal.open();
+              if (isSpace(space)) {
+                await space.open();
                 return { data: true };
               }
               break;
@@ -533,8 +567,8 @@ export const SpacePlugin = ({
 
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                await space.internal.close();
+              if (isSpace(space)) {
+                await space.close();
                 return { data: true };
               }
               break;
@@ -542,7 +576,8 @@ export const SpacePlugin = ({
 
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
+                prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
               }
@@ -550,45 +585,42 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SELECT_DIRECTORY: {
-              const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              directory = handle;
-              await localforage.setItem(SPACE_DIRECTORY_HANDLE, handle);
-              return { data: handle };
+              const rootDir = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+              await localforage.setItem(SPACE_DIRECTORY_HANDLE, rootDir);
+              return { data: rootDir };
             }
 
             case SpaceAction.SAVE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                if (!directory) {
-                  directory = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
-                }
-                if (!directory) {
-                  // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                  const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-                  const result = await intentPlugin?.provides.intent.dispatch({
-                    plugin: SPACE_PLUGIN,
-                    action: SpaceAction.SELECT_DIRECTORY,
-                  });
-                  directory = result?.data;
-                }
-                invariant(directory, 'No directory selected.');
-                if ((directory as any).queryPermission && (await (directory as any).queryPermission()) !== 'granted') {
-                  // TODO(mykola): Is it Chrome-specific?
-                  await (directory as any).requestPermission?.({ mode: 'readwrite' });
-                }
-                await saveSpaceToDisk({ space, directory }).catch((error) => {
-                  log.catch(error);
+              let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
+              if (!rootDir) {
+                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
+                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+                const result = await intentPlugin?.provides.intent.dispatch({
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.SELECT_DIRECTORY,
                 });
-                return { data: true };
+                rootDir = result?.data as FileSystemDirectoryHandle;
+                invariant(rootDir);
               }
-              break;
+
+              // TODO(burdon): Resolve casts.
+              if ((rootDir as any).queryPermission && (await (rootDir as any).queryPermission()) !== 'granted') {
+                // TODO(mykola): Is it Chrome-specific?
+                await (rootDir as any).requestPermission?.({ mode: 'readwrite' });
+              }
+              await serializer.save({ space, directory: rootDir }).catch((err) => {
+                void localforage.removeItem(SPACE_DIRECTORY_HANDLE);
+                log.catch(err);
+              });
+              return { data: true };
             }
 
             case SpaceAction.LOAD: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
                 const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-                await loadSpaceFromDisk({ space, directory });
+                await serializer.load({ space, directory }).catch(log.catch);
                 return { data: true };
               }
               break;
@@ -596,20 +628,20 @@ export const SpacePlugin = ({
 
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              if (!(object instanceof TypedObject)) {
+              if (!isReactiveObject(object)) {
                 return;
               }
 
-              if (intent.data?.target instanceof Folder) {
-                intent.data.target.objects.push(object);
+              if (intent.data?.target instanceof FolderType) {
+                intent.data?.target.objects.push(object as Identifiable);
                 return { data: object };
               }
 
-              if (intent.data?.target instanceof SpaceProxy) {
-                const space = intent.data.target;
-                const folder = space.properties[Folder.schema.typename];
-                if (folder instanceof Folder) {
-                  folder.objects.push(object);
+              const space = intent.data?.target;
+              if (isSpace(space)) {
+                const folder = getSpaceProperty(space, FolderType.typename);
+                if (folder instanceof FolderType) {
+                  folder.objects.push(object as Identifiable);
                   return { data: object };
                 } else {
                   return { data: space.db.add(object) };
@@ -621,7 +653,7 @@ export const SpacePlugin = ({
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (object instanceof TypedObject && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -647,7 +679,7 @@ export const SpacePlugin = ({
             case SpaceAction.RENAME_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (object instanceof TypedObject && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -669,13 +701,15 @@ export const SpacePlugin = ({
 
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
-              if (!(originalObject instanceof TypedObject)) {
+              if (!isEchoObject(originalObject)) {
                 return;
               }
 
-              const newObject = await clone(originalObject);
+              const newObject = await cloneObject(originalObject);
               return {
-                intent: [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+                intents: [
+                  [{ action: SpaceAction.ADD_OBJECT, data: { object: newObject, target: intent.data?.target } }],
+                ],
               };
             }
 

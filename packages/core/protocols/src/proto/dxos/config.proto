@@ -103,32 +103,41 @@ message Runtime {
       optional StorageDriver key_store = 2;
       optional StorageDriver data_store = 3;
       optional string data_root = 4;
+      
+      /**
+       * @deprecated
+       */
+      optional bool space_fragmentation = 5;
     }
-
+    
     message Log {
       optional string filter = 1 [(env_var) = "LOG_FILTER"];
       optional string prefix = 2 [(env_var) = "LOG_PREFIX"];
     }
-
+    
     optional Log log = 1;
     optional Storage storage = 2;
-
+    
     // TODO(burdon): Structure snapshot/epoch related props.
-
+    
     optional bool enable_snapshots = 3;
-
+    
     /// Milliseconds
     optional int32 snapshot_interval = 4;
-
+    
     /// Milliseconds
     optional int32 invitation_expiration = 5;
-
+    
     /// Location of the remote client host.
     // TODO(burdon): Rename vault_endpoint (generalize http/ws; drop vault.html).
     optional string remote_source = 6;
 
+    // Authenticate via `Sec-WebSocket-Protocol` header hack.
+    optional string remote_source_authentication_token = 8;
+
     /// Connect to and serve client services to a remote proxy.
     optional string devtools_proxy = 7;
+
   }
 
   message App {
@@ -258,6 +267,14 @@ message Runtime {
       int32 interval = 2;
     }
 
+    /// https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
+    message KuboApiAuthorization {
+        /// Just for organizational purposes.
+        string name = 1;
+        string auth_secret = 2;
+        repeated string allowed_paths = 3;
+    }
+
     // TODO(burdon): Needs documentation/
     string host = 1;
     string port = 2;
@@ -273,6 +290,8 @@ message Runtime {
     Gravity gravity = 12;
     AppTunneling app_tunneling = 13;
     Bots bots = 14;
+    // TODO(nf): manage secret better.
+    repeated KuboApiAuthorization ipfs_api_authorizations = 15;
   }
 
   //

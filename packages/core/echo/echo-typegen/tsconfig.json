@@ -24,15 +24,6 @@
     },
     {
       "path": "../../../common/protobuf-compiler"
-    },
-    {
-      "path": "../document-model"
-    },
-    {
-      "path": "../echo-db"
-    },
-    {
-      "path": "../model-factory"
     }
   ]
 }

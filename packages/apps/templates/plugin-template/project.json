@@ -1,0 +1,28 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-template",
+  "tags": [
+    "scope:templates"
+  ],
+  "sourceRoot": "packages/apps/templates/plugin-template/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "options": {
+        "main": "packages/apps/templates/plugin-template/src/config.t.ts",
+        "outputPath": "packages/apps/templates/plugin-template/dist",
+        "tsConfig": "packages/apps/templates/plugin-template/tsconfig.json"
+      }
+    },
+    "lint": {},
+    "test": {
+      "options": {
+        "checkLeaks": false,
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "forceExit": true
+      }
+    }
+  }
+}

@@ -7,9 +7,9 @@ import { type JSONOutput } from 'typedoc';
 
 import { type Config } from './config.js';
 
-export const loadTypedocJson = async (config: Config): Promise<JSONOutput.Reflection> => {
+export const loadTypedocJson = async (config: Config): Promise<JSONOutput.ProjectReflection> => {
   const { typedocJsonPath } = config;
   const apitext = await fs.readFile(typedocJsonPath, 'utf-8');
   const api = JSON.parse(apitext);
-  return api as JSONOutput.Reflection;
+  return api as JSONOutput.ProjectReflection;
 };

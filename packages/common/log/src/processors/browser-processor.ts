@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { getPrototypeSpecificInstanceId, safariCheck } from '@dxos/util';
+import { getDebugName, safariCheck } from '@dxos/util';
 
 import { LogLevel } from '../config';
 import { getContextFromEntry, type LogProcessor, shouldLog } from '../context';
@@ -58,7 +58,7 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
     const filename = getRelativeFilename(entry.meta.F);
     const filepath = `${LOG_BROWSER_PREFIX.replace(/\/$/, '')}/${filename}`;
     // TODO(burdon): Line numbers not working for app link, even with colons.
-    //   https://stackoverflow.com/a/54459820/2804332
+    //  https://stackoverflow.com/a/54459820/2804332
     link = `${filepath}#L${entry.meta.L}`;
   }
 
@@ -66,10 +66,10 @@ const APP_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
 
   if (entry.meta?.S) {
     const scope = entry.meta?.S;
-    const prototype = Object.getPrototypeOf(scope);
-    const id = getPrototypeSpecificInstanceId(scope);
+    const scopeName = scope.name || getDebugName(scope);
+    const processPrefix = entry.meta.S?.hostSessionId ? '[worker] ' : '';
     // TODO(dmaretskyi): Those can be made clickable with a custom formatter.
-    args.push(`%c${prototype.constructor.name}#${id}`, 'color:#C026D3;font-weight:bold');
+    args.push(`%c${processPrefix}${scopeName}`, 'color:#C026D3;font-weight:bold');
   }
 
   args.push(entry.message);
@@ -116,7 +116,9 @@ const TEST_BROWSER_PROCESSOR: LogProcessor = (config, entry) => {
   }
 
   let args = [];
-  args.push(entry.message);
+
+  const processPrefix = entry.meta?.S?.hostSessionId ? '[worker] ' : '';
+  args.push(`${processPrefix}${entry.message}`);
 
   const context = getContextFromEntry(entry);
   if (context) {

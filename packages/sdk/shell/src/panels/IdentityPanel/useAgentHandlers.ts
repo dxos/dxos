@@ -6,23 +6,23 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
-import { useAgentHostingProviderClient, type Client } from '@dxos/react-client';
+import { log } from '@dxos/log';
+import { useAgentHostingClient, useClient } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 
 export const useAgentHandlers = ({
-  client,
   invitations,
   identity,
 }: {
-  client: Client;
   invitations: CancellableInvitation[];
   identity: Identity | null;
 }) => {
   const [validationMessage, setValidationMessage] = useState('');
   const [agentStatus, setAgentStatus] = useState('');
   const [agentActive, setAgentActive] = useState(false);
-  const agentHostingProviderClient = useAgentHostingProviderClient(client.config);
+  const agentHostingProviderClient = useAgentHostingClient();
+  const client = useClient();
 
   useEffect(() => {
     const fetchAgentStatus = async () => {
@@ -46,7 +46,7 @@ export const useAgentHandlers = ({
   const handleAgentCreate = useCallback(async (invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
-      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
       invariant(identity, 'Identity not found');
       if (agentHostingProviderClient) {
         try {
@@ -66,7 +66,11 @@ export const useAgentHandlers = ({
     invitations.forEach((invitation) => invitation.cancel());
 
     // TODO(nf): do this work in the hosting provider client?
-    const invitation = client.halo.share({ type: Invitation.Type.MULTIUSE, authMethod: Invitation.AuthMethod.NONE });
+    const invitation = client.halo.share({
+      type: Invitation.Type.INTERACTIVE,
+      authMethod: Invitation.AuthMethod.NONE,
+      multiUse: true,
+    });
 
     invitation.subscribe(handleAgentCreate);
   };

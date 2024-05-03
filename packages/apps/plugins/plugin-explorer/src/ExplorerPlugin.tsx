@@ -3,17 +3,20 @@
 //
 
 import { Graph, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, View as ViewType } from '@braneframe/types';
-import { parseIntentPlugin, resolvePlugin, type PluginDefinition, NavigationAction } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { ViewType } from '@braneframe/types';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/react-client/echo';
 
 import { ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
-import { ExplorerAction, type ExplorerPluginProvides, isExplorer } from './types';
+import { ExplorerAction, type ExplorerPluginProvides } from './types';
 
 export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
   return {
@@ -21,50 +24,85 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [ViewType.schema.typename]: {
+          [ViewType.typename]: {
             placeholder: ['object title placeholder', { ns: EXPLORER_PLUGIN }],
             icon: (props: IconProps) => <Graph {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ViewType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${EXPLORER_PLUGIN}/create`,
-            label: ['create object label', { ns: EXPLORER_PLUGIN }],
-            icon: (props) => <Graph {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: EXPLORER_PLUGIN,
                   action: ExplorerAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'explorerPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create object label', { ns: EXPLORER_PLUGIN }],
+                    icon: (props: IconProps) => <Graph {...props} />,
+                    testId: 'explorerPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all views to the graph.
+              const query = space.db.query(Filter.schema(ViewType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: ViewType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+                          icon: (props: IconProps) => <Graph {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isExplorer(data.active) ? <ExplorerMain view={data.active} /> : null;
+              return data.active instanceof ViewType ? <ExplorerMain view={data.active} /> : null;
             default:
               return null;
           }

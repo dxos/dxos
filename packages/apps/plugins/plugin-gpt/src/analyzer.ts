@@ -5,10 +5,11 @@
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
-import { type Document as DocumentType } from '@braneframe/types';
+import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { getTextContent, toJsonSchema, Schema, Expando, TextObject, getTypename } from '@dxos/echo-schema';
+import { AST, getTypename, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 export type GptAnalyzerOptions = {
   apiKey: string;
@@ -26,22 +27,14 @@ export class GptAnalyzer {
   }
 
   async exec(space: Space, document: DocumentType) {
-    const { objects: schemas } = space.db.query(Schema.filter());
-    const text = getTextContent(document.content);
-    console.info('analyzing...', { length: text?.length, schema: schemas.length });
+    const schemas = await space.db.schemaRegistry.getAll();
+    const text = document.content?.content;
+    log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
       return;
     }
 
-    const schemaMap = schemas.reduce((map, schema) => {
-      const jsonSchema = toJsonSchema(schema);
-      if (jsonSchema.title) {
-        console.log(schema.typename);
-        map.set(jsonSchema.title, jsonSchema);
-      }
-
-      return map;
-    }, new Map());
+    const schemaMap = new Map(schemas.map((schema) => [schema.typename, schema.serializedSchema.jsonSchema]));
 
     const messages: Chat.ChatCompletionMessageParam[] = [
       {
@@ -66,9 +59,9 @@ export class GptAnalyzer {
       },
     ];
 
-    console.info('requesting...', { length: text?.length, schema: schemas.length });
+    log.info('requesting...', { length: text?.length, schema: schemas.length });
     const response = await this._client.chat.completions.create({ model: 'gpt-4', messages });
-    console.log('processing', { choices: response.choices.length });
+    log.info('processing', { choices: response.choices.length });
     const result = response.choices[0];
     try {
       if (result.message.content) {
@@ -76,7 +69,7 @@ export class GptAnalyzer {
         for (const obj of data) {
           const schema = schemas.find((schema) => schema.typename === getTypename(obj));
           if (!schema) {
-            console.warn('invalid object', obj);
+            log.warn('invalid object', { obj });
             continue;
           }
 
@@ -85,27 +78,21 @@ export class GptAnalyzer {
             '@type': schema.typename,
           };
 
-          for (const { id, type } of schema.props) {
+          for (const { name: id, type } of schema.getProperties()) {
             invariant(id);
             const value = obj[id];
-            if (value !== undefined && value !== null) {
-              switch (type) {
-                // TODO(burdon): Currently only handles string properties.
-                case Schema.PropType.STRING: {
-                  data[id] = new TextObject(value);
-                  break;
-                }
-              }
+            if (value != null && AST.isStringKeyword(type)) {
+              data[String(id)] = create(TextV0Type, { content: value });
             }
           }
 
-          const object = new Expando(data, { schema });
+          const object = create(schema, data);
           space.db.add(object);
-          console.log('created', JSON.stringify(object, null, 2));
+          log.info('created', { json: JSON.stringify(object, null, 2) });
         }
       }
     } catch (err) {
-      console.warn('invalid response', err);
+      log.catch(err);
     }
   }
 }

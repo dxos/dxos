@@ -2,16 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { Action, Node } from '@dxos/app-graph';
-import type { TFunction } from '@dxos/react-ui';
-
-export const getLevel = (node: Node, level = 0): number => {
-  if (!node.parent) {
-    return level;
-  } else {
-    return getLevel(node.parent, level + 1);
-  }
-};
+import { type Action } from '@dxos/app-graph';
+import { type TreeNode } from '@dxos/react-ui-navtree';
 
 // TODO(wittjosiah): Move into node implementation?
 export const sortActions = (actions: Action[]): Action[] =>
@@ -27,17 +19,15 @@ export const sortActions = (actions: Action[]): Action[] =>
     return 1;
   });
 
-export const getTreeItemLabel = (node: Node, t: TFunction) =>
-  Array.isArray(node.label) ? t(...node.label) : node.label;
-
-export const getPersistenceParent = (node: Node, persistenceClass: string): Node | null => {
-  if (!node || !node.parent) {
+export const getPersistenceParent = (node: TreeNode, persistenceClass: string): TreeNode | null => {
+  const parent = node.parent;
+  if (!node || !parent) {
     return null;
   }
 
-  if (node.parent.properties.acceptPersistenceClass?.has(persistenceClass)) {
-    return node.parent;
+  if (parent.properties.acceptPersistenceClass?.has(persistenceClass)) {
+    return parent;
   } else {
-    return getPersistenceParent(node.parent, persistenceClass);
+    return getPersistenceParent(parent, persistenceClass);
   }
 };

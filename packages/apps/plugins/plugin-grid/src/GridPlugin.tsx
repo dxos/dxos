@@ -3,17 +3,20 @@
 //
 
 import { type IconProps, SquaresFour } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { SPACE_PLUGIN, SpaceAction } from '@braneframe/plugin-space';
-import { Folder, Grid as GridType } from '@braneframe/types';
-import { NavigationAction, parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
-import { SpaceProxy } from '@dxos/react-client/echo';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { GridItemType, GridType } from '@braneframe/types';
+import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
+import { Filter } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
 import translations from './translations';
-import { GridAction, type GridPluginProvides, isGrid } from './types';
+import { GridAction, type GridPluginProvides } from './types';
 
 export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
   return {
@@ -21,15 +24,15 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
     provides: {
       metadata: {
         records: {
-          [GridType.schema.typename]: {
+          [GridType.typename]: {
             placeholder: ['grid title placeholder', { ns: GRID_PLUGIN }],
             icon: (props: IconProps) => <SquaresFour {...props} />,
           },
-          [GridType.Item.schema.typename]: {
-            parse: (item: GridType.Item, type: string) => {
+          [GridItemType.typename]: {
+            parse: (item: GridItemType, type: string) => {
               switch (type) {
                 case 'node':
-                  return { id: item.object.id, label: item.object.title, data: item.object };
+                  return { id: item.object?.id, label: (item.object as any).title, data: item.object };
                 case 'object':
                   return item.object;
                 case 'view-object':
@@ -40,43 +43,78 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
         },
       },
       translations,
+      echo: {
+        schema: [GridType, GridItemType],
+      },
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (!(parent.data instanceof Folder || parent.data instanceof SpaceProxy)) {
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
             return;
           }
 
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-          parent.actionsMap[`${SPACE_PLUGIN}/create`]?.addAction({
-            id: `${GRID_PLUGIN}/create`,
-            label: ['create grid label', { ns: GRID_PLUGIN }],
-            icon: (props) => <SquaresFour {...props} />,
-            invoke: () =>
-              intentPlugin?.provides.intent.dispatch([
-                {
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            subscriptions.clear();
+            spaces.forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
                   plugin: GRID_PLUGIN,
                   action: GridAction.CREATE,
-                },
-                {
-                  action: SpaceAction.ADD_OBJECT,
-                  data: { target: parent.data },
-                },
-                {
-                  action: NavigationAction.ACTIVATE,
-                },
-              ]),
-            properties: {
-              testId: 'gridPlugin.createObject',
-            },
+                  properties: {
+                    label: ['create grid label', { ns: GRID_PLUGIN }],
+                    icon: (props: IconProps) => <SquaresFour {...props} />,
+                    testId: 'gridPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+
+              // Add all grids to the graph.
+              const query = space.db.query(Filter.schema(GridType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: GridType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(object.id));
+                    query.objects.forEach((object) => {
+                      graph.addNodes({
+                        id: object.id,
+                        data: object,
+                        properties: {
+                          // TODO(wittjosiah): Reconcile with metadata provides.
+                          label: object.title || ['grid title placeholder', { ns: GRID_PLUGIN }],
+                          icon: (props: IconProps) => <SquaresFour {...props} />,
+                          testId: 'spacePlugin.object',
+                          persistenceClass: 'echo',
+                          persistenceKey: space?.key.toHex(),
+                        },
+                      });
+                    });
+                  });
+                }),
+              );
+            });
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       surface: {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isGrid(data.active) ? <GridMain grid={data.active} /> : null;
+              return data.active instanceof GridType ? <GridMain grid={data.active} /> : null;
           }
 
           return null;

@@ -8,11 +8,13 @@ import type { Identity } from '@dxos/react-client/halo';
 import type { Invitation, AuthenticatingInvitationObservable, InvitationResult } from '@dxos/react-client/invitations';
 
 import { type JoinSend } from './joinMachine';
-import { type ResetIdentityProps, type IdentityInputProps } from './steps';
-import { type StepProps } from '../../steps';
+import { type IdentityInputProps } from './steps';
+import { type ConfirmResetProps, type StepProps } from '../../steps';
 import { type FailReason } from '../../types';
 
 export type JoinPanelMode = 'default' | 'halo-only';
+
+export type JoinPanelInitialDisposition = 'default' | 'accept-halo-invitation';
 
 export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   send: JoinSend;
@@ -21,6 +23,7 @@ export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
 
 export interface JoinPanelProps {
   mode?: JoinPanelMode;
+  initialDisposition?: JoinPanelInitialDisposition;
   initialInvitationCode?: string;
   titleId?: string;
   exitActionParent?: Parameters<typeof cloneElement>[0];
@@ -28,6 +31,7 @@ export interface JoinPanelProps {
   onExit?: () => void;
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
+  onCancelResetStorage?: () => void;
 }
 
 export type JoinPanelImplProps = Pick<
@@ -61,8 +65,10 @@ export type JoinPanelImplProps = Pick<
   onSpaceInvitationCancel?: () => Promise<void> | undefined;
   onHaloInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
   onSpaceInvitationAuthenticate?: (authCode: string) => Promise<void> | undefined;
+  onConfirmResetStorage?: () => Promise<void>;
+  onCancelResetStorage?: () => void;
   IdentityInput?: React.FC<IdentityInputProps>;
-  ResetIdentity?: React.FC<ResetIdentityProps>;
+  ConfirmReset?: React.FC<ConfirmResetProps>;
 };
 
 export interface IdentityAction {

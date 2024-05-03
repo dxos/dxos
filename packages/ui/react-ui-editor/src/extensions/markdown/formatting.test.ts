@@ -9,20 +9,20 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import {
-  setHeading,
-  addStyle,
-  removeStyle,
-  addLink,
-  removeLink,
-  addList,
-  removeList,
   addBlockquote,
-  removeBlockquote,
   addCodeblock,
+  addLink,
+  addList,
+  addStyle,
+  getFormatting,
+  removeStyle,
+  removeLink,
+  removeList,
+  removeBlockquote,
   removeCodeblock,
+  setHeading,
   Inline,
   List,
-  getFormatting,
   type Formatting,
 } from './formatting';
 
@@ -101,6 +101,8 @@ describe('setHeading', () => {
   testCommand('can add a heading inside block markup', '> - {one\n> - two}\n', setHeading(1), '> - # one\n> - # two\n');
 
   testCommand('can remove a heading inside block markup', '1. # one{}', setHeading(0), '1. one');
+
+  testCommand('can add a heading to a blank line', 'one\n\n{}', setHeading(1), 'one\n\n# {}');
 });
 
 describe('addStyle', () => {
@@ -158,6 +160,8 @@ describe('addStyle', () => {
     em,
     '*[one {two](x) ![three} four](y)* five',
   );
+
+  testCommand('can add a style to an empty line', '{}', em, '*{}*');
 });
 
 describe('removeStyle', () => {
@@ -188,25 +192,34 @@ describe('removeStyle', () => {
   );
 
   testCommand('can shrink existing styles', '*one {two three} four*', em, '*one* {two three} *four*');
+
+  testCommand('can remove strong from a partially emphasized text', '**{one*two*}**', str, '{one*two*}');
+
+  testCommand(
+    'can remove strong from a partially emphasized text with markers outside',
+    '***{o*ne*two}***',
+    str,
+    '*{o*ne*two}*',
+  );
 });
 
 describe('addLink', () => {
-  testCommand('adds a link', '{}', addLink, '[]({})');
+  testCommand('adds a link', '{}', addLink(), '[]({})');
 
-  testCommand('adds a link around text', 'hello {world}', addLink, 'hello [world]({})');
+  testCommand('adds a link around text', 'hello {world}', addLink(), 'hello [world]({})');
 
-  testCommand('clears existing links', '[hello {world}](foo)', addLink, 'hello [world]({})');
+  testCommand('clears existing links', '[hello {world}](foo)', addLink(), 'hello [world]({})');
 
-  testCommand('does nothing across blocks', '{one\n\ntwo}', addLink, null);
+  testCommand('does nothing across blocks', '{one\n\ntwo}', addLink(), null);
 
-  testCommand('does nothing in code blocks', '```\n{one}\n```', addLink, null);
+  testCommand('does nothing in code blocks', '```\n{one}\n```', addLink(), null);
 
-  testCommand('patches up overlapping styles before', '*foo {bar* baz}', addLink, '*foo* [*bar* baz]({})');
+  testCommand('patches up overlapping styles before', '*foo {bar* baz}', addLink(), '*foo* [*bar* baz]({})');
 
   testCommand(
     'patches up overlapping styles after',
     'one {two ~~three} four~~',
-    addLink,
+    addLink(),
     'one [two ~~three~~]({}) ~~four~~',
   );
 });
@@ -284,6 +297,8 @@ describe('addList', () => {
   );
 
   testCommand("doesn't renumber lists with a different parent", '> one{}\n\n1. two', ordered, '> 1. one\n\n1. two');
+
+  testCommand('can add a list to an empty line', '{}', ordered, '1. {}');
 });
 
 describe('removeList', () => {
@@ -345,6 +360,8 @@ describe('addBlockquote', () => {
     addBlockquote,
     '> one\n> two\n>\n> # three\n\nfour',
   );
+
+  testCommand('can add a blockquote to an empty line', '{}', addBlockquote, '>{}');
 });
 
 describe('removeBlockquote', () => {

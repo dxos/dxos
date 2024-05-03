@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-settings",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "DXOS app plugin for aggregating and rendering plugin settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,17 +23,18 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/local-storage": "workspace:*"
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
-    "vite": "^5.0.12"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",

@@ -4,68 +4,61 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { Chain as ChainType } from '@braneframe/types';
-import { TextObject, getTextContent } from '@dxos/react-client/echo';
-import { DensityProvider, Input, Select, useTranslation } from '@dxos/react-ui';
+import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
+import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
-  BaseTextEditor,
-  createBasicBundle,
-  defaultTextSlots,
-  TextEditor,
-  textTheme,
-  useTextModel,
+  createBasicExtensions,
+  createDataExtensions,
+  createThemeExtensions,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
-import { groupBorder, mx } from '@dxos/react-ui-theme';
+import { attentionSurface, groupBorder, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { nameRegex, promptExtension } from './prompt-extension';
 import { CHAIN_PLUGIN } from '../../meta';
 
 const inputTypes = [
   {
-    value: ChainType.Input.Type.VALUE,
+    value: ChainInputType.VALUE,
     label: 'Value',
   },
   {
-    value: ChainType.Input.Type.PASS_THROUGH,
+    value: ChainInputType.PASS_THROUGH,
     label: 'Pass through',
   },
   {
-    value: ChainType.Input.Type.RETRIEVER,
+    value: ChainInputType.RETRIEVER,
     label: 'Retriever',
   },
   // {
-  //   value: ChainType.Input.Type.FUNCTION,
+  //   value: ChainInputType.FUNCTION,
   //   label: 'Function',
   // },
   // {
-  //   value: ChainType.Input.Type.QUERY,
+  //   value: ChainInputType.QUERY,
   //   label: 'Query',
   // },
   {
-    value: ChainType.Input.Type.RESOLVER,
+    value: ChainInputType.RESOLVER,
     label: 'Resolver',
   },
   {
-    value: ChainType.Input.Type.CONTEXT,
+    value: ChainInputType.CONTEXT,
     label: 'Context',
   },
   {
-    value: ChainType.Input.Type.SCHEMA,
+    value: ChainInputType.SCHEMA,
     label: 'Schema',
   },
 ];
 
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
-type PromptTemplateProps = {
-  prompt: ChainType.Prompt;
-};
-
-export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: prompt.source });
-
-  const text = getTextContent(prompt.source) ?? '';
+const usePromptInputs = (prompt: ChainPromptType) => {
+  const text = prompt.source?.content ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -75,7 +68,9 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     const variables = new Set<string>([...text.matchAll(regex)].map((m) => m[1]));
 
     // Create map of unclaimed inputs.
-    const unclaimed = new Map<string, ChainType.Input>(prompt.inputs?.map((input) => [input.name, input]));
+    const unclaimed = new Map<string, ChainInput>(
+      prompt.inputs?.filter(nonNullable).map((input) => [input.name, input]),
+    );
     const missing: string[] = [];
     Array.from(variables.values()).forEach((name) => {
       if (unclaimed.has(name)) {
@@ -92,7 +87,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(new ChainType.Input({ name, value: new TextObject() }));
+        prompt.inputs.push(create(ChainInput, { name }));
       }
     });
 
@@ -102,10 +97,38 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       prompt.inputs.splice(prompt.inputs.indexOf(input), 1);
     }
   }, [text]);
+};
 
-  if (!model) {
-    return null;
-  }
+type PromptTemplateProps = {
+  prompt: ChainPromptType;
+};
+
+export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
+  const { t } = useTranslation(CHAIN_PLUGIN);
+  const { themeMode } = useThemeContext();
+
+  const { parentRef } = useTextEditor(
+    () => ({
+      doc: prompt.source?.content,
+      extensions: [
+        createDataExtensions({ id: prompt.id, text: prompt.source && createDocAccessor(prompt.source, ['content']) }),
+        createBasicExtensions({
+          bracketMatching: false,
+          lineWrapping: true,
+          placeholder: t('template placeholder'),
+        }),
+        createThemeExtensions({
+          themeMode,
+          slots: {
+            content: { className: '!p-3' },
+          },
+        }),
+        promptExtension,
+      ],
+    }),
+    [themeMode, prompt],
+  );
+  usePromptInputs(prompt);
 
   return (
     <DensityProvider density='fine'>
@@ -127,15 +150,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         </Section>
 
         <Section title='Template'>
-          <BaseTextEditor
-            model={model}
-            extensions={[
-              createBasicBundle({ bracketMatching: false, placeholder: t('template placeholder') }),
-              promptExtension,
-            ]}
-            theme={textTheme}
-            slots={{ ...defaultTextSlots, editor: { className: 'p-3' } }}
-          />
+          <div ref={parentRef} className={attentionSurface} />
         </Section>
 
         {prompt.inputs?.length > 0 && (
@@ -143,15 +158,15 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {prompt.inputs.map((input) => (
+                  {prompt.inputs.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{'{' + input.name + '}'}</td>
+                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>
                         <Input.Root>
                           <Select.Root
                             value={String(input.type)}
                             onValueChange={(type) => {
-                              input.type = getInputType(type) ?? ChainType.Input.Type.VALUE;
+                              input.type = getInputType(type) ?? ChainInputType.VALUE;
                             }}
                           >
                             <Select.TriggerButton placeholder='Type' classNames='is-full' />
@@ -170,12 +185,24 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                         </Input.Root>
                       </td>
                       <td className='px-3'>
-                        {[
-                          ChainType.Input.Type.VALUE,
-                          ChainType.Input.Type.CONTEXT,
-                          ChainType.Input.Type.RESOLVER,
-                          ChainType.Input.Type.SCHEMA,
-                        ].includes(input.type) && <ValueEditor input={input} />}
+                        {input.type &&
+                          [
+                            ChainInputType.VALUE,
+                            ChainInputType.CONTEXT,
+                            ChainInputType.RESOLVER,
+                            ChainInputType.SCHEMA,
+                          ].includes(input.type) && (
+                            <Input.Root>
+                              <Input.TextInput
+                                placeholder={t('command placeholder')}
+                                classNames={mx('is-full bg-transparent m-2')}
+                                value={input.value ?? ''}
+                                onChange={(event) => {
+                                  input.value = event.target.value;
+                                }}
+                              />
+                            </Input.Root>
+                          )}
                       </td>
                     </tr>
                   ))}
@@ -187,17 +214,6 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       </div>
     </DensityProvider>
   );
-};
-
-const ValueEditor = ({ input }: { input: ChainType.Input }) => {
-  const { t } = useTranslation(CHAIN_PLUGIN);
-  const model = useTextModel({ text: input.value });
-  if (!model) {
-    return null;
-  }
-
-  // TODO(burdon): String?
-  return <TextEditor model={model} placeholder={t('value placeholder')} lineWrapping={false} />;
 };
 
 export const Section = ({ title, actions, children }: PropsWithChildren<{ title: string; actions?: JSX.Element }>) => {

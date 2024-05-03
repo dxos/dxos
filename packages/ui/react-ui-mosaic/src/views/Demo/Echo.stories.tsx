@@ -6,14 +6,15 @@ import React, { type FC } from 'react';
 
 import { faker } from '@dxos/random';
 import { type PublicKey } from '@dxos/react-client';
-import { Expando } from '@dxos/react-client/echo';
+import { create } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Mosaic } from '../../mosaic';
 import { FullscreenDecorator, TestObjectGenerator, range, Status, Priority } from '../../testing';
-import { EchoKanban } from '../Kanban/testing';
-import { GraphTree } from '../Tree/testing';
+
+// import { EchoKanban } from '../Kanban/testing';
+// import { GraphTree } from '../Tree/testing';
 
 faker.seed(3);
 const debug = true;
@@ -30,11 +31,9 @@ const Story: FC<{ spaceKey: PublicKey }> = ({ spaceKey }) => {
     <Mosaic.Root debug={debug}>
       <Mosaic.DragOverlay />
       <div className='flex grow overflow-hidden'>
-        <div className='flex shrink-0 w-[280px] overflow-hidden'>
-          <GraphTree id='graph' debug={debug} />
-        </div>
+        <div className='flex shrink-0 w-[280px] overflow-hidden'>{/* <GraphTree id='graph' debug={debug} /> */}</div>
         <div className='flex grow overflow-hidden'>
-          <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} />
+          {/* <EchoKanban id='projects' spaceKey={spaceKey} generator={generator} debug={debug} /> */}
         </div>
       </div>
     </Mosaic.Root>
@@ -51,7 +50,7 @@ export default {
         const objects = [
           factory.schema,
           ...range(factory.createObject, 10),
-          new Expando({
+          create({
             type: 'kanban',
             title: 'Projects',
             schema: factory.schema,
@@ -73,4 +72,4 @@ export default {
 
 // TODO(wittjosiah): This currently has a bug where empty over events are fired when dragging from tree onto kanban.
 //   The bug didn't exist before the cleanup refactor so seems likely it's a side effect of that.
-export const ECHO = {};
+// export const ECHO = {};

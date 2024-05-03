@@ -4,12 +4,11 @@
 
 import '@dxosTheme';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
-import { TextObject } from '@dxos/client/echo';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 import { useClient } from '@dxos/react-client';
+import { createDocAccessor, createEchoObject } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 
 // @ts-ignore
@@ -29,27 +28,21 @@ const code = [
 ].join('\n');
 
 const Story = () => {
-  const [source, setSource] = useState<TextObject>();
-  useEffect(() => {
-    setSource(new TextObject(code, TextKind.PLAIN));
-  }, []);
-
   const client = useClient();
+  // TODO(dmaretskyi): Review what's the right way to create automerge-backed objects.
+  const object = useMemo(() => createEchoObject({ content: code }), [code]);
+  const accessor = useMemo(() => createDocAccessor(object, ['content']), [object]);
   useEffect(() => {
     const generator = createSpaceObjectGenerator(client.spaces.default);
     generator.addSchemas();
-    generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 });
+    void generator.createObjects({ [TestSchemaType.organization]: 20, [TestSchemaType.contact]: 50 }).catch();
   }, []);
-
-  if (!source) {
-    return null;
-  }
 
   // TODO(dmaretskyi): Not sure how to provide `containerUrl` here since the html now lives in composer-app.
   // TODO(burdon): Normalize html/frame.tsx with composer-app to test locally.
   return (
     <div className={'flex fixed inset-0'}>
-      <ScriptBlock id='test' source={source} containerUrl={mainUrl} />
+      {accessor && <ScriptBlock id='test' source={accessor} containerUrl={mainUrl} />}
     </div>
   );
 };

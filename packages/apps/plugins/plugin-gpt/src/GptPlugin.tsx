@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Brain } from '@phosphor-icons/react';
+import { Brain, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { type Document as DocumentType } from '@braneframe/types';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -17,8 +18,9 @@ import {
   type Plugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -35,7 +37,7 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      settings.prop(settings.values.$apiKey!, 'api-key', LocalStorageStore.string);
+      settings.prop({ key: 'apiKey', storageKey: 'api-key', type: LocalStorageStore.string({ allowUndefined: true }) });
 
       graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
@@ -44,23 +46,57 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        builder: ({ parent, plugins }) => {
-          if (isMarkdownProperties(parent.data)) {
-            const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-
-            parent.addAction({
-              id: `${GPT_PLUGIN}/analyze`,
-              label: ['analyze document label', { ns: GPT_PLUGIN }],
-              icon: (props) => <Brain {...props} />,
-              invoke: () =>
-                intentPlugin?.provides.intent.dispatch([
-                  {
-                    plugin: GPT_PLUGIN,
-                    action: GptAction.ANALYZE,
-                  },
-                ]),
-            });
+        // TODO(wittjosiah): Consider a builder which subscribes to the graph itself to add actions.
+        builder: (plugins, graph) => {
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
+          if (!client || !dispatch) {
+            return;
           }
+
+          const subscriptions = new EventSubscriptions();
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              if (space.state.get() !== SpaceState.READY) {
+                return;
+              }
+
+              const query = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(query.subscribe());
+              let previousObjects: DocumentType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                  previousObjects = query.objects;
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
+                    query.objects.forEach((object) =>
+                      graph.addNodes({
+                        id: `${GptAction.ANALYZE}/${object.id}`,
+                        data: () =>
+                          dispatch([
+                            {
+                              plugin: GPT_PLUGIN,
+                              action: GptAction.ANALYZE,
+                            },
+                          ]),
+                        properties: {
+                          label: ['analyze document label', { ns: GPT_PLUGIN }],
+                          icon: (props: IconProps) => <Brain {...props} />,
+                        },
+                      }),
+                    );
+                  });
+                }),
+              );
+            });
+          });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       surface: {
@@ -82,10 +118,10 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               const graph = graphPlugin?.provides.graph;
               const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
               const active = activeNode?.data;
-              const space = isTypedObject(active) && getSpaceForObject(active);
-              if (space && settings.values.apiKey) {
+              const space = getSpace(active);
+              if (space && active instanceof DocumentType && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
-                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active as DocumentType);
+                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
               }
             }
           }

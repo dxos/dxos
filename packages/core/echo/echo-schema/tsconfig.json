@@ -14,18 +14,6 @@
   ],
   "references": [
     {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/debug"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
@@ -38,37 +26,10 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/tracing"
-    },
-    {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../protocols"
     },
     {
-      "path": "../automerge"
-    },
-    {
-      "path": "../document-model"
-    },
-    {
-      "path": "../echo-db"
-    },
-    {
-      "path": "../echo-pipeline"
-    },
-    {
       "path": "../echo-signals"
-    },
-    {
-      "path": "../echo-typegen"
-    },
-    {
-      "path": "../model-factory"
-    },
-    {
-      "path": "../text-model"
     }
   ]
 }

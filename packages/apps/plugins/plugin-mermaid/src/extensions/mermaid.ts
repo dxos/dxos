@@ -18,7 +18,6 @@ import { getToken } from '@dxos/react-ui-editor';
 
 export type MermaidOptions = {};
 
-// TODO(burdon): Move to mermaid-plugin (which should contribute this extension).
 export const mermaid = (options: MermaidOptions = {}): Extension => {
   return [
     StateField.define<RangeSet<any>>({
@@ -32,11 +31,11 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
 
 const update = (state: EditorState, options: MermaidOptions) => {
   const builder = new RangeSetBuilder();
-  const cursor = state.selection.main.head;
 
   syntaxTree(state).iterate({
     enter: (node) => {
       if (node.name === 'FencedCode') {
+        const cursor = state.selection.main.head;
         if (state.readOnly || cursor < node.from || cursor > node.to) {
           const info = node.node.getChild('CodeInfo');
           if (info) {
@@ -44,6 +43,8 @@ const update = (state: EditorState, options: MermaidOptions) => {
             const text = node.node.getChild('CodeText');
             if (type === 'mermaid' && text) {
               const content = state.sliceDoc(text.from, text.to);
+              // TODO(burdon): Error if extension defined AFTER decorateMarkdown.
+              //  Decorations that replace line breaks may not be specified via plugins
               builder.add(
                 node.from,
                 node.to,

@@ -4,16 +4,9 @@
 
 import { inspect } from 'node:util';
 
-import {
-  asyncTimeout,
-  Event,
-  EventSubscriptions,
-  MulticastObservable,
-  observableError,
-  ObservableProvider,
-  Trigger,
-} from '@dxos/async';
+import { asyncTimeout, Event, EventSubscriptions, MulticastObservable, Trigger } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
+import type { Stream } from '@dxos/codec-protobuf';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -26,9 +19,15 @@ import {
   type Identity,
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  type Presentation,
+  type ProfileDocument,
+  type DeviceProfileDocument,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
+import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
@@ -39,11 +38,15 @@ export class HaloProxy implements Halo {
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
+  private readonly _credentialsChanged = new Event<Credential[]>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
+  private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
   private _invitationProxy?: InvitationsProxy;
+
+  private _haloCredentialStream?: Stream<Credential>;
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
@@ -84,6 +87,10 @@ export class HaloProxy implements Halo {
     return this._contacts;
   }
 
+  get credentials() {
+    return this._credentials;
+  }
+
   get invitations() {
     invariant(this._invitationProxy, 'HaloProxy not opened');
     return this._invitationProxy.created;
@@ -106,13 +113,35 @@ export class HaloProxy implements Halo {
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService not available');
-    this._invitationProxy = new InvitationsProxy(this._serviceProvider.services.InvitationsService, () => ({
-      kind: Invitation.Kind.DEVICE,
-    }));
+    this._invitationProxy = new InvitationsProxy(
+      this._serviceProvider.services.InvitationsService,
+      this._serviceProvider.services.IdentityService,
+      () => ({
+        kind: Invitation.Kind.DEVICE,
+      }),
+    );
     await this._invitationProxy.open();
 
+    this._identityChanged.on((identity) => {
+      if (identity && !this._haloCredentialStream) {
+        invariant(this._serviceProvider.services.SpacesService, 'SpacesService not available');
+        this._haloCredentialStream = this._serviceProvider.services.SpacesService.queryCredentials(
+          {
+            spaceKey: identity.spaceKey!,
+          },
+          { timeout: RPC_TIMEOUT },
+        );
+        this._haloCredentialStream.subscribe((data) => {
+          this._credentialsChanged.emit([...this._credentials.get(), data]);
+        });
+        this._subscriptions.add(() => this._haloCredentialStream?.close());
+      }
+    });
+
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity();
+    const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
+      timeout: RPC_TIMEOUT,
+    });
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
       data.identity &&
@@ -125,7 +154,9 @@ export class HaloProxy implements Halo {
     this._subscriptions.add(() => identityStream.close());
 
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
-    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices();
+    const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
+      timeout: RPC_TIMEOUT,
+    });
     devicesStream.subscribe((data) => {
       if (data.devices) {
         this._devicesChanged.emit(data.devices);
@@ -144,6 +175,7 @@ export class HaloProxy implements Halo {
     //   this._contactsChanged.emit();
     // });
     // this._subscriptions.add(() => contactsStream.close());
+    // TODO(nf): trigger automatically? feedback on how many were resumed?
 
     log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
     await Promise.all([gotIdentity]);
@@ -174,79 +206,59 @@ export class HaloProxy implements Halo {
   /**
    * Create Identity.
    * Then initializes profile with given display name.
+   * @param profile - optional display name
+   * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  async createIdentity(profile: ProfileDocument = {}): Promise<Identity> {
+  async createIdentity(profile: ProfileDocument = {}, deviceProfile?: DeviceProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.createIdentity({
-      profile,
-    });
+    const deviceProfileWithDefaults = {
+      ...deviceProfile,
+      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'initial identity device' }),
+    };
+    const identity = await this._serviceProvider.services.IdentityService.createIdentity(
+      {
+        profile,
+        deviceProfile: deviceProfileWithDefaults,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async recoverIdentity(recoveryKey: Uint8Array): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity({ recoveryKey });
+    const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(
+      { recoveryKey },
+      { timeout: RPC_TIMEOUT },
+    );
     this._identityChanged.emit(identity);
     return identity;
   }
 
   async updateProfile(profile: ProfileDocument): Promise<Identity> {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
-    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile);
+    const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile, {
+      timeout: RPC_TIMEOUT,
+    });
     this._identityChanged.emit(identity);
     return identity;
   }
 
   /**
    * Get Halo credentials for the current user.
+   * Note: Will return an empty result if called before all credentials have been loaded.
    */
-  // TODO(wittjosiah): Get/Subscribe.
   queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}) {
-    const identity = this._identity.get();
-    if (!identity) {
-      throw new ApiError('Identity is not available.');
-    }
-    if (!this._serviceProvider.services.SpacesService) {
-      throw new ApiError('SpacesService is not available.');
-    }
-
-    const stream = this._serviceProvider.services.SpacesService.queryCredentials({
-      spaceKey: identity.spaceKey!,
+    return this._credentials.get().filter((credential) => {
+      if (ids && !ids.some((id) => id.equals(credential.id!))) {
+        return false;
+      }
+      if (type && credential.subject.assertion['@type'] !== type) {
+        return false;
+      }
+      return true;
     });
-    this._subscriptions.add(() => stream.close());
-
-    const observable = new ObservableProvider<
-      { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
-      Credential[]
-    >();
-
-    const credentials: Credential[] = [];
-    stream.subscribe(
-      (credential) => {
-        credentials.push(credential);
-        const newCredentials = credentials
-          .filter((c) => !ids || (c.id && ids.some((id) => id.equals(c.id!))))
-          .filter((c) => !type || c.subject.assertion['@type'] === type);
-        if (
-          newCredentials.length !== observable.value?.length ||
-          !newCredentials.every(
-            (credential, index) =>
-              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!),
-          )
-        ) {
-          observable.setValue(newCredentials);
-          observable.callback.onUpdate(newCredentials);
-        }
-      },
-      (err) => {
-        if (err) {
-          observableError(observable, err);
-        }
-      },
-    );
-
-    return observable;
   }
 
   /**
@@ -257,21 +269,26 @@ export class HaloProxy implements Halo {
       throw new ApiError('Client not open.');
     }
 
-    log('create invitation', options);
+    log('create invitation', { options });
     const invitation = this._invitationProxy!.share(options);
     return invitation;
   }
 
   /**
    * Initiates accepting invitation.
+   * @param invitation
+   * @param deviceProfile - optional device profile that will be merged with defaults
    */
-  join(invitation: Invitation | string) {
+  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument) {
     if (!this.opened) {
       throw new ApiError('Client not open.');
     }
 
-    log('accept invitation', invitation);
-    return this._invitationProxy!.join(invitation);
+    const deviceProfileWithDefaults = {
+      ...deviceProfile,
+      ...(deviceProfile?.label ? { label: deviceProfile.label } : { label: 'additional device' }),
+    };
+    return this._invitationProxy!.join(invitation, deviceProfileWithDefaults);
   }
 
   /**
@@ -286,10 +303,13 @@ export class HaloProxy implements Halo {
       throw new ApiError('SpacesService is not available.');
     }
 
-    return this._serviceProvider.services.SpacesService.writeCredentials({
-      spaceKey: identity.spaceKey!,
-      credentials,
-    });
+    return this._serviceProvider.services.SpacesService.writeCredentials(
+      {
+        spaceKey: identity.spaceKey!,
+        credentials,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**
@@ -299,20 +319,13 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
-
     const trigger = new Trigger<Credential[]>();
-    this.queryCredentials({ ids }).subscribe({
-      onUpdate: (credentials) => {
-        if (
-          credentials.every((credential) => ids.some((id) => id.equals(credential.id!))) &&
-          ids.every((id) => credentials.some((credential) => id.equals(credential.id!)))
-        ) {
-          trigger.wake(credentials);
-        }
-      },
-      onError: (err) => {
-        log.catch(err);
-      },
+
+    this._credentials.subscribe((credentials) => {
+      const credentialsToPresent = credentials.filter((credential) => ids.some((id) => id.equals(credential.id!)));
+      if (credentialsToPresent.length === ids.length) {
+        trigger.wake(credentialsToPresent);
+      }
     });
 
     const credentials = await asyncTimeout(
@@ -320,11 +333,14 @@ export class HaloProxy implements Halo {
       AUTH_TIMEOUT,
       new ApiError('Timeout while waiting for credentials'),
     );
-    return this._serviceProvider.services.IdentityService.signPresentation({
-      presentation: {
-        credentials,
+    return this._serviceProvider.services.IdentityService.signPresentation(
+      {
+        presentation: {
+          credentials,
+        },
+        nonce,
       },
-      nonce,
-    });
+      { timeout: RPC_TIMEOUT },
+    );
   }
 }

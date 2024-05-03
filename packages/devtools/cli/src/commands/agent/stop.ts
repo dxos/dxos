@@ -33,7 +33,7 @@ export default class Stop extends BaseCommand<typeof Stop> {
             this.log('Agent stopped');
           }
         } catch (err: any) {
-          this.error(err);
+          this.catch(err);
         }
       };
 

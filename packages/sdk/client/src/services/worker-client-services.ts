@@ -4,17 +4,18 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import type { SharedWorkerConnection } from '@dxos/client-services';
+import { type SharedWorkerConnection } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
-import { type LogFilter, parseFilter, log } from '@dxos/log';
+import { type LogFilter, parseFilter, log, type CallMetadata } from '@dxos/log';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import { type ServiceBundle } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
 import { ClientServicesProxy } from './service-proxy';
+import { RPC_TIMEOUT } from '../common';
 import { LOCK_KEY } from '../lock-key';
 
 /**
@@ -27,6 +28,8 @@ export type WorkerClientServicesParams = {
   config: Config;
   createWorker: () => SharedWorker;
   logFilter?: string;
+  observabilityGroup?: string;
+  signalTelemetryEnabled?: boolean;
 };
 
 /**
@@ -47,11 +50,21 @@ export class WorkerClientServices implements ClientServicesProvider {
   private _runtime!: SharedWorkerConnection;
   private _services!: ClientServicesProxy;
   private _loggingStream?: Stream<LogEntry>;
+  private readonly _observabilityGroup?: string;
+  private readonly _signalTelemetryEnabled: boolean;
 
-  constructor({ config, createWorker, logFilter = 'error,warn' }: WorkerClientServicesParams) {
+  constructor({
+    config,
+    createWorker,
+    logFilter = 'error,warn',
+    observabilityGroup,
+    signalTelemetryEnabled,
+  }: WorkerClientServicesParams) {
     this._config = config;
     this._createWorker = createWorker;
     this._logFilter = parseFilter(logFilter);
+    this._observabilityGroup = observabilityGroup;
+    this._signalTelemetryEnabled = signalTelemetryEnabled ?? false;
   }
 
   get descriptors(): ServiceBundle<ClientServices> {
@@ -77,6 +90,7 @@ export class WorkerClientServices implements ClientServicesProvider {
 
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
+    worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
     worker.port.onmessage = (event) => {
       const { command, payload } = event.data;
       if (command === 'init') {
@@ -89,7 +103,11 @@ export class WorkerClientServices implements ClientServicesProvider {
       config: this._config,
       systemPort: createWorkerPort({ port: systemPort }),
     });
-    await this._runtime.open(location.origin);
+    await this._runtime.open({
+      origin: location.origin,
+      observabilityGroup: this._observabilityGroup,
+      signalTelemetryEnabled: this._signalTelemetryEnabled,
+    });
 
     this._services = new ClientServicesProxy(createWorkerPort({ port: appPort }));
     await this._services.open();
@@ -100,22 +118,25 @@ export class WorkerClientServices implements ClientServicesProvider {
       }
     });
 
-    this._loggingStream = this._services.services.LoggingService.queryLogs({
-      filters: this._logFilter,
-    });
+    this._loggingStream = this._services.services.LoggingService.queryLogs(
+      {
+        filters: this._logFilter,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:
-          log.debug(`[worker] ${entry.message}`, entry.context);
+          log.debug(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.INFO:
-          log.info(`[worker] ${entry.message}`, entry.context);
+          log.info(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.WARN:
-          log.warn(`[worker] ${entry.message}`, entry.context);
+          log.warn(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
         case LogLevel.ERROR:
-          log.error(`[worker] ${entry.message}`, entry.context);
+          log.error(entry.message, entry.context, mapLogMeta(entry.meta));
           break;
       }
     });
@@ -139,3 +160,13 @@ export class WorkerClientServices implements ClientServicesProvider {
     this._isOpen = false;
   }
 }
+
+const mapLogMeta = (meta: LogEntry.Meta | undefined): CallMetadata | undefined => {
+  return (
+    meta && {
+      F: meta.file,
+      L: meta.line,
+      S: meta.scope,
+    }
+  );
+};

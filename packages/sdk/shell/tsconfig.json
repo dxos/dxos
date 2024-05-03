@@ -49,6 +49,9 @@
       "path": "../../core/mesh/rpc-tunnel"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

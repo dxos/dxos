@@ -11,8 +11,7 @@ import {
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import { toSvg } from 'jdenticon';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useMemo } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 import { type Size } from '@dxos/react-ui-types';
@@ -35,7 +34,7 @@ type AvatarContextValue = {
   status?: AvatarStatus;
   animation?: AvatarAnimation;
   inGroup?: boolean;
-  color?: string;
+  hue?: string;
 };
 
 const AVATAR_NAME = 'Avatar';
@@ -51,13 +50,13 @@ const AvatarRoot = ({
   descriptionId: propsDescriptionId,
   maskId: propsMaskId,
   inGroup,
-  color,
+  hue,
 }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
   const descriptionId = useId('avatar__description', propsDescriptionId);
   const maskId = useId('avatar__mask', propsMaskId);
   return (
-    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup, color }}>
+    <AvatarProvider {...{ labelId, descriptionId, maskId, size, variant, status, animation, inGroup, hue }}>
       {children}
     </AvatarProvider>
   );
@@ -69,14 +68,14 @@ const rx = '0.25rem';
 
 const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation, color } =
+    const { size, variant, labelId, descriptionId, maskId, inGroup, status, animation, hue } =
       useAvatarContext('AvatarFrame');
 
     const { tx } = useThemeContext();
     const numericSize = size === 'px' ? 1 : Number(size);
     const sizePx = numericSize * 4;
-    const ringWidth = numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1;
-    const ringGap = numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0;
+    const ringWidth = status ? (numericSize > 4 ? 2 : numericSize > 3 ? 1 : 1) : 0;
+    const ringGap = status ? (numericSize > 12 ? 3 : numericSize > 4 ? 2 : numericSize > 3 ? 1 : 0) : 0;
     const r = sizePx / 2 - ringGap - ringWidth;
     return (
       <AvatarRootPrimitive
@@ -113,15 +112,14 @@ const AvatarFrame = forwardRef<HTMLSpanElement, AvatarFrameProps>(
           </defs>
           {variant === 'circle' ? (
             <circle
-              className={`avatarFrameFill${color ? '' : ' fill-[var(--surface-bg)]'}`}
+              className={hue ? tx('hue.fill', 'avatar__frame__circle', { hue }) : 'fill-[var(--surface-bg)]'}
               cx='50%'
               cy='50%'
               r={r}
-              {...(color ? { fill: color } : {})}
             />
           ) : (
             <rect
-              className='avatarFrameFill fill-[var(--surface-bg)]'
+              className={hue ? tx('hue.fill', 'avatar__frame__rect', { hue }) : 'fill-[var(--surface-bg)]'}
               x={ringGap + ringWidth}
               y={ringGap + ringWidth}
               width={2 * r}
@@ -282,13 +280,6 @@ const AvatarFallback = forwardRef<SVGImageElement, AvatarFallbackProps>(({ delay
   );
 });
 
-const getJdenticonHref = (value: string, size: Size) =>
-  `data:image/svg+xml;utf8,${encodeURIComponent(toSvg(value, size === 'px' ? 1 : size * 4, { padding: 0 }))}`;
-
-const useJdenticonHref = (value: string, size: Size) => {
-  return useMemo(() => getJdenticonHref(value, size), [value]);
-};
-
 export const Avatar = {
   Root: AvatarRoot,
   Frame: AvatarFrame,
@@ -298,7 +289,7 @@ export const Avatar = {
   Description: AvatarDescription,
 };
 
-export { useJdenticonHref, useAvatarContext, getJdenticonHref };
+export { useAvatarContext };
 
 export type {
   AvatarStatus,

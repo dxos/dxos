@@ -6,55 +6,58 @@ import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/reac
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Document as DocumentType } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
-  type LinkOptions,
   EditorModes,
   autocomplete,
-  code,
-  heading,
-  hr,
-  image,
-  link,
+  decorateMarkdown,
+  linkTooltip,
   table,
-  tasklist,
   typewriter,
-  formatting,
+  formattingKeymap,
+  image,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import type { MarkdownSettingsProps } from './types';
+import { type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
+  dispatch?: IntentDispatcher;
   settings?: MarkdownSettingsProps;
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
-  dispatch?: IntentDispatcher;
+  query?: Query<DocumentType>;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ settings, document, dispatch }: ExtensionsOptions): Extension[] => {
-  const space = document ? getSpaceForObject(document) : undefined;
-
+export const getExtensions = ({ dispatch, settings, document, query }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     //
     // Common.
     //
-    code(),
-    formatting(),
-    heading(),
-    hr(),
+    decorateMarkdown({
+      selectionChangeDelay: 100,
+      renderLinkButton: dispatch
+        ? onRenderLink((id: string) => {
+            void dispatch({
+              action: NavigationAction.ACTIVATE,
+              data: { id },
+            });
+          })
+        : undefined,
+    }),
+    formattingKeymap(),
     image(),
     table(),
-    tasklist(),
+    linkTooltip(renderLinkTooltip),
   ];
 
   //
@@ -68,32 +71,15 @@ export const getExtensions = ({ settings, document, dispatch }: ExtensionsOption
   }
 
   //
-  // Hyperlinks (external and internal object links).
-  //
-  if (dispatch) {
-    extensions.push(
-      link({
-        onHover: onHoverLinkTooltip,
-        onRender: onRenderLink((id: string) => {
-          void dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id },
-          });
-        }),
-      }),
-    );
-  }
-
-  //
   // Autocomplete object links.
   //
-  if (space) {
+  if (query) {
     extensions.push(
       autocomplete({
         onSearch: (text: string) => {
+          // TODO query
           // TODO(burdon): Specify filter (e.g., stack).
-          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-          return objects
+          return query.objects
             .map<AutocompleteResult | undefined>((object) =>
               object.title?.length && object.id !== document?.id
                 ? {
@@ -149,7 +135,7 @@ const onRenderLink = (onSelectObject: (id: string) => void) => (el: Element, url
   );
 };
 
-const onHoverLinkTooltip: LinkOptions['onHover'] = (el, url) => {
+const renderLinkTooltip = (el: Element, url: string) => {
   const web = new URL(url);
   createRoot(el).render(
     <StrictMode>

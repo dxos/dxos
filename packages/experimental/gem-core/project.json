@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "gem-core",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/gem-core/src",
   "projectType": "library",
   "targets": {
@@ -12,9 +17,7 @@
     },
     "lint": {}
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "gem-core"
+  ]
 }

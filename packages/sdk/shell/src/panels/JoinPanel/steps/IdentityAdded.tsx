@@ -6,8 +6,9 @@ import React, { cloneElement } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import type { Identity } from '@dxos/react-client/halo';
-import { Avatar, useId, useJdenticonHref, useTranslation } from '@dxos/react-ui';
+import { Avatar, useId, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
+import { hexToFallback } from '@dxos/util';
 
 import { Action, Actions, StepHeading } from '../../../components';
 import { type JoinPanelMode, type JoinStepProps } from '../JoinPanelProps';
@@ -22,11 +23,10 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
   const disabled = !active;
   const { t } = useTranslation('os');
 
-  const fallbackValue = addedIdentity?.identityKey.toHex();
+  const addedIdentityHex = addedIdentity?.identityKey.toHex() ?? '0';
+  const fallbackValue = hexToFallback(addedIdentityHex);
   const labelId = useId('identityListItem__label');
-  const jdenticon = useJdenticonHref(fallbackValue ?? '', 12);
-  const displayName =
-    addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentity?.identityKey.toHex()));
+  const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
 
   const doneAction = (
     <Action
@@ -43,9 +43,9 @@ export const IdentityAdded = (props: IdentityAddedProps) => {
     <>
       <StepHeading>{t('identity added label')}</StepHeading>
       <div role='none' className='grow flex flex-col items-center justify-center text-center gap-2'>
-        <Avatar.Root status='active' labelId={labelId}>
+        <Avatar.Root status='active' labelId={labelId} hue={addedIdentity?.profile?.data?.hue || fallbackValue.hue}>
           <Avatar.Frame>
-            <Avatar.Fallback href={jdenticon} />
+            <Avatar.Fallback text={addedIdentity?.profile?.data?.emoji || fallbackValue.emoji} />
           </Avatar.Frame>
           <Avatar.Label classNames={mx('text-lg truncate', !addedIdentity?.profile?.displayName && 'font-mono')}>
             {displayName}

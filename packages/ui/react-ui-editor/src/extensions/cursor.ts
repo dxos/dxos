@@ -4,7 +4,7 @@
 
 import { type EditorState, Facet } from '@codemirror/state';
 
-import type { Range } from '../hooks';
+import type { Range } from './types';
 
 /**
  * Converts indexes into the text document into stable peer-independent cursors.

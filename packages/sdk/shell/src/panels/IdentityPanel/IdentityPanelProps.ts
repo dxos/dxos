@@ -7,33 +7,29 @@ import type { Event, SingleOrArray } from 'xstate';
 
 import type { Device, Identity } from '@dxos/react-client/halo';
 import type { InvitationStatus } from '@dxos/react-client/invitations';
+import type { ConnectionState } from '@dxos/react-client/mesh';
 
 import type { IdentityEvent } from './identityMachine';
+import { type AgentFormProps } from '../../components';
 import type { InvitationManagerProps } from '../../steps';
 
-export type AgentFormProps = {
-  onAgentCreate?: () => Promise<void>;
-  onAgentDestroy?: () => Promise<void>;
-  agentStatus?: string;
-  agentActive?: boolean;
-  agentProviderDisabled?: boolean;
-  validationMessage?: string;
-};
+export type IdentityPanelInitialDisposition = 'default' | 'manage-device-invitation';
 
 export type IdentityPanelImplProps = {
   titleId: string;
   activeView:
-    | 'device manager'
-    | 'agent manager'
-    | 'update profile form'
     | 'device invitation manager'
     | 'identity action chooser'
-    | 'signing out';
+    | 'confirm join new identity'
+    | 'confirm reset storage';
+  initialDisposition?: IdentityPanelInitialDisposition;
   identity: Identity;
   devices: Device[];
+  connectionState?: ConnectionState;
+  onChangeConnectionState?: (nextState: ConnectionState) => Promise<void>;
   onUpdateProfile?: (profile: NonNullable<Identity['profile']>) => Promise<void>;
-  onResetDevice?: () => Promise<void>;
-  onJoinNewIdentity?: () => void;
+  onResetStorage?: () => Promise<void>;
+  onJoinNewIdentity?: () => Promise<void>;
   createInvitationUrl: (invitationCode: string) => string;
   send?: (event: SingleOrArray<Event<IdentityEvent>>) => void;
   onDone?: () => void;
@@ -46,10 +42,15 @@ export type IdentityPanelImplProps = {
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 
-export type IdentityPanelHeadingProps = Pick<IdentityPanelImplProps, 'titleId' | 'identity' | 'onDone'> & {
+export type IdentityPanelHeadingProps = Pick<
+  IdentityPanelImplProps,
+  'titleId' | 'identity' | 'onDone' | 'onUpdateProfile' | 'connectionState' | 'onChangeConnectionState'
+> & {
   title: string;
 };
 
 export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send' | 'onDone' | 'doneActionParent'> & {
   active?: boolean;
+  agentHostingEnabled?: boolean;
+  devices: Device[];
 };

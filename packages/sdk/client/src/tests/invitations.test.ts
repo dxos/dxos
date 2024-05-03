@@ -6,9 +6,15 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncChain, asyncTimeout } from '@dxos/async';
+import { asyncChain, asyncTimeout, Trigger, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
-import { type DataSpace, InvitationsServiceImpl, type ServiceContext } from '@dxos/client-services';
+import {
+  createAdmissionKeypair,
+  type DataSpace,
+  InvitationsServiceImpl,
+  type ServiceContext,
+  InvitationsManager,
+} from '@dxos/client-services';
 import {
   type PerformInvitationParams,
   type Result,
@@ -16,9 +22,12 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
+import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { ConnectionState, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -102,6 +111,55 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     );
 
     await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('with shared keypair', async () => {
+    const [host, guest] = getPeers();
+    const params = getParams();
+    const guestKeypair = createAdmissionKeypair();
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, guestKeypair, authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY },
+      }),
+    );
+
+    await successfulInvitation({ host, guest, hostResult, guestResult });
+  });
+
+  test('invalid shared keypair', async () => {
+    const params = getParams();
+    const keypair1 = createAdmissionKeypair();
+    const keypair2 = createAdmissionKeypair();
+    const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
+    const [hostResult, guestResult] = performInvitation({
+      ...params,
+      options: {
+        ...params.options,
+        guestKeypair: invalidKeypair,
+        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      },
+    });
+
+    expect((await guestResult).error).to.exist;
+    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
+  });
+
+  test('incomplete shared keypair', async () => {
+    const params = getParams();
+    const keypair = createAdmissionKeypair();
+    delete keypair.privateKey;
+    const [hostResult, guestResult] = performInvitation({
+      ...params,
+      options: {
+        ...params.options,
+        guestKeypair: keypair,
+        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+      },
+    });
+
+    expect((await guestResult).error).to.exist;
+    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
   });
 
   test('with target', async () => {
@@ -292,6 +350,206 @@ describe('Invitations', () => {
   });
 
   describe('InvitationsProxy', () => {
+    describe('invitation expiry', () => {
+      let hostContext: ServiceContext;
+      let guestContext: ServiceContext;
+      let host: InvitationsProxy;
+      let space: DataSpace;
+      let hostMetadata: MetadataStore;
+
+      beforeEach(async () => {
+        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
+        hostContext = peers[0];
+        guestContext = peers[1];
+        invariant(hostContext.dataSpaceManager);
+        invariant(guestContext.dataSpaceManager);
+
+        const { service, metadata } = createInvitationsApi(hostContext);
+        hostMetadata = metadata;
+        space = await hostContext.dataSpaceManager.createSpace();
+        host = new InvitationsProxy(service, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+
+        afterTest(() => space.close());
+      });
+      test('invitations expire', async () => {
+        const expired = new Trigger();
+        const complete = new Trigger();
+        const invitation = host.share({ lifetime: 3 });
+        invitation.subscribe(
+          async (invitation) => {
+            if (invitation.state === Invitation.State.EXPIRED) {
+              expired.wake();
+            }
+          },
+          (err: Error) => {
+            log('invitation error', { err });
+            throw err;
+          },
+          () => {
+            complete.wake();
+          },
+        );
+        await expired.wait({ timeout: 5_000 });
+        await complete.wait();
+        expect(invitation.get().state).to.eq(Invitation.State.EXPIRED);
+        // TODO: assumes too much about implementation.
+        expect(hostMetadata.getInvitations()).to.have.lengthOf(0);
+        const swarmTopic = hostContext.networkManager.topics.find((topic) => topic.equals(invitation.get().swarmKey));
+        expect(swarmTopic).to.be.undefined;
+      });
+    });
+
+    describe('persistent invitations', () => {
+      test('space with no auth', async () => {
+        const [hostContext, guestContext] = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(
+          createPeers(2),
+        );
+        invariant(hostContext.dataSpaceManager);
+        invariant(guestContext.dataSpaceManager);
+        const hostApi = createInvitationsApi(hostContext);
+        // TODO(nf): require calling manually outside of service-host?
+        await hostApi.manager.loadPersistentInvitations();
+
+        const { service: guestService, manager: guestManager } = createInvitationsApi(guestContext);
+        await guestManager.loadPersistentInvitations();
+
+        const space = await hostContext?.dataSpaceManager.createSpace();
+        afterTest(() => space.close());
+
+        const guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
+        let persistentInvitationId: string;
+        {
+          const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
+            kind: Invitation.Kind.SPACE,
+            spaceKey: space.key,
+          }));
+
+          // ensure the saved event fires
+          await tempHost.open();
+          const savedTrigger = new Trigger();
+          tempHost.saved.subscribe((invitation) => {
+            if (invitation.length > 0) {
+              savedTrigger.wake();
+            }
+          });
+          const persistentInvitation = tempHost.share({ authMethod: Invitation.AuthMethod.NONE });
+          persistentInvitationId = persistentInvitation.get().invitationId;
+          await savedTrigger.wait();
+          await waitForCondition({
+            condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
+          });
+          // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
+          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
+        }
+
+        const { service: newHostService, manager: newHostManager } = createInvitationsApi(
+          hostContext,
+          hostApi.metadata,
+        );
+        const host = new InvitationsProxy(newHostService, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+
+        const loadedInvitations = await newHostManager.loadPersistentInvitations();
+        await host.open();
+        expect(loadedInvitations.invitations).to.have.lengthOf(1);
+
+        const [hostObservable] = host.created.get();
+        expect(hostObservable.get().invitationId).to.be.eq(persistentInvitationId);
+
+        const hostComplete = new Trigger<Result>();
+        const guestComplete = new Trigger<Result>();
+        hostObservable.subscribe(
+          async (hostInvitation: Invitation) => {
+            switch (hostInvitation.state) {
+              case Invitation.State.CONNECTING: {
+                const guestObservable = guest.join(hostInvitation);
+                guestObservable.subscribe(
+                  async (guestInvitation: Invitation) => {
+                    switch (guestInvitation.state) {
+                      case Invitation.State.SUCCESS: {
+                        guestComplete.wake({ invitation: guestInvitation });
+                        break;
+                      }
+                    }
+                  },
+                  (err: Error) => {
+                    throw err;
+                  },
+                );
+                break;
+              }
+              case Invitation.State.SUCCESS: {
+                hostComplete.wake({ invitation: hostInvitation });
+                break;
+              }
+            }
+          },
+          (err: Error) => {
+            throw err;
+          },
+        );
+
+        await successfulInvitation({
+          host: hostContext,
+          guest: guestContext,
+          hostResult: await hostComplete.wait(),
+          guestResult: await guestComplete.wait(),
+        });
+      });
+      test('non-persistent invitations are not persisted', async () => {
+        const peers = await asyncChain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+        const hostContext = peers[0];
+
+        invariant(hostContext.dataSpaceManager);
+
+        const hostApi = createInvitationsApi(hostContext);
+
+        const space = await hostContext?.dataSpaceManager.createSpace();
+        afterTest(() => space.close());
+
+        {
+          const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
+            kind: Invitation.Kind.SPACE,
+            spaceKey: space.key,
+            persistent: false,
+          }));
+          // TODO(nf): require calling manually outside of service-host?
+          await hostApi.manager.loadPersistentInvitations();
+          await tempHost.open();
+
+          const createdTrigger = new Trigger();
+          tempHost.created.subscribe((invitation) => {
+            if (invitation.length > 0) {
+              createdTrigger.wake();
+            }
+          });
+          tempHost.share({ authMethod: Invitation.AuthMethod.NONE });
+          await createdTrigger.wait();
+        }
+
+        const { service: newHostService, manager: newHostManager } = createInvitationsApi(
+          hostContext,
+          hostApi.metadata,
+        );
+        await newHostManager.loadPersistentInvitations();
+        expect(hostApi.metadata.getInvitations()).to.have.lengthOf(0);
+
+        const host = new InvitationsProxy(newHostService, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+        await host.open();
+
+        const loadedInvitations = await newHostManager.loadPersistentInvitations();
+        expect(loadedInvitations.invitations).to.have.lengthOf(0);
+        expect(host.created.get()).to.have.lengthOf(0);
+      });
+    });
     describe('space', () => {
       let hostContext: ServiceContext;
       let guestContext: ServiceContext;
@@ -306,16 +564,15 @@ describe('Invitations', () => {
         invariant(hostContext.dataSpaceManager);
         invariant(guestContext.dataSpaceManager);
 
-        const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation),
-        );
-        const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation),
-        );
+        const { service: hostService } = createInvitationsApi(hostContext);
+        const { service: guestService } = createInvitationsApi(guestContext);
 
         space = await hostContext.dataSpaceManager.createSpace();
-        host = new InvitationsProxy(hostService, () => ({ kind: Invitation.Kind.SPACE, spaceKey: space.key }));
-        guest = new InvitationsProxy(guestService, () => ({ kind: Invitation.Kind.SPACE }));
+        host = new InvitationsProxy(hostService, undefined, () => ({
+          kind: Invitation.Kind.SPACE,
+          spaceKey: space.key,
+        }));
+        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
         afterTest(() => space.close());
       });
@@ -339,16 +596,11 @@ describe('Invitations', () => {
 
         await hostContext.identityManager.createIdentity();
 
-        const hostService = new InvitationsServiceImpl(hostContext.invitations, (invitation) =>
-          hostContext.getInvitationHandler(invitation),
-        );
+        const { service: hostService } = createInvitationsApi(hostContext);
+        const { service: guestService } = createInvitationsApi(guestContext);
 
-        const guestService = new InvitationsServiceImpl(guestContext.invitations, (invitation) =>
-          guestContext.getInvitationHandler(invitation),
-        );
-
-        host = new InvitationsProxy(hostService, () => ({ kind: Invitation.Kind.DEVICE }));
-        guest = new InvitationsProxy(guestService, () => ({ kind: Invitation.Kind.DEVICE }));
+        host = new InvitationsProxy(hostService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
+        guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.DEVICE }));
       });
 
       testSuite(
@@ -408,3 +660,16 @@ describe('Invitations', () => {
     );
   });
 });
+
+const createInvitationsApi = (
+  context: ServiceContext,
+  metadata: MetadataStore = new MetadataStore(createStorage({ type: StorageType.RAM }).createDirectory()),
+) => {
+  const manager = new InvitationsManager(
+    context.invitations,
+    (invitation) => context.getInvitationHandler(invitation),
+    metadata,
+  );
+  const service = new InvitationsServiceImpl(manager);
+  return { manager, service, metadata };
+};

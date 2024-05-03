@@ -35,6 +35,9 @@
       "path": "../../../core/echo/automerge"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -51,6 +54,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-space"

@@ -21,10 +21,16 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/log"
     },
     {
       "path": "../../../core/echo/echo-schema"
@@ -46,6 +52,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-markdown"

@@ -18,7 +18,7 @@ export const PopoverRenameSpace = ({ space }: { space: Space }) => {
     space.properties.name = name;
   }, [space, name]);
 
-  // todo(thure): Why does the input value need to be uncontrolled to work?
+  // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (
     <div role='none' className='p-1 flex gap-2'>
       <div role='none' className='flex-1'>

@@ -19,7 +19,7 @@ import ident from '../../../assets/sounds/ident-1.mp3';
 import { DXOS } from '../../icons';
 
 export default {
-  title: 'react-icons/Logo',
+  title: 'brand/Logo',
   component: ComposerLogo,
   decorators: [withTheme],
 };

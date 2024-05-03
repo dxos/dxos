@@ -19,9 +19,8 @@ export type DatadogOptions = {
   getTags: () => { [key: string]: string };
   // needed to read CORS proxy
   config: Config;
+  debug?: boolean;
 };
-
-debug.enable('metrics');
 
 export class DatadogMetrics {
   private _datadogmetrics?: any;
@@ -30,6 +29,7 @@ export class DatadogMetrics {
   constructor(options: DatadogOptions) {
     this._getTags = options.getTags;
     this._datadogmetrics = Datadog;
+    options.debug && debug.enable('metrics');
 
     this._datadogmetrics.init(defaultOptions(options));
   }

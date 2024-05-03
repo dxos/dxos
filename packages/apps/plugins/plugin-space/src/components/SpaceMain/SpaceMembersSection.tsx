@@ -43,7 +43,10 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
   const { dispatch } = useIntent();
 
   const handleCloseDialog = () =>
-    dispatch({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
+    dispatch({
+      action: LayoutAction.SET_LAYOUT,
+      data: { element: 'dialog', state: false },
+    });
 
   const handleInvitationSelect = ({
     invitation: invitationObservable,
@@ -86,8 +89,9 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
       icon: UsersThree,
       onClick: useCallback(() => {
         space.share?.({
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.NONE,
+          multiUse: true,
         });
       }, [space]),
     },

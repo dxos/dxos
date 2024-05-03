@@ -20,6 +20,7 @@ export default class Identity extends BaseCommand<typeof Identity> {
         this.log(chalk`{red Identity not initialized.}`);
         return {};
       } else {
+        await client.spaces.isReady.wait();
         const { identityKey, profile } = identity;
         this.log('Identity key:', identityKey.toHex());
         this.log('Display name:', profile?.displayName);

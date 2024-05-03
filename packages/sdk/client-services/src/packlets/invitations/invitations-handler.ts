@@ -3,14 +3,9 @@
 //
 
 import { PushStream, scheduleTask, TimeoutError, Trigger } from '@dxos/async';
-import {
-  AuthenticatingInvitation,
-  AUTHENTICATION_CODE_LENGTH,
-  CancellableInvitation,
-  INVITATION_TIMEOUT,
-} from '@dxos/client-protocol';
+import { AuthenticatingInvitation, INVITATION_TIMEOUT } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
-import { generatePasscode } from '@dxos/credentials';
+import { createKeyPair, sign } from '@dxos/crypto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,8 +16,9 @@ import {
   type SwarmConnection,
 } from '@dxos/network-manager';
 import { InvalidInvitationExtensionRoleError, trace } from '@dxos/protocols';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
-import { AuthenticationResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 
 import {
   InvitationGuestExtension,
@@ -65,44 +61,12 @@ export class InvitationsHandler {
    */
   constructor(private readonly _networkManager: NetworkManager) {}
 
-  createInvitation(protocol: InvitationProtocol, options?: Partial<Invitation>): CancellableInvitation {
-    const {
-      invitationId = PublicKey.random().toHex(),
-      type = Invitation.Type.INTERACTIVE,
-      authMethod = Invitation.AuthMethod.SHARED_SECRET,
-      state = Invitation.State.INIT,
-      timeout = INVITATION_TIMEOUT,
-      swarmKey = PublicKey.random(),
-    } = options ?? {};
-    const authCode =
-      options?.authCode ??
-      (authMethod === Invitation.AuthMethod.SHARED_SECRET ? generatePasscode(AUTHENTICATION_CODE_LENGTH) : undefined);
-    invariant(protocol);
-
-    const invitation: Invitation = {
-      invitationId,
-      type,
-      authMethod,
-      state,
-      swarmKey,
-      authCode,
-      timeout,
-      ...protocol.getInvitationContext(),
-    };
-
-    const stream = new PushStream<Invitation>();
-    const ctx = new Context({
-      onError: (err) => {
-        void ctx.dispose();
-        stream.error(err);
-      },
-    });
-
-    ctx.onDispose(() => {
-      log('complete', { ...protocol.toJSON() });
-      stream.complete();
-    });
-
+  handleInvitationFlow(
+    ctx: Context,
+    stream: PushStream<Invitation>,
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+  ): void {
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
       const extension = new InvitationHostExtension({
@@ -121,7 +85,7 @@ export class InvitationsHandler {
           try {
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
-            const admissionResponse = await protocol.admit(admissionRequest, extension.guestProfile);
+            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
             extension.completedTrigger.wake(deviceKey);
@@ -141,7 +105,7 @@ export class InvitationsHandler {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.CONNECTED });
-              const deviceKey = await extension.completedTrigger.wait({ timeout });
+              const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
               stream.next({ ...invitation, state: Invitation.State.SUCCESS });
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
@@ -155,7 +119,7 @@ export class InvitationsHandler {
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
             } finally {
-              if (type !== Invitation.Type.MULTIUSE) {
+              if (!invitation.multiUse) {
                 // Wait for graceful close before disposing.
                 await swarmConnection.close();
                 await ctx.dispose();
@@ -180,7 +144,27 @@ export class InvitationsHandler {
       return extension;
     };
 
+    if (invitation.lifetime && invitation.created) {
+      if (invitation.created.getTime() + invitation.lifetime * 1000 < Date.now()) {
+        log.warn('invitation has already expired');
+      } else {
+        scheduleTask(
+          ctx,
+          async () => {
+            // ensure the swarm is closed before changing state and closing the stream.
+            await swarmConnection.close();
+            stream.next({ ...invitation, state: Invitation.State.EXPIRED });
+            await ctx.dispose();
+          },
+          invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
+        );
+      }
+    }
+
     let swarmConnection: SwarmConnection;
+    const invitationLabel =
+      'invitation host for ' +
+      (invitation.kind === Invitation.Kind.DEVICE ? 'device' : `space ${invitation.spaceKey?.truncate()}`);
     scheduleTask(ctx, async () => {
       const topic = invitation.swarmKey!;
       swarmConnection = await this._networkManager.joinSwarm({
@@ -190,30 +174,25 @@ export class InvitationsHandler {
           teleport.addExtension('dxos.halo.invitations', createExtension());
         }),
         topology: new StarTopology(topic),
-        label: 'invitation host',
+        label: invitationLabel,
       });
       ctx.onDispose(() => swarmConnection.close());
 
       stream.next({ ...invitation, state: Invitation.State.CONNECTING });
     });
-
-    // TODO(burdon): Stop anything pending.
-    const observable = new CancellableInvitation({
-      initialInvitation: invitation,
-      subscriber: stream.observable,
-      onCancel: async () => {
-        stream.next({ ...invitation, state: Invitation.State.CANCELLED });
-        await ctx.dispose();
-      },
-    });
-
-    return observable;
   }
 
-  acceptInvitation(protocol: InvitationProtocol, invitation: Invitation): AuthenticatingInvitation {
+  acceptInvitation(
+    protocol: InvitationProtocol,
+    invitation: Invitation,
+    deviceProfile?: DeviceProfileDocument,
+  ): AuthenticatingInvitation {
     const { timeout = INVITATION_TIMEOUT } = invitation;
     invariant(protocol);
 
+    if (deviceProfile) {
+      invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
+    }
     const authenticated = new Trigger<string>();
 
     // TODO(dmaretskyi): Turn into state?
@@ -282,32 +261,19 @@ export class InvitationsHandler {
 
               // 2. Get authentication code.
               if (isAuthenticationRequired(invitation)) {
-                for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
-                  log('guest waiting for authentication code...');
-                  setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
-                  const authCode = await authenticated.wait({ timeout });
-
-                  log('sending authentication request');
-                  setState({ state: Invitation.State.AUTHENTICATING });
-                  const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
-                  if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+                switch (invitation.authMethod) {
+                  case Invitation.AuthMethod.SHARED_SECRET:
+                    await this._handleGuestOtpAuth(extension, setState, authenticated, { timeout });
                     break;
-                  }
-
-                  if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
-                    if (attempt === MAX_OTP_ATTEMPTS) {
-                      throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
-                    } else {
-                      log('retrying invalid code', { attempt });
-                      authenticated.reset();
-                    }
-                  }
+                  case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
+                    await this._handleGuestKpkAuth(extension, setState, invitation, introductionResponse);
+                    break;
                 }
               }
 
               // 3. Send admission credentials to host (with local space keys).
               log('request admission', { ...protocol.toJSON() });
-              const admissionRequest = await protocol.createAdmissionRequest();
+              const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // Remote connection no longer needed.
@@ -388,4 +354,61 @@ export class InvitationsHandler {
 
     return observable;
   }
+
+  private async _handleGuestOtpAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Partial<Invitation>) => void,
+    authenticated: Trigger<string>,
+    options: { timeout: number },
+  ) {
+    for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
+      log('guest waiting for authentication code...');
+      setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
+      const authCode = await authenticated.wait(options);
+
+      log('sending authentication request');
+      setState({ state: Invitation.State.AUTHENTICATING });
+      const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
+      if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
+        break;
+      }
+
+      if (response.status === AuthenticationResponse.Status.INVALID_OTP) {
+        if (attempt === MAX_OTP_ATTEMPTS) {
+          throw new Error(`Maximum retry attempts: ${MAX_OTP_ATTEMPTS}`);
+        } else {
+          log('retrying invalid code', { attempt });
+          authenticated.reset();
+        }
+      }
+    }
+  }
+
+  private async _handleGuestKpkAuth(
+    extension: InvitationGuestExtension,
+    setState: (newState: Partial<Invitation>) => void,
+    invitation: Invitation,
+    introductionResponse: IntroductionResponse,
+  ) {
+    if (invitation.guestKeypair?.privateKey == null) {
+      throw new Error('keypair missing in the invitation');
+    }
+    if (introductionResponse.challenge == null) {
+      throw new Error('challenge missing in the introduction');
+    }
+    log('sending authentication request');
+    setState({ state: Invitation.State.AUTHENTICATING });
+    const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
+    const response = await extension.rpc.InvitationHostService.authenticate({
+      signedChallenge: signature,
+    });
+    if (response.status !== AuthenticationResponse.Status.OK) {
+      throw new Error(`Authentication failed with code: ${response.status}`);
+    }
+  }
 }
+
+export const createAdmissionKeypair = (): AdmissionKeypair => {
+  const keypair = createKeyPair();
+  return { publicKey: PublicKey.from(keypair.publicKey), privateKey: keypair.secretKey };
+};

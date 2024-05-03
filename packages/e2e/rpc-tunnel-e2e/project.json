@@ -1,4 +1,9 @@
 {
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "rpc-tunnel-e2e",
+  "tags": [
+    "scope:e2e"
+  ],
   "sourceRoot": "packages/e2e/rpc-tunnel-e2e/src",
   "projectType": "library",
   "targets": {
@@ -42,9 +47,7 @@
       }
     }
   },
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
     "test"
-  ],
-  "name": "rpc-tunnel-e2e"
+  ]
 }

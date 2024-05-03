@@ -17,6 +17,7 @@ const fmtDuration = (d: number) => `${Math.floor(d / 1000)}.${d - Math.floor(d /
 const main = async () => {
   yargs(hideBin(process.argv))
     .scriptName('plate')
+    .usage('$0 <template> [options]', 'execute a @dxos/plate template')
     .option('dry', {
       description: 'Show only what files would be generated without writing them to disk',
       type: 'boolean',
@@ -123,7 +124,8 @@ const main = async () => {
         const info = logger(!quiet);
         const [template] = _;
         if (!template) {
-          throw new Error('no template specified');
+          console.error('no template specified');
+          process.exit(1);
         }
         debug('working directory', process.cwd());
         const extraArgs = { ...restArgs };

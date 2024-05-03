@@ -9,6 +9,8 @@ export const focusRing =
 export const dropRing =
   'ring-1 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black';
 
+export const dropRingInner = 'ring-1 ring-inset ring-primary-350 dark:ring-primary-450';
+
 export const subduedFocus = 'focus:outline-none focus-visible:outline-none focus:ring-0 ring-0 focus:border-0 border-0';
 
 export const staticFocusRing =

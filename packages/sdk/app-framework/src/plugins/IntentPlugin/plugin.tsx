@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { deepSignal } from 'deepsignal/react';
 import React from 'react';
 
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type IntentContext, IntentProvider, type IntentExecution } from './IntentContext';
@@ -28,7 +28,7 @@ const HISTORY_LIMIT = 100;
  * Inspired by https://developer.android.com/reference/android/content/Intent.
  */
 const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
-  const state = deepSignal<IntentContext>({
+  const state = create<IntentContext>({
     dispatch: async () => ({}),
     undo: async () => ({}),
     history: [],
@@ -109,7 +109,10 @@ const IntentPlugin = (): PluginDefinition<IntentPluginProvides> => {
           });
         }
 
-        state.history = [...state.history.slice(0, HISTORY_LIMIT - 2), executionResults];
+        state.history.push(executionResults);
+        if (state.history.length > HISTORY_LIMIT) {
+          state.history.splice(0, state.history.length - HISTORY_LIMIT);
+        }
 
         if (isUndoable(executionResults)) {
           void dispatch({ action: IntentAction.SHOW_UNDO, data: { results: executionResults } });

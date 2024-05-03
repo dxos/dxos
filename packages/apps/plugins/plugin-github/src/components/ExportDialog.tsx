@@ -6,7 +6,6 @@ import React, { useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Button, Dialog, Input, Trans, useTranslation } from '@dxos/react-ui';
-import { type EditorModel } from '@dxos/react-ui-editor';
 
 import { useOctokitContext } from './GithubApiProviders';
 import { GITHUB_PLUGIN } from '../meta';
@@ -15,15 +14,14 @@ import type { ExportViewState, GhFileIdentifier, GhIdentifier } from '../types';
 export const ExportDialog = ({
   type,
   target,
-  model,
   docGhId,
 }: {
   type: ExportViewState;
   target: string | null;
-  model: EditorModel;
   docGhId: GhIdentifier;
 }) => {
-  const content = model.content;
+  // TODO(burdon): Model removed.
+  const content = '';
 
   const { octokit } = useOctokitContext();
   const { t } = useTranslation(GITHUB_PLUGIN);
@@ -63,7 +61,7 @@ export const ExportDialog = ({
           message: commitMessage,
           branch: branchName,
           sha: fileSha,
-          content: btoa(content.toString()),
+          content: btoa(content),
         });
         const {
           data: { html_url: prUrl },

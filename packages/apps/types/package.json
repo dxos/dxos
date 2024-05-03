@@ -1,29 +1,52 @@
 {
   "name": "@braneframe/types",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Protobuf definitions for Braneframe types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/lib/node/index.cjs",
-  "browser": {
-    "./dist/lib/node/index.cjs": "./dist/lib/browser/index.mjs"
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./proto": {
+      "browser": "./dist/lib/browser/proto/index.mjs",
+      "import": "./dist/lib/browser/proto/index.mjs",
+      "require": "./dist/lib/node/proto/index.cjs",
+      "node": "./dist/lib/node/proto/index.cjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "proto": [
+        "dist/types/src/proto/index.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src"
   ],
-  "scripts": {
-    "prebuild": "dxtype src/proto/schema.proto src/proto/gen/schema.ts"
-  },
   "dependencies": {
+    "@dxos/automerge": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/node-std": "workspace:*"
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "lodash.get": "^4.4.2",
+    "md5": "^2.3.0"
   },
   "devDependencies": {
-    "@dxos/echo-typegen": "workspace:*"
+    "@dxos/echo-typegen": "workspace:*",
+    "@types/lodash.get": "^4.4.7",
+    "@types/md5": "^2.3.5"
   },
   "publishConfig": {
     "access": "public"

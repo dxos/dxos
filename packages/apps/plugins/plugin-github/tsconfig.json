@@ -23,10 +23,19 @@
   ],
   "references": [
     {
+      "path": "../../../common/async"
+    },
+    {
       "path": "../../../common/local-storage"
     },
     {
       "path": "../../../common/log"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
     },
     {
       "path": "../../../sdk/app-framework"
@@ -48,6 +57,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"

@@ -8,18 +8,20 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { types, Document } from '@braneframe/types';
+import { TextV0Type, DocumentType } from '@braneframe/types';
+import type { S } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client, ClientContext } from '@dxos/react-client';
-import { type Space, type SpaceProxy, TextObject, type TypeCollection } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Input, ThemeProvider, Tooltip, Status } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import type { MaybePromise } from '@dxos/util';
 
-import EditorExample from './examples/Editor';
+import TaskList from './examples/TaskList';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -27,7 +29,7 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: TypeCollection;
+  types?: S.Schema<any>[];
   registerSignalFactory?: boolean; // TODO(burdon): Document.
   onCreateSpace?: (space: Space) => MaybePromise<void>;
 };
@@ -38,12 +40,10 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
-  types && clients.map((client) => client.spaces.addSchema(types));
+  types && clients.map((client) => client.addSchema(...types));
   const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
   await onCreateSpace?.(space);
-  await Promise.all(
-    clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
-  );
+  await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
 
   return { spaceKey: space.key, clients };
 };
@@ -52,11 +52,11 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types,
+    types: [DocumentType, TextV0Type],
     onCreateSpace: (space) => {
       space.db.add(
-        new Document({
-          content: new TextObject('## Type here...\n\ntry the airplane mode switch.'),
+        create(DocumentType, {
+          content: create(TextV0Type, { content: '## Type here...\n\ntry the airplane mode switch.' }),
         }),
       );
     },
@@ -68,11 +68,12 @@ const main = async () => {
   };
 
   const handleToggleBatching = async (checked: boolean) => {
-    const batchSize = checked ? 64 : 0;
+    const _batchSize = checked ? 64 : 0;
     clients.forEach((client) => {
       const space = client.spaces.get(spaceKey);
       if (space) {
-        space.db._backend.maxBatchSize = batchSize;
+        // TODO(dmaretskyi): Is this code still relevant?
+        // space.db._backend.maxBatchSize = batchSize;
       }
     });
   };
@@ -130,7 +131,7 @@ const main = async () => {
           </Tooltip.Provider>
           {clients.map((client, index) => (
             <ClientContext.Provider key={index} value={{ client }}>
-              <EditorExample id={index} spaceKey={spaceKey} />
+              <TaskList id={index} spaceKey={spaceKey} />
             </ClientContext.Provider>
           ))}
         </div>

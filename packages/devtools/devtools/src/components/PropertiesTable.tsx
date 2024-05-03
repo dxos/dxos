@@ -8,6 +8,7 @@ import { formatDistance } from 'date-fns/formatDistance';
 import React, { type FC, type ReactNode } from 'react';
 
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 // TODO(burdon): Factor out styles.
 const styles = {
@@ -95,7 +96,7 @@ export const PropertiesTable: FC<{
     try {
       return schema?.[key]?.format(value) ?? String(value);
     } catch (err) {
-      console.error(err);
+      log.catch(err);
       return '<error>';
     }
   };

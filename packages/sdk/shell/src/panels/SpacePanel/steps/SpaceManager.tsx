@@ -5,6 +5,7 @@
 import { Placeholder, UserPlus, UsersThree } from '@phosphor-icons/react';
 import React, { type Dispatch, type SetStateAction, useCallback, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
@@ -45,7 +46,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
   const onInvitationEvent = useCallback((invitation: Invitation) => {
     const invitationCode = InvitationEncoder.encode(invitation);
     if (invitation.state === Invitation.State.CONNECTING) {
-      console.log(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
+      log.info(JSON.stringify({ invitationCode, authCode: invitation.authCode }));
     }
   }, []);
 
@@ -58,6 +59,7 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         const invitation = space.share?.({
           type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.SHARED_SECRET,
+          multiUse: false,
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -71,8 +73,9 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       icon: UsersThree,
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.MULTIUSE,
+          type: Invitation.Type.INTERACTIVE,
           authMethod: Invitation.AuthMethod.NONE,
+          multiUse: true,
           target,
         });
         if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
@@ -80,6 +83,22 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         }
       }, [space]),
     },
+    // inviteNonPersistent: {
+    //   label: 'Invite one (nonpersistent)',
+    //   description: 'Only one user may join. Invitation does not resume if client is restarted.',
+    //   icon: UserPlus,
+    //   onClick: useCallback(() => {
+    //     const invitation = space.share?.({
+    //       type: Invitation.Type.INTERACTIVE,
+    //       authMethod: Invitation.AuthMethod.SHARED_SECRET,
+    //       persistent: false,
+    //       target,
+    //     });
+    //     if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
+    //       invitation.subscribe(onInvitationEvent);
+    //     }
+    //   }, [space]),
+    // },
   };
 
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;

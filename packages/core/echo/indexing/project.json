@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "indexing",
+  "tags": [
+    "scope:echo"
+  ],
+  "sourceRoot": "packages/core/echo/indexing/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/core/echo/indexing/src/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

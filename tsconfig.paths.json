@@ -218,12 +218,6 @@
       "@braneframe/plugin-thread/meta": [
         "packages/apps/plugins/plugin-thread/src/meta.tsx"
       ],
-      "@braneframe/plugin-undo": [
-        "packages/apps/plugins/plugin-undo/src/index.ts"
-      ],
-      "@braneframe/plugin-undo/meta": [
-        "packages/apps/plugins/plugin-undo/src/meta.tsx"
-      ],
       "@braneframe/plugin-wildcard": [
         "packages/apps/plugins/plugin-wildcard/src/index.ts"
       ],

@@ -3,6 +3,7 @@
 //
 
 import '@dxosTheme';
+
 import React, { useState } from 'react';
 
 import { DensityProvider } from '@dxos/react-ui';

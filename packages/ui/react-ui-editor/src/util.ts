@@ -36,6 +36,6 @@ export const logChanges = (trs: readonly Transaction[]) => {
     .filter(Boolean);
 
   if (changes.length) {
-    console.log('changes', changes);
+    log.info('changes', { changes });
   }
 };

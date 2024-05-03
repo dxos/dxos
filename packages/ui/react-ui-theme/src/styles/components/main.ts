@@ -11,70 +11,64 @@ import { bounceLayout, fixedBorder, fixedSurface } from '../fragments';
 export const topbarBlockPaddingStart = 'pbs-[--topbar-size] sticky-top-from-topbar-bottom';
 
 export type MainStyleProps = Partial<{
-  isLg: boolean;
-  inlineStartSidebarOpen: boolean;
-  inlineEndSidebarOpen: boolean;
-  side: 'inline-start' | 'inline-end';
   bounce: boolean;
 }>;
 
 // Sidebar widths (used by main and complementary sidebar).
 const sidebarSlots = {
   start: {
-    width: 'sm:is-[271px]',
-    sidebar: 'sm:-inline-start-[271px]',
-    content: 'pis-[270px]',
+    width: 'sm:data-[side=is]:is-[270px]',
+    sidebar: 'sm:data-[side=is]:-inline-start-[270px]',
+    content:
+      'lg:data-[sidebar-inline-start-state=open]:pis-[270px] lg:data-[sidebar-inline-start-state=open]:scroll-ps-[270px]',
+    notch: 'max-is-[270px]',
   },
   // TODO(burdon): Maximal size for phone.
   end: {
-    width: 'sm:is-[361px]',
-    sidebar: 'sm:-inline-end-[361px]',
-    content: 'pie-[360px]',
+    width: 'sm:data-[side=ie]:is-[360px]',
+    sidebar: 'sm:data-[side=ie]:-inline-end-[360px]',
+    content:
+      'lg:data-[sidebar-inline-end-state=open]:pie-[360px] lg:data-[sidebar-inline-end-state=open]:scroll-pe-[360px]',
   },
 };
 
-export const mainSidebar: ComponentFunction<MainStyleProps> = (
-  { inlineStartSidebarOpen, inlineEndSidebarOpen, side },
-  ...etc
-) =>
+export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
-    'fixed block-start-0 block-end-0 is-[100vw] z-10 overscroll-contain overflow-x-hidden overflow-y-auto',
-    'transition-[inset-inline-start,inset-inline-end] duration-200 ease-in-out',
+    'fixed block-start-0 block-end-0 is-[100vw] z-10 data-[side=ie]:z-20 overscroll-contain overflow-x-hidden overflow-y-auto',
+    'transition-[inset-inline-start,inset-inline-end] duration-0 data-[resizing=false]:duration-200 ease-in-out',
+    `data-[side=is]:-inline-start-[100vw] ${sidebarSlots.start.width} ${sidebarSlots.start.sidebar}`,
+    `data-[side=ie]:-inline-end-[100vw] ${sidebarSlots.end.width} ${sidebarSlots.end.sidebar}`,
+    'data-[side=is]:data-[state=open]:inline-start-0 data-[side=ie]:data-[state=open]:inline-end-0',
+    'data-[side=is]:border-ie data-[side=ie]:border-is',
     fixedBorder,
-    side === 'inline-start' ? sidebarSlots.start.width : sidebarSlots.end.width,
-    side === 'inline-start'
-      ? inlineStartSidebarOpen
-        ? 'inline-start-0'
-        : mx('-inline-start-[100vw]', sidebarSlots.start.sidebar)
-      : inlineEndSidebarOpen
-        ? 'inline-end-0'
-        : mx('-inline-end-[100vw]', sidebarSlots.end.sidebar),
-    side === 'inline-start' ? 'border-ie' : 'border-is',
     fixedSurface,
     ...etc,
   );
 
-export const mainContent: ComponentFunction<MainStyleProps> = (
-  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, bounce },
-  ...etc
-) =>
+export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
   mx(
-    'transition-[padding-inline-start,padding-inline-end] duration-200 ease-in-out',
-    isLg && inlineStartSidebarOpen ? sidebarSlots.start.content : 'pis-0',
-    isLg && inlineEndSidebarOpen ? sidebarSlots.end.content : 'pie-0',
+    'transition-[padding-inline-start,padding-inline-end,scroll-padding-start,scroll-padding-end] duration-200 ease-in-out',
+    `pis-0 scroll-ps-0 ${sidebarSlots.start.content}`,
+    `pie-0 scroll-pe-0 ${sidebarSlots.end.content}`,
     bounce && bounceLayout,
     ...etc,
   );
 
-export const mainOverlay: ComponentFunction<MainStyleProps> = (
-  { isLg, inlineStartSidebarOpen, inlineEndSidebarOpen, side },
-  ...etc
-) =>
+export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx(
     'fixed inset-0 z-[9] surface-scrim',
     'transition-opacity duration-200 ease-in-out',
-    !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'opacity-100' : 'opacity-0',
-    !isLg && (inlineStartSidebarOpen || inlineEndSidebarOpen) ? 'block' : 'hidden',
+    'opacity-0 data-[state=open]:opacity-100 lg:data-[state=open]:opacity-100',
+    'hidden data-[state=open]:block lg:data-[state=open]:hidden',
+    ...etc,
+  );
+
+export const mainNotch: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx(
+    'fixed z-[11] block-end-0 inline-start-0 pbe-[env(safe-area-inset-bottom)] rounded-se-lg min-bs-[var(--rail-size)] is-fit separator-separator surface-base',
+    'transition-[border-width] box-content border-bs border-ie data-[nav-sidebar-state=open]:border-bs-0 data-[nav-sidebar-state=open]:border-ie-0',
+    'pli-1 grid grid-cols-[repeat(auto-fit,var(--rail-action))]',
+    sidebarSlots.start.notch,
     ...etc,
   );
 
@@ -82,4 +76,5 @@ export const mainTheme = {
   content: mainContent,
   sidebar: mainSidebar,
   overlay: mainOverlay,
+  notch: mainNotch,
 };

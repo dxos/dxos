@@ -2,33 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { GithubLogo } from '@phosphor-icons/react';
-import { effect } from '@preact/signals-core';
+import { GithubLogo, type IconProps } from '@phosphor-icons/react';
+import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
-import { type Node } from '@braneframe/plugin-graph';
-import { isEditorModel, isMarkdownProperties } from '@braneframe/plugin-markdown';
-import { Folder, type Document } from '@braneframe/types';
-import { type PluginDefinition } from '@dxos/app-framework';
+import { parseClientPlugin } from '@braneframe/plugin-client';
+import { manageNodes } from '@braneframe/plugin-graph';
+import { isMarkdownProperties } from '@braneframe/plugin-markdown';
+import { type DocumentType } from '@braneframe/types';
+import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
+import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpaceForObject, isTypedObject, SpaceState } from '@dxos/react-client/echo';
+import { log } from '@dxos/log';
+import { type EchoReactiveObject, SpaceState, getMeta } from '@dxos/react-client/echo';
 
-import {
-  EmbeddedMain,
-  ExportDialog,
-  ImportDialog,
-  Issue,
-  MarkdownActions,
-  OctokitProvider,
-  GitHubSettings,
-  UrlDialog,
-} from './components';
+import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
 import translations from './translations';
-import { type ExportViewState, type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
-
-// TODO(dmaretskyi): Meta filters?.
-const filter = (obj: Document) => obj.__meta?.keys?.find((key) => key?.source?.includes('github'));
+import { type GhIdentifier, type GithubPluginProvides, type GithubSettingsProps } from './types';
 
 export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   const settings = new LocalStorageStore<GithubSettingsProps>(GITHUB_PLUGIN);
@@ -36,7 +27,7 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
   return {
     meta,
     ready: async () => {
-      settings.prop(settings.values.$pat!, 'pat', LocalStorageStore.string);
+      settings.prop({ key: 'pat', type: LocalStorageStore.string({ allowUndefined: true }) });
     },
     unload: async () => {
       settings.close();
@@ -45,32 +36,65 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       settings: settings.values,
       translations,
       graph: {
-        builder: ({ parent }) => {
-          // TODO(wittjosiah): Easier way to identify node which represents a space.
-          const space = isTypedObject(parent.data) ? getSpaceForObject(parent.data) : undefined;
-          if (!space || !(parent.data instanceof Folder) || parent.data.name !== space.key.toHex()) {
+        builder: (plugins, graph) => {
+          const subscriptions = new EventSubscriptions();
+          const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          if (!client) {
             return;
           }
 
-          // TODO(dmaretskyi): Turn into subscription.
-          if (space.state.get() !== SpaceState.READY) {
-            return;
-          }
+          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+            spaces.forEach((space) => {
+              if (space.state.get() !== SpaceState.READY) {
+                return;
+              }
 
-          const query = space.db.query(filter);
-          return effect(() => {
-            if (query.objects.length === 0) {
-              return;
-            }
+              // TODO(dmaretskyi): Meta filters?.
+              const query = space.db.query((obj: EchoReactiveObject<any>) =>
+                getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
+              );
+              subscriptions.add(query.subscribe());
+              let previousObjects: DocumentType[] = [];
+              subscriptions.add(
+                effect(() => {
+                  const id = `${GITHUB_PLUGIN_SHORT_ID}:${space.key.toHex()}`;
 
-            const [presentationNode] = parent.addNode(GITHUB_PLUGIN, {
-              id: `${GITHUB_PLUGIN_SHORT_ID}:${parent.id}`,
-              label: ['plugin name', { ns: GITHUB_PLUGIN }],
-              icon: (props) => <GithubLogo {...props} />,
+                  manageNodes({
+                    graph,
+                    condition: query.objects.length > 0,
+                    removeEdges: true,
+                    nodes: [
+                      {
+                        id,
+                        data: 'github',
+                        properties: {
+                          label: ['plugin name', { ns: GITHUB_PLUGIN }],
+                          icon: (props: IconProps) => <GithubLogo {...props} />,
+                        },
+                        edges: [[space.key.toHex(), 'inbound']],
+                      },
+                    ],
+                  });
+
+                  const removedObjects = previousObjects.filter(
+                    (object) => !(query.objects as EchoReactiveObject<any>[]).includes(object),
+                  );
+                  previousObjects = query.objects as EchoReactiveObject<any>[] as DocumentType[];
+
+                  batch(() => {
+                    removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));
+                    // TODO(wittjosiah): Update icon to `Issue` icon.
+                    query.objects.forEach((object) => graph.addEdge({ source: id, target: object.id }));
+                  });
+                }),
+              );
             });
-
-            query.objects.forEach((object) => objectToGraphNode(presentationNode, object));
           });
+
+          return () => {
+            unsubscribe();
+            subscriptions.clear();
+          };
         },
       },
       context: (props) => (
@@ -88,22 +112,24 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
               switch (data.content) {
                 case 'dxos.org/plugin/github/BindDialog':
                   return isMarkdownProperties(data.properties) ? <UrlDialog properties={data.properties} /> : null;
+                // TODO(burdon): Model should not be passed via surfaces.
+                // return isEditorModel(data.model) ? (
+                //   <ExportDialog
+                //     model={data.model}
+                //     type={data.type as ExportViewState}
+                //     target={data.target as string | null}
+                //     docGhId={data.docGhId as GhIdentifier}
+                //   />
+                // ) : null;
                 case 'dxos.org/plugin/github/ExportDialog':
-                  return isEditorModel(data.model) ? (
-                    <ExportDialog
-                      model={data.model}
-                      type={data.type as ExportViewState}
-                      target={data.target as string | null}
-                      docGhId={data.docGhId as GhIdentifier}
-                    />
-                  ) : null;
+                  return null;
                 case 'dxos.org/plugin/github/ImportDialog':
                   return (
                     <ImportDialog
                       docGhId={data.docGhId as GhIdentifier}
                       onUpdate={(content) => {
                         // TODO(burdon): Fire intent.
-                        console.log('onUpdate', content);
+                        log.info('onUpdate', content);
                       }}
                     />
                   );
@@ -111,8 +137,10 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   return null;
               }
             case 'menuitem':
-              return isEditorModel(data.model) && isMarkdownProperties(data.properties) && !data.properties.readonly ? (
-                <MarkdownActions model={data.model} properties={data.properties} />
+              return typeof data.content === 'string' &&
+                isMarkdownProperties(data.properties) &&
+                !data.properties.readonly ? (
+                <MarkdownActions content={data.content} properties={data.properties} />
               ) : null;
             case 'settings':
               return data.plugin === meta.id ? <GitHubSettings /> : null;
@@ -123,18 +151,4 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
       },
     },
   };
-};
-
-const objectToGraphNode = (parent: Node, document: Document): Node => {
-  const [child] = parent.addNode(GITHUB_PLUGIN, {
-    id: document.id,
-    label: document.title ?? ['document title placeholder', { ns: GITHUB_PLUGIN }],
-    icon: (props) => <Issue {...props} />,
-    data: document,
-    properties: {
-      persistenceClass: 'spaceObject',
-    },
-  });
-
-  return child;
 };
