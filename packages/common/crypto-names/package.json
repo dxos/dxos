@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto-names",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Basic crypto key utils",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

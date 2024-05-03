@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-markdown",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
