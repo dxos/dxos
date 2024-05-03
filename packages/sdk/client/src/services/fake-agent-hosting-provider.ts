@@ -2,13 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 
 import { type AgentHostingProviderClient } from './agent-hosting-provider';
 
 export class FakeAgentHostingProvider implements AgentHostingProviderClient {
   private _agents: Map<string, string> = new Map();
-  constructor(private readonly _clientConfig: Config) {}
+  constructor(
+    private readonly _clientConfig: Config,
+    private readonly _halo: Halo,
+  ) {}
 
   public async createAgent(invitationCode: string, identityKey: string): Promise<string> {
     const agentID = crypto.randomUUID();
@@ -22,5 +26,9 @@ export class FakeAgentHostingProvider implements AgentHostingProviderClient {
 
   public async destroyAgent(agentID: string): Promise<boolean> {
     return this._agents.delete(agentID);
+  }
+
+  public init(authToken: any) {
+    return true;
   }
 }

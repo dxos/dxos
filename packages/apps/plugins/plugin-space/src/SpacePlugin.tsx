@@ -567,7 +567,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.open();
+                await space.open();
                 return { data: true };
               }
               break;
@@ -576,7 +576,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.close();
+                await space.close();
                 return { data: true };
               }
               break;

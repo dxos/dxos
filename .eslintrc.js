@@ -31,7 +31,7 @@ module.exports = {
     // TODO(wittjosiah): Fix lint config to lint these files.
     '*.t.ts',
     // Docs snippets
-    'docs/docs/**/*',
+    'docs/content/**/*',
   ],
   overrides: [
     {

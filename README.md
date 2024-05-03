@@ -1,4 +1,4 @@
-![DXOS](./docs/docs/assets/images/github-repo-banner.png)
+![DXOS](./docs/content/assets/images/github-repo-banner.png)
 
 # DXOS
 
