@@ -1,0 +1,66 @@
+{
+  "name": "@braneframe/plugin-wnfs",
+  "version": "0.1.0",
+  "description": "WNFS file management plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@braneframe/plugin-client": "workspace:*",
+    "@braneframe/types": "workspace:*",
+    "@codemirror/language": "^6.10.1",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.25.0",
+    "@dxos/crypto": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-card": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "blockstore-idb": "^1.1.8",
+    "interface-blockstore": "^5.2.10",
+    "multiformats": "^13.1.0",
+    "uint8arrays": "^5.0.3",
+    "wnfs": "^0.2.2"
+  },
+  "devDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^5.2.9"
+  },
+  "peerDependencies": {
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

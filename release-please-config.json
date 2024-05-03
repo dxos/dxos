@@ -224,6 +224,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-wnfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/templates/bare-template/package.json",
           "jsonpath": "$.version"
         },
