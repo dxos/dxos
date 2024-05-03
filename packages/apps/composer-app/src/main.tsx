@@ -53,6 +53,7 @@ import TableMeta from '@dxos/plugin-table/meta';
 import ThemeMeta from '@dxos/plugin-theme/meta';
 import ThreadMeta from '@dxos/plugin-thread/meta';
 import WildcardMeta from '@dxos/plugin-wildcard/meta';
+import WnfsMeta from '@dxos/plugin-wnfs/meta';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -163,6 +164,7 @@ const main = async () => {
       DebugMeta,
       FilesMeta,
       IpfsMeta,
+      WnfsMeta,
 
       // Framework extensions
       // TODO(wittjosiah): Space plugin currently needs to be before the Graph plugin.
@@ -292,6 +294,7 @@ const main = async () => {
       [ThreadMeta.id]: Plugin.lazy(() => import('@dxos/plugin-thread')),
       [WelcomeMeta.id]: Plugin.lazy(() => import('./plugins/welcome'), { firstRun }),
       [WildcardMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wildcard')),
+      [WnfsMeta.id]: Plugin.lazy(() => import('@dxos/plugin-wnfs')),
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : []),
