@@ -176,17 +176,22 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
+          // TODO(burdon): Detect if composer.space (or localhost).
           try {
-            const response = await fetch('/beta/info');
+            // TODO(burdon): Prefix?
+            const response = await fetch('/info');
             const { payload } = await response.json();
+            console.log(payload);
 
+            // TODO(burdon): CamelCase vs. _ names.
             await client.shell.setInvitationUrl({
-              invitationUrl: new URL(`?accessToken=${payload.access_token}`, window.location.origin).toString(),
+              invitationUrl: new URL(`?access_token=${payload.access_token}`, window.location.origin).toString(),
               deviceInvitationParam: 'deviceInvitationCode',
               spaceInvitationParam: 'spaceInvitationCode',
             });
-          } catch {
-            // Ignore.
+          } catch (err) {
+            // Ignore (since composer.dxos.org does not implement the middleware).
+            log.catch(err);
           }
         },
       }),

@@ -43,11 +43,13 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
       const identityKey = resolvePlugin(plugins, parseClientPlugin)
         ?.provides.client.halo.identity.get()
         ?.identityKey.toHex();
+
+      // TODO(burdon): Need way to trigger this from shell panel?
       if (firstRun && identityKey && BETA_DEPLOYMENT) {
-        void fetch('/beta/connect', {
+        void fetch('/connect', {
           method: 'POST',
           headers: new Headers({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({ identityKey }),
+          body: JSON.stringify({ identity_key: identityKey }),
         });
       }
     },
