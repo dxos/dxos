@@ -7,7 +7,14 @@ import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { ShellRuntimeImpl } from '@dxos/client-services';
-import { Client, ClientContext, ClientServicesProxy, Config, SystemStatus } from '@dxos/react-client';
+import {
+  AgentHostingProvider,
+  Client,
+  ClientContext,
+  ClientServicesProxy,
+  Config,
+  SystemStatus,
+} from '@dxos/react-client';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -28,7 +35,9 @@ export const runShell = async (config: Config = new Config()) => {
         <ClientContext.Provider value={{ client, status: SystemStatus.ACTIVE }}>
           <ClipboardProvider>
             <Tooltip.Provider>
-              <Shell runtime={runtime} />
+              <AgentHostingProvider>
+                <Shell runtime={runtime} />
+              </AgentHostingProvider>
             </Tooltip.Provider>
           </ClipboardProvider>
         </ClientContext.Provider>

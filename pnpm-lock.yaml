@@ -4997,8 +4997,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -5085,6 +5085,12 @@ importers:
       fast-sha256:
         specifier: ^1.3.0
         version: 1.3.0
+      isomorphic-ws:
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
+      ws:
+        specifier: ^8.14.2
+        version: 8.14.2
       xstate:
         specifier: ^5.9.1
         version: 5.12.0
@@ -5753,8 +5759,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -5826,8 +5832,8 @@ importers:
         specifier: ^0.5.3
         version: 0.5.3(encoding@0.1.13)
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       nanomessage-rpc:
         specifier: ^3.0.0
         version: 3.2.0
@@ -6216,8 +6222,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -6356,8 +6362,8 @@ importers:
         specifier: ^8.2.0
         version: 8.2.4
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6533,8 +6539,8 @@ importers:
         specifier: ^2.3.1
         version: 2.3.1
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7589,78 +7595,7 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/gravity/gravity-dashboard:
-    dependencies:
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
-      d3:
-        specifier: ^7.8.5
-        version: 7.8.5
-      use-resize-observer:
-        specifier: ^9.0.0
-        version: 9.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.18.13
-        version: 7.21.3
-      '@dxos/esbuild-book-knobs':
-        specifier: ~2.28.3
-        version: 2.28.12(@emotion/css@11.10.0(@babel/core@7.21.3))(@emotion/react@11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@dxos/esbuild-plugins':
-        specifier: workspace:*
-        version: link:../../common/esbuild-plugins
-      '@dxos/esbuild-server':
-        specifier: ~2.29.0
-        version: 2.29.0(@types/react@18.0.21)
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@emotion/css':
-        specifier: ^11.7.1
-        version: 11.10.0(@babel/core@7.21.3)
-      '@emotion/react':
-        specifier: ^11.9.0
-        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
-      '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
-      '@types/lodash':
-        specifier: ^4.14.182
-        version: 4.14.191
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-
-  packages/gravity/kube-publishing:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-    devDependencies:
-      '@dxos/cli':
-        specifier: workspace:*
-        version: link:../../devtools/cli
-      '@types/node':
-        specifier: ^18.11.9
-        version: 18.11.9
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0(@swc/helpers@0.5.1))(@types/node@18.11.9)(typescript@5.2.2)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
-  packages/gravity/kube-testing:
+  packages/gravity/blade-runner:
     dependencies:
       '@braneframe/types':
         specifier: workspace:*
@@ -7756,14 +7691,14 @@ importers:
         specifier: ^5.3.2
         version: 5.3.2
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
       playwright:
         specifier: ^1.36.2
-        version: 1.40.0
+        version: 1.42.1
       plotly.js-dist-min:
         specifier: ^2.25.1
         version: 2.27.1
@@ -7791,7 +7726,7 @@ importers:
         version: 4.0.5
       '@types/node':
         specifier: ^18.11.9
-        version: 18.11.9
+        version: 18.18.9
       '@types/seedrandom':
         specifier: ^3.0.5
         version: 3.0.5
@@ -7801,6 +7736,77 @@ importers:
       chart.js:
         specifier: ^3.9.1
         version: 3.9.1
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0(@swc/helpers@0.5.1))(@types/node@18.18.9)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.4.5
+
+  packages/gravity/gravity-dashboard:
+    dependencies:
+      '@dxos/gem-core':
+        specifier: workspace:*
+        version: link:../../experimental/gem-core
+      d3:
+        specifier: ^7.8.5
+        version: 7.8.5
+      use-resize-observer:
+        specifier: ^9.0.0
+        version: 9.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.18.13
+        version: 7.21.3
+      '@dxos/esbuild-book-knobs':
+        specifier: ~2.28.3
+        version: 2.28.12(@emotion/css@11.10.0(@babel/core@7.21.3))(@emotion/react@11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@dxos/esbuild-plugins':
+        specifier: workspace:*
+        version: link:../../common/esbuild-plugins
+      '@dxos/esbuild-server':
+        specifier: ~2.29.0
+        version: 2.29.0(@types/react@18.0.21)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@emotion/css':
+        specifier: ^11.7.1
+        version: 11.10.0(@babel/core@7.21.3)
+      '@emotion/react':
+        specifier: ^11.9.0
+        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
+      '@types/d3':
+        specifier: ^7.4.2
+        version: 7.4.2
+      '@types/lodash':
+        specifier: ^4.17.0
+        version: 4.17.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/gravity/kube-publishing:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+    devDependencies:
+      '@dxos/cli':
+        specifier: workspace:*
+        version: link:../../devtools/cli
+      '@types/node':
+        specifier: ^18.11.9
+        version: 18.11.9
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0(@swc/helpers@0.5.1))(@types/node@18.11.9)(typescript@5.2.2)
@@ -17078,6 +17084,9 @@ packages:
   '@types/lodash@4.14.191':
     resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
 
+  '@types/lodash@4.17.0':
+    resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
+
   '@types/long@4.0.2':
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
@@ -20243,6 +20252,7 @@ packages:
   domexception@2.0.1:
     resolution: {integrity: sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==}
     engines: {node: '>=8'}
+    deprecated: Use your platform's native DOMException instead
 
   domexception@4.0.0:
     resolution: {integrity: sha512-A2is4PLG+eeSfoTMA95/s4pvAoSo2mKtiM5jlHkAVewmiO8ISFTFKZjH7UAM1Atli/OT/7JHOrJRJiMKUZKYBw==}
@@ -22844,11 +22854,6 @@ packages:
 
   isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
-
-  isomorphic-ws@4.0.1:
-    resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
-    peerDependencies:
-      ws: '*'
 
   isomorphic-ws@5.0.0:
     resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
@@ -25680,18 +25685,8 @@ packages:
   platform@1.3.6:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
 
-  playwright-core@1.40.0:
-    resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
-    engines: {node: '>=16'}
-    hasBin: true
-
   playwright-core@1.42.1:
     resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
-    engines: {node: '>=16'}
-    hasBin: true
-
-  playwright@1.40.0:
-    resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
     engines: {node: '>=16'}
     hasBin: true
 
@@ -37496,7 +37491,7 @@ snapshots:
       '@storybook/preview-api': 8.0.0-alpha.11
       '@storybook/theming': 8.0.0-alpha.11(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@storybook/types': 8.0.0-alpha.11
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       color-convert: 2.0.1
       dequal: 2.0.3
       lodash: 4.17.21
@@ -38979,7 +38974,7 @@ snapshots:
 
   '@types/lodash.get@4.4.7':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.isequal@4.5.6':
     dependencies:
@@ -38987,11 +38982,11 @@ snapshots:
 
   '@types/lodash.isequalwith@4.4.7':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.ismatch@4.4.9':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.matches@4.6.7':
     dependencies:
@@ -38999,7 +38994,7 @@ snapshots:
 
   '@types/lodash.memoize@4.1.7':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.merge@4.6.7':
     dependencies:
@@ -39019,11 +39014,11 @@ snapshots:
 
   '@types/lodash.set@4.3.7':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.sortby@4.7.7':
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
 
   '@types/lodash.startcase@4.4.8':
     dependencies:
@@ -39038,6 +39033,8 @@ snapshots:
       '@types/lodash': 4.14.191
 
   '@types/lodash@4.14.191': {}
+
+  '@types/lodash@4.17.0': {}
 
   '@types/long@4.0.2': {}
 
@@ -41559,7 +41556,7 @@ snapshots:
     dependencies:
       canvas: 2.11.2(encoding@0.1.13)
       chart.js: 3.9.1
-      tslib: 2.6.0
+      tslib: 2.6.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -42564,7 +42561,7 @@ snapshots:
     dependencies:
       '@tensorflow/tfjs-node': 3.21.1(encoding@0.1.13)(seedrandom@3.0.5)
       mathjs: 9.5.2
-      node-fetch: 2.6.7(encoding@0.1.13)
+      node-fetch: 2.7.0(encoding@0.1.13)
       papaparse: 5.4.1
       request: 2.88.2
       stream-json: 1.7.5
@@ -44070,7 +44067,7 @@ snapshots:
   fancy-test@2.0.31:
     dependencies:
       '@types/chai': 4.3.5
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       '@types/node': 18.18.9
       '@types/sinon': 10.0.13
       lodash: 4.17.21
@@ -46199,10 +46196,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  isomorphic-ws@4.0.1(ws@8.14.2):
-    dependencies:
-      ws: 8.14.2
-
   isomorphic-ws@5.0.0(ws@8.14.2):
     dependencies:
       ws: 8.14.2
@@ -47167,7 +47160,7 @@ snapshots:
       data-urls: 2.0.0
       decimal.js: 10.4.2
       domexception: 2.0.1
-      escodegen: 2.0.0
+      escodegen: 2.1.0
       form-data: 3.0.1
       html-encoding-sniffer: 2.0.1
       http-proxy-agent: 4.0.1
@@ -48065,7 +48058,7 @@ snapshots:
       complex.js: 2.1.1
       decimal.js: 10.4.2
       escape-latex: 1.2.0
-      fraction.js: 4.2.0
+      fraction.js: 4.3.7
       javascript-natural-sort: 0.7.1
       seedrandom: 3.0.5
       tiny-emitter: 2.1.0
@@ -50271,15 +50264,7 @@ snapshots:
 
   platform@1.3.6: {}
 
-  playwright-core@1.40.0: {}
-
   playwright-core@1.42.1: {}
-
-  playwright@1.40.0:
-    dependencies:
-      playwright-core: 1.40.0
-    optionalDependencies:
-      fsevents: 2.3.2
 
   playwright@1.42.1:
     dependencies:
@@ -50884,7 +50869,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.23.9
       '@types/base16': 1.0.2
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       base16: 1.0.0
       color: 3.2.1
       csstype: 3.1.2
@@ -53544,7 +53529,6 @@ snapshots:
       yn: 3.1.1
     optionalDependencies:
       '@swc/core': 1.4.0(@swc/helpers@0.5.1)
-    optional: true
 
   ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0(@swc/helpers@0.5.1))(@types/node@20.11.16)(typescript@5.3.3):
     dependencies:

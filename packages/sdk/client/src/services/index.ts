@@ -31,5 +31,5 @@ export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
 export { fromIFrame } from './utils';
 export { fromWorker, WorkerClientServices } from './worker-client-services';
-export { type AgentHostingProviderClient, DXOSAgentHostingProviderClient } from './agent-hosting-provider';
+export { type AgentHostingProviderClient, AgentManagerClient } from './agent-hosting-provider';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider';
