@@ -2,11 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
+import { type Mutex, type MutexGuard, acquireInContext, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { InvalidInvitationExtensionRoleError, schema } from '@dxos/protocols';
+import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, Options } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
@@ -14,8 +15,10 @@ const OPTIONS_TIMEOUT = 10_000;
 
 type InvitationGuestExtensionCallbacks = {
   // Deliberately not async to not block the extensions opening.
-  onOpen: (ctx: Context) => void;
+  onOpen: (ctx: Context, extensionCtx: ExtensionContext) => void;
   onError: (error: Error) => void;
+
+  onStateUpdate: (newState: Invitation.State) => void;
 };
 
 /**
@@ -47,6 +50,10 @@ export class InvitationGuestExtension extends RpcExtension<
     });
   }
 
+  public hasFlowLock(): boolean {
+    return this._invitationFlowLock != null;
+  }
+
   protected override async getHandlers(): Promise<{ InvitationHostService: InvitationHostService }> {
     return {
       InvitationHostService: {
@@ -72,11 +79,15 @@ export class InvitationGuestExtension extends RpcExtension<
     await super.onOpen(context);
 
     try {
-      log('begin options');
-      this._invitationFlowLock = await cancelWithContext(this._ctx, this._invitationFlowMutex.acquire());
+      log('guest acquire lock');
+      this._invitationFlowLock = await acquireInContext(this._ctx, this._invitationFlowMutex, {
+        releaseOnDispose: false,
+      });
+      log('guest lock acquired');
       await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));
+      log('options sent');
       await cancelWithContext(this._ctx, this._remoteOptionsTrigger.wait({ timeout: OPTIONS_TIMEOUT }));
-      log('end options');
+      log('options received');
       if (this._remoteOptions?.role !== Options.Role.HOST) {
         throw new InvalidInvitationExtensionRoleError(undefined, {
           expected: Options.Role.HOST,
@@ -85,17 +96,34 @@ export class InvitationGuestExtension extends RpcExtension<
         });
       }
 
-      this._callbacks.onOpen(this._ctx);
+      this._callbacks.onOpen(this._ctx, context);
     } catch (err: any) {
-      log('openError', err);
-      this._callbacks.onError(err);
+      if (this._invitationFlowLock != null) {
+        this._callbacks.onError(err);
+      }
+      if (!this._ctx.disposed) {
+        context.close(err);
+      }
     }
   }
 
   override async onClose() {
-    log('onClose');
-    this._invitationFlowLock?.release();
-    this._invitationFlowLock = null;
-    await this._ctx.dispose();
+    await this._destroy();
+  }
+
+  override async onAbort(): Promise<void> {
+    await this._destroy();
+  }
+
+  private async _destroy() {
+    try {
+      await this._ctx.dispose();
+    } finally {
+      if (this._invitationFlowLock != null) {
+        this._invitationFlowLock.release();
+        this._invitationFlowLock = null;
+        log('invitation flow lock released');
+      }
+    }
   }
 }
