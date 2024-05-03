@@ -57,7 +57,7 @@ An alternative method is to run `rushx start:firefox` which will run a temporary
 
 ## Design
 
-![devtools-architecture](../../../docs/docs/design/diagrams/devtools-architecture.drawio.svg)
+![devtools-architecture](../../../docs/content/design/diagrams/devtools-architecture.drawio.svg)
 
 The injected script attempts to detect the an object exposed by the SDK's client (`window.__DXOS__`).
 A channel is then setup to forward messages between the devtools panel and app client following the client RPC interface.
