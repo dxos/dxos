@@ -247,6 +247,12 @@
       ],
       "@braneframe/plugin-wildcard/meta": [
         "packages/apps/plugins/plugin-wildcard/src/meta.ts"
+      ],
+      "@braneframe/plugin-wnfs": [
+        "packages/apps/plugins/plugin-wnfs/src/index.ts"
+      ],
+      "@braneframe/plugin-wnfs/meta": [
+        "packages/apps/plugins/plugin-wnfs/src/meta.tsx"
       ]
     }
   },
