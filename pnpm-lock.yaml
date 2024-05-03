@@ -7778,8 +7778,8 @@ importers:
         specifier: ^7.4.2
         version: 7.4.2
       '@types/lodash':
-        specifier: ^4.14.182
-        version: 4.14.191
+        specifier: ^4.17.0
+        version: 4.17.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -22328,7 +22328,7 @@ packages:
       '@storybook/preview-api': 8.0.0-alpha.11
       '@storybook/theming': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/types': 8.0.0-alpha.11
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       color-convert: 2.0.1
       dequal: 2.0.3
       lodash: 4.17.21
@@ -24519,7 +24519,7 @@ packages:
   /@types/lodash.get@4.4.7:
     resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.isequal@4.5.6:
@@ -24531,13 +24531,13 @@ packages:
   /@types/lodash.isequalwith@4.4.7:
     resolution: {integrity: sha512-GdI984QbZw+LGAd3jcFIIhaMwhlVasTMIT3nmE1rOcACjyzp9J9VjTENVkl9aJLOiPZt6RYSJFVEEsRHKbdh3w==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.ismatch@4.4.9:
     resolution: {integrity: sha512-qWihnStOPKH8urljLGm6ZOEdN/5Bt4vxKR81tL3L4ArUNLvcf9RW3QSnPs21eix5BiqioSWq4aAXD4Iep+d0fw==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.matches@4.6.7:
@@ -24549,7 +24549,7 @@ packages:
   /@types/lodash.memoize@4.1.7:
     resolution: {integrity: sha512-lGN7WeO4vO6sICVpf041Q7BX/9k1Y24Zo3FY0aUezr1QlKznpjzsDk3T3wvH8ofYzoK0QupN9TWcFAFZlyPwQQ==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.merge@4.6.7:
@@ -24579,13 +24579,13 @@ packages:
   /@types/lodash.set@4.3.7:
     resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.sortby@4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.startcase@4.4.8:
@@ -24608,6 +24608,9 @@ packages:
 
   /@types/lodash@4.14.191:
     resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
+
+  /@types/lodash@4.17.0:
+    resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
@@ -32243,7 +32246,7 @@ packages:
     engines: {node: '>=12.0.0'}
     dependencies:
       '@types/chai': 4.3.5
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       '@types/node': 18.18.9
       '@types/sinon': 10.0.13
       lodash: 4.17.21
@@ -42333,7 +42336,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       '@types/base16': 1.0.2
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       base16: 1.0.0
       color: 3.2.1
       csstype: 3.1.2
