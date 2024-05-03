@@ -174,10 +174,10 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
       BrowserWebSocketClientAdapter,
       NodeWSServerAdapter,
     }: // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-    typeof import('@automerge/automerge-repo-network-websocket') =
+    typeof import('@dxos/automerge/automerge-repo-network-websocket') =
       runtime.platform === 'nodejs'
-        ? await importEsm('@automerge/automerge-repo-network-websocket')
-        : await import('@automerge/automerge-repo-network-websocket');
+        ? await importEsm('@dxos/automerge/automerge-repo-network-websocket')
+        : await import('@dxos/automerge/automerge-repo-network-websocket');
 
     switch (config.type) {
       case 'server':

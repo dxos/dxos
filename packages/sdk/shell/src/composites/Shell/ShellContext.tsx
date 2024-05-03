@@ -153,7 +153,7 @@ export const ShellProvider = ({
     <>
       {shellRuntime && (
         <div className={mx(display === ShellDisplay.NONE ? 'hidden' : '')}>
-          <Shell runtime={shellRuntime} origin={window.location.origin} />
+          <Shell runtime={shellRuntime} />
         </div>
       )}
 

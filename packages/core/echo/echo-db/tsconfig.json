@@ -49,6 +49,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../mesh/teleport"
+    },
+    {
       "path": "../../protocols"
     },
     {
@@ -65,6 +68,9 @@
     },
     {
       "path": "../echo-typegen"
+    },
+    {
+      "path": "../indexing"
     }
   ]
 }

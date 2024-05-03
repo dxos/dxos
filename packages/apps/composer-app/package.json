@@ -67,7 +67,7 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.34",
+    "@dxos/web-auth": "0.4.36",
     "isomorphic-fetch": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -11,8 +11,8 @@ import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
-import { type Hypergraph } from '@dxos/react-client/echo';
 import { ClientRepeater, FullscreenDecorator } from '@dxos/react-client/testing';
+import { Table } from '@dxos/react-ui-table';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { ObjectTable } from './ObjectTable';
@@ -29,13 +29,7 @@ const useTable = () => {
     generator.addSchemas();
     void generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
-    const graph = (client as any)._graph as Hypergraph;
-
-    // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
-    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
-    if (!graph.runtimeSchemaRegistry.isSchemaRegistered(TableType)) {
-      graph.runtimeSchemaRegistry.registerSchema(TableType);
-    }
+    client.addSchema(TableType);
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.
@@ -49,16 +43,16 @@ const useTable = () => {
 };
 
 const Story = ({ table }: { table?: TableType }) => {
-  const containerRef = React.createRef<HTMLDivElement>();
-
   if (!table) {
     return null;
   }
 
   return (
-    <div ref={containerRef} className='inset-0 overflow-auto'>
-      <ObjectTable table={table} stickyHeader />
-    </div>
+    <Table.Root>
+      <Table.Viewport classNames={'inset-0 overflow-auto'}>
+        <ObjectTable table={table} stickyHeader />
+      </Table.Viewport>
+    </Table.Root>
   );
 };
 

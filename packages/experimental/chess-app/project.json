@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "chess-app",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/chess-app/src",
   "projectType": "application",
   "targets": {

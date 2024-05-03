@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "create-tasks",
+  "tags": [
+    "scope:initializers"
+  ],
   "sourceRoot": "packages/devtools/initializers/create-tasks/src",
   "projectType": "library",
   "targets": {

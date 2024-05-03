@@ -19,7 +19,7 @@ export enum LifecycleState {
 /**
  * Base class for resources that need to be opened and closed.
  */
-export class Resource implements Lifecycle {
+export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;

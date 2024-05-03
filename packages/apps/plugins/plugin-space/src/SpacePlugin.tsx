@@ -81,9 +81,17 @@ export type SpacePluginOptions = {
     personalSpaceFolder: FolderType;
     dispatch: IntentDispatcher;
   }) => Promise<void>;
+
+  /**
+   * Query string parameter to look for space invitation codes.
+   */
+  spaceInvitationParam?: string;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({
+  onFirstRun,
+  spaceInvitationParam = 'spaceInvitationCode',
+}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = create<PluginState>({
     awaiting: undefined,
@@ -138,7 +146,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
-      const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+      const spaceInvitationCode = searchParams.get(spaceInvitationParam);
       if (spaceInvitationCode) {
         void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
@@ -323,7 +331,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
@@ -558,7 +567,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.open();
+                await space.open();
                 return { data: true };
               }
               break;
@@ -567,7 +576,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.close();
+                await space.close();
                 return { data: true };
               }
               break;

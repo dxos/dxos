@@ -21,7 +21,7 @@ export interface AutomergeDocumentLoader {
   getAllHandles(): DocHandle<SpaceDoc>[];
 
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
-  loadObjectDocument(objectId: string): void;
+  loadObjectDocument(objectId: string | string[]): void;
   getSpaceRootDocHandle(): DocHandle<SpaceDoc>;
   createDocumentForObject(objectId: string): DocHandle<SpaceDoc>;
   onObjectLinksUpdated(links: SpaceDocumentLinks): void;
@@ -79,20 +79,29 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 
-  public loadObjectDocument(objectId: string) {
-    invariant(this._spaceRootDocHandle);
-    if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
-      return;
+  public loadObjectDocument(objectIdOrMany: string | string[]) {
+    const objectIds = Array.isArray(objectIdOrMany) ? objectIdOrMany : [objectIdOrMany];
+    let hasUrlsToLoad = false;
+    const urlsToLoad: SpaceDoc['links'] = {};
+    for (const objectId of objectIds) {
+      invariant(this._spaceRootDocHandle);
+      if (this._objectDocumentHandles.has(objectId) || this._objectsPendingDocumentLoad.has(objectId)) {
+        continue;
+      }
+      const spaceRootDoc = this._spaceRootDocHandle.docSync();
+      invariant(spaceRootDoc);
+      const documentUrl = (spaceRootDoc.links ?? {})[objectId];
+      if (documentUrl == null) {
+        this._objectsPendingDocumentLoad.add(objectId);
+        log.info('loading delayed until object links are initialized', { objectId });
+      } else {
+        urlsToLoad[objectId] = documentUrl;
+        hasUrlsToLoad = true;
+      }
     }
-    const spaceRootDoc = this._spaceRootDocHandle.docSync();
-    invariant(spaceRootDoc);
-    const documentUrl = (spaceRootDoc.links ?? {})[objectId];
-    if (documentUrl == null) {
-      this._objectsPendingDocumentLoad.add(objectId);
-      log.info('loading delayed until object links are initialized', { objectId });
-      return;
+    if (hasUrlsToLoad) {
+      this._loadLinkedObjects(urlsToLoad);
     }
-    this._loadLinkedObjects({ [objectId]: documentUrl });
   }
 
   public onObjectLinksUpdated(links: SpaceDocumentLinks) {

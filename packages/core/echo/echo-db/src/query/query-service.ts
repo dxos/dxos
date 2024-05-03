@@ -8,8 +8,9 @@ import { type DocHandle, type DocumentId } from '@dxos/automerge/automerge-repo'
 import { Stream } from '@dxos/codec-protobuf';
 import { Resource } from '@dxos/context';
 import { type AutomergeHost } from '@dxos/echo-pipeline';
+import { type ObjectSnapshot, type Indexer, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
-import { type ObjectPointerEncoded, idCodec } from '@dxos/protocols';
+import { idCodec } from '@dxos/protocols';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import {
   type QueryRequest,
@@ -18,9 +19,7 @@ import {
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
 
-import { type ObjectSnapshot, type Indexer } from './indexer';
 import { QueryState } from './query-state';
-import { type ConcatenatedHeadHashes } from './types';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -72,7 +71,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
       return;
     }
     this._params.indexer.setIndexConfig(config);
-    await this._params.indexer.initialize();
   }
 
   find(request: QueryRequest): Stream<QueryResponse> {
@@ -117,10 +115,10 @@ export class QueryServiceImpl extends Resource implements QueryService {
    */
   async reIndex() {
     const iterator = createDocumentsIterator(this._params.automergeHost);
-    const ids = new Map<ObjectPointerEncoded, ConcatenatedHeadHashes>();
+    const ids: IdToHeads = new Map();
     for await (const documents of iterator()) {
-      for (const { id, currentHash } of documents) {
-        ids.set(id, currentHash);
+      for (const { id, heads } of documents) {
+        ids.set(id, heads);
       }
     }
 
@@ -152,14 +150,12 @@ const createDocumentsIterator = (automergeHost: AutomergeHost) =>
       }
       const doc = handle.docSync();
 
-      const heads = getHeads(doc);
-
       if (doc.objects) {
         yield Object.entries(doc.objects as { [key: string]: any }).map(([objectId, object]) => {
           return {
             id: idCodec.encode({ documentId: handle.documentId, objectId }),
             object,
-            currentHash: heads.join(''),
+            heads: getHeads(doc),
           };
         });
       }

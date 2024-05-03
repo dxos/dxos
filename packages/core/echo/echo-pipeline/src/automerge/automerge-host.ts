@@ -2,11 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { asyncTimeout } from '@dxos/async';
-import { next as automerge } from '@dxos/automerge/automerge';
-import { Repo, type DocumentId, type PeerId, type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
+import { Event } from '@dxos/async';
+import { type Doc, next as automerge, getBackend, type Heads } from '@dxos/automerge/automerge';
+import {
+  type DocHandle,
+  Repo,
+  type DocumentId,
+  type PeerId,
+  type StorageAdapterInterface,
+  type DocHandleChangePayload,
+} from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -24,7 +32,7 @@ import { LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { type SubLevelDB } from './types';
+import { type SpaceDoc, type SubLevelDB } from './types';
 
 // TODO: Remove
 export type { DocumentId };
@@ -185,16 +193,17 @@ export class AutomergeHost {
   // Methods for client-services.
   //
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ documentIds }: FlushRequest): Promise<void> {
+  async flush({ states }: FlushRequest): Promise<void> {
     // Note: Wait for all requested documents to be loaded/synced from thin-client.
-    await Promise.all(documentIds?.map((id) => this._repo.find(id as DocumentId).whenReady()) ?? []);
+    await Promise.all(
+      states?.map(async ({ heads, documentId }) => {
+        invariant(heads, 'heads are required for flush');
+        const handle = this.repo.handles[documentId as DocumentId] ?? this._repo.find(documentId as DocumentId);
+        await waitForHeads(handle, heads);
+      }) ?? [],
+    );
 
-    // TODO(dmaretskyi): Workaround until the flush issue gets resolved.
-    try {
-      await asyncTimeout(this._repo.flush(documentIds as DocumentId[]), 500);
-    } catch (err) {
-      log.warn('flush error', { documentIds, err });
-    }
+    await this._repo.flush(states?.map(({ documentId }) => documentId as DocumentId));
   }
 
   syncRepo(request: SyncRepoRequest): Stream<SyncRepoResponse> {
@@ -231,4 +240,27 @@ export const getSpaceKeyFromDoc = (doc: any): string | null => {
   }
 
   return String(rawSpaceKey);
+};
+
+const waitForHeads = async (handle: DocHandle<SpaceDoc>, heads: Heads) => {
+  await handle.whenReady();
+  const unavailableHeads = new Set(heads);
+
+  await Event.wrap<DocHandleChangePayload<SpaceDoc>>(handle, 'change').waitForCondition(() => {
+    // Check if unavailable heads became available.
+    for (const changeHash of unavailableHeads.values()) {
+      if (changeIsPresentInDoc(handle.docSync(), changeHash)) {
+        unavailableHeads.delete(changeHash);
+      }
+    }
+
+    if (unavailableHeads.size === 0) {
+      return true;
+    }
+    return false;
+  });
+};
+
+const changeIsPresentInDoc = (doc: Doc<any>, changeHash: string): boolean => {
+  return !!getBackend(doc).getChangeByHash(changeHash);
 };
