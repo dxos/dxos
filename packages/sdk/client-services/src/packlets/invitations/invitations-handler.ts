@@ -15,13 +15,15 @@ import { type AdmissionKeypair, Invitation } from '@dxos/protocols/proto/dxos/cl
 import { type DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { AuthenticationResponse, type IntroductionResponse } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Options } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type ExtensionContext, type TeleportExtension, type TeleportParams } from '@dxos/teleport';
+import { ComplexSet } from '@dxos/util';
 
 import { InvitationGuestExtension } from './invitation-guest-extenstion';
 import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationTopology } from './invitation-topology';
 
-const MAX_DELEGATED_INVITATION_ATTEMPTS = 3;
+const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
 /**
  * Generic handler for Halo and Space invitations.
@@ -51,7 +53,10 @@ export class InvitationsHandler {
   /**
    * @internal
    */
-  constructor(private readonly _networkManager: NetworkManager) {}
+  constructor(
+    private readonly _networkManager: NetworkManager,
+    private readonly _defaultTeleportParams?: Partial<TeleportParams>,
+  ) {}
 
   handleInvitationFlow(
     ctx: Context,
@@ -59,20 +64,16 @@ export class InvitationsHandler {
     protocol: InvitationProtocol,
     invitation: Invitation,
   ): void {
-    const topology = new InvitationTopology(Options.Role.HOST);
-    const invitationFlowMutex = new Mutex();
+    const guardedState = this._createGuardedState(ctx, invitation, stream);
     // Called for every connecting peer.
     const createExtension = (): InvitationHostExtension => {
-      const extension = new InvitationHostExtension(invitationFlowMutex, {
-        onStateUpdate: (invitation) => {
-          stream.next({ ...invitation, state: Invitation.State.READY_FOR_AUTHENTICATION });
+      const extension = new InvitationHostExtension(guardedState.mutex, {
+        get activeInvitation() {
+          return ctx.disposed ? null : guardedState.current;
         },
 
-        resolveInvitation: async ({ invitationId }) => {
-          if (invitationId && invitationId !== invitation.invitationId) {
-            return undefined;
-          }
-          return invitation;
+        onStateUpdate: (newState: Invitation.State): Invitation => {
+          return guardedState.set(extension, newState);
         },
 
         admit: async (admissionRequest) => {
@@ -87,22 +88,29 @@ export class InvitationsHandler {
             return admissionResponse;
           } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            stream.next({ ...invitation, state: Invitation.State.ERROR });
+            guardedState.set(extension, Invitation.State.ERROR);
             throw err; // Propagate error to guest.
           }
         },
 
-        onOpen: () => {
-          scheduleTask(ctx, async () => {
+        onOpen: (connectionCtx: Context, extensionsCtx: ExtensionContext) => {
+          let admitted = false;
+          connectionCtx.onDispose(() => {
+            if (!admitted) {
+              guardedState.set(extension, Invitation.State.ERROR);
+            }
+          });
+
+          scheduleTask(connectionCtx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.begin({ id: traceId }));
               log('connected', { ...protocol.toJSON() });
-              stream.next({ ...invitation, state: Invitation.State.CONNECTED });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
-              stream.next({ ...invitation, state: Invitation.State.SUCCESS });
+              guardedState.set(extension, Invitation.State.SUCCESS);
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.end({ id: traceId }));
+              admitted = true;
 
               if (!invitation.multiUse) {
                 await ctx.dispose();
@@ -110,29 +118,28 @@ export class InvitationsHandler {
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
-                stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+                guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
                 log.error('failed', err);
-                stream.next({ ...invitation, state: Invitation.State.ERROR });
+                guardedState.set(extension, Invitation.State.ERROR);
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
-              throw err;
+              extensionsCtx.close(err);
             }
           });
         },
         onError: (err) => {
           if (err instanceof InvalidInvitationExtensionRoleError) {
-            invariant(err.context?.remotePeerId);
-            topology.addWrongRolePeer(err.context.remotePeerId);
+            log('invalid role', { ...err.context });
             return;
           }
           if (err instanceof TimeoutError) {
-            log('timeout', { ...protocol.toJSON() });
-            stream.next({ ...invitation, state: Invitation.State.TIMEOUT });
+            log('timeout', { err });
+            guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
             log.error('failed', err);
-            stream.next({ ...invitation, state: Invitation.State.ERROR });
+            guardedState.set(extension, Invitation.State.ERROR);
           }
         },
       });
@@ -149,7 +156,7 @@ export class InvitationsHandler {
           async () => {
             // ensure the swarm is closed before changing state and closing the stream.
             await swarmConnection.close();
-            stream.next({ ...invitation, state: Invitation.State.EXPIRED });
+            guardedState.set(null, Invitation.State.EXPIRED);
             await ctx.dispose();
           },
           invitation.created.getTime() + invitation.lifetime * 1000 - Date.now(),
@@ -158,23 +165,9 @@ export class InvitationsHandler {
     }
 
     let swarmConnection: SwarmConnection;
-    const invitationLabel =
-      'invitation host for ' +
-      (invitation.kind === Invitation.Kind.DEVICE ? 'device' : `space ${invitation.spaceKey?.truncate()}`);
     scheduleTask(ctx, async () => {
-      const topic = invitation.swarmKey!;
-      swarmConnection = await this._networkManager.joinSwarm({
-        topic,
-        peerId: topic,
-        protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-          teleport.addExtension('dxos.halo.invitations', createExtension());
-        }),
-        topology,
-        label: invitationLabel,
-      });
-      ctx.onDispose(() => swarmConnection.close());
-
-      stream.next({ ...invitation, state: Invitation.State.CONNECTING });
+      swarmConnection = await this._joinSwarm(ctx, invitation, Options.Role.HOST, createExtension);
+      guardedState.set(null, Invitation.State.CONNECTING);
     });
   }
 
@@ -192,59 +185,60 @@ export class InvitationsHandler {
       invariant(invitation.kind === Invitation.Kind.DEVICE, 'deviceProfile provided for non-device invitation');
     }
 
-    let currentState: Invitation.State;
-    const setState = (newData: Partial<Invitation>) => {
-      invariant(newData.state !== undefined);
-      currentState = newData.state;
-      stream.next({ ...invitation, ...newData });
+    const triedPeersIds = new ComplexSet(PublicKey.hash);
+    const guardedState = this._createGuardedState(ctx, invitation, stream);
+
+    const shouldCancelInvitationFlow = (extension: InvitationGuestExtension) => {
+      const isLockedByAnotherConnection = guardedState.mutex.isLocked() && !extension.hasFlowLock();
+      log('should cancel invitation flow', {
+        isLockedByAnotherConnection,
+        invitationType: Invitation.Type.DELEGATED,
+        triedPeers: triedPeersIds.size,
+      });
+      if (isLockedByAnotherConnection) {
+        return false;
+      }
+      // for delegated invitations we might try with other hosts and will dispose either after
+      // a timeout or when the number of tries was exceeded
+      return invitation.type !== Invitation.Type.DELEGATED || triedPeersIds.size >= MAX_DELEGATED_INVITATION_HOST_TRIES;
     };
 
-    // TODO(dmaretskyi): Turn into state?
-    // Whether the Host has already admitted us and the remote connection is no longer needed.
-    let admitted = false;
-
-    const topology = new InvitationTopology(Options.Role.GUEST);
-
-    const invitationFlowMutex = new Mutex();
     const createExtension = (): InvitationGuestExtension => {
-      let connectionCount = 0;
+      let admitted = false;
+      const extension = new InvitationGuestExtension(guardedState.mutex, {
+        onStateUpdate: (newState: Invitation.State) => {
+          guardedState.set(extension, newState);
+        },
+        onOpen: (connectionCtx: Context, extensionCtx: ExtensionContext) => {
+          triedPeersIds.add(extensionCtx.remotePeerId);
 
-      const shouldCancelInvitationFlow = () => {
-        // for delegated invitations we might try with other hosts and will dispose either after
-        // a timeout or when the number of tries was exceeded
-        return invitation.type !== Invitation.Type.DELEGATED || connectionCount >= MAX_DELEGATED_INVITATION_ATTEMPTS;
-      };
-
-      const extension = new InvitationGuestExtension(invitationFlowMutex, {
-        onOpen: (extensionCtx) => {
-          connectionCount++;
-
-          extensionCtx.onDispose(async () => {
-            log('extension disposed', { currentState });
-            if (!admitted) {
-              if (shouldCancelInvitationFlow()) {
-                await ctx.dispose();
-              } else {
-                setState({ state: Invitation.State.ERROR });
-              }
+          connectionCtx.onDispose(async () => {
+            log('extension disposed', { currentState: guardedState.current.state });
+            if (admitted || shouldCancelInvitationFlow(extension)) {
+              guardedState.set(extension, admitted ? Invitation.State.SUCCESS : Invitation.State.ERROR);
+              log('disposing guest invitation context');
+              await ctx.dispose();
+            } else {
+              guardedState.set(extension, Invitation.State.ERROR);
             }
           });
 
-          scheduleTask(ctx, async () => {
+          scheduleTask(connectionCtx, async () => {
             const traceId = PublicKey.random().toHex();
             try {
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
 
-              scheduleTask(ctx, () => extensionCtx.raise(new TimeoutError(timeout)), timeout);
+              scheduleTask(connectionCtx, () => connectionCtx.raise(new TimeoutError(timeout)), timeout);
 
               log('connected', { ...protocol.toJSON() });
-              setState({ state: Invitation.State.CONNECTED });
+              guardedState.set(extension, Invitation.State.CONNECTED);
 
               // 1. Introduce guest to host.
               log('introduce', { ...protocol.toJSON() });
-              const introductionResponse = await extension.rpc.InvitationHostService.introduce(
-                protocol.createIntroduction(),
-              );
+              const introductionResponse = await extension.rpc.InvitationHostService.introduce({
+                invitationId: invitation.invitationId,
+                ...protocol.createIntroduction(),
+              });
               log('introduce response', { ...protocol.toJSON(), response: introductionResponse });
               invitation.authMethod = introductionResponse.authMethod;
 
@@ -252,10 +246,20 @@ export class InvitationsHandler {
               if (isAuthenticationRequired(invitation)) {
                 switch (invitation.authMethod) {
                   case Invitation.AuthMethod.SHARED_SECRET:
-                    await this._handleGuestOtpAuth(extension, setState, otpEnteredTrigger, { timeout });
+                    await this._handleGuestOtpAuth(
+                      extension,
+                      (state) => guardedState.set(extension, state),
+                      otpEnteredTrigger,
+                      { timeout },
+                    );
                     break;
                   case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
-                    await this._handleGuestKpkAuth(extension, setState, invitation, introductionResponse);
+                    await this._handleGuestKpkAuth(
+                      extension,
+                      (state) => guardedState.set(extension, state),
+                      invitation,
+                      introductionResponse,
+                    );
                     break;
                 }
               }
@@ -273,36 +277,36 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              setState({ ...result, target: invitation.target, state: Invitation.State.SUCCESS });
+              stream.next({
+                ...guardedState.current,
+                target: result.target,
+                state: Invitation.State.SUCCESS,
+              });
+              await ctx.dispose();
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
                 log('timeout', { ...protocol.toJSON() });
-                setState({ state: Invitation.State.TIMEOUT });
+                guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
                 log('auth failed', err);
-                setState({ state: Invitation.State.ERROR });
+                guardedState.set(extension, Invitation.State.ERROR);
               }
+              extensionCtx.close(err);
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
-            } finally {
-              if (shouldCancelInvitationFlow()) {
-                await ctx.dispose();
-              }
             }
           });
         },
         onError: (err) => {
           if (err instanceof InvalidInvitationExtensionRoleError) {
-            invariant(err.context?.remotePeerId);
-            topology.addWrongRolePeer(err.context.remotePeerId);
             return;
           }
           if (err instanceof TimeoutError) {
             log('timeout', { ...protocol.toJSON() });
-            setState({ state: Invitation.State.TIMEOUT });
+            guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
             log('auth failed', err);
-            setState({ state: Invitation.State.ERROR });
+            guardedState.set(extension, Invitation.State.ERROR);
           }
         },
       });
@@ -313,40 +317,74 @@ export class InvitationsHandler {
     scheduleTask(ctx, async () => {
       const error = protocol.checkInvitation(invitation);
       if (error) {
-        setState({ state: Invitation.State.ERROR });
+        guardedState.set(null, Invitation.State.ERROR);
         await ctx.dispose();
       } else {
         invariant(invitation.swarmKey);
-        const topic = invitation.swarmKey;
-        const swarmConnection = await this._networkManager.joinSwarm({
-          topic,
-          peerId: PublicKey.random(),
-          protocolProvider: createTeleportProtocolFactory(async (teleport) => {
-            teleport.addExtension('dxos.halo.invitations', createExtension());
-          }),
-          topology,
-          label: 'invitation guest',
-        });
-        ctx.onDispose(() => swarmConnection.close());
-
-        setState({ state: Invitation.State.CONNECTING });
+        await this._joinSwarm(ctx, invitation, Options.Role.GUEST, createExtension);
+        guardedState.set(null, Invitation.State.CONNECTING);
       }
     });
   }
 
+  private async _joinSwarm(
+    ctx: Context,
+    invitation: Invitation,
+    role: Options.Role,
+    extensionFactory: () => TeleportExtension,
+  ): Promise<SwarmConnection> {
+    let label: string;
+    if (role === Options.Role.GUEST) {
+      label = 'invitation guest';
+    } else if (invitation.kind === Invitation.Kind.DEVICE) {
+      label = 'invitation host for device';
+    } else {
+      label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
+    }
+    const swarmConnection = await this._networkManager.joinSwarm({
+      topic: invitation.swarmKey,
+      peerId: PublicKey.random(),
+      protocolProvider: createTeleportProtocolFactory(async (teleport) => {
+        teleport.addExtension('dxos.halo.invitations', extensionFactory());
+      }, this._defaultTeleportParams),
+      topology: new InvitationTopology(role),
+      label,
+    });
+    ctx.onDispose(() => swarmConnection.close());
+    return swarmConnection;
+  }
+
+  private _createGuardedState(ctx: Context, invitation: Invitation, stream: PushStream<Invitation>) {
+    let currentInvitation = { ...invitation };
+    const mutex = new Mutex();
+    return {
+      mutex,
+      get current() {
+        return currentInvitation;
+      },
+      set: (extension: InvitationHostExtension | InvitationGuestExtension | null, newState: Invitation.State) => {
+        if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
+          currentInvitation = { ...currentInvitation, state: newState };
+          stream.next(currentInvitation);
+        }
+        return currentInvitation;
+      },
+    };
+  }
+
   private async _handleGuestOtpAuth(
     extension: InvitationGuestExtension,
-    setState: (newState: Partial<Invitation>) => void,
+    setState: (newState: Invitation.State) => void,
     authenticated: Trigger<string>,
     options: { timeout: number },
   ) {
     for (let attempt = 1; attempt <= MAX_OTP_ATTEMPTS; attempt++) {
       log('guest waiting for authentication code...');
-      setState({ state: Invitation.State.READY_FOR_AUTHENTICATION });
+      setState(Invitation.State.READY_FOR_AUTHENTICATION);
       const authCode = await authenticated.wait(options);
 
       log('sending authentication request');
-      setState({ state: Invitation.State.AUTHENTICATING });
+      setState(Invitation.State.AUTHENTICATING);
       const response = await extension.rpc.InvitationHostService.authenticate({ authCode });
       if (response.status === undefined || response.status === AuthenticationResponse.Status.OK) {
         break;
@@ -365,7 +403,7 @@ export class InvitationsHandler {
 
   private async _handleGuestKpkAuth(
     extension: InvitationGuestExtension,
-    setState: (newState: Partial<Invitation>) => void,
+    setState: (newState: Invitation.State) => void,
     invitation: Invitation,
     introductionResponse: IntroductionResponse,
   ) {
@@ -376,7 +414,7 @@ export class InvitationsHandler {
       throw new Error('challenge missing in the introduction');
     }
     log('sending authentication request');
-    setState({ state: Invitation.State.AUTHENTICATING });
+    setState(Invitation.State.AUTHENTICATING);
     const signature = sign(Buffer.from(introductionResponse.challenge), invitation.guestKeypair.privateKey);
     const response = await extension.rpc.InvitationHostService.authenticate({
       signedChallenge: signature,
