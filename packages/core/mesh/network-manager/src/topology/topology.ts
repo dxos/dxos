@@ -36,6 +36,11 @@ export interface SwarmState {
    * Candidates for connection. Does not intersect with a set of already connected peers.
    */
   candidates: PublicKey[];
+
+  /**
+   * Candidates for connection. Does not intersect with a set of already connected peers.
+   */
+  allPeers: PublicKey[];
 }
 
 export interface Topology {
