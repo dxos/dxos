@@ -1,5 +1,5 @@
 
-# @dxos/blade-runner
+# @dxos/kube-testing
 
 KUBE Testing.
 

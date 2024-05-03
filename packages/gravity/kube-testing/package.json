@@ -1,8 +1,8 @@
 {
-  "name": "@dxos/blade-runner",
+  "name": "@dxos/kube-testing",
   "version": "0.5.0",
   "private": true,
-  "description": "DXOS simulation tests runner.",
+  "description": "KUBE Testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -14,7 +14,7 @@
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {
-    "run-tests": "pnpm -w nx compile blade-runner && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
+    "run-tests": "pnpm -w nx compile kube-testing && SWC_PLUGINS=$(cat swc-plugins.json) node -r ts-node/register ./src/main.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
@@ -48,7 +48,7 @@
     "esbuild": "^0.19.6",
     "esbuild-plugin-wasm": "^1.1.0",
     "ioredis": "^5.3.2",
-    "isomorphic-ws": "^5.0.0",
+    "isomorphic-ws": "^4.0.1",
     "js-yaml": "^4.1.0",
     "playwright": "^1.36.2",
     "plotly.js-dist-min": "^2.25.1",

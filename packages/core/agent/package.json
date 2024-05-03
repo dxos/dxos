@@ -47,7 +47,7 @@
     "date-fns": "^3.3.1",
     "express": "^4.19.2",
     "hnswlib-node": "^1.4.2",
-    "isomorphic-ws": "^5.0.0",
+    "isomorphic-ws": "^4.0.1",
     "js-yaml": "^4.1.0",
     "lodash.defaultsdeep": "^4.6.1",
     "pkg-up": "^3.1.0",

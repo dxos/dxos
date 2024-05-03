@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import WebSocket from 'isomorphic-ws';
+import { Server } from 'isomorphic-ws';
 
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
@@ -182,7 +182,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     switch (config.type) {
       case 'server':
         this.repo = new Repo({
-          network: network ? [new NodeWSServerAdapter(new WebSocket.Server({ port: config.port }))] : [],
+          network: network ? [new NodeWSServerAdapter(new Server({ port: config.port }))] : [],
         });
         break;
       case 'client':

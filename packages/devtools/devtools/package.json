@@ -47,7 +47,7 @@
     "change-case": "^4.1.2",
     "date-fns": "^3.3.1",
     "flame-chart-js": "^2.3.1",
-    "isomorphic-ws": "^5.0.0",
+    "isomorphic-ws": "^4.0.1",
     "localforage": "^1.10.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react": "^18.2.0",

@@ -148,8 +148,6 @@
     "debug": "^4.3.4",
     "eventemitter3": "^5.0.1",
     "fast-sha256": "^1.3.0",
-    "isomorphic-ws": "^5.0.0",
-    "ws": "^8.14.2",
     "xstate": "^5.9.1"
   },
   "devDependencies": {
