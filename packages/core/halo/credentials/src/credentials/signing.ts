@@ -12,6 +12,7 @@ import { arrayToBuffer } from '@dxos/util';
 /**
  * @returns The input message to be signed for a given credential.
  */
+// TODO(nf): rename, this returns not the proof itself, but the payload for verifying against the proof.
 export const getCredentialProofPayload = (credential: Credential): Uint8Array => {
   const copy = {
     ...credential,
