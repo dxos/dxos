@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { HonoRequest } from 'hono';
+import { type HonoRequest } from 'hono';
 
 /**
  * Safely parse JSON data from the request with default value.

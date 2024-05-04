@@ -2,12 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Ai } from '@cloudflare/ai';
+// import { type Ai } from '@cloudflare/ai';
 
 import { type SignalingServer } from './signaling';
-
-// TODO(burdon): YAML file for config.
-export const DISCORD_INVITE_URL = 'https://discord.gg/PTA7ThQQ';
 
 /**
  * Secrets management.
@@ -30,6 +27,6 @@ export type Env = {
     SIGNALING: DurableObjectNamespace<SignalingServer>;
 
     // AI.
-    AI: Ai;
+    // AI: Ai;
   };
 };

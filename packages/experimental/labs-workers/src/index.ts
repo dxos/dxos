@@ -15,8 +15,6 @@ import { type Env } from './defs';
 import testing from './testing';
 import { safeJson } from './util';
 
-export * from './signaling';
-
 /**
  * https://hono.dev/top
  * https://hono.dev/getting-started/cloudflare-workers
@@ -80,6 +78,5 @@ root.onError((err, c) => {
 root.route('/testing', testing);
 root.route('/chess', chess);
 // root.route('/chat', chat);
-// root.route('/signal', signaling);
 
 export default root;

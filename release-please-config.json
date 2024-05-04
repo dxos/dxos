@@ -609,6 +609,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/signaling/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/spyglass/package.json",
           "jsonpath": "$.version"
         },

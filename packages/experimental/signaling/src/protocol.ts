@@ -4,24 +4,27 @@
 
 import type WebSocket from 'ws';
 
-import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+// TODO(burdon): Compare with current mesh signaling protocol.
 
 export type Message<T = {}> = {
   type: 'ping' | 'pong' | 'join' | 'leave' | 'info' | 'offer' | 'answer';
-  sender?: PublicKey; // If undefined then from server.
-  recipient?: PublicKey; // If undefined then broadcast.
+  // recipients?: string[]; // If undefined then broadcast.
   data?: T;
 };
 
 export type SwarmPayload = {
-  peerKeys: PublicKey[];
+  swarmKey?: string;
+  peerKeys?: string[];
 };
 
 export type WebRTCPayload = {
   description?: RTCSessionDescription;
   candidate?: RTCIceCandidate;
 };
+
+// TODO(burdon): Protobuf. CF uses Cap'n Proto.
 
 export const encodeMessage = <T = {}>(message: Message<T>) => JSON.stringify(message);
 
