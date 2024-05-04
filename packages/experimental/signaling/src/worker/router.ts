@@ -20,36 +20,35 @@ import {
   type WebRTCPayload,
 } from '../protocol';
 
-// TODO(burdon): How to test logic outside of worker?
-
-// TODO(burdon): How can this be used by invitations (prior to indentity being created).
+// TODO(burdon): How to unit test logic outside of worker?
+// TODO(burdon): Alarms (time-based triggers).
+// TODO(burdon): Hibernation.
+//  https://developers.cloudflare.com/durable-objects/api/websockets/#serializeattachment
+// TODO(burdon): Security/encryption info (e2e).
+//  https://developers.cloudflare.com/durable-objects/reference/data-security
 
 /**
- * The UserObject is a Durable Object identified by the user's identity key.
- * All devices connect to the same SocketObject.
- * The class provide a general message routing and subscription mechanism.
+ * The class provides message routing between peers.
  *
+ * The RouterObject is a Durable Object identified by a discovery key used to find a group of connected peers.
+ * For example, all devices for a given user will connect to a router using a discovery key that is the hash of the identity key.
+ * Peers starting a key exchange will use a temporary discovery key determined by the exchanged invitation object.
+ *
+ * Implementation:
  * WebSockets are long-lived TCP connections that enable bi-directional, real-time communication between client and server.
  * Cloudflare Durable Objects coordinate Cloudflare Workers to manage WebSocket connections between peers.
- *
  * https://developers.cloudflare.com/workers/runtime-apis/websockets
  *
  * Hibernation allows Durable Objects that do not have events handlers (i.e., not handling peer messages)
  * to be removed from memory without disconnecting the WebSocket.
- *
  * https://developers.cloudflare.com/durable-objects/examples/websocket-hibernation-server
- * Max 32,768 connections per Durable Object.
+ * Hibernation supports up to 32,768 connections per Durable Object.
  *
  * Pricing model.
  * https://developers.cloudflare.com/durable-objects/platform/pricing/#example-2
  * Example: $300/mo for 10,000 peers (very actively connected).
  */
 export class RouterObject extends DurableObject<Env> {
-  // TODO(burdon): Alarms (time based trigger).
-
-  // TODO(burdon): Security/encryption.
-  // https://developers.cloudflare.com/durable-objects/reference/data-security
-
   /**
    * @param state
    * @param env
@@ -120,10 +119,6 @@ export class RouterObject extends DurableObject<Env> {
     if (code !== 1005) {
       ws.close(code, 'closing WebSocket');
     }
-
-    // @ts-ignore
-    // TODO(burdon): Persist data for hibernation (2k).
-    // https://developers.cloudflare.com/durable-objects/api/websockets/#serializeattachment
 
     const swarmKeys = await this.getSwarmMap(deviceKey);
     for (const swarmKey of swarmKeys) {

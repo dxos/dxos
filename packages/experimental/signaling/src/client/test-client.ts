@@ -11,14 +11,13 @@ import { log } from '@dxos/log';
 
 import { decodeMessage, encodeMessage, type SignalMessage, type SwarmPayload, type WebRTCPayload } from '../protocol';
 
-const TEST_IDENTITY_KEY = '34c6a1e612ce21fa1937b33329b1890450d193a8407e035bdb065ce468479164';
 const TEST_SPACE_KEY = '4a138aed546a789b17ab702190a7f4382b2c92826247d1c7620287b49536666f';
 
 const { prod, endpoint, port, identityKey } = args
   .option('prod', 'production mode', false)
   .option('endpoint', 'production endpoint', 'signaling.dxos.workers.dev')
   .option('port', 'dev server if not in prod mode', 8787)
-  .option('identity-key', 'identity key', TEST_IDENTITY_KEY)
+  .option('identity-key', 'identity key', PublicKey.random().toHex())
   .parse(process.argv);
 
 const url = prod ? `wss://${endpoint}}` : `ws://localhost:${port}`;
@@ -48,8 +47,7 @@ class TestClient {
     Object.assign(this._ws, {
       onopen: () => {
         log.info('opened', { deviceKey: this._deviceKey });
-        this.send({ type: 'join', data: { swarmKey: TEST_IDENTITY_KEY } });
-        // this.send({ type: 'join', data: { swarmKey: TEST_SPACE_KEY } });
+        this.send({ type: 'join', data: { swarmKey: TEST_SPACE_KEY } });
       },
 
       onclose: () => {

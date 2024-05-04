@@ -18,7 +18,7 @@ import { type Peer } from '../protocol';
 
 /**
  * Represents a swarm (e.g., Space or invitation swarm).
- * Each Durable Object is identified by its swarm key.
+ * Each Durable Object is identified by the corresponding swarm key.
  */
 export class SwarmObject extends DurableObject<Env> {
   /**
@@ -39,14 +39,6 @@ export class SwarmObject extends DurableObject<Env> {
     const swarmKey = await this.ctx.storage.get<string>('swarmKey');
     invariant(swarmKey);
     return PublicKey.from(swarmKey);
-  }
-
-  private async getPeers(): Promise<Set<Peer>> {
-    return (await this.ctx.storage.get<Set<Peer>>('peers')) || new Set();
-  }
-
-  private async setPeers(peers: Set<Peer>) {
-    await this.ctx.storage.put('peers', peers);
   }
 
   // Storage
@@ -91,5 +83,13 @@ export class SwarmObject extends DurableObject<Env> {
       const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(peer.discoveryKey));
       await router.notifySwarmUpdated(peer.peerKey, swarmKey.toHex(), peers);
     }
+  }
+
+  private async getPeers(): Promise<Set<Peer>> {
+    return (await this.ctx.storage.get<Set<Peer>>('peers')) || new Set();
+  }
+
+  private async setPeers(peers: Set<Peer>) {
+    await this.ctx.storage.put('peers', peers);
   }
 }
