@@ -17,8 +17,8 @@ account_id = "950816f3f59b079880a1ae33fb0ec320"
       WORKER_ENV = "local"
 
 [[durable_objects.bindings]]
-name = "SOCKET"
-class_name = "SocketObject"
+name = "USER"
+class_name = "UserObject"
 
 [[durable_objects.bindings]]
 name = "SWARM"
@@ -26,4 +26,4 @@ class_name = "SwarmObject"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["SocketObject", "SwarmObject"]
+new_classes = ["UserObject", "SwarmObject"]

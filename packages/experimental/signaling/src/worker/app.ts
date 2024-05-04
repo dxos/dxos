@@ -71,9 +71,9 @@ app.get('/ws/:identityKey/:deviceKey', async (c) => {
   // The Hibernation API limits to 32k connections per durable object (with 10 tags per socket).
   // https://developers.cloudflare.com/durable-objects/api/websockets/#acceptwebsocket
   // https://developers.cloudflare.com/durable-objects/best-practices/access-durable-objects-from-a-worker/#derive-ids-from-names
-  const id = c.env.SOCKET.idFromName(identityKey.toHex());
-  const socket = c.env.SOCKET.get(id);
-  const response = await socket.fetch(c.req.raw);
+  const id = c.env.USER.idFromName(identityKey.toHex());
+  const user = c.env.USER.get(id);
+  const response = await user.fetch(c.req.raw);
 
   return new Response(null, {
     status: response.status,

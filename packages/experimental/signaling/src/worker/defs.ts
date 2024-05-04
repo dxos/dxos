@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type SocketObject } from './socket';
 import { type SwarmObject } from './swarm';
+import { type UserObject } from './user';
 
 /**
  * Secrets management.
@@ -12,6 +12,6 @@ import { type SwarmObject } from './swarm';
 export type Env = {
   WORKER_ENV: 'production' | 'local';
 
-  SOCKET: DurableObjectNamespace<SocketObject>;
+  USER: DurableObjectNamespace<UserObject>;
   SWARM: DurableObjectNamespace<SwarmObject>;
 };

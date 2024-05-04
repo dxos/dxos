@@ -14,6 +14,7 @@ export type Message<T = {}> = {
   data?: T;
 };
 
+// TODO(burdon): Bind message.type to data type. Discriminated union?
 export type SwarmPayload = {
   swarmKey?: string;
   peerKeys?: string[];

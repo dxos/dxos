@@ -15,8 +15,8 @@ import type { Env } from './defs';
 // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
 
 export type Peer = {
+  userId: string;
   peerKey: string;
-  socketId: string;
 };
 
 /**
@@ -30,8 +30,17 @@ export class SwarmObject extends DurableObject<Env> {
    */
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
-    // TODO(burdon): ID should match swarm key.
     log.info('SwarmObject', { id: state.id.toString().slice(0, 8) });
+  }
+
+  async getSwarmKey(): Promise<string> {
+    const swarmKey = await this.ctx.storage.get<string>('swarmKey');
+    invariant(swarmKey);
+    return swarmKey;
+  }
+
+  async setSwarmKey(swarmKey: string) {
+    await this.ctx.storage.put('swarmKey', swarmKey);
   }
 
   async getPeers(): Promise<Set<Peer>> {
@@ -50,9 +59,9 @@ export class SwarmObject extends DurableObject<Env> {
    * Join the swarm.
    * Registers the peer Key and the associated socket object.
    */
-  public async join(peerKey: string, socketId: string): Promise<string[]> {
+  public async join(peerKey: string, userId: string): Promise<string[]> {
     const peers = await this.getPeers();
-    peers.add({ peerKey, socketId });
+    peers.add({ peerKey, userId });
     await this.setPeers(peers);
     await this.notify(peers);
     return Array.from(peers.values()).map((peer) => peer.peerKey);
@@ -61,9 +70,9 @@ export class SwarmObject extends DurableObject<Env> {
   /**
    * Leave the swarm.
    */
-  public async leave(peerKey: string, socketId: string): Promise<string[]> {
+  public async leave(peerKey: string, userId: string): Promise<string[]> {
     const peers = await this.getPeers();
-    const peer = Array.from(peers.values()).find((peer) => peer.peerKey === peerKey && peer.socketId === socketId);
+    const peer = Array.from(peers.values()).find((peer) => peer.peerKey === peerKey && peer.userId === userId);
     invariant(peer);
     peers.delete(peer);
     await this.setPeers(peers);
@@ -72,15 +81,14 @@ export class SwarmObject extends DurableObject<Env> {
   }
 
   /**
-   * Notify all peers of change.
+   * Notify all peers of a change in the swarm membership.
    */
   private async notify(peers: Set<Peer>) {
+    const swarmKey = await this.getSwarmKey();
+    const peerKeys = Array.from(peers).map((peer) => peer.peerKey);
     for (const peer of peers) {
-      const socket = this.env.SOCKET.get(this.env.SOCKET.idFromString(peer.socketId));
-      await socket.notify(
-        this.ctx.id.toString(),
-        Array.from(peers).map((p) => p.peerKey),
-      );
+      const user = this.env.USER.get(this.env.USER.idFromString(peer.userId));
+      await user.notifySwarmUpdated(peer.peerKey, swarmKey, peerKeys);
     }
   }
 }
