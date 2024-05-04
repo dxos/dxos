@@ -1,5 +1,5 @@
 # Class `Client`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:33]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:29]()</sub>
 
 
 The Client class encapsulates the core client-side API of DXOS.
@@ -25,7 +25,7 @@ Type: <code>Event&lt;void&gt;</code>
 Emitted after the client is reset and the services have finished restarting.
 
 ### [version]()
-Type: <code>"0.4.9"</code>
+Type: <code>"0.5.0"</code>
 
 The version of this client API.
 
@@ -40,7 +40,7 @@ Type: <code>object</code>
 
 
 ### [halo]()
-Type: <code>[HaloProxy](/api/@dxos/react-client/classes/HaloProxy)</code>
+Type: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
 
 HALO credentials.
 
@@ -50,7 +50,7 @@ Type: <code>boolean</code>
 Returns true if the client has been initialized. Initialize by calling  `.initialize()` .
 
 ### [mesh]()
-Type: <code>[MeshProxy](/api/@dxos/react-client/classes/MeshProxy)</code>
+Type: <code>MeshProxy</code>
 
 MESH networking.
 
@@ -65,7 +65,7 @@ Type: <code>[Shell](/api/@dxos/react-client/classes/Shell)</code>
 
 
 ### [spaces]()
-Type: <code>[SpaceList](/api/@dxos/react-client/classes/SpaceList)</code>
+Type: <code>[Echo](/api/@dxos/react-client/interfaces/Echo)</code>
 
 
 
@@ -88,7 +88,7 @@ Arguments: none
 
 
 
-### [addSchema(types)]()
+### [addSchema(schemaList)]()
 
 
 
@@ -97,19 +97,7 @@ Returns: <code>this</code>
 
 Arguments: 
 
-`types`: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
-
-
-### [addTypes(types)]()
-
-
-
-
-Returns: <code>this</code>
-
-Arguments: 
-
-`types`: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
+`schemaList`: <code>Schema&lt;any, any, never&gt;[]</code>
 
 
 ### [destroy()]()

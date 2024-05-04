@@ -6,7 +6,8 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { trigger } from './trigger';
+import { sleep } from './timeout';
+import { Trigger, trigger } from './trigger';
 
 describe('trigger', () => {
   test('trigger', async () => {
@@ -17,5 +18,13 @@ describe('trigger', () => {
     const result = await value();
     expect(result).to.equal('test');
     clearTimeout(t);
+  });
+
+  test('throw with not listeners does not cause unhandled rejection', async () => {
+    const trigger = new Trigger();
+    trigger.wake();
+    trigger.throw(new Error('Test error'));
+    trigger.reset();
+    await sleep(10);
   });
 });

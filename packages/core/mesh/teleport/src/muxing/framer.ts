@@ -137,7 +137,7 @@ export class Framer {
   destroy() {
     // TODO(dmaretskyi): Call stream.end() instead?
     if (this._stream.readableLength > 0) {
-      log.info('framer destroyed while there are still read bytes in the buffer.');
+      log('framer destroyed while there are still read bytes in the buffer.');
     }
     if (this._stream.writableLength > 0) {
       log.warn('framer destroyed while there are still write bytes in the buffer.');

@@ -614,17 +614,17 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/blade-runner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/gravity/kube-publishing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-testing/package.json",
           "jsonpath": "$.version"
         },
         {

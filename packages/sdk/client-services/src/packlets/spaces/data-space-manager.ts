@@ -5,7 +5,8 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { getCredentialAssertion, type CredentialSigner, type DelegateInvitationCredential } from '@dxos/credentials';
-import { type AutomergeHost, type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-db';
+import { type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -79,7 +80,7 @@ export class DataSpaceManager {
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _automergeHost: AutomergeHost,
+    private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
     params?: DataSpaceManagerRuntimeParams,
   ) {
@@ -152,14 +153,10 @@ export class DataSpaceManager {
 
     log('creating space...', { spaceKey });
 
-    const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: any) => {
-      doc.access = { spaceKey: spaceKey.toHex() };
-    });
-
+    const automergeRootUrl = await this._echoHost.createSpaceRoot(spaceKey);
     const space = await this._constructSpace(metadata);
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRoot.url);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRootUrl);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -243,8 +240,8 @@ export class DataSpaceManager {
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._automergeHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._automergeHost.createExtension());
+        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
       },
       onAuthFailure: () => {
         log.warn('auth failure');
@@ -265,6 +262,7 @@ export class DataSpaceManager {
       presence,
       keyring: this._keyring,
       feedStore: this._feedStore,
+      echoHost: this._echoHost,
       signingContext: this._signingContext,
       callbacks: {
         beforeReady: async () => {
@@ -282,7 +280,6 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
-      automergeHost: this._automergeHost,
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {

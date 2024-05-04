@@ -8,9 +8,9 @@ import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
@@ -32,7 +32,6 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
-import { createSelectedDocumentsIterator } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
@@ -64,9 +63,7 @@ export class ServiceContext extends Resource {
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
   public readonly invitationsManager: InvitationsManager;
-  public readonly automergeHost: AutomergeHost;
-  public readonly indexMetadata: IndexMetadataStore;
-  public readonly indexer: Indexer;
+  public readonly echoHost: EchoHost;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -122,19 +119,9 @@ export class ServiceContext extends Resource {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.indexMetadata = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
-
-    this.automergeHost = new AutomergeHost({
-      directory: storage.createDirectory('automerge'),
-      db: level.sublevel('automerge'),
-      storageCallbacks: createStorageCallbacks({ host: () => this.automergeHost, metadata: this.indexMetadata }),
-    });
-
-    this.indexer = new Indexer({
-      db: this.level,
-      indexStore: new IndexStore({ db: level.sublevel('index-storage') }),
-      metadataStore: this.indexMetadata,
-      loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
+    this.echoHost = new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     });
 
     this.invitations = new InvitationsHandler(this.networkManager);
@@ -166,7 +153,7 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
-    await this.automergeHost.open();
+    await this.echoHost.open(ctx);
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
@@ -181,20 +168,19 @@ export class ServiceContext extends Resource {
     log('opened');
   }
 
-  protected override async _close() {
+  protected override async _close(ctx: Context) {
     log('closing...');
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.automergeHost.close();
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
     await this.feedStore.close();
+    await this.metadataStore.close();
+    await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
-    await this.metadataStore.close();
-    await this.indexer.destroy();
     log('closed');
   }
 
@@ -255,7 +241,7 @@ export class ServiceContext extends Resource {
       this.keyring,
       signingContext,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
       this.invitationsManager,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );

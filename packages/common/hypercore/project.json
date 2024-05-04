@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "hypercore",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/hypercore/src",
   "projectType": "library",
   "targets": {

@@ -3,9 +3,32 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Filter } from '@dxos/echo-db';
+import { type Heads } from '@dxos/automerge/automerge';
 import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+
+/**
+ * @deprecated To be replaced by a specialized API for each index.
+ */
+export type IndexQuery = {
+  /**
+   * null means all Expando objects.
+   * undefined means all objects (no filter).
+   */
+  typename?: string | null;
+};
+
+export type ObjectSnapshot = {
+  /**
+   * Index ID.
+   */
+  id: ObjectPointerEncoded;
+  object: Partial<ObjectStructure>;
+  heads: Heads;
+};
+
+export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
 
 export interface Index {
   identifier: string;
@@ -20,7 +43,9 @@ export interface Index {
    */
   update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
   remove(id: string): Promise<void>;
-  find(filter: Filter): Promise<{ id: string; rank: number }[]>;
+
+  // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
+  find(filter: IndexQuery): Promise<{ id: string; rank: number }[]>;
 
   serialize(): Promise<string>;
 }
@@ -38,8 +63,3 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
-
-/**
- * Document head hashes concatenated with a no separator.
- */
-export type ConcatenatedHeadHashes = string;
