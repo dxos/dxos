@@ -6,6 +6,11 @@ import type WebSocket from 'ws';
 
 import { log } from '@dxos/log';
 
+export const STUN_ENDPOINT = 'stun:stun.cloudflare.com:3478';
+
+export const DATA_CHANNEL_LABEL = 'data-channel';
+export const DATA_CHANNEL_ID = 0;
+
 // TODO(burdon): Compare with current mesh signaling protocol.
 // TODO(burdon): Bind message.type to data type. Discriminated union?
 // TODO(burdon): Generalize?
@@ -28,7 +33,8 @@ export type SwarmPayload = {
 };
 
 export type WebRTCPayload = {
-  peer: Peer;
+  from: Peer;
+  to: Peer;
   description?: RTCSessionDescription;
   candidate?: RTCIceCandidate;
 };

@@ -173,12 +173,13 @@ export class RouterObject extends DurableObject<Env> {
         break;
       }
 
-      // Send message to other peers.
+      // Relay message to other peer.
       default: {
-        const { peer } = data as WebRTCPayload;
-        if (peer) {
-          const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(peer.discoveryKey));
-          await router.sendMessage(peer.peerKey, message);
+        const { to } = data as WebRTCPayload;
+        if (to) {
+          // Find router.
+          const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(to.discoveryKey));
+          await router.sendMessage(to.peerKey, message);
         }
       }
     }
@@ -187,9 +188,10 @@ export class RouterObject extends DurableObject<Env> {
   /**
    * Relay message to peer.
    */
-  public async sendMessage(peerKey: string, message: SignalMessage) {
+  public async sendMessage(_peerKey: string, message: SignalMessage) {
+    const peerKey = PublicKey.from(_peerKey);
     const socket =
-      this.getSocket(PublicKey.from(peerKey)) ?? raise(new HTTPException(404, { message: 'peer not found ' }));
+      this.getSocket(peerKey) ?? raise(new HTTPException(404, { message: `peer not found: ${peerKey.truncate()}` }));
     socket.send(encodeMessage(message));
   }
 
