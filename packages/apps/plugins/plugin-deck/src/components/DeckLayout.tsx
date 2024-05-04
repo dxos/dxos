@@ -75,10 +75,12 @@ const sidebarPart = ['sidebar', 0, 1] satisfies PartIdentifier;
 const NodePlankHeading = ({
   node,
   part,
+  slug,
   popoverAnchorId,
 }: {
   node: Node;
   part: PartIdentifier;
+  slug: string;
   popoverAnchorId?: string;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
@@ -110,7 +112,7 @@ const NodePlankHeading = ({
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? { action: NavigationAction.CLOSE, data: { [part[0]]: node.id } }
+              ? { action: NavigationAction.CLOSE, data: { [part[0]]: slug } }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
@@ -161,12 +163,12 @@ export const DeckLayout = ({
       ? { sidebar: NAV_ID }
       : location.active
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
-  const sidebarId = firstSidebarId(activeParts);
-  const sidebarNode = resolveNodeFromSlug(graph, sidebarId);
-  const sidebarAvailable = sidebarId === NAV_ID || !!sidebarNode;
-  const complementaryId = firstComplementaryId(activeParts);
-  const complementaryNode = resolveNodeFromSlug(graph, complementaryId);
-  const complementaryAvailable = complementaryId === NAV_ID || !!complementaryNode;
+  const sidebarSlug = firstSidebarId(activeParts);
+  const sidebarNode = resolveNodeFromSlug(graph, sidebarSlug);
+  const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
+  const complementarySlug = firstComplementaryId(activeParts);
+  const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
+  const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -227,7 +229,7 @@ export const DeckLayout = ({
 
         {/* Sidebars */}
         <Main.NavigationSidebar>
-          {sidebarId === NAV_ID ? (
+          {sidebarSlug === NAV_ID ? (
             <Surface
               role='navigation'
               data={{
@@ -238,7 +240,12 @@ export const DeckLayout = ({
             />
           ) : sidebarNode ? (
             <>
-              <NodePlankHeading node={sidebarNode.node} part={sidebarPart} popoverAnchorId={popoverAnchorId} />
+              <NodePlankHeading
+                node={sidebarNode.node}
+                slug={sidebarSlug!}
+                part={sidebarPart}
+                popoverAnchorId={popoverAnchorId}
+              />
               <Surface
                 role='article'
                 data={{
@@ -254,7 +261,7 @@ export const DeckLayout = ({
           ) : null}
         </Main.NavigationSidebar>
         <Main.ComplementarySidebar>
-          {complementaryId === NAV_ID ? (
+          {complementarySlug === NAV_ID ? (
             <Surface
               role='navigation'
               data={{
@@ -267,6 +274,7 @@ export const DeckLayout = ({
             <>
               <NodePlankHeading
                 node={complementaryNode.node}
+                slug={complementarySlug!}
                 part={complementaryPart}
                 popoverAnchorId={popoverAnchorId}
               />
@@ -302,7 +310,7 @@ export const DeckLayout = ({
                       <Surface role='navigation' data={{ part, popoverAnchorId }} limit={1} />
                     ) : node ? (
                       <>
-                        <NodePlankHeading node={node.node} part={part} popoverAnchorId={popoverAnchorId} />
+                        <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />
                         <Surface
                           role='article'
                           data={{
