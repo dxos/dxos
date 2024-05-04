@@ -4,7 +4,16 @@
 
 import React, { useCallback } from 'react';
 
-import { NavigationAction, Surface, useIntent, type PartIdentifier } from '@dxos/app-framework';
+import {
+  NavigationAction,
+  Surface,
+  useIntent,
+  type PartIdentifier,
+  useResolvePlugin,
+  parseNavigationPlugin,
+  SLUG_PATH_SEPARATOR,
+  SLUG_COLLECTION_INDICATOR,
+} from '@dxos/app-framework';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -48,6 +57,8 @@ export const NavTreeContainer = ({
   const { closeNavigationSidebar } = useSidebars(NAVTREE_PLUGIN);
   const [isLg] = useMediaQuery('lg', { ssr: false });
   const { dispatch } = useIntent();
+  const navPlugin = useResolvePlugin(parseNavigationPlugin);
+  const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
     if (!node.data) {
@@ -56,7 +67,15 @@ export const NavTreeContainer = ({
 
     await dispatch({
       action: NavigationAction.OPEN,
-      data: { activeParts: { main: [node.id] } },
+      data: {
+        activeParts: {
+          main:
+            // TODO(thure): don’t bake this in, refactor this to be a generalized approach.
+            isDeckModel && !!node.data?.comments
+              ? [node.id, `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`]
+              : [node.id],
+        },
+      },
     });
 
     const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
