@@ -7,14 +7,13 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { SignalingClient } from './client';
+import { type SignalingClient } from './client';
 import { DATA_CHANNEL_ID, DATA_CHANNEL_LABEL, STUN_ENDPOINT } from '../protocol';
 
 /**
  * WebRTC Peer.
  */
 export class Peer {
-  private _signaler: SignalingClient;
   private _connection?: RTCPeerConnection;
   private _channel?: RTCDataChannel; // TODO(burdon): Multiple?
 
@@ -24,15 +23,16 @@ export class Peer {
   public readonly error = new Event<Error>();
   public readonly update = new Event<{ state?: string }>();
 
-  constructor(public readonly id: PublicKey) {
-    this._signaler = new SignalingClient(this.id);
-  }
+  constructor(
+    private readonly _signaler: SignalingClient,
+    private readonly peerKey: PublicKey,
+  ) {}
 
   get info() {
     return {
       ts: Date.now(),
-      id: this.id.toHex(),
-      signaling: this._signaler.info,
+      peerKey: this.peerKey.toHex(),
+      signaler: this._signaler.info,
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection
       connection: this._connection && {
         connectionState: this._connection.connectionState,
@@ -220,7 +220,7 @@ export class Peer {
     Object.assign<RTCDataChannel, Partial<RTCDataChannel>>(this._channel, {
       onopen: (event) => {
         log.info('channel.onopen', { event });
-        this.send({ sender: this.id, message: 'hello' });
+        this.send({ sender: this.peerKey, message: 'hello' });
       },
       onclose: (event) => {
         log.info('channel.onclose', { event });

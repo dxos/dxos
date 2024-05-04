@@ -11,6 +11,11 @@ import { log } from '@dxos/log';
 
 import { decodeMessage, encodeMessage, type SignalMessage, type SwarmPayload, type WebRTCPayload } from '../protocol';
 
+export interface SignalingListener {
+  onDescription(description: RTCSessionDescription): void;
+  onIceCandidate(candidate: RTCIceCandidate): void;
+}
+
 /**
  * Signaling client.
  */
@@ -21,17 +26,17 @@ export class SignalingClient {
 
   constructor(private readonly _url: string) {}
 
-  get info() {
+  public get info() {
     return {
       open: this.isOpen,
     };
   }
 
-  get isOpen() {
+  public get isOpen() {
     return !!this._ws;
   }
 
-  async open(discoveryKey: PublicKey): Promise<boolean> {
+  public async open(discoveryKey: PublicKey, listener: SignalingListener): Promise<boolean> {
     invariant(!this._ws);
     log.info('opening', { deviceKey: this._deviceKey });
     const ready = new Trigger<boolean>();
@@ -80,6 +85,7 @@ export class SignalingClient {
             const {
               from: { peerKey },
             } = message.data as WebRTCPayload;
+            // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation
             const polite = this._deviceKey.toHex() < peerKey;
             log.info('offer', { polite, this: this._deviceKey.toHex(), peerKey });
             break;
@@ -95,12 +101,20 @@ export class SignalingClient {
     return await ready.wait();
   }
 
-  async close() {
+  public async close() {
     if (this._ws) {
       log.info('closing', { deviceKey: this._deviceKey });
       this._ws.close();
       this._ws = undefined;
     }
+  }
+
+  public sendDescription(description: RTCSessionDescription) {
+    // this.send({ description });
+  }
+
+  public sendIceCandidate(candidate: RTCIceCandidate) {
+    // this.send({ candidate });
   }
 
   send<T>(message: SignalMessage<T>) {
