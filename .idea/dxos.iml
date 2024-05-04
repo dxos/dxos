@@ -10,8 +10,13 @@
       <excludeFolder url="file://$MODULE_DIR$/.nx" />
       <excludeFolder url="file://$MODULE_DIR$/.swc" />
       <excludeFolder url="file://$MODULE_DIR$/packages/apps/testbench-app/.partykit" />
+<<<<<<< HEAD
       <excludeFolder url="file://$MODULE_DIR$/packages/experimental/signaling/.swc" />
       <excludeFolder url="file://$MODULE_DIR$/packages/experimental/signaling/.wrangler" />
+=======
+      <excludeFolder url="file://$MODULE_DIR$/packages/experimental/labs-functions/.swc" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/experimental/labs-workers/.wrangler" />
+>>>>>>> 52e948b8fce7f570f48e5740ba7bbf04f5a48b12
       <excludePattern pattern="dist" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
