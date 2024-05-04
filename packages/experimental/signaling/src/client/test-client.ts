@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { decodeMessage, encodeMessage, type Message } from '../protocol';
+import { decodeMessage, encodeMessage, type Message, type SwarmPayload } from '../protocol';
 
 const TEST_IDENTITY_KEY = '34c6a1e612ce21fa1937b33329b1890450d193a8407e035bdb065ce468479164';
 const TEST_SPACE_KEY = '4a138aed546a789b17ab702190a7f4382b2c92826247d1c7620287b49536666f';
@@ -64,12 +64,13 @@ class TestClient {
         const message = decodeMessage(event.data);
         log.info('received', { deviceKey: this._deviceKey, message });
         switch (message?.type) {
-          case 'info': {
-            // TODO(burdon): Select peer and make offer.
-            // const { peerKeys } = message.data as SwarmPayload;
-            // if (peerKeys?.length) {
-            //   this.send({ type: 'offer', recipient: peerKeys[0] });
-            // }
+          case 'update': {
+            // Select peer and make offer.
+            const { peers } = message.data as SwarmPayload;
+            if (peers?.length) {
+              const recipient = peers[0];
+              // this.send({ type: 'rtc-offer', recipients: [recipient] });
+            }
             break;
           }
         }

@@ -55,9 +55,9 @@ app.onError((err, c) => {
  * https://hono.dev/helpers/websocket
  * Ref: https://github.com/partykit/partykit/blob/main/packages/partykit/src/server.ts
  */
-app.get('/ws/:identityKey/:deviceKey', async (c) => {
-  const identityKey = PublicKey.from(c.req.param('identityKey'));
-  log.info('open', { swarmKey: identityKey.truncate() }); // TODO(burdon): Configure logger.
+app.get('/ws/:discoveryKey/:deviceKey', async (c) => {
+  const discoveryKey = PublicKey.from(c.req.param('discoveryKey'));
+  log.info('open', { discoveryKey: discoveryKey.truncate() }); // TODO(burdon): Configure logger.
   const upgradeHeader = c.req.raw.headers.get('Upgrade');
   if (!upgradeHeader || upgradeHeader !== 'websocket') {
     return new Response('Expected header: [Upgrade=websocket]', { status: 426 });
@@ -71,9 +71,8 @@ app.get('/ws/:identityKey/:deviceKey', async (c) => {
   // The Hibernation API limits to 32k connections per durable object (with 10 tags per socket).
   // https://developers.cloudflare.com/durable-objects/api/websockets/#acceptwebsocket
   // https://developers.cloudflare.com/durable-objects/best-practices/access-durable-objects-from-a-worker/#derive-ids-from-names
-  const id = c.env.USER.idFromName(identityKey.toHex());
-  const user = c.env.USER.get(id);
-  const response = await user.fetch(c.req.raw);
+  const router = c.env.ROUTER.get(c.env.ROUTER.idFromName(discoveryKey.toHex()));
+  const response = await router.fetch(c.req.raw);
 
   return new Response(null, {
     status: response.status,

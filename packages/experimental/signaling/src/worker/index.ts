@@ -4,7 +4,7 @@
 
 import { app } from './app';
 
+export * from './router';
 export * from './swarm';
-export * from './user';
 
 export default app;

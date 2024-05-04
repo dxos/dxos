@@ -7,20 +7,29 @@ import type WebSocket from 'ws';
 import { log } from '@dxos/log';
 
 // TODO(burdon): Compare with current mesh signaling protocol.
+// TODO(burdon): Bind message.type to data type. Discriminated union?
 
 export type Message<T = {}> = {
-  type: 'ping' | 'pong' | 'join' | 'leave' | 'info' | 'offer' | 'answer';
-  // recipients?: string[]; // If undefined then broadcast.
+  type: 'ping' | 'pong' | 'join' | 'leave' | 'update' | 'rtc-offer' | 'rtc-answer';
   data?: T;
 };
 
-// TODO(burdon): Bind message.type to data type. Discriminated union?
+/**
+ * Devices (peers) connect to a connection object.
+ */
+export type Peer = {
+  discoveryKey: string;
+  peerKey: string;
+};
+
 export type SwarmPayload = {
   swarmKey?: string;
-  peerKeys?: string[];
+  peers?: Peer[];
 };
 
 export type WebRTCPayload = {
+  swarmKey: string;
+  peerKey: string;
   description?: RTCSessionDescription;
   candidate?: RTCIceCandidate;
 };

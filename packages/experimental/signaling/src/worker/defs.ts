@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type RouterObject } from './router';
 import { type SwarmObject } from './swarm';
-import { type UserObject } from './user';
 
 /**
  * Secrets management.
@@ -12,6 +12,6 @@ import { type UserObject } from './user';
 export type Env = {
   WORKER_ENV: 'production' | 'local';
 
-  USER: DurableObjectNamespace<UserObject>;
+  ROUTER: DurableObjectNamespace<RouterObject>;
   SWARM: DurableObjectNamespace<SwarmObject>;
 };

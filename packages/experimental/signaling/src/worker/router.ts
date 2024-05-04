@@ -9,9 +9,11 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Env } from './defs';
-import { decodeMessage, encodeMessage, type SwarmPayload } from '../protocol';
+import { decodeMessage, encodeMessage, type Peer, type SwarmPayload } from '../protocol';
 
 // TODO(burdon): How to test logic outside of worker?
+
+// TODO(burdon): How can this be used by invitations (prior to indentity being created).
 
 /**
  * The UserObject is a Durable Object identified by the user's identity key.
@@ -33,7 +35,7 @@ import { decodeMessage, encodeMessage, type SwarmPayload } from '../protocol';
  * https://developers.cloudflare.com/durable-objects/platform/pricing/#example-2
  * Example: $300/mo for 10,000 peers (very actively connected).
  */
-export class UserObject extends DurableObject<Env> {
+export class RouterObject extends DurableObject<Env> {
   // TODO(burdon): Alarms (time based trigger).
 
   // TODO(burdon): Security/encryption.
@@ -45,17 +47,15 @@ export class UserObject extends DurableObject<Env> {
    */
   constructor(state: DurableObjectState, env: Env) {
     super(state, env);
-    log.info('UserObject', { id: state.id.toString().slice(0, 8) });
+    log.info('RouterObject', { id: state.id.toString().slice(0, 8) });
   }
 
-  // TODO(burdon): Should match name of object id (this.ctx.id.name).
-  async getIdentityKey(): Promise<PublicKey> {
-    const identityKey = await this.ctx.storage.get<string>('identityKey');
-    return PublicKey.from(identityKey!);
+  public async getDiscoveryKey(): Promise<PublicKey> {
+    const discoveryKey = await this.ctx.storage.get<string>('discoveryKey');
+    return PublicKey.from(discoveryKey!);
   }
 
-  // TODO(burdon): This seems to be the same for each.
-  getDeviceKey(ws: WebSocket): PublicKey {
+  private getDeviceKey(ws: WebSocket): PublicKey {
     const deviceKey = this.ctx.getTags(ws)[0];
     return PublicKey.from(deviceKey);
   }
@@ -68,14 +68,14 @@ export class UserObject extends DurableObject<Env> {
   override async fetch(request: Request) {
     const parts = request.url.split('/');
     const deviceKey = PublicKey.from(parts.pop()!);
-    const identityKey = PublicKey.from(parts.pop()!);
-    await this.ctx.storage.put('identityKey', identityKey.toHex());
-    log.info('connecting...', { identityKey: identityKey.truncate(), deviceKey: deviceKey.truncate() });
+    const discoveryKey = PublicKey.from(parts.pop()!);
+    await this.ctx.storage.put('discoveryKey', discoveryKey.toHex());
+    log.info('connecting...', { discoveryKey: discoveryKey.truncate(), deviceKey: deviceKey.truncate() });
 
     // Creates two ends of a WebSocket connection.
     const [client, server] = Object.values(new WebSocketPair());
 
-    // Bind the socket to the Durable Object but make it hibernatable. Set a tag with the identityKey.
+    // Bind the socket to the Durable Object but make it hibernatable. Set a tag with the device key.
     // https://developers.cloudflare.com/durable-objects/api/websockets/#state-methods
     this.ctx.acceptWebSocket(server, [deviceKey.toHex()]);
 
@@ -83,7 +83,7 @@ export class UserObject extends DurableObject<Env> {
     // this.ctx.setWebSocketAutoResponse();
 
     log.info('connected', {
-      identityKey: identityKey.truncate(),
+      discoveryKey: discoveryKey.truncate(),
       deviceKey: deviceKey.truncate(),
       peers: this.ctx.getWebSockets().length,
     });
@@ -113,10 +113,10 @@ export class UserObject extends DurableObject<Env> {
 
     const swarmKeys = await this.getSwarmMap(deviceKey);
     for (const swarmKey of swarmKeys) {
-      await this.leaveSwarm(deviceKey, PublicKey.from(swarmKey));
+      await this.leaveSwarm(PublicKey.from(swarmKey), deviceKey);
     }
 
-    log.info('closed', { identityKey: deviceKey.truncate(), sockets: this.ctx.getWebSockets().length });
+    log.info('closed', { deviceKey: deviceKey.truncate(), sockets: this.ctx.getWebSockets().length });
   }
 
   /**
@@ -137,6 +137,10 @@ export class UserObject extends DurableObject<Env> {
       return;
     }
 
+    // https://developers.cloudflare.com/workers/runtime-apis/rpc
+    // https://developers.cloudflare.com/workers/runtime-apis/rpc/#structured-clonable-types-and-more
+    // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests/#call-rpc-methods
+
     const { type, data } = message;
     switch (type) {
       case 'ping': {
@@ -144,87 +148,83 @@ export class UserObject extends DurableObject<Env> {
         break;
       }
 
-      // https://developers.cloudflare.com/workers/runtime-apis/rpc
-      // https://developers.cloudflare.com/workers/runtime-apis/rpc/#structured-clonable-types-and-more
-      // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests/#call-rpc-methods
-
       case 'join': {
         const { swarmKey: _swarmKey } = data as SwarmPayload;
         invariant(_swarmKey);
         const swarmKey = PublicKey.from(_swarmKey);
-        await this.joinSwarm(deviceKey, swarmKey);
+        await this.joinSwarm(swarmKey, deviceKey);
         break;
       }
 
       case 'leave': {
         const { swarmKey: _swarmKey } = data as SwarmPayload;
-        const swarmKey = PublicKey.from(_swarmKey!);
-        invariant(swarmKey);
-        await this.leaveSwarm(deviceKey, swarmKey);
+        invariant(_swarmKey);
+        const swarmKey = PublicKey.from(_swarmKey);
+        await this.leaveSwarm(swarmKey, deviceKey);
         break;
       }
 
-      // Send message to other peer.
-      // TODO(burdon): Implement signaling protocol: advertise, offer, answer.
-      // default: {
-      //   if (recipient) {
-      //     // Send to peer.
-      //     const peer = this.ctx.getWebSockets().find((peer) => this.getPeerKey(peer)?.equals(recipient));
-      //     peer?.send(encodeMessage({ type, sender, data }));
-      //   } else {
-      //     // Broadcast to all connected peers.
-      //     for (const { ws: peer } of this.getOtherPeers(ws)) {
-      //       peer.send(encodeMessage({ type, sender, data }));
-      //     }
-      //   }
-      // }
+      // Send message to other peers.
+      default: {
+        // TODO(burdon): Get UserObject of associated device.
+        // for (const recipient of recipients ?? []) {
+        //   const peer = this.ctx.getWebSockets().find((socket) => this.getDeviceKey(socket).toHex() === recipient);
+        //   peer?.send(encodeMessage({ type, data }));
+        // }
+      }
     }
   }
 
   /**
    * Notify change of peers.
    */
-  public async notifySwarmUpdated(peerKey: string, swarmKey: string, peerKeys: string[]) {
-    log.info('notifySwarmUpdated', { swarmKey: PublicKey.from(swarmKey).truncate(), peerKeys: peerKeys.length });
+  public async notifySwarmUpdated(peerKey: string, swarmKey: string, peers: Peer[]) {
+    log.info('notifySwarmUpdated', { swarmKey: PublicKey.from(swarmKey).truncate(), peers: peers.length });
 
     const sockets = this.ctx.getWebSockets();
-    const socket = sockets.find((socket) => this.getDeviceKey(socket).toHex() === peerKey);
-    invariant(socket);
+    const socket = sockets.find((socket) => {
+      return this.getDeviceKey(socket).toHex() === peerKey;
+    });
 
-    const deviceKey = this.getDeviceKey(socket);
-    const swarms = Array.from(await this.getSwarmMap(deviceKey));
-    if (swarms.find((_swarmKey) => _swarmKey === swarmKey)) {
-      socket.send(encodeMessage<SwarmPayload>({ type: 'info', data: { swarmKey, peerKeys } }));
+    // Socket may have disconnected.
+    if (socket) {
+      const deviceKey = this.getDeviceKey(socket);
+      const swarms = Array.from(await this.getSwarmMap(deviceKey));
+      if (swarms.find((_swarmKey) => _swarmKey === swarmKey)) {
+        socket.send(encodeMessage<SwarmPayload>({ type: 'update', data: { swarmKey, peers } }));
+      }
     }
   }
 
   /**
    * Join swarm object.
    */
-  private async joinSwarm(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
-    log.info('joinSwarm', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
+  private async joinSwarm(swarmKey: PublicKey, deviceKey: PublicKey) {
+    log.info('joinSwarm', { swarmKey: swarmKey.truncate(), deviceKey: deviceKey.truncate() });
 
     const swarms = await this.getSwarmMap(deviceKey);
     swarms.add(swarmKey.toHex());
     await this.setSwarmMap(deviceKey, swarms);
 
+    const discoveryKey = await this.getDiscoveryKey();
     const swarm = this.env.SWARM.get(this.env.SWARM.idFromName(swarmKey.toHex()));
     await swarm.setSwarmKey(swarmKey.toHex()); // Ideally we'd pass this to the constructor.
-    return await swarm.join(deviceKey.toHex(), this.ctx.id.toString());
+    await swarm.join({ discoveryKey: discoveryKey.toHex(), peerKey: deviceKey.toHex() });
   }
 
   /**
    * Leave swarm object.
    */
-  private async leaveSwarm(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
-    log.info('leaveSwarm', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
+  private async leaveSwarm(swarmKey: PublicKey, deviceKey: PublicKey) {
+    log.info('leaveSwarm', { swarmKey: swarmKey.truncate(), deviceKey: deviceKey.truncate() });
 
     const swarms = await this.getSwarmMap(deviceKey);
     swarms.delete(swarmKey.toHex());
     await this.setSwarmMap(deviceKey, swarms);
 
+    const discoveryKey = await this.getDiscoveryKey();
     const swarm = this.env.SWARM.get(this.env.SWARM.idFromName(swarmKey.toHex()));
-    return await swarm.leave(deviceKey.toHex(), this.ctx.id.toString());
+    await swarm.leave({ discoveryKey: discoveryKey.toHex(), peerKey: deviceKey.toHex() });
   }
 
   /**

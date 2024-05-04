@@ -7,17 +7,13 @@ import { DurableObject } from 'cloudflare:workers';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import type { Env } from './defs';
+import { type Env } from './defs';
+import { type Peer } from '../protocol';
 
 // TODO(burdon): Rust: https://github.com/cloudflare/workers-rs?tab=readme-ov-file#durable-objects
 
 // https://developers.cloudflare.com/durable-objects/reference/in-memory-state
 // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests
-
-export type Peer = {
-  userId: string;
-  peerKey: string;
-};
 
 /**
  * Represents a swarm (e.g., Space or invitation swarm).
@@ -33,21 +29,22 @@ export class SwarmObject extends DurableObject<Env> {
     log.info('SwarmObject', { id: state.id.toString().slice(0, 8) });
   }
 
-  async getSwarmKey(): Promise<string> {
+  public async setSwarmKey(swarmKey: string) {
+    invariant(swarmKey);
+    await this.ctx.storage.put('swarmKey', swarmKey);
+  }
+
+  public async getSwarmKey(): Promise<string> {
     const swarmKey = await this.ctx.storage.get<string>('swarmKey');
     invariant(swarmKey);
     return swarmKey;
   }
 
-  async setSwarmKey(swarmKey: string) {
-    await this.ctx.storage.put('swarmKey', swarmKey);
-  }
-
-  async getPeers(): Promise<Set<Peer>> {
+  private async getPeers(): Promise<Set<Peer>> {
     return (await this.ctx.storage.get<Set<Peer>>('peers')) || new Set();
   }
 
-  async setPeers(peers: Set<Peer>) {
+  private async setPeers(peers: Set<Peer>) {
     await this.ctx.storage.put('peers', peers);
   }
 
@@ -56,39 +53,38 @@ export class SwarmObject extends DurableObject<Env> {
   // https://developers.cloudflare.com/workers/runtime-apis/rpc/#structured-clonable-types-and-more
 
   /**
-   * Join the swarm.
-   * Registers the peer Key and the associated socket object.
+   * Join the swarm and notify other peers.
+   * Registers the peer key and the associated UserObject.
    */
-  public async join(peerKey: string, userId: string): Promise<string[]> {
+  public async join(peer: Peer) {
     const peers = await this.getPeers();
-    peers.add({ peerKey, userId });
+    const peerArray = Array.from(peers.values());
+    peers.add(peer);
     await this.setPeers(peers);
-    await this.notify(peers);
-    return Array.from(peers.values()).map((peer) => peer.peerKey);
+    await this.notify(peerArray);
   }
 
   /**
-   * Leave the swarm.
+   * Leave the swarm and notify other peers.
    */
-  public async leave(peerKey: string, userId: string): Promise<string[]> {
+  public async leave(peer: Peer) {
     const peers = await this.getPeers();
-    const peer = Array.from(peers.values()).find((peer) => peer.peerKey === peerKey && peer.userId === userId);
-    invariant(peer);
-    peers.delete(peer);
+    const peerArray = Array.from(peers.values());
+    peers.delete(
+      peerArray.find(({ discoveryKey, peerKey }) => discoveryKey === peer.discoveryKey && peerKey === peer.peerKey)!,
+    );
     await this.setPeers(peers);
-    await this.notify(peers);
-    return Array.from(peers.values()).map((peer) => peer.peerKey);
+    await this.notify(peerArray);
   }
 
   /**
-   * Notify all peers of a change in the swarm membership.
+   * Notify all peers of the change in swarm membership.
    */
-  private async notify(peers: Set<Peer>) {
+  private async notify(peers: Peer[]) {
     const swarmKey = await this.getSwarmKey();
-    const peerKeys = Array.from(peers).map((peer) => peer.peerKey);
     for (const peer of peers) {
-      const user = this.env.USER.get(this.env.USER.idFromString(peer.userId));
-      await user.notifySwarmUpdated(peer.peerKey, swarmKey, peerKeys);
+      const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(peer.discoveryKey));
+      await router.notifySwarmUpdated(peer.peerKey, swarmKey, peers);
     }
   }
 }
