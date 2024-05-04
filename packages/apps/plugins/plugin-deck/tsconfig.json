@@ -23,19 +23,16 @@
   ],
   "references": [
     {
-      "path": "../../../common/async"
+      "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/keys"
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keyboard"
     },
     {
       "path": "../../../common/local-storage"
-    },
-    {
-      "path": "../../../common/log"
-    },
-    {
-      "path": "../../../common/react-async"
     },
     {
       "path": "../../../common/util"
@@ -47,25 +44,13 @@
       "path": "../../../sdk/app-framework"
     },
     {
-      "path": "../../../sdk/react-client"
-    },
-    {
       "path": "../../../ui/react-ui"
-    },
-    {
-      "path": "../../../ui/react-ui-card"
     },
     {
       "path": "../../../ui/react-ui-deck"
     },
     {
-      "path": "../../../ui/react-ui-editor"
-    },
-    {
       "path": "../../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../../ui/react-ui-stack"
     },
     {
       "path": "../../../ui/react-ui-theme"
@@ -74,22 +59,13 @@
       "path": "../../../ui/storybook-utils"
     },
     {
-      "path": "../../types"
-    },
-    {
-      "path": "../plugin-client"
-    },
-    {
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-layout"
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-settings"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-theme"
