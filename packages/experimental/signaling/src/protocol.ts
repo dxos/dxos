@@ -8,8 +8,8 @@ import { log } from '@dxos/log';
 
 // TODO(burdon): Compare with current mesh signaling protocol.
 // TODO(burdon): Bind message.type to data type. Discriminated union?
-
-export type Message<T = {}> = {
+// TODO(burdon): Generalize?
+export type SignalMessage<T = {}> = {
   type: 'ping' | 'pong' | 'join' | 'leave' | 'update' | 'rtc-offer' | 'rtc-answer';
   data?: T;
 };
@@ -28,19 +28,18 @@ export type SwarmPayload = {
 };
 
 export type WebRTCPayload = {
-  swarmKey: string;
-  peerKey: string;
+  peer: Peer;
   description?: RTCSessionDescription;
   candidate?: RTCIceCandidate;
 };
 
 // TODO(burdon): Protobuf. CF uses Cap'n Proto.
 
-export const encodeMessage = <T = {}>(message: Message<T>) => JSON.stringify(message);
+export const encodeMessage = <T = {}>(message: SignalMessage<T>) => JSON.stringify(message);
 
-export const decodeMessage = <T = {}>(data: WebSocket.Data): Message<T> | null => {
+export const decodeMessage = <T = {}>(data: WebSocket.Data): SignalMessage<T> | null => {
   try {
-    return JSON.parse(data.toString()) as Message<T>;
+    return JSON.parse(data.toString()) as SignalMessage<T>;
   } catch (err) {
     log.catch(err);
     return null;

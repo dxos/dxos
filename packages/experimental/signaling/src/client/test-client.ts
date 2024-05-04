@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { decodeMessage, encodeMessage, type Message, type SwarmPayload } from '../protocol';
+import { decodeMessage, encodeMessage, type SignalMessage, type SwarmPayload, type WebRTCPayload } from '../protocol';
 
 const TEST_IDENTITY_KEY = '34c6a1e612ce21fa1937b33329b1890450d193a8407e035bdb065ce468479164';
 const TEST_SPACE_KEY = '4a138aed546a789b17ab702190a7f4382b2c92826247d1c7620287b49536666f';
@@ -65,12 +65,16 @@ class TestClient {
         log.info('received', { deviceKey: this._deviceKey, message });
         switch (message?.type) {
           case 'update': {
-            // Select peer and make offer.
             const { peers } = message.data as SwarmPayload;
-            if (peers?.length) {
-              const recipient = peers[0];
-              // this.send({ type: 'rtc-offer', recipients: [recipient] });
+            const peer = peers?.find((peer) => peer.peerKey !== this._deviceKey.toHex());
+            if (peer) {
+              this.send<WebRTCPayload>({ type: 'rtc-offer', data: { peer } });
             }
+            break;
+          }
+
+          case 'rtc-answer': {
+            // TODO(burdon): Determine who will be the polite peer and decline.
             break;
           }
         }
@@ -86,10 +90,10 @@ class TestClient {
     }
   }
 
-  send(message: Message) {
+  send<T>(message: SignalMessage<T>) {
     invariant(this._ws);
     log.info('sending', { deviceKey: this._deviceKey, message });
-    this._ws.send(encodeMessage(message));
+    this._ws.send(encodeMessage<T>(message));
   }
 }
 

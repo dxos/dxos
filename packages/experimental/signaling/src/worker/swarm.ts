@@ -5,6 +5,7 @@
 import { DurableObject } from 'cloudflare:workers';
 
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Env } from './defs';
@@ -34,10 +35,10 @@ export class SwarmObject extends DurableObject<Env> {
     await this.ctx.storage.put('swarmKey', swarmKey);
   }
 
-  public async getSwarmKey(): Promise<string> {
+  public async getSwarmKey(): Promise<PublicKey> {
     const swarmKey = await this.ctx.storage.get<string>('swarmKey');
     invariant(swarmKey);
-    return swarmKey;
+    return PublicKey.from(swarmKey);
   }
 
   private async getPeers(): Promise<Set<Peer>> {
@@ -53,38 +54,42 @@ export class SwarmObject extends DurableObject<Env> {
   // https://developers.cloudflare.com/workers/runtime-apis/rpc/#structured-clonable-types-and-more
 
   /**
-   * Join the swarm and notify other peers.
+   * Join the swarm and notifyPeers other peers.
    * Registers the peer key and the associated UserObject.
    */
   public async join(peer: Peer) {
+    const swarmKey = await this.getSwarmKey();
+    log.info('join', { swarmKey: swarmKey.truncate(), peer });
     const peers = await this.getPeers();
-    const peerArray = Array.from(peers.values());
     peers.add(peer);
     await this.setPeers(peers);
-    await this.notify(peerArray);
+    await this.notifyPeers(Array.from(peers.values()));
   }
 
   /**
-   * Leave the swarm and notify other peers.
+   * Leave the swarm and notifyPeers other peers.
    */
   public async leave(peer: Peer) {
+    const swarmKey = await this.getSwarmKey();
+    log.info('leave', { swarmKey: swarmKey.truncate(), peer });
     const peers = await this.getPeers();
-    const peerArray = Array.from(peers.values());
     peers.delete(
-      peerArray.find(({ discoveryKey, peerKey }) => discoveryKey === peer.discoveryKey && peerKey === peer.peerKey)!,
+      Array.from(peers.values()).find(
+        ({ discoveryKey, peerKey }) => discoveryKey === peer.discoveryKey && peerKey === peer.peerKey,
+      )!,
     );
     await this.setPeers(peers);
-    await this.notify(peerArray);
+    await this.notifyPeers(Array.from(peers.values()));
   }
 
   /**
    * Notify all peers of the change in swarm membership.
    */
-  private async notify(peers: Peer[]) {
+  private async notifyPeers(peers: Peer[]) {
     const swarmKey = await this.getSwarmKey();
     for (const peer of peers) {
       const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(peer.discoveryKey));
-      await router.notifySwarmUpdated(peer.peerKey, swarmKey, peers);
+      await router.notifySwarmUpdated(peer.peerKey, swarmKey.toHex(), peers);
     }
   }
 }

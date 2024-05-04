@@ -3,13 +3,22 @@
 //
 
 import { DurableObject } from 'cloudflare:workers';
+import { HTTPException } from 'hono/http-exception';
 
+import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type Env } from './defs';
-import { decodeMessage, encodeMessage, type Peer, type SwarmPayload } from '../protocol';
+import {
+  decodeMessage,
+  encodeMessage,
+  type Peer,
+  type SignalMessage,
+  type SwarmPayload,
+  type WebRTCPayload,
+} from '../protocol';
 
 // TODO(burdon): How to test logic outside of worker?
 
@@ -58,6 +67,11 @@ export class RouterObject extends DurableObject<Env> {
   private getDeviceKey(ws: WebSocket): PublicKey {
     const deviceKey = this.ctx.getTags(ws)[0];
     return PublicKey.from(deviceKey);
+  }
+
+  private getSocket(peerKey: PublicKey): WebSocket | undefined {
+    const sockets = this.ctx.getWebSockets();
+    return sockets.find((socket) => this.getDeviceKey(socket).equals(peerKey));
   }
 
   /**
@@ -166,13 +180,22 @@ export class RouterObject extends DurableObject<Env> {
 
       // Send message to other peers.
       default: {
-        // TODO(burdon): Get UserObject of associated device.
-        // for (const recipient of recipients ?? []) {
-        //   const peer = this.ctx.getWebSockets().find((socket) => this.getDeviceKey(socket).toHex() === recipient);
-        //   peer?.send(encodeMessage({ type, data }));
-        // }
+        const { peer } = data as WebRTCPayload;
+        if (peer) {
+          const router = this.env.ROUTER.get(this.env.ROUTER.idFromName(peer.discoveryKey));
+          await router.sendMessage(peer.peerKey, message);
+        }
       }
     }
+  }
+
+  /**
+   * Relay message to peer.
+   */
+  public async sendMessage(peerKey: string, message: SignalMessage) {
+    const socket =
+      this.getSocket(PublicKey.from(peerKey)) ?? raise(new HTTPException(404, { message: 'peer not found ' }));
+    socket.send(encodeMessage(message));
   }
 
   /**
@@ -180,13 +203,7 @@ export class RouterObject extends DurableObject<Env> {
    */
   public async notifySwarmUpdated(peerKey: string, swarmKey: string, peers: Peer[]) {
     log.info('notifySwarmUpdated', { swarmKey: PublicKey.from(swarmKey).truncate(), peers: peers.length });
-
-    const sockets = this.ctx.getWebSockets();
-    const socket = sockets.find((socket) => {
-      return this.getDeviceKey(socket).toHex() === peerKey;
-    });
-
-    // Socket may have disconnected.
+    const socket = this.getSocket(PublicKey.from(peerKey));
     if (socket) {
       const deviceKey = this.getDeviceKey(socket);
       const swarms = Array.from(await this.getSwarmMap(deviceKey));
