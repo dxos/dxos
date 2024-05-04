@@ -5,7 +5,7 @@
 import { Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
-import { useGraph, type Node } from '@braneframe/plugin-graph';
+import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
 import {
   Surface,
   type Toast as ToastSchema,
@@ -15,6 +15,7 @@ import {
   type PartIdentifier,
   NavigationAction,
   useIntent,
+  SLUG_PATH_SEPARATOR,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -119,6 +120,21 @@ const NodePlankHeading = ({
   );
 };
 
+const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: string } | undefined => {
+  if (!slug) {
+    return undefined;
+  }
+  const [id, ...path] = slug.split(SLUG_PATH_SEPARATOR);
+  const node = graph.findNode(id);
+  if (!node) {
+    return undefined;
+  } else if (path.length > 0) {
+    return { node, path: path.join(SLUG_PATH_SEPARATOR) };
+  } else {
+    return { node };
+  }
+};
+
 export const DeckLayout = ({
   fullscreen,
   showHintsFooter,
@@ -146,10 +162,10 @@ export const DeckLayout = ({
       : location.active
     : { sidebar: NAV_ID, main: [location.active].filter(Boolean) as string[] };
   const sidebarId = firstSidebarId(activeParts);
-  const sidebarNode = sidebarId ? graph.findNode(sidebarId) : null;
+  const sidebarNode = resolveNodeFromSlug(graph, sidebarId);
   const sidebarAvailable = sidebarId === NAV_ID || !!sidebarNode;
   const complementaryId = firstComplementaryId(activeParts);
-  const complementaryNode = complementaryId ? graph.findNode(complementaryId) : null;
+  const complementaryNode = resolveNodeFromSlug(graph, complementaryId);
   const complementaryAvailable = complementaryId === NAV_ID || !!complementaryNode;
 
   return fullscreen ? (
@@ -222,11 +238,13 @@ export const DeckLayout = ({
             />
           ) : sidebarNode ? (
             <>
-              <NodePlankHeading node={sidebarNode} part={sidebarPart} popoverAnchorId={popoverAnchorId} />
+              <NodePlankHeading node={sidebarNode.node} part={sidebarPart} popoverAnchorId={popoverAnchorId} />
               <Surface
                 role='article'
                 data={{
-                  object: sidebarNode.data,
+                  ...(sidebarNode.path
+                    ? { subject: sidebarNode.node.data, path: sidebarNode.path }
+                    : { object: sidebarNode.node.data }),
                   part: sidebarPart,
                   popoverAnchorId,
                 }}
@@ -247,11 +265,17 @@ export const DeckLayout = ({
             />
           ) : complementaryNode ? (
             <>
-              <NodePlankHeading node={complementaryNode} part={complementaryPart} popoverAnchorId={popoverAnchorId} />
+              <NodePlankHeading
+                node={complementaryNode.node}
+                part={complementaryPart}
+                popoverAnchorId={popoverAnchorId}
+              />
               <Surface
                 role='article'
                 data={{
-                  object: complementaryNode.data,
+                  ...(complementaryNode.path
+                    ? { subject: complementaryNode.node.data, path: complementaryNode.path }
+                    : { object: complementaryNode.node.data }),
                   part: complementaryPart,
                   popoverAnchorId,
                 }}
@@ -270,7 +294,7 @@ export const DeckLayout = ({
             {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
               .filter(Boolean)
               .map((id, index, main) => {
-                const node = graph.findNode(id);
+                const node = resolveNodeFromSlug(graph, id);
                 const part = ['main', index, main.length] satisfies PartIdentifier;
                 return (
                   <Deck.Plank key={id}>
@@ -278,11 +302,11 @@ export const DeckLayout = ({
                       <Surface role='navigation' data={{ part, popoverAnchorId }} limit={1} />
                     ) : node ? (
                       <>
-                        <NodePlankHeading node={node} part={part} popoverAnchorId={popoverAnchorId} />
+                        <NodePlankHeading node={node.node} part={part} popoverAnchorId={popoverAnchorId} />
                         <Surface
                           role='article'
                           data={{
-                            object: node.data,
+                            ...(node.path ? { subject: node.node.data, path: node.path } : { object: node.node.data }),
                             part,
                             popoverAnchorId,
                           }}
