@@ -11,6 +11,8 @@ import { log } from '@dxos/log';
 import { type Env } from './defs';
 import { decodeMessage, encodeMessage, type SwarmPayload } from '../protocol';
 
+// TODO(burdon): How to test logic outside of worker?
+
 /**
  * The UserObject is a Durable Object identified by the user's identity key.
  * All devices connect to the same SocketObject.
@@ -64,7 +66,6 @@ export class UserObject extends DurableObject<Env> {
    */
   // TODO(burdon): Authenticate by requiring signed proof of identity.
   override async fetch(request: Request) {
-    // TODO(burdon): Get the device key? e.g., /ws/identity/device.
     const parts = request.url.split('/');
     const deviceKey = PublicKey.from(parts.pop()!);
     const identityKey = PublicKey.from(parts.pop()!);
@@ -112,7 +113,7 @@ export class UserObject extends DurableObject<Env> {
 
     const swarmKeys = await this.getSwarmMap(deviceKey);
     for (const swarmKey of swarmKeys) {
-      await this.leave(deviceKey, PublicKey.from(swarmKey));
+      await this.leaveSwarm(deviceKey, PublicKey.from(swarmKey));
     }
 
     log.info('closed', { identityKey: deviceKey.truncate(), sockets: this.ctx.getWebSockets().length });
@@ -143,17 +144,15 @@ export class UserObject extends DurableObject<Env> {
         break;
       }
 
-      // TODO(burdon): Notify other identities.
-      //  Swarm objects
-
       // https://developers.cloudflare.com/workers/runtime-apis/rpc
       // https://developers.cloudflare.com/workers/runtime-apis/rpc/#structured-clonable-types-and-more
       // https://developers.cloudflare.com/durable-objects/best-practices/create-durable-object-stubs-and-send-requests/#call-rpc-methods
+
       case 'join': {
         const { swarmKey: _swarmKey } = data as SwarmPayload;
         invariant(_swarmKey);
         const swarmKey = PublicKey.from(_swarmKey);
-        await this.join(deviceKey, swarmKey);
+        await this.joinSwarm(deviceKey, swarmKey);
         break;
       }
 
@@ -161,7 +160,7 @@ export class UserObject extends DurableObject<Env> {
         const { swarmKey: _swarmKey } = data as SwarmPayload;
         const swarmKey = PublicKey.from(_swarmKey!);
         invariant(swarmKey);
-        await this.leave(deviceKey, swarmKey);
+        await this.leaveSwarm(deviceKey, swarmKey);
         break;
       }
 
@@ -185,10 +184,9 @@ export class UserObject extends DurableObject<Env> {
   /**
    * Notify change of peers.
    */
-  // TODO(burdon): How to test logic outside of worker?
   public async notifySwarmUpdated(peerKey: string, swarmKey: string, peerKeys: string[]) {
-    log.info('notify', { swarmKey: PublicKey.from(swarmKey).truncate(), peerKeys: peerKeys.length });
-    // TODO(burdon): Notify all peers (sockets) that have joined this swarm (need to get topic or store).
+    log.info('notifySwarmUpdated', { swarmKey: PublicKey.from(swarmKey).truncate(), peerKeys: peerKeys.length });
+
     const sockets = this.ctx.getWebSockets();
     const socket = sockets.find((socket) => this.getDeviceKey(socket).toHex() === peerKey);
     invariant(socket);
@@ -203,14 +201,13 @@ export class UserObject extends DurableObject<Env> {
   /**
    * Join swarm object.
    */
-  private async join(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
-    log.info('join', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
+  private async joinSwarm(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
+    log.info('joinSwarm', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
 
     const swarms = await this.getSwarmMap(deviceKey);
     swarms.add(swarmKey.toHex());
     await this.setSwarmMap(deviceKey, swarms);
 
-    // TODO(burdon): Return info about swarm when joining (don't trigger notification).
     const swarm = this.env.SWARM.get(this.env.SWARM.idFromName(swarmKey.toHex()));
     await swarm.setSwarmKey(swarmKey.toHex()); // Ideally we'd pass this to the constructor.
     return await swarm.join(deviceKey.toHex(), this.ctx.id.toString());
@@ -219,8 +216,8 @@ export class UserObject extends DurableObject<Env> {
   /**
    * Leave swarm object.
    */
-  private async leave(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
-    log.info('leave', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
+  private async leaveSwarm(deviceKey: PublicKey, swarmKey: PublicKey): Promise<string[]> {
+    log.info('leaveSwarm', { deviceKey: deviceKey.truncate(), swarmKey: swarmKey.truncate() });
 
     const swarms = await this.getSwarmMap(deviceKey);
     swarms.delete(swarmKey.toHex());
@@ -243,29 +240,4 @@ export class UserObject extends DurableObject<Env> {
   private async setSwarmMap(peerKey: PublicKey, swarmKeys: Set<string>) {
     await this.ctx.storage.put(peerKey.toHex(), swarmKeys);
   }
-
-  /**
-   * Get other connected peers.
-   */
-  // getOtherPeers(current: WebSocket): Peer[] {
-  //   return this.ctx
-  //     .getWebSockets()
-  //     .filter((ws) => ws !== current)
-  //     .map((ws) => ({ ws, deviceKey: await this.getDeviceKey() }));
-  // }
-
-  /**
-   * Broadcast peer keys to all connected peers.
-   */
-  // updatePeers() {
-  //   for (const socket of this.ctx.getWebSockets()) {
-  //     const peerKeys = this.getOtherPeers(socket).map(({ deviceKey }) => peerKey.toHex());
-  //     socket.send(encodeMessage<SwarmPayload>({ type: 'info', data: { peerKeys } }));
-  //   }
-  // }
 }
-
-// type Peer = {
-//   ws: WebSocket;
-//   deviceKey: PublicKey;
-// };
