@@ -1,16 +1,6 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
-
-import { type Location, firstMainId } from '@dxos/app-framework';
-
-export const uriToActive = (uri: string): Location['active'] => {
-  const [_, ...nodeId] = uri.split('/');
-  return nodeId ? nodeId.map(decodeURIComponent).join(':') : undefined;
-};
-
-export const activeToUri = (active?: Location['active']) =>
-  '/' + firstMainId(active).split(':').map(encodeURIComponent).join('/');
 
 // TODO(mjamesderocher): Factor out as part of NavigationPlugin.
 export const checkAppScheme = (url: string) => {
