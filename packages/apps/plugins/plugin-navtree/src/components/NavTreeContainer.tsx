@@ -68,13 +68,16 @@ export const NavTreeContainer = ({
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
-        activeParts: {
-          main:
-            // TODO(thure): don’t bake this in, refactor this to be a generalized approach.
-            isDeckModel && !!node.data?.comments
-              ? [node.id, `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`]
-              : [node.id],
-        },
+        // TODO(thure): don’t bake this in, refactor this to be a generalized approach.
+        activeParts:
+          isDeckModel && !!node.data?.comments
+            ? {
+                main: [node.id],
+                complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+              }
+            : {
+                main: [node.id],
+              },
       },
     });
 
