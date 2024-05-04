@@ -172,11 +172,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'navbar-start': {
               const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
               if (path && state.root) {
-                const activeNode = getTreeNode(state.root, path);
-
                 return {
                   node: (
-                    <NavBarStart activeNode={activeNode} popoverAnchorId={data.popoverAnchorId as string | undefined} />
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
                   ),
                   disposition: 'hoist',
                 };
