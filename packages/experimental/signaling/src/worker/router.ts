@@ -31,7 +31,8 @@ import {
  * The class provides message routing between peers.
  *
  * The RouterObject is a Durable Object identified by a discovery key used to find a group of connected peers.
- * For example, all devices for a given user will connect to a router using a discovery key that is the hash of the identity key.
+ * For example, all devices for a given user could connect to a router using a discovery key that is the hash of the identity key.
+ * Binding to the same RouterObject may enable efficient broadcast messaging between peers with strong affinity.
  * Peers starting a key exchange will use a temporary discovery key determined by the exchanged invitation object.
  *
  * Implementation:

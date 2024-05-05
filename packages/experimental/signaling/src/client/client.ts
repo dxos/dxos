@@ -19,6 +19,7 @@ export interface SignalingListener {
 /**
  * Signaling client.
  */
+// TODO(burdon): Rename Messenger.
 export class SignalingClient {
   private readonly _deviceKey = PublicKey.random();
   private _discoveryKey?: PublicKey;
@@ -36,7 +37,7 @@ export class SignalingClient {
     return !!this._ws;
   }
 
-  public async open(discoveryKey: PublicKey, listener: SignalingListener): Promise<boolean> {
+  public async open(discoveryKey: PublicKey, listener?: SignalingListener): Promise<boolean> {
     invariant(!this._ws);
     log.info('opening', { deviceKey: this._deviceKey });
     const ready = new Trigger<boolean>();
@@ -68,7 +69,7 @@ export class SignalingClient {
             const peer = peers?.find((peer) => peer.peerKey !== this._deviceKey.toHex());
             if (peer) {
               this.send<WebRTCPayload>({
-                type: 'rtc-offer',
+                type: 'rtc',
                 data: {
                   from: {
                     discoveryKey: this._discoveryKey!.toHex(),
@@ -81,17 +82,13 @@ export class SignalingClient {
             break;
           }
 
-          case 'rtc-offer': {
+          case 'rtc': {
             const {
               from: { peerKey },
             } = message.data as WebRTCPayload;
             // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation
             const polite = this._deviceKey.toHex() < peerKey;
             log.info('offer', { polite, this: this._deviceKey.toHex(), peerKey });
-            break;
-          }
-
-          case 'rtc-answer': {
             break;
           }
         }
@@ -109,12 +106,34 @@ export class SignalingClient {
     }
   }
 
+  // TODO(burdon): to: peer.
+
   public sendDescription(description: RTCSessionDescription) {
-    // this.send({ description });
+    this.send({
+      type: 'rtc',
+      data: {
+        from: {
+          discoveryKey: this._discoveryKey!.toHex(),
+          peerKey: this._deviceKey.toHex(),
+        },
+
+        description,
+      },
+    });
   }
 
   public sendIceCandidate(candidate: RTCIceCandidate) {
-    // this.send({ candidate });
+    this.send({
+      type: 'rtc',
+      data: {
+        from: {
+          discoveryKey: this._discoveryKey!.toHex(),
+          peerKey: this._deviceKey.toHex(),
+        },
+
+        candidate,
+      },
+    });
   }
 
   send<T>(message: SignalMessage<T>) {

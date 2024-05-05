@@ -15,7 +15,7 @@ export const DATA_CHANNEL_ID = 0;
 // TODO(burdon): Bind message.type to data type. Discriminated union?
 // TODO(burdon): Generalize?
 export type SignalMessage<T = {}> = {
-  type: 'ping' | 'pong' | 'join' | 'leave' | 'update' | 'rtc-offer' | 'rtc-answer';
+  type: 'ping' | 'pong' | 'join' | 'leave' | 'update' | 'rtc';
   data?: T;
 };
 

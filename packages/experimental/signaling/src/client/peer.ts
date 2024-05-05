@@ -28,7 +28,7 @@ export class Peer {
     private readonly peerKey: PublicKey,
   ) {}
 
-  get info() {
+  public get info() {
     return {
       ts: Date.now(),
       peerKey: this.peerKey.toHex(),
@@ -61,11 +61,11 @@ export class Peer {
     };
   }
 
-  get connected() {
+  public get connected() {
     return this._connection?.connectionState === 'connected';
   }
 
-  async open(swarmKey: PublicKey, initiating = false) {
+  public async open(swarmKey: PublicKey, initiating = false) {
     await this.close();
     log.info('opening...', { room: swarmKey, initiating });
 
@@ -75,10 +75,10 @@ export class Peer {
 
     const getPeer = () => this;
 
-    // TODO(burdon): Catch errors
-    // TODO(burdon): Should we keep open the signaling connection -- or only during invitations?
+    // TODO(burdon): Signaler should be open; route swarm messages.
+    // TODO(burdon): Catch errors.
     await this._signaler.open(swarmKey, {
-      //
+      // Process RTC offer.
       async onDescription(description: RTCSessionDescription) {
         const peer = getPeer();
         if (peer._connection) {
@@ -238,7 +238,7 @@ export class Peer {
     });
   }
 
-  async close() {
+  public async close() {
     await this._signaler.close();
 
     if (this._connection) {
@@ -250,7 +250,7 @@ export class Peer {
     }
   }
 
-  send(data: Object) {
+  public send(data: Object) {
     invariant(this.connected);
     this._channel?.send(JSON.stringify(data));
   }
