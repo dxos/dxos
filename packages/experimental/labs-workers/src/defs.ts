@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Ai } from '@cloudflare/ai';
-
 import { type SignalingServer } from './signaling';
 
 // TODO(burdon): YAML file for config.
