@@ -188,7 +188,7 @@ export class AutomergeHost {
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
   private async _afterSave() {
-    this._indexMetadataStore.notifyMarkDirty();
+    this._indexMetadataStore.notifyMarkedDirty();
   }
 
   @trace.info({ depth: null })
