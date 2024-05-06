@@ -68,7 +68,7 @@ describe('Indexer', () => {
       const batch = level.batch();
       metadataStore.markDirty(dirtyMap, batch);
       await batch.write();
-      metadataStore.afterMarkDirty();
+      metadataStore.notifyMarkedDirty();
 
       await asyncTimeout(doneIndexing, 1000);
     }
@@ -119,7 +119,7 @@ describe('Indexer', () => {
       const newHash = 'new-hash';
       documents[0].heads = [newHash];
       // Not mark dirty, simulates a change that were not saved yet.
-      metadataStore.afterMarkDirty();
+      metadataStore.notifyMarkedDirty();
 
       await asyncTimeout(doneIndexing, 1000);
     }

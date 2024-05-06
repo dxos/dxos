@@ -46,6 +46,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/feed-store": "workspace:*",
     "@dxos/hypercore": "workspace:*",
+    "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
