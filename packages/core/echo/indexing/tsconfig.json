@@ -32,6 +32,9 @@
       "path": "../../../common/keys"
     },
     {
+      "path": "../../../common/kv-store"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -54,6 +57,9 @@
     },
     {
       "path": "../echo-pipeline"
+    },
+    {
+      "path": "../echo-protocol"
     },
     {
       "path": "../echo-schema"

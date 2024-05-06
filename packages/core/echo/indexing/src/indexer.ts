@@ -4,10 +4,10 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type LevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
@@ -57,6 +57,7 @@ export class Indexer {
       await this._promoteNewIndexes();
     }
     await this._indexUpdatedObjects();
+    await sleep(300);
   });
 
   private readonly _db: LevelDB;
