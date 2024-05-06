@@ -4487,6 +4487,25 @@ importers:
         specifier: workspace:*
         version: link:../node-std
 
+  packages/common/kv-store:
+    dependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../keys
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      abstract-level:
+        specifier: ^1.0.2
+        version: 1.0.4
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
+    devDependencies:
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
+
   packages/common/local-storage:
     dependencies:
       '@dxos/echo-schema':
@@ -5208,6 +5227,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5223,6 +5245,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5329,6 +5354,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5347,6 +5375,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5421,6 +5452,18 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
 
+  packages/core/echo/echo-protocol:
+    dependencies:
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+      abstract-level:
+        specifier: ^1.0.2
+        version: 1.0.4
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
+
   packages/core/echo/echo-query:
     dependencies:
       '@dxos/echo-db':
@@ -5445,6 +5488,9 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -5552,6 +5598,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5561,6 +5610,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -8073,6 +8125,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8219,6 +8274,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -8237,6 +8295,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/lock-file':
         specifier: workspace:*
         version: link:../../common/lock-file
@@ -8282,9 +8343,6 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
       platform:
         specifier: ^1.3.6
         version: 1.3.6
@@ -37590,7 +37648,6 @@ packages:
     dependencies:
       buffer: 6.0.3
       module-error: 1.0.2
-    dev: false
 
   /level@8.0.1:
     resolution: {integrity: sha512-oPBGkheysuw7DmzFQYyFe8NAia5jFLAgEnkgWnK3OXAuJr8qFT+xBQIwokAZPME2bhPFzS8hlYcL16m8UZrtwQ==}
@@ -39731,7 +39788,6 @@ packages:
   /module-error@1.0.2:
     resolution: {integrity: sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==}
     engines: {node: '>=10'}
-    dev: false
 
   /moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
