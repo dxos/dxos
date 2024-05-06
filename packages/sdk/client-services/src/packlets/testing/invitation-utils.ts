@@ -45,6 +45,7 @@ export type PerformInvitationParams = {
     guest?: PerformInvitationCallbacks<AuthenticatingInvitation>;
   };
   guestDeviceProfile?: DeviceProfileDocument;
+  codeInputDelay?: number;
 };
 
 export type Result = { invitation?: Invitation; error?: Error };
@@ -55,7 +56,10 @@ export const performInvitation = ({
   options,
   hooks,
   guestDeviceProfile,
+  codeInputDelay,
 }: PerformInvitationParams): [Promise<Result>, Promise<Result>] => {
+  let guestError = false;
+  let guestConnected = false;
   const hostComplete = new Trigger<Result>();
   const guestComplete = new Trigger<Result>();
   const authCode = new Trigger<string>();
@@ -65,6 +69,10 @@ export const performInvitation = ({
       async (hostInvitation: Invitation) => {
         switch (hostInvitation.state) {
           case Invitation.State.CONNECTING: {
+            if (guestConnected) {
+              break;
+            }
+            guestConnected = true;
             if (hooks?.host?.onConnecting?.(hostObservable)) {
               break;
             }
@@ -89,7 +97,16 @@ export const performInvitation = ({
                     if (hooks?.guest?.onReady?.(guestObservable)) {
                       break;
                     }
-                    await guestObservable.authenticate(await authCode.wait());
+                    const code = await authCode.wait();
+                    if (codeInputDelay == null) {
+                      await guestObservable.authenticate(code);
+                    } else {
+                      setTimeout(async () => {
+                        if (!guestError) {
+                          await guestObservable.authenticate(code);
+                        }
+                      }, codeInputDelay);
+                    }
                     break;
                   }
 
@@ -123,6 +140,7 @@ export const performInvitation = ({
                 }
               },
               (error: Error) => {
+                guestError = true;
                 if (hooks?.guest?.onError?.(guestObservable)) {
                   return;
                 }

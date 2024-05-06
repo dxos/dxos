@@ -267,7 +267,7 @@ export class InvitationsManager {
       initialInvitation: initialState,
       subscriber: stream.observable,
       onCancel: async () => {
-        stream.complete({ ...initialState, state: Invitation.State.CANCELLED });
+        stream.next({ ...initialState, state: Invitation.State.CANCELLED });
         await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {

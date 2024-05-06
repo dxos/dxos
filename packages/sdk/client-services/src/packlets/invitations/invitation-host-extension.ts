@@ -209,10 +209,12 @@ export class InvitationHostExtension extends RpcExtension<
           const invitation = this._requireActiveInvitation();
 
           try {
-            this._assertInvitationState(Invitation.State.AUTHENTICATING);
             // Check authenticated.
-            if (isAuthenticationRequired(invitation) && !this.authenticationPassed) {
-              throw new Error('Not authenticated');
+            if (isAuthenticationRequired(invitation)) {
+              this._assertInvitationState(Invitation.State.AUTHENTICATING);
+              if (!this.authenticationPassed) {
+                throw new Error('Not authenticated');
+              }
             }
 
             const response = await this._callbacks.admit(request);

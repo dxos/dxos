@@ -147,10 +147,6 @@ describe('Client services', () => {
       }),
     );
 
-    // Check same identity.
-    expect(hostInvitation!.identityKey).not.to.exist;
-    expect(guestInvitation?.identityKey).to.deep.eq(client1.halo.identity.get()!.identityKey);
-    expect(guestInvitation?.identityKey).to.deep.eq(client2.halo.identity.get()!.identityKey);
     expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
     expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
 

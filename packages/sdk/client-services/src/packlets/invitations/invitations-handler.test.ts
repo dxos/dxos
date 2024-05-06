@@ -58,7 +58,7 @@ describe('InvitationHandler', () => {
       });
     }
 
-    test('host ctx active on single use invitation timeout', async () => {
+    test('invitation timeout', async () => {
       const host = await createPeer();
       const invitation = await createInvitation(host, {
         timeout: 100,
@@ -69,10 +69,30 @@ describe('InvitationHandler', () => {
       await acceptInvitation(guest, invitation);
 
       await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
-      await guest.ctx.dispose();
+      await sleep(200);
       await host.sink.waitFor(Invitation.State.TIMEOUT);
+      await guest.sink.waitFor(Invitation.State.TIMEOUT);
 
-      await sleep(25);
+      await sleep(10);
+      expect(host.ctx.disposed).to.be.false;
+      expect(guest.ctx.disposed).to.be.false;
+    });
+
+    test('host ctx active after guest disconnects', async () => {
+      const host = await createPeer();
+      const invitation = await createInvitation(host, {
+        timeout: 100,
+      });
+      await hostInvitation(host, invitation);
+
+      const guest = await createPeer(host.spaceKey);
+      await acceptInvitation(guest, invitation);
+
+      await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
+      await guest.peer.networkManager.close();
+      await host.sink.waitFor(Invitation.State.ERROR);
+
+      await sleep(10);
       expect(host.ctx.disposed).to.be.false;
     });
 

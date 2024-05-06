@@ -22,6 +22,7 @@ import { InvitationGuestExtension } from './invitation-guest-extenstion';
 import { InvitationHostExtension, isAuthenticationRequired, MAX_OTP_ATTEMPTS } from './invitation-host-extension';
 import { type InvitationProtocol } from './invitation-protocol';
 import { InvitationTopology } from './invitation-topology';
+import { stateToString } from './utils';
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
@@ -232,7 +233,14 @@ export class InvitationsHandler {
             try {
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.begin({ id: traceId }));
 
-              scheduleTask(connectionCtx, () => connectionCtx.raise(new TimeoutError(timeout)), timeout);
+              scheduleTask(
+                connectionCtx,
+                () => {
+                  guardedState.set(extension, Invitation.State.TIMEOUT);
+                  extensionCtx.close();
+                },
+                timeout,
+              );
 
               log('connected', { ...protocol.toJSON() });
               guardedState.set(extension, Invitation.State.CONNECTED);
@@ -283,7 +291,7 @@ export class InvitationsHandler {
               log('admitted by host', { ...protocol.toJSON() });
               stream.next({
                 ...guardedState.current,
-                target: result.target,
+                ...result,
                 state: Invitation.State.SUCCESS,
               });
               await ctx.dispose();
@@ -359,6 +367,7 @@ export class InvitationsHandler {
   }
 
   private _createGuardedState(ctx: Context, invitation: Invitation, stream: PushStream<Invitation>) {
+    let lastActiveExtension: any = null;
     let currentInvitation = { ...invitation };
     const mutex = new Mutex();
     return {
@@ -368,22 +377,46 @@ export class InvitationsHandler {
       },
       set: (extension: InvitationHostExtension | InvitationGuestExtension | null, newState: Invitation.State) => {
         if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
-          if (currentInvitation.state !== newState) {
+          if (extension === null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state)) {
+            this._logStateUpdate(currentInvitation, extension, newState);
             currentInvitation = { ...currentInvitation, state: newState };
             stream.next(currentInvitation);
           }
+          lastActiveExtension = extension;
         }
         return currentInvitation;
       },
       setError: (extension: InvitationHostExtension | InvitationGuestExtension | null, error: any) => {
         if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
-          currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
-          stream.next(currentInvitation);
-          stream.error(error);
+          if (extension === null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state)) {
+            this._logStateUpdate(currentInvitation, extension, Invitation.State.ERROR);
+            currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
+            stream.next(currentInvitation);
+            stream.error(error);
+          }
+          lastActiveExtension = extension;
         }
         return currentInvitation;
       },
     };
+  }
+
+  private _logStateUpdate(invitation: Invitation, actor: any, newState: Invitation.State) {
+    log('invitation state update', {
+      actor: actor?.constructor.name,
+      newState: stateToString(newState),
+      oldState: stateToString(invitation.state),
+    });
+  }
+
+  private _isNotTerminal(currentState: Invitation.State): boolean {
+    return ![
+      Invitation.State.SUCCESS,
+      Invitation.State.ERROR,
+      Invitation.State.CANCELLED,
+      Invitation.State.TIMEOUT,
+      Invitation.State.EXPIRED,
+    ].includes(currentState);
   }
 
   private async _handleGuestOtpAuth(
