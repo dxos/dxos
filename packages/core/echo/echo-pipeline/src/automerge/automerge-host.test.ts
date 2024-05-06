@@ -15,6 +15,7 @@ import {
   type HandleState,
   type DocumentId,
 } from '@dxos/automerge/automerge-repo';
+import { IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -33,6 +34,7 @@ describe('AutomergeHost', () => {
     afterTest(() => level.close());
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
     afterTest(() => host.close());
@@ -50,7 +52,10 @@ describe('AutomergeHost', () => {
     await level.open();
     afterTest(() => level.close());
 
-    const host = new AutomergeHost({ db: level.sublevel('automerge') });
+    const host = new AutomergeHost({
+      db: level.sublevel('automerge'),
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+    });
     await host.open();
     const handle = host.repo.create();
     handle.change((doc: any) => {
@@ -61,7 +66,10 @@ describe('AutomergeHost', () => {
     await host.repo.flush();
     await host.close();
 
-    const host2 = new AutomergeHost({ db: level.sublevel('automerge') });
+    const host2 = new AutomergeHost({
+      db: level.sublevel('automerge'),
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
+    });
     await host2.open();
     afterTest(() => host2.close());
     const handle2 = host2.repo.find(url);

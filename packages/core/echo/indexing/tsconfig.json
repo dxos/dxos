@@ -17,13 +17,7 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/debug"
     },
     {
       "path": "../../../common/invariant"
@@ -56,13 +50,7 @@
       "path": "../automerge"
     },
     {
-      "path": "../echo-pipeline"
-    },
-    {
       "path": "../echo-protocol"
-    },
-    {
-      "path": "../echo-schema"
     }
   ]
 }
