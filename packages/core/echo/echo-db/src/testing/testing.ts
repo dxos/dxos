@@ -9,7 +9,9 @@ import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 
-// Remove in favour of the new EchoTestBuilder.
+/**
+ * @deprecated Remove in favour of the new EchoTestBuilder
+ */
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();
@@ -42,6 +44,9 @@ export class TestBuilder {
   }
 }
 
+/**
+ * @deprecated Remove in favour of the new EchoTestBuilder
+ */
 export class TestPeer {
   public db = new EchoDatabaseImpl({
     spaceKey: this.spaceKey,
