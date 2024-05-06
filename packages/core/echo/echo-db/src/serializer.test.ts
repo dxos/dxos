@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import type { SpaceDoc } from '@dxos/echo-pipeline';
-import { getSchema, create, Expando } from '@dxos/echo-schema';
+import { Expando, create, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
@@ -14,9 +14,19 @@ import { EchoDatabaseImpl } from './database';
 import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
 import { Serializer, type SerializedSpace } from './serializer';
-import { createDatabase, Contact } from './testing';
+import { Contact, EchoTestBuilder } from './testing';
 
 describe('Serializer', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   // TODO(dmaretskyi): Test with unloaded objects.
   test('Basic', async () => {
     const serializer = new Serializer();
@@ -24,7 +34,7 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       const obj = create({} as any);
       obj.title = 'Test';
       db.add(obj);
@@ -41,7 +51,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       await serializer.import(db, data);
 
       const { objects } = await db.query().run();
@@ -56,7 +66,7 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       const preserved = db.add(create(objValue));
       const deleted = db.add(create({ value: objValue.value + 1 }));
       db.remove(deleted);
@@ -72,7 +82,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       await serializer.import(db, data);
 
       const { objects } = await db.query().run();
@@ -87,7 +97,7 @@ describe('Serializer', () => {
     let serialized: SerializedSpace;
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       const obj = create({
         title: 'Main task',
         subtasks: [
@@ -110,7 +120,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db } = await createDatabase();
+      const { db } = await builder.createDatabase();
       await serializer.import(db, serialized);
 
       const { objects } = await db.query().run();
@@ -129,7 +139,7 @@ describe('Serializer', () => {
     const name = 'Rich Burton';
 
     {
-      const { db, graph } = await createDatabase();
+      const { db, graph } = await builder.createDatabase();
       graph.runtimeSchemaRegistry.registerSchema(Contact);
       const contact = create(Contact, { name });
       db.add(contact);
@@ -138,7 +148,7 @@ describe('Serializer', () => {
     }
 
     {
-      const { db, graph } = await createDatabase();
+      const { db, graph } = await builder.createDatabase();
       graph.runtimeSchemaRegistry.registerSchema(Contact);
 
       await new Serializer().import(db, data);
