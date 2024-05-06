@@ -25,7 +25,7 @@ const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tableDefs'> = {
     name: 'table 1',
     columns: [{ id: 'col-1', prop: 'one-foo', type: 'string' }],
   },
-  tableDefs: [
+  tablesToReference: [
     {
       id: '1',
       name: 'table 1',

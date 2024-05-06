@@ -118,8 +118,28 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
 
   const onRowDelete = useCallback((object: any) => space!.db.remove(object), [space]);
 
+  const onColumnReorder = useCallback(
+    (columnId: string, direction: 'right' | 'left') => {
+      // Find the prop with the given id.
+      const index = table.props.findIndex((prop) => prop.id === columnId);
+      if (index === -1) {
+        return;
+      }
+
+      // Find the prop to swap with.
+      const swapIndex = direction === 'right' ? index + 1 : index - 1;
+      if (swapIndex < 0 || swapIndex >= table.props.length) {
+        return;
+      }
+
+      [table.props[index], table.props[swapIndex]] = [table.props[swapIndex], table.props[index]];
+    },
+    [table.props],
+  );
+
   const columns = useMemo(
-    () => createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete),
+    () =>
+      createColumns(space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete, onColumnReorder),
     [space, tables, table, onColumnUpdate, onColumnDelete, onRowUpdate, onRowDelete],
   );
 
