@@ -1,0 +1,27 @@
+{
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "plugin-deck",
+  "tags": [
+    "scope:plugins"
+  ],
+  "sourceRoot": "packages/apps/plugins/plugin-deck/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/apps/plugins/plugin-deck/src/index.ts",
+          "packages/apps/plugins/plugin-deck/src/meta.ts"
+        ],
+        "platforms": [
+          "browser"
+        ]
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild"
+  ]
+}

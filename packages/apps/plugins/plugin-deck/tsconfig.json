@@ -1,0 +1,74 @@
+{
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/debug"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keyboard"
+    },
+    {
+      "path": "../../../common/local-storage"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-deck"
+    },
+    {
+      "path": "../../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-settings"
+    },
+    {
+      "path": "../plugin-theme"
+    }
+  ]
+}
