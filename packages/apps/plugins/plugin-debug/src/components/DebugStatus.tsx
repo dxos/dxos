@@ -6,7 +6,7 @@ import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-ico
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
-import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin, firstMainId } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
@@ -140,7 +140,7 @@ const SavingIndicator: FC<IconProps> = (props) => {
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const _space = location && graph ? getActiveSpace(graph, location.active) : undefined;
+  const _space = location && graph ? getActiveSpace(graph, firstMainId(location.active)) : undefined;
   // TODO(dmaretskyi): Fix this when we have save status for automerge.
   // useEffect(() => {
   //   if (!space) {

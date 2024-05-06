@@ -236,6 +236,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
+            case 'article': {
+              if (doc) {
+                return (
+                  <DocumentMain
+                    readonly={settings.values.state[doc.id]?.readonly}
+                    toolbar={settings.values.toolbar}
+                    document={doc}
+                    extensions={extensions}
+                  />
+                );
+              } else {
+                return null;
+              }
+            }
             case 'main': {
               if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};

@@ -175,6 +175,7 @@ export class Serializer {
     }
 
     database.automerge.addCore(core);
+    // TODO(dmaretskyi): It is very slow to call flush after every object.
     await database.flush();
   }
 }

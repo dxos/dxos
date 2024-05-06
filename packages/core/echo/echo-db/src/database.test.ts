@@ -11,13 +11,22 @@ import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge';
 import { clone } from './echo-handler';
-import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
-import { createDatabase, TestBuilder, Contact, Container, RecordType, Task, Todo } from './testing';
+import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from './testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
 describe('Database', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('flush with test builder', async () => {
     const testBuilder = new TestBuilder();
     const peer = await testBuilder.createPeer();
@@ -26,7 +35,7 @@ describe('Database', () => {
   });
 
   test('inspect', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
 
     const task = create(Expando, {
       title: 'Main task',
@@ -40,7 +49,7 @@ describe('Database', () => {
   });
 
   test('query by id', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
 
     const n = 10;
     for (const _ of Array.from({ length: n })) {
@@ -64,7 +73,7 @@ describe('Database', () => {
   });
 
   test('meta', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
 
     const obj = create(Expando, {});
     expectObjects(getMeta(obj).keys, []);
@@ -290,6 +299,18 @@ describe('Database', () => {
       expect(root.records).to.have.length(1);
     });
   });
+  const createDbWithTypes = async () => {
+    const { db, graph } = await builder.createDatabase();
+    graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
+    return { db, graph };
+  };
+
+  const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
+    const { db } = await createDbWithTypes();
+    db.add(obj);
+    await db.flush();
+    return { db, obj };
+  };
 });
 
 const expectObjects = (echoObjects: any[], expectedObjects: any) => {
@@ -301,16 +322,3 @@ const mapEchoToPlainJsObject = (array: any[]): any[] => {
 };
 
 const newTask = () => create(Task, { subTasks: [] });
-
-const createDbWithTypes = async () => {
-  const graph = new Hypergraph();
-  graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
-  return createDatabase(graph);
-};
-
-const addToDatabase = async <T>(obj: ReactiveObject<T>) => {
-  const { db } = await createDbWithTypes();
-  db.add(obj);
-  await db.flush();
-  return { db, obj };
-};
