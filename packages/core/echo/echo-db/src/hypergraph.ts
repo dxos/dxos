@@ -4,7 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type Reference } from '@dxos/echo-protocol';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';

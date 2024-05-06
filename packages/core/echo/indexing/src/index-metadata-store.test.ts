@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, openAndClose, test } from '@dxos/test';
 
 import { IndexMetadataStore } from './index-metadata-store';
@@ -46,7 +46,7 @@ describe('IndexMetadataStore', () => {
     const id = '1';
 
     // Setup storage as if there were some data in the old format.
-    level.sublevel('index-metadata').sublevel('last-seen').put(id, heads.join(''), { valueEncoding: 'json' });
+    await level.sublevel('index-metadata').sublevel('last-seen').put(id, heads.join(''), { valueEncoding: 'json' });
 
     // Check if data is accessible with the new format.
     const metadataStore = new IndexMetadataStore({ db: level.sublevel('index-metadata') });

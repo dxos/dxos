@@ -40,6 +40,9 @@
       "path": "../../../common/keys"
     },
     {
+      "path": "../../../common/kv-store"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -95,6 +98,9 @@
     },
     {
       "path": "../automerge"
+    },
+    {
+      "path": "../echo-protocol"
     },
     {
       "path": "../echo-schema"

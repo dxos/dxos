@@ -172,6 +172,7 @@ export class PipelineState {
   }
 }
 
+// TODO(mykola): Extract to `@dxos/echo-protocol`
 export interface PipelineAccessor {
   state: PipelineState;
   writer: FeedWriter<FeedMessage.Payload>;

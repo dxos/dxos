@@ -5,9 +5,8 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { Reference } from '@dxos/echo-schema';
+import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 

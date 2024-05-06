@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
-import { type SpaceDoc } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import {
   Expando,
   create,

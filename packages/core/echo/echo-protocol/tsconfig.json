@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/types",
+    "types": [
+      "@dxos/test"
+    ]
+  },
+  "exclude": [],
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../protocols"
+    }
+  ]
+}
