@@ -31,12 +31,12 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
+import { createEchoObject, isEchoObject } from './create';
 import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
-import { createEchoObject, isEchoObject } from './create';
 
 registerSignalRuntime();
 

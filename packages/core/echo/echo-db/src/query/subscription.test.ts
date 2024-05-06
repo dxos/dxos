@@ -11,8 +11,8 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
 
-import { EchoTestBuilder } from '../testing';
 import { createSubscription } from './subscription';
+import { EchoTestBuilder } from '../testing';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { expect } from 'chai';
+
 import { type Context, Resource } from '@dxos/context';
 import { type LevelDB } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { EchoClient } from '../client';
+import { type EchoDatabase } from '../database';
 import { EchoHost } from '../host';
-import { PublicKey } from '@dxos/keys';
-import { EchoDatabase } from '../database';
-import { EchoReactiveObject, S } from '@dxos/echo-schema';
-import { expect } from 'chai';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];

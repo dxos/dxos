@@ -5,7 +5,15 @@
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
-import { DynamicEchoSchema, EchoObjectAnnotationId, StoredEchoSchema, TypedObject, create, effectToJsonSchema, type EchoObjectAnnotation } from '@dxos/echo-schema';
+import {
+  DynamicEchoSchema,
+  EchoObjectAnnotationId,
+  StoredEchoSchema,
+  TypedObject,
+  create,
+  effectToJsonSchema,
+  type EchoObjectAnnotation,
+} from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from './query';

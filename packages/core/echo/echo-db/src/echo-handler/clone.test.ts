@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import { create, Expando } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
-import { EchoTestBuilder } from '../testing';
 import { clone } from './clone';
+import { EchoTestBuilder } from '../testing';
 
 describe('clone', () => {
   let builder: EchoTestBuilder;

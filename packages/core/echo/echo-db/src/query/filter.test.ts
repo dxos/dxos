@@ -9,9 +9,9 @@ import { Reference, TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
+import { Filter, compareType, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { EchoTestBuilder } from '../testing';
-import { Filter, compareType, filterMatch } from './filter';
 
 describe('Filter', () => {
   let builder: EchoTestBuilder;

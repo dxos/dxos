@@ -3,6 +3,7 @@
 //
 
 import { Event, synchronized, type ReadOnlyEvent } from '@dxos/async';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type EchoReactiveObject, getSchema, type ReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,8 +14,6 @@ import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
-import { AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { Context, LifecycleState, Resource } from '@dxos/context';
 
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
