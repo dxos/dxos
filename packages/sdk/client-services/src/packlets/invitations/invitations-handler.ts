@@ -26,6 +26,8 @@ import { stateToString } from './utils';
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
+type InvitationExtension = InvitationHostExtension | InvitationGuestExtension;
+
 /**
  * Generic handler for Halo and Space invitations.
  * Handles the life-cycle of invitations between peers.
@@ -74,7 +76,8 @@ export class InvitationsHandler {
         },
 
         onStateUpdate: (newState: Invitation.State): Invitation => {
-          return guardedState.set(extension, newState);
+          guardedState.set(extension, newState);
+          return guardedState.current;
         },
 
         admit: async (admissionRequest) => {
@@ -89,7 +92,7 @@ export class InvitationsHandler {
             return admissionResponse;
           } catch (err: any) {
             // TODO(burdon): Generic RPC callback to report error to client.
-            guardedState.setError(extension, err);
+            guardedState.error(extension, err);
             throw err; // Propagate error to guest.
           }
         },
@@ -98,7 +101,7 @@ export class InvitationsHandler {
           let admitted = false;
           connectionCtx.onDispose(() => {
             if (!admitted) {
-              guardedState.setError(extension, new ContextDisposedError());
+              guardedState.error(extension, new ContextDisposedError());
             }
           });
 
@@ -118,11 +121,13 @@ export class InvitationsHandler {
               }
             } catch (err: any) {
               if (err instanceof TimeoutError) {
-                log('timeout', { ...protocol.toJSON() });
-                guardedState.set(extension, Invitation.State.TIMEOUT);
+                if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+                  log('timeout', { ...protocol.toJSON() });
+                }
               } else {
-                log.error('failed', err);
-                guardedState.setError(extension, err);
+                if (guardedState.error(extension, err)) {
+                  log.error('failed', err);
+                }
               }
               log.trace('dxos.sdk.invitations-handler.host.onOpen', trace.error({ id: traceId, error: err }));
               // Close connection
@@ -136,11 +141,13 @@ export class InvitationsHandler {
             return;
           }
           if (err instanceof TimeoutError) {
-            log('timeout', { err });
-            guardedState.set(extension, Invitation.State.TIMEOUT);
+            if (guardedState.set(extension, Invitation.State.TIMEOUT)) {
+              log('timeout', { err });
+            }
           } else {
-            log.error('failed', err);
-            guardedState.setError(extension, err);
+            if (guardedState.error(extension, err)) {
+              log.error('failed', err);
+            }
           }
         },
       });
@@ -204,8 +211,8 @@ export class InvitationsHandler {
       return invitation.type !== Invitation.Type.DELEGATED || triedPeersIds.size >= MAX_DELEGATED_INVITATION_HOST_TRIES;
     };
 
+    let admitted = false;
     const createExtension = (): InvitationGuestExtension => {
-      let admitted = false;
       const extension = new InvitationGuestExtension(guardedState.mutex, {
         onStateUpdate: (newState: Invitation.State) => {
           guardedState.set(extension, newState);
@@ -221,7 +228,7 @@ export class InvitationsHandler {
           connectionCtx.onDispose(async () => {
             log('extension disposed', { admitted, currentState: guardedState.current.state });
             if (!admitted) {
-              guardedState.setError(extension, new ContextDisposedError());
+              guardedState.error(extension, new ContextDisposedError());
               if (shouldCancelInvitationFlow(extension)) {
                 await ctx.dispose();
               }
@@ -289,12 +296,11 @@ export class InvitationsHandler {
 
               // 5. Success.
               log('admitted by host', { ...protocol.toJSON() });
-              stream.next({
+              await guardedState.complete({
                 ...guardedState.current,
                 ...result,
                 state: Invitation.State.SUCCESS,
               });
-              await ctx.dispose();
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.end({ id: traceId }));
             } catch (err: any) {
               if (err instanceof TimeoutError) {
@@ -302,7 +308,7 @@ export class InvitationsHandler {
                 guardedState.set(extension, Invitation.State.TIMEOUT);
               } else {
                 log('auth failed', err);
-                guardedState.setError(extension, err);
+                guardedState.error(extension, err);
               }
               extensionCtx.close(err);
               log.trace('dxos.sdk.invitations-handler.guest.onOpen', trace.error({ id: traceId, error: err }));
@@ -318,7 +324,7 @@ export class InvitationsHandler {
             guardedState.set(extension, Invitation.State.TIMEOUT);
           } else {
             log('auth failed', err);
-            guardedState.setError(extension, err);
+            guardedState.error(extension, err);
           }
         },
       });
@@ -366,37 +372,54 @@ export class InvitationsHandler {
     return swarmConnection;
   }
 
+  /**
+   * A utility object for serializing invitation state changes by multiple concurrent
+   * invitation flow connections.
+   */
   private _createGuardedState(ctx: Context, invitation: Invitation, stream: PushStream<Invitation>) {
+    const mutex = new Mutex();
     let lastActiveExtension: any = null;
     let currentInvitation = { ...invitation };
-    const mutex = new Mutex();
+    const isStateChangeAllowed = (extension: InvitationExtension | null) => {
+      if (ctx.disposed || (extension !== null && mutex.isLocked() && !extension.hasFlowLock())) {
+        return false;
+      }
+      // don't allow transitions from a terminal state unless a new extension acquired mutex
+      // handles a case when error occurs (e.g. connection is closed) after we completed the flow
+      // successfully or already reported another error
+      return extension == null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state);
+    };
     return {
       mutex,
       get current() {
         return currentInvitation;
       },
-      set: (extension: InvitationHostExtension | InvitationGuestExtension | null, newState: Invitation.State) => {
-        if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
-          if (extension === null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state)) {
-            this._logStateUpdate(currentInvitation, extension, newState);
-            currentInvitation = { ...currentInvitation, state: newState };
-            stream.next(currentInvitation);
-          }
-          lastActiveExtension = extension;
-        }
-        return currentInvitation;
+      // disposing context prevents any further state updates
+      complete: (newState: Partial<Invitation>) => {
+        currentInvitation = { ...currentInvitation, ...newState };
+        stream.next(currentInvitation);
+        return ctx.dispose();
       },
-      setError: (extension: InvitationHostExtension | InvitationGuestExtension | null, error: any) => {
-        if (!ctx.disposed && (extension == null || extension.hasFlowLock() || !mutex.isLocked())) {
-          if (extension === null || lastActiveExtension !== extension || this._isNotTerminal(currentInvitation.state)) {
-            this._logStateUpdate(currentInvitation, extension, Invitation.State.ERROR);
-            currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
-            stream.next(currentInvitation);
-            stream.error(error);
-          }
+      set: (extension: InvitationExtension | null, newState: Invitation.State): boolean => {
+        if (isStateChangeAllowed(extension)) {
+          this._logStateUpdate(currentInvitation, extension, newState);
+          currentInvitation = { ...currentInvitation, state: newState };
+          stream.next(currentInvitation);
           lastActiveExtension = extension;
+          return true;
         }
-        return currentInvitation;
+        return false;
+      },
+      error: (extension: InvitationExtension | null, error: any): boolean => {
+        if (isStateChangeAllowed(extension)) {
+          this._logStateUpdate(currentInvitation, extension, Invitation.State.ERROR);
+          currentInvitation = { ...currentInvitation, state: Invitation.State.ERROR };
+          stream.next(currentInvitation);
+          stream.error(error);
+          lastActiveExtension = extension;
+          return true;
+        }
+        return false;
       },
     };
   }
