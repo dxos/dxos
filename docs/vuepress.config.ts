@@ -69,7 +69,7 @@ const config: UserConfig = defineUserConfig({
         link: '/composer/',
       },
       {
-        text: 'Guide',
+        text: 'SDK',
         link: '/guide/',
       },
       {
