@@ -5457,12 +5457,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      abstract-level:
-        specifier: ^1.0.2
-        version: 1.0.4
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
 
   packages/core/echo/echo-query:
     dependencies:
