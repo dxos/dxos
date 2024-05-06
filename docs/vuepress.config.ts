@@ -65,16 +65,16 @@ const config: UserConfig = defineUserConfig({
     navTitle: false,
     navbar: [
       {
+        text: 'Composer',
+        link: '/composer/',
+      },
+      {
         text: 'Guide',
         link: '/guide/',
       },
       {
         text: 'API',
         link: '/api/',
-      },
-      {
-        text: 'Composer',
-        link: '/composer/',
       },
     ],
     plugins: {
