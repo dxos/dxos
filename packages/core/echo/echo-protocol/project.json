@@ -4,14 +4,14 @@
   "tags": [
     "scope:echo"
   ],
-  "sourceRoot": "packages/core/echo/echo-protocol/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-protocol/src/index.ts"
+          "{projectRoot}/src/index.ts"
         ]
       }
     },

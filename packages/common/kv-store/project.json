@@ -4,15 +4,15 @@
   "tags": [
     "scope:common"
   ],
-  "sourceRoot": "packages/common/kv-store/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/common/kv-store/src/index.ts",
-          "packages/common/kv-store/src/testing/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ]
       }
     },
