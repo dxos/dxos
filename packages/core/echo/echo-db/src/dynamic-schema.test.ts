@@ -19,13 +19,23 @@ import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testin
 import { describe, test } from '@dxos/test';
 
 import { Filter } from './query';
-import { createDatabase } from './testing';
+import { EchoTestBuilder } from './testing';
 
 class ClassWithSchemaField extends TypedObject(TEST_SCHEMA_TYPE)({
   schema: S.optional(ref(DynamicEchoSchema)),
 }) {}
 
 describe('DynamicSchema', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('set DynamicSchema as echo object field', async () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
@@ -86,7 +96,7 @@ describe('DynamicSchema', () => {
   });
 
   const setupTest = async () => {
-    const { db, graph } = await createDatabase();
+    const { db, graph } = await builder.createDatabase();
     graph.runtimeSchemaRegistry.registerSchema(ClassWithSchemaField);
     return { db };
   };
