@@ -11,7 +11,6 @@ import {
   type PeerId,
   type StorageAdapterInterface,
   type DocHandleChangePayload,
-  type StorageKey,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
@@ -168,8 +167,7 @@ export class AutomergeHost {
   }
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {
-    const getDocumentIdFromPath = (path: StorageKey): DocumentId => path[0] as DocumentId;
-    const handle = this._repo.handles[getDocumentIdFromPath(path)];
+    const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle) {
       return;
     }
@@ -180,16 +178,17 @@ export class AutomergeHost {
 
     const lastAvailableHash = getHeads(doc);
 
-    const getDocumentObjects = (doc: SpaceDoc): string[] => Object.keys(doc.objects ?? {});
-
-    const objectIds = getDocumentObjects(doc);
+    const objectIds = Object.keys(doc.objects ?? {});
     const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: handle.documentId, objectId }));
     const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }
 
+  /**
+   * Called by AutomergeStorageAdapter after levelDB batch commit.
+   */
   private async _afterSave() {
-    this._indexMetadataStore.afterMarkDirty();
+    this._indexMetadataStore.notifyMarkDirty();
   }
 
   @trace.info({ depth: null })

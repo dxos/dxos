@@ -62,7 +62,7 @@ export class IndexMetadataStore {
   /**
    * Called after leveldb batch commit.
    */
-  afterMarkDirty() {
+  notifyMarkDirty() {
     this.dirty.emit();
   }
 
