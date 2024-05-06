@@ -1,9 +1,6 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "lib": [
-      "DOM"
-    ],
     "outDir": "dist/types"
   },
   "include": [
