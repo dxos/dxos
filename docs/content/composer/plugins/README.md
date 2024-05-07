@@ -1,7 +1,7 @@
 ---
 dir:
-  text: Building Plugins
-  order: 20
+  text: Extensibility
+  order: 29
 ---
 
 # Quick Start

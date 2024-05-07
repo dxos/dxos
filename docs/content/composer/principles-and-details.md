@@ -1,10 +1,12 @@
 ---
-order: 2
+order: 28
 ---
 
-# Key concepts
+# Principles and Details
 
-Below are some important things to know when using Composer.
+### Extensibility
+
+Every feature is implemented through the extensibility model, leaving nothing off-limits to malleability.
 
 ### Local first
 
@@ -18,9 +20,17 @@ Data is continuously replicated across all the user's connected devices whenever
 
 Data is always transmitted securely and **directly** between peers using WebRTC. No servers mediate the exchange of user data.
 
+### Privacy-First
+
+Ensures privacy, availability, and functionality while offline. No data silos or intermediaries.
+
 ### Multiplayer
 
 When online, users can sense each other's presence and collaborate in real-time.
+
+### Runs everywhere
+
+Designed for mobile and desktop, works in modern browsers.
 
 ### Availability
 
@@ -29,7 +39,3 @@ Data is available on the peer network as long as peers are online. [Agents](http
 ### HALO decentralized identity
 
 Composer uses the passwordless and decentralized identity management system [HALO](https://docs.dxos.org/guide/platform/halo) from DXOS. This means that users can access their data from any device without needing to remember a password. As long as some peers or agents are online, the user can restore their data to any new device.
-
-### Extensibility
-
-Every feature of Composer is implemented as a plugin. This means that developers can replace or extend any of Composer's functionality using the [plugin guide](plugins/). Community contributions are most welcome.

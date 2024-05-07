@@ -1,14 +1,19 @@
 ---
 order: 0
+headerDepth: 0
 ---
 
-# Composer
+# About
 
-Composer is a free, open-source, multiplayer, local-first knowledge environment powered by DXOS. Users can collaborate real-time, work offline, and retain privacy through the peer-to-peer protocols of DXOS. User data is never stored on any servers and does not leave devices the user trusts. Composer works entirely on the client with no private data silos.
+Composer is a team notetaking, whiteboarding, and knowledge management program.
 
-Developers can extend Composer through plugins - every feature is implemented as a plugin that can be swapped or extended. Community contributions are most welcome.
+It has three key features:
 
-[Try Composer](https://composer.dxos.org){class="button"}
+* **Extensibility**: If your team is operating in a challenging problem domain you need knowledge tools specific to your work. Composer is built for customization from the ground up.
+* **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
+* **Openness**: Not only are Composer and the DXOS protocols it's built on open source, the application is cloudless as well. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
+
+## Read More
 
 <a id="technology-preview"></a>
 ::: warning Technology Preview
@@ -17,24 +22,7 @@ Composer is not yet ready for production. There are bugs, and breaking changes m
 All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
 
-## Key Features
-
-* **Extensibility**: Every feature is implemented through the extensibility model, leaving nothing off-limits to malleability.
-* **Collaboration**: Built-in real-time multiplayer functionality for sharing and collaboration.
-* **Privacy-First**: Ensures privacy, availability, and functionality while offline. No data silos or intermediaries.
-* **Runs everywhere**: Designed for mobile and desktop, works in modern browsers.
-* **Native and Desktop apps**: Installable to your desktop or home screen (**coming soon**).
-
-## Use Cases
-
-* **Knowledge Management**: Organize and manage personal knowledge, notes, tasks, diagrams, and other kinds of content.
-* **Collaborative Work**: Share and collaborate on documents, projects, and tasks.
-* **Data Integration**: Integrate and visualize data from diverse sources and formats.
-* **Custom Applications**: Build custom applications and workflows on top of Composer.
-
-### Learn more
-
-* Try [Composer](https://composer.dxos.org)
-* Check out the [source](https://github.com/dxos/dxos/tree/main/packages/apps/composer-app)
-* See the source code to the various [plugins](https://github.com/dxos/dxos/tree/main/packages/apps/plugins)
-* Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+* To try composer see [Quick Start](./quick-start.md)
+* For day-to-day instructions see [User Guide](./user-guide/)
+* For information on privacy, the DXOS protocols, etc. see [Principles and Details](./principles-and-details.md)
+* To learn about or write your own customization see [Extensibility](./extensibility.md)

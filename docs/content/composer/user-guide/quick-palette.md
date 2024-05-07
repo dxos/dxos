@@ -1,5 +1,6 @@
 ---
 order: 6
+headerDepth: 0
 ---
 
 # Quick Palette

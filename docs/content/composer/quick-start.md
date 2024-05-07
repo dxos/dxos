@@ -1,35 +1,17 @@
 ---
 order: 1
+headerDepth: 0
 ---
 
 # Quick Start
-
-Composer can be used in the browser or installed on your computer.
-
-<div class="quick-start-tiles">
-  <div class="tile">
-    <HopeIcon icon="browser large" />
-    <h3>Browser</h3>
-    <p>Your data will be contained within the current browser profile.</p>
-    <p>You may save or load your data to and from local disk at any time.</p>
-    <p>Composer can be used offline once it loads at least once.</p>
-    <a href="https://composer.dxos.org" class="button" target="_blank">Start Composer</a>
-  </div>
-  <div class="tile">
-    <HopeIcon icon="download large" />
-    <h3>Install</h3>
-    <p>Your data will be stored on disk by default.</p>
-    <p>Enjoy global system shortcuts to bring up composer instantly.</p>
-    <p><em>Coming soon</em></p>
-    <a class="button disabled">Install Composer</a>
-  </div>
-</div>
 
 ::: warning Technology Preview
 Composer is not yet ready for production. There are bugs, and breaking changes may occur. Migration guides will be provided for version updates in the [release notes](https://github.com/dxos/dxos/releases).
 
 All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
+
+<a href="https://composer.dxos.org" class="button" target="_blank">Start Composer</a>
 
 ## Creating
 
