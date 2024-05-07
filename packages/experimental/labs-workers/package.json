@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-workers",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Experimental workers.",
   "homepage": "https://dxos.org",
