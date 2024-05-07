@@ -8,9 +8,8 @@ import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
+import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import { Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
-
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
