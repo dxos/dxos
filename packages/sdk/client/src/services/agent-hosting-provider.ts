@@ -49,7 +49,6 @@ export interface AgentHostingProviderClient {
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
 const COMPOSER_BETA_COOKIE_NAME = 'COMPOSER-BETA';
-const AGENT_AUTH_JWT_KEY = 'auth_agent';
 
 export type ComposerBetaJwt = {
   access_token: string;
