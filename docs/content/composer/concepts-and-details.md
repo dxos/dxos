@@ -2,7 +2,11 @@
 order: 28
 ---
 
-# Principles and Details
+# Concepts and Details
+
+### Protocol based
+
+The open source DXOS [SDK](../guide/) provides protocols for developing local-first applications. Composer is the flagship example of building on them, but they're available for any other project you can think of.
 
 ### Extensibility
 
