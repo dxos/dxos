@@ -26,6 +26,12 @@
       "@braneframe/plugin-debug/meta": [
         "packages/apps/plugins/plugin-debug/src/meta.tsx"
       ],
+      "@braneframe/plugin-deck": [
+        "packages/apps/plugins/plugin-deck/src/index.ts"
+      ],
+      "@braneframe/plugin-deck/meta": [
+        "packages/apps/plugins/plugin-deck/src/meta.ts"
+      ],
       "@braneframe/plugin-explorer": [
         "packages/apps/plugins/plugin-explorer/src/index.ts"
       ],

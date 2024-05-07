@@ -6,8 +6,8 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
-import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { type SubLevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
@@ -62,7 +62,7 @@ export class IndexMetadataStore {
   /**
    * Called after leveldb batch commit.
    */
-  afterMarkDirty() {
+  notifyMarkedDirty() {
     this.dirty.emit();
   }
 
@@ -101,7 +101,7 @@ const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
       /**
        * Document head hashes concatenated with no  separator.
        */
-      const concatenatedHeads = Buffer.from(encodedValue).toString('utf8').replace('"', '');
+      const concatenatedHeads = Buffer.from(encodedValue).toString('utf8').replace(/"/g, '');
 
       // Split concatenated heads into individual hashes by 64 characters.
       invariant(concatenatedHeads.length % 64 === 0, 'Invalid concatenated heads length');

@@ -231,6 +231,16 @@ jobs:
       - run: date +%s > "pnpm-lock.yaml"
       - *cache_save
 
+  #
+  # Check for dead local links
+  #
+  dead_links_check:
+    docker:
+      - image: 'lycheeverse/lychee:0.14.3'
+    steps:
+      - checkout
+      - run: lychee --offline ./docs/content/composer
+
 workflows:
   default:
     when:
@@ -243,6 +253,9 @@ workflows:
           matrix:
             parameters:
               node-version: *node-version
+      - dead_links_check:
+          context:
+            - Github
       # Only run e2e and browser tests on pushes to main & release branches.
       - e2e:
           filters:
