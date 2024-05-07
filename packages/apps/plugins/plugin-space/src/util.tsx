@@ -25,6 +25,7 @@ import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { SpaceState, getSpace, type Space, Filter, isEchoObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
@@ -314,15 +315,20 @@ export const updateGraphWithSpace = ({
 
   // Update graph with all objects in the space.
   // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj: EchoReactiveObject<any>) => {
-    if (obj instanceof TextV0Type) {
-      return false;
-    }
+  const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
+  // const query = space.db.query((obj: EchoReactiveObject<any>) => {
+  //   if (obj instanceof TextV0Type) {
+  //     return false;
+  //   }
+  //
+  //   return true;
+  // });
 
-    return true;
-  });
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
-  const unsubscribeQuery = query.subscribe();
+  const unsubscribeQuery = query.subscribe((query) => {
+    log.info('queries', { objects: query.objects.length });
+  });
+
   const unsubscribeQueryHandler = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;

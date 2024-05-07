@@ -95,6 +95,10 @@ export class QueryState extends Resource {
   }
 }
 
-const filterToIndexQuery = (filter: Filter): IndexQuery => ({
-  typename: filter.type?.itemId,
-});
+// TODO(burdon): Process Filter DSL.
+const filterToIndexQuery = (filter: Filter): IndexQuery => {
+  return {
+    typename: filter.type?.itemId,
+    inverted: filter.not,
+  };
+};
