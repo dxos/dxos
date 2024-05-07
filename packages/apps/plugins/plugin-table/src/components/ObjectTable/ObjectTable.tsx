@@ -106,7 +106,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
     (object: any, prop: string, value: any) => {
       object[prop] = value;
       if (object === newObject.current) {
-        space!.db.add(create(table.schema!, { ...newObject.current }));
+        space!.db.add(newObject.current);
         newObject.current = makeNewObject(table);
       }
     },
