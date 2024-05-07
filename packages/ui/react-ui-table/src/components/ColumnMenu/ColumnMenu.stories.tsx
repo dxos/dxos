@@ -19,7 +19,7 @@ export default {
   decorators: [withTheme],
 };
 
-const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tableDefs'> = {
+const defs: Pick<ColumnSettingsFormProps, 'tableDef' | 'tablesToReference'> = {
   tableDef: {
     id: '1',
     name: 'table 1',
