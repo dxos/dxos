@@ -255,15 +255,17 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       surface: {
         component: ({ data, role }) => {
+          const primary = data.active ?? data.object;
           switch (role) {
+            case 'article':
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
-              return isSpace(data.active) ? (
-                <SpaceMain space={data.active} />
-              ) : data.active instanceof FolderType ? (
-                <FolderMain folder={data.active} />
-              ) : typeof data.active === 'string' && data.active.length === 64 ? (
-                <MissingObject id={data.active} />
+              return isSpace(primary) ? (
+                <SpaceMain space={primary} role={role} />
+              ) : primary instanceof FolderType ? (
+                <FolderMain folder={primary} />
+              ) : typeof primary === 'string' && primary.length === 64 ? (
+                <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
