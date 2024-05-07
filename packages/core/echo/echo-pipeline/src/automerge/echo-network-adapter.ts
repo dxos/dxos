@@ -112,7 +112,14 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       }
     });
 
-    this.emit('peer-candidate', { peerId: connection.peerId as PeerId, peerMetadata: {} });
+    log.info('peer-candidate', { peerId: connection.peerId });
+    this.emit('peer-candidate', {
+      peerId: connection.peerId as PeerId,
+      peerMetadata: {
+        // TODO(dmaretskyi): Refactor this.
+        dxos_peerSource: 'EchoNetworkAdapter',
+      } as any,
+    });
   }
 
   private _onConnectionClosed(connection: ReplicatorConnection) {

@@ -113,6 +113,11 @@ export class AutomergeHost {
           return false;
         }
 
+        const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
+        if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
+          return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
+        }
+
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
           const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
@@ -130,7 +135,7 @@ export class AutomergeHost {
           const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-          const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
+          const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
             log('device key not found for share policy check', { peerId, documentId });
             return false;

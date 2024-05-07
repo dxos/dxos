@@ -106,9 +106,16 @@ export class EchoHost extends Resource {
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: EchoReplicator): Promise<void> {}
+  async addReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(replicator);
+  }
 
-  async removeReplicator(replicator: EchoReplicator): Promise<void> {}
+  /**
+   * Remove data replicator.
+   */
+  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.removeReplicator(replicator);
+  }
 
   /**
    * Authorize remote device to access space.
