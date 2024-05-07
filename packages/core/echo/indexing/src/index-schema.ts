@@ -61,6 +61,14 @@ export class IndexSchema extends Resource implements Index {
         .map((id) => ({ id, rank: 0 }));
     }
 
+    // TODO(burdon): Handle inversion.
+    if (filter.inverted) {
+      return Array.from(this._index.entries())
+        .filter(([key]) => key !== filter.typename)
+        .flatMap(([, value]) => Array.from(value))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
     return Array.from(this._index.get(filter.typename) ?? []).map((id) => ({ id, rank: 0 }));
   }
 
