@@ -1,6 +1,5 @@
 ---
 order: 0
-prev: ../
 ---
 
 # Introduction
