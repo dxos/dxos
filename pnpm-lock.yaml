@@ -682,8 +682,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: ^0.4.28
-        version: 0.4.28
+        specifier: ^0.4.37
+        version: 0.4.37
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -760,6 +760,9 @@ importers:
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
+      wrangler:
+        specifier: ^3.51.2
+        version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
 
   packages/apps/composer-extension:
     devDependencies:
@@ -8143,6 +8146,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      jwt-decode:
+        specifier: ^4.0.0
+        version: 4.0.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -10952,7 +10958,7 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
-      resolve: 1.22.5
+      resolve: 1.22.8
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
@@ -14210,8 +14216,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.28:
-    resolution: {integrity: sha512-lNBUQi/MMZ6pMyVkSnNAA+EWzlmrsTKZ1tErnleTdBwTrZWWPCr1Wig0hkVVxZom4Wgnf56dMca6BOni9mzbHQ==}
+  /@dxos/web-auth@0.4.37:
+    resolution: {integrity: sha512-XxS7hs7eAbhxyj3zysGPfgF3Bj2Q5SAV2l9ZfYUbPWYN+of9EMlReBVWHaY80Vp6Xm8FnHWjuuV2HCQOuizdFA==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
@@ -21446,7 +21452,7 @@ packages:
       builtin-modules: 3.3.0
       deepmerge: 4.3.1
       is-module: 1.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       rollup: 2.79.1
     dev: true
 
@@ -24526,7 +24532,6 @@ packages:
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-    dev: true
 
   /@types/json-stable-stringify@1.0.34:
     resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
@@ -25443,7 +25448,7 @@ packages:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.49.0)
-      '@types/json-schema': 7.0.12
+      '@types/json-schema': 7.0.15
       '@types/semver': 7.5.1
       '@typescript-eslint/scope-manager': 5.59.11
       '@typescript-eslint/types': 5.59.11
@@ -27247,7 +27252,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       cosmiconfig: 6.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
     dev: true
 
   /babel-plugin-macros@3.1.0:
@@ -27256,7 +27261,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       cosmiconfig: 7.1.0
-      resolve: 1.22.5
+      resolve: 1.22.8
 
   /babel-plugin-polyfill-corejs2@0.3.3(@babel/core@7.21.3):
     resolution: {integrity: sha512-8hOdmFYFSZhqg2C/JgLUQ+t52o5nirNwaWM2B9LWteozwIvM14VSwdsCAUET10qT+kmySAlseadmfeeSWFCy+Q==}
@@ -31670,7 +31675,7 @@ packages:
     dependencies:
       debug: 3.2.7(supports-color@5.5.0)
       is-core-module: 2.13.0
-      resolve: 1.22.5
+      resolve: 1.22.8
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -36395,7 +36400,7 @@ packages:
       jest-pnp-resolver: 1.2.2(jest-resolve@26.6.2)
       jest-util: 26.6.2
       read-pkg-up: 7.0.1
-      resolve: 1.22.5
+      resolve: 1.22.8
       slash: 3.0.0
     dev: true
 
@@ -36424,7 +36429,7 @@ packages:
       jest-pnp-resolver: 1.2.2(jest-resolve@29.5.0)
       jest-util: 29.5.0
       jest-validate: 29.5.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       resolve.exports: 2.0.2
       slash: 3.0.0
     dev: true
@@ -37168,6 +37173,11 @@ packages:
     dependencies:
       jwa: 2.0.0
       safe-buffer: 5.2.1
+    dev: false
+
+  /jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
+    engines: {node: '>=18'}
     dev: false
 
   /keyborg@2.5.0:
@@ -42552,7 +42562,7 @@ packages:
       '@types/doctrine': 0.0.9
       '@types/resolve': 1.20.6
       doctrine: 3.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       strip-indent: 4.0.0
     transitivePeerDependencies:
       - supports-color
@@ -43157,7 +43167,7 @@ packages:
     resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
     engines: {node: '>= 0.10'}
     dependencies:
-      resolve: 1.22.5
+      resolve: 1.22.8
 
   /recursive-readdir@2.2.3:
     resolution: {integrity: sha512-8HrF5ZsXk5FAH9dgsx3BlUer73nIhuj+9OrQwEbLTPOBzGkL1lsFCR01am+v+0m2Cmbs1nP12hLDl5FA7EszKA==}
@@ -43609,7 +43619,7 @@ packages:
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       module-details-from-path: 1.0.3
-      resolve: 1.22.5
+      resolve: 1.22.8
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -43704,7 +43714,6 @@ packages:
       is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: true
 
   /resolve@2.0.0-next.4:
     resolution: {integrity: sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==}
@@ -45625,7 +45634,7 @@ packages:
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
       quick-lru: 5.1.1
-      resolve: 1.22.5
+      resolve: 1.22.8
       tmp: 0.2.1
     transitivePeerDependencies:
       - ts-node
