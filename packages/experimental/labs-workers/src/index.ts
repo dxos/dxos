@@ -12,7 +12,6 @@ import { log } from '@dxos/log';
 
 import chat from './chat';
 import { type Env } from './defs';
-import signaling from './signaling';
 
 export * from './signaling';
 
@@ -68,6 +67,5 @@ root.onError((err, context) => {
 });
 
 root.route('/chat', chat);
-root.route('/signal', signaling);
 
 export default root;
