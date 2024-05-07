@@ -68,7 +68,7 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.28",
+    "@dxos/web-auth": "^0.4.37",
     "isomorphic-fetch": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -97,7 +97,8 @@
     "vite-plugin-pwa": "^0.18.2",
     "vite-plugin-top-level-await": "^1.4.1",
     "vite-plugin-wasm": "^3.3.0",
-    "workbox-window": "^7.0.0"
+    "workbox-window": "^7.0.0",
+    "wrangler": "^3.51.2"
   },
   "peerDependencies": {
     "@babel/core": ">=7.0.0 <8.0.0-0",
