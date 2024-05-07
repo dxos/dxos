@@ -23,14 +23,6 @@ npm run dev
 
 This will start your development server with a core set of plugins and the plugin being prototyped.
 
-Default plugins can be disabled when creating the project using `--interactive`
-
-```bash
-npm create @dxos/app-plugin@latest --interactive
-```
-
-Answer `no` to the question `Include default plugins?` to generate an empty configuration.
-
 ::: warning Under Development
 
 The Composer Extensibility APIs are under active development. The API may change often, and these docs may not be accurate.
