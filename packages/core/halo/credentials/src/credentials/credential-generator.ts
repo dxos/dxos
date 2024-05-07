@@ -202,12 +202,24 @@ export const createDeviceAuthorization = async (
 };
 
 // TODO(burdon): Reconcile with above (esp. Signer).
+/**
+ * @param signer - invitation signer.
+ * @param identityKey - identity key of the admitted member.
+ * @param spaceKey - subject space key.
+ * @param genesisFeedKey - genesis feed key of the space.
+ * @param role - role of the newly added member.
+ * @param profile - profile of the newly added member.
+ * @param parentCredentialId - id of the last known SpaceMember credential associated with this identityKey if any.
+ * @param invitationCredentialId - id of the delegated invitation credential in case one was used to add the member.
+ */
 export const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
+  role: SpaceMember.Role,
   profile?: ProfileDocument,
+  parentCredentialId?: PublicKey,
   invitationCredentialId?: PublicKey,
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
@@ -216,9 +228,10 @@ export const createAdmissionCredentials = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
-        role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
+        role,
         profile,
         genesisFeedKey,
+        parentCredentialId,
         invitationCredentialId,
       },
     }),
