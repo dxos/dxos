@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { jwtDecode } from 'jwt-decode';
+
 import { synchronized } from '@dxos/async';
 import { type Halo } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
@@ -46,6 +48,14 @@ export interface AgentHostingProviderClient {
 
 // Interface to REST API to manage agent deployments
 // TODO(nf): for now API just simply returns created k8s CRD objects, define backend-agnostic API
+const COMPOSER_BETA_COOKIE_NAME = 'COMPOSER-BETA';
+
+export type ComposerBetaJwt = {
+  access_token: string;
+  auth_app?: number;
+  auth_agent?: number;
+};
+
 export class AgentManagerClient implements AgentHostingProviderClient {
   private readonly _config: AgentHostingProvider;
   private readonly DXRPC_PATH = 'dxrpc';
@@ -80,19 +90,9 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       return false;
     }
 
-    this._rpc = new WebsocketRpcClient({
-      url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
-      noHandshake: true,
-    });
-
-    this._rpc.connected.on(() => {
-      this._rpcState = 'connected';
-    });
-
-    this._rpc.disconnected.on(() => {
-      this._rpcState = 'disconnected';
-    });
+    // TODO: AgentHostingContext is currently called 4 times on startup.
+    // when this is reduced to one, preemptively open the Websocket connection to decrease the latency of the first RPC call.
+    // void this._openRpc();
     return true;
   }
 
@@ -104,8 +104,38 @@ export class AgentManagerClient implements AgentHostingProviderClient {
    */
 
   _checkAuthorization(authToken: any) {
-    // TODO(nf): implement
-    return true;
+    const cookies = Object.fromEntries(
+      document.cookie.split('; ').map((v) => v.split(/=(.*)/s).map(decodeURIComponent)),
+    );
+
+    if (cookies[COMPOSER_BETA_COOKIE_NAME] == null) {
+      return false;
+    }
+
+    const composerBetaJwt = this._decodeComposerBetaJwt();
+
+    // The AgentManager server will verify the JWT. This check is just to prevent unnecessary requests.
+    if (composerBetaJwt && composerBetaJwt.auth_agent && composerBetaJwt.auth_agent === 1) {
+      return true;
+    }
+    return false;
+  }
+
+  // TODO(nf): use asymmetric key to verify token?
+  _decodeComposerBetaJwt() {
+    const decoded: ComposerBetaJwt = jwtDecode(this._getComposerBetaCookie());
+    return decoded;
+  }
+
+  _getComposerBetaCookie() {
+    const cookies = Object.fromEntries(
+      document.cookie.split('; ').map((v) => v.split(/=(.*)/s).map(decodeURIComponent)),
+    );
+
+    if (cookies[COMPOSER_BETA_COOKIE_NAME] == null) {
+      return null;
+    }
+    return cookies[COMPOSER_BETA_COOKIE_NAME];
   }
 
   public requestInitWithCredentials(req: RequestInit): RequestInit {
@@ -146,20 +176,45 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     );
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
-    invariant(this._rpc, 'RPC not initialized');
-    // TODO: factor out RPC operations and state management.
-    if (this._rpcState === 'disconnected') {
-      await this._rpc.open();
-    }
     await this._agentManagerAuth(authDeviceCreds[0]);
+  }
+
+  async _openRpc() {
+    if (this._rpcState === 'connected') {
+      return;
+    }
+    this._rpc = new WebsocketRpcClient({
+      url: this._wsDxrpcUrl,
+      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      noHandshake: true,
+    });
+
+    this._rpc.connected.on(() => {
+      this._rpcState = 'connected';
+    });
+
+    this._rpc.disconnected.on(() => {
+      this._rpcState = 'disconnected';
+    });
+
+    this._rpc.error.on((err) => {
+      log.info('rpc error', { err });
+      this._rpcState = 'disconnected';
+    });
+    try {
+      await this._rpc.open();
+    } catch (err) {
+      log.warn('failed to open rpc', { err });
+      throw new Error('Failed to open rpc');
+    }
   }
 
   // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
   async _agentManagerAuth(authDeviceCreds: Credential) {
+    await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
-    // TODO(nf): pass authToken to initAuthSequence
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
-      await this._rpc.rpc.AgentManager.initAuthSequence({});
+      await this._rpc.rpc.AgentManager.initAuthSequence({ authToken: this._getComposerBetaCookie() });
 
     if (result !== InitAuthSequenceResponse.InitAuthSequenceResult.SUCCESS || !nonce || !agentmanagerKey) {
       log('auth init failed', { result, nonce, agentmanagerKey, initAuthResponseReason });
