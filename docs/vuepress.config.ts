@@ -77,6 +77,7 @@ const config: UserConfig = defineUserConfig({
         link: '/api/',
       },
     ],
+    backToTop: false,
     plugins: {
       mdEnhance: {
         codetabs: true,
