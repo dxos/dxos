@@ -183,10 +183,7 @@ export const DeckPlugin = ({
       context: (props: PropsWithChildren) => {
         return (
           <AttentionProvider attended={attention.attended}>
-            <Mosaic.Root>
-              <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
-              <Mosaic.DragOverlay />
-            </Mosaic.Root>
+            <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
           </AttentionProvider>
         );
       },
@@ -223,25 +220,28 @@ export const DeckPlugin = ({
         }, [location.active]);
 
         return (
-          <DeckLayout
-            attention={attention}
-            location={location}
-            fullscreen={layout.values.fullscreen}
-            showHintsFooter={settings.values.showFooter}
-            toasts={layout.values.toasts}
-            onDismissToast={(id) => {
-              const index = layout.values.toasts.findIndex((toast) => toast.id === id);
-              if (index !== -1) {
-                // Allow time for the toast to animate out.
-                setTimeout(() => {
-                  if (layout.values.toasts[index].id === currentUndoId) {
-                    currentUndoId = undefined;
-                  }
-                  layout.values.toasts.splice(index, 1);
-                }, 1000);
-              }
-            }}
-          />
+          <Mosaic.Root>
+            <DeckLayout
+              attention={attention}
+              location={location}
+              fullscreen={layout.values.fullscreen}
+              showHintsFooter={settings.values.showFooter}
+              toasts={layout.values.toasts}
+              onDismissToast={(id) => {
+                const index = layout.values.toasts.findIndex((toast) => toast.id === id);
+                if (index !== -1) {
+                  // Allow time for the toast to animate out.
+                  setTimeout(() => {
+                    if (layout.values.toasts[index].id === currentUndoId) {
+                      currentUndoId = undefined;
+                    }
+                    layout.values.toasts.splice(index, 1);
+                  }, 1000);
+                }
+              }}
+            />
+            <Mosaic.DragOverlay />
+          </Mosaic.Root>
         );
       },
       surface: {

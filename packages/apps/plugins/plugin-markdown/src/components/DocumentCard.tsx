@@ -48,7 +48,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
   ) => {
     const { t } = useTranslation(MARKDOWN_PLUGIN);
     const { themeMode } = useThemeContext();
-    const { parentRef } = useTextEditor(
+    const { parentRef, focusAttributes } = useTextEditor(
       () => ({
         doc: object.content?.content,
         extensions: [
@@ -93,7 +93,7 @@ export const DocumentCard: MosaicTileComponent<DocumentItemProps, HTMLDivElement
             </Card.Menu>
           </Card.Header>
           <Card.Body>
-            <div ref={parentRef} className={mx(focusRing, 'h-full p-1 text-sm')} />
+            <div {...focusAttributes} ref={parentRef} className={mx(focusRing, 'rounded-sm h-full p-1 text-sm')} />
           </Card.Body>
         </Card.Root>
       </div>
