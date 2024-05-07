@@ -6,7 +6,14 @@ import { ArrowSquareOut, GearSix, Warning } from '@phosphor-icons/react';
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
-import { SettingsAction, NavigationAction, useIntent, type PartIdentifier } from '@dxos/app-framework';
+import {
+  SettingsAction,
+  NavigationAction,
+  useIntent,
+  type PartIdentifier,
+  useResolvePlugin,
+  parseNavigationPlugin,
+} from '@dxos/app-framework';
 import { useConfig } from '@dxos/react-client';
 import { Button, Tooltip, Popover, useSidebars, useTranslation, Link, Message, Trans } from '@dxos/react-ui';
 import { PlankHeading } from '@dxos/react-ui-deck';
@@ -24,6 +31,7 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
   const { navigationSidebarOpen } = useSidebars(NAVTREE_PLUGIN);
   const { dispatch } = useIntent();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const releaseUrl =
     config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
@@ -122,13 +130,15 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
         </Tooltip.Portal>
       </Tooltip.Root>
 
-      <PlankHeading.Controls
-        part={part}
-        variant='hide-disabled'
-        increment={part[0] === 'main'}
-        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
-        onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
-      />
+      {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
+        <PlankHeading.Controls
+          part={part}
+          variant='hide-disabled'
+          increment={part[0] === 'main'}
+          pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
+          onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
+        />
+      )}
     </div>
   );
 };
