@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.5.1](https://github.com/dxos/dxos/compare/v0.5.0...v0.5.1) (2024-05-07)
+
+
+### Features
+
+* agentmanager API authentication ([#6514](https://github.com/dxos/dxos/issues/6514)) ([3dd1b82](https://github.com/dxos/dxos/commit/3dd1b82d3eb0dd366d39c83f121880ca13844442))
+* Index document on specified heads ([#6477](https://github.com/dxos/dxos/issues/6477)) ([ff7d242](https://github.com/dxos/dxos/commit/ff7d242a61e0daf1e954a72f6f8bdda46ac05c84))
+* **native:** Added support for command palette global hotkey ([#5692](https://github.com/dxos/dxos/issues/5692)) ([7f021b8](https://github.com/dxos/dxos/commit/7f021b8199c5ed637318fec8be4c5967c14245b9))
+* **plugin-deck:** Deck plugin ([#6397](https://github.com/dxos/dxos/issues/6397)) ([7ef92de](https://github.com/dxos/dxos/commit/7ef92de7eec7b028e55e78f660d011d0c9dba4a6))
+* **testbench:** add space import/export ([#6499](https://github.com/dxos/dxos/issues/6499)) ([5d48d87](https://github.com/dxos/dxos/commit/5d48d871796c3398f84412f5a305e1337d4dc59a))
+
+
+### Bug Fixes
+
+* Add toJSON to SpaceProxy ([#6496](https://github.com/dxos/dxos/issues/6496)) ([5b8360b](https://github.com/dxos/dxos/commit/5b8360b03ac3a202029c25673279e071bfe6df9f))
+* **agenthosting:** invitation handler ([#6481](https://github.com/dxos/dxos/issues/6481)) ([2ed734f](https://github.com/dxos/dxos/commit/2ed734f11f6e64a5a042dd8635a981d7c654900e))
+* **devtools:** handle spaces being closed ([#6500](https://github.com/dxos/dxos/issues/6500)) ([bc05254](https://github.com/dxos/dxos/commit/bc05254a3b22404ec21fa0dec60ecfb1030c3646))
+* **devtools:** SpaceListPanel ([#6497](https://github.com/dxos/dxos/issues/6497)) ([b833aa2](https://github.com/dxos/dxos/commit/b833aa2fb4a0c4790822a1e0fe4f437891483eee))
+* **echo:** dynamic serializer timeout ([#6532](https://github.com/dxos/dxos/issues/6532)) ([6e20736](https://github.com/dxos/dxos/commit/6e20736626e0940db91db3ff7cc426e3bed02038))
+* **echo:** fixed space export with deleted objects ([#6524](https://github.com/dxos/dxos/issues/6524)) ([18af12a](https://github.com/dxos/dxos/commit/18af12a234813dc877618401e7673ba9852484e2))
+* **echo:** try loading objects in chunks when exporting data ([#6529](https://github.com/dxos/dxos/issues/6529)) ([377e5f9](https://github.com/dxos/dxos/commit/377e5f91078c1b64d17e06884d67fef5eb3b011f))
+* Fix `Error: Iterator could not decode entries` ([#6523](https://github.com/dxos/dxos/issues/6523)) ([f02b2c7](https://github.com/dxos/dxos/commit/f02b2c779aae1c36444dcc87f0e83e33a52b5be8))
+* Initial space selection and remove strict mode. ([#6526](https://github.com/dxos/dxos/issues/6526)) ([77ab9c9](https://github.com/dxos/dxos/commit/77ab9c91c6436c572fbbb64675d449e43ddc0439))
+* Make dxos lint utils public ([#6555](https://github.com/dxos/dxos/issues/6555)) ([d514f85](https://github.com/dxos/dxos/commit/d514f85401e5680067513f6883dfcec4bcefba04))
+* make less astonishing error about hypergraphs ([#6534](https://github.com/dxos/dxos/issues/6534)) ([873f84c](https://github.com/dxos/dxos/commit/873f84ca18c39035cb81fc7a115dd1b90d544494))
+* **plugin-space:** crash during device join ([#6479](https://github.com/dxos/dxos/issues/6479)) ([c37e119](https://github.com/dxos/dxos/commit/c37e11993cba20d4afaddf787319327eb0c88a51))
+* refactor Halo.queryCredentials ([#6536](https://github.com/dxos/dxos/issues/6536)) ([a94bc56](https://github.com/dxos/dxos/commit/a94bc56267b6f3cfad2d975626551d628a473123))
+* **shell:** ensure mesh is not bundled into the shell ([#6509](https://github.com/dxos/dxos/issues/6509)) ([89f6168](https://github.com/dxos/dxos/commit/89f6168e786b716285f23b75a33dda1702188e4a))
+* show debug info for agent device join ([#6480](https://github.com/dxos/dxos/issues/6480)) ([4e99b85](https://github.com/dxos/dxos/commit/4e99b85bff6a1d3e43091745671ece6d88b7f3ec))
+* **tables:** Column deletion ([#6474](https://github.com/dxos/dxos/issues/6474)) ([ad6ccc9](https://github.com/dxos/dxos/commit/ad6ccc973f997dab40c7528f1715e1ef619d2b2e))
+* **tables:** Sorting another column should clear current column sorting ([#6513](https://github.com/dxos/dxos/issues/6513)) ([395dec6](https://github.com/dxos/dxos/commit/395dec6509e1e87a190a874bcf6e375953648aca))
+* templates referencing kube deploy instructions ([#6512](https://github.com/dxos/dxos/issues/6512)) ([8569512](https://github.com/dxos/dxos/commit/85695124374cbdd99b938d45b5312a332d53ebe6))
+
 ## [0.5.0](https://github.com/dxos/dxos/compare/v0.4.9...v0.5.0) (2024-04-28)
 
 
