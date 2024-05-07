@@ -91,19 +91,9 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       return false;
     }
 
-    this._rpc = new WebsocketRpcClient({
-      url: this._wsDxrpcUrl,
-      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
-      noHandshake: true,
-    });
-
-    this._rpc.connected.on(() => {
-      this._rpcState = 'connected';
-    });
-
-    this._rpc.disconnected.on(() => {
-      this._rpcState = 'disconnected';
-    });
+    // TODO: AgentHostingContext is currently called 4 times on startup.
+    // when this is reduced to one, preemptively open the Websocket connection to decrease the latency of the first RPC call.
+    // void this._openRpc();
     return true;
   }
 
@@ -187,16 +177,42 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     );
 
     invariant(authDeviceCreds.length === 1, 'Improper number of authorized devices');
-    invariant(this._rpc, 'RPC not initialized');
-    // TODO: factor out RPC operations and state management.
-    if (this._rpcState === 'disconnected') {
-      await this._rpc.open();
-    }
     await this._agentManagerAuth(authDeviceCreds[0]);
+  }
+
+  async _openRpc() {
+    if (this._rpcState === 'connected') {
+      return;
+    }
+    this._rpc = new WebsocketRpcClient({
+      url: this._wsDxrpcUrl,
+      requested: { AgentManager: schema.getService('dxos.service.agentmanager.AgentManager') },
+      noHandshake: true,
+    });
+
+    this._rpc.connected.on(() => {
+      this._rpcState = 'connected';
+    });
+
+    this._rpc.disconnected.on(() => {
+      this._rpcState = 'disconnected';
+    });
+
+    this._rpc.error.on((err) => {
+      log.info('rpc error', { err });
+      this._rpcState = 'disconnected';
+    });
+    try {
+      await this._rpc.open();
+    } catch (err) {
+      log.warn('failed to open rpc', { err });
+      throw new Error('Failed to open rpc');
+    }
   }
 
   // Authenticate to the agentmanager service using dxrpc and obtain a JWT token for subsequent HTTP requests.
   async _agentManagerAuth(authDeviceCreds: Credential) {
+    await this._openRpc();
     invariant(this._rpc, 'RPC not initialized');
     const { result, nonce, agentmanagerKey, initAuthResponseReason } =
       await this._rpc.rpc.AgentManager.initAuthSequence({ authToken: this._getComposerBetaCookie() });
