@@ -7,6 +7,8 @@ import { describe, test } from '@dxos/test';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
+import { AnyDocumentId } from '@dxos/automerge/src/automerge-repo';
+import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -73,7 +75,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test.only('replication', async () => {
+  test('replication', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     await using network = await new TestReplicationNetwork().open();
     const dataAssertion = createDataAssertion();

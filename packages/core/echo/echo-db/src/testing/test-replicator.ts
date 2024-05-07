@@ -44,7 +44,7 @@ export class TestReplicationNetwork extends Resource {
       if (otherReplicator === replicator || !otherReplicator.connected) {
         continue;
       }
-      log.info('create connection', { from: replicator.context!.peerId, to: otherReplicator.context!.peerId });
+      log('create connection', { from: replicator.context!.peerId, to: otherReplicator.context!.peerId });
       const [connection1, connection2] = this._createConnectionPair(
         replicator.context!.peerId,
         otherReplicator.context!.peerId,
@@ -62,7 +62,7 @@ export class TestReplicationNetwork extends Resource {
   }
 
   private _createConnectionPair(peer1: string, peer2: string): [TestReplicatorConnection, TestReplicatorConnection] {
-    const LOG = true;
+    const LOG = false;
 
     const forward = new TransformStream({
       transform(message, controller) {
@@ -79,8 +79,8 @@ export class TestReplicationNetwork extends Resource {
       },
     });
 
-    const connection1 = new TestReplicatorConnection(peer1, backwards.readable, forward.writable);
-    const connection2 = new TestReplicatorConnection(peer2, forward.readable, backwards.writable);
+    const connection1 = new TestReplicatorConnection(peer2, backwards.readable, forward.writable);
+    const connection2 = new TestReplicatorConnection(peer1, forward.readable, backwards.writable);
     connection1.otherSide = connection2;
     connection2.otherSide = connection1;
     return [connection1, connection2];
@@ -100,14 +100,14 @@ export class TestReplicator implements EchoReplicator {
   public connections = new Set<TestReplicatorConnection>();
 
   async connect(context: EchoReplicatorContext): Promise<void> {
-    log.info('connect', { peerId: context.peerId });
+    log('connect', { peerId: context.peerId });
     this.context = context;
     this.connected = true;
     await this._params.onConnect();
   }
 
   async disconnect(): Promise<void> {
-    log.info('disconnect', { peerId: this.context!.peerId });
+    log('disconnect', { peerId: this.context!.peerId });
     this.connected = false;
     await this._params.onDisconnect();
   }

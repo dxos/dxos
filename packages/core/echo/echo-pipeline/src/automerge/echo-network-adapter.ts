@@ -112,7 +112,6 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       }
     });
 
-    log.info('peer-candidate', { peerId: connection.peerId });
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: {
