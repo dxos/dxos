@@ -18,8 +18,4 @@ All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 
 Ideally no software would need a guide. The combination of familiar UI analogies and judicial use of tooltips would make a separate document unnecessary.
 
-In reality, guides are underused. It's important to have explicit answers to the following questions:
-
-- Where is my data physically stored?
-- How can I share data with others? How do I tell who I've shared what with?
-- How does deletion work? Is it true deletion or archiving, and how do I get data back?
+However, while Composer's under heavy development it's easier to explain things explicitly.
