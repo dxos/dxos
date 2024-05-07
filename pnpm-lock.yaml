@@ -531,6 +531,9 @@ importers:
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
+      '@braneframe/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugins/plugin-deck
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
@@ -1209,6 +1212,79 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.5
         version: 15.5.5
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-deck:
+    dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+    devDependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2151,6 +2227,9 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -4408,6 +4487,25 @@ importers:
         specifier: workspace:*
         version: link:../node-std
 
+  packages/common/kv-store:
+    dependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../keys
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      abstract-level:
+        specifier: ^1.0.2
+        version: 1.0.4
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
+    devDependencies:
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
+
   packages/common/local-storage:
     dependencies:
       '@dxos/echo-schema':
@@ -5129,6 +5227,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5144,6 +5245,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5250,6 +5354,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5259,6 +5366,9 @@ importers:
       '@dxos/hypercore':
         specifier: workspace:*
         version: link:../../../common/hypercore
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5268,6 +5378,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5342,6 +5455,12 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
 
+  packages/core/echo/echo-protocol:
+    dependencies:
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+
   packages/core/echo/echo-query:
     dependencies:
       '@dxos/echo-db':
@@ -5366,6 +5485,9 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -5461,27 +5583,21 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../automerge
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
-      '@dxos/debug':
+      '@dxos/echo-protocol':
         specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
+        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5503,12 +5619,6 @@ importers:
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
-      abstract-level:
-        specifier: ^1.0.2
-        version: 1.0.4
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -7994,6 +8104,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8140,6 +8253,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -8158,6 +8274,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/lock-file':
         specifier: workspace:*
         version: link:../../common/lock-file
@@ -8203,9 +8322,6 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
       platform:
         specifier: ^1.3.6
         version: 1.3.6
@@ -37511,7 +37627,6 @@ packages:
     dependencies:
       buffer: 6.0.3
       module-error: 1.0.2
-    dev: false
 
   /level@8.0.1:
     resolution: {integrity: sha512-oPBGkheysuw7DmzFQYyFe8NAia5jFLAgEnkgWnK3OXAuJr8qFT+xBQIwokAZPME2bhPFzS8hlYcL16m8UZrtwQ==}
@@ -39652,7 +39767,6 @@ packages:
   /module-error@1.0.2:
     resolution: {integrity: sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==}
     engines: {node: '>=10'}
-    dev: false
 
   /moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}

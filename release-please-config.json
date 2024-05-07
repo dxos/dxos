@@ -54,6 +54,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -319,6 +324,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/kv-store/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/local-storage/package.json",
           "jsonpath": "$.version"
         },
@@ -420,6 +430,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
         {

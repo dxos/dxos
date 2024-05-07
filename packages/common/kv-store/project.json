@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "kv-store",
+  "tags": [
+    "scope:common"
+  ],
+  "sourceRoot": "{projectRoot}/src",
+  "projectType": "library",
+  "targets": {
+    "build": {},
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

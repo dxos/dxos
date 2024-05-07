@@ -9,8 +9,8 @@ import { type MixedEncoding } from 'level-transcoder';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { type SubLevelDB } from './types';
-import { createTestLevel } from '../testing';
+import { type SubLevelDB } from './level';
+import { createTestLevel } from './testing';
 
 describe('Level', () => {
   test('missing keys', async () => {

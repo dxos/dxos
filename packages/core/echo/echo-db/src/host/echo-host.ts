@@ -4,10 +4,11 @@
 
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, type LevelDB } from '@dxos/echo-pipeline';
-import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
+import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type Storage } from '@dxos/random-access-storage';
@@ -40,8 +41,7 @@ export class EchoHost extends Resource {
 
     this._automergeHost = new AutomergeHost({
       db: kv.sublevel('automerge'),
-      // TODO(dmaretskyi): Remove circular dependency.
-      storageCallbacks: createStorageCallbacks({ host: () => this._automergeHost, metadata: this._indexMetadataStore }),
+      indexMetadataStore: this._indexMetadataStore,
       // TODO(dmaretskyi): Still needed for data migration -- remove before the next release.
       directory: storage.createDirectory('automerge'),
     });

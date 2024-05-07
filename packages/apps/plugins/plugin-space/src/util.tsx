@@ -416,7 +416,7 @@ export const updateGraphWithSpace = ({
                   data: { target: object, object: create(FolderType, { objects: [] }) },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties: {
@@ -547,7 +547,7 @@ export const updateGraphWithAddObjectAction = ({
                   data: { target: space },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties,
@@ -573,7 +573,7 @@ export const updateGraphWithAddObjectAction = ({
                 data: { target: folder },
               },
               {
-                action: NavigationAction.ACTIVATE,
+                action: NavigationAction.OPEN,
               },
             ]),
           properties,
