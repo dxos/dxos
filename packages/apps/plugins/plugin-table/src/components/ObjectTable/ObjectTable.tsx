@@ -69,7 +69,7 @@ export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader })
   }
 };
 
-const makeNewObject = () => ({ id: PublicKey.random() });
+const makeNewObject = (table: TableType) => (table.schema ? create(table.schema, {}) : create({}));
 
 const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
   const space = getSpace(table);
@@ -77,7 +77,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
   const objects = useTableObjects(space, table.schema);
   const tables = useQuery<TableType>(space, Filter.schema(TableType));
 
-  const newObject = useRef(makeNewObject());
+  const newObject = useRef(makeNewObject(table));
   const rows = useMemo(() => [...objects, newObject.current], [objects]);
 
   const onColumnUpdate = useCallback(
@@ -107,7 +107,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
       object[prop] = value;
       if (object === newObject.current) {
         space!.db.add(create(table.schema!, { ...newObject.current }));
-        newObject.current = makeNewObject();
+        newObject.current = makeNewObject(table);
       }
     },
     [space, table.schema, newObject],
