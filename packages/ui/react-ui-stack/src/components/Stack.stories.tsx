@@ -4,6 +4,9 @@
 
 import '@dxosTheme';
 
+// NOTE(thure): This unused import resolves the “likely not portable” TS error.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
@@ -17,9 +20,13 @@ import { TestObjectGenerator } from '../testing/generator';
 
 faker.seed(3);
 
-const SimpleContent = ({ data }: { data: StackSectionContent }) => <div className='p-4 text-center'>{data.title}</div>;
+const SimpleContent = ({ data }: { data: StackSectionContent & { title?: string } }) => (
+  <div className='p-4 text-center'>{data.title ?? data.id}</div>
+);
 
-const ComplexContent = ({ data }: { data: StackSectionContent & { body?: string; image?: string } }) => {
+const ComplexContent = ({
+  data,
+}: StackSectionItem & { data: StackSectionContent & { title?: string; body?: string; image?: string } }) => {
   useEffect(() => () => console.log('[ComplexContent]', 'unmount'), []);
   return (
     <div className='flex'>
@@ -120,6 +127,8 @@ export type DemoStackProps = StackProps & {
   operation?: MosaicOperation;
 };
 
+const labelGetter = (object: { title?: string }) => object.title;
+
 const DemoStack = ({
   id = 'stack',
   SectionContent,
@@ -130,7 +139,10 @@ const DemoStack = ({
 }: DemoStackProps) => {
   const [items, setItems] = useState<StackSectionItem[]>(() => {
     const generator = new TestObjectGenerator({ types });
-    return generator.createObjects({ length: count }).map((object) => ({ id: faker.string.uuid(), object }));
+    return generator.createObjects({ length: count }).map((object) => ({
+      id: faker.string.uuid(),
+      object,
+    }));
   });
 
   const itemsRef = useRef(items);
@@ -186,6 +198,7 @@ const DemoStack = ({
       data-testid={id}
       SectionContent={SectionContent}
       items={items}
+      transform={(item, _) => ({ ...item, label: labelGetter }) as StackSectionItem}
       onOver={handleOver}
       onDrop={handleDrop}
       onDeleteSection={handleRemove}
