@@ -22,6 +22,8 @@ import {
   type SubscribeMessagesRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
+  type RevokeMembershipRequest,
+  type PromoteMemberRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -66,6 +68,10 @@ export class SpacesServiceImpl implements SpacesService {
       }
     }
   }
+
+  async promoteMember(request: PromoteMemberRequest): Promise<void> {}
+
+  async revokeMembership(request: RevokeMembershipRequest): Promise<void> {}
 
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
