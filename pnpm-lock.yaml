@@ -7432,8 +7432,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       hono:
-        specifier: ^4.2.5
-        version: 4.2.6
+        specifier: ^4.2.7
+        version: 4.2.8
       modelfusion:
         specifier: ^0.137.0
         version: 0.137.0
@@ -34141,11 +34141,6 @@ packages:
     dependencies:
       parse-passwd: 1.0.0
     dev: true
-
-  /hono@4.2.6:
-    resolution: {integrity: sha512-AtbHZJYWsm+uFHLz0C6xltX7hjOV44a55gSEGBfoQOJ00KSxEUOoiIkmd+NXfapNX0j2GCKhqMmYeegBdHRwcQ==}
-    engines: {node: '>=16.0.0'}
-    dev: false
 
   /hono@4.2.8:
     resolution: {integrity: sha512-re/zNrOWb7Sp9KhojlMEgcgvqsE8Rgk9IcmumqsbKa9ruPT5XuOcx1U+xuNaI4SUnwrPsiTQ72MiodtpJEVfjg==}
