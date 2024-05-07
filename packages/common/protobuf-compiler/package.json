@@ -25,7 +25,7 @@
     "argparse": "^2.0.1",
     "chalk": "^4.1.0",
     "glob": "~7.1.6",
-    "protobufjs": "^7.2.2",
+    "protobufjs": "^7.2.5",
     "read-pkg": "^5.2.0",
     "ts-morph": "^16.0.0"
   },

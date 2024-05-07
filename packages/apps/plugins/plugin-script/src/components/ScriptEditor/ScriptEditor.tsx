@@ -11,7 +11,7 @@ import React from 'react';
 import { DocAccessor } from '@dxos/react-client/echo';
 import { type ThemeMode } from '@dxos/react-ui';
 import { automerge, defaultTheme, useTextEditor } from '@dxos/react-ui-editor';
-import { mx } from '@dxos/react-ui-theme';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 export type ScriptEditorProps = {
   source: DocAccessor;
@@ -22,7 +22,7 @@ export type ScriptEditorProps = {
 // TODO(burdon): https://davidmyers.dev/blog/how-to-build-a-code-editor-with-codemirror-6-and-typescript/introduction
 
 export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps) => {
-  const { parentRef } = useTextEditor(
+  const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       doc: DocAccessor.getValue(source),
       extensions: [
@@ -48,5 +48,5 @@ export const ScriptEditor = ({ source, themeMode, className }: ScriptEditorProps
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className={mx('flex grow', className)} />;
+  return <div {...focusAttributes} ref={parentRef} className={mx('flex grow rounded-sm', focusRing, className)} />;
 };

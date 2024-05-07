@@ -9,6 +9,7 @@ import {
   appServiceBundle,
   shellServiceBundle,
 } from '@dxos/client-protocol';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type AppContextRequest, type LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
@@ -48,10 +49,11 @@ export class ShellManager {
   }
 
   async setLayout(request: LayoutRequest) {
+    invariant(this._shellRpc, 'ShellManager not open');
     log('set layout', request);
     this._display = ShellDisplay.FULLSCREEN;
     this.contextUpdate.emit({ display: this._display });
-    await this._shellRpc?.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
+    await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
   }
 
   async open() {

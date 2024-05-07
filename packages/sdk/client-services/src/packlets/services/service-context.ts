@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Level } from 'level';
-
 import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
@@ -14,6 +12,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type NetworkManager } from '@dxos/network-manager';
@@ -79,7 +78,7 @@ export class ServiceContext extends Resource {
 
   constructor(
     public readonly storage: Storage,
-    public readonly level: Level<string, string>,
+    public readonly level: LevelDB,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
     public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
