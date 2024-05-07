@@ -25,6 +25,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/codec-protobuf"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -77,6 +80,9 @@
     },
     {
       "path": "../../core/mesh/network-manager"
+    },
+    {
+      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/mesh/signal"
