@@ -10,6 +10,7 @@ import { PublicKey } from '@dxos/keys';
 import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
 import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
+import { arrayMove } from '@dxos/util';
 
 import { useTableObjects } from './hooks';
 import { createColumns, deleteTableProp, updateTableProp } from './utils';
@@ -132,7 +133,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
         return;
       }
 
-      [table.props[index], table.props[swapIndex]] = [table.props[swapIndex], table.props[index]];
+      arrayMove(table.props, index, swapIndex);
     },
     [table.props],
   );
