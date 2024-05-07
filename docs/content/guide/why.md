@@ -41,13 +41,3 @@ What would have to be true for such a world to exist?
 * We need a **workable revenue model** that supports the infrastructure and developers that make up this platform
 * There must be **an order of mangnitude of productivity gains** for developers when compared to building "siloed" applications, to "pay" for their switch.
 * This efficiency will come from **schema interoperability**, and deeper re-use of community code as a consequence of that.
-
-## Technologies
-
-### [ECHO](platform)
-
-In order to build local-first and offline-first applications with peer-to-peer collaboration features, developers need a simple-to-use solution for state management that solves for concurrent and offline writers. [Read more](platform)
-
-### [HALO](platform/halo)
-
-Most applications need to understand, store, and protect the identity of the user using them. Users don't want to memorize new passwords for every application, and developers don't want to implement the hard parts of secure authentication. [Read more](platform/halo)
