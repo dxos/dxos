@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { X, GearSix, CaretDown, ArrowDown, ArrowUp } from '@phosphor-icons/react';
+import { X, GearSix, CaretDown, ArrowDown, ArrowUp, ArrowRight, ArrowLeft } from '@phosphor-icons/react';
 import { type SortDirection, type HeaderContext, type RowData } from '@tanstack/react-table';
 import React, { useRef, useState, useCallback } from 'react';
 
@@ -15,14 +15,23 @@ import { type TableDef, type ColumnProps } from '../../schema';
 
 export type ColumnMenuProps<TData extends RowData, TValue> = {
   context: HeaderContext<TData, TValue>;
-  tableDefs: TableDef[];
+  tablesToReference: TableDef[];
   tableDef: TableDef;
   column: ColumnProps;
+  columnOrderable: boolean;
+  columnPosition: 'start' | 'end' | undefined;
+  onColumnReorder: (columnId: string, direction: 'left' | 'right') => void;
   onUpdate?: (id: string, column: ColumnProps) => void;
   onDelete?: (id: string) => void;
 };
 
-export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: ColumnMenuProps<TData, TValue>) => {
+export const ColumnMenu = <TData extends RowData, TValue>({
+  column,
+  columnOrderable,
+  columnPosition,
+  onColumnReorder,
+  ...props
+}: ColumnMenuProps<TData, TValue>) => {
   const title = column.label?.length ? column.label : column.id;
   const header = props.context.header;
 
@@ -93,6 +102,28 @@ export const ColumnMenu = <TData extends RowData, TValue>({ column, ...props }: 
                     )}
                   </>
                 )}
+
+                {columnOrderable && (
+                  <>
+                    {columnPosition !== 'start' && (
+                      <DropdownMenu.Item onClick={() => onColumnReorder(header.column.id, 'left')}>
+                        <span className='grow'>Move left</span>
+                        <span className='opacity-50'>
+                          <ArrowLeft className={mx(getSize(4))} />
+                        </span>
+                      </DropdownMenu.Item>
+                    )}
+                    {columnPosition !== 'end' && (
+                      <DropdownMenu.Item onClick={() => onColumnReorder(header.column.id, 'right')}>
+                        <span className='grow'>Move right</span>
+                        <span className='opacity-50'>
+                          <ArrowRight className={mx(getSize(4))} />
+                        </span>
+                      </DropdownMenu.Item>
+                    )}
+                  </>
+                )}
+
                 <DropdownMenu.Item onClick={onOpenColumnSettings}>
                   <span className='grow'>Column settings</span>
                   <span className='opacity-50'>
