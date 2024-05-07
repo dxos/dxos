@@ -36,6 +36,8 @@ import { type BeforeSaveParams, LevelDBStorageAdapter, type StorageCallbacks } f
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
+import { EchoNetworkAdapter } from './echo-network-adapter';
+import { EchoReplicator } from './echo-replicator';
 
 // TODO: Remove
 export type { DocumentId };
@@ -56,7 +58,7 @@ export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
   private readonly _db: SubLevelDB;
-  private readonly _storageCallbacks?: StorageCallbacks;
+  private readonly _echoNetworkAdapter = new EchoNetworkAdapter();
 
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
@@ -94,9 +96,10 @@ export class AutomergeHost {
 
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
+
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      network: [this._clientNetwork, this._meshNetwork],
+      network: [this._clientNetwork, this._meshNetwork, this._echoNetworkAdapter],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -152,18 +155,29 @@ export class AutomergeHost {
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
+    await this._echoNetworkAdapter.open();
 
     await this._clientNetwork.whenConnected();
+    await this._echoNetworkAdapter.whenConnected();
   }
 
   async close() {
     await this._storage.close?.();
     await this._clientNetwork.close();
+    await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
   }
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  async addReplicator(replicator: EchoReplicator) {
+    await this._echoNetworkAdapter.addReplicator(replicator);
+  }
+
+  async removeReplicator(replicator: EchoReplicator) {
+    await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {
