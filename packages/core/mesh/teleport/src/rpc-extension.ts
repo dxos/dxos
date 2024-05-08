@@ -17,15 +17,15 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
   constructor(private readonly _rpcParams: Omit<ProtoRpcPeerOptions<Client, Server>, 'port' | 'handlers'>) {}
 
   get initiator() {
-    return this._extensionContext.initiator;
+    return this._extensionContext?.initiator;
   }
 
   get localPeerId() {
-    return this._extensionContext.localPeerId;
+    return this._extensionContext?.localPeerId;
   }
 
   get remotePeerId() {
-    return this._extensionContext.remotePeerId;
+    return this._extensionContext?.remotePeerId;
   }
 
   get rpc(): Client {
@@ -67,6 +67,6 @@ export abstract class RpcExtension<Client, Server> implements TeleportExtension 
   }
 
   close() {
-    this._extensionContext.close();
+    this._extensionContext?.close();
   }
 }

@@ -19,6 +19,8 @@ export type TeleportParams = {
   initiator: boolean;
   localPeerId: PublicKey;
   remotePeerId: PublicKey;
+  controlHeartbeatInterval?: number;
+  controlHeartbeatTimeout?: number;
 };
 
 const CONTROL_HEARTBEAT_INTERVAL = 10_000;
@@ -52,7 +54,7 @@ export class Teleport {
   private _destroying = false;
   private _aborting = false;
 
-  constructor({ initiator, localPeerId, remotePeerId }: TeleportParams) {
+  constructor({ initiator, localPeerId, remotePeerId, ...rest }: TeleportParams) {
     invariant(typeof initiator === 'boolean');
     invariant(PublicKey.isPublicKey(localPeerId));
     invariant(PublicKey.isPublicKey(remotePeerId));
@@ -62,8 +64,8 @@ export class Teleport {
 
     this._control = new ControlExtension(
       {
-        heartbeatInterval: CONTROL_HEARTBEAT_INTERVAL,
-        heartbeatTimeout: CONTROL_HEARTBEAT_TIMEOUT,
+        heartbeatInterval: rest.controlHeartbeatInterval ?? CONTROL_HEARTBEAT_INTERVAL,
+        heartbeatTimeout: rest.controlHeartbeatTimeout ?? CONTROL_HEARTBEAT_TIMEOUT,
         onTimeout: () => {
           if (this._destroying || this._aborting) {
             return;
@@ -183,6 +185,7 @@ export class Teleport {
     if (this._destroying || this._aborting) {
       return;
     }
+    log('destroying teleport...', { extensionsCount: this._extensions.size });
     this._destroying = true;
     if (this._ctx.disposed) {
       return;
@@ -192,13 +195,16 @@ export class Teleport {
 
     for (const extension of this._extensions.values()) {
       try {
+        log('destroying extension', { name: extension.constructor.name });
         await extension.onClose(err);
+        log('destroyed extension', { name: extension.constructor.name });
       } catch (err: any) {
         log.catch(err);
       }
     }
 
     await this._muxer.close();
+    log('teleport destroyed');
   }
 
   addExtension(name: string, extension: TeleportExtension) {
