@@ -7,7 +7,7 @@ next: ./tutorial
 # Quick Start Guide
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
-This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo.md) for decentralized identity.
+This guide shows how to use [ECHO](./echo.md) for state consensus and [HALO](./halo.md) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 
@@ -49,7 +49,7 @@ main();
 
 An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](typescript/config.md).
 
-[Spaces](./platform/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
+[Spaces](./echo.md#spaces) are the main units of data storage and sharing (like `collections` in other databases).
 
 To begin manipulating data, use `client.spaces.default`, or [join or create a space](./typescript/spaces.md).
 
@@ -173,7 +173,7 @@ This will start the development server and print a URL to the console. Opening t
 * State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
 * Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**.
 * Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-* User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo.md) for the whole device (browser profile), without a password.
+* User identity (public/private keys) are established securely and maintained by [HALO](./halo.md) for the whole device (browser profile), without a password.
 * Everything works offline.
 * Real-time collaboration is possible when online.
 * There are **no servers** that store any data.

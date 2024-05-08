@@ -1,8 +1,5 @@
 ---
-dir:
-  text: Platform Overview
-  order: 2.5
-prev: ../getting-started
+order: 4
 ---
 
 # ECHO Database
@@ -30,22 +27,22 @@ A given peer is typically a part of many spaces at any given time.
 
 There are several steps to establishing a space between peers:
 
-1. <span class="peer-a">**Peer A**</span> listens on the peer network for peers intereseted in a specific [invite code](../glossary.md#invitation-code) it generated.
-2. <span class="peer-b">**Peer B**</span> obtains the [invite code](../glossary.md#invitation-code) and locates the listening <span class="peer-a">**Peer A**</span> via the [signaling network](../glossary.md#signaling-service).
+1. <span class="peer-a">**Peer A**</span> listens on the peer network for peers intereseted in a specific [invite code](./glossary.md#invitation-code) it generated.
+2. <span class="peer-b">**Peer B**</span> obtains the [invite code](./glossary.md#invitation-code) and locates the listening <span class="peer-a">**Peer A**</span> via the [signaling network](./glossary.md#signaling-service).
 3. <span class="peer-a">**Peer A**</span> and <span class="peer-b">**Peer B**</span> establish a secure connection via [Diffie Hellmann](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange) key exchange.
-4. <span class="peer-a">**Peer A**</span> generates an [authorization code](../glossary.md#authorization-code) and sends it to <span class="peer-b">**Peer B**</span> via another safe channel (i.e.: shows a QR code).
-5. Finally, <span class="peer-b">**Peer B**</span> provides the [authorization code](../glossary.md#authorization-code) back to <span class="peer-a">**Peer A**</span> over the new connection.
+4. <span class="peer-a">**Peer A**</span> generates an [authorization code](./glossary.md#authorization-code) and sends it to <span class="peer-b">**Peer B**</span> via another safe channel (i.e.: shows a QR code).
+5. Finally, <span class="peer-b">**Peer B**</span> provides the [authorization code](./glossary.md#authorization-code) back to <span class="peer-a">**Peer A**</span> over the new connection.
 
 This verifies that the connection is secure, and the identities of peers are mutually confirmed.
 
 ::: tip Tip
-If you're using `react`, DXOS provides a simple [UI flow](../react/spaces.md#joining-spaces) that implements generating and accepting invitations to spaces.
+If you're using `react`, DXOS provides a simple [UI flow](./react/spaces.md#joining-spaces) that implements generating and accepting invitations to spaces.
 :::
 
 **Next steps:**
 
-* Create or join a space in [TypeScript](../typescript/spaces.md)
-* Create or join a space in [React](../react/spaces.md)
+* Create or join a space in [TypeScript](./typescript/spaces.md)
+* Create or join a space in [React](./react/spaces.md)
 
 ## Objects
 
@@ -53,17 +50,17 @@ Units of data are referred to as `objects` (like documents or rows in other data
 
 ## Glossary
 
-See the [glossary.md](../glossary.md) for definitions of other terms you'll find in this guide.
+See the [glossary.md](./glossary.md) for definitions of other terms you'll find in this guide.
 
 ## How to use ECHO
 
-* Install the appropriate npm package [`@dxos/client`](../typescript) or [`@dxos/react-client`](../react)
-* Create a [Client](../typescript#configuration) (or a [ClientProvider](../react#cofiguration) in react)
+* Install the appropriate npm package [`@dxos/client`](./typescript) or [`@dxos/react-client`](./react)
+* Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
 * Set up an identity with [HALO](./halo.md)
 * Create or Join a [Space](#spaces)
-* [Query objects](../typescript/queries.md) (in [react](../react/queries.md))
-* [Create objects](../typescript/mutations.md#creating-objects) (in [react](../react/mutations.md))
-* [Mutate objects](../typescript/mutations.md) (in [react](../react/mutations.md))
+* [Query objects](./typescript/queries.md) (in [react](./react/queries.md))
+* [Create objects](./typescript/mutations.md#creating-objects) (in [react](./react/mutations.md))
+* [Mutate objects](./typescript/mutations.md) (in [react](./react/mutations.md))
 
 ## ECHO and HALO
 
@@ -75,5 +72,5 @@ For Node.js applications, the ECHO database is implemented as an in-process stor
 
 ## Next steps
 
-* If using `react` see the [React guide](../react/)
-* Otherwise, follow the [TypeScript guide](../typescript/)
+* If using `react` see the [React guide](./react/)
+* Otherwise, follow the [TypeScript guide](./typescript/)

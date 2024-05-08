@@ -4,7 +4,7 @@ order: 1
 
 # Identity
 
-This section describes how to obtain [HALO identity](../platform/halo.md) in TypeScript.
+This section describes how to obtain [HALO identity](../halo.md) in TypeScript.
 
 To create or join a [space](./spaces.md) in ECHO, the user must first establish a HALO identity.
 

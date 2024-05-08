@@ -6,7 +6,7 @@ order: 100
 
 ### Resetting Storage
 
-You may occasionally need to reset the storage state behind [`HALO`](./platform/halo.md) in case of problems.
+You may occasionally need to reset the storage state behind [`HALO`](./halo.md) in case of problems.
 
 ::: warning
 This procedure clears all storage for all apps using ECHO and HALO on the machine.

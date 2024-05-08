@@ -2,7 +2,7 @@
 order: 0
 dir:
   text: TypeScript Guide
-  order: 3
+  order: 10.1
 ---
 
 # Installation

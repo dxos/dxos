@@ -4,7 +4,7 @@ order: 2
 
 # Identity
 
-This section describes how to obtain [HALO identity](../platform/halo.md) in `react`.
+This section describes how to obtain [HALO identity](../halo.md) in `react`.
 
 ## Logging in
 

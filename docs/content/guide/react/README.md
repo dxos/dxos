@@ -2,7 +2,7 @@
 order: 1
 dir:
   text: React Guide
-  order: 4
+  order: 10.2
 ---
 
 # Installation

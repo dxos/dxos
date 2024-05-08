@@ -1,5 +1,5 @@
 ---
-order: 2.1
+order: 6
 title: React Tutorial
 next: ./platform
 ---
@@ -100,7 +100,7 @@ There's a lot going on here! Let's walk through it.
 
 ### Bootstrap the DXOS Client
 
-DXOS apps enable users to control their data and identity by storing it in [ECHO and HALO](./platform/README.md#echo-and-halo). In a browser-based environment like this React app, data is stored in persistent browser storage. ECHO runs inside of a [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker). The `ClientProvider` bootstraps ECHO and HALO, enabling the application to access the user's identity and data.
+DXOS apps enable users to control their data and identity by storing it in [ECHO](./echo.md) and [HALO](./halo.md). In a browser-based environment like this React app, data is stored in persistent browser storage. ECHO runs inside of a [Shared Worker](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker). The `ClientProvider` bootstraps ECHO and HALO, enabling the application to access the user's identity and data.
 
 ### React Helpers
 
@@ -131,7 +131,7 @@ export const Counter = () => {
 
 `useIdentity` attempts to use the device's existing identity, if there is one. If the device's vault has no identity, an identity will be created automatically.
 
-`useSpaces` returns all the user's spaces. An [ECHO Space](./platform/README.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
+`useSpaces` returns all the user's spaces. An [ECHO Space](./echo.md#spaces) is an instance of an ECHO database that will be replicated to peers that connect to the space. Spaces can be created and joined programmatically, but in this case a space was created automatically when `useIdentity` created a new identity. For now, we'll just grab that first auto-created space.
 
 Don't forget to import the `Counter` component in `App.tsx` and replace "Your code goes here" with the `Counter` component:
 
@@ -288,7 +288,7 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 ## Recap
 
-* A [HALO identity](./platform/halo.md) and a [space](./platform/#spaces) are required to use ECHO.
+* A [HALO identity](./halo.md) and a [space](./echo.md#spaces) are required to use ECHO.
 * Reading objects is as simple as querying for the object using [`useQuery()`](react/queries.md).
 * The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 

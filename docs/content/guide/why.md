@@ -1,5 +1,6 @@
 ---
 order: 1
+headerDepth: 0
 title: "Why DXOS?"
 ---
 

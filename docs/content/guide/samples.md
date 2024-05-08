@@ -2,7 +2,7 @@
 order: 30
 ---
 
-# Example Applications
+# Example Gallery
 
 ## Composer
 

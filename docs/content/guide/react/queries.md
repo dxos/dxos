@@ -5,7 +5,7 @@ order: 5
 
 # Queries
 
-The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary.md#space). This will return generic objects which can be [mutated](./mutations.md) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
+The simplest way to access data in [`ECHO`](../echo.md) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary.md#space). This will return generic objects which can be [mutated](./mutations.md) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
 
 ## Untyped queries
 
