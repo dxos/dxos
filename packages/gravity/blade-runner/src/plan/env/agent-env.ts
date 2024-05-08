@@ -7,13 +7,14 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
+import { type ReplicantEnv } from './interface';
 import { type AgentParams } from '../spec';
 
 export const REDIS_PORT = 6379;
 
 export { type RedisOptions };
 
-export class AgentEnv<S, C> {
+export class AgentEnv<S, C> implements ReplicantEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.

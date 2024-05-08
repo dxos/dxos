@@ -80,7 +80,7 @@ const createLinkedRedisPorts = async () => {
   return [alicePort, bobPort];
 };
 
-const createRedisRpcPort = async ({
+export const createRedisRpcPort = ({
   sendClient,
   receiveClient,
   sendQueue,
@@ -90,7 +90,7 @@ const createRedisRpcPort = async ({
   receiveClient: Redis;
   sendQueue: string;
   receiveQueue: string;
-}): Promise<RpcPort> => {
+}): RpcPort => {
   return {
     send: async (message: Uint8Array) => {
       await sendClient.rpush(sendQueue, Buffer.from(message));
@@ -125,6 +125,7 @@ const setupRedisClient = async () => {
   afterTest(() => redis.disconnect());
   return redis;
 };
+
 const createPayload = (value = ''): TaggedType<TYPES, 'google.protobuf.Any'> => ({
   '@type': 'google.protobuf.Any',
   type_url: 'dxos.test',
