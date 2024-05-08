@@ -14,6 +14,6 @@
 Plan
 
 - [ ] Retire `beta` branch.
-- [ ] Configure staging for CF Pages (support ticket due to limit reached)
+- [ ] Configure staging for CF Pages (support ticket due to limit reached): increased to 20
 - [ ] Configure and align production and staging environments.
 - [ ] How are secrets managed?
