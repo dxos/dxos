@@ -1,7 +1,7 @@
 ---
 dir:
   text: User Guide
-  order: 3
+  order: 2
 ---
 
 # Intro

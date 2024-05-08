@@ -1,5 +1,5 @@
 ---
-order: 2
+order: 10.0
 title: Quick Start
 next: ./tutorial
 ---

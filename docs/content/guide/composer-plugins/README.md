@@ -1,7 +1,7 @@
 ---
 dir:
-  text: Extensibility
-  order: 29
+  text: Composer Plugins
+  order: 2
 ---
 
 # Quick Start

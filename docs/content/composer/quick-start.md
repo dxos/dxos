@@ -1,5 +1,5 @@
 ---
-order: 10.0
+order: 1
 headerDepth: 0
 ---
 
