@@ -28,9 +28,19 @@ In the future, we plan to support recovering an identity using a [seed phrase](.
 
 ## Shell
 
-[Shell](https://github.com/dxos/dxos/tree/main/packages/sdk/shell) is a set of components and pre-built workflows for managing [ECHO](./echo.md) spaces, invitations, and identity.
+Shell is a set of components and pre-built workflows for managing, invitations, identity, and [ECHO](./echo.md) spaces.
 
-It runs and renders within an iframe managed by the DXOS client.
+It's used in Composer and looks like a full screen dialog panel:
+
+<div class="shell-images" style="display: flex; flex-direction: row; gap: 2em;">
+  <img class="light" src="./images/shell-light.png" alt="Shell profile panel" />
+  <img class="dark" src="./images/shell-dark.png" alt="Shell profile panel" />
+
+  <img class="light" src="./images/shell-light-add-device.png" alt="Shell device invitation panel" />
+  <img class="dark" src="./images/shell-dark-add-device.png" alt="Shell device invitation panel" />
+</div>
+
+Shell is also available for use by non-Composer applications. You can see the Shell package itself [here on GitHub](https://github.com/dxos/dxos/tree/main/packages/sdk/shell). It runs and renders within an iframe managed by the DXOS client.
 
 The shell can be invoked via the client API.
 
@@ -43,16 +53,6 @@ Scenarios:
 * Accept a device invitation to join the current device to an existing HALO identity
 
 You can experiment with the Shell at <https://halo.dxos.org>.
-
-The shell appears overtop the calling UI and looks like a full screen dialog panel.
-
-<div class="shell-images" style="display: flex; flex-direction: row; gap: 2em;">
-  <img class="light" src="./images/shell-light.png" alt="Shell profile panel" />
-  <img class="dark" src="./images/shell-dark.png" alt="Shell profile panel" />
-
-  <img class="light" src="./images/shell-light-add-device.png" alt="Shell device invitation panel" />
-  <img class="dark" src="./images/shell-dark-add-device.png" alt="Shell device invitation panel" />
-</div>
 
 ### Device Invitations
 
