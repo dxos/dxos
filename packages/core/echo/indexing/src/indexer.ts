@@ -37,7 +37,12 @@ export type IndexerParams = {
 
 @trace.resource()
 export class Indexer {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+    },
+  });
+
   private _indexConfig?: IndexConfig;
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
     kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
