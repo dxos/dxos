@@ -32,12 +32,12 @@ import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-rep
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { type BeforeSaveParams, LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
+import { EchoNetworkAdapter } from './echo-network-adapter';
+import { type EchoReplicator } from './echo-replicator';
+import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
-import { EchoNetworkAdapter } from './echo-network-adapter';
-import { EchoReplicator } from './echo-replicator';
 
 // TODO: Remove
 export type { DocumentId };

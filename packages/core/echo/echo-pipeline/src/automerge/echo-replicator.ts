@@ -1,4 +1,8 @@
-import { Message } from '@dxos/automerge/automerge-repo';
+//
+// Copyright 2024 DXOS.org
+//
+
+import { type Message } from '@dxos/automerge/automerge-repo';
 
 export interface EchoReplicator {
   /**

@@ -1,9 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { Trigger, synchronized } from '@dxos/async';
-import { Message, NetworkAdapter, PeerId, PeerMetadata } from '@dxos/automerge/automerge-repo';
-import { EchoReplicator, ReplicatorConnection, ShouldAdvertizeParams } from './echo-replicator';
-import { invariant } from '@dxos/invariant';
+import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+
+import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
 
 /**
  * Manages a set of {@link EchoReplicator} instances.
@@ -24,13 +29,17 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-    const connection = this._connections.get(message.targetId);
-    if (!connection) {
+    const connectionEntry = this._connections.get(message.targetId);
+    if (!connectionEntry) {
       throw new Error('Connection not found.');
     }
 
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
-    connection.writer.write(message);
+    connectionEntry.writer.write(message).catch((err) => {
+      if (connectionEntry.isOpen) {
+        log.catch(err);
+      }
+    });
   }
 
   override disconnect(): void {
@@ -94,7 +103,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     invariant(!this._connections.has(connection.peerId as PeerId));
     const reader = connection.readable.getReader();
     const writer = connection.writable.getWriter();
-    this._connections.set(connection.peerId as PeerId, { connection, reader, writer });
+    const connectionEntry: ConnectionEntry = { connection, reader, writer, isOpen: true };
+    this._connections.set(connection.peerId as PeerId, connectionEntry);
 
     queueMicrotask(async () => {
       try {
@@ -108,7 +118,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           this.emit('message', value);
         }
       } catch (err) {
-        log.catch(err);
+        if (connectionEntry.isOpen) {
+          log.catch(err);
+        }
       }
     });
 
@@ -125,10 +137,11 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
 
+    entry.isOpen = false;
     this.emit('peer-disconnected', { peerId: connection.peerId as PeerId });
 
     void entry.reader.cancel().catch((err) => log.catch(err));
-    void entry.writer.abort();
+    void entry.writer.abort().catch((err) => log.catch(err));
 
     this._connections.delete(connection.peerId as PeerId);
   }
@@ -138,4 +151,5 @@ type ConnectionEntry = {
   connection: ReplicatorConnection;
   reader: ReadableStreamDefaultReader<Message>;
   writer: WritableStreamDefaultWriter<Message>;
+  isOpen: boolean;
 };

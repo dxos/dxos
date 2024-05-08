@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, EchoReplicator } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, type EchoReplicator } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

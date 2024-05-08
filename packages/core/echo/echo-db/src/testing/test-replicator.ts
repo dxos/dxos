@@ -1,13 +1,16 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { synchronized } from '@dxos/async';
-import { Message } from '@dxos/automerge/src/automerge-repo';
+import { type Message } from '@dxos/automerge/automerge-repo';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import {
-  EchoReplicator,
-  EchoReplicatorContext,
-  ReplicatorConnection,
-  ShouldAdvertizeParams,
+  type EchoReplicator,
+  type EchoReplicatorContext,
+  type ReplicatorConnection,
+  type ShouldAdvertizeParams,
 } from '@dxos/echo-pipeline';
-import { PublicKey } from '@dxos/keys';
-import { Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -66,14 +69,18 @@ export class TestReplicationNetwork extends Resource {
 
     const forward = new TransformStream({
       transform(message, controller) {
-        if (LOG) log.info('replicate', { from: peer1, to: peer2, message });
+        if (LOG) {
+          log.info('replicate', { from: peer1, to: peer2, message });
+        }
 
         controller.enqueue(message);
       },
     });
     const backwards = new TransformStream({
       transform(message, controller) {
-        if (LOG) log.info('replicate', { from: peer2, to: peer1, message });
+        if (LOG) {
+          log.info('replicate', { from: peer2, to: peer1, message });
+        }
 
         controller.enqueue(message);
       },
