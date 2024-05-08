@@ -38,7 +38,7 @@ export interface SwarmState {
   candidates: PublicKey[];
 
   /**
-   * Candidates for connection. Does not intersect with a set of already connected peers.
+   * All peers in the swarm, including candidates, connected peers and those we have connection timeout with.
    */
   allPeers: PublicKey[];
 }

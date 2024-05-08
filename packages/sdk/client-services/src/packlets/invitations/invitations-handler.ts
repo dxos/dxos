@@ -51,6 +51,10 @@ type InvitationExtension = InvitationHostExtension | InvitationGuestExtension;
  *   |-------------------------------[Authenticate]-->|
  *   |----------------------------------------Admit-->|
  *  ```
+ *
+ *  TODO: consider refactoring using xstate making the logic separation more explicit:
+ *  TODO: the flow logic should either be contained in invitations-handler or in extensions, not be split across
+ *  TODO: potentially re-evaluate host-side API to allow multiple concurrent connection, so that mutex can be removed
  */
 export class InvitationsHandler {
   /**
@@ -377,6 +381,12 @@ export class InvitationsHandler {
    * invitation flow connections.
    */
   private _createGuardedState(ctx: Context, invitation: Invitation, stream: PushStream<Invitation>) {
+    // the mutex guards invitation flow on host and guest side, making sure only one flow is currently active
+    // deadlocks seem very unlikely because hosts don't initiate multiple connections
+    // even if this somehow happens that there are 2 guests (A, B) and 2 hosts (1, 2) and:
+    //  A has lock for flow with 1, B has lock for flow with 2
+    //  1 has lock for flow with B, 2 has lock for flow with A
+    // there'll be a 10-second introduction timeout after which connection will be closed and deadlock broken
     const mutex = new Mutex();
     let lastActiveExtension: any = null;
     let currentInvitation = { ...invitation };

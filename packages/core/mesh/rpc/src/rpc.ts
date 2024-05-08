@@ -16,6 +16,8 @@ import { decodeRpcError } from './errors';
 const DEFAULT_TIMEOUT = 3_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
+const DEBUG_CALLS = true;
+
 type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
@@ -250,7 +252,7 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = RpcMessage.decode(msg, { preserveAny: true });
-    logIfEnabled('received message', { type: Object.keys(decoded)[0] });
+    DEBUG_CALLS && log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
@@ -280,14 +282,14 @@ export class RpcPeer {
           });
         });
       } else {
-        logIfEnabled('request', { method: req.method });
+        DEBUG_CALLS && log('request', { method: req.method });
         const response = await this._callHandler(req);
-
-        logIfEnabled('sending response', {
-          method: req.method,
-          response: response.payload?.type_url,
-          error: response.error,
-        });
+        DEBUG_CALLS &&
+          log('sending response', {
+            method: req.method,
+            response: response.payload?.type_url,
+            error: response.error,
+          });
         await this._sendMessage({ response });
       }
     } else if (decoded.response) {
@@ -309,7 +311,7 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      logIfEnabled('response', { type_url: decoded.response.payload?.type_url });
+      DEBUG_CALLS && log('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
       log('received open message', { state: this._state });
@@ -364,7 +366,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    logIfEnabled('calling', { method });
+    DEBUG_CALLS && log('calling', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;
@@ -469,7 +471,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage, timeout?: number) {
-    logIfEnabled('sending message', { type: Object.keys(message)[0] });
+    DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
   }
 
@@ -538,14 +540,6 @@ export class RpcPeer {
     }
   }
 }
-
-const DEBUG_LOG_ALL_CALLS = true;
-
-const logIfEnabled = (message: string, context: any) => {
-  if (DEBUG_LOG_ALL_CALLS) {
-    log(message, context);
-  }
-};
 
 const throwIfNotOpen = (state: RpcState) => {
   switch (state) {

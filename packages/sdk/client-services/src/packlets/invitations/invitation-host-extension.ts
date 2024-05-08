@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Mutex, type MutexGuard, acquireInContext, Trigger, scheduleTask } from '@dxos/async';
+import { type Mutex, type MutexGuard, Trigger, scheduleTask } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { randomBytes, verify } from '@dxos/crypto';
 import { invariant, InvariantViolation } from '@dxos/invariant';
@@ -20,7 +20,7 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
 
-import { stateToString } from './utils';
+import { stateToString, tryAcquireBeforeContextDisposed } from './utils';
 
 /// Timeout for the options exchange.
 const OPTIONS_TIMEOUT = 10_000;
@@ -235,9 +235,7 @@ export class InvitationHostExtension extends RpcExtension<
 
     try {
       log('host acquire lock');
-      this._invitationFlowLock = await acquireInContext(this._ctx, this._invitationFlowMutex, {
-        releaseOnDispose: false,
-      });
+      this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log('host lock acquired');
       const lastState = this._requireActiveInvitation().state;
       this._callbacks.onStateUpdate(Invitation.State.CONNECTING);
@@ -295,14 +293,11 @@ export class InvitationHostExtension extends RpcExtension<
   }
 
   private async _destroy() {
-    try {
-      await this._ctx.dispose();
-    } finally {
-      if (this._invitationFlowLock != null) {
-        this._invitationFlowLock?.release();
-        this._invitationFlowLock = null;
-        log('invitation flow lock released');
-      }
+    await this._ctx.dispose();
+    if (this._invitationFlowLock != null) {
+      this._invitationFlowLock?.release();
+      this._invitationFlowLock = null;
+      log('invitation flow lock released');
     }
   }
 }

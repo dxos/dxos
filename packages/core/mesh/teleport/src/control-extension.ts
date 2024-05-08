@@ -121,6 +121,7 @@ export class ControlExtension implements TeleportExtension {
         } catch (err: any) {
           const now = Date.now();
           if (err instanceof RpcClosedError) {
+            // TODO: expose 'closed' event in Rpc peer to close context as soon the the peer gets closed
             log('ignoring RpcClosedError in heartbeat');
             this._extensionContext.close(err);
             return;

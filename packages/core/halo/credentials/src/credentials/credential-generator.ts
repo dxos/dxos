@@ -250,6 +250,11 @@ export const createDelegatedSpaceInvitationCredential = async (
   return { credential: { credential } };
 };
 
+/**
+ * @param signer - credential issuer.
+ * @param subject - key of the space the invitation was for.
+ * @param invitationCredentialId id of a dxos.halo.invitations.DelegateSpaceInvitation credential.
+ */
 export const createCancelDelegatedSpaceInvitationCredential = async (
   signer: CredentialSigner,
   subject: PublicKey,

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Mutex, type MutexGuard, acquireInContext, Trigger } from '@dxos/async';
+import { type Mutex, type MutexGuard, Trigger } from '@dxos/async';
 import { cancelWithContext, Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -10,6 +10,8 @@ import { InvalidInvitationExtensionRoleError, schema } from '@dxos/protocols';
 import { type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type InvitationHostService, Options } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+
+import { tryAcquireBeforeContextDisposed } from './utils';
 
 const OPTIONS_TIMEOUT = 10_000;
 
@@ -80,9 +82,7 @@ export class InvitationGuestExtension extends RpcExtension<
 
     try {
       log('guest acquire lock');
-      this._invitationFlowLock = await acquireInContext(this._ctx, this._invitationFlowMutex, {
-        releaseOnDispose: false,
-      });
+      this._invitationFlowLock = await tryAcquireBeforeContextDisposed(this._ctx, this._invitationFlowMutex);
       log('guest lock acquired');
       await cancelWithContext(this._ctx, this.rpc.InvitationHostService.options({ role: Options.Role.GUEST }));
       log('options sent');
@@ -116,14 +116,11 @@ export class InvitationGuestExtension extends RpcExtension<
   }
 
   private async _destroy() {
-    try {
-      await this._ctx.dispose();
-    } finally {
-      if (this._invitationFlowLock != null) {
-        this._invitationFlowLock.release();
-        this._invitationFlowLock = null;
-        log('invitation flow lock released');
-      }
+    await this._ctx.dispose();
+    if (this._invitationFlowLock != null) {
+      this._invitationFlowLock.release();
+      this._invitationFlowLock = null;
+      log('invitation flow lock released');
     }
   }
 }

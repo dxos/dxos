@@ -4,7 +4,6 @@
 
 // Import explicit resource management polyfill.
 import '@dxos/util';
-import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 
 /**
@@ -139,32 +138,4 @@ export const synchronized = (
     }
   };
   Object.defineProperty(descriptor.value, 'name', { value: propertyName + '$synchronized' });
-};
-
-export const acquireInContext = async (
-  ctx: Context,
-  mutex: Mutex,
-  options: { releaseOnDispose: boolean } = { releaseOnDispose: true },
-): Promise<MutexGuard> => {
-  let guard: MutexGuard | undefined;
-  try {
-    return await cancelWithContext(
-      ctx,
-      (async () => {
-        guard = await mutex.acquire();
-        if (ctx.disposed) {
-          guard.release();
-          guard = undefined;
-          throw new Error('Guard released because acquired after context was disposed.');
-        }
-        if (options.releaseOnDispose) {
-          ctx.onDispose(() => guard?.release());
-        }
-        return guard;
-      })(),
-    );
-  } catch (e) {
-    guard?.release();
-    throw e;
-  }
 };

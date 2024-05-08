@@ -26,6 +26,14 @@ import { ComplexSet } from '@dxos/util';
 export class InvitationTopology implements Topology {
   private _controller?: SwarmController;
 
+  /**
+   * Peers we tried to establish a connection with.
+   * In invitation flow peers are assigned random ids when they join the swarm, so we'll retry
+   * a peer if they reload an invitation.
+   *
+   * Consider keeping a separate set for peers we know are hosts and have some retry timeout
+   * for guests we failed an invitation flow with (potentially due to a network error).
+   */
   private _seenPeers = new ComplexSet<PublicKey>(PublicKey.hash);
 
   constructor(private readonly _role: Options.Role) {}
