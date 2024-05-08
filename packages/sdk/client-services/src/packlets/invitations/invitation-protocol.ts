@@ -32,9 +32,15 @@ export interface InvitationProtocol {
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;
 
   /**
-   * Once authentication is successful, the host can admit the guest to the requested resource.
+   * Allow authorized peers to handle this invitation behalf of invitation creator.
+   * @return id of the delegation credential written to subject control-feed.
    */
   delegate(invitation: Invitation): Promise<PublicKey>;
+
+  /**
+   * Notify other peers that a delegated invitation was cancelled;
+   */
+  cancelDelegation(invitation: Invitation): Promise<void>;
 
   /**
    * Once authentication is successful, the host can admit the guest to the requested resource.

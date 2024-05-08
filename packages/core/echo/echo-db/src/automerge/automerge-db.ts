@@ -19,9 +19,8 @@ import {
   type AutomergeDocumentLoader,
   type DocumentChanges,
   type ObjectDocumentLoaded,
-  type SpaceDoc,
-  type SpaceState,
 } from '@dxos/echo-pipeline';
+import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -353,10 +352,13 @@ export class AutomergeDb {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      states: this._automergeDocLoader.getAllHandles().map((handle) => ({
-        heads: getHeads(handle.docSync()),
-        documentId: handle.documentId,
-      })),
+      states: this._automergeDocLoader
+        .getAllHandles()
+        .filter((handle) => !!handle.docSync())
+        .map((handle) => ({
+          heads: getHeads(handle.docSync()),
+          documentId: handle.documentId,
+        })),
     });
   }
 

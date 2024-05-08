@@ -38,6 +38,7 @@ export type TableProps<TData extends RowData> = TableFlags &
     data: TData[];
     columns: TableColumnDef<TData>[];
     onColumnResize: (state: Record<string, number>) => void;
+    onColumnReorder: (columnId: string, direction: 'left' | 'right') => void;
     columnVisibility: VisibilityState;
     // Controllable row selection
     rowSelection: RowSelectionState;

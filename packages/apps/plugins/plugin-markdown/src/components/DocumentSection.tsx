@@ -20,6 +20,7 @@ import {
   useFormattingState,
 } from '@dxos/react-ui-editor';
 import { sectionToolbarLayout } from '@dxos/react-ui-stack';
+import { focusRing, mx } from '@dxos/react-ui-theme';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 
@@ -34,7 +35,11 @@ const DocumentSection: FC<{
 
   const { themeMode } = useThemeContext();
   const [formattingState, formattingObserver] = useFormattingState();
-  const { parentRef, view: editorView } = useTextEditor(
+  const {
+    parentRef,
+    view: editorView,
+    focusAttributes,
+  } = useTextEditor(
     () => ({
       doc: document.content?.content,
       extensions: [
@@ -58,7 +63,13 @@ const DocumentSection: FC<{
   const handleAction = useActionHandler(editorView);
 
   return (
-    <div role='none' className='contents group'>
+    <div role='none' className='flex flex-col group'>
+      <div
+        {...focusAttributes}
+        ref={parentRef}
+        className={mx('min-bs-[8rem] order-last rounded-sm', focusRing)}
+        data-testid='composer.markdownRoot'
+      />
       {toolbar && (
         <Toolbar.Root
           state={formattingState}
@@ -69,7 +80,6 @@ const DocumentSection: FC<{
           <Toolbar.Separator />
         </Toolbar.Root>
       )}
-      <div ref={parentRef} className='min-bs-[8rem]' data-testid='composer.markdownRoot' />
     </div>
   );
 };

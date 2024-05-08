@@ -90,10 +90,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
           (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
         ) {
           void dispatch({
-            action: NavigationAction.ACTIVATE,
-            // TODO(thure): Multitasking will make this multifarious; implement a way to follow other members that
-            //  doesn’t assume they can only view one object at a time.
-            data: { id: Array.from(viewing.get(member.identity.identityKey)!)[0] },
+            action: NavigationAction.OPEN,
+            data: { activeParts: { main: Array.from(viewing.get(member.identity.identityKey)!) } },
           });
         } else {
           log.warn('No viewing object found for member');
