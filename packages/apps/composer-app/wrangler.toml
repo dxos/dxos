@@ -7,11 +7,23 @@ name = "composer-app"
 compatibility_date = "2024-04-05"
 pages_build_output_dir = "./out/composer"
 
+vars = { ENVIRONMENT = "dev" }
+
 d1_databases = [
-  { binding = "DB", database_name = "dev-users", database_id = "98e5b6a0-53f4-468b-b483-6c66a8cf9f15" }
+  { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }
+]
+
+[env.staging]
+
+vars = { ENVIRONMENT = "staging" }
+
+d1_databases = [
+  { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }
 ]
 
 [env.production]
+
+vars = { ENVIRONMENT = "production" }
 
 d1_databases = [
   { binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }

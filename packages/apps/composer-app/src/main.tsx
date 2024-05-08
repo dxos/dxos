@@ -176,20 +176,22 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          // TODO(burdon): Detect if composer.space (or localhost).
           try {
-            // TODO(burdon): Prefix?
+            // Retrieve the cookie.
             const response = await fetch('/info');
-            const { payload } = await response.json();
-            console.log(payload);
+            if (!response.ok) {
+              throw new Error('Invalid response.');
+            }
 
             // TODO(burdon): CamelCase vs. _ names.
+            const result: JWTPayload = await response.json();
             await client.shell.setInvitationUrl({
-              invitationUrl: new URL(`?access_token=${payload.access_token}`, window.location.origin).toString(),
+              invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
               deviceInvitationParam: 'deviceInvitationCode',
               spaceInvitationParam: 'spaceInvitationCode',
             });
           } catch (err) {
+            // TODO(burdon): Need to notify user.
             // Ignore (since composer.dxos.org does not implement the middleware).
             log.catch(err);
           }
