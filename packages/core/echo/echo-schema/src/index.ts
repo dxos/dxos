@@ -1,28 +1,18 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export * from './automerge';
-export * from './automerge/key-path';
-export * from './database';
-export * from './guarded-scope';
-export * from './hypergraph';
-export * from './object';
-export * from './query';
-export * from './serializer';
-export { TextCompatibilitySchema, TypeCollection } from './type-collection';
-export * from './util';
-
-// TODO(dmaretskyi): Until we resolve the circular dependencies lets avoid using "barrel" index.ts files in subdirectories.
-export * from './effect/dynamic/dynamic-schema';
-export * from './effect/dynamic/stored-schema';
-export { createEchoReactiveObject } from './effect/echo-handler';
-export * from './effect/echo-object-class';
-export * from './effect/json-schema';
-export { isReactiveProxy } from './effect/proxy';
-export * from './effect/reactive';
-export { SchemaValidator } from './effect/schema-validator';
-export * from './text';
+export * from './dynamic';
+export * from './ast';
+export * from './handler';
+export * from './json';
+export * from './proxy';
+export * from './annotations';
+export * from './expando';
+export * from './getter';
+export * from './typed-object-class';
+export * from './types';
+export { defineHiddenProperty } from './utils';
 
 export * as S from '@effect/schema/Schema';
 export * as AST from '@effect/schema/AST';

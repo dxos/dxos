@@ -6,12 +6,12 @@ import '@dxosTheme';
 
 import { BaselimeRum } from '@baselime/react-rum';
 import { withProfiler } from '@sentry/react';
-import React, { StrictMode, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { initializeAppObservability } from '@dxos/observability';
-import { type Client, ClientProvider, Config, Defaults, Envs } from '@dxos/react-client';
+import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 
@@ -60,8 +60,26 @@ const useThemeWatcher = () => {
 };
 
 const App = withProfiler(() => {
-  const config = () => getConfig();
   const themeMode = useThemeWatcher();
+
+  return (
+    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
+      <DensityProvider density='fine'>
+        <RouterProvider router={router} />
+      </DensityProvider>
+    </ThemeProvider>
+  );
+});
+
+const main = async () => {
+  const config = await getConfig();
+  const createWorker = config.values.runtime?.app?.env?.DX_HOST
+    ? undefined
+    : () =>
+        new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-client-worker',
+        });
 
   const handleInitialized = async (client: Client) => {
     if (!client.halo.identity.get()) {
@@ -74,27 +92,22 @@ const App = withProfiler(() => {
     await client.spaces.isReady.wait();
   };
 
-  return (
-    <ThemeProvider tx={defaultTx} themeMode={themeMode} resourceExtensions={translations}>
-      <DensityProvider density='fine'>
-        <ClientProvider config={config} shell='./shell.html' onInitialized={handleInitialized}>
-          <RouterProvider router={router} />
-        </ClientProvider>
-      </DensityProvider>
-    </ThemeProvider>
-  );
-});
-
-const main = () => {
-  const config = Envs();
   const root = createRoot(document.getElementById('root')!);
   root.render(
-    <StrictMode>
-      <BaselimeRum apiKey={config?.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
+    // NOTE: StrictMode will cause the entire stack to render twice.
+    // <StrictMode>
+    <BaselimeRum apiKey={config.values.runtime?.app?.env?.BASELIME_API_KEY} enableWebVitals>
+      <ClientProvider
+        config={config}
+        createWorker={createWorker}
+        shell='./shell.html'
+        onInitialized={handleInitialized}
+      >
         <App />
-      </BaselimeRum>
-    </StrictMode>,
+      </ClientProvider>
+    </BaselimeRum>,
+    // </StrictMode>,
   );
 };
 
-main();
+void main();

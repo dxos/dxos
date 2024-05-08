@@ -101,6 +101,9 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
               const mailboxQuery = space.db.query(Filter.schema(MailboxType));
               const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
               const calendarQuery = space.db.query(Filter.schema(CalendarType));
+              subscriptions.add(mailboxQuery.subscribe());
+              subscriptions.add(addressBookQuery.subscribe());
+              subscriptions.add(calendarQuery.subscribe());
               let previousMailboxes: MailboxType[] = [];
               let previousAddressBooks: AddressBookType[] = [];
               let previousCalendars: CalendarType[] = [];

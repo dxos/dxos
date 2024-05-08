@@ -28,8 +28,9 @@ import {
   type SurfaceProps,
   type Layout,
   IntentAction,
+  firstMainId,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -87,16 +88,18 @@ export const LayoutPlugin = ({
 
   const location = create<NavigationState>({
     active: undefined,
-    previous: undefined,
+    closed: undefined,
 
     // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.active && graphPlugin.provides.graph.findNode(this.active);
+      return this.active ? graphPlugin.provides.graph.findNode(firstMainId(this.active)) : undefined;
     },
     get previousNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
+      return this.closed
+        ? graphPlugin.provides.graph.findNode(Array.isArray(this.closed) ? this.closed[0] : this.closed)
+        : undefined;
     },
   });
 
@@ -205,7 +208,7 @@ export const LayoutPlugin = ({
         const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const [shortId, component] = location.active?.split(':') ?? [];
+        const [shortId, component] = location.active ? firstMainId(location.active).split(':') : [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
 
         // Update selection based on browser navigation.
@@ -213,8 +216,8 @@ export const LayoutPlugin = ({
           const handleNavigation = async () => {
             await dispatch({
               plugin: LAYOUT_PLUGIN,
-              action: NavigationAction.ACTIVATE,
-              data: { id: uriToActive(window.location.pathname) },
+              action: NavigationAction.OPEN,
+              data: { activeParts: { main: [uriToActive(window.location.pathname)] } },
             });
           };
 
@@ -360,8 +363,8 @@ export const LayoutPlugin = ({
             }
 
             // TODO(wittjosiah): Factor out.
-            case NavigationAction.ACTIVATE: {
-              const id = intent.data?.id ?? intent.data?.result?.id;
+            case NavigationAction.OPEN: {
+              const id = firstMainId(intent.data?.activeParts);
               const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
                 // TODO(wittjosiah): Factor out.
@@ -369,7 +372,7 @@ export const LayoutPlugin = ({
               }
 
               batch(() => {
-                location.previous = location.active;
+                location.closed = firstMainId(location.active);
                 location.active = id;
               });
 

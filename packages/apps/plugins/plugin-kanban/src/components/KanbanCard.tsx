@@ -8,7 +8,7 @@ import { DotsSixVertical, X } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
 import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,
@@ -44,7 +44,7 @@ export const KanbanCardComponent: FC<{
   });
   const tx = transform ? Object.assign(transform, { scaleY: 1 }) : null;
 
-  const { parentRef } = useTextEditor(
+  const { parentRef, focusAttributes } = useTextEditor(
     () => ({
       doc: item.title?.content,
       extensions: [
@@ -68,7 +68,7 @@ export const KanbanCardComponent: FC<{
           <DotsSixVertical className={getSize(5)} />
         </button>
         <div className='flex flex-col grow pt-1'>
-          <div className={mx(focusRing, 'p-1')} ref={parentRef} />
+          <div {...focusAttributes} className={mx(focusRing, 'rounded-sm p-1')} ref={parentRef} />
           {debug && <div className='text-xs text-red-800'>{item.id.slice(0, 9)}</div>}
         </div>
         {onDelete && (

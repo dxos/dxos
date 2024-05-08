@@ -3,7 +3,7 @@
 //
 import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import {
   Button,
@@ -30,7 +30,7 @@ export type HuePickerProps = {
   disabled?: boolean;
   defaultHue?: string;
   hue?: string;
-  onChangeHue?: Dispatch<SetStateAction<string>>;
+  onChangeHue?: (nextHue: string) => void;
   onClickClear?: ButtonProps['onClick'];
 };
 

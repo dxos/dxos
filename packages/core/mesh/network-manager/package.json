@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,7 +37,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "nanomessage-rpc": "^3.0.0",
     "node-datachannel": "^0.5.5",
     "p-defer": "^3.0.0",

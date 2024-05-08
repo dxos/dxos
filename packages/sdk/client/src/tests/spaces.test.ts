@@ -9,17 +9,17 @@ import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { TYPE_PROPERTIES } from '@dxos/echo-db';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { Expando, getAutomergeObjectCore, type ReactiveObject } from '@dxos/echo-schema';
+import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpace, type SpaceProxy } from '../echo';
+import { SpaceState, getSpace } from '../echo';
 import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
@@ -143,7 +143,7 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2.spaces }),
+      performInvitation({ host: space1, guest: client2.spaces }),
     );
     const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 
@@ -285,20 +285,20 @@ describe('Spaces', () => {
     const { id } = space.db.add(createEchoObject({ data: 'test' }));
     await space.db.flush();
 
-    await space.internal.close();
+    await space.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space.internal.open();
+    await space.open();
     await space.waitUntilReady();
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.READY);
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
+    space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -331,13 +331,13 @@ describe('Spaces', () => {
       expect(space2.db.getObjectById(id)).to.exist;
     });
 
-    await space1.internal.close();
+    await space1.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space1.internal.open();
+    await space1.open();
 
     await space2.waitUntilReady();
     await waitForExpect(() => {
@@ -345,7 +345,7 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<ReactiveObject<any>>(id)!.data = 'test2';
+    space2.db.getObjectById(id)!.data = 'test2';
     await space2.db.flush();
   });
 
@@ -354,13 +354,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -388,13 +387,12 @@ describe('Spaces', () => {
 
     const host = new Client({ services: testBuilder.createLocal() });
     const guest = new Client({ services: testBuilder.createLocal() });
-    [host, guest].forEach(registerTypes);
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -460,19 +458,25 @@ describe('Spaces', () => {
 
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
-    spaceA.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objA)).to.be.true;
-      inc();
-    }, true);
+    spaceA.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objA)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
-    spaceB.db.query().subscribe(({ objects }) => {
-      expect(objects).to.have.length(2);
-      expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
-      expect(objects.some((obj) => obj === objB)).to.be.true;
-      inc();
-    }, true);
+    spaceB.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objB)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
 
     await wait();
   });
@@ -527,7 +531,7 @@ describe('Spaces', () => {
   };
 
   const registerTypes = (client: Client) => {
-    client.addSchema(DocumentType);
+    client.addSchema(DocumentType, TextV0Type);
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {

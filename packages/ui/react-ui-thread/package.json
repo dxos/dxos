@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-thread",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "A set of components to use with threads, including comments and messages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,17 +26,18 @@
   },
   "devDependencies": {
     "@braneframe/types": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.7",
+    "vite": "^5.2.9",
     "vite-plugin-turbosnap": "^1.0.2"
   },
   "peerDependencies": {

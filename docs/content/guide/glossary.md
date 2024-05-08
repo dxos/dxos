@@ -17,10 +17,6 @@ A protocol, application, and SDK for managing a decentralized user identity for 
 
 The set of peer networking technologies behind ECHO, HALO and KUBE.
 
-### [KUBE](./platform/kube)
-
-A reslilient, self-contained set of services for hosting and supporting decentralized applications.
-
 ### [Space](./platform/#spaces)
 
 An ECHO replication domain containing objects which all the peers in the space replicate continuously.

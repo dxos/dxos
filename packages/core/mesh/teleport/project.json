@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "teleport",
+  "tags": [
+    "scope:mesh"
+  ],
   "sourceRoot": "packages/core/mesh/teleport/src",
   "projectType": "library",
   "targets": {

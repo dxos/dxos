@@ -4,21 +4,18 @@
 
 import { expect } from 'chai';
 
-import { Reference } from '@dxos/echo-db';
-import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { createTestLevel } from '@dxos/kv-store/testing';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { IndexSchema } from './index-schema';
 import { IndexStore } from './index-store';
 
 describe('IndexStore', () => {
   test('basic', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
-    const directory = storage.createDirectory('IndexStore');
-    const store = new IndexStore({ directory });
+    const db = createTestLevel();
+    await openAndClose(db);
+    const store = new IndexStore({ db: db.sublevel('index-store') });
 
     const index = new IndexSchema();
     await index.open();
@@ -36,7 +33,7 @@ describe('IndexStore', () => {
     {
       await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
-      const ids = await index.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await index.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
 
       expect(ids[0].id).to.equal('0');
@@ -46,17 +43,16 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
   });
 
   test('update loaded index', async () => {
-    const storage = createStorage({ type: StorageType.RAM });
-    afterTest(() => storage.close());
-    const directory = storage.createDirectory('IndexStore');
-    const store = new IndexStore({ directory });
+    const db = createTestLevel();
+    await openAndClose(db);
+    const store = new IndexStore({ db: db.sublevel('index-store') });
 
     const index = new IndexSchema();
     await index.open();
@@ -83,7 +79,7 @@ describe('IndexStore', () => {
       const identifier = [...kinds.keys()][0];
       const loadedIndex = await store.load(identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
 
@@ -97,7 +93,7 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ type: { itemId: schemaURI } } as Filter);
+      const ids = await loadedIndex.find({ typename: schemaURI });
       expect(ids.length).to.equal(2);
       expect(ids.map(({ id }) => id)).to.deep.eq(['0', '3']);
     }

@@ -10,14 +10,8 @@ import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
-import {
-  EchoDatabaseImpl,
-  type AutomergeContext,
-  type EchoDatabase,
-  type Hypergraph,
-  Filter,
-  type EchoReactiveObject,
-} from '@dxos/echo-schema';
+import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,6 +28,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
 
+import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 // TODO(burdon): This should not be used as part of the API (don't export).
@@ -90,8 +85,7 @@ export class SpaceProxy implements Space {
   constructor(
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
-    graph: Hypergraph,
-    automergeContext: AutomergeContext,
+    echoClient: EchoClient,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');
@@ -104,31 +98,19 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    invariant(this._clientServices.services.DataService, 'DataService not available');
-    this._db = new EchoDatabaseImpl({
-      spaceKey: this.key,
-      graph,
-      automergeContext,
-    });
+    this._db = echoClient.constructDatabase({ spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     this._internal = {
-      get db(): never {
-        throw new Error('Use space.db instead');
-      },
       get data() {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
-      open: this._activate.bind(this),
-      close: this._deactivate.bind(this),
       removeMember: this._removeMember.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
-
-    graph._register(this.key, this._db, this);
 
     // Update observables.
     this._stateUpdate.emit(this._currentState);
@@ -251,7 +233,7 @@ export class SpaceProxy implements Space {
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
         // NOOP if the root is the same.
-        await this._db.automerge.update({ rootUrl: automergeRoot });
+        await this._db.setSpaceRoot(automergeRoot);
       }
     }
 
@@ -287,6 +269,7 @@ export class SpaceProxy implements Space {
     log('initialized');
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   private async _initializeDb() {
     this._databaseOpen = true;
 
@@ -297,9 +280,10 @@ export class SpaceProxy implements Space {
         automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
       }
 
-      await this._db.automerge.open({
-        rootUrl: automergeRoot,
-      });
+      if (automergeRoot !== undefined) {
+        await this._db.setSpaceRoot(automergeRoot);
+      }
+      await this._db.open();
     }
 
     log('ready');
@@ -314,16 +298,19 @@ export class SpaceProxy implements Space {
     {
       const unsubscribe = this._db
         .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
-        .subscribe((query) => {
-          if (query.objects.length === 1) {
-            this._properties = query.objects[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        }, true);
+        .subscribe(
+          (query) => {
+            if (query.objects.length === 1) {
+              this._properties = query.objects[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),
@@ -339,23 +326,18 @@ export class SpaceProxy implements Space {
     log('destroying...');
     await this._ctx.dispose();
     await this._invitationsProxy.close();
-    await this._db.automerge.close();
+    await this._db.close();
     this._databaseOpen = false;
     log('destroyed');
   }
 
-  /**
-   * TODO
-   */
   async open() {
-    await this._setOpen(true);
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
   }
 
-  /**
-   * TODO
-   */
   async close() {
-    await this._setOpen(false);
+    await this._db.flush();
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 
   /**
@@ -371,11 +353,14 @@ export class SpaceProxy implements Space {
    */
   async postMessage(channel: string, message: any) {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
-    await this._clientServices.services.SpacesService.postMessage({
-      spaceKey: this.key,
-      channel,
-      message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
-    });
+    await this._clientServices.services.SpacesService.postMessage(
+      {
+        spaceKey: this.key,
+        channel,
+        message: { ...message, '@type': message['@type'] || 'google.protobuf.Struct' },
+      },
+      { timeout: RPC_TIMEOUT },
+    );
   }
 
   /**
@@ -383,7 +368,10 @@ export class SpaceProxy implements Space {
    */
   listen(channel: string, callback: (message: GossipMessage) => void) {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
-    const stream = this._clientServices.services.SpacesService.subscribeMessages({ spaceKey: this.key, channel });
+    const stream = this._clientServices.services.SpacesService.subscribeMessages(
+      { spaceKey: this.key, channel },
+      { timeout: RPC_TIMEOUT },
+    );
     stream.subscribe(callback);
     return () => stream.close();
   }
@@ -404,27 +392,15 @@ export class SpaceProxy implements Space {
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
   }
 
-  async _setOpen(open: boolean) {
-    return todo();
-    // invariant(this._clientServices.services.SpaceService, 'SpaceService not available');
-
-    // await this._clientServices.services.SpaceService.setSpaceState({
-    //   spaceKey: this.key,
-    //   open
-    // });
+  toJSON() {
+    return {
+      key: this.key.toHex(),
+      state: SpaceState[this.state.get()],
+    };
   }
 
   private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
-  }
-
-  private async _activate() {
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
-  }
-
-  private async _deactivate() {
-    await this._db.flush();
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 
   private async _removeMember(memberKey: PublicKey) {

@@ -17,19 +17,16 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
-    },
-    {
-      "path": "../../../common/debug"
     },
     {
       "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/kv-store"
     },
     {
       "path": "../../../common/log"
@@ -53,13 +50,7 @@
       "path": "../automerge"
     },
     {
-      "path": "../echo-db"
-    },
-    {
-      "path": "../echo-pipeline"
-    },
-    {
-      "path": "../echo-schema"
+      "path": "../echo-protocol"
     }
   ]
 }

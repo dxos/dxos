@@ -1,106 +1,97 @@
 //
 // Copyright 2024 DXOS.org
 //
-import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
-import { type Filter } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
+import { defaultMap } from '@dxos/util';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
+import { type Index, type IndexStaticProps, type LoadParams, staticImplements, type IndexQuery } from './types';
 
-// Note: By default, Orama search returns 10 results.
-const ORAMA_LIMIT = 1_000_000;
-
-// TODO(mykola): Correct schema ref?
-type OramaSchemaType = orama.Orama<
-  {
-    system: {
-      type: { itemId: 'string' };
-    };
-  },
-  orama.IIndex<orama.components.index.Index>,
-  orama.IDocumentsStore<orama.components.documentsStore.DocumentsStore>
->;
-
+@trace.resource()
 @staticImplements<IndexStaticProps>()
 export class IndexSchema extends Resource implements Index {
   private _identifier = PublicKey.random().toString();
   public readonly kind: IndexKind = { kind: IndexKind.Kind.SCHEMA_MATCH };
   public readonly updated = new Event<void>();
 
-  private _orama?: OramaSchemaType = undefined;
-
-  override async _open() {
-    this._orama = await orama.create({
-      schema: {
-        system: {
-          type: { itemId: 'string' },
-        },
-      },
-    });
-  }
-
-  override async _close() {}
+  /**
+   * Map `typename` -> Set `index id`.
+   * @see https://v8.dev/blog/hash-code for performance estimations.
+   */
+  private readonly _index = new Map<string | null, Set<ObjectPointerEncoded>>();
 
   get identifier() {
     return this._identifier;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async update(id: string, object: Partial<ObjectStructure>) {
-    invariant(this._orama, 'Index is not initialized');
-    const entry = await orama.getByID(this._orama, id);
-    if (entry && entry.system.type?.itemId === object.system?.type?.itemId) {
+    if (this._index.get(getTypeFromObject(object))?.has(id)) {
       return false;
     }
-    await orama.update<any>(this._orama, id, { ...object, id });
+    defaultMap(this._index, getTypeFromObject(object), new Set()).add(id);
     return true;
   }
 
   async remove(id: string) {
-    invariant(this._orama, 'Index is not initialized');
-    await orama.remove(this._orama, id);
-  }
-
-  // TODO(mykola): Fix Filter type with new Reactive API.
-  async find(filter: Filter) {
-    invariant(this._orama, 'Index is not initialized');
-    let results: orama.Results<Partial<ObjectStructure>>;
-    if (!filter.type) {
-      results = await orama.search(this._orama, {
-        term: '',
-        exact: true,
-        threshold: 1,
-        limit: ORAMA_LIMIT,
-      });
-    } else {
-      results = await orama.search<OramaSchemaType, Partial<ObjectStructure>>(this._orama, {
-        term: filter.type.itemId,
-        exact: true,
-        threshold: 0,
-        limit: ORAMA_LIMIT,
-      });
+    for (const [_, ids] of this._index.entries()) {
+      if (ids.has(id)) {
+        ids.delete(id);
+        return;
+      }
     }
-    return results.hits.map((hit) => ({ id: hit.id, rank: hit.score }));
   }
 
+  @trace.span({ showInBrowserTimeline: true })
+  async find(filter: IndexQuery) {
+    if (filter.typename === null) {
+      // TODO(dmaretskyi): Implement querying for Expando objects.
+      throw new Error('Not implemented');
+    }
+
+    if (filter.typename === undefined) {
+      return Array.from(this._index.values())
+        .flatMap((ids) => Array.from(ids))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
+    // TODO(burdon): Handle inversion.
+    if (filter.inverted) {
+      return Array.from(this._index.entries())
+        .filter(([key]) => key !== filter.typename)
+        .flatMap(([, value]) => Array.from(value))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
+    return Array.from(this._index.get(filter.typename) ?? []).map((id) => ({ id, rank: 0 }));
+  }
+
+  @trace.span({ showInBrowserTimeline: true })
   async serialize(): Promise<string> {
-    invariant(this._orama, 'Index is not initialized');
-    return JSON.stringify(await orama.save(this._orama), null, 2);
+    return JSON.stringify({
+      index: Array.from(this._index.entries()).map(([type, ids]) => ({
+        type,
+        ids: Array.from(ids),
+      })),
+    });
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   static async load({ serialized, identifier }: LoadParams): Promise<IndexSchema> {
-    const deserialized = JSON.parse(serialized);
-
     const index = new IndexSchema();
-    await index.open();
-    invariant(index._orama, 'Index is not initialized');
+    const serializedIndex: { type: string | null; ids: string[] }[] = JSON.parse(serialized).index;
     index._identifier = identifier;
-    await orama.load(index._orama, deserialized);
+    for (const { type, ids } of serializedIndex) {
+      index._index.set(type, new Set(ids));
+    }
     return index;
   }
 }
+
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => object.system?.type?.itemId ?? null;

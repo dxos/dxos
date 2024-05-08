@@ -4,7 +4,7 @@
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type EchoReactiveObject, isEchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -55,10 +55,7 @@ export const subscriptionHandler = (
     const space = event.space ? client.spaces.get(PublicKey.from(event.space)) : undefined;
     const objects =
       space &&
-      event.objects
-        ?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id))
-        .filter(nonNullable)
-        .filter(isEchoReactiveObject);
+      event.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable);
 
     if (!!event.space && !space) {
       log.warn('invalid space', { event });

@@ -9,7 +9,7 @@ import {
   parseMetadataRecordsPlugin,
   type MetadataRecordsProvides,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 
 import meta from './meta';
 

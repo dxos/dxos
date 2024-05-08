@@ -70,6 +70,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 
               // Add all scripts to the graph.
               const query = space.db.query(Filter.schema(ScriptType));
+              subscriptions.add(query.subscribe());
               let previousObjects: ScriptType[] = [];
               subscriptions.add(
                 effect(() => {

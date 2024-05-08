@@ -10,8 +10,6 @@ import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
 
 import "dxos/config.proto";
-import "dxos/agent/query.proto";
-import "dxos/echo/indexing.proto";
 import "dxos/echo/metadata.proto";
 import "dxos/echo/timeframe.proto";
 import "dxos/error.proto";
@@ -385,16 +383,6 @@ service SpacesService {
 }
 
 //
-// Indexing
-//
-
-service IndexService {
-  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc Find(dxos.agent.query.QueryRequest) returns (stream dxos.agent.query.QueryResponse);
-  
-}
-
-//
 // Invitations (Halo and Data Spaces).
 //
 
@@ -492,6 +480,9 @@ message Invitation {
 
   /// Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
   optional AdmissionKeypair guest_keypair = 16;
+
+  /// Present on Type.DELEGATED invitations.
+  optional dxos.keys.PublicKey delegation_credential_id = 17;
 }
 
 message AdmissionKeypair {
@@ -551,7 +542,6 @@ service InvitationsService {
   rpc Authenticate(AuthenticationRequest) returns (google.protobuf.Empty);
   rpc CancelInvitation(CancelInvitationRequest) returns (google.protobuf.Empty);
   rpc QueryInvitations(google.protobuf.Empty) returns (stream QueryInvitationsResponse);
-  rpc LoadPersistentInvitations(google.protobuf.Empty) returns (LoadPersistentInvitationsResponse);
 }
 
 //

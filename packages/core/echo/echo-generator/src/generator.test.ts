@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { Client } from '@dxos/client';
-import { typeOf } from '@dxos/echo-schema';
+import { getType } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -14,11 +14,11 @@ import { createSpaceObjectGenerator, createTestObjectGenerator, TestSchemaType }
 faker.seed(3);
 
 describe('TestObjectGenerator', () => {
-  test('basic', () => {
+  test('basic', async () => {
     const generator = createTestObjectGenerator();
 
     // Create raw object.
-    const object = generator.createObject({ types: [TestSchemaType.contact] });
+    const object = await generator.createObject({ types: [TestSchemaType.contact] });
     expect(object).to.exist;
   });
 
@@ -29,11 +29,11 @@ describe('TestObjectGenerator', () => {
     generator.addSchemas();
 
     // Create org object.
-    const organization = generator.createObject({ types: [TestSchemaType.organization] });
-    expect(typeOf(organization)).to.exist;
+    const organization = await generator.createObject({ types: [TestSchemaType.organization] });
+    expect(getType(organization)).to.exist;
 
     // Expect at least one person object with a linked org reference.
-    const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
+    const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
     expect(objects.some((object) => object.org === organization)).to.be.true;
   });
 
@@ -45,15 +45,15 @@ describe('TestObjectGenerator', () => {
     {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
-      const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(typeOf(organization)!.itemId);
+      const organization = await generator.createObject({ types: [TestSchemaType.organization] });
+      schemaId.push(getType(organization)!.itemId);
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       generator.addSchemas();
-      const organization = generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(typeOf(organization)!.itemId);
+      const organization = await generator.createObject({ types: [TestSchemaType.organization] });
+      schemaId.push(getType(organization)!.itemId);
     }
 
     expect(schemaId[0]).not.to.be.undefined;

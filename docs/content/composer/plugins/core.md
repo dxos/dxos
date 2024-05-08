@@ -4,15 +4,15 @@ order: 4
 
 # Core Plugins
 
-## [Intent](intents)
+## [Intent](intent.md)
 
 Intents are a way for plugins to communicate with each other. They represent user actions and enable plugins to respond to changes in state initiated by the user or any other plugin. Similar to redux actions.
 
-## [Surface](surface)
+## [Surface](surface.md)
 
 Defines a component `<Surface />` that allows developers to delegate presentation of arbitrary content to plugins. The entire user interface of Composer is constructed of Surfaces, and the core plugins `provide` components that fulfill them.
 
-## [Graph](graph)
+## [Graph](graph.md)
 
 Responsible for maintaining the organizational structure of the user's data and representing the user's possible actions on that data.
 

@@ -16,18 +16,12 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, Filter, isReactiveProxy, typeOf } from '@dxos/echo-schema';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
-import { Main, Button, ButtonGroup } from '@dxos/react-ui';
+import { create, isReactiveObject, getType } from '@dxos/echo-schema';
+import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  getSize,
-  surfaceElevation,
-  staticDefaultButtonColors,
-} from '@dxos/react-ui-theme';
+import { getSize, surfaceElevation, staticDefaultButtonColors } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
@@ -50,7 +44,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     // TODO(wittjosiah): Render placeholders for missing objects so they can be removed from the stack?
     .filter(({ object }) => object)
     .map(({ id, object }) => {
-      const rest = metadataPlugin?.provides.metadata.resolver(typeOf(object!)?.itemId ?? 'never');
+      const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
       return { id, object: object as SectionType, ...rest };
     });
   const space = getSpace(stack);
@@ -64,7 +58,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
     // TODO(wittjosiah): Prevent dropping items which don't have a section renderer?
     //  Perhaps stack plugin should just provide a fallback section renderer.
-    if (!isReactiveProxy(data) || data instanceof StackType) {
+    if (!isReactiveObject(data) || data instanceof StackType) {
       return 'reject';
     }
 
@@ -124,8 +118,8 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
 
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [id] } },
     });
   };
 
@@ -146,7 +140,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   };
 
   return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <>
       <Stack
         id={id}
         data-testid='main.stack'
@@ -190,7 +184,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
           )}
         </ButtonGroup>
       </div>
-    </Main.Content>
+    </>
   );
 };
 

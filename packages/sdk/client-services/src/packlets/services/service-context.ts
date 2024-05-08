@@ -2,18 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Level } from 'level';
-
 import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import { AutomergeHost, MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type NetworkManager } from '@dxos/network-manager';
@@ -22,6 +21,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
+import type { TeleportParams } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
@@ -32,16 +32,17 @@ import {
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
-import { createDocumentsIterator, createSelectedDocumentsIterator } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
   SpaceInvitationProtocol,
   type InvitationProtocol,
 } from '../invitations';
+import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
+export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
+  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
 /**
  * Shared backend for all client services.
  */
@@ -62,9 +63,8 @@ export class ServiceContext extends Resource {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
-  public readonly automergeHost: AutomergeHost;
-  public readonly indexMetadata: IndexMetadataStore;
-  public readonly indexer: Indexer;
+  public readonly invitationsManager: InvitationsManager;
+  public readonly echoHost: EchoHost;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -80,10 +80,10 @@ export class ServiceContext extends Resource {
 
   constructor(
     public readonly storage: Storage,
-    public readonly level: Level<string, string>,
+    public readonly level: LevelDB,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
+    public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
     super();
 
@@ -120,22 +120,17 @@ export class ServiceContext extends Resource {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.indexMetadata = new IndexMetadataStore({ db: level.sublevel('index-metadata') });
-
-    this.automergeHost = new AutomergeHost({
-      directory: storage.createDirectory('automerge'),
-      db: level.sublevel('automerge'),
-      metadata: this.indexMetadata,
+    this.echoHost = new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     });
 
-    this.indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
-      metadataStore: this.indexMetadata,
-      loadDocuments: createSelectedDocumentsIterator(this.automergeHost),
-      getAllDocuments: createDocumentsIterator(this.automergeHost),
-    });
-
-    this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
+    this.invitationsManager = new InvitationsManager(
+      this.invitations,
+      (invitation) => this.getInvitationHandler(invitation),
+      this.metadataStore,
+    );
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
@@ -159,31 +154,34 @@ export class ServiceContext extends Resource {
     await this.signalManager.open();
     await this.networkManager.open();
 
-    await this.automergeHost.open();
+    await this.echoHost.open(ctx);
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }
+
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
+
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
 
-  protected override async _close() {
+  protected override async _close(ctx: Context) {
     log('closing...');
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.automergeHost.close();
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
     await this.feedStore.close();
+    await this.metadataStore.close();
+    await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
-    await this.metadataStore.close();
-    await this.indexer.destroy();
     log('closed');
   }
 
@@ -244,7 +242,8 @@ export class ServiceContext extends Resource {
       this.keyring,
       signingContext,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
+      this.invitationsManager,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

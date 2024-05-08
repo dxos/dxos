@@ -6,23 +6,19 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  AutomergeHost,
-  MetadataStore,
-  type MyLevel,
-  SnapshotStore,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import { type LevelDB } from '@dxos/kv-store';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
-import { type MaybePromise } from '@dxos/util';
 
+import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
 import { ClientServicesHost, ServiceContext } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
 
@@ -53,7 +49,9 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager);
+  return new ServiceContext(storage, level, networkManager, signalManager, {
+    invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+  });
 };
 
 export const createPeers = async (numPeers: number) => {
@@ -94,7 +92,7 @@ export type TestPeerOpts = {
 
 export type TestPeerProps = {
   storage?: Storage;
-  level?: MaybePromise<MyLevel>;
+  level?: LevelDB;
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
@@ -104,7 +102,8 @@ export type TestPeerProps = {
   snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
-  automergeHost?: AutomergeHost;
+  echoHost?: EchoHost;
+  invitationsManager?: InvitationsManager;
 };
 
 export class TestPeer {
@@ -176,20 +175,36 @@ export class TestPeer {
     return this._props.signingContext ?? failUndefined();
   }
 
-  get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost({
-      db: Promise.resolve(this.level).then((level) => level.sublevel('automerge')),
+  get echoHost() {
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     }));
   }
 
-  get dataSpaceManager() {
+  get dataSpaceManager(): DataSpaceManager {
     return (this._props.dataSpaceManager ??= new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
       this.keyring,
       this.identity,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
+      this.invitationsManager,
+    ));
+  }
+
+  get invitationsManager() {
+    return (this._props.invitationsManager ??= new InvitationsManager(
+      new InvitationsHandler(this.networkManager),
+      (invitation) => {
+        if (invitation.kind === Invitation.Kind.SPACE) {
+          return new SpaceInvitationProtocol(this.dataSpaceManager, this.identity!, this.keyring, invitation.spaceKey!);
+        } else {
+          throw new Error('not implemented');
+        }
+      },
+      this.metadataStore,
     ));
   }
 
@@ -198,6 +213,7 @@ export class TestPeer {
   }
 
   async destroy() {
+    await this.level.close();
     await this.storage.reset();
   }
 }

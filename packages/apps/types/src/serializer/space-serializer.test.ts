@@ -28,8 +28,8 @@ describe('Serialization', () => {
     afterTest(() => builder.destroy());
 
     const client = new Client({ services: builder.createLocal() });
-    client.addSchema(FolderType, DocumentType);
     await client.initialize();
+    client.addSchema(FolderType, DocumentType, TextV0Type);
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 
@@ -56,9 +56,7 @@ describe('Serialization', () => {
       const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;
       expect(object.content.content).to.equal(content);
-
-      // TODO(burdon): Object ID is not preserved (refs?)
-      expect(object.id).to.not.equal(serialized.objects[0].id);
+      expect(object.id).to.equal(serialized.objects[0].id);
     }
   });
 

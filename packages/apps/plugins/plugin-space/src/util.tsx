@@ -20,22 +20,13 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, FolderType } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, FolderType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
-import {
-  EchoDatabaseImpl,
-  Filter,
-  LEGACY_TEXT_TYPE,
-  type OpaqueEchoObject,
-  type EchoReactiveObject,
-  isEchoReactiveObject,
-  typeOf,
-} from '@dxos/echo-schema';
+import { type EchoReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
 import { Migrations } from '@dxos/migrations';
-import { SpaceState, getSpace, type Space } from '@dxos/react-client/echo';
+import { SpaceState, getSpace, type Space, Filter, isEchoObject } from '@dxos/react-client/echo';
 import { nonNullable } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
@@ -43,11 +34,6 @@ import { SpaceAction } from './types';
 
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
-
-export const isSpace = (data: unknown): data is Space =>
-  data && typeof data === 'object'
-    ? 'key' in data && data.key instanceof PublicKey && 'db' in data && data.db instanceof EchoDatabaseImpl // TODO(dmaretskyi): No doing duck typing.
-    : false;
 
 export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
@@ -66,7 +52,7 @@ const getFolderGraphNodePartials = ({ graph, folder, space }: { graph: Graph; fo
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
-      folder.objects = nextOrder.filter(isEchoReactiveObject);
+      folder.objects = nextOrder.filter(isEchoObject);
     },
     onTransferStart: (child: Node<EchoReactiveObject<any>>) => {
       // TODO(wittjosiah): Support transfer between spaces.
@@ -327,16 +313,13 @@ export const updateGraphWithSpace = ({
   });
 
   // Update graph with all objects in the space.
-  // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj: OpaqueEchoObject) => {
-    if (typeOf(obj)?.itemId === LEGACY_TEXT_TYPE) {
-      return false;
-    }
-
-    return true;
-  });
+  // TODO(burdon): HACK: Skip loading sketches (filter Expandos also?)
+  // TODO(wittjosiah): Option not to trigger queries if content of document updates (otherwise each keystroke triggers change).
+  const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
-  const unsubscribeQuery = effect(() => {
+  const unsubscribeQuery = query.subscribe();
+
+  const unsubscribeQueryHandler = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
     const folderObjects = folder?.objects ?? [];
@@ -429,7 +412,7 @@ export const updateGraphWithSpace = ({
                   data: { target: object, object: create(FolderType, { objects: [] }) },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties: {
@@ -504,6 +487,7 @@ export const updateGraphWithSpace = ({
   return () => {
     unsubscribeSpace();
     unsubscribeQuery();
+    unsubscribeQueryHandler();
   };
 };
 
@@ -535,7 +519,8 @@ export const updateGraphWithAddObjectAction = ({
   // Include the create document action on all folders.
   const folderQuery = space.db.query(Filter.schema(FolderType));
   let previousFolders: FolderType[] = [];
-  return effect(() => {
+  const unsubscribeQuery = folderQuery.subscribe();
+  const unsubscribeQueryHandler = effect(() => {
     const removedFolders = previousFolders.filter((folder) => !folderQuery.objects.includes(folder));
     previousFolders = folderQuery.objects;
 
@@ -558,7 +543,7 @@ export const updateGraphWithAddObjectAction = ({
                   data: { target: space },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties,
@@ -584,7 +569,7 @@ export const updateGraphWithAddObjectAction = ({
                 data: { target: folder },
               },
               {
-                action: NavigationAction.ACTIVATE,
+                action: NavigationAction.OPEN,
               },
             ]),
           properties,
@@ -593,6 +578,10 @@ export const updateGraphWithAddObjectAction = ({
       });
     });
   });
+  return () => {
+    unsubscribeQueryHandler();
+    unsubscribeQuery();
+  };
 };
 
 /**
@@ -604,7 +593,7 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   const node = graph.findNode(active);
-  if (!node || !isEchoReactiveObject(node.data)) {
+  if (!node || !isReactiveObject(node.data)) {
     return;
   }
 

@@ -21,16 +21,18 @@ import {
   parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
+  activeIds,
+  firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isEchoReactiveObject, isReactiveProxy } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, SpaceProxy, getSpace, type PropertiesProps } from '@dxos/react-client/echo';
+import { type Space, getSpace, type PropertiesProps, isSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -61,7 +63,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, isSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
+import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -154,8 +156,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           }
 
           await dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id: target ?? space.key.toHex() },
+            action: NavigationAction.OPEN,
+            data: { main: [target ?? space.key.toHex()] },
           });
         });
       }
@@ -165,18 +167,22 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         effect(() => {
           const send = () => {
             const identity = client.halo.identity.get();
-            const space = getActiveSpace(graph, location.active);
-            if (identity && space && location.active) {
-              void space
-                .postMessage('viewing', {
-                  identityKey: identity.identityKey.toHex(),
-                  spaceKey: space.key.toHex(),
-                  added: [location.active],
-                  removed: [location.previous],
-                })
-                .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence', { err: err.message });
-                });
+            if (identity && location.active) {
+              Array.from(activeIds(location.active)).forEach((id) => {
+                const space = getActiveSpace(graph, id);
+                if (space) {
+                  void space
+                    .postMessage('viewing', {
+                      identityKey: identity.identityKey.toHex(),
+                      spaceKey: space.key.toHex(),
+                      added: [id],
+                      removed: location.closed,
+                    })
+                    .catch((err) => {
+                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                    });
+                }
+              });
             }
           };
 
@@ -249,15 +255,17 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       surface: {
         component: ({ data, role }) => {
+          const primary = data.active ?? data.object;
           switch (role) {
+            case 'article':
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
-              return isSpace(data.active) ? (
-                <SpaceMain space={data.active} />
-              ) : data.active instanceof FolderType ? (
-                <FolderMain folder={data.active} />
-              ) : typeof data.active === 'string' && data.active.length === 64 ? (
-                <MissingObject id={data.active} />
+              return isSpace(primary) ? (
+                <SpaceMain space={primary} role={role} />
+              ) : primary instanceof FolderType ? (
+                <FolderMain folder={primary} />
+              ) : typeof primary === 'string' && primary.length === 64 ? (
+                <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
@@ -286,14 +294,14 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return <PopoverRenameSpace space={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RenameObjectPopover' &&
-                isEchoReactiveObject(data.subject)
+                isReactiveObject(data.subject)
               ) {
                 return <PopoverRenameObject object={data.subject} />;
               } else if (
                 data.component === 'dxos.org/plugin/space/RemoveObjectPopover' &&
                 data.subject &&
                 typeof data.subject === 'object' &&
-                isReactiveProxy((data.subject as Record<string, any>)?.object)
+                isReactiveObject((data.subject as Record<string, any>)?.object)
               ) {
                 return (
                   <PopoverRemoveObject
@@ -305,7 +313,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
             case 'presence--glyph': {
-              return isReactiveProxy(data.object) ? (
+              return isReactiveObject(data.object) ? (
                 <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
               ) : (
                 <SmallPresence count={0} />
@@ -313,17 +321,18 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             }
             case 'navbar-start': {
               const space =
-                isGraphNode(data.activeNode) && isReactiveProxy(data.activeNode.data)
+                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
                   ? getSpace(data.activeNode.data)
                   : undefined;
               return space ? <PersistenceStatus db={space.db} /> : null;
             }
             case 'navbar-end': {
-              if (!isEchoReactiveObject(data.object)) {
+              if (!isEchoObject(data.object)) {
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
@@ -402,7 +411,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                       action: SpaceAction.CREATE,
                     },
                     {
-                      action: NavigationAction.ACTIVATE,
+                      action: NavigationAction.OPEN,
                     },
                   ]),
                 properties: {
@@ -421,7 +430,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                       action: SpaceAction.JOIN,
                     },
                     {
-                      action: NavigationAction.ACTIVATE,
+                      action: NavigationAction.OPEN,
                     },
                   ]),
                 properties: {
@@ -433,19 +442,21 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             ],
           });
 
-          const updateSpacesOrder = (spacesOrder?: EchoReactiveObject<Record<string, any>>) => {
+          const updateSpacesOrder = (orderObject?: EchoReactiveObject<Record<string, any>>) => {
             if (!spacesOrder) {
+              spacesOrder = orderObject;
+            }
+
+            if (!orderObject) {
               return;
             }
 
-            graph.sortEdges(groupNode.id, 'outbound', spacesOrder.order);
+            graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
           };
           const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
-          spacesOrder = spacesOrderQuery.objects[0];
-          updateSpacesOrder(spacesOrderQuery.objects[0]);
           graphSubscriptions.set(
             SHARED,
-            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0])),
+            spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),
           );
 
           const createSpaceNodes = (spaces: Space[]) => {
@@ -495,7 +506,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
-              } = defaultSpace.db.query({ key: SHARED });
+              } = await defaultSpace.db.query({ key: SHARED }).run();
               const space = await client.spaces.create(intent.data as PropertiesProps);
 
               const folder = create(FolderType, { objects: [] });
@@ -507,14 +518,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
               }
 
-              return { data: { space, id: space.key.toHex() } };
+              const spaceHex = space.key.toHex();
+              return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
             }
 
             case SpaceAction.JOIN: {
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  return { data: { space, id: space.key.toHex() } };
+                  const spaceHex = space.key.toHex();
+                  return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
                 }
               }
               break;
@@ -524,7 +537,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const target = navigationPlugin?.provides.location.active;
+                const target = firstMainId(navigationPlugin?.provides.location.active);
                 const result = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return { data: result };
               }
@@ -533,7 +546,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.RENAME: {
               const { caller, space } = intent.data ?? {};
-              if (typeof caller === 'string' && space instanceof SpaceProxy) {
+              if (typeof caller === 'string' && isSpace(space)) {
                 return {
                   intents: [
                     [
@@ -555,8 +568,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                await space.internal.open();
+              if (isSpace(space)) {
+                await space.open();
                 return { data: true };
               }
               break;
@@ -564,8 +577,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
-                await space.internal.close();
+              if (isSpace(space)) {
+                await space.close();
                 return { data: true };
               }
               break;
@@ -573,7 +586,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
-              if (space instanceof SpaceProxy) {
+              if (isSpace(space)) {
                 prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
@@ -615,32 +628,34 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.LOAD: {
               const space = intent.data?.space;
-              invariant(space instanceof SpaceProxy);
-              const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
-              await serializer.load({ space, directory }).catch(log.catch);
-              return { data: true };
+              if (isSpace(space)) {
+                const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+                await serializer.load({ space, directory }).catch(log.catch);
+                return { data: true };
+              }
+              break;
             }
 
             case SpaceAction.ADD_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
-              if (!isReactiveProxy(object)) {
+              if (!isReactiveObject(object)) {
                 return;
               }
 
               if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: object };
+                return { data: { ...object }, activeParts: { main: [object.id] } };
               }
 
-              if (intent.data?.target instanceof SpaceProxy) {
-                const space = intent.data.target;
+              const space = intent.data?.target;
+              if (isSpace(space)) {
                 const folder = getSpaceProperty(space, FolderType.typename);
                 if (folder instanceof FolderType) {
                   folder.objects.push(object as Identifiable);
-                  return { data: object };
                 } else {
-                  return { data: space.db.add(object) };
+                  space.db.add(object);
                 }
+                return { data: { ...object, activeParts: { main: [object.id] } } };
               }
               break;
             }
@@ -648,7 +663,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.REMOVE_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (isReactiveProxy(object) && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -664,6 +679,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                           },
                         },
                       },
+                      {
+                        action: NavigationAction.CLOSE,
+                        data: { activeParts: { main: [object.id] } },
+                      },
                     ],
                   ],
                 };
@@ -674,7 +693,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.RENAME_OBJECT: {
               const object = intent.data?.object ?? intent.data?.result;
               const caller = intent.data?.caller;
-              if (isReactiveProxy(object) && caller) {
+              if (isReactiveObject(object) && caller) {
                 return {
                   intents: [
                     [
@@ -696,7 +715,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
             case SpaceAction.DUPLICATE_OBJECT: {
               const originalObject = intent.data?.object ?? intent.data?.result;
-              if (!isEchoReactiveObject(originalObject)) {
+              if (!isEchoObject(originalObject)) {
                 return;
               }
 

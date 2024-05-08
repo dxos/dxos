@@ -6,13 +6,13 @@ import { expect } from 'chai';
 
 import { type StorageAdapterInterface } from '@dxos/automerge/automerge-repo';
 import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, test } from '@dxos/test';
+import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { type MaybePromise } from '@dxos/util';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { createTestLevel } from '../testing';
 
 const runTests = (
   testNamespace: string,
@@ -84,7 +84,7 @@ runTests('AutomergeStorageAdapter', () => {
  */
 runTests('LevelDBStorageAdapter', async () => {
   const level = createTestLevel();
-  await level.open();
-  afterTest(() => level.close());
-  return new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+  const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
+  await openAndClose(level, adapter as any);
+  return adapter;
 });

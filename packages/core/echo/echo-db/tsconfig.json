@@ -13,6 +13,9 @@
   ],
   "references": [
     {
+      "path": "../../../../tools/executors/test"
+    },
+    {
       "path": "../../../common/async"
     },
     {
@@ -25,13 +28,13 @@
       "path": "../../../common/debug"
     },
     {
-      "path": "../../../common/feed-store"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/kv-store"
     },
     {
       "path": "../../../common/log"
@@ -40,16 +43,40 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/timeframe"
+      "path": "../../../common/random-access-storage"
     },
     {
-      "path": "../../../common/typings"
+      "path": "../../../common/tracing"
     },
     {
       "path": "../../../common/util"
     },
     {
+      "path": "../../mesh/teleport"
+    },
+    {
       "path": "../../protocols"
+    },
+    {
+      "path": "../automerge"
+    },
+    {
+      "path": "../echo-pipeline"
+    },
+    {
+      "path": "../echo-protocol"
+    },
+    {
+      "path": "../echo-schema"
+    },
+    {
+      "path": "../echo-signals"
+    },
+    {
+      "path": "../echo-typegen"
+    },
+    {
+      "path": "../indexing"
     }
   ]
 }

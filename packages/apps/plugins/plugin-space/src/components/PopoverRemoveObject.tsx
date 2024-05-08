@@ -5,9 +5,15 @@
 import React, { useCallback, useRef } from 'react';
 
 import { getSpaceProperty, FolderType } from '@braneframe/types';
-import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { type Expando, isEchoReactiveObject } from '@dxos/echo-schema';
-import { getSpace } from '@dxos/react-client/echo';
+import {
+  NavigationAction,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  useResolvePlugin,
+  isIdActive,
+} from '@dxos/app-framework';
+import { type Expando } from '@dxos/echo-schema';
+import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -20,15 +26,15 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: E
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
   const handleDelete = useCallback(async () => {
-    if (!isEchoReactiveObject(object)) {
+    if (!isEchoObject(object)) {
       return;
     }
 
     // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-    if (navigationPlugin?.provides.location.active === object.id) {
+    if (isIdActive(navigationPlugin?.provides.location.active, object.id)) {
       await intentPlugin?.provides.intent.dispatch({
-        action: NavigationAction.ACTIVATE,
-        data: { id: undefined },
+        action: NavigationAction.CLOSE,
+        data: { activeParts: { main: object.id, sidebar: object.id, complementary: object.id } },
       });
     }
 

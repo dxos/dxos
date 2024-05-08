@@ -11,6 +11,7 @@ import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
 import DebugMeta from '@braneframe/plugin-debug/meta';
+import DeckMeta from '@braneframe/plugin-deck/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
@@ -98,6 +99,7 @@ const main = async () => {
     !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
+  const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -122,7 +124,7 @@ const main = async () => {
       isSocket ? NativeMeta : PwaMeta,
 
       // UX
-      LayoutMeta,
+      isDeck ? DeckMeta : LayoutMeta,
       NavTreeMeta,
       SettingsMeta,
       HelpMeta,
@@ -186,9 +188,17 @@ const main = async () => {
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
-      [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
-        observability: true,
-      }),
+      ...(isDeck
+        ? {
+            [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
+              observability: true,
+            }),
+          }
+        : {
+            [LayoutMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-layout'), {
+              observability: true,
+            }),
+          }),
       [MapMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-map')),
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
@@ -197,6 +207,10 @@ const main = async () => {
         ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
         : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
+      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
+        namespace: appKey,
+        observability: () => observability,
+      }),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
@@ -214,16 +228,12 @@ const main = async () => {
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id: document.id },
+            action: NavigationAction.OPEN,
+            data: { activeParts: { main: [document.id] } },
           });
         },
       }),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
-      [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
-        namespace: appKey,
-        observability: () => observability,
-      }),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
         appName: 'Composer',
@@ -232,22 +242,27 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
+      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
-      LayoutMeta.id,
+      isDeck ? DeckMeta.id : LayoutMeta.id,
       MetadataMeta.id,
       NavTreeMeta.id,
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ObservabilityMeta.id,
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
       ThemeMeta.id,
-      ObservabilityMeta.id,
       WildcardMeta.id,
     ],
-    // TODO(burdon): Add DebugMeta if dev build.
-    defaults: [MarkdownMeta.id, StackMeta.id, ThreadMeta.id, SketchMeta.id],
+    defaults: [
+      // TODO(burdon): Add DebugMeta if dev build.
+      MarkdownMeta.id,
+      StackMeta.id,
+      ThreadMeta.id,
+      SketchMeta.id,
+    ],
   });
 
   createRoot(document.getElementById('root')!).render(

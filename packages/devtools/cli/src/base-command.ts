@@ -24,7 +24,7 @@ import {
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
 } from '@dxos/client-protocol';
-import { type ConfigProto } from '@dxos/config';
+import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
@@ -36,7 +36,7 @@ import {
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
-import { FriendlyError, PublisherConnectionError } from './errors';
+import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
 import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
@@ -104,9 +104,20 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
+    target: Flags.string({
+      description: 'Target websocket server.',
+    }),
+
     // TODO(burdon): '--no-' prefix is not working.
+    // This does not check whether an agent is running or not, and could potentially corrupt data.
+    // https://github.com/dxos/dxos/issues/6473
     'no-agent': Flags.boolean({
-      description: 'Run command without using or starting agent.',
+      description: 'Run command without using an agent.',
+      default: false,
+    }),
+
+    'no-start-agent': Flags.boolean({
+      description: 'Do not automatically start an agent if one is not running.',
       default: false,
     }),
 
@@ -206,8 +217,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       log.config({ filter: !process.env.LOG_FILTER && !process.env.LOG_CONFIG ? LogLevel.ERROR : undefined });
     }
 
-    // Load user config file.
-    await this._loadConfig();
+    if (this.flags.target) {
+      this.log('Using remote target:', this.flags.target);
+      await this._loadConfigFromFile(Remote(this.flags.target, process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN));
+    } else {
+      // Load user config file.
+      await this._loadConfigFromFile();
+    }
     await this._initObservability(
       this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
         ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
@@ -276,7 +292,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Load or create config file from defaults.
    * @private
    */
-  private async _loadConfig() {
+  private async _loadConfigFromFile(...additionalConfig: ConfigProto[]) {
     const { config: configFile } = this.flags;
     const configExists = await exists(configFile);
     if (!configExists) {
@@ -302,7 +318,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }
 
     // TODO(burdon): Use Profile()?
-    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto);
+    this._clientConfig = new Config(yaml.load(await readFile(configFile, 'utf-8')) as ConfigProto, ...additionalConfig);
   }
 
   // TODO(burdon): Reconcile internal/external logging.
@@ -393,7 +409,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-agent']) {
+    if (!this.flags['no-start-agent'] && !this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
@@ -410,17 +426,27 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getClient() {
     invariant(this._clientConfig);
     if (!this._client) {
-      if (this.flags['no-agent']) {
-        this._client = new Client({ config: this._clientConfig });
-      } else {
-        await this.maybeStartDaemon();
-        this._client = new Client({ config: this._clientConfig, services: fromAgent({ profile: this.flags.profile }) });
+      try {
+        // Create a client using a LocalClientServices "host mode" or by connecting to a remote ClientServices.
+        if (this.flags['no-agent'] || this.flags.target) {
+          this._client = new Client({ config: this._clientConfig });
+        } else {
+          // Connect to a locally-running agent, possibly starting one if necessary.
+          await this.maybeStartDaemon();
+          this._client = new Client({
+            config: this._clientConfig,
+            services: fromAgent({ profile: this.flags.profile }),
+          });
+        }
+
+        await this._client.initialize();
+      } catch (err: any) {
+        if (err.message.includes('401')) {
+          throw new ClientInitializationError('error authenticating with remote service', err);
+        }
+        throw new ClientInitializationError('error initializing client', err);
       }
-
-      await this._client.initialize();
-      log('Client initialized', { profile: this.flags.profile });
     }
-
     return this._client;
   }
 

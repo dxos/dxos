@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -65,7 +65,7 @@
     "ink": "^3.2.0",
     "ink-table": "~3.0.0",
     "inquirer": "^8.2.0",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
     "kubo-rpc-client": "^3.0.2",
     "lodash.defaultsdeep": "^4.6.1",
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@oclif/test": "^2.3.31",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",

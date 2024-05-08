@@ -74,19 +74,19 @@ const testSchemas = (): TestSchemaMap<TestSchemaType> => {
 };
 
 const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
-  [TestSchemaType.document]: () => ({
+  [TestSchemaType.document]: async () => ({
     title: faker.lorem.sentence(3),
     content: faker.lorem.sentences({ min: 1, max: faker.number.int({ min: 1, max: 3 }) }),
   }),
 
-  [TestSchemaType.organization]: () => ({
+  [TestSchemaType.organization]: async () => ({
     name: faker.company.name(),
     website: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     description: faker.lorem.sentences(),
   }),
 
-  [TestSchemaType.contact]: (provider) => {
-    const organizations = provider?.(TestSchemaType.organization);
+  [TestSchemaType.contact]: async (provider) => {
+    const organizations = await provider?.(TestSchemaType.organization);
     const location = faker.datatype.boolean() ? faker.helpers.arrayElement(locations) : undefined;
     return {
       name: faker.person.fullName(),
@@ -99,7 +99,7 @@ const testObjectGenerators: TestGeneratorMap<TestSchemaType> = {
     };
   },
 
-  [TestSchemaType.project]: () => ({
+  [TestSchemaType.project]: async () => ({
     name: faker.commerce.productName(),
     repo: faker.datatype.boolean({ probability: 0.3 }) ? faker.internet.url() : undefined,
     status: faker.helpers.arrayElement(Status),

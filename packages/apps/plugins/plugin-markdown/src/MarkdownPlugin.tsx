@@ -18,8 +18,9 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter, create, type ReactiveObject } from '@dxos/echo-schema';
+import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { getSpace, Filter, type Query } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -59,12 +60,13 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
 
   // TODO(burdon): Move downstream outside of plugin.
-  const getCustomExtensions = (document?: DocumentType) => {
+  const getCustomExtensions = (document?: DocumentType, query?: Query<DocumentType>) => {
     // Configure extensions.
     const extensions = getExtensions({
       dispatch: intentPlugin?.provides.intent.dispatch,
       settings: settings.values,
       document,
+      query,
     });
 
     // Add extensions from other plugins.
@@ -102,6 +104,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
+            label: (object: any) => (object instanceof DocumentType ? getFallbackTitle(object) : undefined),
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -140,6 +143,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
               // Add all documents to the graph.
               const query = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -218,18 +222,35 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         component: ({ data, role, ...props }, forwardedRef) => {
           // TODO(wittjosiah): Ideally this should only be called when the editor is actually being used.
           //   We probably want a better pattern for splitting this surface resolver up.
-          const extensions = useMemo(
-            () =>
-              data.active instanceof DocumentType
-                ? getCustomExtensions(data.active)
-                : data.object instanceof DocumentType
-                  ? getCustomExtensions(data.object)
-                  : getCustomExtensions(),
-            [data.active, data.object, settings.values.editorMode],
-          );
+          const doc =
+            data.active instanceof DocumentType
+              ? data.active
+              : data.object instanceof DocumentType
+                ? data.object
+                : undefined;
+          const space = doc && getSpace(doc);
+          const extensions = useMemo(() => {
+            const query = space?.db.query(Filter.schema(DocumentType));
+            query?.subscribe();
+            return getCustomExtensions(doc, query);
+          }, [doc, space, settings.values.editorMode]);
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
+            case 'article': {
+              if (doc) {
+                return (
+                  <DocumentMain
+                    readonly={settings.values.state[doc.id]?.readonly}
+                    toolbar={settings.values.toolbar}
+                    document={doc}
+                    extensions={extensions}
+                  />
+                );
+              } else {
+                return null;
+              }
+            }
             case 'main': {
               if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};

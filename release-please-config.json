@@ -54,6 +54,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
@@ -319,6 +324,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/kv-store/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/local-storage/package.json",
           "jsonpath": "$.version"
         },
@@ -420,6 +430,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -589,6 +604,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/labs-workers/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },
@@ -609,17 +629,17 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/blade-runner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/gravity/kube-publishing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-testing/package.json",
           "jsonpath": "$.version"
         },
         {

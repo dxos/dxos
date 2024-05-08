@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
-import { createDocAccessor, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   createBasicExtensions,

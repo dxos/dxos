@@ -5,10 +5,10 @@
 import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, createDocAccessor, create } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 
 const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
@@ -55,7 +55,7 @@ export class Generator {
   }
 
   createObjects(count: Partial<Record<TestSchemaType, number>> = defaultCount) {
-    this._generator.createObjects(count);
+    void this._generator.createObjects(count).catch();
   }
 
   createDocument() {
@@ -67,8 +67,8 @@ export class Generator {
     return this._space.db.add(create(DocumentType, { title, content: create(TextV0Type, { content }) }));
   }
 
-  updateDocument() {
-    const { objects } = this._space.db.query(Filter.schema(DocumentType));
+  async updateDocument() {
+    const { objects } = await this._space.db.query(Filter.schema(DocumentType)).run();
     if (objects.length) {
       const object = faker.helpers.arrayElement(objects);
       const text = object.content?.content ?? '';

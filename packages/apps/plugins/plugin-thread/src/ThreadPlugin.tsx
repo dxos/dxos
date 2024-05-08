@@ -12,6 +12,7 @@ import { ThreadType, DocumentType, MessageType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
+  NavigationAction,
   type LocationProvides,
   type Plugin,
   type PluginDefinition,
@@ -19,12 +20,15 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
+  firstMainId,
+  SLUG_PATH_SEPARATOR,
+  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { createDocAccessor, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, getTextInRange, SpaceProxy, Filter } from '@dxos/react-client/echo';
+import { getSpace, getTextInRange, Filter, isSpace, createDocAccessor } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -56,8 +60,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const state = create<ThreadState>({ threads: {} });
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
+  let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let unsubscribe: UnsubscribeCallback | undefined;
+  let queryUnsubscribe: UnsubscribeCallback | undefined;
 
   return {
     meta,
@@ -65,50 +71,67 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
+      const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+      if (!client) {
+        return;
+      }
 
       // TODO(wittjosiah): This is a hack to make standalone threads work in the c11y sidebar.
       //  This should have a better solution when deck is introduced.
-      unsubscribe = effect(() => {
-        const active = navigationPlugin?.provides.location.active;
-        const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-        const space = activeNode
-          ? activeNode.data instanceof SpaceProxy
-            ? activeNode.data
-            : getSpace(activeNode.data)
-          : undefined;
-        untracked(() => {
-          const [thread] = space?.db.query(Filter.schema(ThreadType, (thread) => !thread.context)).objects ?? [];
-          if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: {
-                element: 'complementary',
-                subject: activeNode.data,
-                state: isMinSm(),
-              },
+      const threadsQuery = client.spaces.query(Filter.schema(ThreadType, (thread) => !thread.context));
+      queryUnsubscribe = threadsQuery.subscribe();
+      unsubscribe = isDeckModel
+        ? effect(() => {
+            // TODO(thure); Open comments in a way that doesn’t cause an infinite loop.
+          })
+        : effect(() => {
+            const active = firstMainId(navigationPlugin?.provides.location.active);
+            const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
+            const space = activeNode
+              ? isSpace(activeNode.data)
+                ? activeNode.data
+                : getSpace(activeNode.data)
+              : undefined;
+            untracked(() => {
+              const [thread] = threadsQuery.objects.filter((thread) => getSpace(thread) === space);
+              if (
+                activeNode &&
+                activeNode?.data instanceof DocumentType &&
+                (activeNode.data.comments?.length ?? 0) > 0
+              ) {
+                // TODO(thure): `OPEN` instead of `SET_LAYOUT`.
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'complementary',
+                    subject: activeNode.data,
+                    state: isMinSm(),
+                  },
+                });
+              } else if (settings.values.standalone && thread && !(activeNode?.data instanceof ThreadType)) {
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'complementary',
+                    subject: thread,
+                    state: isMinSm(),
+                  },
+                });
+              } else {
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: { element: 'complementary', subject: null, state: false },
+                });
+              }
             });
-          } else if (settings.values.standalone && thread && !(activeNode?.data instanceof ThreadType)) {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: {
-                element: 'complementary',
-                subject: thread,
-                state: isMinSm(),
-              },
-            });
-          } else {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: { element: 'complementary', subject: null, state: false },
-            });
-          }
-        });
-      });
+          });
     },
     unload: async () => {
       unsubscribe?.();
+      queryUnsubscribe?.();
     },
     provides: {
       settings: settings.values,
@@ -166,9 +189,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
               // Add all threads not linked to documents to the graph.
               const query = space.db.query(Filter.schema(ThreadType));
+              subscriptions.add(query.subscribe());
               // TODO(wittjosiah): There should be a better way to do this.
               //  Resolvers in echo schema is likely the solution.
               const documentQuery = space.db.query(Filter.schema(DocumentType));
+              subscriptions.add(documentQuery.subscribe());
               let previousObjects: ThreadType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -218,6 +243,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
             }
 
+            case 'article':
             case 'complementary': {
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
@@ -236,17 +262,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ?.filter(({ cursor }) => !cursor)
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
-
                 return (
                   <>
-                    <CommentsHeading attendableId={data.subject.id} />
-                    <ScrollArea.Root>
+                    {role === 'complementary' && <CommentsHeading attendableId={data.subject.id} />}
+                    <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads ?? []}
                           detached={detached ?? []}
                           currentId={state.current}
-                          context={{ object: location?.active }}
+                          context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
@@ -279,7 +304,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={{ object: location?.active }} />
+                    <ChatContainer thread={data.subject} context={{ object: firstMainId(location?.active) }} />
                   </>
                 );
               }
@@ -317,8 +342,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments?.splice(index, 1);
                 }
 
-                // TODO(wittjosiah): Deleting the thread entirely here causes an error when undoing.
-                // space.db.remove(thread);
+                space.db.remove(thread);
 
                 return {
                   undoable: {
@@ -327,7 +351,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   },
                 };
               } else if (intent.undo && typeof cursor === 'string') {
-                doc.comments.push({ thread, cursor });
+                // TODO(wittjosiah): SDK should do this automatically.
+                const savedThread = space.db.add(thread);
+                doc.comments.push({ thread: savedThread, cursor });
                 return { data: true };
               }
             }
@@ -361,7 +387,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               },
             }),
             comments({
-              id: doc.content?.id,
+              id: doc.id,
               onCreate: ({ cursor, location }) => {
                 // Create comment thread.
                 const [start, end] = cursor.split(':');
@@ -377,14 +403,23 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     action: ThreadAction.SELECT,
                     data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
-                  {
-                    action: LayoutAction.SET_LAYOUT,
-                    data: {
-                      element: 'complementary',
-                      subject: doc,
-                      state: true,
-                    },
-                  },
+                  isDeckModel
+                    ? {
+                        action: NavigationAction.OPEN,
+                        data: {
+                          activeParts: {
+                            main: [`${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                          },
+                        },
+                      }
+                    : {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          subject: doc,
+                          state: true,
+                        },
+                      },
                 ]);
 
                 return thread.id;

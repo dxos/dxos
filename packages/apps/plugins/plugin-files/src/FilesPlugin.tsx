@@ -16,9 +16,10 @@ import {
   parseIntentPlugin,
   NavigationAction,
   parseNavigationPlugin,
+  firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Trigger } from '@dxos/async';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { listener } from '@dxos/react-ui-editor';
 
 import { LocalFileMain } from './components';
@@ -98,7 +99,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
       if (navigationPlugin && graphPlugin) {
         subscriptions.add(
           effect(() => {
-            const active = navigationPlugin.provides.location.active;
+            const active = firstMainId(navigationPlugin.provides.location.active);
             const path =
               active && graphPlugin.provides.graph.getPath({ target: active })?.filter((id) => id.startsWith(PREFIX));
             const current = (active?.startsWith(PREFIX) && path && findFile(state.files, path)) || undefined;
@@ -153,7 +154,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                       plugin: FILES_PLUGIN,
                       action: LocalFilesAction.OPEN_FILE,
                     },
-                    { action: NavigationAction.ACTIVATE },
+                    { action: NavigationAction.OPEN },
                   ]),
                 properties: {
                   label: ['open file label', { ns: FILES_PLUGIN }],
@@ -170,7 +171,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                             plugin: FILES_PLUGIN,
                             action: LocalFilesAction.OPEN_DIRECTORY,
                           },
-                          { action: NavigationAction.ACTIVATE },
+                          { action: NavigationAction.OPEN },
                         ]),
                       properties: {
                         label: ['open directory label', { ns: FILES_PLUGIN }],
@@ -292,7 +293,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
                 const file = await handleToLocalFile(handle);
                 state.files.push(file);
 
-                return { data: [file.id] };
+                return { data: { activeParts: { main: [file.id] } } };
               }
 
               const input = document.createElement('input');
@@ -315,7 +316,7 @@ export const FilesPlugin = (): PluginDefinition<LocalFilesPluginProvides, Markdo
               const handle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
               const directory = await handleToLocalDirectory(handle);
               state.files.push(directory);
-              return { data: [directory.id, directory.children[0]?.id] };
+              return { data: { activeParts: { main: [directory.id, directory.children[0]?.id] } } };
             }
 
             case LocalFilesAction.RECONNECT: {

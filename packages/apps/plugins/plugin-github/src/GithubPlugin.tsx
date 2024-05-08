@@ -14,7 +14,7 @@ import { resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
-import { type OpaqueEchoObject, SpaceState, getMeta } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, SpaceState, getMeta } from '@dxos/react-client/echo';
 
 import { EmbeddedMain, ImportDialog, OctokitProvider, GitHubSettings, UrlDialog, MarkdownActions } from './components';
 import meta, { GITHUB_PLUGIN, GITHUB_PLUGIN_SHORT_ID } from './meta';
@@ -50,9 +50,10 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
               }
 
               // TODO(dmaretskyi): Meta filters?.
-              const query = space.db.query((obj: OpaqueEchoObject) =>
+              const query = space.db.query((obj: EchoReactiveObject<any>) =>
                 getMeta(obj)?.keys?.find((key) => key?.source?.includes('github')),
               );
+              subscriptions.add(query.subscribe());
               let previousObjects: DocumentType[] = [];
               subscriptions.add(
                 effect(() => {
@@ -76,9 +77,9 @@ export const GithubPlugin = (): PluginDefinition<GithubPluginProvides> => {
                   });
 
                   const removedObjects = previousObjects.filter(
-                    (object) => !(query.objects as OpaqueEchoObject[]).includes(object),
+                    (object) => !(query.objects as EchoReactiveObject<any>[]).includes(object),
                   );
-                  previousObjects = query.objects as OpaqueEchoObject[] as DocumentType[];
+                  previousObjects = query.objects as EchoReactiveObject<any>[] as DocumentType[];
 
                   batch(() => {
                     removedObjects.forEach((object) => graph.removeEdge({ source: id, target: object.id }));

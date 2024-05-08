@@ -9,11 +9,10 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type MyLevel } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -54,7 +53,7 @@ export class TestBuilder {
 
   public config: Config;
   public storage?: Storage;
-  public level?: MyLevel;
+  public level?: LevelDB;
 
   _transport: TransportKind;
 
@@ -115,16 +114,14 @@ export class TestBuilder {
    * Create backend service handlers.
    */
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
-    const level = this.level ?? createTestLevel();
     const services = new ClientServicesHost({
       config: this.config,
       storage: this.storage,
-      level,
+      level: this.level,
       runtimeParams,
       ...this.networking,
     });
     this._ctx.onDispose(async () => {
-      await level.close();
       await services.close();
     });
     return services;
@@ -134,15 +131,14 @@ export class TestBuilder {
    * Create local services host.
    */
   createLocal() {
-    const level = this.level ?? createTestLevel();
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
-      level,
+      level: this.level,
+      runtimeParams: { invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 } },
       ...this.networking,
     });
     this._ctx.onDispose(async () => {
-      await level.close();
       await services.close();
     });
     return services;
@@ -168,7 +164,7 @@ export class TestBuilder {
   }
 
   async destroy() {
-    void this._ctx.dispose();
+    await this._ctx.dispose();
     await this.level?.close();
   }
 }

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type IntentContext, IntentProvider, type IntentExecution } from './IntentContext';

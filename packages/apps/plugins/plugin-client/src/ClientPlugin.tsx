@@ -5,7 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -19,7 +19,6 @@ import {
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -32,7 +31,7 @@ export enum ClientAction {
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
 }
 
-export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
+export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean };
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
@@ -58,7 +57,6 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
   Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
 
 export const ClientPlugin = ({
-  types,
   appKey,
   ...options
 }: ClientPluginOptions): PluginDefinition<
@@ -81,6 +79,7 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
+        client.addSchema(TextV0Type);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {
@@ -90,10 +89,6 @@ export const ClientPlugin = ({
             }
           });
         });
-
-        if (types) {
-          client.addTypes(types);
-        }
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);

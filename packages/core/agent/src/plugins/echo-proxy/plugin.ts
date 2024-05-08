@@ -48,7 +48,7 @@ export class EchoProxyPlugin extends Plugin {
       if (spaceKey) {
         const space = this.context.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
-          const { objects } = space.db.query();
+          const { objects } = await space.db.query().run();
           Object.assign(result, {
             objects,
           });

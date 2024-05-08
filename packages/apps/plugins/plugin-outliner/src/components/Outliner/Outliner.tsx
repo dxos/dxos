@@ -9,7 +9,7 @@ import React, { type HTMLAttributes, StrictMode, useEffect, useMemo, useState } 
 import { createRoot } from 'react-dom/client';
 
 import { type TreeItemType } from '@braneframe/types';
-import { createDocAccessor } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,

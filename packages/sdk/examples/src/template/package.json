@@ -13,7 +13,7 @@
     "@dxos/react-ui-types": "latest",
     "@dxos/react-client": "latest",
     "@dxos/echo-schema": "latest",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -24,6 +24,6 @@
     "@vitejs/plugin-react": "^4.2.1",
     "noise-protocol": "3.0.1",
     "typescript": "^5.2.2",
-    "vite": "^5.1.7"
+    "vite": "^5.2.9"
   }
 }

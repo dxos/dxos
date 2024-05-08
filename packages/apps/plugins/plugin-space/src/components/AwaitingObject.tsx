@@ -3,10 +3,11 @@
 //
 
 import { CheckCircle, CircleDashed, CircleNotch } from '@phosphor-icons/react';
-import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { parseIntentPlugin, useResolvePlugin, parseNavigationPlugin, NavigationAction } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -25,11 +26,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
 
   const client = useClient();
-  const query = useMemo(() => client.spaces.query(), []);
-  const objects = useSyncExternalStore(
-    (cb) => query.subscribe(cb),
-    () => query.objects,
-  );
+  const objects = useQuery(client.spaces);
 
   useEffect(() => {
     if (!id) {
@@ -62,8 +59,8 @@ export const AwaitingObject = ({ id }: { id: string }) => {
 
   const handleNavigate = () => {
     void intentPlugin?.provides.intent.dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [id] } },
     });
     void handleClose();
   };

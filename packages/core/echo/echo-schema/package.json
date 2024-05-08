@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,12 +18,6 @@
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
       "node": "./dist/lib/node/testing/index.cjs"
-    },
-    "./schema": {
-      "browser": "./dist/lib/browser/schema.mjs",
-      "import": "./dist/lib/browser/schema.mjs",
-      "require": "./dist/lib/node/schema.cjs",
-      "node": "./dist/lib/node/schema.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -31,52 +25,27 @@
     "*": {
       "testing": [
         "dist/types/src/testing/index.d.ts"
-      ],
-      "schema": [
-        "dist/types/src/schema.d.ts"
       ]
     }
   },
   "files": [
-    "testing.d.ts",
-    "testing.js",
     "dist",
     "src"
   ],
   "dependencies": {
-    "@dxos/async": "workspace:*",
-    "@dxos/automerge": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
-    "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
-    "@dxos/tracing": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@effect/schema": "0.64.7",
-    "@orama/orama": "^2.0.8",
-    "effect": "2.4.9",
-    "lodash.defaultsdeep": "^4.6.1",
-    "lodash.get": "^4.4.2",
-    "lodash.isequal": "^4.5.0"
-  },
-  "devDependencies": {
-    "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-typegen": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.get": "^4.4.7",
-    "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.15.1",
-    "wait-for-expect": "^3.0.2"
+    "effect": "2.4.9",
+    "lodash.get": "^4.4.2"
   },
+  "devDependencies": {},
   "publishConfig": {
     "access": "public"
   },

@@ -9,7 +9,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { createColumnBuilder, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 
 import { MasterDetailTable, PanelContainer } from '../../../components';
-import { SpaceSelector } from '../../../containers';
+import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
 const { helper, builder } = createColumnBuilder<SpaceMember>();
@@ -43,7 +43,7 @@ export const MembersPanel = () => {
     <PanelContainer
       toolbar={
         <Toolbar.Root>
-          <SpaceSelector />
+          <DataSpaceSelector />
         </Toolbar.Root>
       }
     >

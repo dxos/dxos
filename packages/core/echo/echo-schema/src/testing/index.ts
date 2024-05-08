@@ -1,5 +1,6 @@
 //
-// Copyright 2020 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-export * from './testing';
+export * from './schema';
+export * from './utils';

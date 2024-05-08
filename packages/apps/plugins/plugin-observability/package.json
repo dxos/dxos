@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-observability",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,10 +42,10 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/react": "^18.0.21",
     "react": "^18.2.0",
-    "vite": "^5.1.7"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

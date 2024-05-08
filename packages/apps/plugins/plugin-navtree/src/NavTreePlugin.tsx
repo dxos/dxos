@@ -20,8 +20,9 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
-import { create } from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
+import { type PartIdentifier } from '@dxos/react-ui-deck';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
@@ -155,6 +156,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                     paths={longestPaths}
                     activeId={data.activeId as string}
                     popoverAnchorId={data.popoverAnchorId as string}
+                    part={data.part as PartIdentifier | undefined}
                   />
                 );
               }
@@ -170,11 +172,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'navbar-start': {
               const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
               if (path && state.root) {
-                const activeNode = getTreeNode(state.root, path);
-
                 return {
                   node: (
-                    <NavBarStart activeNode={activeNode} popoverAnchorId={data.popoverAnchorId as string | undefined} />
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
                   ),
                   disposition: 'hoist',
                 };

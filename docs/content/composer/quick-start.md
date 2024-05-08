@@ -39,7 +39,7 @@ The contents of your personal space will be visible only to you.
 
 ## Sharing
 
-Composer is organized into [spaces](spaces) for grouping and sharing content.
+Composer is organized into [spaces](spaces.md) for grouping and sharing content.
 
 Click the <HopeIcon icon="plus" /> next to <span class="composer-pink">`Shared Spaces`</span> in the sidebar to create a new space.
 
