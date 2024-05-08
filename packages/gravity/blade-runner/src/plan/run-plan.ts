@@ -62,7 +62,6 @@ export const readYAMLSpecFile = async <S, C>(
   });
 };
 
-// TODO(mykola): Introduce Executor class.
 export const runPlan = async <S, C>(name: string, { plan, spec, options }: RunPlanParams<S, C>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
