@@ -2,18 +2,31 @@
 // Copyright 2023 DXOS.org
 //
 
-import get from 'lodash.get';
 import React, { type PropsWithChildren, useState, useEffect } from 'react';
 import Joyride, { ACTIONS, EVENTS } from 'react-joyride';
 
 import { usePlugins } from '@dxos/app-framework';
-import { useThemeContext } from '@dxos/react-ui';
+// import { useThemeContext } from '@dxos/react-ui';
 import { tailwindConfig, type TailwindConfig } from '@dxos/react-ui-theme';
 
 import { type Step, HelpContext } from '../../types';
 import { floaterProps, Tooltip } from '../Tooltip';
 
 export const tokens: TailwindConfig['theme'] = tailwindConfig({}).theme;
+
+const addStepClass = (target: string | HTMLElement) => {
+  const element = typeof target === 'string' ? document.querySelector(target) : target;
+  if (element) {
+    element.classList.add('joyride-target');
+  }
+};
+
+const removeTargetClass = (target: string | HTMLElement) => {
+  const element = typeof target === 'string' ? document.querySelector(target) : target;
+  if (element) {
+    element.classList.remove('joyride-target');
+  }
+};
 
 export const HelpContextProvider = ({
   children,
@@ -25,7 +38,7 @@ export const HelpContextProvider = ({
   const setStepIndex = async (index: number, cb?: () => any) => {
     if (runningProp) {
       const step = steps[index];
-      await step?.before?.({ plugins });
+      await step?.before?.({ plugins, step });
     }
     _setStepIndex(index);
     cb?.();
@@ -43,7 +56,7 @@ export const HelpContextProvider = ({
   };
   const [steps, setSteps] = useState(initialSteps);
   // const [helpers, setHelpers] = useState<StoreHelpers>();
-  const { themeMode } = useThemeContext();
+  // const { themeMode } = useThemeContext();
   const [running, setRunning] = useState(!!runningProp);
   const { plugins } = usePlugins();
 
@@ -59,7 +72,14 @@ export const HelpContextProvider = ({
   const callback: Joyride['callback'] = async (options) => {
     const { type, action, index, size } = options;
     switch (type) {
+      case EVENTS.STEP_BEFORE:
+        addStepClass(options.step.target);
+        break;
+      case EVENTS.TOUR_END:
+        // removeTargetClass(options.step.target);
+        break;
       case EVENTS.STEP_AFTER:
+        removeTargetClass(options.step.target);
         switch (action) {
           case ACTIONS.NEXT:
             if (index < size - 1) {
@@ -93,10 +113,15 @@ export const HelpContextProvider = ({
         stop: () => setRunningChanged(false),
       }}
     >
+      <style>
+        {`.joyride-target {
+          --controls-opacity: 1;
+        }`}
+      </style>
       <Joyride
         continuous={true}
         // spotlightClicks={true}
-        disableOverlay={true}
+        // disableOverlay={true}
         // disableOverlayClose={true}
         steps={steps}
         stepIndex={stepIndex}
@@ -105,12 +130,6 @@ export const HelpContextProvider = ({
         floaterProps={floaterProps}
         tooltipComponent={Tooltip}
         // getHelpers={(helpers) => setHelpers(helpers)}
-        styles={{
-          options: {
-            // TODO(burdon): Better way to normalize theme?
-            arrowColor: get(tokens, themeMode === 'dark' ? 'extend.colors.accent' : 'extend.colors.accent'),
-          },
-        }}
       />
       {children}
     </HelpContext.Provider>

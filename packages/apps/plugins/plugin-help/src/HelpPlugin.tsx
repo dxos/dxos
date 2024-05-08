@@ -31,6 +31,7 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           storageKey: 'show-welcome',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         });
+      state.running = !!settings.values.showHints;
     },
     provides: {
       context: ({ children }) => {
@@ -38,7 +39,12 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           <HelpContextProvider
             steps={steps}
             running={state.running}
-            onRunningChanged={(newState) => (state.running = newState)}
+            onRunningChanged={(newState) => {
+              state.running = newState;
+              if (!newState) {
+                settings.values.showHints = false;
+              }
+            }}
           >
             {children}
           </HelpContextProvider>

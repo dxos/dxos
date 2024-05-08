@@ -16,7 +16,7 @@ import {
 import { HELP_PLUGIN } from './meta';
 
 export type Step = BaseStep & {
-  before?: (context: { plugins: Plugin[] }) => any;
+  before?: (context: { plugins: Plugin[]; step: Step }) => any;
 };
 
 export type HelpContextType = {
