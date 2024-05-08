@@ -53,6 +53,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
 
