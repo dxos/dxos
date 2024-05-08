@@ -4,7 +4,7 @@
 
 - CF Pages supports a `preview` and `production` environment per project, unlike Workers, which can have any number.
 
-| Branch       | CF Page Naem   | CF Environment | Cloudflare                     | Netlify                           |
+| Branch       | CF Page Name   | CF Environment | Cloudflare                     | Netlify                           |
 |--------------|----------------|----------------|--------------------------------|-----------------------------------|
 | `main`       | `composer-dev` | `preview`      | https://dev.composer.space     | https://composer.dev.dxos.org     |
 | `testing`    |                | `production`   | https://testing.composer.space | N/A                               | 
@@ -13,7 +13,6 @@
 
 Plan
 
-- [ ] Retire `beta` branch.
-- [ ] Configure staging for CF Pages (support ticket due to limit reached): increased to 20
+- [ ] Retire `beta` branch (move to production).
 - [ ] Configure and align production and staging environments.
 - [ ] How are secrets managed?
