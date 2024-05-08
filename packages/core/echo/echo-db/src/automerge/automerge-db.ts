@@ -352,10 +352,13 @@ export class AutomergeDb {
   async flush(): Promise<void> {
     // TODO(mykola): send out only changed documents.
     await this.automerge.flush({
-      states: this._automergeDocLoader.getAllHandles().map((handle) => ({
-        heads: getHeads(handle.docSync()),
-        documentId: handle.documentId,
-      })),
+      states: this._automergeDocLoader
+        .getAllHandles()
+        .filter((handle) => !!handle.docSync())
+        .map((handle) => ({
+          heads: getHeads(handle.docSync()),
+          documentId: handle.documentId,
+        })),
     });
   }
 
