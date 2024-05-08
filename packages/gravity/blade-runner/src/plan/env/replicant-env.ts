@@ -14,7 +14,7 @@ export const REDIS_PORT = 6379;
 
 export { type RedisOptions };
 
-export class AgentEnv<S, C> implements ReplicantEnv {
+export class ReplicantEnvImpl<S, C> implements ReplicantEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
