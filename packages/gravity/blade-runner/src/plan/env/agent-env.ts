@@ -7,7 +7,7 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { type ReplicantEnv } from './interface';
+import { type ReplicantEnv } from '../interface';
 import { type AgentParams } from '../spec';
 
 export const REDIS_PORT = 6379;
