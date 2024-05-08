@@ -11,7 +11,7 @@ import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
-import { REDIS_PORT } from './agent-env';
+import { REDIS_PORT } from './replicant-env';
 import { createRedisRpcPort } from './util';
 
 /**
@@ -19,44 +19,42 @@ import { createRedisRpcPort } from './util';
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe.skip('AgentEnv', () => {
-  describe('Redis', () => {
-    test('two redis client can exchange messages', async () => {
-      const client = await setupRedisClient();
-      const server = await setupRedisClient();
+describe.skip('Redis', () => {
+  test('two redis client can exchange messages', async () => {
+    const client = await setupRedisClient();
+    const server = await setupRedisClient();
 
-      const key = 'message-' + PublicKey.random().toHex();
-      const value = 'hello';
-      const message = server.blpop(key, 0);
+    const key = 'message-' + PublicKey.random().toHex();
+    const value = 'hello';
+    const message = server.blpop(key, 0);
 
-      await client.rpush(key, value);
+    await client.rpush(key, value);
 
-      expect(await message).to.deep.equal([key, value]);
+    expect(await message).to.deep.equal([key, value]);
+  });
+
+  test('RPC connection between two redis clients', async () => {
+    const [alicePort, bobPort] = await createLinkedRedisPorts();
+
+    const alice = new RpcPeer({
+      callHandler: async (method, msg) => {
+        expect(method).to.eq('method');
+        expect(msg.value).to.deep.eq(Buffer.from('request'));
+        return createPayload('response');
+      },
+      port: alicePort,
+      noHandshake: true,
+    });
+    const bob = new RpcPeer({
+      callHandler: async (method, msg) => createPayload(),
+      port: bobPort,
+      noHandshake: true,
     });
 
-    test('RPC connection between two redis clients', async () => {
-      const [alicePort, bobPort] = await createLinkedRedisPorts();
+    await openAndClose(alice, bob);
 
-      const alice = new RpcPeer({
-        callHandler: async (method, msg) => {
-          expect(method).to.eq('method');
-          expect(msg.value).to.deep.eq(Buffer.from('request'));
-          return createPayload('response');
-        },
-        port: alicePort,
-        noHandshake: true,
-      });
-      const bob = new RpcPeer({
-        callHandler: async (method, msg) => createPayload(),
-        port: bobPort,
-        noHandshake: true,
-      });
-
-      await openAndClose(alice, bob);
-
-      const response = await bob.call('method', createPayload('request'));
-      expect(response).to.deep.eq(createPayload('response'));
-    });
+    const response = await bob.call('method', createPayload('request'));
+    expect(response).to.deep.eq(createPayload('response'));
   });
 });
 
