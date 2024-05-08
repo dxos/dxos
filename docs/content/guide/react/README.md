@@ -12,7 +12,7 @@ npm install --save @dxos/react-client
 ```
 
 ::: note
-If using one of the DXOS application templates via [`npm init @dxos@latest`](../cli/app-templates) this is pre-installed
+If using one of the DXOS application templates via [`npm init @dxos@latest`](../cli/app-templates.md) this is pre-installed
 :::
 
 ## Configuration
@@ -54,7 +54,7 @@ createRoot(document.body).render(<App />);
 
 ## Manipulating data
 
-Before manipulating data, a [user identity](identity) and a [space](spaces) are required.
+Before manipulating data, a [user identity](identity.md) and a [space](spaces.md) are required.
 
 ## Further configuration
 
@@ -133,4 +133,4 @@ createRoot(document.body).render(<App />);
 
 :::
 
-See [configuration](../typescript/config) in the TypeScript guide for more configuration recipes.
+See [configuration](../typescript/config.md) in the TypeScript guide for more configuration recipes.

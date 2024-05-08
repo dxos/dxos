@@ -20,7 +20,7 @@ There are several open-source packages of UI components available:
 Install the `@dxos/react-ui` package with your package manager and follow steps below.
 
 ::: note
-Apps based on the DXOS [application templates](../cli/app-templates) have DXOS UI configured by default, which can be turned off with `--interactive` mode.
+Apps based on the DXOS [application templates](../cli/app-templates.md) have DXOS UI configured by default, which can be turned off with `--interactive` mode.
 :::
 
 ### With [Vite](https://vitejs.dev)

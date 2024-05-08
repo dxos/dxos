@@ -5,11 +5,11 @@ order: 5
 
 # Queries
 
-The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary#space). This will return generic objects which can be [mutated](./mutations) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
+The simplest way to access data in [`ECHO`](../platform) from `react` is by using a [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) hook on a [`space`](../glossary.md#space). This will return generic objects which can be [mutated](./mutations.md) like regular JavaScript objects. `useQuery<T>` can also return strongly typed results as will be shown [below](#typed-queries).
 
 ## Untyped queries
 
-The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
+The first argument to [`useQuery`](/api/@dxos/react-client/functions#usequery-space-filter) from package `@dxos/react-client` is the [`space`](../glossary.md#space) and the second is an optional filter which matches all objects which have all the keys and values specified in the filter. The return type is an iterable array of `Document` objects.
 
 ```tsx{10} file=./snippets/use-query.tsx#L5-
 import React from 'react';
@@ -119,7 +119,7 @@ dxtype <input protobuf file> <output typescript file>
 ```
 
 ::: info Tip
-If you're using one of the DXOS [application templates](../cli/app-templates), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
+If you're using one of the DXOS [application templates](../cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
 
 To use the type declarations, simply import the relevant type like `Task` from the location where `dxtype` produces output and pass it to `useQuery<T>`.

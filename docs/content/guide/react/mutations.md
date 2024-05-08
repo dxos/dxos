@@ -67,7 +67,7 @@ Calling `space.db.add(task)` needs to happen only once. All changes to the objec
 
 ## Typed Mutations
 
-The following example uses the same [schema](./queries#typed-queries) definition and code generation setup with `dxtype` as in the [Typed Queries](./queries#typed-queries) section.
+The following example uses the same [schema](./queries.md#typed-queries) definition and code generation setup with `dxtype` as in the [Typed Queries](./queries.md#typed-queries) section.
 
 ### Setting values
 
@@ -137,5 +137,5 @@ await space.db.remove(task);
 ```
 
 ::: note
-Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
+Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](../glossary.md#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
 :::

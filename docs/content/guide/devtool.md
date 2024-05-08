@@ -27,4 +27,4 @@ The "Download Backup" and "Import Space" buttons can be found under the "Spaces"
 
 ## Next Steps
 
-Check out some [Example Applications](./samples) created with DXOS.
+Check out some [Example Applications](./samples.md) created with DXOS.

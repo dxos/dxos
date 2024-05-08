@@ -11,7 +11,7 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 
 ## Creating spaces
 
-Having established an [identity](./identity), a space can be created:
+Having established an [identity](./identity.md), a space can be created:
 
 ```ts file=./snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';
@@ -106,4 +106,4 @@ const client = new Client();
 })();
 ```
 
-Having obtained a `space`, it is now possible to [query](./queries) and [mutate](./mutations) objects in that space.
+Having obtained a `space`, it is now possible to [query](./queries.md) and [mutate](./mutations.md) objects in that space.

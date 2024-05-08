@@ -146,7 +146,7 @@ See [the platform overview](../platform/#spaces) describing the general process 
 Now that you have a space, you can invite people to it using our [Sharing UI flows](./sharing-ui-flows).
 
 ::: note Tip
-To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/spaces#creating-an-invitation).
+To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/spaces.md#creating-an-invitation).
 :::
 
-See a more detailed example in the [`Tasks` application sample](../samples#tasks).
+See a more detailed example in the [`Tasks` application sample](../samples.md#tasks).

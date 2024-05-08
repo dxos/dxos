@@ -11,7 +11,7 @@ The shell is a set of components and pre-built workflows for managing [ECHO](../
   <img class="dark" src="../platform/images/shell-dark.png" alt="Shell profile panel" />
 </div>
 
-[Read more about Shell.](../platform/halo#shell)
+[Read more about Shell.](../platform/halo.md#shell)
 
 ## Installation
 

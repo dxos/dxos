@@ -288,8 +288,8 @@ This is one of the "gotchas" when working with CRDTs. While they ensure that con
 
 ## Recap
 
-* A [HALO identity](./platform/halo) and a [space](./platform/#spaces) are required to use ECHO.
-* Reading objects is as simple as querying for the object using [`useQuery()`](react/queries).
+* A [HALO identity](./platform/halo.md) and a [space](./platform/#spaces) are required to use ECHO.
+* Reading objects is as simple as querying for the object using [`useQuery()`](react/queries.md).
 * The objects returned are tracked by the `Client` and direct mutations to them will be synchronized with other peers (and other parts of your app) reactively.
 
 ## Deploying the app
@@ -314,7 +314,7 @@ For more info on using DXOS, see:
 
 * ECHO with [React](./react/)
 * ECHO with [TypeScript](./typescript/)
-* ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+* ECHO with [strongly typed objects](./typescript/queries.md#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 

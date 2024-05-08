@@ -19,12 +19,12 @@ HALO is a system of components for implementing decentralized identity designed 
 
 ## Establishing user identity
 
-There are two ways a user can establish their identity (login) with DXOS on any given [device](../glossary#device).
+There are two ways a user can establish their identity (login) with DXOS on any given [device](../glossary.md#device).
 
 1. Visiting any DXOS-powered application in the browser will immediately initialize a HALO identity for the user.
 2. Accepting a [device invitation](#device-invitations) will synchronize the user's identity from another device.
 
-In the future, we plan to support recovering an identity using a [seed phrase](../glossary#seed-phrase), sometimes referred to as paper key recovery.
+In the future, we plan to support recovering an identity using a [seed phrase](../glossary.md#seed-phrase), sometimes referred to as paper key recovery.
 
 ## Shell
 
@@ -64,10 +64,10 @@ Device Invitations allow users to synchronize their identity and data across mul
 
 How to use the HALO Shell in code:
 
-* Use [Shell with Typescript](../typescript/shell#installation)
-* Use [Shell with React](../react/shell#installation)
+* Use [Shell with Typescript](../typescript/shell.md#installation)
+* Use [Shell with React](../react/shell.md#installation)
 
 How to read the HALO identity in code:
 
-* Use the [`useIdentity` hook in react](../react/identity)
-* Use the [`client.halo.profile` field in TypeScript](../typescript/identity)
+* Use the [`useIdentity` hook in react](../react/identity.md)
+* Use the [`client.halo.profile` field in TypeScript](../typescript/identity.md)

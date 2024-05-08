@@ -9,7 +9,7 @@ order: 100
 
 Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers.
 
-### [HALO](./platform/halo)
+### [HALO](./platform/halo.md)
 
 A protocol, application, and SDK for managing a decentralized user identity for end users and developers.
 

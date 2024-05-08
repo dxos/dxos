@@ -89,5 +89,5 @@ await space.db.remove(object);
 ```
 
 ::: note
-Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](../glossary#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
+Objects in ECHO are not physically deleted, they are marked with a removed field and remain in the change history until the next [epoch](../glossary.md#epoch). This ECHO mutation feed design is required to allow any latent offline writers to reconcile changes when they come online.
 :::

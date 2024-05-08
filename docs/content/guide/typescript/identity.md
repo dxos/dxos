@@ -4,9 +4,9 @@ order: 1
 
 # Identity
 
-This section describes how to obtain [HALO identity](../platform/halo) in TypeScript.
+This section describes how to obtain [HALO identity](../platform/halo.md) in TypeScript.
 
-To create or join a [space](./spaces) in ECHO, the user must first establish a HALO identity.
+To create or join a [space](./spaces.md) in ECHO, the user must first establish a HALO identity.
 
 ## Obtaining identity
 
@@ -56,4 +56,4 @@ const client = new Client();
 
 :::
 
-Before data can be manipulated, a [`space`](./spaces) must be obtained.
+Before data can be manipulated, a [`space`](./spaces.md) must be obtained.
