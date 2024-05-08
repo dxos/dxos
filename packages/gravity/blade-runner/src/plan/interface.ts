@@ -11,6 +11,7 @@ export interface ReplicantEnv extends CommonTestEnv {}
 
 export interface SchedulerEnv extends CommonTestEnv {
   spawn<T>(brain: ReplicantBrain<T>): Promise<Replicant<T>>;
+  
 }
 
 export type ReplicantBrain<T> = { new (): T };
