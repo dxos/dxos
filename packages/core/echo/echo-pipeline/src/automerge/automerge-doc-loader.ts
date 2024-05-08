@@ -56,7 +56,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   ) {}
 
   getAllHandles(): DocHandle<SpaceDoc>[] {
-    return [...new Set(this._objectDocumentHandles.values())];
+    return this._spaceRootDocHandle != null
+      ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
+      : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -171,7 +173,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     const docHandle = this._repo.find<SpaceDoc>(url as DocumentId);
     while (true) {
       try {
-        await warnAfterTimeout(5_000, `Automerge root doc load timeout (AutomergeDb)`, async () => {
+        await warnAfterTimeout(5_000, 'Automerge root doc load timeout (AutomergeDb)', async () => {
           await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
         });
         break;
