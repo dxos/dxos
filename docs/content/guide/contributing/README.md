@@ -12,7 +12,7 @@ dir:
 This section is under development
 :::
 
-We welcome all your input! Our [mission](https://docs.dxos.org/guide/why) is to enable developers to build a fully decentralized alternative to the existing Cloud, and we believe the path ahead involves all kinds of developers from far and wide collaborating here. Thank you for being here and contributing.
+We welcome all your input! Our [mission](../why.md) is to enable developers to build a fully decentralized alternative to the existing Cloud, and we believe the path ahead involves all kinds of developers from far and wide collaborating here. Thank you for being here and contributing.
 
 ## Submitting Issues
 

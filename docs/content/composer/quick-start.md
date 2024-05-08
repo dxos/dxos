@@ -49,7 +49,7 @@ While it's possible to sync data between devices this way, it's also possible th
 
 The solution requires that at least one device is always available on the network for every space.
 
-The DXOS [`Agent`](/docs/composer/agent/overview) is a component anyone can run on their computer to ensure that their spaces are always available to other devices, even when they are offline.
+The DXOS [`Agent`](../guide/tooling/cli/agent.md) is a component anyone can run on their computer to ensure that their spaces are always available to other devices, even when they are offline.
 
 The DXOS Agent is also available in a [hosted version]() which offers better uptime and backup features.
 

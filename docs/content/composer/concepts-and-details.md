@@ -38,8 +38,8 @@ Designed for mobile and desktop, works in modern browsers.
 
 ### Availability
 
-Data is available on the peer network as long as peers are online. [Agents](https://docs.dxos.org/guide/platform/agents) are personal servers that can be used to boost data availability when the user's devices are offline. They are open source and can be run on any device, or hosted by a trusted third party.
+Data is available on the peer network as long as peers are online. [Agents](../guide/tooling/cli/agent.md) are personal servers that can be used to boost data availability when the user's devices are offline. They are open source and can be run on any device, or hosted by a trusted third party.
 
 ### HALO decentralized identity
 
-Composer uses the passwordless and decentralized identity management system [HALO](https://docs.dxos.org/guide/platform/halo) from DXOS. This means that users can access their data from any device without needing to remember a password. As long as some peers or agents are online, the user can restore their data to any new device.
+Composer uses the passwordless and decentralized identity management system [HALO](../guide/halo.md) from DXOS. This means that users can access their data from any device without needing to remember a password. As long as some peers or agents are online, the user can restore their data to any new device.
