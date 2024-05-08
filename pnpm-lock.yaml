@@ -14,9 +14,6 @@ patchedDependencies:
   '@nx/js@17.3.2':
     hash: dwhumptijtisrex26nuv2tgk2a
     path: patches/@nx__js@17.3.2.patch
-  '@radix-ui/react-dropdown-menu@2.0.5':
-    hash: e5isk7r7t3hyjd7xo7tbxnvrpm
-    path: patches/@radix-ui__react-dropdown-menu@2.0.5.patch
   '@radix-ui/react-dropdown-menu@2.0.7-rc.10':
     hash: fdgem6zvkijjenhhx3en7zyzdy
     path: patches/@radix-ui__react-dropdown-menu@2.0.7-rc.10.patch
@@ -36119,7 +36116,7 @@ snapshots:
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
 
-  '@radix-ui/react-dropdown-menu@2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@radix-ui/react-dropdown-menu@2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       '@babel/runtime': 7.23.9
       '@radix-ui/primitive': 1.0.1
@@ -38547,7 +38544,7 @@ snapshots:
       '@radix-ui/react-alert-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-context-menu': 2.1.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
-      '@radix-ui/react-dropdown-menu': 2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      '@radix-ui/react-dropdown-menu': 2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-popover': 1.0.6-rc.5(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-select': 1.2.1(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@radix-ui/react-slider': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
