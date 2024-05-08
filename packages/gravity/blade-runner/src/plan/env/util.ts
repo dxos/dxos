@@ -7,6 +7,8 @@ import type Redis from 'ioredis';
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
+export const REDIS_PORT = 6379;
+
 export const createRedisRpcPort = ({
   sendClient,
   receiveClient,
