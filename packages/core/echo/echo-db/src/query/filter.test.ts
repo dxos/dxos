@@ -8,6 +8,7 @@ import { expect } from 'chai';
 import { Reference } from '@dxos/echo-protocol';
 import { TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
 import { Filter, compareType, filterMatch } from './filter';
@@ -62,6 +63,16 @@ describe('Filter', () => {
     const filter2 = Filter.not(filter1);
 
     expect(filterMatch(filter1, core)).to.be.true;
+    expect(filterMatch(filter2, core)).to.be.false;
+  });
+
+  test('not preserves deleted handling', () => {
+    const core = createAutomergeObjectCore({ title: 'test' });
+    core.setDeleted(true);
+    const filter1 = Filter.from({ title: 'test' }, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
+    const filter2 = Filter.not(filter1);
+
+    expect(filterMatch(filter1, core)).to.be.false;
     expect(filterMatch(filter2, core)).to.be.false;
   });
 

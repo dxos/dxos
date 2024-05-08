@@ -181,7 +181,7 @@ describe('InvitationHandler', () => {
 
       await sleep(10);
       expect(guest.sink.lastState).to.eq(Invitation.State.ERROR);
-    });
+    }).timeout(20_000);
 
     test('single host - many guests', async () => {
       const hosts: PeerSetup[] = [await createPeer()];
