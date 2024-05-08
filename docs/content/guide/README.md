@@ -8,8 +8,6 @@ DXOS provides developers with everything they need to build real-time, collabora
 
 DXOS applications work offline, share state instantly when online, and leave end-users in control of their data and privacy.
 
-Read more [motivation](why.md).
-
 :::note
 DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome on [GitHub](https://github.com/dxos/dxos/issues) and [Discord](https://discord.gg/eXVfryv3sW). <br/>See our [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md) about contributing code.
 :::
