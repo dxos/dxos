@@ -5,7 +5,7 @@ dir:
 order: 0
 ---
 
-# DXOS UI
+# About
 
 There are several open-source packages of UI components available:
 
