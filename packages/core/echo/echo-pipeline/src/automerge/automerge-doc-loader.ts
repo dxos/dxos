@@ -56,7 +56,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   ) {}
 
   getAllHandles(): DocHandle<SpaceDoc>[] {
-    return [...new Set(this._objectDocumentHandles.values())];
+    return this._spaceRootDocHandle != null
+      ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
+      : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })
