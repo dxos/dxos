@@ -7,8 +7,6 @@ import { describe, test } from '@dxos/test';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
-import { AnyDocumentId } from '@dxos/automerge/src/automerge-repo';
-import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -47,8 +45,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
-  test.skip('reload peer', async () => {
+  test('reload peer', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
