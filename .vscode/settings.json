@@ -49,5 +49,5 @@
   "debug.javascript.terminalOptions": {
     "skipFiles": ["<node_internals>/**", "internal/*", "**/stream.ts", "**/events.ts", "**/wtfnode.js", "**/context.ts"]
   },
-  "circleci.persistedProjectSelection": ["gh/dxos/dxos"]
+  "circleci.persistedProjectSelection": []
 }
