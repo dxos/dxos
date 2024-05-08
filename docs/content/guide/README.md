@@ -26,15 +26,3 @@ Compare DXOS applications to client-server web applications:
 | How data is stored | on the **server** | on the **client** |
 | How data is exchanged | client to server via HTTP or Web Sockets | peer to peer via WebRTC |
 | How identity is established | servers issue session tokens after validating credentials with methods like OAuth | clients generate their own private/public key pairs and use them to sign messages in the database. |
-
-## ECHO
-
-ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates data with those peers using the [Automerge](https://automerge.org/) [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on arbitrary objects and text. Clients may perform writes while offline, reconciling with the swarm when returning online.
-
-Learn more about [ECHO](platform).
-
-## HALO
-
-Establishing user identity in a non-authoritative internet is hard. Every peer has to decide how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
-
-Learn more about [HALO](platform/halo.md).
