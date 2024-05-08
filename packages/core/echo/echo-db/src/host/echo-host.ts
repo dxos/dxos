@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, type EchoReplicator } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -101,6 +101,20 @@ export class EchoHost extends Resource {
     await this._automergeHost.repo.flush([automergeRoot.documentId]);
 
     return automergeRoot.url;
+  }
+
+  /**
+   * Install data replicator.
+   */
+  async addReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(replicator);
+  }
+
+  /**
+   * Remove data replicator.
+   */
+  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.removeReplicator(replicator);
   }
 
   /**
