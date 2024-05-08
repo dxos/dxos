@@ -4,7 +4,8 @@
 
 import { type Doc, view } from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { type AutomergeHost } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';

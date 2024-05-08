@@ -10,21 +10,8 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 
 /**
- * @deprecated Use TestBuilder.
+ * @deprecated Remove in favour of the new EchoTestBuilder
  */
-// TODO(burdon): Builder pattern.
-export const createDatabase = async (graph = new Hypergraph()) => {
-  const spaceKey = PublicKey.random();
-  const automergeContext = new AutomergeContext();
-  const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
-  await db.automerge.open({
-    rootUrl: automergeContext.repo.create().url,
-  });
-  graph._register(spaceKey, db); // TODO(burdon): Database should have random id?
-  return { db, graph };
-};
-
-// Remove in favour of the new EchoTestBuilder.
 export class TestBuilder {
   public readonly defaultSpaceKey = PublicKey.random();
   public readonly graph = new Hypergraph();
@@ -57,6 +44,9 @@ export class TestBuilder {
   }
 }
 
+/**
+ * @deprecated Remove in favour of the new EchoTestBuilder
+ */
 export class TestPeer {
   public db = new EchoDatabaseImpl({
     spaceKey: this.spaceKey,

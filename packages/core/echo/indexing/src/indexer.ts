@@ -4,10 +4,10 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type LevelDB } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
@@ -37,7 +37,12 @@ export type IndexerParams = {
 
 @trace.resource()
 export class Indexer {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({
+    onError: (err) => {
+      log.catch(err);
+    },
+  });
+
   private _indexConfig?: IndexConfig;
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
     kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
@@ -57,6 +62,7 @@ export class Indexer {
       await this._promoteNewIndexes();
     }
     await this._indexUpdatedObjects();
+    await sleep(300);
   });
 
   private readonly _db: LevelDB;

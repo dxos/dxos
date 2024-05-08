@@ -9,10 +9,10 @@ import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { type LevelDB } from '@dxos/echo-pipeline';
 import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
@@ -135,6 +135,7 @@ export class TestBuilder {
       config: this.config,
       storage: this.storage,
       level: this.level,
+      runtimeParams: { invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 } },
       ...this.networking,
     });
     this._ctx.onDispose(async () => {

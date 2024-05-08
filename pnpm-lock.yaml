@@ -531,6 +531,9 @@ importers:
       '@braneframe/plugin-debug':
         specifier: workspace:*
         version: link:../plugins/plugin-debug
+      '@braneframe/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugins/plugin-deck
       '@braneframe/plugin-explorer':
         specifier: workspace:*
         version: link:../plugins/plugin-explorer
@@ -679,8 +682,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: 0.4.36
-        version: 0.4.36
+        specifier: ^0.4.37
+        version: 0.4.37
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -757,6 +760,9 @@ importers:
       workbox-window:
         specifier: ^7.0.0
         version: 7.0.0
+      wrangler:
+        specifier: ^3.51.2
+        version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
 
   packages/apps/composer-extension:
     devDependencies:
@@ -1209,6 +1215,79 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.5
         version: 15.5.5
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-deck:
+    dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keyboard':
+        specifier: workspace:*
+        version: link:../../../common/keyboard
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-mosaic
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+    devDependencies:
+      '@braneframe/plugin-graph':
+        specifier: workspace:*
+        version: link:../plugin-graph
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
+      '@braneframe/plugin-theme':
+        specifier: workspace:*
+        version: link:../plugin-theme
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -2151,6 +2230,9 @@ importers:
       '@dxos/react-ui-card':
         specifier: workspace:*
         version: link:../../../ui/react-ui-card
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../../../ui/react-ui-editor
@@ -4099,8 +4181,8 @@ importers:
         specifier: ^4.6.2
         version: 4.6.2
       protobufjs:
-        specifier: ^7.2.2
-        version: 7.2.2
+        specifier: ^7.2.5
+        version: 7.2.6
     devDependencies:
       '@types/lodash.merge':
         specifier: ^4.6.6
@@ -4408,6 +4490,25 @@ importers:
         specifier: workspace:*
         version: link:../node-std
 
+  packages/common/kv-store:
+    dependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../keys
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../node-std
+      abstract-level:
+        specifier: ^1.0.2
+        version: 1.0.4
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
+    devDependencies:
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
+
   packages/common/local-storage:
     dependencies:
       '@dxos/echo-schema':
@@ -4690,8 +4791,8 @@ importers:
         specifier: ~7.1.6
         version: 7.1.7
       protobufjs:
-        specifier: ^7.2.2
-        version: 7.2.2
+        specifier: ^7.2.5
+        version: 7.2.6
       read-pkg:
         specifier: ^5.2.0
         version: 5.2.0
@@ -5129,6 +5230,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5144,6 +5248,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5250,6 +5357,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo-schema
@@ -5259,6 +5369,9 @@ importers:
       '@dxos/hypercore':
         specifier: workspace:*
         version: link:../../../common/hypercore
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5268,6 +5381,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5342,6 +5458,12 @@ importers:
         specifier: ^3.0.2
         version: 3.0.2
 
+  packages/core/echo/echo-protocol:
+    dependencies:
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../protocols
+
   packages/core/echo/echo-query:
     dependencies:
       '@dxos/echo-db':
@@ -5366,6 +5488,9 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
@@ -5431,8 +5556,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/protobuf-compiler
       protobufjs:
-        specifier: ^7.2.2
-        version: 7.2.2
+        specifier: ^7.2.5
+        version: 7.2.6
     devDependencies:
       '@swc-node/register':
         specifier: 1.6.8
@@ -5461,27 +5586,21 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../automerge
-      '@dxos/codec-protobuf':
-        specifier: workspace:*
-        version: link:../../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
-      '@dxos/debug':
+      '@dxos/echo-protocol':
         specifier: workspace:*
-        version: link:../../../common/debug
-      '@dxos/echo-pipeline':
-        specifier: workspace:*
-        version: link:../echo-pipeline
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../echo-schema
+        version: link:../echo-protocol
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -5503,12 +5622,6 @@ importers:
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
-      abstract-level:
-        specifier: ^1.0.2
-        version: 1.0.4
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
       level-transcoder:
         specifier: ^1.0.1
         version: 1.0.1
@@ -7322,8 +7435,8 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       hono:
-        specifier: ^4.2.5
-        version: 4.2.6
+        specifier: ^4.2.7
+        version: 4.2.8
       modelfusion:
         specifier: ^0.137.0
         version: 0.137.0
@@ -7994,6 +8107,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -8030,6 +8146,9 @@ importers:
       base-x:
         specifier: ~3.0.9
         version: 3.0.9
+      jwt-decode:
+        specifier: ^4.0.0
+        version: 4.0.0
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -8140,6 +8259,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -8158,6 +8280,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/lock-file':
         specifier: workspace:*
         version: link:../../common/lock-file
@@ -8203,9 +8328,6 @@ importers:
       '@dxos/websocket-rpc':
         specifier: workspace:*
         version: link:../../core/mesh/websocket-rpc
-      level:
-        specifier: ^8.0.1
-        version: 8.0.1
       platform:
         specifier: ^1.3.6
         version: 1.3.6
@@ -10836,7 +10958,7 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@8.1.1)
       lodash.debounce: 4.0.8
-      resolve: 1.22.5
+      resolve: 1.22.8
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
@@ -14094,8 +14216,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.36:
-    resolution: {integrity: sha512-YbD/RWRmHnO4e6oKVvOzoIN1M6InvUQco8Yy34WNnnv0VbY56c/t70/c/7QPinZuURnmLBt6fklr4JSEKjADng==}
+  /@dxos/web-auth@0.4.37:
+    resolution: {integrity: sha512-XxS7hs7eAbhxyj3zysGPfgF3Bj2Q5SAV2l9ZfYUbPWYN+of9EMlReBVWHaY80Vp6Xm8FnHWjuuV2HCQOuizdFA==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
@@ -21330,7 +21452,7 @@ packages:
       builtin-modules: 3.3.0
       deepmerge: 4.3.1
       is-module: 1.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       rollup: 2.79.1
     dev: true
 
@@ -24410,7 +24532,6 @@ packages:
 
   /@types/json-schema@7.0.15:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
-    dev: true
 
   /@types/json-stable-stringify@1.0.34:
     resolution: {integrity: sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==}
@@ -24519,7 +24640,7 @@ packages:
   /@types/lodash.get@4.4.7:
     resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.isequal@4.5.6:
@@ -25327,7 +25448,7 @@ packages:
       eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@8.49.0)
-      '@types/json-schema': 7.0.12
+      '@types/json-schema': 7.0.15
       '@types/semver': 7.5.1
       '@typescript-eslint/scope-manager': 5.59.11
       '@typescript-eslint/types': 5.59.11
@@ -27131,7 +27252,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       cosmiconfig: 6.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
     dev: true
 
   /babel-plugin-macros@3.1.0:
@@ -27140,7 +27261,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       cosmiconfig: 7.1.0
-      resolve: 1.22.5
+      resolve: 1.22.8
 
   /babel-plugin-polyfill-corejs2@0.3.3(@babel/core@7.21.3):
     resolution: {integrity: sha512-8hOdmFYFSZhqg2C/JgLUQ+t52o5nirNwaWM2B9LWteozwIvM14VSwdsCAUET10qT+kmySAlseadmfeeSWFCy+Q==}
@@ -31554,7 +31675,7 @@ packages:
     dependencies:
       debug: 3.2.7(supports-color@5.5.0)
       is-core-module: 2.13.0
-      resolve: 1.22.5
+      resolve: 1.22.8
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -34026,11 +34147,6 @@ packages:
       parse-passwd: 1.0.0
     dev: true
 
-  /hono@4.2.6:
-    resolution: {integrity: sha512-AtbHZJYWsm+uFHLz0C6xltX7hjOV44a55gSEGBfoQOJ00KSxEUOoiIkmd+NXfapNX0j2GCKhqMmYeegBdHRwcQ==}
-    engines: {node: '>=16.0.0'}
-    dev: false
-
   /hono@4.2.8:
     resolution: {integrity: sha512-re/zNrOWb7Sp9KhojlMEgcgvqsE8Rgk9IcmumqsbKa9ruPT5XuOcx1U+xuNaI4SUnwrPsiTQ72MiodtpJEVfjg==}
     engines: {node: '>=16.0.0'}
@@ -34815,7 +34931,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       err-code: 3.0.1
-      protobufjs: 7.2.2
+      protobufjs: 7.2.6
     dev: false
 
   /ipfs-utils@9.0.14:
@@ -36284,7 +36400,7 @@ packages:
       jest-pnp-resolver: 1.2.2(jest-resolve@26.6.2)
       jest-util: 26.6.2
       read-pkg-up: 7.0.1
-      resolve: 1.22.5
+      resolve: 1.22.8
       slash: 3.0.0
     dev: true
 
@@ -36313,7 +36429,7 @@ packages:
       jest-pnp-resolver: 1.2.2(jest-resolve@29.5.0)
       jest-util: 29.5.0
       jest-validate: 29.5.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       resolve.exports: 2.0.2
       slash: 3.0.0
     dev: true
@@ -37059,6 +37175,11 @@ packages:
       safe-buffer: 5.2.1
     dev: false
 
+  /jwt-decode@4.0.0:
+    resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
+    engines: {node: '>=18'}
+    dev: false
+
   /keyborg@2.5.0:
     resolution: {integrity: sha512-nb4Ji1suqWqj6VXb61Jrs4ab/UWgtGph4wDch2NIZDfLBUObmLcZE0aiDjZY49ghtu03fvwxDNvS9ZB0XMz6/g==}
     dev: false
@@ -37511,7 +37632,6 @@ packages:
     dependencies:
       buffer: 6.0.3
       module-error: 1.0.2
-    dev: false
 
   /level@8.0.1:
     resolution: {integrity: sha512-oPBGkheysuw7DmzFQYyFe8NAia5jFLAgEnkgWnK3OXAuJr8qFT+xBQIwokAZPME2bhPFzS8hlYcL16m8UZrtwQ==}
@@ -39652,7 +39772,6 @@ packages:
   /module-error@1.0.2:
     resolution: {integrity: sha512-0yuvsqSCv8LbaOKhnsQ/T5JhyFlCYLPXK3U2sgV10zoKQwzs/MyfuQUOZQ1V/6OCOJsK/TRgNVrPuPDqtdMFtA==}
     engines: {node: '>=10'}
-    dev: false
 
   /moment@2.30.1:
     resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
@@ -41926,25 +42045,6 @@ packages:
     resolution: {integrity: sha512-vtK/94akxsTMhe0/cbfpR+syPuszcuwhqVjJq26CuNDgFGj682oRBXOP5MJpv2r7JtE8MsiepGIqvvOTBwn2vA==}
     dev: true
 
-  /protobufjs@7.2.2:
-    resolution: {integrity: sha512-++PrQIjrom+bFDPpfmqXfAGSQs40116JRrqqyf53dymUMvvb5d/LMRyicRoF1AUKoXVS1/IgJXlEgcpr4gTF3Q==}
-    engines: {node: '>=12.0.0'}
-    requiresBuild: true
-    dependencies:
-      '@protobufjs/aspromise': 1.1.2
-      '@protobufjs/base64': 1.1.2
-      '@protobufjs/codegen': 2.0.4
-      '@protobufjs/eventemitter': 1.1.0
-      '@protobufjs/fetch': 1.1.0
-      '@protobufjs/float': 1.0.2
-      '@protobufjs/inquire': 1.1.0
-      '@protobufjs/path': 1.1.2
-      '@protobufjs/pool': 1.1.0
-      '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.11.9
-      long: 5.2.1
-    dev: false
-
   /protobufjs@7.2.6:
     resolution: {integrity: sha512-dgJaEDDL6x8ASUZ1YqWciTRrdOuYNzoOf27oHNfdyvKqHr5i0FV7FSLU+aIeFjyFgVxrpTOtQUi0BLLBymZaBw==}
     engines: {node: '>=12.0.0'}
@@ -42462,7 +42562,7 @@ packages:
       '@types/doctrine': 0.0.9
       '@types/resolve': 1.20.6
       doctrine: 3.0.0
-      resolve: 1.22.5
+      resolve: 1.22.8
       strip-indent: 4.0.0
     transitivePeerDependencies:
       - supports-color
@@ -43067,7 +43167,7 @@ packages:
     resolution: {integrity: sha512-HFM8rkZ+i3zrV+4LQjwQ0W+ez98pApMGM3HUrN04j3CqzPOzl9nmP15Y8YXNm8QHGv/eacOVEjqhmWpkRV0NAw==}
     engines: {node: '>= 0.10'}
     dependencies:
-      resolve: 1.22.5
+      resolve: 1.22.8
 
   /recursive-readdir@2.2.3:
     resolution: {integrity: sha512-8HrF5ZsXk5FAH9dgsx3BlUer73nIhuj+9OrQwEbLTPOBzGkL1lsFCR01am+v+0m2Cmbs1nP12hLDl5FA7EszKA==}
@@ -43519,7 +43619,7 @@ packages:
     dependencies:
       debug: 4.3.4(supports-color@8.1.1)
       module-details-from-path: 1.0.3
-      resolve: 1.22.5
+      resolve: 1.22.8
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -43614,7 +43714,6 @@ packages:
       is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: true
 
   /resolve@2.0.0-next.4:
     resolution: {integrity: sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==}
@@ -45535,7 +45634,7 @@ packages:
       postcss-selector-parser: 6.0.11
       postcss-value-parser: 4.2.0
       quick-lru: 5.1.1
-      resolve: 1.22.5
+      resolve: 1.22.8
       tmp: 0.2.1
     transitivePeerDependencies:
       - ts-node

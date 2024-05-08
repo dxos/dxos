@@ -2,12 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type IconProps } from '@phosphor-icons/react';
-import { type FC } from 'react';
-
-import { type InvokeParams, type Action } from '@dxos/app-graph';
-import { type Label } from '@dxos/react-ui';
-import { type MaybePromise } from '@dxos/util';
+import { type ActionLike } from '@dxos/app-graph';
 
 // TODO(thure): Dedupe (also in react-ui-navtree)
 export type KeyBinding = {
@@ -19,9 +14,4 @@ export type KeyBinding = {
 };
 
 // TODO(thure): Dedupe (similar in react-ui-navtree)
-export type PlankHeadingAction = Pick<Action, 'id' | 'properties'> & {
-  label: Label;
-  icon?: FC<IconProps>;
-  keyBinding?: string | KeyBinding;
-  invoke: (params?: Omit<InvokeParams, 'node'>) => MaybePromise<any>;
-};
+export type PlankHeadingAction = Pick<ActionLike, 'id' | 'properties' | 'data'>;

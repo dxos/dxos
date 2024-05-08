@@ -32,13 +32,15 @@ export const createColumnsFromTableDef = ({
   space,
   tableDef,
   tablesToReference,
+  onColumnReorder,
   ...options
 }: {
   space: Space;
   tableDef: TableDef;
   tablesToReference: TableDef[];
+  onColumnReorder: (columnId: string, direction: 'right' | 'left') => void;
 } & ColumnCreationOptions): TableColumnDef<any>[] => {
-  const dataColumns = createColumns(tableDef, tablesToReference, space, options);
+  const dataColumns = createColumns(tableDef, tablesToReference, space, onColumnReorder, options);
   const actionColumn = createActionColumn(tableDef, options);
 
   return [...dataColumns, actionColumn];
@@ -51,11 +53,17 @@ export const createColumns = (
   tableDef: TableDef,
   tablesToReference: TableDef[],
   space: Space,
+  onColumnReorder: (columnId: string, direction: 'right' | 'left') => void,
   { onRowUpdate, onColumnUpdate, onColumnDelete }: ColumnCreationOptions = {},
 ): TableColumnDef<any>[] => {
   const { helper, builder } = createColumnBuilder<any>();
+
   return tableDef.columns.map((column) => {
     const { type, id, label, fixed, resizable, ...props } = column;
+
+    const columnIndex = tableDef.columns.indexOf(column);
+    const columnPosition =
+      columnIndex === 0 ? 'start' : columnIndex === tableDef.columns.length - 1 ? 'end' : undefined;
 
     const options: BaseColumnOptions<EchoReactiveObject<any>, any> = {
       ...props,
@@ -66,11 +74,14 @@ export const createColumns = (
         : (context) => (
             <ColumnMenu<any, any>
               context={context}
-              tableDefs={tablesToReference}
+              tablesToReference={tablesToReference}
               tableDef={tableDef}
               column={column}
+              columnOrderable={tableDef.columns.length > 1}
+              columnPosition={columnPosition}
               onUpdate={onColumnUpdate}
               onDelete={onColumnDelete}
+              onColumnReorder={onColumnReorder}
             />
           ),
       onUpdate: onRowUpdate,

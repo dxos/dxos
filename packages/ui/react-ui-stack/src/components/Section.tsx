@@ -59,7 +59,7 @@ import { translationKey } from '../translations';
 
 const sectionActionDimensions = 'p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
-export type StackSectionContent = MosaicDataItem & { title?: string };
+export type StackSectionContent = MosaicDataItem;
 
 export type CollapsedSections = Record<string, boolean>;
 
@@ -87,6 +87,7 @@ export type StackSectionItem = MosaicDataItem & {
   size?: SectionSize;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
+  label?: (data: any) => string | undefined;
   isResizable?: boolean;
 };
 
@@ -335,7 +336,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
     const title =
-      itemObject?.title ??
+      transformedItem.label?.(itemObject) ??
       // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
       ((typeof transformedItem.placeholder === 'string'
         ? transformedItem.placeholder

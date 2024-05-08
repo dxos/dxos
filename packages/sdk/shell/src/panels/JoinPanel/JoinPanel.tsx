@@ -60,7 +60,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
           <Viewport.View classNames={stepStyles} id='reset storage confirmation'>
             <ConfirmResetComponent
               send={send}
-              active={activeView === 'reset identity confirmation'}
+              active={activeView === 'reset storage confirmation'}
               onCancel={onCancelResetStorage}
               onConfirm={onConfirmResetStorage}
             />
@@ -222,7 +222,7 @@ export const JoinPanel = ({
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
         return 'addition method chooser';
       case joinState.matches('resettingIdentity'):
-        return 'reset identity confirmation';
+        return 'reset storage confirmation';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
         return 'create identity input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
