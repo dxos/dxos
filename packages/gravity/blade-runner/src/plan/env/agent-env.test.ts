@@ -7,12 +7,12 @@ import { Redis, type RedisOptions } from 'ioredis';
 
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols';
-import { RpcPeer, type RpcPort } from '@dxos/rpc';
+import { RpcPeer } from '@dxos/rpc';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
 import { REDIS_PORT } from './agent-env';
+import { createRedisRpcPort } from './util';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.
@@ -78,46 +78,6 @@ const createLinkedRedisPorts = async () => {
     receiveQueue: bobQueue,
   });
   return [alicePort, bobPort];
-};
-
-export const createRedisRpcPort = ({
-  sendClient,
-  receiveClient,
-  sendQueue,
-  receiveQueue,
-}: {
-  sendClient: Redis;
-  receiveClient: Redis;
-  sendQueue: string;
-  receiveQueue: string;
-}): RpcPort => {
-  return {
-    send: async (message: Uint8Array) => {
-      await sendClient.rpush(sendQueue, Buffer.from(message));
-    },
-    subscribe: (callback: (message: Uint8Array) => void) => {
-      let unsubscribed = false;
-      queueMicrotask(async () => {
-        try {
-          // eslint-disable-next-line no-unmodified-loop-condition
-          while (!unsubscribed) {
-            const message = await receiveClient.blpopBuffer(receiveQueue, 0);
-            if (!message) {
-              continue;
-            }
-            callback(message[1]);
-          }
-        } catch (err) {
-          if (!unsubscribed) {
-            log.catch(err);
-          }
-        }
-      });
-      return () => {
-        unsubscribed = true;
-      };
-    },
-  };
 };
 
 const setupRedisClient = async () => {
