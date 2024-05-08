@@ -2,10 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { warnAfterTimeout } from '@dxos/debug';
-
 // Import explicit resource management polyfill.
 import '@dxos/util';
+import { warnAfterTimeout } from '@dxos/debug';
 
 /**
  * A locking mechanism to ensure that a given section of the code is executed by only one single "thread" at a time.
@@ -25,11 +24,16 @@ import '@dxos/util';
  */
 export class Mutex {
   private _queue = Promise.resolve();
+  private _queueLength = 0;
 
   private _tag: string | null = null;
 
   get tag() {
     return this._tag;
+  }
+
+  isLocked(): boolean {
+    return this._queueLength > 0;
   }
 
   /**
@@ -43,8 +47,10 @@ export class Mutex {
 
     // Immediately update the promise before invoking any async actions so that next invocation waits for our task to complete.
     let guard!: MutexGuard;
+    this._queueLength++;
     this._queue = new Promise((resolve) => {
       guard = new MutexGuard(() => {
+        this._queueLength--;
         this._tag = null;
         resolve();
       });

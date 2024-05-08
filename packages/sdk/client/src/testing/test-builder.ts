@@ -135,6 +135,7 @@ export class TestBuilder {
       config: this.config,
       storage: this.storage,
       level: this.level,
+      runtimeParams: { invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 } },
       ...this.networking,
     });
     this._ctx.onDispose(async () => {
