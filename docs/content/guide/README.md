@@ -14,8 +14,8 @@ DXOS is under development and will continue to change frequently.<br/>Your feedb
 
 DXOS includes a key pair of technologies that work together:
 
-* [ECHO](echo.md) - Database and reactive state container for offline-first, real-time, collaborative apps.
-* [HALO](halo.md) - Identity for decentralized apps.
+* [ECHO](echo/) - Database and reactive state container for offline-first, real-time, collaborative apps.
+* [HALO](halo/) - Identity for decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | Client-Server Web Apps | DXOS Apps |

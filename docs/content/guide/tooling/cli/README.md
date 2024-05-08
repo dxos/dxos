@@ -36,4 +36,4 @@ pnpm serve # local development server
 Only `pnpm` is supported for now due to a temporary requirement to patch `vite`.
 :::
 
-Learn more about the [application templates](./app-templates.md) available.
+Learn more about the [application templates](../app-templates.md) available.

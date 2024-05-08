@@ -42,4 +42,4 @@ Data is available on the peer network as long as peers are online. [Agents](../g
 
 ### HALO decentralized identity
 
-Composer uses the passwordless and decentralized identity management system [HALO](../guide/halo.md) from DXOS. This means that users can access their data from any device without needing to remember a password. As long as some peers or agents are online, the user can restore their data to any new device.
+Composer uses the passwordless and decentralized identity management system [HALO](../guide/halo/) from DXOS. This means that users can access their data from any device without needing to remember a password. As long as some peers or agents are online, the user can restore their data to any new device.

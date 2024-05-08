@@ -4,7 +4,7 @@ order: 2
 
 # Identity
 
-This section describes how to obtain [HALO identity](../halo.md) in `react`.
+This section describes how to obtain [HALO identity](../halo/) in `react`.
 
 ## Logging in
 
@@ -28,4 +28,4 @@ By default `useIdentity` will tell HALO to log the user in using the [HALO vault
 When first creating an identity, the `useIdentity` hook will fire twice. Once with `null`, and then again with an identity when one has been established.
 :::
 
-Once identity is established, a [`space`](spaces.md) must be created or joined in order to manipulate data.
+Once identity is established, a [`space`](../echo/react/README.md) must be created or joined in order to manipulate data.

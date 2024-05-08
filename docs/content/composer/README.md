@@ -3,7 +3,9 @@ order: 0
 headerDepth: 0
 ---
 
-# About
+# About Composer
+
+*Composer is built on the DXOS framework. If you want to know more about the framework, check out the [SDK docs](../guide).*
 
 Composer is a team notetaking, whiteboarding, and knowledge management program.
 

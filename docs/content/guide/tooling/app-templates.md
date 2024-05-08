@@ -40,7 +40,7 @@ This template provides some opinions for app development:
 | :----------------------- | :------------------------------------------------------------------------- |
 | `vite`                   | A fast developer loop based on esbuild.                                    |
 | `typescript`             | Type safety                                                                |
-| `vite-pwa`               | Turnkey [PWA](../../glossary.md#PWA) configuration provided by `vite-plugin-pwa` |
+| `vite-pwa`               | Turnkey [PWA](../glossary.md#PWA) configuration provided by `vite-plugin-pwa` |
 | `tailwind`               | A productive CSS framework                                                 |
 | `phosphor-icons`         | A solid icons library                                                      |
 | `@dxos/client`           | ECHO, HALO, KUBE configuration support                                     |

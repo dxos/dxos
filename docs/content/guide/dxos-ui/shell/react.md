@@ -2,16 +2,16 @@
 order: 15
 ---
 
-# Shell
+# React
 
-The shell is a set of components and pre-built workflows for managing [ECHO](../echo.md) spaces, invitations, and identity.
+The shell is a set of components and pre-built workflows for managing [ECHO](../../echo/) spaces, invitations, and identity.
 
 <div class="shell-images">
-  <img class="light" src="../images/shell-light.png" alt="Shell profile panel" />
-  <img class="dark" src="../images/shell-dark.png" alt="Shell profile panel" />
+  <img class="light" src="../../images/shell-light.png" alt="Shell profile panel" />
+  <img class="dark" src="../../images/shell-dark.png" alt="Shell profile panel" />
 </div>
 
-[Read more about Shell.](../halo.md#shell)
+[Read more about Shell.](../../halo/#shell)
 
 ## Installation
 
@@ -133,4 +133,4 @@ const Component = () => {
 };
 ```
 
-See more in the [API documentation](../../api/@dxos/client/classes/Shell.md) for the Shell.
+See more in the [API documentation](../../../api/@dxos/client/classes/Shell.md) for the Shell.

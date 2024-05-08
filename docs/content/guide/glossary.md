@@ -1,15 +1,14 @@
 ---
-title: Glossary
-order: 100
+order: 1000
 ---
 
 # Glossary
 
-### [ECHO](./echo.md)
+### [ECHO](./echo/)
 
 Eventually Consistent Hierarchical Object Store supporting multiple concurrent writers and latent offline writers.
 
-### [HALO](./halo.md)
+### [HALO](./halo/)
 
 A protocol, application, and SDK for managing a decentralized user identity for end users and developers.
 
@@ -17,11 +16,11 @@ A protocol, application, and SDK for managing a decentralized user identity for 
 
 The set of peer networking technologies behind ECHO, HALO and KUBE.
 
-### [Space](./echo.md#spaces)
+### [Space](./echo/#spaces)
 
 An ECHO replication domain containing objects which all the peers in the space replicate continuously.
 
-### [Object](./echo.md#objects)
+### [Object](./echo/#objects)
 
 A unit of data in a [space](#space), a bag of properties and values with a type and identity.
 

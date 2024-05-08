@@ -1,5 +1,5 @@
 ---
-order: 1.1
+order: 3.1
 title: Quick Start
 next: ./tutorial
 ---
@@ -7,7 +7,7 @@ next: ./tutorial
 # Quick Start Guide
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
-This guide shows how to use [ECHO](./echo.md) for state consensus and [HALO](./halo.md) for decentralized identity.
+This guide shows how to use [ECHO](./echo/) for state consensus and [HALO](./halo/) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
 
@@ -49,11 +49,11 @@ main();
 
 An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](typescript/config.md).
 
-[Spaces](./echo.md#spaces) are the main units of data storage and sharing (like `collections` in other databases).
+[Spaces](./echo/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
 
-To begin manipulating data, use `client.spaces.default`, or [join or create a space](./typescript/spaces.md).
+To begin manipulating data, use `client.spaces.default`, or [join or create a space](./echo/typescript/README.md).
 
-See below for `react` usage, otherwise see the [TypeScript Guide](./typescript/queries.md).
+See below for `react` usage, otherwise see the [TypeScript Guide](./echo/typescript/queries.md).
 
 ## Usage with React
 
@@ -109,7 +109,7 @@ onconnect = async (event) => {
 
 Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
 
-For a step-by-step walkthrough, see the [react tutorial](./tutorial.md).
+For a step-by-step walkthrough, see the [react tutorial](./echo/tutorial.md).
 
 ## Usage in a browser
 
@@ -173,7 +173,7 @@ This will start the development server and print a URL to the console. Opening t
 * State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
 * Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**.
 * Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-* User identity (public/private keys) are established securely and maintained by [HALO](./halo.md) for the whole device (browser profile), without a password.
+* User identity (public/private keys) are established securely and maintained by [HALO](./halo/) for the whole device (browser profile), without a password.
 * Everything works offline.
 * Real-time collaboration is possible when online.
 * There are **no servers** that store any data.
@@ -197,10 +197,10 @@ For example, with [Netlify](https://netlify.com):
 
 ## Next steps
 
-* Step-by-step [React tutorial](./tutorial.md)
+* Step-by-step [React tutorial](./echo/tutorial.md)
 * ECHO with [React](./react/)
 * ECHO with [TypeScript](./typescript/)
-* ECHO with [strongly typed objects](./typescript/queries.md#typed-queries)
+* ECHO with [strongly typed objects](./echo/typescript/queries.md#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 

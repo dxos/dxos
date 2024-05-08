@@ -1,5 +1,5 @@
 ---
-order: 6
+order: 2
 title: Queries
 ---
 
@@ -9,7 +9,7 @@ The simplest way to read the items in a space is to use the `space.db.query()` m
 
 ## Untyped Queries
 
-Once access is obtained to a [space](./spaces.md), objects can be retrieved:
+Once access is obtained to a [space](./README.md), objects can be retrieved:
 
 ```ts{12,14,16} file=./snippets/read-items.ts#L5-
 import { Client } from '@dxos/client';
@@ -99,7 +99,7 @@ dxtype <input protobuf file> <output typescript file>
 ```
 
 ::: info Tip
-If you're using one of the DXOS [application templates](../tooling/cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
+If you're using one of the DXOS [application templates](../../tooling/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
 
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.

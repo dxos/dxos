@@ -6,7 +6,7 @@ order: 100
 
 ### Resetting Storage
 
-You may occasionally need to reset the storage state behind [`HALO`](./halo.md) in case of problems.
+You may occasionally need to reset the storage state behind [`HALO`](./halo/) in case of problems.
 
 ::: warning
 If you haven't shared your identity with other devices than that identity will be lost.

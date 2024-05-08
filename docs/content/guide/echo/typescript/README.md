@@ -1,17 +1,19 @@
 ---
-order: 2
-description: DXOS Spaces
+dir:
+  text: TypeScript API
+  order: 2
+order: 0
 ---
 
 # Spaces
 
 A `space` is an instance of an ECHO database which can be replicated by a number of peers.
 
-This section describes how to create, join, and invite peers to [ECHO Spaces](../echo.md#spaces) with the TypeScript API.
+This section describes how to create, join, and invite peers to [ECHO Spaces](../#spaces) with the TypeScript API.
 
 ## Creating spaces
 
-Having established an [identity](./identity.md), a space can be created:
+Having established an [identity](../../typescript/identity.md), a space can be created:
 
 ```ts file=./snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';
@@ -56,7 +58,7 @@ Whenever an Identity is created, a Space is automatically created and marked as 
 
 ## Creating an invitation
 
-See [ECHO Spaces](../echo.md#spaces) for a description of the way peers join spaces.
+See [ECHO Spaces](../#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/invite-to-space.ts#L5-
 import { Client } from '@dxos/client';
@@ -84,7 +86,7 @@ const client = new Client();
 
 ## Accepting invitations
 
-See [ECHO Spaces](../echo.md#spaces) for a description of the way peers join spaces.
+See [ECHO Spaces](../#spaces) for a description of the way peers join spaces.
 
 ```ts file=./snippets/join-space.ts#L5-
 import { Client } from '@dxos/client';
