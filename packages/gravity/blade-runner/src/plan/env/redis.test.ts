@@ -11,8 +11,7 @@ import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
-import { REDIS_PORT } from './replicant-env';
-import { createRedisRpcPort } from './util';
+import { REDIS_PORT, createRedisRpcPort } from './util';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.
