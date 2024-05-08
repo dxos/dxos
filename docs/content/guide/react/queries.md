@@ -119,7 +119,7 @@ dxtype <input protobuf file> <output typescript file>
 ```
 
 ::: info Tip
-If you're using one of the DXOS [application templates](../cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
+If you're using one of the DXOS [application templates](../tooling/cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
 
 To use the type declarations, simply import the relevant type like `Task` from the location where `dxtype` produces output and pass it to `useQuery<T>`.

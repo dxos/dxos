@@ -99,7 +99,7 @@ dxtype <input protobuf file> <output typescript file>
 ```
 
 ::: info Tip
-If you're using one of the DXOS [application templates](../cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
+If you're using one of the DXOS [application templates](../tooling/cli/app-templates.md), this type generation step is pre-configured as a [`prebuild`](https://docs.npmjs.com/cli/v9/using-npm/scripts#pre--post-scripts) script for you.
 :::
 
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.

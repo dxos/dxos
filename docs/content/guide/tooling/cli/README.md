@@ -2,7 +2,7 @@
 order: 0
 dir:
   text: Command Line Tools
-  order: 19
+  order: 1
 ---
 
 # CLI Overview

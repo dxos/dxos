@@ -1,6 +1,8 @@
 ---
-order: 20
-title: Developer Tools
+order: 0
+dir:
+  text: Tooling
+  order: 7
 ---
 
 # Developer Tools
@@ -12,7 +14,7 @@ There are two ways to run the tool:
 * Launch the standalone [Developer Tools](https://devtools.dxos.org) as an application and point it to a DXOS application using the `?target=vault:https://...` argument in the URL.
 * Install the browser extension [DXOS Client Developer Tools](https://chrome.google.com/webstore/detail/dxos-client-developer-too/ioofnlghmmdbmkadofabikgcgjacnnaf) and it will connect to the vault of the app being debugged in the browser's devtools.
 
-![Developer Tools](../assets/images/inspector.png)
+![Developer Tools](../../assets/images/inspector.png)
 
 ## Backup and Import Spaces
 
@@ -22,9 +24,9 @@ Backup and Import are especially useful when there are breaking protocol changes
 
 The "Download Backup" and "Import Space" buttons can be found under the "Spaces" tab.
 
-![Download Backup](../assets/images/download-backup.png)
-![Import Space](../assets/images/import-space.png)
+![Download Backup](../../assets/images/download-backup.png)
+![Import Space](../../assets/images/import-space.png)
 
 ## Next Steps
 
-Check out some [Example Applications](./samples.md) created with DXOS.
+Check out some [Example Applications](../samples.md) created with DXOS.

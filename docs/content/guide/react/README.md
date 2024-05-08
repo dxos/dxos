@@ -2,7 +2,7 @@
 order: 1
 dir:
   text: React Guide
-  order: 10.2
+  order: 10.3
 ---
 
 # Installation
@@ -12,7 +12,7 @@ npm install --save @dxos/react-client
 ```
 
 ::: note
-If using one of the DXOS application templates via [`npm init @dxos@latest`](../cli/app-templates.md) this is pre-installed
+If using one of the DXOS application templates via [`npm init @dxos@latest`](../tooling/cli/app-templates.md) this is pre-installed
 :::
 
 ## Configuration

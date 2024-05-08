@@ -1,5 +1,5 @@
 ---
-order: 6
+order: 10.2
 title: React Tutorial
 next: ./platform
 ---
@@ -25,9 +25,9 @@ DXOS works in any Node.js or Browser environment. There is a [TypeScript API](ty
 
 Ensure `node -v` is at version 18 or higher (we recommend [Node Version Manager](https://github.com/nvm-sh/nvm)).
 
-We have a few [app templates](./cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
+We have a few [app templates](./tooling/cli/app-templates.md) that are designed to get you going quickly. They are based on [`vite`](https://vitejs.dev/), [`typescript`](https://www.typescriptlang.org/), [`react`](https://reactjs.org/), [`tailwind`](https://tailwindcss.com/), [`pwa`](https://vite-pwa-org.netlify.app/), and other opinions.
 
-For this guide, we're going to start with the [`bare`](./cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm create`:
+For this guide, we're going to start with the [`bare`](./tooling/cli/app-templates.md#bare-template) template and create a simple shared counter. Initialize the app with `npm create`:
 
 ```bash
 npm create @dxos/bare@latest
