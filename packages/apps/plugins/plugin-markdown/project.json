@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-markdown",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-markdown/src",
   "projectType": "library",
   "targets": {

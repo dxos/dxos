@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "debug",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/debug/src",
   "projectType": "library",
   "targets": {

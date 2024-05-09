@@ -323,7 +323,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = getSpace(data.object);
               return space && space !== defaultSpace
                 ? {
@@ -558,7 +559,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.open();
+                await space.open();
                 return { data: true };
               }
               break;
@@ -567,7 +568,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.close();
+                await space.close();
                 return { data: true };
               }
               break;

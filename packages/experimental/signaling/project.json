@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "signaling",
+  "tags": [
+    "scope:experimental"
+  ],
+  "sourceRoot": "packages/experimental/signaling/src",
+  "projectType": "library",
+  "targets": {
+    "__test": {
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ]
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

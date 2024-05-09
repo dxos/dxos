@@ -135,6 +135,16 @@ export class Hypergraph {
     }
   }
 
+  /**
+   * Does not remove the provider from active query contexts.
+   */
+  unregisterQuerySourceProvider(provider: QuerySourceProvider) {
+    const index = this._querySourceProviders.indexOf(provider);
+    if (index !== -1) {
+      this._querySourceProviders.splice(index, 1);
+    }
+  }
+
   private _onUpdate(updateEvent: ItemsUpdatedEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {

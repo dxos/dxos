@@ -330,7 +330,7 @@ export class Connection {
         log.catch(err);
       }
     } else {
-      log.info(`graceful close requested when we were in ${lastState} state? aborting`);
+      log(`graceful close requested when we were in ${lastState} state? aborting`);
       try {
         await this._protocol.abort();
       } catch (err: any) {

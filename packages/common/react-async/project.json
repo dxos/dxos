@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-async",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/react-async/src",
   "projectType": "library",
   "targets": {

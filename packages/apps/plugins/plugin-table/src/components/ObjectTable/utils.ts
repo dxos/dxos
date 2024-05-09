@@ -24,6 +24,25 @@ export const updateTableProp = (props: TableTypeProp[], oldId: string, update: T
   }
 };
 
+/**
+ * Mutably deletes a given table property from the props array.
+ * If the property with the given id exists, it is removed.
+ * If it doesn't exist, no action is taken.
+ */
+export const deleteTableProp = (props: TableTypeProp[], id: string) => {
+  if (!props) {
+    return;
+  }
+
+  const idx = props.findIndex((prop) => prop.id === id);
+
+  if (idx === -1) {
+    return;
+  }
+
+  props.splice(idx, 1);
+};
+
 export const createColumns = (
   space: Space | undefined,
   tables: TableType[],

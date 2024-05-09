@@ -2,25 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event } from '@dxos/async';
-import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
-import { type ObjectPointerEncoded } from '@dxos/protocols';
-import { trace } from '@dxos/tracing';
-import { defaultMap } from '@dxos/util';
+import { type MixedEncoding } from 'level-transcoder';
 
-import { type ConcatenatedHeadHashes } from './types';
+import { Event } from '@dxos/async';
+import { type Heads } from '@dxos/automerge/automerge';
+import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
+import { trace } from '@dxos/tracing';
+
+import { type IdToHeads } from './types';
 
 export type IndexMetadataStoreParams = {
   db: SubLevelDB;
-};
-
-export type DocumentMetadata = {
-  /**
-   * Encoded object pointer: `${documentId}|${objectId}`.
-   */
-  id: ObjectPointerEncoded;
-  lastIndexedHash?: ConcatenatedHeadHashes;
-  lastAvailableHash?: ConcatenatedHeadHashes;
 };
 
 @trace.resource()
@@ -30,64 +25,37 @@ export class IndexMetadataStore {
 
   /**
    * Documents that were saved by automerge-repo but maybe not indexed (also includes indexed documents).
-   *
-   * ObjectPointerEncoded -> ConcatenatedHeadHashes
+   * ObjectPointerEncoded -> Heads
    */
   private readonly _lastSeen: SubLevelDB;
 
   /**
    * Documents that were indexing
+   * ObjectPointerEncoded -> Heads
    */
   private readonly _lastIndexed: SubLevelDB;
 
   constructor({ db }: IndexMetadataStoreParams) {
-    this._lastSeen = db.sublevel('last-seen');
-    this._lastIndexed = db.sublevel('last-indexed');
+    this._lastSeen = db.sublevel('last-seen', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
+    this._lastIndexed = db.sublevel('last-indexed', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async getDirtyDocuments(): Promise<ObjectPointerEncoded[]> {
-    const res = new Map<ObjectPointerEncoded, DocumentMetadata>();
-
-    for await (const [id, lastAvailableHash] of this._lastSeen.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
-      valueEncoding: 'json',
-    })) {
-      defaultMap(res, id, { id, lastAvailableHash });
-    }
-
-    for await (const [id, lastIndexedHash] of this._lastIndexed.iterator<ObjectPointerEncoded, ConcatenatedHeadHashes>({
-      valueEncoding: 'json',
-    })) {
-      if (res.has(id)) {
-        res.get(id)!.lastIndexedHash = lastIndexedHash;
-      } else {
-        defaultMap(res, id, { id, lastIndexedHash });
-      }
-    }
-
-    return Array.from(res.values())
-      .filter((metadata) => metadata.lastIndexedHash !== metadata.lastAvailableHash)
-      .map((metadata) => metadata.id);
+  async getDirtyDocuments(): Promise<IdToHeads> {
+    return new Map(await this._lastSeen.iterator<ObjectPointerEncoded>({}).all());
   }
 
   /**
    * @returns All document id's that were already indexed. May include dirty documents.
    */
-  async getAllIndexedDocuments(): Promise<ObjectPointerEncoded[]> {
-    const tuples = await this._lastIndexed
-      .iterator<ObjectPointerEncoded>({
-        valueEncoding: 'json',
-        values: false,
-      })
-      .all();
-
-    return tuples.map(([id]) => id);
+  async getAllIndexedDocuments(): Promise<IdToHeads> {
+    return new Map(await this._lastIndexed.iterator<ObjectPointerEncoded>({}).all());
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  markDirty(idToLastHash: Map<ObjectPointerEncoded, ConcatenatedHeadHashes>, batch: BatchLevel) {
-    for (const [id, lastAvailableHash] of idToLastHash.entries()) {
-      batch.put<string, string>(id, lastAvailableHash, { valueEncoding: 'json', sublevel: this._lastSeen });
+  markDirty(idToHeads: IdToHeads, batch: BatchLevel) {
+    for (const [id, heads] of idToHeads.entries()) {
+      batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
     }
   }
 
@@ -98,9 +66,12 @@ export class IndexMetadataStore {
     this.dirty.emit();
   }
 
-  async markClean(id: ObjectPointerEncoded, lastIndexedHash: ConcatenatedHeadHashes) {
-    await this._lastIndexed.put<string, string>(id, lastIndexedHash, { valueEncoding: 'json' });
-    this.clean.emit();
+  @trace.span({ showInBrowserTimeline: true })
+  markClean(idToHeads: IdToHeads, batch: BatchLevel) {
+    for (const [id, heads] of idToHeads.entries()) {
+      batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
+      batch.del(id, { sublevel: this._lastSeen });
+    }
   }
 
   /**
@@ -112,3 +83,34 @@ export class IndexMetadataStore {
     }
   }
 }
+
+const headsCodec = schema.getCodecForType('dxos.echo.query.Heads');
+let showedWarning = false;
+const headsEncoding: MixedEncoding<Heads, Uint8Array, Heads> = {
+  encode: (value: Heads): Uint8Array => headsCodec.encode({ hashes: value }),
+  decode: (encodedValue: Uint8Array): Heads => {
+    try {
+      return headsCodec.decode(encodedValue).hashes!;
+    } catch (err) {
+      // TODO(mykola): remove this before 0.7 release.
+      // Migration from old format.
+      if (!showedWarning) {
+        showedWarning = true;
+        log.warn('Detected legacy encoding of heads in the indexer. \nRun `await dxos.client.repair()`');
+      }
+      /**
+       * Document head hashes concatenated with no  separator.
+       */
+      const concatenatedHeads = Buffer.from(encodedValue).toString('utf8').replace(/"/g, '');
+
+      // Split concatenated heads into individual hashes by 64 characters.
+      invariant(concatenatedHeads.length % 64 === 0, 'Invalid concatenated heads length');
+      const heads = [];
+      for (let i = 0; i < concatenatedHeads.length; i += 64) {
+        heads.push(concatenatedHeads.slice(i, i + 64));
+      }
+      return heads;
+    }
+  },
+  format: 'buffer',
+};

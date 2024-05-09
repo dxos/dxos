@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-ipfs",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-ipfs/src",
   "projectType": "library",
   "targets": {

@@ -195,8 +195,6 @@ For example, with [Netlify](https://netlify.com):
 3. Set the build command and output directory.
 4. Publish!
 
-If you would like to host the application yourself, see our guide on [using KUBE for self-sovereign hosting](./kube/deploying.md).
-
 ## Next steps
 
 * Step-by-step [React tutorial](./tutorial.md)
@@ -206,7 +204,7 @@ If you would like to host the application yourself, see our guide on [using KUBE
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+* Join the DXOS [Discord](https://discord.gg/eXVfryv3sW)
 * DXOS [repository on GitHub](https://github.com/dxos/dxos)
 * File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 

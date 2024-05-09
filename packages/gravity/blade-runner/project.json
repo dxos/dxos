@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "blade-runner",
+  "tags": [
+    "scope:gravity"
+  ],
+  "sourceRoot": "packages/gravity/blade-runner/src",
+  "projectType": "library",
+  "targets": {
+    "compile": {
+      "options": {
+        "entryPoints": [
+          "packages/gravity/blade-runner/src/index.ts",
+          "packages/gravity/blade-runner/src/main.ts"
+        ]
+      }
+    },
+    "e2e": {
+      "options": {
+        "ciEnvironments": [
+          "nodejs"
+        ],
+        "testPatterns": [
+          "packages/gravity/blade-runner/src/**/*.test.{ts,js}"
+        ],
+        "watchPatterns": [
+          "packages/gravity/blade-runner/src/**/*"
+        ]
+      }
+    },
+    "lint": {}
+  }
+}

@@ -31,7 +31,7 @@ module.exports = {
     // TODO(wittjosiah): Fix lint config to lint these files.
     '*.t.ts',
     // Docs snippets
-    'docs/docs/**/*',
+    'docs/content/**/*',
   ],
   overrides: [
     {
@@ -39,12 +39,6 @@ module.exports = {
       extends: [
         'plugin:@dxos/recommended'
       ]
-    },
-    {
-      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
-      "rules": {
-        "no-console": "off"
-      }
     },
     {
       files: '**/*.{ts,mts,tsx}',
@@ -63,6 +57,12 @@ module.exports = {
       extends: [
         'plugin:@dxos/test'
       ]
-    }
+    },
+    {
+      "files": '**/*.{test,stories,blueprint-test}.{ts,tsx,js,jsx}',
+      "rules": {
+        "no-console": "off"
+      }
+    },
   ]
 };

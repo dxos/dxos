@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "todomvc",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/todomvc/src",
   "projectType": "library",
   "targets": {
@@ -49,6 +52,9 @@
       }
     },
     "serve": {
+      "dependsOn": [
+        "^bundle"
+      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "todomvc:bundle"

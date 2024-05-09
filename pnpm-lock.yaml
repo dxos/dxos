@@ -3815,6 +3815,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-generator':
         specifier: workspace:*
         version: link:../../core/echo/echo-generator
@@ -4992,8 +4995,8 @@ importers:
         specifier: ^1.4.2
         version: 1.4.2
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -5062,15 +5065,6 @@ importers:
 
   packages/core/echo/automerge:
     dependencies:
-      '@automerge/automerge':
-        specifier: ^2.1.13
-        version: 2.1.13
-      '@automerge/automerge-repo':
-        specifier: ^1.1.5
-        version: 1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      '@automerge/automerge-repo-storage-indexeddb':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@automerge/automerge-wasm':
         specifier: ^0.12.0
         version: 0.12.0
@@ -5089,9 +5083,31 @@ importers:
       fast-sha256:
         specifier: ^1.3.0
         version: 1.3.0
+      isomorphic-ws:
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
+      ws:
+        specifier: ^8.14.2
+        version: 8.14.2
       xstate:
-        specifier: ^4.37.0
-        version: 4.37.1
+        specifier: ^5.9.1
+        version: 5.12.0
+    devDependencies:
+      '@automerge/automerge':
+        specifier: ^2.2.0
+        version: 2.2.1
+      '@automerge/automerge-repo':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-network-broadcastchannel':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-network-websocket':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo-storage-indexeddb':
+        specifier: ^1.1.9
+        version: 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
 
   packages/core/echo/echo-db:
     dependencies:
@@ -5119,6 +5135,9 @@ importers:
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../echo-signals
+      '@dxos/indexing':
+        specifier: workspace:*
+        version: link:../indexing
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5137,6 +5156,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../../common/random-access-storage
+      '@dxos/teleport':
+        specifier: workspace:*
+        version: link:../../mesh/teleport
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../../common/tracing
@@ -5152,6 +5174,9 @@ importers:
       effect:
         specifier: 2.4.9
         version: 2.4.9
+      level:
+        specifier: ^8.0.1
+        version: 8.0.1
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -5376,20 +5401,20 @@ importers:
     dependencies:
       '@preact/signals':
         specifier: ^1.2.1
-        version: 1.2.1(preact@10.20.2)
+        version: 1.2.1(preact@10.21.0)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       '@preact/signals-react':
         specifier: ^1.3.8
-        version: 1.3.8(react@18.2.0)
+        version: 1.3.8(react@18.3.1)
     optionalDependencies:
       preact:
         specifier: ^10.11.0
-        version: 10.20.2
+        version: 10.21.0
       react:
         specifier: ^18.2.0
-        version: 18.2.0
+        version: 18.3.1
 
   packages/core/echo/echo-typegen:
     dependencies:
@@ -5445,9 +5470,6 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../echo-db
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../echo-pipeline
@@ -5487,6 +5509,9 @@ importers:
       level:
         specifier: ^8.0.1
         version: 8.0.1
+      level-transcoder:
+        specifier: ^1.0.1
+        version: 1.0.1
       lodash.isequal:
         specifier: ^4.5.0
         version: 4.5.0
@@ -5732,8 +5757,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -5805,8 +5830,8 @@ importers:
         specifier: ^0.5.3
         version: 0.5.3
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       nanomessage-rpc:
         specifier: ^3.0.0
         version: 3.2.0
@@ -6195,8 +6220,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -6335,8 +6360,8 @@ importers:
         specifier: ^8.2.0
         version: 8.2.4
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -6512,8 +6537,8 @@ importers:
         specifier: ^2.3.1
         version: 2.3.1
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
@@ -7338,7 +7363,7 @@ importers:
         version: 1.5.0(@types/node@18.11.9)(@vitest/browser@1.5.0)(@vitest/ui@1.5.0)(happy-dom@13.3.4)(jsdom@20.0.1)
       wrangler:
         specifier: ^3.52.0
-        version: 3.52.0(@cloudflare/workers-types@4.20240423.0)
+        version: 3.53.1(@cloudflare/workers-types@4.20240423.0)
       ws:
         specifier: ^8.14.2
         version: 8.14.2
@@ -7531,6 +7556,88 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
 
+  packages/experimental/signaling:
+    dependencies:
+      '@cloudflare/ai':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@cloudflare/pages-plugin-mailchannels':
+        specifier: ^0.1.3
+        version: 0.1.3
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/automerge':
+        specifier: workspace:*
+        version: link:../../core/echo/automerge
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      chess.js:
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
+      cookie:
+        specifier: ^0.6.0
+        version: 0.6.0
+      email-validator:
+        specifier: ^2.0.4
+        version: 2.0.4
+      hono:
+        specifier: ^4.2.5
+        version: 4.2.8
+      js-chess-engine:
+        specifier: ^1.0.2
+        version: 1.0.2
+      modelfusion:
+        specifier: ^0.137.0
+        version: 0.137.0
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20240423.0
+        version: 4.20240423.0
+      '@types/args':
+        specifier: ^5.0.3
+        version: 5.0.3
+      '@types/cookie':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@types/ws':
+        specifier: ^7.4.0
+        version: 7.4.7
+      args:
+        specifier: ^5.0.3
+        version: 5.0.3
+      miniflare:
+        specifier: ^3.20240405.2
+        version: 3.20240419.0
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      vitest:
+        specifier: ^1.5.0
+        version: 1.5.0(@types/node@18.11.9)(@vitest/browser@1.5.0)(@vitest/ui@1.5.0)(happy-dom@13.3.4)(jsdom@20.0.1)
+      wrangler:
+        specifier: ^3.52.0
+        version: 3.53.1(@cloudflare/workers-types@4.20240423.0)
+      ws:
+        specifier: ^8.14.2
+        version: 8.14.2
+
   packages/experimental/spyglass:
     dependencies:
       '@dxos/invariant':
@@ -7577,82 +7684,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/gravity/gravity-dashboard:
+  packages/gravity/blade-runner:
     dependencies:
-      '@dxos/gem-core':
-        specifier: workspace:*
-        version: link:../../experimental/gem-core
-      d3:
-        specifier: ^7.8.5
-        version: 7.8.5
-      use-resize-observer:
-        specifier: ^9.0.0
-        version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
-    devDependencies:
-      '@babel/core':
-        specifier: ^7.18.13
-        version: 7.21.3
-      '@dxos/esbuild-book-knobs':
-        specifier: ~2.28.3
-        version: 2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0)
-      '@dxos/esbuild-plugins':
-        specifier: workspace:*
-        version: link:../../common/esbuild-plugins
-      '@dxos/esbuild-server':
-        specifier: ~2.29.0
-        version: 2.29.0(@types/react@18.0.21)
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-      '@emotion/css':
-        specifier: ^11.7.1
-        version: 11.10.0(@babel/core@7.21.3)
-      '@emotion/react':
-        specifier: ^11.9.0
-        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
-      '@types/d3':
-        specifier: ^7.4.2
-        version: 7.4.2
-      '@types/lodash':
-        specifier: ^4.14.182
-        version: 4.14.191
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-
-  packages/gravity/kube-publishing:
-    dependencies:
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-    devDependencies:
-      '@dxos/cli':
-        specifier: workspace:*
-        version: link:../../devtools/cli
-      '@types/node':
-        specifier: ^18.11.9
-        version: 18.11.9
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
-  packages/gravity/kube-testing:
-    dependencies:
-      '@automerge/automerge-repo-network-websocket':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -7747,14 +7780,14 @@ importers:
         specifier: ^5.3.2
         version: 5.3.2
       isomorphic-ws:
-        specifier: ^4.0.1
-        version: 4.0.1(ws@8.14.2)
+        specifier: ^5.0.0
+        version: 5.0.0(ws@8.14.2)
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
       playwright:
         specifier: ^1.36.2
-        version: 1.40.0
+        version: 1.42.1
       plotly.js-dist-min:
         specifier: ^2.25.1
         version: 2.27.1
@@ -7782,7 +7815,7 @@ importers:
         version: 4.0.5
       '@types/node':
         specifier: ^18.11.9
-        version: 18.11.9
+        version: 18.18.9
       '@types/seedrandom':
         specifier: ^3.0.5
         version: 3.0.5
@@ -7792,6 +7825,77 @@ importers:
       chart.js:
         specifier: ^3.9.1
         version: 3.9.1
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.18.9)(typescript@5.4.5)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.4.5
+
+  packages/gravity/gravity-dashboard:
+    dependencies:
+      '@dxos/gem-core':
+        specifier: workspace:*
+        version: link:../../experimental/gem-core
+      d3:
+        specifier: ^7.8.5
+        version: 7.8.5
+      use-resize-observer:
+        specifier: ^9.0.0
+        version: 9.1.0(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@babel/core':
+        specifier: ^7.18.13
+        version: 7.21.3
+      '@dxos/esbuild-book-knobs':
+        specifier: ~2.28.3
+        version: 2.28.12(@emotion/css@11.10.0)(@emotion/react@11.10.4)(react-dom@18.2.0)(react@18.2.0)
+      '@dxos/esbuild-plugins':
+        specifier: workspace:*
+        version: link:../../common/esbuild-plugins
+      '@dxos/esbuild-server':
+        specifier: ~2.29.0
+        version: 2.29.0(@types/react@18.0.21)
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+      '@emotion/css':
+        specifier: ^11.7.1
+        version: 11.10.0(@babel/core@7.21.3)
+      '@emotion/react':
+        specifier: ^11.9.0
+        version: 11.10.4(@babel/core@7.21.3)(@types/react@18.0.21)(react@18.2.0)
+      '@types/d3':
+        specifier: ^7.4.2
+        version: 7.4.2
+      '@types/lodash':
+        specifier: ^4.17.0
+        version: 4.17.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+
+  packages/gravity/kube-publishing:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+    devDependencies:
+      '@dxos/cli':
+        specifier: workspace:*
+        version: link:../../devtools/cli
+      '@types/node':
+        specifier: ^18.11.9
+        version: 18.11.9
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
@@ -8481,7 +8585,7 @@ importers:
         version: link:../../common/random
       yjs:
         specifier: ^13.6.10
-        version: 13.6.14
+        version: 13.6.15
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8537,9 +8641,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -8610,6 +8711,9 @@ importers:
       '@dxos/react-async':
         specifier: workspace:*
         version: link:../../common/react-async
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
@@ -9160,9 +9264,6 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
     devDependencies:
-      '@automerge/automerge-repo-network-broadcastchannel':
-        specifier: ^1.1.4
-        version: 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../apps/types
@@ -10464,10 +10565,10 @@ packages:
       leven: 3.1.0
     dev: true
 
-  /@automerge/automerge-repo-network-broadcastchannel@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-aCPtGFz9tMHhzZnpquAf5bhqjarrsVyQXVN7Wdd1AR1gg+RbFhphnITQVMds7c8QogTI2Xdzh+7nhKFyun74qw==}
+  /@automerge/automerge-repo-network-broadcastchannel@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-uPjCdKhenqT89oezT91uwmDQoJcxsGxosJHrfWJUlSLTkMyy4QI+tGKIfvpQQ9Vxkp4M+7CKaAhVYf+TbreXYw==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
@@ -10476,10 +10577,10 @@ packages:
       - typescript
     dev: true
 
-  /@automerge/automerge-repo-network-websocket@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-CTo3VvLRnuhE7sAg8oFnMyvfzZolKT8WSizQHIMlv4AlEbOc/e54wEwfZ09ySaabwT8u8eVj5R3WCvfVdkkSBA==}
+  /@automerge/automerge-repo-network-websocket@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-y5YcS2LtYZuHEaqwcMWiH6Z7ufXjoW/JavnXqt1jS7vAsaIx8h2E+gqccbgt1WGa02DLxul/+vhs7IzvzeBCZQ==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
       eventemitter3: 5.0.1
@@ -10493,24 +10594,24 @@ packages:
       - supports-color
       - typescript
       - utf-8-validate
-    dev: false
+    dev: true
 
-  /@automerge/automerge-repo-storage-indexeddb@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-PNravKPsF0wn0XllqwzamRjEF/HgcvwWyExBzKk2WUqIclQzLchlECHwZmq4BjsfJZXbq/6rgDIsTMhyFgvwzQ==}
+  /@automerge/automerge-repo-storage-indexeddb@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-y/9nxCXZNWnnLM30ClaJ12wKB3Cotqw8i011zRB6mKB6cmy9l3QV7hK2d34ReEdRlmJ7gmO54kMvNnmBKcmmeA==}
     dependencies:
-      '@automerge/automerge-repo': 1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+      '@automerge/automerge-repo': 1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
       - supports-color
       - typescript
-    dev: false
+    dev: true
 
-  /@automerge/automerge-repo@1.1.4(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-EuY/+hwPkR0bLkMzi2obRFzW3fsUtlih7S0Te/nJRvsXS7a5mrzmqnQpFwYZPZzeBsPrxaBC2vVrcNqferlaLQ==}
+  /@automerge/automerge-repo@1.1.9(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
+    resolution: {integrity: sha512-rh8PEgC0tDULrfnS5Gcq0U8yxqU0kuwcfx/JkQnOtp0FU/1IoalGAc3qgvceruRMOrzfXaktZ/r9a13I5UtiTQ==}
     dependencies:
-      '@automerge/automerge': 2.1.13
+      '@automerge/automerge': 2.2.1
       bs58check: 3.0.1
       cbor-x: 1.5.4
       debug: 4.3.4(supports-color@8.1.1)
@@ -10519,43 +10620,29 @@ packages:
       tiny-typed-emitter: 2.1.0
       ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
       uuid: 9.0.1
-      xstate: 4.37.1
+      xstate: 5.12.0
     transitivePeerDependencies:
       - '@swc/core'
       - '@swc/wasm'
       - '@types/node'
       - supports-color
       - typescript
-
-  /@automerge/automerge-repo@1.1.5(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2):
-    resolution: {integrity: sha512-SwXWwkasugfdGwQy4RuS/pn2FrI+YDtzrwvUbXkLVRiX83Zt3UQBXlL+QW+5QbH7uQ2mK0l3rOkRlQwnsYHUNg==}
-    dependencies:
-      '@automerge/automerge': 2.1.13
-      bs58check: 3.0.1
-      cbor-x: 1.5.4
-      debug: 4.3.4(supports-color@8.1.1)
-      eventemitter3: 5.0.1
-      fast-sha256: 1.3.0
-      tiny-typed-emitter: 2.1.0
-      ts-node: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
-      uuid: 9.0.1
-      xstate: 4.37.1
-    transitivePeerDependencies:
-      - '@swc/core'
-      - '@swc/wasm'
-      - '@types/node'
-      - supports-color
-      - typescript
-    dev: false
+    dev: true
 
   /@automerge/automerge-wasm@0.12.0:
     resolution: {integrity: sha512-MJVmw/83Uy7WuqA9Dac3VcLXpXENZSDu7hqxttdFyAYZXQYQugiU7R+RUO2sP7081J9gRUb2+73sYpNnSTwzYQ==}
+    dev: false
 
-  /@automerge/automerge@2.1.13:
-    resolution: {integrity: sha512-9t185MgkFvwvqccmA45yKq61If2KCpKxZg19gukwO9G15bvxuh5ulWv2PWvMZ+iTvhDYCH+pZwXmFkD4nufScw==}
+  /@automerge/automerge-wasm@0.16.0:
+    resolution: {integrity: sha512-yYQ8WJED8f4cCnbIq+5SM8Q2tLK2VawDqLKptW+FTI5asklN8NEsHUHvDzqWUQARqGp6O9BnNd7ifQ0FPdks7A==}
+    dev: true
+
+  /@automerge/automerge@2.2.1:
+    resolution: {integrity: sha512-LJwvVapEgAox0sEp0iDihE4wqsDAUyKt41Y5m3z1hHdF5DHa7IhqiHhGNCc59H8t3Zl3fnbTgtKabcMWFffvCQ==}
     dependencies:
-      '@automerge/automerge-wasm': 0.12.0
+      '@automerge/automerge-wasm': 0.16.0
       uuid: 9.0.1
+    dev: true
 
   /@aw-web-design/x-default-browser@1.4.126:
     resolution: {integrity: sha512-Xk1sIhyNC/esHGGVjL/niHLowM0csl/kFO5uawBy4IrWwy0o1G8LGt3jP6nmWGz+USxeeqbihAmp/oVZju6wug==}
@@ -19426,14 +19513,25 @@ packages:
       '@preact/signals-core': 1.6.0
       react: 18.2.0
       use-sync-external-store: 1.2.0(react@18.2.0)
+    dev: true
 
-  /@preact/signals@1.2.1(preact@10.20.2):
+  /@preact/signals-react@1.3.8(react@18.3.1):
+    resolution: {integrity: sha512-i7mVZ/ZiD9WqNH79r+klpQsp8X+/dOd/5AtvDI0HNpgWuHyzyF9WXDViKl+1vXgB767n9VnH1W2azg+w1oyFMQ==}
+    peerDependencies:
+      react: ^16.14.0 || 17.x || 18.x
+    dependencies:
+      '@preact/signals-core': 1.6.0
+      react: 18.3.1
+      use-sync-external-store: 1.2.0(react@18.3.1)
+    dev: false
+
+  /@preact/signals@1.2.1(preact@10.21.0):
     resolution: {integrity: sha512-hRPvp1C2ooDzOHqfnhdpHgoIFDbYFAXLhoid3+jSItuPPD/J0r/UsiWKv/8ZO/oEhjRaP0M5niuRYsWqmY2GEA==}
     peerDependencies:
       preact: 10.x
     dependencies:
       '@preact/signals-core': 1.6.0
-      preact: 10.20.2
+      preact: 10.21.0
     dev: false
 
   /@protobufjs/aspromise@1.1.2:
@@ -22378,7 +22476,7 @@ packages:
       '@storybook/preview-api': 8.0.0-alpha.11
       '@storybook/theming': 8.0.0-alpha.11(react-dom@18.2.0)(react@18.2.0)
       '@storybook/types': 8.0.0-alpha.11
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       color-convert: 2.0.1
       dequal: 2.0.3
       lodash: 4.17.21
@@ -24565,7 +24663,7 @@ packages:
   /@types/lodash.get@4.4.7:
     resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.isequal@4.5.6:
@@ -24577,13 +24675,13 @@ packages:
   /@types/lodash.isequalwith@4.4.7:
     resolution: {integrity: sha512-GdI984QbZw+LGAd3jcFIIhaMwhlVasTMIT3nmE1rOcACjyzp9J9VjTENVkl9aJLOiPZt6RYSJFVEEsRHKbdh3w==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.ismatch@4.4.9:
     resolution: {integrity: sha512-qWihnStOPKH8urljLGm6ZOEdN/5Bt4vxKR81tL3L4ArUNLvcf9RW3QSnPs21eix5BiqioSWq4aAXD4Iep+d0fw==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.matches@4.6.7:
@@ -24595,7 +24693,7 @@ packages:
   /@types/lodash.memoize@4.1.7:
     resolution: {integrity: sha512-lGN7WeO4vO6sICVpf041Q7BX/9k1Y24Zo3FY0aUezr1QlKznpjzsDk3T3wvH8ofYzoK0QupN9TWcFAFZlyPwQQ==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.merge@4.6.7:
@@ -24625,13 +24723,13 @@ packages:
   /@types/lodash.set@4.3.7:
     resolution: {integrity: sha512-bS5Wkg/nrT82YUfkNYPSccFrNZRL+irl7Yt4iM6OTSQ0VZJED2oUIVm15NkNtUAQ8SRhCe+axqERUV6MJgkeEg==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.sortby@4.7.7:
     resolution: {integrity: sha512-J/4IS+jQopGBrrRetBXDCX0KnSeXJZ0rOTmGAxR9MWGV24YdHxX8IRi9LCGAU9GKWlBov9KRSfQpuup9PReqrw==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
     dev: true
 
   /@types/lodash.startcase@4.4.8:
@@ -24654,6 +24752,9 @@ packages:
 
   /@types/lodash@4.14.191:
     resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
+
+  /@types/lodash@4.17.0:
+    resolution: {integrity: sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==}
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
@@ -24815,6 +24916,12 @@ packages:
 
   /@types/node@20.11.16:
     resolution: {integrity: sha512-gKb0enTmRCzXSSUJDq6/sPcqrfCv2mkkG6Jt/clpn5eiCbKTY+SgZUxo+p8ZKMof5dCp9vHQUAB7wOUTod22wQ==}
+    dependencies:
+      undici-types: 5.26.5
+    dev: true
+
+  /@types/node@20.12.8:
+    resolution: {integrity: sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJ4R7g+2w==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -26006,14 +26113,14 @@ packages:
     resolution: {integrity: sha512-321F3sWafnlw93uRTSjEBVuvWCxTkWNDs7ektQS15drrroL3TMeFOynu4rDrIz0jXD9Vas0HCD2Tq/P0uxFLdw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.8
     dev: true
 
   /@wdio/types@8.32.4:
     resolution: {integrity: sha512-pDPGcCvq0MQF8u0sjw9m4aMI2gAKn6vphyBB2+1IxYriL777gbbxd7WQ+PygMBvYVprCYIkLPvhUFwF85WakmA==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.8
     dev: true
 
   /@wdio/utils@8.33.1:
@@ -28364,7 +28471,7 @@ packages:
     dependencies:
       canvas: 2.11.2
       chart.js: 3.9.1
-      tslib: 2.6.0
+      tslib: 2.6.2
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -29917,7 +30024,7 @@ packages:
     dependencies:
       '@tensorflow/tfjs-node': 3.21.1(seedrandom@3.0.5)
       mathjs: 9.5.2
-      node-fetch: 2.6.7
+      node-fetch: 2.7.0
       papaparse: 5.4.1
       request: 2.88.2
       stream-json: 1.7.5
@@ -30586,6 +30693,7 @@ packages:
   /domexception@2.0.1:
     resolution: {integrity: sha512-yxJ2mFy/sibVQlu5qHjOkf9J3K6zgmCxgJ94u2EdvDOV09H+32LtRswEcUsmUWN72pVLOEnTSRaIVVzVQgS0dg==}
     engines: {node: '>=8'}
+    deprecated: Use your platform's native DOMException instead
     dependencies:
       webidl-conversions: 5.0.0
     dev: false
@@ -31560,7 +31668,6 @@ packages:
       esutils: 2.0.3
     optionalDependencies:
       source-map: 0.6.1
-    dev: true
 
   /eslint-config-semistandard@17.0.0(eslint-config-standard@17.1.0)(eslint-plugin-import@2.28.1)(eslint-plugin-n@16.1.0)(eslint-plugin-promise@6.1.1)(eslint@8.49.0):
     resolution: {integrity: sha512-tLi0JYmfiiJgtmRhoES55tENatR7y/5aXOh6cBeW+qjzl1+WwyV0arDqR65XN3/xrPZt+/1EG+xNLknV/0jWsQ==}
@@ -32290,7 +32397,7 @@ packages:
     engines: {node: '>=12.0.0'}
     dependencies:
       '@types/chai': 4.3.5
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       '@types/node': 18.18.9
       '@types/sinon': 10.0.13
       lodash: 4.17.21
@@ -32807,7 +32914,6 @@ packages:
 
   /fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
-    dev: true
 
   /fragment-cache@0.2.1:
     resolution: {integrity: sha512-GMBAbW9antB8iZRHLoGw0b3HANt57diZYFO/HL1JGIC1MjKrdmhxvrJbupnVvpys0zsz7yBApXdQyfepKly2kA==}
@@ -35515,21 +35621,12 @@ packages:
       - encoding
     dev: false
 
-  /isomorphic-ws@4.0.1(ws@8.14.2):
-    resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
-    peerDependencies:
-      ws: '*'
-    dependencies:
-      ws: 8.14.2
-    dev: false
-
   /isomorphic-ws@5.0.0(ws@8.14.2):
     resolution: {integrity: sha512-muId7Zzn9ywDsyXgTIafTry2sV3nySZeUDe6YedVd1Hvuuep5AsIlqK+XefWpYTyJG5e503F2xIuT2lcU6rCSw==}
     peerDependencies:
       ws: '*'
     dependencies:
       ws: 8.14.2
-    dev: false
 
   /isomorphic.js@0.2.5:
     resolution: {integrity: sha512-PIeMbHqMt4DnUP3MA/Flc0HElYjMXArsw1qwJZcm9sqR8mq3l8NYizFMty0pWwE/tzIGH3EKK5+jes5mAr85yw==}
@@ -36860,7 +36957,7 @@ packages:
       data-urls: 2.0.0
       decimal.js: 10.4.2
       domexception: 2.0.1
-      escodegen: 2.0.0
+      escodegen: 2.1.0
       form-data: 3.0.1
       html-encoding-sniffer: 2.0.1
       http-proxy-agent: 4.0.1
@@ -38349,7 +38446,7 @@ packages:
       complex.js: 2.1.1
       decimal.js: 10.4.2
       escape-latex: 1.2.0
-      fraction.js: 4.2.0
+      fraction.js: 4.3.7
       javascript-natural-sort: 0.7.1
       seedrandom: 3.0.5
       tiny-emitter: 2.1.0
@@ -41496,27 +41593,10 @@ packages:
     resolution: {integrity: sha512-fnWVljUchTro6RiCFvCXBbNhJc2NijN7oIQxbwsyL0buWJPG85v81ehlHI9fXrJsMNgTofEoWIQeClKpgxFLrg==}
     dev: false
 
-  /playwright-core@1.40.0:
-    resolution: {integrity: sha512-fvKewVJpGeca8t0ipM56jkVSU6Eo0RmFvQ/MaCQNDYm+sdvKkMBBWTE1FdeMqIdumRaXXjZChWHvIzCGM/tA/Q==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dev: false
-
   /playwright-core@1.42.1:
     resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
     engines: {node: '>=16'}
     hasBin: true
-    dev: true
-
-  /playwright@1.40.0:
-    resolution: {integrity: sha512-gyHAgQjiDf1m34Xpwzaqb76KgfzYrhK7iih+2IzcOCoZWr/8ZqmdBw+t0RU85ZmfJMgtgAiNtBQ/KS2325INXw==}
-    engines: {node: '>=16'}
-    hasBin: true
-    dependencies:
-      playwright-core: 1.40.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
 
   /playwright@1.42.1:
     resolution: {integrity: sha512-PgwB03s2DZBcNRoW+1w9E+VkLBxweib6KTXM0M3tkiT4jVxKSi6PmVJ591J+0u10LUrgxB7dLRbiJqO5s2QPMg==}
@@ -41526,7 +41606,6 @@ packages:
       playwright-core: 1.42.1
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /plotly.js-dist-min@2.27.1:
     resolution: {integrity: sha512-fFPFityhOkDtjoIVd/9IJQbEEuKEjfmNALBVLZyHwLIkry5ygE4ZC/XENRqLnWR3rNJdTtEaxhM5zflcWTRlDA==}
@@ -41781,8 +41860,8 @@ packages:
     resolution: {integrity: sha512-skAwGDFmgxhq1DCBHke/9e12ewkhc7WYwjuhHB8HHS8zkdtITXLRmUMTeol2ldxvLwYtwbFeifZ9uDDWuyL4Iw==}
     dev: false
 
-  /preact@10.20.2:
-    resolution: {integrity: sha512-S1d1ernz3KQ+Y2awUxKakpfOg2CEmJmwOP+6igPx6dgr6pgDvenqYviyokWso2rhHvGtTlWWnJDa7RaPbQerTg==}
+  /preact@10.21.0:
+    resolution: {integrity: sha512-aQAIxtzWEwH8ou+OovWVSVNlFImL7xUCwJX3YMqA3U8iKCNC34999fFOnWjYNsylgfPgMexpbk7WYOLtKr/mxg==}
     requiresBuild: true
     dev: false
 
@@ -42435,7 +42514,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.9
       '@types/base16': 1.0.2
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.0
       base16: 1.0.0
       color: 3.2.1
       csstype: 3.1.2
@@ -42998,6 +43077,14 @@ packages:
     engines: {node: '>=0.10.0'}
     dependencies:
       loose-envify: 1.4.0
+
+  /react@18.3.1:
+    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
+    engines: {node: '>=0.10.0'}
+    requiresBuild: true
+    dependencies:
+      loose-envify: 1.4.0
+    dev: false
 
   /read-all-stream@3.1.0:
     resolution: {integrity: sha512-DI1drPHbmBcUDWrJ7ull/F2Qb8HkwBncVx8/RpKYFSIACYaVRQReISYPdZz/mt1y1+qMCOrfReTopERmaxtP6w==}
@@ -45923,6 +46010,7 @@ packages:
 
   /tiny-typed-emitter@2.1.0:
     resolution: {integrity: sha512-qVtvMxeXbVej0cQWKqVSSAHmKZEHAvxdF8HEUBFWts8h+xEo5m/lEiPakuyZ3BnCBjOD8i24kzNOiOLLgsSxhA==}
+    dev: true
 
   /tinybench@2.6.0:
     resolution: {integrity: sha512-N8hW3PG/3aOoZAN5V/NSAEDz0ZixDSSt5b/a05iqtpgfLWMSVuCo7w0k2vVvEjdrIoeGqZzweX2WlyioNIHchA==}
@@ -46295,6 +46383,39 @@ packages:
     dev: true
     patched: true
 
+  /ts-node@10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.18.9)(typescript@5.4.5):
+    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
+    hasBin: true
+    peerDependencies:
+      '@swc/core': '>=1.2.50'
+      '@swc/wasm': '>=1.2.50'
+      '@types/node': '*'
+      typescript: '>=2.7'
+    peerDependenciesMeta:
+      '@swc/core':
+        optional: true
+      '@swc/wasm':
+        optional: true
+    dependencies:
+      '@cspotcode/source-map-support': 0.8.1
+      '@swc/core': 1.4.0
+      '@tsconfig/node10': 1.0.9
+      '@tsconfig/node12': 1.0.11
+      '@tsconfig/node14': 1.0.3
+      '@tsconfig/node16': 1.0.3
+      '@types/node': 18.18.9
+      acorn: 8.11.3
+      acorn-walk: 8.3.2
+      arg: 4.1.3
+      create-require: 1.1.1
+      diff: 4.0.2
+      make-error: 1.3.6
+      typescript: 5.4.5
+      v8-compile-cache-lib: 3.0.1
+      yn: 3.1.1
+    dev: true
+    patched: true
+
   /ts-toolbelt@9.6.0:
     resolution: {integrity: sha512-nsZd8ZeNUzukXPlJmTBwUAuABDe/9qtVDelJeT/qW0ow3ZS3BsQJtNkan1802aM9Uf68/Y8ljw86Hu0h5IUW3w==}
     dev: false
@@ -46533,6 +46654,12 @@ packages:
 
   /typescript@5.3.3:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+    dev: true
+
+  /typescript@5.4.5:
+    resolution: {integrity: sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true
@@ -47220,6 +47347,14 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
+
+  /use-sync-external-store@1.2.0(react@18.3.1):
+    resolution: {integrity: sha512-eEgnFxGQ1Ife9bzYs6VLi8/4X6CObHMw9Qr9tPY43iKwsPw8xE8+EFsf/2cFZ5S3esXgpWgtSCtLNS41F+sKPA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+    dependencies:
+      react: 18.3.1
+    dev: false
 
   /use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
@@ -48621,7 +48756,7 @@ packages:
     resolution: {integrity: sha512-QREF4c08omN9BPh3QDmz5h+OEvjdzDliuEcrDuXoDnHSMxIj1rsonzsgRaM2PXhFZuPeMIiKZYqc7Qg9BGbh6A==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.8
       '@types/ws': 8.5.9
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
@@ -49191,8 +49326,8 @@ packages:
     resolution: {integrity: sha512-ILEIE97kDZvF9Wb9f6h5aXK4swSlKGUcOEGiIYb2OOu/IrDU9iwj0fD//SsA6E5ibwJxpEvhullJY4Sl4GcpAw==}
     dev: true
 
-  /wrangler@3.52.0(@cloudflare/workers-types@4.20240423.0):
-    resolution: {integrity: sha512-HR06jTym+yr7+CI3Ggld3nfp1OM9vSC7h4B8vwWHwhi5K0sYg8p44rxV514Gmsv9dkFHegkRP70SM3sjuuxxpQ==}
+  /wrangler@3.53.1(@cloudflare/workers-types@4.20240423.0):
+    resolution: {integrity: sha512-bdMRQdHYdvowIwOhEMFkARIZUh56aDw7HLUZ/2JreBjj760osXE4Fc4L1TCkfRRBWgB6/LKF5LA4OcvORMYmHg==}
     engines: {node: '>=16.17.0'}
     hasBin: true
     peerDependencies:
@@ -49470,6 +49605,10 @@ packages:
 
   /xstate@4.37.1:
     resolution: {integrity: sha512-MuB7s01nV5vG2CzaBg2msXLGz7JuS+x/NBkQuZAwgEYCnWA8iQMiRz2VGxD3pcFjZAOih3fOgDD3kDaFInEx+g==}
+    dev: false
+
+  /xstate@5.12.0:
+    resolution: {integrity: sha512-4W/Hj553mwVnTLQ1itc3rni/cGtM5OkjyavTjaxCelc0ZZKE/ks6tYllc98KbekIoUrEPm4CJH/wTB5p5pPGEw==}
 
   /xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
@@ -49719,8 +49858,8 @@ packages:
       lib0: 0.2.87
     dev: false
 
-  /yjs@13.6.14:
-    resolution: {integrity: sha512-D+7KcUr0j+vBCUSKXXEWfA+bG4UQBviAwP3gYBhkstkgwy5+8diOPMx0iqLIOxNo/HxaREUimZRxqHGAHCL2BQ==}
+  /yjs@13.6.15:
+    resolution: {integrity: sha512-moFv4uNYhp8BFxIk3AkpoAnnjts7gwdpiG8RtyFiKbMtxKCS0zVZ5wPaaGpwC3V2N/K8TK8MwtSI3+WO9CHWjQ==}
     engines: {node: '>=16.0.0', npm: '>=8.0.0'}
     requiresBuild: true
     dependencies:

@@ -15,11 +15,10 @@ Read more [motivation](why.md).
 DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome on [GitHub](https://github.com/dxos/dxos/issues) and [Discord](https://discord.gg/eXVfryv3sW). <br/>See our [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md) about contributing code.
 :::
 
-DXOS is a group of technologies that work together:
+DXOS includes a key pair of technologies that work together:
 
 * [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
 * [HALO](platform/halo) - Identity for decentralized apps.
-* [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | Client-Server Web Apps | DXOS Apps |
@@ -40,9 +39,3 @@ Learn more about [ECHO](platform).
 Establishing user identity in a non-authoritative internet is hard. Every peer has to decide how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
 
 Learn more about [HALO](platform/halo).
-
-## KUBE
-
-Running an application requires a lot of supporting technology: process monitoring, observability, deployment management, DNS, SSL, ..., etc. KUBE is a compact, self-contained binary that runs anywhere and provides essential hosting services for applications.
-
-Learn more about [KUBE](platform/kube).

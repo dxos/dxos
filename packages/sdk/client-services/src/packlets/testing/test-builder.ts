@@ -6,14 +6,8 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  AutomergeHost,
-  MetadataStore,
-  type LevelDB,
-  SnapshotStore,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, type LevelDB, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -105,7 +99,7 @@ export type TestPeerProps = {
   snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
-  automergeHost?: AutomergeHost;
+  echoHost?: EchoHost;
   invitationsManager?: InvitationsManager;
 };
 
@@ -178,9 +172,10 @@ export class TestPeer {
     return this._props.signingContext ?? failUndefined();
   }
 
-  get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost({
-      db: this.level.sublevel('automerge'),
+  get echoHost() {
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     }));
   }
 
@@ -191,7 +186,7 @@ export class TestPeer {
       this.keyring,
       this.identity,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
       this.invitationsManager,
     ));
   }
