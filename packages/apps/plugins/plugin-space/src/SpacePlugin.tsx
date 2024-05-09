@@ -675,7 +675,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
-                            folder: intent.data?.folder,
+                            folder: intent.data?.folder?.data,
                           },
                         },
                       },
