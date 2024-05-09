@@ -5,38 +5,31 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplicant, type GlobalOptions } from './plan';
+import { type RunParams } from './plan/run-process';
 import {
-  runPlan,
-  type RunPlanParams,
-  readYAMLSpecFile,
-  type TestPlan,
-  runAgentForPlan,
-  type PlanOptions,
-} from './plan';
-import {
-  ReplicationTestPlan,
   EmptyTestPlan,
-  SignalTestPlan,
-  TransportTestPlan,
-  EchoTestPlan,
-  AutomergeTestPlan,
-  StorageTestPlan,
+  // ReplicationTestPlan,
+  // SignalTestPlan,
+  // TransportTestPlan,
+  // EchoTestPlan,
+  // AutomergeTestPlan,
+  // StorageTestPlan,
 } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
 
-const plans: { [key: string]: () => TestPlan<any, any> } = {
-  signal: () => new SignalTestPlan(),
-  transport: () => new TransportTestPlan(),
-  echo: () => new EchoTestPlan(),
-  replication: () => new ReplicationTestPlan(),
-  automerge: () => new AutomergeTestPlan(),
-  storage: () => new StorageTestPlan(),
+const plans: { [key: string]: () => TestPlan<any> } = {
+  // signal: () => new SignalTestPlan(),
+  // transport: () => new TransportTestPlan(),
+  // echo: () => new EchoTestPlan(),
+  // replication: () => new ReplicationTestPlan(),
+  // automerge: () => new AutomergeTestPlan(),
+  // storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
 
@@ -49,23 +42,23 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
  * Example: KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
 const start = async () => {
-  // Run agent entry point in node process.
-  if (process.env.GRAVITY_SPEC) {
-    const name = process.env.GRAVITY_SPEC;
-    await runAgentForPlan(name, process.env.GRAVITY_AGENT_PARAMS!, plans[name]());
+  // Entry point for Replicant node process.
+  if (process.env.__DX_NODE_REPLICANT) {
+    const params: RunParams = JSON.parse(process.env.DX_RUN_PARAMS!);
+    await runReplicant(params);
     return;
   }
 
-  // Run agent entry point in browser.
-  if ((globalThis as any).dxgravity_env) {
-    log.info('running in browser');
-    const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
-    const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
-    invariant(name, 'missing GRAVITY_SPEC');
-    invariant(params, 'missing GRAVITY_AGENT_PARAMS');
-    await runAgentForPlan(name, params, plans[name]());
-    return;
-  }
+  // // Entry point for Replicant browser process.
+  // if ((globalThis as any).__DX_BROWSER_REPLICANT) {
+  //   log.info('running in browser');
+  //   const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
+  //   const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
+  //   invariant(name, 'missing GRAVITY_SPEC');
+  //   invariant(params, 'missing GRAVITY_AGENT_PARAMS');
+  //   await runReplicant(name, params, plans[name]());
+  //   return;
+  // }
 
   const argv = yargs(hideBin(process.argv))
     .options({
@@ -84,7 +77,7 @@ const start = async () => {
 
   const name = argv._[0] as string;
 
-  let plan: () => RunPlanParams<any, any>;
+  let plan: () => RunPlanParams<any>;
   const planGenerator = plans[name];
 
   if (!planGenerator) {
@@ -93,7 +86,7 @@ const start = async () => {
     return;
   }
 
-  const options: PlanOptions = {
+  const options: GlobalOptions = {
     staggerAgents: argv.staggerAgents,
     randomSeed: PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
@@ -116,7 +109,7 @@ const start = async () => {
     });
   }
 
-  await runPlan(name, plan());
+  await runPlan(plan());
 };
 
 void start();
