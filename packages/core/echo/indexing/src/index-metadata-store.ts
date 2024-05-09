@@ -54,7 +54,7 @@ export class IndexMetadataStore {
 
   @trace.span({ showInBrowserTimeline: true })
   markDirty(idToHeads: IdToHeads, batch: BatchLevel) {
-    log.info('mark dirty', { count: idToHeads.size });
+    log('mark dirty', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
     }
@@ -69,7 +69,7 @@ export class IndexMetadataStore {
 
   @trace.span({ showInBrowserTimeline: true })
   markClean(idToHeads: IdToHeads, batch: BatchLevel) {
-    log.info('mark dirty', { count: idToHeads.size });
+    log('mark dirty', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
       batch.del(id, { sublevel: this._lastSeen });

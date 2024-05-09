@@ -62,6 +62,8 @@ export class Indexer {
       await this._promoteNewIndexes();
     }
     await this._indexUpdatedObjects();
+
+    // TODO(dmaretskyi): Move to the begging somehow without blocking the first call.
     await sleep(300);
   });
 
@@ -197,7 +199,7 @@ export class Indexer {
     }
     const idToHeads = await this._metadataStore.getDirtyDocuments();
 
-    log.info('dirty objects to index', { count: idToHeads.size });
+    log('dirty objects to index', { count: idToHeads.size });
 
     if (idToHeads.size === 0 || this._ctx.disposed) {
       return;

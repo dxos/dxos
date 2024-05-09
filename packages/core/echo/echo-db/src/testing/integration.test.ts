@@ -7,8 +7,6 @@ import { describe, test } from '@dxos/test';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
-import { sleep } from '@dxos/async';
-import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -31,7 +29,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db);
   });
 
-  test.only('reopen peer', async () => {
+  test('reopen peer', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -47,7 +45,7 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test.only('reopen peer - updating indexes after restart', async () => {
+  test('reopen peer - updating indexes after restart', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -56,7 +54,6 @@ describe('Integration tests', () => {
     await dataAssertion.seed(db);
 
     await peer.close();
-    log.break();
     await peer.open();
     await peer.host.updateIndexes();
 
