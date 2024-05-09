@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
@@ -36,25 +36,18 @@ export type IndexerParams = {
 };
 
 @trace.resource()
-export class Indexer {
-  private _ctx = new Context({
-    onError: (err) => {
-      log.catch(err);
-    },
-  });
-
+export class Indexer extends Resource {
   private _indexConfig?: IndexConfig;
   private readonly _indexes = new ComplexMap<IndexKind, Index>((kind) =>
     kind.kind === IndexKind.Kind.FIELD_MATCH ? `${kind.kind}:${kind.field}` : kind.kind,
   );
 
-  private _initialized = false;
   private readonly _newIndexes: Index[] = [];
 
   public readonly updated = new Event<void>();
 
   private readonly _run = new DeferredTask(this._ctx, async () => {
-    if (!this._initialized || this._indexConfig?.enabled !== true) {
+    if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       return;
     }
 
@@ -73,6 +66,7 @@ export class Indexer {
   private readonly _loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
+    super();
     this._db = db;
     this._metadataStore = metadataStore;
     this._indexStore = indexStore;
@@ -80,7 +74,7 @@ export class Indexer {
   }
 
   get initialized() {
-    return this._initialized;
+    return this._lifecycleState === LifecycleState.OPEN;
   }
 
   @synchronized
@@ -90,7 +84,7 @@ export class Indexer {
       return;
     }
     this._indexConfig = config;
-    if (this._initialized) {
+    if (this._lifecycleState === LifecycleState.OPEN) {
       for (const kind of this._indexes.keys()) {
         if (!config.indexes?.some((kind) => isEqual(kind, kind))) {
           this._indexes.delete(kind);
@@ -101,13 +95,7 @@ export class Indexer {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  @synchronized
-  async initialize() {
-    if (this._initialized) {
-      log.warn('Indexer is already initialized');
-      return;
-    }
-
+  protected override async _open(ctx: Context): Promise<void> {
     if (!this._indexConfig) {
       log.warn('Index config is not set');
     }
@@ -119,13 +107,24 @@ export class Indexer {
       this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
       this._run.schedule();
     }
+  }
 
-    this._initialized = true;
+  protected override async _close(ctx: Context): Promise<void> {
+    for (const index of this._indexes.values()) {
+      await index.close();
+    }
+    this._newIndexes.length = 0;
+    this._indexes.clear();
+  }
+
+  protected override async _catch(err: Error): Promise<void> {
+    // TODO(dmaretskyi): Better error handling.
+    log.catch(err);
   }
 
   @synchronized
   async find(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
-    if (!this._initialized || this._indexConfig?.enabled !== true) {
+    if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
     const arraysOfIds = await Promise.all(Array.from(this._indexes.values()).map((index) => index.find(filter)));
@@ -265,17 +264,6 @@ export class Indexer {
       }
       await this._indexStore.save(index);
     }
-  }
-
-  async destroy() {
-    await this._ctx.dispose();
-    this._initialized = false;
-    for (const index of this._indexes.values()) {
-      await index.close();
-    }
-    this._ctx = new Context();
-    this._newIndexes.length = 0;
-    this._indexes.clear();
   }
 }
 

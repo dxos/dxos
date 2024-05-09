@@ -82,13 +82,13 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
-    await this._indexer.initialize();
+    await this._indexer.open(ctx);
     await this._queryService.open(ctx);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._queryService.close(ctx);
-    await this._indexer.destroy();
+    await this._indexer.close(ctx);
     await this._automergeHost.close();
   }
 
