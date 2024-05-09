@@ -9,11 +9,12 @@ import { log } from '@dxos/log';
 
 import { ReplicantRpcHandle } from './replicant-rpc-handle';
 import { REDIS_PORT, createRedisRpcPort } from './util';
+import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
 import { runNode } from '../run-process';
-import { type PlanOptions, type AgentParams } from '../spec';
+import { type GlobalOptions, type TestParams } from '../spec';
 
-export class SchedulerEnvImpl<S, C> implements SchedulerEnv {
+export class SchedulerEnvImpl<S> implements SchedulerEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -31,9 +32,14 @@ export class SchedulerEnvImpl<S, C> implements SchedulerEnv {
    */
   public rpcResponses: Redis;
 
+  private replicantIdx: number = 0;
+
+  // Start websocket REDIS proxy for browser tests.
+  private readonly _server = new WebSocketRedisProxy();
+
   constructor(
-    private readonly _options: PlanOptions,
-    public params: AgentParams<S, C>,
+    private readonly _options: GlobalOptions,
+    public params: TestParams<S>,
     private readonly _redisOptions?: RedisOptions,
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
@@ -55,6 +61,7 @@ export class SchedulerEnvImpl<S, C> implements SchedulerEnv {
     this.redisSub.disconnect();
     this.rpcRequests.disconnect();
     this.rpcResponses.disconnect();
+    await this._server.destroy();
   }
 
   async syncBarrier(key: string) {
@@ -119,7 +126,7 @@ export class SchedulerEnvImpl<S, C> implements SchedulerEnv {
     }) as RpcHandle<T>;
 
     const { kill } = runNode({
-      replicantIdx: this.params.agentIdx,
+      replicantIdx: this.replicantIdx++,
       outDir: this.params.outDir,
       profile: this._options.profile,
       debug: this._options.debug,
