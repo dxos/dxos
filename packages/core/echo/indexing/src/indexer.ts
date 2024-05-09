@@ -164,6 +164,13 @@ export class Indexer {
     this._run.schedule();
   }
 
+  /**
+   * Perform any pending index updates.
+   */
+  async updateIndexes() {
+    await this._run.runBlocking();
+  }
+
   @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
     const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();

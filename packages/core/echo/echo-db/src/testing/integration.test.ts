@@ -7,6 +7,7 @@ import { describe, test } from '@dxos/test';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
+import { sleep } from '@dxos/async';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -29,8 +30,23 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db);
   });
 
-  // TODO(dmaretskyi): packages/core/echo/echo-pipeline/src/automerge/automerge-doc-loader.ts:92 INFO AutomergeDocumentLoaderImpl#7 loading delayed until object links are initialized
-  test.skip('reopen peer', async () => {
+  test.only('reopen peer', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
+    await using peer = await builder.createPeer();
+
+    await using db = await peer.createDatabase(spaceKey);
+    await dataAssertion.seed(db);
+
+    await peer.host.updateIndexes();
+    await peer.close();
+    await peer.open();
+
+    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await dataAssertion.verify(db2);
+  });
+
+  test.only('reopen peer - updating indexes after restart', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
     await using peer = await builder.createPeer();
@@ -40,6 +56,7 @@ describe('Integration tests', () => {
 
     await peer.close();
     await peer.open();
+    await peer.host.updateIndexes();
 
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
     await dataAssertion.verify(db2);
