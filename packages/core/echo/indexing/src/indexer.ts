@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 
 import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
