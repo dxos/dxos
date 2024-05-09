@@ -29,7 +29,7 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "kubo-rpc-client": "^3.0.2",
+    "kubo-rpc-client": "^4.1.1",
     "lodash.get": "^4.4.2",
     "url-join": "^5.0.0"
   },
@@ -52,7 +52,8 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "undici": "*"
   },
   "publishConfig": {
     "access": "public"
