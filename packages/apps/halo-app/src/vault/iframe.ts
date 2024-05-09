@@ -59,7 +59,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
             // NOTE: Using context provider directly to avoid duplicate banners being logged.
             ClientContext.Provider,
             { value: { client } },
-            createElement(Shell, { runtime, origin }),
+            createElement(Shell, { runtime }),
           ),
         }),
       ),

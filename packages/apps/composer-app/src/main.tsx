@@ -53,9 +53,11 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
 
+import { meta as BetaMeta } from './BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
@@ -66,7 +68,6 @@ const main = async () => {
   registerSignalRuntime();
 
   let config = await setupConfig();
-
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
@@ -122,6 +123,7 @@ const main = async () => {
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
       isSocket ? NativeMeta : PwaMeta,
+      BetaMeta,
 
       // UX
       isDeck ? DeckMeta : LayoutMeta,
@@ -167,6 +169,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
+      [BetaMeta.id]: Plugin.lazy(() => import('./BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
@@ -174,6 +177,27 @@ const main = async () => {
         config,
         services,
         shell: './shell.html',
+        onClientInitialized: async (client) => {
+          try {
+            // Retrieve the cookie.
+            const response = await fetch('/info');
+            if (!response.ok) {
+              throw new Error('Invalid response.');
+            }
+
+            // TODO(burdon): CamelCase vs. _ names.
+            const result: JWTPayload = await response.json();
+            await client.shell.setInvitationUrl({
+              invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
+              deviceInvitationParam: 'deviceInvitationCode',
+              spaceInvitationParam: 'spaceInvitationCode',
+            });
+          } catch (err) {
+            // TODO(burdon): Need to notify user.
+            // Ignore (since composer.dxos.org does not implement the middleware).
+            log.catch(err);
+          }
+        },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
@@ -243,6 +267,7 @@ const main = async () => {
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,
