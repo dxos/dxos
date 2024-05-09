@@ -701,8 +701,8 @@ importers:
         specifier: ^7.18.13
         version: 7.22.19
       '@cloudflare/workers-types':
-        specifier: ^4.20240423.0
-        version: 4.20240423.0
+        specifier: ^4.20240502.0
+        version: 4.20240502.0
       '@dxos/app-graph':
         specifier: workspace:*
         version: link:../../sdk/app-graph
@@ -762,7 +762,7 @@ importers:
         version: 7.0.0
       wrangler:
         specifier: ^3.51.2
-        version: 3.51.2(@cloudflare/workers-types@4.20240423.0)
+        version: 3.51.2(@cloudflare/workers-types@4.20240502.0)
 
   packages/apps/composer-extension:
     devDependencies:
@@ -13584,10 +13584,6 @@ packages:
 
   /@cloudflare/workers-types@4.20240320.1:
     resolution: {integrity: sha512-CiYtVpQURPgQqtBKkmOAnfPElVZuD7Xyf1IxKtKp2B4aB9gnooapwJhzeY8c4Ls4u17SgMS0MprOkrgYwzZ6xg==}
-    dev: true
-
-  /@cloudflare/workers-types@4.20240423.0:
-    resolution: {integrity: sha512-ssuccb3j+URp6mP2p0PcQE9vmS3YeKBQnALHF9P3yQfUAFozuhTsDTbqmL+zPrJvUcG7SL2xVQkNDF9QJeKDZw==}
     dev: true
 
   /@cloudflare/workers-types@4.20240502.0:
@@ -40085,7 +40081,7 @@ packages:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
     dependencies:
       hosted-git-info: 2.8.9
-      resolve: 1.22.2
+      resolve: 1.22.8
       semver: 5.7.1
       validate-npm-package-license: 3.0.4
 
