@@ -27,6 +27,12 @@ export type EchoHostParams = {
   storage: Storage;
 };
 
+/**
+ * Host for the Echo database.
+ * Manages multiple spaces.
+ * Stores data to disk.
+ * Can sync with pluggable data replicators.
+ */
 export class EchoHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
@@ -76,20 +82,33 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
-    await this._indexer.initialize();
+    await this._indexer.open(ctx);
     await this._queryService.open(ctx);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._queryService.close(ctx);
-    await this._indexer.destroy();
+    await this._indexer.close(ctx);
     await this._automergeHost.close();
   }
 
+  /**
+   * Flush all pending writes to the underlying storage.
+   */
   async flush() {
     await this._automergeHost.repo.flush();
   }
 
+  /**
+   * Perform any pending index updates.
+   */
+  async updateIndexes() {
+    await this._indexer.updateIndexes();
+  }
+
+  /**
+   * Create new space root.
+   */
   async createSpaceRoot(spaceKey: PublicKey): Promise<AutomergeUrl> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
