@@ -2,7 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EchoReactiveObject, type Reference } from '@dxos/echo-schema';
+import { type Reference } from '@dxos/echo-protocol';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 
 export type DecodedAutomergePrimaryValue =
   | undefined

@@ -170,7 +170,7 @@ export class Peer {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
-    log('initiating...', { id: this.id, topic: this.topic, peerId: this.id, sessionId });
+    log('initiating...', { ownPeerId: this.localPeerId, topic: this.topic, remotePeerId: this.id, sessionId });
 
     const connection = this._createConnection(true, sessionId);
     this.initiating = true;

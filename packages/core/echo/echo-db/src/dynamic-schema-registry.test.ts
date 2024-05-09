@@ -5,12 +5,19 @@
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
-import { type EchoObjectAnnotation, EchoObjectAnnotationId } from '@dxos/echo-schema';
-import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema, TypedObject } from '@dxos/echo-schema';
+import {
+  DynamicEchoSchema,
+  EchoObjectAnnotationId,
+  StoredEchoSchema,
+  TypedObject,
+  create,
+  effectToJsonSchema,
+  type EchoObjectAnnotation,
+} from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from './query';
-import { createDatabase } from './testing';
+import { EchoTestBuilder } from './testing';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [
@@ -26,6 +33,21 @@ const createTestSchemas = () => [
 ];
 
 describe('schema registry', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const setupTest = async () => {
+    const { db } = await builder.createDatabase();
+    return { db, registry: db.schemaRegistry };
+  };
+
   test('add new schema', async () => {
     const { registry } = await setupTest();
     class TestClass extends TypedObject(testType)({}) {}
@@ -96,9 +118,4 @@ describe('schema registry', () => {
     dynamicSchema.addColumns({ newField: S.number });
     expect(dynamicSchema.getProperties().length).to.eq(2);
   });
-
-  const setupTest = async () => {
-    const { db } = await createDatabase();
-    return { db, registry: db.schemaRegistry };
-  };
 });

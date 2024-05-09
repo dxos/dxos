@@ -5,9 +5,8 @@
 import { expect } from 'chai';
 
 import { asyncTimeout } from '@dxos/async';
-import { encodeReference, type ObjectStructure } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
-import { Reference } from '@dxos/echo-schema';
+import { encodeReference, type ObjectStructure, Reference } from '@dxos/echo-protocol';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
@@ -47,12 +46,12 @@ describe('Indexer', () => {
         yield Array.from(pointersWithHash.entries()).map(([id]) => documents.find((doc) => doc.id === id)!);
       },
     });
-    afterTest(() => indexer.destroy());
+    afterTest(() => indexer.close());
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-      await indexer.initialize();
+      await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }
 
@@ -69,7 +68,7 @@ describe('Indexer', () => {
       const batch = level.batch();
       metadataStore.markDirty(dirtyMap, batch);
       await batch.write();
-      metadataStore.afterMarkDirty();
+      metadataStore.notifyMarkedDirty();
 
       await asyncTimeout(doneIndexing, 1000);
     }
@@ -120,7 +119,7 @@ describe('Indexer', () => {
       const newHash = 'new-hash';
       documents[0].heads = [newHash];
       // Not mark dirty, simulates a change that were not saved yet.
-      metadataStore.afterMarkDirty();
+      metadataStore.notifyMarkedDirty();
 
       await asyncTimeout(doneIndexing, 1000);
     }

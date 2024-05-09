@@ -2,20 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ExportedHandler } from '@cloudflare/workers-types';
-
 import { authMiddleware, type Env } from '@dxos/web-auth';
 
-<<<<<<< Updated upstream
-const handler = authMiddleware({ service: 'composer-app-worker', cookie: 'COMPOSER-BETA' });
-=======
 const handler = authMiddleware({
   cookie: 'COMPOSER-BETA',
   service: 'composer-app-worker',
-  prefix: '',
+  prefix: 'beta',
   redirectUrl: 'https://dxos.org/composer/#beta',
 });
->>>>>>> Stashed changes
 
 /**
  * Cloudflare Pages Functions Advanced mode set-up.
@@ -23,8 +17,7 @@ const handler = authMiddleware({
  * Output _worker.js to <pages_build_output_dir> and deploy via git.
  */
 export default {
-  fetch: async (request, env, c)=> {
-    console.log('###', env);
+  fetch: async (request, env, c) => {
     return handler(request, env, c)
   },
 } as ExportedHandler<Env>;

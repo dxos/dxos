@@ -4,10 +4,11 @@
 
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, type LevelDB } from '@dxos/echo-pipeline';
-import { IndexMetadataStore, IndexStore, Indexer, createStorageCallbacks } from '@dxos/indexing';
+import { AutomergeHost, DataServiceImpl, type EchoReplicator } from '@dxos/echo-pipeline';
+import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type Storage } from '@dxos/random-access-storage';
@@ -26,6 +27,12 @@ export type EchoHostParams = {
   storage: Storage;
 };
 
+/**
+ * Host for the Echo database.
+ * Manages multiple spaces.
+ * Stores data to disk.
+ * Can sync with pluggable data replicators.
+ */
 export class EchoHost extends Resource {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
@@ -40,8 +47,7 @@ export class EchoHost extends Resource {
 
     this._automergeHost = new AutomergeHost({
       db: kv.sublevel('automerge'),
-      // TODO(dmaretskyi): Remove circular dependency.
-      storageCallbacks: createStorageCallbacks({ host: () => this._automergeHost, metadata: this._indexMetadataStore }),
+      indexMetadataStore: this._indexMetadataStore,
       // TODO(dmaretskyi): Still needed for data migration -- remove before the next release.
       directory: storage.createDirectory('automerge'),
     });
@@ -76,20 +82,33 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
-    await this._indexer.initialize();
+    await this._indexer.open(ctx);
     await this._queryService.open(ctx);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._queryService.close(ctx);
-    await this._indexer.destroy();
+    await this._indexer.close(ctx);
     await this._automergeHost.close();
   }
 
+  /**
+   * Flush all pending writes to the underlying storage.
+   */
   async flush() {
     await this._automergeHost.repo.flush();
   }
 
+  /**
+   * Perform any pending index updates.
+   */
+  async updateIndexes() {
+    await this._indexer.updateIndexes();
+  }
+
+  /**
+   * Create new space root.
+   */
   async createSpaceRoot(spaceKey: PublicKey): Promise<AutomergeUrl> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
@@ -101,6 +120,20 @@ export class EchoHost extends Resource {
     await this._automergeHost.repo.flush([automergeRoot.documentId]);
 
     return automergeRoot.url;
+  }
+
+  /**
+   * Install data replicator.
+   */
+  async addReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(replicator);
+  }
+
+  /**
+   * Remove data replicator.
+   */
+  async removeReplicator(replicator: EchoReplicator): Promise<void> {
+    await this._automergeHost.removeReplicator(replicator);
   }
 
   /**

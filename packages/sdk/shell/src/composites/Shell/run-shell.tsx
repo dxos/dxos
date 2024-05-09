@@ -13,9 +13,10 @@ import {
   ClientContext,
   ClientServicesProxy,
   Config,
+  ShellDisplay,
   SystemStatus,
 } from '@dxos/react-client';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -24,24 +25,55 @@ import { ClipboardProvider } from '../../components';
 import { osTranslations } from '../../translations';
 
 export const runShell = async (config: Config = new Config()) => {
-  const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
-  const client = new Client({ config, services });
+  // If runtime fails to open then the shell will not be openable.
   const runtime = new ShellRuntimeImpl(createIFramePort({ channel: DEFAULT_SHELL_CHANNEL }));
-  await Promise.all([runtime.open(), client.initialize()]);
+  await runtime.open();
 
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
-        <ClientContext.Provider value={{ client, status: SystemStatus.ACTIVE }}>
-          <ClipboardProvider>
-            <Tooltip.Provider>
-              <AgentHostingProvider>
-                <Shell runtime={runtime} origin={location.origin} />
-              </AgentHostingProvider>
-            </Tooltip.Provider>
-          </ClipboardProvider>
-        </ClientContext.Provider>
-      </ThemeProvider>
-    </StrictMode>,
+  try {
+    const services = new ClientServicesProxy(createIFramePort({ channel: DEFAULT_CLIENT_CHANNEL }));
+    const client = new Client({ config, services });
+    await client.initialize();
+
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
+          <ClientContext.Provider value={{ client, status: SystemStatus.ACTIVE }}>
+            <ClipboardProvider>
+              <Tooltip.Provider>
+                <AgentHostingProvider>
+                  <Shell runtime={runtime} />
+                </AgentHostingProvider>
+              </Tooltip.Provider>
+            </ClipboardProvider>
+          </ClientContext.Provider>
+        </ThemeProvider>
+      </StrictMode>,
+    );
+  } catch {
+    // If shell's client fails to initialize, ensure that the shell is still closeable.
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <ThemeProvider tx={defaultTx} resourceExtensions={[osTranslations]}>
+          <Fallback onClose={() => runtime.setAppContext({ display: ShellDisplay.NONE })} />
+        </ThemeProvider>
+      </StrictMode>,
+    );
+  }
+};
+
+const Fallback = ({ onClose }: { onClose?: () => void }) => {
+  const { t } = useTranslation('os');
+
+  return (
+    <Dialog.Root modal open onOpenChange={() => onClose?.()}>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Title>{t('shell fallback title')}</Dialog.Title>
+          <Dialog.Close asChild onClick={() => onClose?.()}>
+            <Button variant='primary'>{t('close label')}</Button>
+          </Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };

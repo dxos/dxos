@@ -12,7 +12,6 @@ export * from './expando';
 export * from './getter';
 export * from './typed-object-class';
 export * from './types';
-export * from './reference';
 export { defineHiddenProperty } from './utils';
 
 export * as S from '@effect/schema/Schema';

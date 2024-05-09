@@ -8,7 +8,8 @@ import { asyncTimeout } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { IndexMetadataStore } from '@dxos/indexing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
@@ -26,6 +27,7 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
     afterTest(() => host.close());
