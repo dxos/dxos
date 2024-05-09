@@ -4,7 +4,7 @@
 
 - CF Pages supports a `preview` and `production` environment per project, unlike Workers, which can have any number.
 
-| Branch       | CF Page Name   | CF Environment | Cloudflare                     | Netlify                           |
+| GH Branch    | CF Page Name   | CF Environment | Cloudflare                     | Netlify                           |
 |--------------|----------------|----------------|--------------------------------|-----------------------------------|
 | `main`       | `composer-dev` | `preview`      | https://dev.composer.space     | https://composer.dev.dxos.org     |
 | `testing`    |                | `production`   | https://testing.composer.space | N/A                               | 

@@ -20,14 +20,17 @@ import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 export class ShellRuntimeImpl implements ShellRuntime {
   readonly layoutUpdate = new Event<LayoutRequest>();
   readonly invitationUrlUpdate = new Event<InvitationUrlRequest>();
+
   private _appRpc?: ProtoRpcPeer<AppServiceBundle>;
   private _layout = ShellLayout.DEFAULT;
-  private _invitationCode?: string;
   private _spaceKey?: PublicKey;
 
-  private _invitationUrl = window.location.origin;
-  private _deviceInvitationParam = 'deviceInvitationCode';
-  private _spaceInvitationParam = 'spaceInvitationCode';
+  private _invitationCode?: string;
+  private _invitationUrl = typeof window !== 'undefined' && window.location.origin;
+
+  // TODO(burdon): Change to using underscores (coordinate with @dxos/web-auth).
+  private _deviceInvitationParam = 'deviceInvitationCode'; // TODO(burdon): device_invitation_code
+  private _spaceInvitationParam = 'spaceInvitationCode'; // TODO(burdon): space_invitation_code
 
   constructor(private readonly _port: RpcPort) {}
 
