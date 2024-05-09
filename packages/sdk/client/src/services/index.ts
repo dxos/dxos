@@ -13,6 +13,7 @@ export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 export {
   type AppContextRequest,
   type LayoutRequest,
+  type InvitationUrlRequest,
   ShellDisplay,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';

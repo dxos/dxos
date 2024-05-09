@@ -78,7 +78,19 @@ message LayoutRequest {
   optional string target = 4;
 }
 
+message InvitationUrlRequest {
+  /// Base URL for invitations.
+  string invitation_url = 1;
+
+  /// Query parameter for device invitations.
+  string device_invitation_param = 2;
+
+  /// Query parameter for space invitations.
+  string space_invitation_param = 3;
+}
+
 /// Shell UI RPCs.
 service ShellService {
   rpc SetLayout(LayoutRequest) returns (google.protobuf.Empty);
+  rpc SetInvitationUrl(InvitationUrlRequest) returns (google.protobuf.Empty);
 }
