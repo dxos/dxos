@@ -1937,10 +1937,13 @@ importers:
         version: link:../../../ui/react-ui-mosaic
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1
+        version: 4.1.1(undici@6.13.0)
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+      undici:
+        specifier: '*'
+        version: 6.13.0
       url-join:
         specifier: ^5.0.0
         version: 5.0.0
@@ -6480,7 +6483,7 @@ importers:
         version: 4.1.0
       kubo-rpc-client:
         specifier: ^4.1.1
-        version: 4.1.1
+        version: 4.1.1(undici@6.13.0)
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
@@ -6496,6 +6499,9 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.2.0
+      undici:
+        specifier: '*'
+        version: 6.13.0
       uuid:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
@@ -37026,7 +37032,7 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  /kubo-rpc-client@4.1.1:
+  /kubo-rpc-client@4.1.1(undici@6.13.0):
     resolution: {integrity: sha512-vxIkTQLvDqd2DEcBfz7DWegAidYtopmWUR/UhWyuuss9+JNFzV5neBn8BKxSDHoLJPvkxJpqXDaJhsb7ZuPouQ==}
     dependencies:
       '@ipld/dag-cbor': 9.1.0
@@ -37055,7 +37061,7 @@ packages:
       merge-options: 3.0.4
       multiformats: 13.1.0
       nanoid: 5.0.7
-      native-fetch: 4.0.2
+      native-fetch: 4.0.2(undici@6.13.0)
       parse-duration: 1.0.2
       react-native-fetch-api: 3.0.0
       stream-to-it: 1.0.1
@@ -39793,10 +39799,12 @@ packages:
   /napi-macros@2.2.2:
     resolution: {integrity: sha512-hmEVtAGYzVQpCKdbQea4skABsdXW4RUh5t5mJ2zzqowJS2OyXZTU1KhDVFhx+NlWZ4ap9mqR9TcDO3LTTttd+g==}
 
-  /native-fetch@4.0.2:
+  /native-fetch@4.0.2(undici@6.13.0):
     resolution: {integrity: sha512-4QcVlKFtv2EYVS5MBgsGX5+NWKtbDbIECdUXDBGDMAZXq3Jkv9zf+y8iS7Ub8fEdga3GpYeazp9gauNqXHJOCg==}
     peerDependencies:
       undici: '*'
+    dependencies:
+      undici: 6.13.0
     dev: false
 
   /natural-compare@1.4.0:
@@ -48948,6 +48956,7 @@ packages:
 
   /workbox-google-analytics@7.0.0:
     resolution: {integrity: sha512-MEYM1JTn/qiC3DbpvP2BVhyIH+dV/5BjHk756u9VbwuAhu0QHyKscTnisQuz21lfRpOwiS9z4XdqeVAKol0bzg==}
+    deprecated: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
     dependencies:
       workbox-background-sync: 7.0.0
       workbox-core: 7.0.0
