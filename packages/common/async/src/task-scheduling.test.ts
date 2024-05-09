@@ -54,5 +54,17 @@ describe('task-scheduling', () => {
       await task.runBlocking();
       expect(events).to.deep.eq(['task done']);
     });
+
+    test('join', async () => {
+      const task = new DeferredTask(Context.default(), async () => {
+        await sleep(10);
+      });
+
+      await task.join(); // Should be a no-op.
+
+      await task.runBlocking();
+
+      await task.join(); // Should be a no-op.
+    });
   });
 });

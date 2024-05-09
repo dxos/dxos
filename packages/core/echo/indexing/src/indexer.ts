@@ -4,7 +4,7 @@
 
 import isEqual from 'lodash.isequal';
 
-import { DeferredTask, Event, sleep, synchronized } from '@dxos/async';
+import { DeferredTask, DeferredTask, Event, sleep, sleepWithContext, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
@@ -22,6 +22,8 @@ import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot } from
  * Amount of documents processed in a batch to save indexes after.
  */
 const INDEX_UPDATE_BATCH_SIZE = 100;
+
+const INDEX_COOLDOWN_TIME = 300;
 
 export type IndexerParams = {
   db: LevelDB;
@@ -46,24 +48,14 @@ export class Indexer extends Resource {
 
   public readonly updated = new Event<void>();
 
-  private readonly _run = new DeferredTask(this._ctx, async () => {
-    if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
-      return;
-    }
-
-    if (this._newIndexes.length > 0) {
-      await this._promoteNewIndexes();
-    }
-    await this._indexUpdatedObjects();
-
-    // TODO(dmaretskyi): Move to the begging somehow without blocking the first call.
-    await sleep(300);
-  });
+  private _run!: DeferredTask;
 
   private readonly _db: LevelDB;
   private readonly _metadataStore: IndexMetadataStore;
   private readonly _indexStore: IndexStore;
   private readonly _loadDocuments: (ids: IdToHeads) => AsyncGenerator<ObjectSnapshot[]>;
+
+  private _lastRunFinishedAt = 0;
 
   constructor({ db, metadataStore, indexStore, loadDocuments }: IndexerParams) {
     super();
@@ -100,6 +92,28 @@ export class Indexer extends Resource {
       log.warn('Index config is not set');
     }
 
+    // Needs to be re-created because context changes.
+    // TODO(dmaretskyi): Find a way to express this better for resources.
+    this._run = new DeferredTask(this._ctx, async () => {
+      try {
+        if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
+          return;
+        }
+
+        const cooldownMs = this._lastRunFinishedAt + INDEX_COOLDOWN_TIME - Date.now();
+        if (cooldownMs > 0) {
+          await sleepWithContext(this._ctx, cooldownMs);
+        }
+
+        if (this._newIndexes.length > 0) {
+          await this._promoteNewIndexes();
+        }
+        await this._indexUpdatedObjects();
+      } finally {
+        this._lastRunFinishedAt = Date.now();
+      }
+    });
+
     // Load indexes from disk.
     await this._loadIndexes();
 
@@ -110,6 +124,7 @@ export class Indexer extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    await this._run.join();
     for (const index of this._indexes.values()) {
       await index.close();
     }

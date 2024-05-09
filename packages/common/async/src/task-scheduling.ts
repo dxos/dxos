@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
+import { ContextDisposedError, type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
@@ -16,6 +16,7 @@ export type ClearCallback = () => void;
  * Could be triggered multiple times, but only runs once.
  * If a new task is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
  */
+// TODO(dmaretskyi): Consider calling `join` on context dispose.
 export class DeferredTask {
   private _scheduled = false;
   private _currentTask: Promise<void> | null = null; // Can't be rejected.
@@ -56,8 +57,19 @@ export class DeferredTask {
    * Schedule the task to run and wait for it to finish.
    */
   async runBlocking() {
+    if (this._ctx.disposed) {
+      throw new ContextDisposedError();
+    }
     this.schedule();
     await this._nextTask.wait();
+  }
+
+  /**
+   * Waits for the current task to finish if it is running.
+   * Does not schedule a new task.
+   */
+  async join() {
+    await this._currentTask;
   }
 }
 
