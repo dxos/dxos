@@ -683,7 +683,7 @@ export const SpacePlugin = ({
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
-                            folder: intent.data?.folder,
+                            folder: intent.data?.folder?.data,
                           },
                         },
                       },
