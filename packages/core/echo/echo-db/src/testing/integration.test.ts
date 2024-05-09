@@ -8,6 +8,7 @@ import { describe, test } from '@dxos/test';
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
 import { sleep } from '@dxos/async';
+import { log } from '@dxos/log';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -55,6 +56,7 @@ describe('Integration tests', () => {
     await dataAssertion.seed(db);
 
     await peer.close();
+    log.break();
     await peer.open();
     await peer.host.updateIndexes();
 

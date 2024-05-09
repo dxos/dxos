@@ -37,7 +37,7 @@ export type IndexerParams = {
 
 @trace.resource()
 export class Indexer {
-  private readonly _ctx = new Context({
+  private _ctx = new Context({
     onError: (err) => {
       log.catch(err);
     },
@@ -111,33 +111,7 @@ export class Indexer {
     }
 
     // Load indexes from disk.
-    const kinds = await this._indexStore.loadIndexKindsFromDisk();
-    for (const [identifier, kind] of kinds.entries()) {
-      if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
-        await this._indexStore
-          .load(identifier)
-          .then((index) => this._indexes.set(index.kind, index))
-          .catch((err) => {
-            log.warn('Failed to load index', { err, identifier });
-          });
-      } else {
-        // Note: We remove indexes that are not used
-        //       to not store indexes that are getting out of sync with database.
-        await this._indexStore.remove(identifier);
-      }
-    }
-
-    // Create indexes that are not loaded from disk.
-    for (const kind of this._indexConfig?.indexes || []) {
-      if (!this._indexes.has(kind)) {
-        const IndexConstructor = IndexConstructors[kind.kind];
-        invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
-        // Note: New indexes are not saved to disk until they are promoted.
-        //       New Indexes will be promoted to `_indexes` map on indexing job run.
-        this._newIndexes.push(new IndexConstructor(kind));
-      }
-    }
-    await Promise.all(this._newIndexes.map((index) => index.open()));
+    await this._loadIndexes();
 
     if (this._indexConfig?.enabled === true) {
       this._metadataStore.dirty.on(this._ctx, () => this._run.schedule());
@@ -171,6 +145,36 @@ export class Indexer {
     await this._run.runBlocking();
   }
 
+  private async _loadIndexes() {
+    const kinds = await this._indexStore.loadIndexKindsFromDisk();
+    for (const [identifier, kind] of kinds.entries()) {
+      if (!this._indexConfig || this._indexConfig.indexes?.some((configKind) => isEqual(configKind, kind))) {
+        await this._indexStore
+          .load(identifier)
+          .then((index) => this._indexes.set(index.kind, index))
+          .catch((err) => {
+            log.warn('Failed to load index', { err, identifier });
+          });
+      } else {
+        // Note: We remove indexes that are not used
+        //       to not store indexes that are getting out of sync with database.
+        await this._indexStore.remove(identifier);
+      }
+    }
+
+    // Create indexes that are not loaded from disk.
+    for (const kind of this._indexConfig?.indexes || []) {
+      if (!this._indexes.has(kind)) {
+        const IndexConstructor = IndexConstructors[kind.kind];
+        invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
+        // Note: New indexes are not saved to disk until they are promoted.
+        //       New Indexes will be promoted to `_indexes` map on indexing job run.
+        this._newIndexes.push(new IndexConstructor(kind));
+      }
+    }
+    await Promise.all(this._newIndexes.map((index) => index.open()));
+  }
+
   @trace.span({ showInBrowserTimeline: true })
   private async _promoteNewIndexes() {
     const documentsToIndex = await this._metadataStore.getAllIndexedDocuments();
@@ -192,6 +196,9 @@ export class Indexer {
       return;
     }
     const idToHeads = await this._metadataStore.getDirtyDocuments();
+
+    log.info('dirty objects to index', { count: idToHeads.size });
+
     if (idToHeads.size === 0 || this._ctx.disposed) {
       return;
     }
@@ -260,6 +267,13 @@ export class Indexer {
 
   async destroy() {
     await this._ctx.dispose();
+    this._initialized = false;
+    for (const index of this._indexes.values()) {
+      await index.close();
+    }
+    this._ctx = new Context();
+    this._newIndexes.length = 0;
+    this._indexes.clear();
   }
 }
 
