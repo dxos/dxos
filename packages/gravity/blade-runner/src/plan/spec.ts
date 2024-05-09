@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type AgentEnv } from './env';
+import { type ReplicantEnv } from './interface';
 
 export const AGENT_LOG_FILE = 'agent.log';
 
@@ -58,10 +58,9 @@ export type AgentResult = {
 };
 
 // plan vs environment
-export interface TestPlan<S, C> {
+export interface TestPlan<Spec> {
   onError?: (err: Error) => void;
-  init(params: TestParams<S>): Promise<AgentRunOptions<C>[]>; // 1
-  run(env: AgentEnv<S, C>): Promise<void>; // N
-  finish(params: TestParams<S>, results: PlanResults): Promise<any>;
-  defaultSpec(): S;
+  run(env: ReplicantEnv, params: TestParams<Spec>): Promise<void>;
+  runAnalyses(params: TestParams<Spec>, results: PlanResults): Promise<any>;
+  defaultSpec(): Spec;
 }
