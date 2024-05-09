@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Migrate to eslint.config.js config format.
+
 require('@rushstack/eslint-patch/modern-module-resolution');
 
 module.exports = {
@@ -30,6 +32,7 @@ module.exports = {
     // Templates
     // TODO(wittjosiah): Fix lint config to lint these files.
     '*.t.ts',
+
     // Docs snippets
     'docs/content/**/*',
   ],
