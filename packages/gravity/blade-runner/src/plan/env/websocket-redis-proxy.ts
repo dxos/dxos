@@ -11,7 +11,7 @@ import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { REDIS_PORT } from './agent-env';
+import { REDIS_PORT } from './util';
 
 export type WebSocketRedisProxyParams = {
   /**
