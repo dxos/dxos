@@ -18,7 +18,7 @@ export interface ShellRuntime {
   spaceKey?: PublicKey;
   target?: string;
   invitationCode?: string;
-  invitationUrl?: string;
+  invitationUrl: string;
   deviceInvitationParam: string;
   spaceInvitationParam: string;
   setLayout: (request: LayoutRequest) => void;

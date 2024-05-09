@@ -47,7 +47,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   }
 
   get invitationUrl() {
-    return this._invitationUrl;
+    return this._invitationUrl!;
   }
 
   get deviceInvitationParam() {
