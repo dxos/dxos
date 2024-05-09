@@ -2,20 +2,15 @@
 # Pages Functions configuration.
 # https://developers.cloudflare.com/pages/functions/wrangler-configuration
 #
+# To tail production logs:
+# wrangler pages deployment tail --project-name composer
+#
 
 name = "composer-app"
 compatibility_date = "2024-04-05"
 pages_build_output_dir = "./out/composer"
 
 vars = { ENVIRONMENT = "dev" }
-
-d1_databases = [
-  { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }
-]
-
-[env.staging]
-
-vars = { ENVIRONMENT = "staging" }
 
 d1_databases = [
   { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }

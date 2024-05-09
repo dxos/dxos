@@ -68,7 +68,6 @@ const main = async () => {
   registerSignalRuntime();
 
   let config = await setupConfig();
-
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
