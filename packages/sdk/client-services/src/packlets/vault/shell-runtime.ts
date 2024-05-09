@@ -26,7 +26,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   private _spaceKey?: PublicKey;
 
   private _invitationCode?: string;
-  private _invitationUrl = typeof window !== 'undefined' && window.location.origin;
+  private _invitationUrl? = typeof window !== 'undefined' ? window.location.origin : undefined;
 
   // TODO(burdon): Change to using underscores (coordinate with @dxos/web-auth).
   private _deviceInvitationParam = 'deviceInvitationCode'; // TODO(burdon): device_invitation_code

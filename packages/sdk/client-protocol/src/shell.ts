@@ -15,10 +15,10 @@ export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;
   invitationUrlUpdate: Event<InvitationUrlRequest>;
   layout: ShellLayout;
-  invitationCode?: string;
   spaceKey?: PublicKey;
   target?: string;
-  invitationUrl: string;
+  invitationCode?: string;
+  invitationUrl?: string;
   deviceInvitationParam: string;
   spaceInvitationParam: string;
   setLayout: (request: LayoutRequest) => void;
