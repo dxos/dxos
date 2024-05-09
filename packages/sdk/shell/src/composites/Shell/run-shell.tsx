@@ -41,7 +41,7 @@ export const runShell = async (config: Config = new Config()) => {
             <ClipboardProvider>
               <Tooltip.Provider>
                 <AgentHostingProvider>
-                  <Shell runtime={runtime} origin={location.origin} />
+                  <Shell runtime={runtime} />
                 </AgentHostingProvider>
               </Tooltip.Provider>
             </ClipboardProvider>

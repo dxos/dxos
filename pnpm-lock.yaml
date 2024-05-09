@@ -12,9 +12,6 @@ patchedDependencies:
   '@nx/js@17.3.2':
     hash: dwhumptijtisrex26nuv2tgk2a
     path: patches/@nx__js@17.3.2.patch
-  '@radix-ui/react-dropdown-menu@2.0.5':
-    hash: e5isk7r7t3hyjd7xo7tbxnvrpm
-    path: patches/@radix-ui__react-dropdown-menu@2.0.5.patch
   '@radix-ui/react-dropdown-menu@2.0.7-rc.10':
     hash: fdgem6zvkijjenhhx3en7zyzdy
     path: patches/@radix-ui__react-dropdown-menu@2.0.7-rc.10.patch
@@ -682,8 +679,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: ^0.4.37
-        version: 0.4.37
+        specifier: ^0.4.46
+        version: 0.4.46
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -14222,8 +14219,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.37:
-    resolution: {integrity: sha512-XxS7hs7eAbhxyj3zysGPfgF3Bj2Q5SAV2l9ZfYUbPWYN+of9EMlReBVWHaY80Vp6Xm8FnHWjuuV2HCQOuizdFA==}
+  /@dxos/web-auth@0.4.46:
+    resolution: {integrity: sha512-XqSMIjE1tHTSGkxYZxiw3QHUjTmfEcK1pTCJkCYUOrPKRtjZDhEWEVXflHYl+ySs6OAdRgd39tn98286OySNRg==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
@@ -14235,6 +14232,7 @@ packages:
       '@dxos/util': 0.4.9
       cookie: 0.6.0
       hono: 4.2.8
+      lodash.isequal: 4.5.0
       lodash.pick: 4.4.0
     dev: false
 
@@ -19943,7 +19941,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@radix-ui/react-dropdown-menu@2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
+  /@radix-ui/react-dropdown-menu@2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-xdOrZzOTocqqkCkYo8yRPCib5OkTkqN7lqNCdxwPOdE466DOaNl4N8PkUIlsXthQvW5Wwkd+aEmWpfWlBoDPEw==}
     peerDependencies:
       '@types/react': '*'
@@ -19969,7 +19967,6 @@ packages:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
-    patched: true
 
   /@radix-ui/react-dropdown-menu@2.0.7-rc.10(patch_hash=fdgem6zvkijjenhhx3en7zyzdy)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-6InaPWetwok6kAg2XrBKalvozkXb/ZMeIXmFlTkRh1FmuiGjTYNCpDGBmKiBMcxzVHXlu9maca07zxlMrWuCKQ==}
@@ -23734,7 +23731,7 @@ packages:
       '@radix-ui/react-alert-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-context-menu': 2.1.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-dialog': 1.0.3(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
-      '@radix-ui/react-dropdown-menu': 2.0.5(patch_hash=e5isk7r7t3hyjd7xo7tbxnvrpm)(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@radix-ui/react-dropdown-menu': 2.0.5(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-popover': 1.0.6-rc.5(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-select': 1.2.1(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slider': 1.1.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)

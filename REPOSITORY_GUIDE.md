@@ -9,7 +9,7 @@ Instructions and documentation for developer workflows in this DXOS repository.
 
 ## Monorepo workspace
 
-This repository is a [`pnpm`](https://pnpm.io/) and [`nx`](https://nx.dev/) monorepo with [`release-please`](https://github.com/googleapis/release-please) for release automation.
+This monorepo repository is built with [`pnpm`](https://pnpm.io) and [`nx`](https://nx.dev), with [`release-please`](https://github.com/googleapis/release-please) for release automation.
 
 Get `pnpm`
 
