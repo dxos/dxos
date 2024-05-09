@@ -14,83 +14,60 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type AgentResult, type AgentParams, type PlanOptions, type Platform, AGENT_LOG_FILE } from './spec';
+import { type AgentParams, type GlobalOptions, type Platform, AGENT_LOG_FILE } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
 type ProcessHandle = {
-  /**
-   * Promise that resolves when the agent finishes.
-   */
-  result: Promise<AgentResult>;
-
   /**
    * Kill the agent process/browser.
    */
   kill: () => void;
 };
 
-export const runNode = <S, C>(
-  planName: string,
-  agentParams: AgentParams<S, C>,
-  options: PlanOptions,
-): ProcessHandle => {
+export type RunParams<S, C> = {
+  agentParams: AgentParams<S, C>;
+  options: GlobalOptions;
+};
+
+export const runNode = <S, C>(params: RunParams<S, C>): ProcessHandle => {
   const execArgv = process.execArgv;
 
-  if (options.profile) {
+  if (params.options.profile) {
     execArgv.push(
       '--cpu-prof', //
       '--cpu-prof-dir',
-      agentParams.outDir,
+      params.agentParams.outDir,
       '--cpu-prof-name',
       'agent.cpuprofile',
     );
   }
 
-  const startTs = performance.now();
   const childProcess = fork(process.argv[1], {
-    execArgv: options.debug
+    execArgv: params.options.debug
       ? [
-          '--inspect=:' + (DEBUG_PORT_START + agentParams.agentIdx), //
+          '--inspect=:' + (DEBUG_PORT_START + params.agentParams.agentIdx), //
           ...execArgv,
         ]
       : execArgv,
     env: {
       ...process.env,
-      GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-      GRAVITY_SPEC: planName,
+      DX_RUN_PARAMS: JSON.stringify(params),
+      __DX_NODE_REPLICANT: 'true',
     },
+  });
+  childProcess.on('error', (err) => {
+    log.info('child process error', { err });
+  });
+  childProcess.on('exit', async (exitCode, signal) => {
+    if (exitCode == null) {
+      log.warn('agent exited with signal', { signal });
+    } else if (exitCode !== 0) {
+      log.warn('agent exited with non-zero exit code', { exitCode });
+    }
   });
 
   return {
-    result: new Promise<AgentResult>((resolve, reject) => {
-      childProcess.on('error', (err) => {
-        log.info('child process error', { err });
-        reject(err);
-      });
-      childProcess.on('exit', async (exitCode, signal) => {
-        if (exitCode == null) {
-          log.warn('agent exited with signal', { signal });
-          reject(new Error(`agent exited with signal ${signal}`));
-          return;
-        }
-
-        if (exitCode !== 0) {
-          log.warn('agent exited with non-zero exit code', { exitCode });
-          reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
-          return;
-        }
-
-        resolve({
-          result: exitCode ?? -1,
-          outDir: agentParams.outDir,
-          logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-          startTs,
-          endTs: performance.now(),
-        });
-      });
-      // TODO(nf): add timeout for agent completion
-    }),
     kill: () => {
       childProcess.kill();
     },
@@ -100,7 +77,7 @@ export const runNode = <S, C>(
 export const runBrowser = <S, C>(
   planName: string,
   agentParams: AgentParams<S, C>,
-  options: PlanOptions,
+  options: GlobalOptions,
 ): ProcessHandle => {
   const doneTrigger = new Trigger<number>();
   const ctx = new Context();
@@ -165,6 +142,7 @@ export const runBrowser = <S, C>(
   <body>
     <h1>TESTING TESTING.</h1>
     <script>
+      window.__DX_BROWSER_REPLICANT = true
       window.dxgravity_env = ${JSON.stringify({
         ...process.env,
         GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
