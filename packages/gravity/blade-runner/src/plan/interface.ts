@@ -3,8 +3,8 @@
 //
 
 export interface CommonTestEnv {
-  syncBarrier(key: string): Promise<void>;
-  syncData<T>(key: string, data?: T): Promise<T[]>;
+  syncBarrier(key: string, amount: number): Promise<void>;
+  syncData<T>(key: string, amount: number, data?: T): Promise<T[]>;
 }
 
 export interface ReplicantEnv extends CommonTestEnv {}
