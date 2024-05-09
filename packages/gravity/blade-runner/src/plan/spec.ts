@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ReplicantEnv } from './interface';
+import { type SchedulerEnv } from './interface';
 
 export const AGENT_LOG_FILE = 'agent.log';
 
-export type PlanOptions = {
+export type GlobalOptions = {
   staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
@@ -15,13 +15,16 @@ export type PlanOptions = {
   headless?: boolean;
 };
 
-export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 export type TestParams<S> = {
   testId: string;
   outDir: string;
   spec: S;
+  agents: number;
 };
 
+export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
+
+// TODO(mykola): Remove.
 export type AgentParams<S, C> = {
   agentIdx: number;
   agentId: string;
@@ -60,7 +63,7 @@ export type AgentResult = {
 // plan vs environment
 export interface TestPlan<Spec> {
   onError?: (err: Error) => void;
-  run(env: ReplicantEnv, params: TestParams<Spec>): Promise<void>;
-  runAnalyses(params: TestParams<Spec>, results: PlanResults): Promise<any>;
+  run(env: SchedulerEnv, params: TestParams<Spec>): Promise<void>;
+  analyses(params: TestParams<Spec>, results: PlanResults): Promise<any>;
   defaultSpec(): Spec;
 }
