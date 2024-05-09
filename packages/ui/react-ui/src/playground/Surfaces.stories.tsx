@@ -15,6 +15,7 @@ import {
   fixedSurface,
   fixedBorder,
   attentionSurface,
+  accentSurface,
 } from '@dxos/react-ui-theme';
 
 import { withTheme } from '../testing';
@@ -22,7 +23,7 @@ import { withTheme } from '../testing';
 const Surface = ({
   children,
   level,
-}: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'fixed' | 'input' }) => {
+}: PropsWithChildren & { level: 'base' | 'group' | 'chrome' | 'fixed' | 'input' | 'accent' }) => {
   const surface =
     level === 'chrome'
       ? [modalSurface, surfaceElevation({ elevation: 'chrome' })]
@@ -32,7 +33,9 @@ const Surface = ({
           ? [attentionSurface, surfaceElevation({ elevation: 'group' })]
           : level === 'fixed'
             ? [fixedSurface, fixedBorder, 'border', surfaceElevation({ elevation: 'chrome' })]
-            : [baseSurface];
+            : level === 'accent'
+              ? [accentSurface, surfaceElevation({ elevation: 'chrome' })]
+              : [baseSurface];
 
   return (
     <div
@@ -53,6 +56,7 @@ const SurfacesStory = () => {
       <Surface level='group' />
       <Surface level='chrome' />
       <Surface level='input' />
+      <Surface level='accent' />
     </div>
   );
 };
