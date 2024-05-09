@@ -3,6 +3,6 @@
 //
 
 export * from './env';
-export * from './run-agent';
+export * from './run-replicant';
 export * from './run-plan';
 export * from './spec';
