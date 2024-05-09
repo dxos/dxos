@@ -1,0 +1,88 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { forwardRef, type ReactNode } from 'react';
+
+import { type ThemedClassName } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
+
+// TODO(Zan): None of the theme context stuff is actually implemented yet.
+// It's all in the second classnames argument.
+
+type StatusBarTextProps = ThemedClassName<{ children: ReactNode }>;
+
+const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNames, children }, forwardedRef) => (
+  <span className={mx(classNames)} ref={forwardedRef}>
+    {children}
+  </span>
+));
+
+type StatusBarButtonProps = ThemedClassName<{ children: ReactNode }> & React.HTMLAttributes<HTMLButtonElement>;
+
+const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <button
+      className={mx(
+        'flex items-center gap-2 p-1 px-2 rounded-sm select-none hover:bg-gray-200 cursor-pointer active:bg-gray-300',
+        classNames,
+      )}
+      ref={forwardedRef}
+      {...props}
+    >
+      {children}
+    </button>
+  ),
+);
+
+type StatusBarItemProps = ThemedClassName<{ children: ReactNode }>;
+
+const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(({ classNames, children }, forwardedRef) => (
+  <div className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)} ref={forwardedRef}>
+    {children}
+  </div>
+));
+type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
+
+// TODO: Role content info
+// tabable group with tabster
+const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
+  ({ classNames, children }, forwardedRef) => (
+    <div
+      className={mx(
+        'flex justify-end items-center gap-2 border-solid border-t border-gray-200 bg-gray-50 text-gray-500',
+        'text-lg pointer-fine:text-xs',
+        classNames,
+      )}
+      ref={forwardedRef}
+      role='contentinfo'
+    >
+      {children}
+    </div>
+  ),
+);
+
+type StartContentProps = ThemedClassName<{ children: ReactNode }>;
+
+const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
+  <div className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+    {children}
+  </div>
+));
+
+type EndContentProps = ThemedClassName<{ children: ReactNode }>;
+
+const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
+  <div className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+    {children}
+  </div>
+));
+
+export const StatusBar = {
+  Container: StatusBarContainer,
+  Text: StatusBarText,
+  Item: StatusBarItem,
+  Button: StatusBarButton,
+  StartContent,
+  EndContent,
+};

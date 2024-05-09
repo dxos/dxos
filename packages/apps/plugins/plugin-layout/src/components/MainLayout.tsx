@@ -154,6 +154,14 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
           </div>
         )}
 
+        {/* TODO(Zan): Wrap this in the appropriate container */}
+        {/* Another footer */}
+        <Main.Content asChild>
+          <div className='fixed bottom-0 left-0 right-0'>
+            <Surface role='status-bar' limit={1} />
+          </div>
+        </Main.Content>
+
         {/* Global popovers. */}
         <Popover.Portal>
           <Popover.Content

@@ -194,6 +194,9 @@
       "path": "../plugins/plugin-stack"
     },
     {
+      "path": "../plugins/plugin-status"
+    },
+    {
       "path": "../plugins/plugin-table"
     },
     {

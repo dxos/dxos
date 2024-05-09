@@ -47,6 +47,7 @@
     "@braneframe/plugin-sketch": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
+    "@braneframe/plugin-status": "workspace:*",
     "@braneframe/plugin-table": "workspace:*",
     "@braneframe/plugin-template": "workspace:*",
     "@braneframe/plugin-theme": "workspace:*",
