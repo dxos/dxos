@@ -5952,8 +5952,8 @@ importers:
         specifier: ^3.0.0
         version: 3.2.0
       node-datachannel:
-        specifier: ^0.5.5
-        version: 0.5.5
+        specifier: ^0.9.0
+        version: 0.9.0
       p-defer:
         specifier: ^3.0.0
         version: 3.0.0
@@ -39878,13 +39878,14 @@ packages:
       yargs: 7.1.2
     dev: false
 
-  /node-datachannel@0.5.5:
-    resolution: {integrity: sha512-B0MS/iK0qjCiNY5Go4055zuRCOuiFkOrhNOZuj2PAnaJN7YlnKxKidOLhLXf/lAcsJQXgj8BR31zsqJKKA16jA==}
+  /node-datachannel@0.9.0:
+    resolution: {integrity: sha512-GgT3Ff1xEt1sxyRexR3wOgEEzMvuDlZnhIbeLkFELndIssQOXIxS97ND1m4JHZSnnlPsFZgyJ9pCtIDPTpZN7g==}
     engines: {node: '>=16.0.0'}
     requiresBuild: true
     dependencies:
       node-domexception: 2.0.1
       prebuild-install: 7.1.1
+      rollup: 4.14.1
     dev: false
 
   /node-dir@0.1.17:
