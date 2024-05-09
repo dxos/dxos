@@ -2,11 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
+import { ContextDisposedError, type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
 import { trackResource } from './track-leaks';
+import { Trigger } from './trigger';
 
 export type ClearCallback = () => void;
 
@@ -15,15 +16,20 @@ export type ClearCallback = () => void;
  * Could be triggered multiple times, but only runs once.
  * If a new task is triggered while a previous one is running, the next run would occur immediately after the current run has finished.
  */
+// TODO(dmaretskyi): Consider calling `join` on context dispose.
 export class DeferredTask {
   private _scheduled = false;
-  private _promise: Promise<void> | null = null; // Can't be rejected.
+  private _currentTask: Promise<void> | null = null; // Can't be rejected.
+  private _nextTask = new Trigger();
 
   constructor(
     private readonly _ctx: Context,
     private readonly _callback: () => Promise<void>,
   ) {}
 
+  /**
+   * Schedule the task to run asynchronously.
+   */
   schedule() {
     if (this._scheduled) {
       return; // Already scheduled.
@@ -31,16 +37,39 @@ export class DeferredTask {
 
     scheduleTask(this._ctx, async () => {
       // The previous task might still be running, so we need to wait for it to finish.
-      await this._promise; // Can't be rejected.
+      await this._currentTask; // Can't be rejected.
 
       // Reset the flag. New tasks can now be scheduled. They would wait for the callback to finish.
       this._scheduled = false;
+      const completionTrigger = this._nextTask;
+      this._nextTask = new Trigger(); // Re-create the trigger as opposed to resetting it since there might be listeners waiting for it.
 
       // Store the promise so that new tasks could wait for this one to finish.
-      this._promise = runInContextAsync(this._ctx, () => this._callback());
+      this._currentTask = runInContextAsync(this._ctx, () => this._callback()).then(() => {
+        completionTrigger.wake();
+      });
     });
 
     this._scheduled = true;
+  }
+
+  /**
+   * Schedule the task to run and wait for it to finish.
+   */
+  async runBlocking() {
+    if (this._ctx.disposed) {
+      throw new ContextDisposedError();
+    }
+    this.schedule();
+    await this._nextTask.wait();
+  }
+
+  /**
+   * Waits for the current task to finish if it is running.
+   * Does not schedule a new task.
+   */
+  async join() {
+    await this._currentTask;
   }
 }
 

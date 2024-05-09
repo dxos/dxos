@@ -35,6 +35,9 @@ import {
   type TFunction,
   type ThemedClassName,
   ScrollArea,
+  toLocalizedString,
+  type Label,
+  isLabel,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -87,7 +90,7 @@ export type StackSectionItem = MosaicDataItem & {
   size?: SectionSize;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
-  label?: (data: any) => string | undefined;
+  label?: ((data: any) => string | undefined) | Label;
   isResizable?: boolean;
 };
 
@@ -335,14 +338,13 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
-    const title =
-      transformedItem.label?.(itemObject) ??
-      // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
-      ((typeof transformedItem.placeholder === 'string'
-        ? transformedItem.placeholder
-        : transformedItem.placeholder
-          ? t(...transformedItem.placeholder)
-          : t('untitled section title')) as string);
+    const title: string =
+      (typeof transformedItem.label === 'function' ? transformedItem.label(itemObject) : undefined) ??
+      (isLabel(transformedItem.label)
+        ? toLocalizedString(transformedItem.label as Label, t)
+        : isLabel(transformedItem.placeholder)
+          ? toLocalizedString(transformedItem.placeholder, t)
+          : t('untitled section title'));
 
     const section = (
       <Section
