@@ -11,7 +11,6 @@ export interface ReplicantEnv extends CommonTestEnv {}
 
 export interface SchedulerEnv extends CommonTestEnv {
   spawn<T>(brain: ReplicantBrain<T>): Promise<Replicant<T>>;
-  
 }
 
 export type ReplicantBrain<T> = { new (): T };
@@ -23,5 +22,5 @@ export interface Replicant<T> {
 
 export type RpcHandle<T> = {
   // todo: Events
-  [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (args: A) => Promise<R> : never;
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
 };
