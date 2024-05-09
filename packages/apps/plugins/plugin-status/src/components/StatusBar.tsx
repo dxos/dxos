@@ -7,9 +7,6 @@ import React, { forwardRef, type ReactNode } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(Zan): None of the theme context stuff is actually implemented yet.
-// It's all in the second classnames argument.
-
 type StatusBarTextProps = ThemedClassName<{ children: ReactNode }>;
 
 const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNames, children }, forwardedRef) => (

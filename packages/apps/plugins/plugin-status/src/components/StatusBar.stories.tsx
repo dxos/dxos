@@ -27,10 +27,12 @@ export const Normal = (_props: any) => (
           <Mailbox />
           <StatusBar.Text>Quick feedback</StatusBar.Text>
         </StatusBar.Button>
-        <StatusBar.Button>
-          <DiscordLogo />
-          <StatusBar.Text>Join us on Discord</StatusBar.Text>
-        </StatusBar.Button>
+        <a href='https://discord.gg/' target='_blank' rel='noopener noreferrer'>
+          <StatusBar.Button>
+            <DiscordLogo />
+            <StatusBar.Text>Join us on Discord</StatusBar.Text>
+          </StatusBar.Button>
+        </a>
         <StatusBar.Item>
           <Lightning />
           <StatusBar.Text>Online</StatusBar.Text>

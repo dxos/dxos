@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Compass, type IconProps } from '@phosphor-icons/react';
+import { Info, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { pluginMeta } from '@dxos/app-framework';
 
-export const STATUS_PLUGIN = 'dxos.org/plugin/status';
+export const STATUS_BAR_PLUGIN = 'dxos.org/plugin/status-bar';
 
 export default pluginMeta({
-  id: STATUS_PLUGIN,
-  name: 'Status',
+  id: STATUS_BAR_PLUGIN,
+  name: 'Status Bar',
   description: 'Display a bar with status and actions.',
   tags: ['experimental'],
-  iconComponent: (props: IconProps) => <Compass {...props} />,
+  iconComponent: (props: IconProps) => <Info {...props} />,
 });

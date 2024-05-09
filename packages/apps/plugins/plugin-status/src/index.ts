@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MapPlugin } from './StatusPlugin';
+import { StatusBarPlugin } from './StatusBarPlugin';
 
-export default MapPlugin;
+export default StatusBarPlugin;
 
-export * from './StatusPlugin';
+export * from './StatusBarPlugin';
