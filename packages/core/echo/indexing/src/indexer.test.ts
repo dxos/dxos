@@ -46,12 +46,12 @@ describe('Indexer', () => {
         yield Array.from(pointersWithHash.entries()).map(([id]) => documents.find((doc) => doc.id === id)!);
       },
     });
-    afterTest(() => indexer.destroy());
+    afterTest(() => indexer.close());
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
       indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-      await indexer.initialize();
+      await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }
 
