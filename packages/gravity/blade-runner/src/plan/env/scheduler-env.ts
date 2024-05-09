@@ -31,11 +31,10 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
    * so we need different clients for RPC requests and responses.
    */
   public rpcResponses: Redis;
-
-  private replicantIdx: number = 0;
-
   // Start websocket REDIS proxy for browser tests.
   private readonly _server = new WebSocketRedisProxy();
+
+  private replicantIdx: number = 0;
 
   constructor(
     private readonly _options: GlobalOptions,
@@ -49,6 +48,8 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
 
     this.redis.on('error', (err) => log.info('Redis Client Error', err));
     this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
+    this.rpcRequests.on('error', (err) => log.info('Redis Client Error', err));
+    this.rpcResponses.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   async open() {
@@ -64,25 +65,23 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     await this._server.destroy();
   }
 
-  async syncBarrier(key: string) {
-    const agentCount = Object.keys(this.params.agents).length;
+  async syncBarrier(key: string, amount: number) {
     const syncKey = `${this.params.testId}:${key}`;
 
-    await this._barrier(syncKey, agentCount);
+    await this._barrier(syncKey, amount);
   }
 
   /**
    * Waits for all agents to reach this statement.
    * Each agent can optionally submit data to be returned to all agents.
    */
-  async syncData<T>(key: string, data?: T): Promise<T[]> {
-    const agentCount = Object.keys(this.params.agents).length;
+  async syncData<T>(key: string, amount: number, data?: T): Promise<T[]> {
     const syncKey = `${this.params.testId}:${key}`;
 
     if (data !== undefined) {
-      await this.redis.set(`${syncKey}:data:${this.params.agentIdx}`, JSON.stringify(data));
+      await this.redis.set(`${syncKey}:data:scheduler`, JSON.stringify(data));
     }
-    await this._barrier(syncKey, agentCount);
+    await this._barrier(syncKey, amount);
 
     const values = await this.redis.keys(`${syncKey}:data:*`);
     const dataValues = await this.redis.mget(values);
@@ -123,7 +122,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     const rpcHandle = new ReplicantRpcHandle({
       brain,
       rpcPort,
-    }) as RpcHandle<T>;
+    });
+
+    await rpcHandle.open();
 
     const { kill } = runNode({
       replicantIdx: this.replicantIdx++,
@@ -138,8 +139,11 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     });
 
     return {
-      brain: rpcHandle,
-      kill,
+      brain: rpcHandle as RpcHandle<T>,
+      kill: async () => {
+        await rpcHandle.close();
+        kill();
+      },
     };
   }
 }
