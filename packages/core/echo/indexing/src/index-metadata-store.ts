@@ -6,8 +6,8 @@ import { type MixedEncoding } from 'level-transcoder';
 
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
-import { type SubLevelDB, type BatchLevel } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
+import { type SubLevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
@@ -54,6 +54,7 @@ export class IndexMetadataStore {
 
   @trace.span({ showInBrowserTimeline: true })
   markDirty(idToHeads: IdToHeads, batch: BatchLevel) {
+    log('mark dirty', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
     }
@@ -62,12 +63,13 @@ export class IndexMetadataStore {
   /**
    * Called after leveldb batch commit.
    */
-  afterMarkDirty() {
+  notifyMarkedDirty() {
     this.dirty.emit();
   }
 
   @trace.span({ showInBrowserTimeline: true })
   markClean(idToHeads: IdToHeads, batch: BatchLevel) {
+    log('mark clean', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
       batch.del(id, { sublevel: this._lastSeen });

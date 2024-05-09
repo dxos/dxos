@@ -4,7 +4,7 @@
 
 import { type Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
@@ -17,6 +17,9 @@ export type IndexQuery = {
    * undefined means all objects (no filter).
    */
   typename?: string | null;
+
+  // TODO(burdon): Hack to exclude.
+  inverted?: boolean;
 };
 
 export type ObjectSnapshot = {

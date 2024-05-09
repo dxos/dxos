@@ -67,7 +67,7 @@
     "inquirer": "^8.2.0",
     "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
-    "kubo-rpc-client": "^3.0.2",
+    "kubo-rpc-client": "^4.1.1",
     "lodash.defaultsdeep": "^4.6.1",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0",
@@ -96,7 +96,8 @@
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",
-    "@types/react-dom": "^18.0.6"
+    "@types/react-dom": "^18.0.6",
+    "undici": "*"
   },
   "engines": {
     "node": ">=12.0.0"

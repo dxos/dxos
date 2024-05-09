@@ -6,12 +6,11 @@ import { Event } from '@dxos/async';
 import { type DocHandle, type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
+import { type SpaceState, type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-
-import { type SpaceState, type SpaceDoc } from './types';
 
 type SpaceDocumentLinks = SpaceDoc['links'];
 
@@ -57,7 +56,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   ) {}
 
   getAllHandles(): DocHandle<SpaceDoc>[] {
-    return [...new Set(this._objectDocumentHandles.values())];
+    return this._spaceRootDocHandle != null
+      ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
+      : [];
   }
 
   @trace.span({ showInBrowserTimeline: true })

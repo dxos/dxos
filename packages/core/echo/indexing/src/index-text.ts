@@ -5,7 +5,7 @@ import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';

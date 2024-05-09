@@ -8,7 +8,7 @@ import waitForExpect from 'wait-for-expect';
 import { Context } from '@dxos/context';
 import { describe, test } from '@dxos/test';
 
-import { scheduleTask } from './task-scheduling';
+import { DeferredTask, scheduleTask } from './task-scheduling';
 import { sleep } from './timeout';
 
 describe('task-scheduling', () => {
@@ -42,6 +42,29 @@ describe('task-scheduling', () => {
       void ctx.dispose();
       await sleep(2);
       expect(called).to.be.false;
+    });
+
+    test('run blocking', async () => {
+      const events: string[] = [];
+      const task = new DeferredTask(Context.default(), async () => {
+        await sleep(10);
+        events.push('task done');
+      });
+
+      await task.runBlocking();
+      expect(events).to.deep.eq(['task done']);
+    });
+
+    test('join', async () => {
+      const task = new DeferredTask(Context.default(), async () => {
+        await sleep(10);
+      });
+
+      await task.join(); // Should be a no-op.
+
+      await task.runBlocking();
+
+      await task.join(); // Should be a no-op.
     });
   });
 });

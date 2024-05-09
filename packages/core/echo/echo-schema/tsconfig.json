@@ -29,6 +29,9 @@
       "path": "../../protocols"
     },
     {
+      "path": "../echo-protocol"
+    },
+    {
       "path": "../echo-signals"
     }
   ]

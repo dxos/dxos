@@ -2,8 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
-import React, { type KeyboardEventHandler, useCallback, useState } from 'react';
+import React, { useState } from 'react';
 
 import { TextV0Type } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
@@ -31,7 +30,7 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
   const id = text.id;
   const doc = text.content;
   const [formattingState, formattingObserver] = useFormattingState();
-  const { parentRef, view } = useTextEditor(() => {
+  const { parentRef, view, focusAttributes } = useTextEditor(() => {
     return {
       id,
       doc,
@@ -50,24 +49,9 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
 
   const handleAction = useActionHandler(view);
 
-  // TODO(thure): Should these be factored out?
-  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
-  // Focus editor on Enter (e.g., when tabbing to this component).
-  const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
-    (event) => {
-      const { key } = event;
-      switch (key) {
-        case 'Enter': {
-          view?.focus();
-          break;
-        }
-      }
-    },
-    [view],
-  );
-
   return (
-    <>
+    <div role='none' className='flex flex-col'>
+      <div {...focusAttributes} className={mx(textBlockWidth, focusRing, 'rounded-sm order-last')} ref={parentRef} />
       <Toolbar.Root
         onAction={handleAction}
         state={formattingState}
@@ -76,13 +60,6 @@ export const EditorContent = ({ data: { content = '' } }: { data: StackSectionCo
         <Toolbar.Markdown />
         <Toolbar.Separator />
       </Toolbar.Root>
-      <div
-        ref={parentRef}
-        className={mx(textBlockWidth, focusRing, 'mbs-1 rounded-sm')}
-        tabIndex={0}
-        {...focusableGroup}
-        onKeyUp={handleKeyUp}
-      />
-    </>
+    </div>
   );
 };

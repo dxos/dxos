@@ -8,8 +8,8 @@ import { expect } from 'chai';
 
 import { waitForCondition } from '@dxos/async';
 import { Config } from '@dxos/config';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { describe, test, afterTest } from '@dxos/test';
 
 import { Client } from '../client';
