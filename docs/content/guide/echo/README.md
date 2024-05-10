@@ -51,10 +51,6 @@ If you're using `react`, DXOS provides a simple [UI flow](./react/#joining-space
 
 Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. Objects can have fields with values, and weak references to other objects to form trees or graphs.
 
-## Glossary
-
-See the [glossary.md](../glossary.md) for definitions of other terms you'll find in this guide.
-
 ## How to use ECHO
 
 * Install the appropriate npm package [`@dxos/client`](../typescript) or [`@dxos/react-client`](../react)
