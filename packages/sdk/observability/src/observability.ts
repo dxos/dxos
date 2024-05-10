@@ -495,4 +495,13 @@ export class Observability {
       this._captureException?.(err);
     }
   }
+
+  /**
+   * Manually capture user feedback.
+   *
+   * The default implementation uses Sentry.
+   */
+  captureUserFeedback(feedback: any) {
+    throw new Error('Method not implemented.');
+  }
 }

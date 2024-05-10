@@ -149,10 +149,12 @@ export const ObservabilityPlugin = (options: {
 
         setupTelemetryListeners(options.namespace, client, observability);
 
-        await observability.setIdentityTags(client);
-        await observability.startNetworkMetrics(client);
-        await observability.startSpacesMetrics(client, options.namespace);
-        await observability.startRuntimeMetrics(client);
+        await Promise.all([
+          observability.setIdentityTags(client),
+          observability.startRuntimeMetrics(client),
+          observability.startNetworkMetrics(client),
+          observability.startSpacesMetrics(client, options.namespace),
+        ]);
       });
     },
     unload: async () => {
@@ -192,6 +194,15 @@ export const ObservabilityPlugin = (options: {
               };
               observability.event(event);
               return { data: event };
+            }
+
+            case ObservabilityAction.CAPTURE_USER_FEEDBACK: {
+              // const data = intent.data as FeedbackOptions;
+
+              // TODO(Zan): Pipe data through this
+              const feedback = {};
+              observability.captureUserFeedback(feedback);
+              return { data: feedback };
             }
           }
         },
