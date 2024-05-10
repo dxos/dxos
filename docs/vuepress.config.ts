@@ -86,6 +86,7 @@ const config: UserConfig = defineUserConfig({
         attrs: true,
         figure: true,
         imgMark: true,
+        mermaid: true,
       },
       readingTime: false,
     },
