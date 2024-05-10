@@ -88,7 +88,7 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.MEMBER,
+          role: SpaceMember.Role.EDITOR,
           genesisFeedKey,
         },
       }),
@@ -208,8 +208,8 @@ export const createDeviceAuthorization = async (
  * @param spaceKey - subject space key.
  * @param genesisFeedKey - genesis feed key of the space.
  * @param role - role of the newly added member.
+ * @param membershipChainHeads - ids of the last known SpaceMember credentials (branching possible).
  * @param profile - profile of the newly added member.
- * @param parentCredentialId - id of the last known SpaceMember credential associated with this identityKey if any.
  * @param invitationCredentialId - id of the delegated invitation credential in case one was used to add the member.
  */
 export const createAdmissionCredentials = async (
@@ -217,9 +217,9 @@ export const createAdmissionCredentials = async (
   identityKey: PublicKey,
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
-  role: SpaceMember.Role,
+  role: SpaceMember.Role = SpaceMember.Role.ADMIN,
+  membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
-  parentCredentialId?: PublicKey,
   invitationCredentialId?: PublicKey,
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
@@ -231,7 +231,7 @@ export const createAdmissionCredentials = async (
         role,
         profile,
         genesisFeedKey,
-        parentCredentialId,
+        membershipChainHeads,
         invitationCredentialId,
       },
     }),

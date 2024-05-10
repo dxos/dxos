@@ -22,10 +22,9 @@ import {
   type SubscribeMessagesRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
-  type RevokeMembershipRequest,
-  type PromoteMemberRequest,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Provider } from '@dxos/util';
 
@@ -69,9 +68,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async promoteMember(request: PromoteMemberRequest): Promise<void> {}
-
-  async revokeMembership(request: RevokeMembershipRequest): Promise<void> {}
+  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<void> {}
 
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
@@ -219,11 +216,12 @@ export class SpacesServiceImpl implements SpacesService {
             identityKey: member.key,
             profile: member.profile ?? {},
           },
-          presence: member.removed
-            ? SpaceMember.PresenceState.REMOVED
-            : isMe || peers.length > 0
-              ? SpaceMember.PresenceState.ONLINE
-              : SpaceMember.PresenceState.OFFLINE,
+          presence:
+            member.role === HaloSpaceMember.Role.REMOVED
+              ? SpaceMember.PresenceState.REMOVED
+              : isMe || peers.length > 0
+                ? SpaceMember.PresenceState.ONLINE
+                : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
         };
       }),

@@ -57,7 +57,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
 };
 
 /**
- * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
+ * Verifies that the signer has the delegated authority to create credentials on behalf of the issuer.
  */
 export const verifyChain = async (
   chain: Chain,

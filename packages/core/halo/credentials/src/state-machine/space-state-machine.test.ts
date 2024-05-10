@@ -175,7 +175,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.MEMBER,
+            role: SpaceMember.Role.EDITOR,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -199,7 +199,7 @@ describe('SpaceStateMachine', () => {
         key: identity2,
         assertion: {
           spaceKey: space,
-          role: SpaceMember.Role.MEMBER,
+          role: SpaceMember.Role.EDITOR,
         },
       },
     ]);

@@ -59,7 +59,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     invariant(request.space);
     const { identityKey, deviceKey } = request.space;
-    const lastKnownMemberCredentialId = space.inner.spaceState.members.get(identityKey)?.credential?.id;
 
     log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
     // TODO(burdon): Check if already admitted.
@@ -69,8 +68,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space.key,
       space.inner.genesisFeedKey,
       invitation.role ?? SpaceMember.Role.ADMIN,
+      space.inner.spaceState.membershipChainHeads,
       guestProfile,
-      lastKnownMemberCredentialId,
       invitation.delegationCredentialId,
     );
 

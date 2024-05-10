@@ -364,13 +364,9 @@ message CreateEpochRequest {
   optional Migration migration = 2;
 }
 
-message PromoteMemberRequest {
+message UpdateMemberRoleRequest {
   dxos.keys.PublicKey member_public_key = 1;
   dxos.halo.credentials.SpaceMember.Role new_role = 2;
-}
-
-message RevokeMembershipRequest {
-  dxos.keys.PublicKey member_public_key = 1;
 }
 
 service SpacesService {
@@ -378,8 +374,7 @@ service SpacesService {
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
-  rpc PromoteMember(PromoteMemberRequest) returns (google.protobuf.Empty);
-  rpc RevokeMembership(RevokeMembershipRequest) returns (google.protobuf.Empty);
+  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (google.protobuf.Empty);
 
   /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
