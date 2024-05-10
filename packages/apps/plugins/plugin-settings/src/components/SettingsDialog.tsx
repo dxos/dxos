@@ -35,7 +35,7 @@ export const SettingsDialog = ({
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
   return (
-    <Dialog.Content classNames={['h-auto h-max-full md:max-is-[40rem] overflow-hidden']}>
+    <Dialog.Content classNames={['bs-content max-bs-full md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
       <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
