@@ -58,7 +58,9 @@ export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
   private readonly _db: SubLevelDB;
-  private readonly _echoNetworkAdapter = new EchoNetworkAdapter();
+  private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
+    getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+  });
 
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
@@ -67,11 +69,6 @@ export class AutomergeHost {
 
   @trace.info()
   private _peerId!: string;
-
-  /**
-   * spaceKey -> deviceKey[]
-   */
-  private readonly _authorizedDevices = new ComplexMap<PublicKey, ComplexSet<PublicKey>>(PublicKey.hash);
 
   public _requestedDocs = new Set<string>();
 
@@ -99,7 +96,7 @@ export class AutomergeHost {
 
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      network: [this._clientNetwork, this._meshNetwork, this._echoNetworkAdapter],
+      network: [this._clientNetwork, this._echoNetworkAdapter],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -120,50 +117,55 @@ export class AutomergeHost {
 
         const doc = this._repo.handles[documentId]?.docSync();
         if (!doc) {
+          // TODO(dmaretskyi): Verify that this works as intended.
+          // TODO(dmaretskyi): Move to MESH replicator?
           const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
           log('doc share policy check', { peerId, documentId, isRequested });
           return isRequested;
         }
 
-        try {
-          const spaceKey = getSpaceKeyFromDoc(doc);
-          if (!spaceKey) {
-            log('space key not found for share policy check', { peerId, documentId });
-            return false;
-          }
+        return false;
 
-          const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
+        // try {
+        //   const spaceKey = getSpaceKeyFromDoc(doc);
+        //   if (!spaceKey) {
+        //     log('space key not found for share policy check', { peerId, documentId });
+        //     return false;
+        //   }
 
-          // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-          const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
-          if (!deviceKeyHex) {
-            log('device key not found for share policy check', { peerId, documentId });
-            return false;
-          }
-          const deviceKey = PublicKey.from(deviceKeyHex);
+        //   const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
-          const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-          log('share policy check', {
-            localPeer: this._peerId,
-            remotePeer: peerId,
-            documentId,
-            deviceKey,
-            spaceKey,
-            isAuthorized,
-          });
-          return isAuthorized;
-        } catch (err) {
-          log.catch(err);
-          return false;
-        }
+        //   // TODO(mykola): Hack, stop abusing `peerMetadata` field.
+        //   const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
+        //   if (!deviceKeyHex) {
+        //     log('device key not found for share policy check', { peerId, documentId });
+        //     return false;
+        //   }
+        //   const deviceKey = PublicKey.from(deviceKeyHex);
+
+        //   const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
+        //   log('share policy check', {
+        //     localPeer: this._peerId,
+        //     remotePeer: peerId,
+        //     documentId,
+        //     deviceKey,
+        //     spaceKey,
+        //     isAuthorized,
+        //   });
+        //   return isAuthorized;
+        // } catch (err) {
+        //   log.catch(err);
+        //   return false;
+        // }
       },
     });
     this._clientNetwork.ready();
-    this._meshNetwork.ready();
     await this._echoNetworkAdapter.open();
 
     await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
+
+    await this._echoNetworkAdapter.addReplicator(this._meshNetwork);
   }
 
   async close() {
@@ -241,6 +243,20 @@ export class AutomergeHost {
     return this._repo.peers;
   }
 
+  private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
+    const doc = this._repo.handles[documentId as any]?.docSync();
+    if (!doc) {
+      return null;
+    }
+
+    const spaceKeyHex = getSpaceKeyFromDoc(doc);
+    if (!spaceKeyHex) {
+      return null;
+    }
+
+    return PublicKey.from(spaceKeyHex);
+  }
+
   //
   // Methods for client-services.
   //
@@ -279,8 +295,7 @@ export class AutomergeHost {
   }
 
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    log('authorizeDevice', { spaceKey, deviceKey });
-    defaultMap(this._authorizedDevices, spaceKey, () => new ComplexSet(PublicKey.hash)).add(deviceKey);
+    this._meshNetwork.authorizeDevice(spaceKey, deviceKey);
   }
 }
 
