@@ -2,7 +2,7 @@
 order: 1
 ---
 
-# Identity
+# TypeScript
 
 This section describes how to obtain [HALO identity](../halo/) in TypeScript.
 

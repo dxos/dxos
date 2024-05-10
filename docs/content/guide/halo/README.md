@@ -72,5 +72,5 @@ How to use the HALO Shell in code:
 
 How to read the HALO identity in code:
 
-* Use the [`useIdentity` hook in react](../react/identity.md)
-* Use the [`client.halo.profile` field in TypeScript](../typescript/identity.md)
+* Use the [`useIdentity` hook in react](../halo/react.md)
+* Use the [`client.halo.profile` field in TypeScript](../halo/typescript.md)

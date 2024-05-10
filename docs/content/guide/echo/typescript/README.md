@@ -13,7 +13,7 @@ This section describes how to create, join, and invite peers to [ECHO Spaces](..
 
 ## Creating spaces
 
-Having established an [identity](../../typescript/identity.md), a space can be created:
+Having established an [identity](../../halo/typescript.md), a space can be created:
 
 ```ts file=./snippets/create-space.ts#L5-
 import { Client } from '@dxos/client';

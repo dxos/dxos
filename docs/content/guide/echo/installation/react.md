@@ -51,7 +51,7 @@ createRoot(document.body).render(<App />);
 
 ## Manipulating data
 
-Before manipulating data, a [user identity](../../react/identity.md) and a [space](../react/README.md) are required.
+Before manipulating data, a [user identity](../../halo/react.md) and a [space](../react/README.md) are required.
 
 ## Further configuration
 

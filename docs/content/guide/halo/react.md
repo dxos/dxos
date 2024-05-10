@@ -2,7 +2,7 @@
 order: 2
 ---
 
-# Identity
+# React
 
 This section describes how to obtain [HALO identity](../halo/) in `react`.
 
