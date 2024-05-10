@@ -103,7 +103,6 @@ If you're using one of the DXOS [application templates](../../tooling/app-templa
 :::
 
 There are other utilities like a `filter` you can pass to `useQuery` to locate items of this type.
-:::
 
 To use the type declarations, simply import the relevant type like `Task` from the typescript location out of `dxtype` and pass it to `query<T>`:
 

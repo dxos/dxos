@@ -2,7 +2,7 @@
 order: 1
 ---
 
-# Installation
+# React
 
 ```bash
 npm install --save @dxos/react-client
