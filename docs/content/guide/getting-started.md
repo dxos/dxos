@@ -46,7 +46,7 @@ const main = async () => {
 main();
 ```
 
-An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](typescript/config.md).
+An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](echo/typescript/config.md).
 
 [Spaces](./echo/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
 

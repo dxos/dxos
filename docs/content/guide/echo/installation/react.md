@@ -130,4 +130,4 @@ createRoot(document.body).render(<App />);
 
 :::
 
-See [configuration](../../typescript/config.md) in the TypeScript guide for more configuration recipes.
+See [configuration](../typescript/config.md) in the TypeScript guide for more configuration recipes.
