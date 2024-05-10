@@ -1,7 +1,7 @@
 ---
 dir:
   text: ECHO
-  order: 3
+  order: 4
 order: 0
 ---
 

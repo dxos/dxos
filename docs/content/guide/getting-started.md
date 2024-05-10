@@ -1,10 +1,9 @@
 ---
-order: 3.1
-title: Quick Start
+order: 3
 next: ./tutorial
 ---
 
-# Quick Start Guide
+# Quick Start
 
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 This guide shows how to use [ECHO](./echo/) for state consensus and [HALO](./halo/) for decentralized identity.
