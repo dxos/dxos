@@ -393,3 +393,13 @@ code.ph {
     margin-right: 0.5em;
   }
 }
+
+/* Prevent Mermaid diagrams from picking up our green theme color
+as the background and stroke color.
+
+`.mermaid-preview` is for when you click the eye icon to expand the diagram.
+*/
+.mermaid-wrapper rect, .mermaid-preview rect {
+  fill: white !important;
+  stroke: black !important;
+}

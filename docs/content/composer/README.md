@@ -15,6 +15,37 @@ It has three key features:
 * **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
 * **Openness**: Not only are Composer and the DXOS protocols it's built on open source, the application is cloudless as well. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
 
+## Peer-to-peer
+
+Composer gets its real-time collaboration and offline abilities through a peer-to-peer model.
+
+For example, a running system might sync data like this, where nodes represent devices and edges represent syncing connections:
+
+```mermaid
+graph BT;
+  subgraph Alice
+    AliceSmartphone["Alice's smartphone (Chrome)"]
+    AliceDesktop["Alice's desktop (Chrome)"]
+  end
+  subgraph Bob
+    BobDesktopChrome["Bob's desktop (Chrome)"]
+    BobDesktopFirefox["Bob's desktop (Firefox)"]
+    BobSmartphone["Bob's smartphone"]
+  end
+  subgraph Server
+    Agent["<a href='../guide/tooling/cli/agent.md'>Agent</a>"]
+  end
+  AliceSmartphone<-->AliceDesktop
+  AliceDesktop<-->BobDesktopChrome
+  BobSmartphone<-->BobDesktopChrome
+  BobDesktopFirefox<-->BobDesktopChrome
+  Agent<-.->AliceDesktop
+```
+
+The syncing connections will re-adjust themselves as devices come on and offline. For instance, if Bob's desktop goes offline, his smartphone will connect to either Alice's desktop or smartphone in order to stay up-to-date.
+
+The use of an [Agent](../guide/tooling/cli/agent.md) is optional. Agents provide availability if all other devices are offline, but aren't required otherwise.
+
 ## Read More
 
 <a id="technology-preview"></a>
