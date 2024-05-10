@@ -125,38 +125,6 @@ export class AutomergeHost {
         }
 
         return false;
-
-        // try {
-        //   const spaceKey = getSpaceKeyFromDoc(doc);
-        //   if (!spaceKey) {
-        //     log('space key not found for share policy check', { peerId, documentId });
-        //     return false;
-        //   }
-
-        //   const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
-
-        //   // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-        //   const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
-        //   if (!deviceKeyHex) {
-        //     log('device key not found for share policy check', { peerId, documentId });
-        //     return false;
-        //   }
-        //   const deviceKey = PublicKey.from(deviceKeyHex);
-
-        //   const isAuthorized = authorizedDevices?.has(deviceKey) ?? false;
-        //   log('share policy check', {
-        //     localPeer: this._peerId,
-        //     remotePeer: peerId,
-        //     documentId,
-        //     deviceKey,
-        //     spaceKey,
-        //     isAuthorized,
-        //   });
-        //   return isAuthorized;
-        // } catch (err) {
-        //   log.catch(err);
-        //   return false;
-        // }
       },
     });
     this._clientNetwork.ready();
