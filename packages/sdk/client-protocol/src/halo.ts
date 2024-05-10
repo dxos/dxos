@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type ObservableProvider, type MulticastObservable } from '@dxos/async';
+import { type MulticastObservable } from '@dxos/async';
 import { type PublicKey } from '@dxos/keys';
 import { type Contact, type Device, type Identity, type Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import {
@@ -23,6 +23,7 @@ export interface Halo {
   get device(): Device | undefined;
   get contacts(): MulticastObservable<Contact[]>;
   get invitations(): MulticastObservable<CancellableInvitation[]>;
+  get credentials(): MulticastObservable<Credential[]>;
 
   createIdentity(options?: ProfileDocument, deviceProfile?: DeviceProfileDocument): Promise<Identity>;
   recoverIdentity(recoveryKey: Uint8Array): Promise<Identity>;
@@ -31,14 +32,12 @@ export interface Halo {
   share(options?: Partial<Invitation>): CancellableInvitation;
   join(invitation: Invitation, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
 
-  // TODO(wittjosiah): Migrate to multicast observable.
-  queryCredentials(options?: {
-    ids?: PublicKey[];
-    type?: string;
-  }): ObservableProvider<
-    { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
-    Credential[]
-  >;
+  /*
+   * query Credentials currently known to the identity.
+   * Note: Will return an empty or incomplete result if called before credentials have been loaded.
+   * @experimental
+   */
+  queryCredentials(options: { ids?: PublicKey[]; type?: string }): Credential[];
   writeCredentials(credentials: Credential[]): Promise<void>;
   presentCredentials(options: { ids: PublicKey[]; nonce?: Uint8Array }): Promise<Presentation>;
 }

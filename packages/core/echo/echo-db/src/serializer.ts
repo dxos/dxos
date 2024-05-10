@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-pipeline';
-import { Reference, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { type EncodedReferenceObject, encodeReference, Reference } from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { nonNullable, stripUndefinedValues } from '@dxos/util';
@@ -12,7 +12,6 @@ import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 
-const EXPORT_TIMEOUT = 30_000;
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
 /**
@@ -97,11 +96,7 @@ export class Serializer {
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      loadedObjects.push(
-        ...(await Promise.all(
-          chunk.map(async (id) => database.automerge.loadObjectById(id, { timeout: EXPORT_TIMEOUT })),
-        )),
-      );
+      loadedObjects.push(...(await database.automerge.batchLoadObjects(chunk)));
     }
 
     const data = {
@@ -180,6 +175,7 @@ export class Serializer {
     }
 
     database.automerge.addCore(core);
+    // TODO(dmaretskyi): It is very slow to call flush after every object.
     await database.flush();
   }
 }

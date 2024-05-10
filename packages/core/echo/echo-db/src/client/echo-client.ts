@@ -21,7 +21,7 @@ export type ConnectToServiceParams = {
   queryService: QueryService;
 };
 
-export type CreateDatabaseParams = {
+export type ConstructDatabaseParams = {
   // TODO(dmaretskyi): Consider changing to string id.
   spaceKey: PublicKey;
 
@@ -100,7 +100,7 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceKey, owningObject }: CreateDatabaseParams) {
+  constructDatabase({ spaceKey, owningObject }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceKey), 'Database already exists.');
     const db = new EchoDatabaseImpl({

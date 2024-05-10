@@ -8,7 +8,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
-import { type SpaceDoc } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { Expando, type EchoReactiveObject, create, TypedObject, ref } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
@@ -305,6 +305,20 @@ describe('AutomergeDb', () => {
       await peer.db.automerge.loadObjectById(object.id);
       const loadedObject = peer.db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
+    });
+
+    test('batch load object timeout', async () => {
+      const object = createExpando({ title: 'Hello' });
+      const peer = await createPeerInSpaceWithObject(object);
+      let threw = false;
+      try {
+        await peer.db.automerge.batchLoadObjects(['123', object.id], {
+          inactivityTimeout: 20,
+        });
+      } catch (e) {
+        threw = true;
+      }
+      expect(threw).to.be.true;
     });
 
     describe('loadObjectReferences', () => {
