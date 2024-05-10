@@ -10,7 +10,7 @@ dir:
 Using this tool you can inspect an instance of ECHO to visualize and debug the state of the application.
 
 :::note
-If you're using Composer you can open the Developer Tools by replacing the current URL with `https://composer.space/devtools`
+If you're using Composer you can open the Developer Tools by replacing the current URL path with `/devtools`, e.g. `https://composer.space/devtools`
 :::
 
 There are two non-Composer specific ways to run the tool:
@@ -30,7 +30,3 @@ The "Download Backup" and "Import Space" buttons can be found under the "Spaces"
 
 ![Download Backup](../../assets/images/download-backup.png)
 ![Import Space](../../assets/images/import-space.png)
-
-## Next Steps
-
-Check out some [Example Applications](../samples.md) created with DXOS.
