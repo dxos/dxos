@@ -146,7 +146,7 @@ export const App = () => {
 
 See [the platform overview](../#spaces) describing the general process of joining peers to a space.
 
-Now that you have a space, you can invite people to it using our [Sharing UI flows](./sharing-ui-flows).
+Now that you have a space, you can invite people to it using our [Sharing UI flows](../../halo/#shell).
 
 ::: note Tip
 To implement invitation flows manually, see the TypeScript API about [joining spaces](../typescript/README.md#creating-an-invitation).
