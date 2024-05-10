@@ -200,10 +200,10 @@
       "@braneframe/plugin-stack/meta": [
         "packages/apps/plugins/plugin-stack/src/meta.tsx"
       ],
-      "@braneframe/plugin-status": [
+      "@braneframe/plugin-status-bar": [
         "packages/apps/plugins/plugin-status/src/index.ts"
       ],
-      "@braneframe/plugin-status/meta": [
+      "@braneframe/plugin-status-bar/meta": [
         "packages/apps/plugins/plugin-status/src/meta.tsx"
       ],
       "@braneframe/plugin-table": [

@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-status",
+  "name": "@braneframe/plugin-status-bar",
   "version": "0.5.0",
-  "description": "Status plugin",
+  "description": "Status bar plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

@@ -2,6 +2,41 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type useTranslation } from '@dxos/react-ui';
+
 import { STATUS_BAR_PLUGIN } from './meta';
 
-export default [{ 'en-US': { [STATUS_BAR_PLUGIN]: { 'plugin name': 'Status Bar' } } }];
+type StatusBarTranslationKeys =
+  | 'plugin name'
+  | 'feedback panel title'
+  | 'email input label'
+  | 'email input placeholder'
+  | 'feedback text area label'
+  | 'feedback text area placeholder'
+  | 'send feedback label'
+  | 'name label'
+  | 'name placeholder';
+
+type RequiredTranslation = { [key in StatusBarTranslationKeys]: string };
+type TranslationEntry = { [STATUS_BAR_PLUGIN]: RequiredTranslation };
+type Language = string;
+
+// -- helpers.
+const entry = (translation: RequiredTranslation): TranslationEntry => ({ [STATUS_BAR_PLUGIN]: translation });
+export const mkTranslation = (t: ReturnType<typeof useTranslation>['t']) => (key: StatusBarTranslationKeys) => t(key);
+
+const translations: Record<Language, TranslationEntry> = {
+  'en-US': entry({
+    'plugin name': 'Status Bar',
+    'feedback panel title': 'Feedback',
+    'name label': 'Name',
+    'name placeholder': 'Full name',
+    'email input label': 'Email',
+    'email input placeholder': 'your-email@example.com',
+    'feedback text area label': 'Feedback',
+    'feedback text area placeholder': 'tell us what you think',
+    'send feedback label': 'Send Feedback',
+  }),
+};
+
+export default [translations];

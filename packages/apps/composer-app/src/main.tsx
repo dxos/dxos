@@ -40,7 +40,7 @@ import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
-import StatusMeta from '@braneframe/plugin-status/meta';
+import StatusBarMeta from '@braneframe/plugin-status-bar/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
@@ -149,7 +149,7 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      StatusMeta,
+      StatusBarMeta,
       ChainMeta,
       StackMeta,
       PresenterMeta,
@@ -265,7 +265,7 @@ const main = async () => {
           });
         },
       }),
-      [StatusMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status')),
+      [StatusBarMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status-bar')),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
@@ -287,7 +287,7 @@ const main = async () => {
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
-      StatusMeta.id,
+      StatusBarMeta.id,
       ThemeMeta.id,
       WildcardMeta.id,
     ],

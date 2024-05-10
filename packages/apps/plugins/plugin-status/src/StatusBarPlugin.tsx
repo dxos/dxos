@@ -1,31 +1,45 @@
-/* eslint-disable no-console */
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { Mailbox, DiscordLogo, Lightning } from '@phosphor-icons/react';
 import React from 'react';
 
-import { type PluginDefinition, type TranslationsProvides, type SurfaceProvides } from '@dxos/app-framework';
+import {
+  type PluginDefinition,
+  type TranslationsProvides,
+  type SurfaceProvides,
+  type IntentResolverProvides,
+} from '@dxos/app-framework';
+import { create } from '@dxos/echo-schema';
 
-import { StatusBar } from './components/StatusBar';
+import { StatusBarImpl } from './components';
+import { mkIntentBuilder } from './lib';
 import meta, { STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
 
-const _STATUS_BAR_ACTION = `${STATUS_BAR_PLUGIN}/action`;
+const STATUS_BAR_ACTION = `${STATUS_BAR_PLUGIN}/action`;
 
-export enum StatusBarAction {}
+export enum StatusBarAction {
+  PROVIDE_FEEDBACK = `${STATUS_BAR_ACTION}/provide-feedback`,
+}
 
-export type StatusBarPluginProvides = SurfaceProvides & TranslationsProvides;
+export namespace StatusBarAction {
+  export type ProvideFeedback = undefined;
+}
+
+type StatusBarActions = {
+  [StatusBarAction.PROVIDE_FEEDBACK]: StatusBarAction.ProvideFeedback;
+};
+
+export const statusBarIntent = mkIntentBuilder<StatusBarActions>(meta.id);
+
+export type StatusBarPluginProvides = SurfaceProvides & TranslationsProvides & IntentResolverProvides;
+
+const state = create({ feedbackOpen: false });
 
 export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => {
-  // TODO: Initialise state here
-
   return {
     meta,
-    initialize: async () => {
-      console.log('StatusPlugin:initialize');
-    },
     provides: {
       translations,
       surface: {
@@ -39,27 +53,16 @@ export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => 
           return null;
         },
       },
+      intent: {
+        resolver: async (intent, _plugins) => {
+          switch (intent.action) {
+            case StatusBarAction.PROVIDE_FEEDBACK: {
+              state.feedbackOpen = true;
+              break;
+            }
+          }
+        },
+      },
     },
   };
 };
-
-const StatusBarImpl = () => (
-  <StatusBar.Container>
-    <StatusBar.EndContent>
-      <StatusBar.Button onClick={(e) => console.log('Capture feedback')}>
-        <Mailbox />
-        <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
-      </StatusBar.Button>
-      <a href='https://discord.gg/' target='_blank' rel='noopener noreferrer'>
-        <StatusBar.Button>
-          <DiscordLogo />
-          <StatusBar.Text>Discord</StatusBar.Text>
-        </StatusBar.Button>
-      </a>
-      <StatusBar.Item>
-        <Lightning />
-        <StatusBar.Text classNames='hidden sm:block'>Online</StatusBar.Text>
-      </StatusBar.Item>
-    </StatusBar.EndContent>
-  </StatusBar.Container>
-);
