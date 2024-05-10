@@ -149,3 +149,6 @@ tools/intellij-plugin/build/
 
 # partykit
 .partykit
+
+# lychee link checker
+/.lychee.report.md
