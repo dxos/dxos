@@ -40,8 +40,11 @@
   },
   "devDependencies": {
     "level-transcoder": "^1.0.1"
+<<<<<<< Updated upstream
   },
   "publishConfig": {
     "access": "public"
+=======
+>>>>>>> Stashed changes
   }
 }
