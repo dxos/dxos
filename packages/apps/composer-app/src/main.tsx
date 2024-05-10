@@ -178,6 +178,12 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
+          const url = new URL(window.location.href);
+          // Match CF only.
+          if (!url.origin.endsWith('composer.space')) {
+            return;
+          }
+
           try {
             // Retrieve the cookie.
             const response = await fetch('/info');
@@ -185,8 +191,9 @@ const main = async () => {
               throw new Error('Invalid response.');
             }
 
-            // TODO(burdon): CamelCase vs. _ names.
             const result: JWTPayload = await response.json();
+
+            // TODO(burdon): CamelCase vs. _ names.
             await client.shell.setInvitationUrl({
               invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
               deviceInvitationParam: 'deviceInvitationCode',
@@ -206,12 +213,11 @@ const main = async () => {
       [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
-      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
-        steps,
-      }),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), { steps }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
+      // DX_DECK=1
       ...(isDeck
         ? {
             [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
