@@ -1,9 +1,9 @@
 ---
-position: 0
-label: Contributor Guide
 dir:
   text: Contributing
-  order: 40
+  order: 10
+position: 0
+label: Contributor Guide
 ---
 
 # Contributing to DXOS
