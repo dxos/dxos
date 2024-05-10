@@ -180,6 +180,7 @@ const main = async () => {
         onClientInitialized: async (client) => {
           const url = new URL(window.location.href);
           // Match CF only.
+          // TODO(burdon): Factor out const.
           if (!url.origin.endsWith('composer.space')) {
             return;
           }
@@ -200,8 +201,6 @@ const main = async () => {
               spaceInvitationParam: 'spaceInvitationCode',
             });
           } catch (err) {
-            // TODO(burdon): Need to notify user.
-            // Ignore (since composer.dxos.org does not implement the middleware).
             log.catch(err);
           }
         },
