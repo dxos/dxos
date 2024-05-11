@@ -198,7 +198,7 @@ const DemoStack = ({
       data-testid={id}
       SectionContent={SectionContent}
       items={items}
-      transform={(item, _) => ({ ...item, label: labelGetter }) as StackSectionItem}
+      transform={(item, _) => ({ ...item, metadata: { label: labelGetter } }) as StackSectionItem}
       onOver={handleOver}
       onDrop={handleDrop}
       onDeleteSection={handleRemove}
