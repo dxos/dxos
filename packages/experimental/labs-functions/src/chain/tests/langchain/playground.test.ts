@@ -4,6 +4,8 @@
 
 import { SerpAPI } from '@langchain/community/tools/serpapi';
 import { HNSWLib } from '@langchain/community/vectorstores/hnswlib';
+import { type BaseFunctionCallOptions } from '@langchain/core/language_models/base';
+import { HumanMessage } from '@langchain/core/messages';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import {
   ChatPromptTemplate,
@@ -17,19 +19,14 @@ import { DynamicStructuredTool } from '@langchain/core/tools';
 import { ChatOpenAI, formatToOpenAITool, OpenAIEmbeddings } from '@langchain/openai';
 import { expect } from 'chai';
 import { AgentExecutor } from 'langchain/agents';
-import { formatLogToString } from 'langchain/agents/format_scratchpad/log';
 import { formatToOpenAIToolMessages } from 'langchain/agents/format_scratchpad/openai_tools';
 import { OpenAIToolsAgentOutputParser, type ToolsAgentStep } from 'langchain/agents/openai/output_parser';
-import { ReActSingleInputOutputParser } from 'langchain/agents/react/output_parser';
 import { type Document } from 'langchain/document';
+import { OllamaFunctions } from 'langchain/experimental/chat_models/ollama_functions';
 import { PlanAndExecuteAgentExecutor } from 'langchain/experimental/plan_and_execute';
-import { pull } from 'langchain/hub';
-import { BufferMemory } from 'langchain/memory';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
-import { type AgentStep, type BaseMessage } from 'langchain/schema';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { Calculator } from 'langchain/tools/calculator';
-import { renderTextDescription } from 'langchain/tools/render';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import { MemoryVectorStore } from 'langchain/vectorstores/memory';
 import fs from 'node:fs';
@@ -39,7 +36,7 @@ import { z } from 'zod';
 import { effectToJsonSchema, S } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
-import { getConfig, getKey } from '../util';
+import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Demo:
 //  - Email pipeline (summarize daily set of messages from contacts in CRM).
@@ -53,9 +50,10 @@ import { getConfig, getKey } from '../util';
 // TODO(burdon): Document chains: https://js.langchain.com/docs/modules/chains/document
 // TODO(burdon): Summarize: https://js.langchain.com/docs/modules/chains/popular/summarize
 // TODO(burdon): Plugins: https://platform.openai.com/docs/plugins/examples
-// TODO(burdon): FakeEmbeddings for tests
 
-describe.skip('LangChain', () => {
+// TODO(burdon): Test which work with Ollama vs. OpenAI.
+
+describe('LangChain', () => {
   const createModel = (modelName = 'gpt-4') => {
     const config = getConfig()!;
 
@@ -156,7 +154,7 @@ describe.skip('LangChain', () => {
       ),
     );
 
-    const agent = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
@@ -168,7 +166,7 @@ describe.skip('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const result = await agent.invoke(inputText);
+      const result = await sequence.invoke(inputText);
       console.log(result);
       return result;
     };
@@ -185,7 +183,7 @@ describe.skip('LangChain', () => {
     const embeddings = createEmbeddings();
 
     // Get data.
-    const text = fs.readFileSync(path.join(__dirname, 'testing/text.txt'), 'utf8');
+    const text = fs.readFileSync(path.join(__dirname, 'data/text.txt'), 'utf8');
     const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000 });
     const docs = await textSplitter.createDocuments([text]);
 
@@ -205,7 +203,7 @@ describe.skip('LangChain', () => {
       HumanMessagePromptTemplate.fromTemplate('{question}'),
     ]);
 
-    const chain = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         context: retriever.pipe(formatDocumentsAsString),
         question: new RunnablePassthrough(),
@@ -217,7 +215,7 @@ describe.skip('LangChain', () => {
 
     const call = async (inputText: string) => {
       console.log(`\n> ${inputText}`);
-      const result = await chain.invoke(inputText);
+      const result = await sequence.invoke(inputText);
       console.log(result);
       return result;
     };
@@ -231,7 +229,7 @@ describe.skip('LangChain', () => {
   // TODO(burdon): How to make prompt satisfy all fields?
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
-  test.only('functions', async () => {
+  test('functions', async () => {
     const defs = S.struct({
       company: S.array(
         S.struct({
@@ -251,7 +249,6 @@ describe.skip('LangChain', () => {
 
     const jsonSchema: Record<string, unknown> = effectToJsonSchema(defs) as any;
     const model = createModel().bind({
-      function_call: { name: 'output_formatter' },
       functions: [
         {
           name: 'output_formatter',
@@ -259,6 +256,9 @@ describe.skip('LangChain', () => {
           parameters: jsonSchema,
         },
       ],
+      function_call: {
+        name: 'output_formatter',
+      },
     });
 
     const outputParser = new JsonOutputFunctionsParser();
@@ -284,12 +284,104 @@ describe.skip('LangChain', () => {
   });
 
   //
+  // Ollama functions.
+  // https://js.langchain.com/docs/integrations/chat/ollama_functions
+  //
+  test('ollama functions', async () => {
+    // const calculatorSchema = z.object({
+    //   operation: z.enum(['add', 'subtract', 'multiply', 'divide']).describe('The type of operation to execute.'),
+    //   number1: z.number().describe('The first number to operate on.'),
+    //   number2: z.number().describe('The second number to operate on.'),
+    // });
+
+    // class CalculatorTool extends StructuredTool {
+    //   name = 'calculator';
+    //   description = 'A simple calculator tool';
+    //   schema = calculatorSchema;
+    //   async _call(input: z.infer<typeof calculatorSchema>) {
+    //     return JSON.stringify(input);
+    //   }
+    // }
+
+    // const model = new ChatMistralAI({
+    //   apiKey: process.env.MISTRAL_API_KEY,
+    //   modelName: 'mistral-large',
+    // });
+
+    // const model2 = model.bind({ tools: [new CalculatorTool()] });
+
+    // const tools = [
+    //   new DynamicStructuredTool({
+    //     name: 'get_current_weather',
+    //     description: 'Get the current weather in a given location',
+    //     schema: z.object({
+    //       location: z.string().describe('The city and state, e.g. San Francisco, CA'),
+    //       unit: z.enum(['celsius', 'fahrenheit']),
+    //     }),
+    //     func: async ({ location }) => {
+    //       const data = new Map<string, number>([
+    //         ['new york', 20],
+    //         ['san francisco', 25],
+    //         ['tokyo', 31],
+    //       ]);
+    //
+    //       const temperature = data.get(location.toLowerCase());
+    //       if (temperature !== undefined) {
+    //         return JSON.stringify({ location, temperature, unit: 'celsius' });
+    //       } else {
+    //         return JSON.stringify({}); // TODO(burdon): Say I don't know.
+    //       }
+    //     },
+    //   }),
+    // ];
+
+    // const model2 = model.bind({ tools: tools.map(formatToOpenAITool) });
+
+    const options: BaseFunctionCallOptions = {
+      functions: [
+        {
+          name: 'get_current_weather',
+          description: 'Get the weather in a given location.',
+          parameters: {
+            type: 'object',
+            properties: {
+              location: {
+                type: 'string',
+                description: 'The city and state, e.g. San Francisco, CA',
+              },
+              unit: {
+                type: 'string',
+                enum: ['celsius', 'fahrenheit'],
+                description: 'The unit of temperature',
+              },
+            },
+            required: ['location'],
+          },
+        },
+      ],
+      function_call: {
+        name: 'get_current_weather',
+      },
+    };
+
+    const model = new OllamaFunctions({
+      temperature: 0.1,
+      model: 'mistral',
+    }).bind(options);
+
+    const response = await model.invoke([new HumanMessage('what is the weather in Tokyo?')]);
+    console.log(response);
+  });
+
+  //
   // Plan and execute.
   // https://js.langchain.com/docs/modules/agents/agent_types/plan_and_execute
   //
   test('plan and execute', async () => {
     const config = getConfig()!;
     const model = createModel();
+
+    console.log(model);
 
     // Tools.
     // https://api.js.langchain.com/classes/tools.Tool.html
@@ -318,67 +410,6 @@ describe.skip('LangChain', () => {
     console.log({ result });
   }).timeout(60_000);
 
-  //
-  // Agents, ReAct prompts, and Tools.
-  // https://js.langchain.com/docs/modules/agents/agent_types/chat_conversation_agent
-  // TODO(burdon): https://js.langchain.com/docs/modules/agents/agent_types/openai_assistant
-  //
-  test('agent', async () => {
-    // Bind stop token.
-    // https://help.openai.com/en/articles/5072263-how-do-i-use-stop-sequences
-    // The ReAct prompt used below (https://smith.langchain.com/hub/hwchase17/react-chat) uses the following format:
-    //
-    // Thought: Do I need to use a tool? Yes
-    // Action: the action to take, should be one of [{tool_names}]
-    // Action Input: the input to the action
-    // Observation: the result of the action
-    // ~~~~~~~~~~~
-    const model = createModel().bind({ stop: ['\nObservation'] });
-
-    const tools = [new Calculator()];
-    const toolNames = tools.map((tool) => tool.name);
-
-    // Get prompt form LangChain Hub.
-    // ReAct prompts: generate both reasoning traces and task-specific actions in an interleaved manner.
-    // https://www.promptingguide.ai/techniques/react
-    // https://smith.langchain.com/hub/hwchase17/react-chat
-    const basePrompt = await pull<PromptTemplate>('hwchase17/react-chat');
-    const prompt = await basePrompt.partial({
-      tools: renderTextDescription(tools),
-      tool_names: toolNames.join(','),
-    });
-
-    // TODO(burdon): Import type def?
-    type Input = { input: string; steps: AgentStep[]; chat_history: BaseMessage[] };
-    const agent = RunnableSequence.from([
-      {
-        input: (i: Input) => i.input,
-        agent_scratchpad: (i: Input) => formatLogToString(i.steps),
-        chat_history: (i: Input) => i.chat_history,
-      },
-      prompt,
-      model,
-      new ReActSingleInputOutputParser({ toolNames }),
-    ]);
-
-    const memory = new BufferMemory({ memoryKey: 'chat_history' });
-
-    // TODO(burdon): See: chat-conversational-react-description
-    const executor = AgentExecutor.fromAgentAndTools({ agent, tools, memory });
-
-    const call = async (input: string) => {
-      const result = await executor.invoke({ input });
-      console.log(`\n> ${input}`);
-      console.log(result.output);
-      return result;
-    };
-
-    await call('hello, i am DXOS');
-    await call('what is my name?');
-    await call('what is 6 times 7?');
-  });
-
-  //
   // Custom tools
   // https://js.langchain.com/docs/modules/agents/agent_types/openai_tools_agent
   //
@@ -416,7 +447,7 @@ describe.skip('LangChain', () => {
       new MessagesPlaceholder('agent_scratchpad'),
     ]);
 
-    const agent = RunnableSequence.from([
+    const sequence = RunnableSequence.from([
       {
         input: (i: { input: string; steps: ToolsAgentStep[] }) => i.input,
         agent_scratchpad: (i: { input: string; steps: ToolsAgentStep[] }) => formatToOpenAIToolMessages(i.steps),
@@ -426,7 +457,7 @@ describe.skip('LangChain', () => {
       new OpenAIToolsAgentOutputParser(),
     ]).withConfig({ runName: 'OpenAIToolsAgent' });
 
-    const executor = AgentExecutor.fromAgentAndTools({ agent, tools });
+    const executor = AgentExecutor.fromAgentAndTools({ agent: sequence, tools });
 
     const call = async (input: string) => {
       const result = await executor.invoke({ input });
