@@ -169,7 +169,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
-      [BetaMeta.id]: Plugin.lazy(() => import('./BetaPlugin')),
+      [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {

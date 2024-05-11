@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
@@ -67,60 +67,62 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   };
 };
 
+// TODO(burdon): Replace with formatted markdown?
+//  https://www.npmjs.com/package/react-markdown (ESM only).
+//  https://www.npmjs.com/package/simple-markdown
+// const notice = [
+//   //
+//   'Composer is now in Beta and updates will now be published to the new site [https://composer.space](https://composer.space).',
+//   'Composer will remain free to use and we are still 100% committed to building privacy-preserving open source software.',
+//   "However, we're asking Beta users to sign-up to help us build Composer during this next stage of development.",
+//   // TODO(burdon): Why.
+//   // TODO(burdon): How.
+//   // TODO(burdon): Next steps.
+//   // TODO(burdon): Discord or Email us.
+// ];
+
+const SimpleLink = ({ children, href, target }: PropsWithChildren<{ href: string; target?: string }>) => (
+  <Link variant='neutral' href={href} target={target ?? '_blank'}>
+    {children}
+  </Link>
+);
+
 const BetaDialog = () => {
+  const SIGNUP_URL = 'https://dxos.org/composer#beta';
   const handleSignup = () => {
-    window.open('https://dxos.org/composer#beta', '_blank');
+    window.open(SIGNUP_URL, '_blank');
   };
 
+  // TODO(burdon): Magic link Auto enable existing users without signing up?
   return (
     <Dialog.Content classNames='md:max-is-[30rem]'>
       <Dialog.Title>Composer Beta Notice</Dialog.Title>
       <p className='plb-2'>
-        <span className='font-bold'>Composer is entering closed beta!</span> What does that mean?
+        <span className='font-bold'>Composer is now in Beta</span> and updates to Composer will now be published to the
+        new site
+        <SimpleLink href='https://composer.space'>https://composer.space</SimpleLink>.
       </p>
       <p className='plb-2'>
-        composer.dxos.org is going to stop being updated, however will remain available for your continued usage for the
-        forseeable future. (It&apos;s also{' '}
-        <Link variant='neutral' href='https://github.com/dxos/dxos' target='_blank'>
-          open source
-        </Link>
-        , and will remain so.)
+        Composer will remain free to use and open source and we&apos;re still 100% committed to building preserving
+        applications. However, we&apos;re asking Beta users to sign-up during this next stage of development.
       </p>
-      <p className='plb-2'>
-        Going forward Composer updates will be found at{' '}
-        <Link variant='neutral' href='https://composer.space' target='_blank'>
-          composer.space
-        </Link>
-        , which will be behind a beta gate that requires an email and approval to access. If you&apos;re an existing
-        Composer user we&apos;ll get you into the beta ASAP, just{' '}
-        <Link variant='neutral' href='https://dxos.org/composer' target='_blank'>
-          click here
-        </Link>{' '}
-        to signup. Once you&apos;ve been invited to the beta, do a{' '}
-        <Link
-          variant='neutral'
-          href='https://docs.dxos.org/guide/platform/halo.html#device-invitations'
-          target='_blank'
-        >
-          device invitation
-        </Link>{' '}
-        from your existing account on composer.dxos.org to move all your data over to{' '}
-        <Link variant='neutral' href='https://composer.space' target='_blank'>
-          composer.space
-        </Link>
-        .
-      </p>
-      <p className='plb-2'>Why are we doing this?</p>
+      <p className='plb-2'>Why we are doing this.</p>
       <ol className='plb-2'>
-        <li>
-          1. We&apos;re looking to elicit more feedback from early users of Composer in order to shape the product into
-          something useful.
-        </li>
-        <li>
-          2. We want to communicate with Composer users via email about updates and progress – not everyone is on
-          Discord, nor do they want to be!
-        </li>
+        <li>1. We&apos;re looking to get more detailed feedback from early users.</li>
+        <li>2. We want to communicate (opt-in) with users via email about updates and progress.</li>
       </ol>
+      <p className='plb-2'>
+        Please
+        <SimpleLink href='https://dxos.org/composer'>click here</SimpleLink> to sign-up for the beta.
+      </p>
+      <p className='plb-2'>
+        To transfer your data, you will be able to transfer your existing data by initiating a
+        <SimpleLink href='https://docs.dxos.org/guide/platform/halo.html#device-invitations'>
+          device invitation
+        </SimpleLink>{' '}
+        from your existing account on composer.dxos.org to move all your data over to{' '}
+        <SimpleLink href='https://composer.space'>composer.space</SimpleLink>.
+      </p>
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>
           <Button>Dismiss</Button>
