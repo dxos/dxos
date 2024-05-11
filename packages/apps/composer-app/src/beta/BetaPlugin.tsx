@@ -72,6 +72,9 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   };
 };
 
+// TODO(burdon): Reconcile with react-theme.
+const linkStyle = 'text-sky-700 dark:text-sky-200 hover:opacity-80';
+
 function link(this: any, d: any) {
   if (d.type !== 'textDirective') {
     return false;
@@ -79,9 +82,7 @@ function link(this: any, d: any) {
 
   this.tag('<a');
   if (d.attributes && 'href' in d.attributes) {
-    this.tag(
-      ` class="text-sky-700 dark:text-sky-200" target="_blank" rel="noreferrer" href="${this.encode(d.attributes.href)}"`,
-    );
+    this.tag(` class="${linkStyle}" target="_blank" rel="noreferrer" href="${this.encode(d.attributes.href)}"`);
   }
   this.tag('>');
   this.raw(d.label || '');
@@ -98,9 +99,9 @@ const BetaDialog = () => {
   const [html, setHtml] = useState<string>();
   useEffect(() => {
     setTimeout(async () => {
-      // https://github.com/micromark/micromark?tab=readme-ov-file#list-of-extensions
-      // https://github.com/micromark/micromark-extension-directive
+      // https://github.com/micromark/micromark (ESM).
       const { micromark } = await import('micromark');
+      // https://github.com/micromark/micromark-extension-directive
       const { directive, directiveHtml } = await import('micromark-extension-directive');
       setHtml(micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] }));
     });
