@@ -76,13 +76,11 @@ function link(this: any, d: any) {
   if (d.type !== 'textDirective') {
     return false;
   }
+
   this.tag('<a');
   if (d.attributes && 'href' in d.attributes) {
-    // TODO(burdon): Class.
     this.tag(
-      ' class="text-sky-600 dark:text-sky-300" target="_blank" rel="noreferrer" href="' +
-        this.encode(d.attributes.href) +
-        '"',
+      ` class="text-sky-700 dark:text-sky-200" target="_blank" rel="noreferrer" href="${this.encode(d.attributes.href)}"`,
     );
   }
   this.tag('>');

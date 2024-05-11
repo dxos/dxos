@@ -1,7 +1,5 @@
-
 Composer is now in Beta and going forward updates will be published to the new site 
 :link[composer.space]{href="https://composer.space"}.
-
 
 Composer will remain free to use and we are still 100% committed to building privacy-preserving open source software.
 
