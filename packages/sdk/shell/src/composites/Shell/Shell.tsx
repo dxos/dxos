@@ -6,12 +6,12 @@ import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import {
+  type InvitationUrlRequest,
   type LayoutRequest,
   ShellDisplay,
   ShellLayout,
   type ShellRuntime,
   useClient,
-  type InvitationUrlRequest,
 } from '@dxos/react-client';
 import { useSpace } from '@dxos/react-client/echo';
 
