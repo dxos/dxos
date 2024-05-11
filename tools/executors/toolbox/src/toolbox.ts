@@ -78,10 +78,11 @@ type NxJson = {
 type PackageJson = {
   name: string;
   version: string;
+  type?: string;
   private: boolean;
-  dependencies: Record<string, string>[];
-  devDependencies: Record<string, string>[];
-  peerDependencies: Record<string, string>[];
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
+  peerDependencies: Record<string, string>;
 };
 
 type TsConfigJson = {
@@ -437,25 +438,83 @@ class Toolbox {
     }
   }
 
+  async getModuleStats() {
+    const fieldsForStats = ['exports', 'main', 'types', 'typesVersions', 'browser'] as const;
+    const byField = fieldsForStats.reduce(
+      (acc, field) => {
+        acc[field] = [];
+        return acc;
+      },
+      {} as Record<(typeof fieldsForStats)[number], string[]>,
+    );
+    const byModuleType = {
+      commonjs: [] as string[],
+      module: [] as string[],
+      unspecified: [] as string[],
+    };
+
+    for (const project of this.projects) {
+      const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
+
+      for (const field of fieldsForStats) {
+        if ((packageJson as any)[field]) {
+          byField[field].push(project.name);
+        }
+      }
+
+      switch (packageJson.type) {
+        case 'commonjs':
+          byModuleType.commonjs.push(project.name);
+          break;
+        case 'module':
+          byModuleType.module.push(project.name);
+          break;
+        default:
+          byModuleType.unspecified.push(project.name);
+      }
+    }
+
+    return { byField, byModuleType };
+  }
+
   _getProjectByPackageName(name: string): Project {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
 }
 
+const PRINT_MODULE_STATS = true;
+
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
  */
 const run = async () => {
+  const argModuleStats = process.argv.includes('--module-stats');
+
   // TODO(burdon): Parse options using yargs.
   const toolbox = new Toolbox({ verbose: false });
   await toolbox.init();
-  await toolbox.updateReleasePlease();
-  await toolbox.updateRootPackage();
-  await toolbox.updateTags();
-  await toolbox.updateProjects();
-  await toolbox.updatePackages();
-  await toolbox.updateTsConfig();
-  await toolbox.updateTsConfigPaths();
+
+  if (argModuleStats) {
+    const stats = await toolbox.getModuleStats();
+
+    for (const key in stats) {
+      console.log(`\n\n# ${key}:\n`);
+      for (const field in (stats as any)[key]) {
+        console.log(`\n${field}:\n`);
+        for (const pkg of (stats as any)[key][field]) {
+          console.log(`- ${pkg}`);
+        }
+      }
+    }
+  } else {
+    await toolbox.updateReleasePlease();
+    await toolbox.updateRootPackage();
+    await toolbox.updateTags();
+    await toolbox.updateProjects();
+    await toolbox.updatePackages();
+    await toolbox.updateTsConfig();
+    await toolbox.updateTsConfigPaths();
+  }
 
   // await toolbox.printStats();
 };
