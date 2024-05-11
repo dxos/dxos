@@ -14,6 +14,7 @@ import { Callback } from '@dxos/util';
 import { type ExtensionContext, type TeleportExtension } from './teleport';
 
 const HEARTBEAT_RTT_WARN_THRESH = 10_000;
+const DEBUG_PRINT_HEARTBEAT = false; // very noisy
 
 type ControlRpcBundle = {
   Control: ControlService;
@@ -63,11 +64,13 @@ export class ControlExtension implements TeleportExtension {
             this.onExtensionRegistered.call(request.name);
           },
           heartbeat: async (request) => {
-            log('received heartbeat request', {
-              ts: request.requestTimestamp,
-              localPeerId: this.localPeerId.truncate(),
-              remotePeerId: this.remotePeerId.truncate(),
-            });
+            if (DEBUG_PRINT_HEARTBEAT) {
+              log('received heartbeat request', {
+                ts: request.requestTimestamp,
+                localPeerId: this.localPeerId.truncate(),
+                remotePeerId: this.remotePeerId.truncate(),
+              });
+            }
             return {
               requestTimestamp: request.requestTimestamp,
             };
@@ -106,17 +109,21 @@ export class ControlExtension implements TeleportExtension {
                 remotePeerId: this.remotePeerId.truncate(),
               });
             } else {
-              log('heartbeat RTT', {
-                rtt: now - resp.requestTimestamp.getTime(),
-                localPeerId: this.localPeerId.truncate(),
-                remotePeerId: this.remotePeerId.truncate(),
-              });
+              if (DEBUG_PRINT_HEARTBEAT) {
+                log('heartbeat RTT', {
+                  rtt: now - resp.requestTimestamp.getTime(),
+                  localPeerId: this.localPeerId.truncate(),
+                  remotePeerId: this.remotePeerId.truncate(),
+                });
+              }
             }
           }
         } catch (err: any) {
           const now = Date.now();
           if (err instanceof RpcClosedError) {
+            // TODO: expose 'closed' event in Rpc peer to close context as soon the the peer gets closed
             log('ignoring RpcClosedError in heartbeat');
+            this._extensionContext.close(err);
             return;
           }
           if (err instanceof AsyncTimeoutError) {

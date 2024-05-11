@@ -29,8 +29,9 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
-    "kubo-rpc-client": "^3.0.2",
+    "kubo-rpc-client": "^4.1.1",
     "lodash.get": "^4.4.2",
+    "undici": "*",
     "url-join": "^5.0.0"
   },
   "devDependencies": {

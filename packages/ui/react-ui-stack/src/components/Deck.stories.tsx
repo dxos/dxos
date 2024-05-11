@@ -20,7 +20,7 @@ import React, { type PropsWithChildren, useState } from 'react';
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
 import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck as NaturalDeck } from '@dxos/react-ui-deck';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
 
@@ -39,7 +39,7 @@ const Toolbar = () => {
   );
 };
 
-const SimpleContent = ({ data }: { data: { title?: string; body?: string } }) => (
+const SimpleContent = ({ data }: { data: MosaicDataItem & { title?: string; body?: string } }) => (
   <>
     <Toolbar />
     <div className='text-xl mlb-2'>{data.title}</div>

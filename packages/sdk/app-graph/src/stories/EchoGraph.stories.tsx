@@ -171,7 +171,7 @@ const runAction = (action: Action) => {
       break;
 
     case Action.CLOSE_SPACE:
-      void getSpace()?.internal.close();
+      void getSpace()?.close();
       break;
 
     case Action.RENAME_SPACE: {

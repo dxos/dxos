@@ -107,8 +107,6 @@ export class SpaceProxy implements Space {
         return self._data;
       },
       createEpoch: this._createEpoch.bind(this),
-      open: this._activate.bind(this),
-      close: this._deactivate.bind(this),
       removeMember: this._removeMember.bind(this),
     };
 
@@ -235,7 +233,7 @@ export class SpaceProxy implements Space {
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
         // NOOP if the root is the same.
-        await this._db.automerge.update({ rootUrl: automergeRoot });
+        await this._db.setSpaceRoot(automergeRoot);
       }
     }
 
@@ -282,9 +280,10 @@ export class SpaceProxy implements Space {
         automergeRoot = this._data.pipeline.currentEpoch.subject.assertion.automergeRoot;
       }
 
-      await this._db.automerge.open({
-        rootUrl: automergeRoot,
-      });
+      if (automergeRoot !== undefined) {
+        await this._db.setSpaceRoot(automergeRoot);
+      }
+      await this._db.open();
     }
 
     log('ready');
@@ -327,23 +326,18 @@ export class SpaceProxy implements Space {
     log('destroying...');
     await this._ctx.dispose();
     await this._invitationsProxy.close();
-    await this._db.automerge.close();
+    await this._db.close();
     this._databaseOpen = false;
     log('destroyed');
   }
 
-  /**
-   * TODO
-   */
   async open() {
-    await this._setOpen(true);
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
   }
 
-  /**
-   * TODO
-   */
   async close() {
-    await this._setOpen(false);
+    await this._db.flush();
+    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 
   /**
@@ -398,27 +392,15 @@ export class SpaceProxy implements Space {
     // return this._serviceProvider.services.SpaceService.createSnapshot({ space_key: this.key });
   }
 
-  async _setOpen(open: boolean) {
-    return todo();
-    // invariant(this._clientServices.services.SpaceService, 'SpaceService not available');
-
-    // await this._clientServices.services.SpaceService.setSpaceState({
-    //   spaceKey: this.key,
-    //   open
-    // });
+  toJSON() {
+    return {
+      key: this.key.toHex(),
+      state: SpaceState[this.state.get()],
+    };
   }
 
   private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
-  }
-
-  private async _activate() {
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.ACTIVE });
-  }
-
-  private async _deactivate() {
-    await this._db.flush();
-    await this._clientServices.services.SpacesService!.updateSpace({ spaceKey: this.key, state: SpaceState.INACTIVE });
   }
 
   private async _removeMember(memberKey: PublicKey) {

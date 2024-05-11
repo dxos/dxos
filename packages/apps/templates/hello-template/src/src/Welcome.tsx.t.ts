@@ -2,7 +2,7 @@ import { plate } from '@dxos/plate';
 import template from '../template.t';
 
 export default template.define.script({
-  content: ({ input: { react } }) => {
+  content: ({ input: { react, name } }) => {
     return react ? plate /* javascript */`
     import React, { useEffect, useState } from 'react';
     import { Counter } from './Counter';
@@ -32,9 +32,9 @@ export default template.define.script({
               <code>.ts</code> files directly.
             </p>
             <p>
-              When you are ready you can deploy this app to your{' '}
-              <a href='https://docs.dxos.org/guide/kube' target='_blank' rel='noreferrer'>
-                KUBE
+              When you are ready you can deploy to any static hosting service. See sample{' '}
+              <a href='https://docs.dxos.org/guide/tutorial.html#deploying-the-app' target='_blank' rel='noreferrer'>
+              deploy instructions
               </a>
               .
             </p>
@@ -44,11 +44,6 @@ export default template.define.script({
               <li>
                 <a href='https://docs.dxos.org/guide/react' target='_blank' rel='noreferrer'>
                   Using ECHO with React
-                </a>
-              </li>
-              <li>
-                <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank' rel='noreferrer'>
-                  Deploying to KUBE
                 </a>
               </li>
               <li>

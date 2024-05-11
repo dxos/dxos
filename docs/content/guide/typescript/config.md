@@ -4,46 +4,6 @@ order: 20
 
 # Configuration examples
 
-### Custom signaling server
-
-To use a local [KUBE](../glossary#kube) [signaling server](../glossary#signaling-service) instead of the public default:
-
-```ts file=./snippets/create-with-signal-server.ts#L5-
-import { Client, Config } from '@dxos/client';
-
-const client = new Client({
-  config: new Config({
-    runtime: {
-      services: {
-        signaling: [{
-          server: 'wss://kube.dxos.org/.well-known/dx/signal'
-        }]
-      }
-    }
-  })
-});
-```
-
-### Custom HALO source
-
-By default the client will use `https://halo.dxos.org` as the storage [`vault`](../glossary#vault), but if there was a version of HALO deployed to a local KUBE, the `remoteSource` configuration value can be used to point the client to it:
-
-```ts file=./snippets/create-with-custom-vault.ts#L5-
-import { Client, Config } from '@dxos/client';
-
-const client = new Client({
-  config: new Config({
-    runtime: {
-      client: {
-        remoteSource: 'http://halo.localhost/vault.html'
-      }
-    }
-  })
-});
-```
-
-To deploy a locally operated HALO application, clone the [`dxos`](https://github.com/dxos/dxos) repo, and follow the [repository guide](https://github.com/dxos/dxos/tree/main/REPOSITORY_GUIDE.md) to set up a local HALO build. HALO is a regular DXOS application with a [`dx.yml`](../cli/publishing) configuration file. You should be able to [start up a local KUBE](../quick-start#starting-a-kube) and [deploy to it](../quick-start#deploying-your-app-to-a-kube).
-
 ## Config Plugin
 
 `@dxos/config` provides plugins for a number of bundlers which allow the config to be loaded from yaml files at the package root rather than specified inline.
@@ -150,27 +110,6 @@ const client = new Client({
 
 ::: note
 In a Node environment, `Local` is a no-op.
-:::
-
-### Dynamic app configuration from KUBE
-
-If your app is being hosted on a KUBE, use `Dynamics` to receive more specific configuration from that KUBE. With this mechanism, KUBE can serve apps in ways that redirect them to different signaling servers or `HALO` identity vaults.
-
-```ts file=./snippets/create-with-dynamics.ts#L5-
-import { Client, Config } from '@dxos/client';
-import { Defaults, Dynamics, Local } from '@dxos/config';
-
-const client = new Client({
-  config: new Config(await Dynamics(), Local(), Defaults())
-});
-```
-
-::: tip
-The `Config` constructor uses `lodash.merge` to combine config objects. Earlier objects will take precedence over later objects, so `Defaults` should come last.
-:::
-
-::: note
-If you want to provide config only for local-development, try including a `dx-dev.yml` file. If not being served from a KUBE, `Dynamics` will return the config from this file.
 :::
 
 ### App configuration with environment variables

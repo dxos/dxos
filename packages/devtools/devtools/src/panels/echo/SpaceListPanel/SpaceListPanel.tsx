@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Space, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { AnchoredOverflow, Button, useFileDownload } from '@dxos/react-ui';
 import { Table, type TableColumnDef, createColumnBuilder, textPadding } from '@dxos/react-ui-table';
 
@@ -17,6 +17,15 @@ import { exportData, importData } from './backup';
 import { PanelContainer } from '../../../components';
 import { useDevtoolsDispatch } from '../../../hooks';
 
+type SpaceData = {
+  key: PublicKey;
+  name: string;
+  objects: number;
+  members: number;
+  startup: number;
+  isOpen: boolean;
+};
+
 export const SpaceListPanel: FC = () => {
   const client = useClient();
   const spaces = useSpaces({ all: true });
@@ -24,17 +33,18 @@ export const SpaceListPanel: FC = () => {
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
 
-  const handleSelect = (selection: Space | undefined) => {
-    setState((state) => ({ ...state, space: selection }));
+  const handleSelect = (selection: SpaceData | undefined) => {
+    const space = selection && spaces.find((space) => space.key.equals(selection.key));
+    setState((state) => ({ ...state, space }));
     navigate('/echo/space');
   };
 
   const handleToggleOpen = async (spaceKey: PublicKey) => {
     const space = spaces.find((space) => space.key.equals(spaceKey))!;
     if (space.isOpen) {
-      await space.internal.close();
+      await space.close();
     } else {
-      await space.internal.open();
+      await space.open();
     }
   };
 
@@ -65,30 +75,20 @@ export const SpaceListPanel: FC = () => {
   // TODO(burdon): Get builder from hook.
   // TODO(dmaretskyi): Fix the types.
   const { helper, builder } = createColumnBuilder<any>();
-  const columns: TableColumnDef<Space, any>[] = [
+  const columns: TableColumnDef<SpaceData, any>[] = [
     helper.accessor('key', builder.key({ tooltip: true })),
-    helper.accessor((space) => space.properties.name, {
-      id: 'name',
+    helper.accessor('name', {
       meta: { cell: { classNames: textPadding } },
     }) as any,
-    helper.accessor((space) => space.db.objects.length, {
-      id: 'objects',
+    helper.accessor('objects', {
       ...builder.number(),
     }),
-    helper.accessor((space) => space.members.get().length, {
-      id: 'members',
+    helper.accessor('members', {
       ...builder.number(),
     }),
-    helper.accessor(
-      (space) => {
-        const { open, ready } = space.internal.data.metrics ?? {};
-        return open && ready && ready.getTime() - open.getTime();
-      },
-      {
-        id: 'startup',
-        ...builder.number({ size: 80 }),
-      },
-    ),
+    helper.accessor('startup', {
+      ...builder.number({ size: 80 }),
+    }),
     helper.accessor('isOpen', { header: 'open', ...builder.icon() }),
     helper.display({
       id: 'open',
@@ -107,7 +107,7 @@ export const SpaceListPanel: FC = () => {
       maxSize: 60,
     }),
     helper.display({
-      id: 'open',
+      id: 'backup',
       cell: (context) => (
         <Button
           onClick={(event) => {
@@ -122,13 +122,25 @@ export const SpaceListPanel: FC = () => {
     }),
   ];
 
+  const data = spaces.map((space): SpaceData => {
+    const { open, ready } = space.internal.data.metrics ?? {};
+    return {
+      key: space.key,
+      name: space.isOpen ? space.properties.name : undefined,
+      objects: space.db.objects.length,
+      members: space.members.get().length,
+      startup: open && ready ? ready.getTime() - open.getTime() : -1,
+      isOpen: space.isOpen,
+    };
+  });
+
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       <DialogRestoreSpace handleFile={handleImport} />
 
       <Table.Root>
         <Table.Viewport classNames='overflow-anchored'>
-          <Table.Table<Space> columns={columns} data={spaces} onDatumClick={handleSelect} fullWidth />
+          <Table.Table<SpaceData> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
           <AnchoredOverflow.Anchor />
         </Table.Viewport>
       </Table.Root>

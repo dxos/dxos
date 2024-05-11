@@ -18,6 +18,15 @@ message QueryRequest {
   dxos.echo.filter.Filter filter = 2;
 }
 
+/**
+ * Automerge heads.
+ * Used for encoding in Index metadata store.
+ * @see https://automerge.org/automerge-repo/types/_automerge_automerge_repo.Heads.html
+ */ 
+message Heads {
+  repeated string hashes = 1;
+}
+
 message QueryResult {
   string id = 1;
   dxos.keys.PublicKey spaceKey = 2;

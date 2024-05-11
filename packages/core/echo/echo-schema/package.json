@@ -33,6 +33,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
