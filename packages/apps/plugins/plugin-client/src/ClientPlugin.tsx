@@ -32,7 +32,19 @@ export enum ClientAction {
 }
 
 export type ClientPluginOptions = ClientOptions & {
+  /**
+   * Used to track app-specific state in spaces.
+   */
   appKey: string;
+
+  /**
+   * Query string parameter to look for device invitation codes.
+   */
+  deviceInvitationParam?: string;
+
+  /**
+   * Run after the client has been initialized.
+   */
   onClientInitialized?: (client: Client) => Promise<void>;
 };
 
@@ -61,6 +73,7 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
 
 export const ClientPlugin = ({
   appKey,
+  deviceInvitationParam = 'deviceInvitationCode',
   onClientInitialized,
   ...options
 }: ClientPluginOptions): PluginDefinition<
@@ -83,6 +96,7 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
+        // TODO(wittjosiah): Why is this here? Remove?
         await onClientInitialized?.(client);
         client.addSchema(TextV0Type);
 
@@ -97,7 +111,7 @@ export const ClientPlugin = ({
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const deviceInvitationCode = searchParams.get(deviceInvitationParam);
         const identity = client.halo.identity.get();
         if (!identity && !deviceInvitationCode) {
           await client.halo.createIdentity();

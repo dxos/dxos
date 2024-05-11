@@ -1,6 +1,6 @@
 {
   "name": "@dxos/indexing",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,13 +18,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
-    "@dxos/echo-pipeline": "workspace:*",
-    "@dxos/echo-schema": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -32,8 +30,7 @@
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@orama/orama": "^2.0.8",
-    "abstract-level": "^1.0.2",
-    "level": "^8.0.1",
+    "level-transcoder": "^1.0.1",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {

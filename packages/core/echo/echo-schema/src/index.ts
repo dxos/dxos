@@ -12,7 +12,6 @@ export * from './expando';
 export { isDeleted, getSchema, getType, getMeta, getTypeReference, requireTypeReference } from './getter';
 export * from './typed-object-class';
 export * from './types';
-export * from './reference';
 export { ref } from './ref-annotation';
 export { defineHiddenProperty } from './utils';
 

@@ -34,6 +34,7 @@ import {
   ScrollArea,
   toLocalizedString,
   type Label,
+  isLabel,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -58,7 +59,7 @@ import { translationKey } from '../translations';
 
 const sectionActionDimensions = 'p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
-export type StackSectionContent = MosaicDataItem & { title?: string };
+export type StackSectionContent = MosaicDataItem;
 
 export type CollapsedSections = Record<string, boolean>;
 
@@ -92,6 +93,7 @@ export type StackSectionItem = MosaicDataItem & {
   // TODO(wittjosiah): Common type? Factor out?
   metadata?: {
     icon?: FC<IconProps>;
+    label?: ((data: any) => string | undefined) | Label;
     placeholder?: Label;
     viewActions?: (item: StackSectionItem) => StackAction;
   };
@@ -331,8 +333,16 @@ export const SectionTile: MosaicTileComponent<
       )
     : item;
 
-  const placeholder = transformedItem.metadata?.placeholder ?? ['untitled section title', { ns: translationKey }];
-  const title = transformedItem.view?.title ?? toLocalizedString(placeholder, t);
+  // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
+  const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
+
+  const title: string =
+    (typeof transformedItem.metadata?.label === 'function' ? transformedItem.metadata.label(itemObject) : undefined) ??
+    (isLabel(transformedItem.metadata?.label)
+      ? toLocalizedString(transformedItem.metadata!.label as Label, t)
+      : isLabel(transformedItem.metadata?.placeholder)
+        ? toLocalizedString(transformedItem.metadata!.placeholder, t)
+        : t('untitled section title'));
 
   const section = (
     <Section

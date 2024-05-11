@@ -21,6 +21,8 @@ import {
   parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
+  activeIds,
+  firstMainId,
   Surface,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
@@ -62,7 +64,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, getActiveSpace, updateGraphWithSpace, prepareSpaceForMigration } from './util';
+import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 
@@ -75,9 +77,17 @@ export type SpacePluginOptions = {
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: { client: Client; dispatch: IntentDispatcher }) => Promise<void>;
+
+  /**
+   * Query string parameter to look for space invitation codes.
+   */
+  spaceInvitationParam?: string;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({
+  onFirstRun,
+  spaceInvitationParam = 'spaceInvitationCode',
+}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = create<PluginState>({
     awaiting: undefined,
@@ -127,7 +137,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
-      const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+      const spaceInvitationCode = searchParams.get(spaceInvitationParam);
       if (spaceInvitationCode) {
         void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
@@ -143,8 +153,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
           }
 
           await dispatch({
-            action: NavigationAction.ACTIVATE,
-            data: { id: target ?? space.key.toHex() },
+            action: NavigationAction.OPEN,
+            data: { main: [target ?? space.key.toHex()] },
           });
         });
       }
@@ -154,18 +164,22 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
         effect(() => {
           const send = () => {
             const identity = client.halo.identity.get();
-            const space = getActiveSpace(graph, location.active);
-            if (identity && space && location.active) {
-              void space
-                .postMessage('viewing', {
-                  identityKey: identity.identityKey.toHex(),
-                  spaceKey: space.key.toHex(),
-                  added: [location.active],
-                  removed: [location.previous],
-                })
-                .catch((err) => {
-                  log.warn('Failed to broadcast active node for presence', { err: err.message });
-                });
+            if (identity && location.active) {
+              Array.from(activeIds(location.active)).forEach((id) => {
+                const space = getActiveSpace(graph, id);
+                if (space) {
+                  void space
+                    .postMessage('viewing', {
+                      identityKey: identity.identityKey.toHex(),
+                      spaceKey: space.key.toHex(),
+                      added: [id],
+                      removed: location.closed,
+                    })
+                    .catch((err) => {
+                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                    });
+                }
+              });
             }
           };
 
@@ -238,15 +252,17 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
       },
       surface: {
         component: ({ data, role, ...rest }) => {
+          const primary = data.active ?? data.object;
           switch (role) {
+            case 'article':
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
-              return isSpace(data.active) ? (
-                <Surface data={{ active: getSpaceProperty(data.active, Collection.typename) }} role={role} {...rest} />
-              ) : data.active instanceof Collection ? (
-                { node: <CollectionMain collection={data.active} />, disposition: 'fallback' }
-              ) : typeof data.active === 'string' && data.active.length === 64 ? (
-                <MissingObject id={data.active} />
+              return isSpace(primary) ? (
+                <Surface data={{ active: getSpaceProperty(primary, Collection.typename) }} role={role} {...rest} />
+              ) : primary instanceof Collection ? (
+                { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
+              ) : typeof primary === 'string' && primary.length === 64 ? (
+                <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
             case 'tree--empty':
@@ -312,7 +328,8 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 return null;
               }
 
-              const defaultSpace = clientPlugin?.provides.client.spaces.default;
+              const client = clientPlugin?.provides.client;
+              const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
                 ? data.object.state.get() === SpaceState.READY
@@ -398,7 +415,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                       action: SpaceAction.CREATE,
                     },
                     {
-                      action: NavigationAction.ACTIVATE,
+                      action: NavigationAction.OPEN,
                     },
                   ]),
                 properties: {
@@ -417,7 +434,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                       action: SpaceAction.JOIN,
                     },
                     {
-                      action: NavigationAction.ACTIVATE,
+                      action: NavigationAction.OPEN,
                     },
                   ]),
                 properties: {
@@ -505,14 +522,16 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
               }
 
-              return { data: { space, id: space.key.toHex() } };
+              const spaceHex = space.key.toHex();
+              return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
             }
 
             case SpaceAction.JOIN: {
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  return { data: { space, id: space.key.toHex() } };
+                  const spaceHex = space.key.toHex();
+                  return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
                 }
               }
               break;
@@ -522,7 +541,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
               const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
-                const target = navigationPlugin?.provides.location.active;
+                const target = firstMainId(navigationPlugin?.provides.location.active);
                 const result = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
                 return { data: result };
               }
@@ -554,7 +573,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.OPEN: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.open();
+                await space.open();
                 return { data: true };
               }
               break;
@@ -563,7 +582,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
             case SpaceAction.CLOSE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                await space.internal.close();
+                await space.close();
                 return { data: true };
               }
               break;
@@ -629,7 +648,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
               if (intent.data?.target instanceof Collection) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: object };
+                return { data: { ...object }, activeParts: { main: [object.id] } };
               }
 
               const space = intent.data?.target;
@@ -637,10 +656,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                 const collection = getSpaceProperty(space, Collection.typename);
                 if (collection instanceof Collection) {
                   collection.objects.push(object as Identifiable);
-                  return { data: object };
                 } else {
-                  return { data: space.db.add(object) };
+                  space.db.add(object);
                 }
+                return { data: { ...object, activeParts: { main: [object.id] } } };
               }
               break;
             }
@@ -663,6 +682,10 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                             collection: intent.data?.collection,
                           },
                         },
+                      },
+                      {
+                        action: NavigationAction.CLOSE,
+                        data: { activeParts: { main: [object.id] } },
                       },
                     ],
                   ],

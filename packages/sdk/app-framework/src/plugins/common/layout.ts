@@ -36,10 +36,17 @@ export type Toast = z.infer<typeof Toast>;
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
   fullscreen: z.boolean(),
+
   sidebarOpen: z.boolean(),
 
   complementarySidebarOpen: z.boolean(),
-  complementarySidebarContent: z.any().optional().describe('Data to be passed to the complementary sidebar Surface.'),
+  /**
+   * @deprecated
+   */
+  complementarySidebarContent: z
+    .any()
+    .optional()
+    .describe('DEPRECATED. Data to be passed to the complementary sidebar Surface.'),
 
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),

@@ -4,6 +4,7 @@
 
 import {
   createAdmissionCredentials,
+  createCancelDelegatedSpaceInvitationCredential,
   createDelegatedSpaceInvitationCredential,
   getCredentialAssertion,
 } from '@dxos/credentials';
@@ -87,7 +88,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
   async delegate(invitation: Invitation): Promise<PublicKey> {
     invariant(this._spaceKey);
-    const space = await this._spaceManager.spaces.get(this._spaceKey);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
     if (invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY) {
       invariant(invitation.guestKeypair?.publicKey);
@@ -116,6 +117,23 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     invariant(credential.credential);
     await writeMessages(space.inner.controlPipeline.writer, [credential]);
     return credential.credential.credential.id!;
+  }
+
+  async cancelDelegation(invitation: Invitation): Promise<void> {
+    invariant(this._spaceKey);
+    invariant(invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    invariant(space);
+
+    log('cancelling delegated space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
+    const credential = await createCancelDelegatedSpaceInvitationCredential(
+      this._signingContext.credentialSigner,
+      space.key,
+      invitation.delegationCredentialId,
+    );
+
+    invariant(credential.credential);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
   }
 
   checkInvitation(invitation: Partial<Invitation>) {

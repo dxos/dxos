@@ -31,7 +31,6 @@ Options:
 ### [spaceFragmentation]()
 Type: <code>boolean</code>
 
-Options:
-  - proto3_optional = true
+
 
     

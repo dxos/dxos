@@ -50,31 +50,29 @@ const KeyShortcuts = () => {
   );
 };
 
-/**
- * @deprecated
- */
+const spaceMainLayout =
+  'grid gap-y-2 auto-rows-min before:bs-2 before:col-span-5 grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)] md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]';
+
 // TODO(wittjosiah): Remove this and re-use space members section as a deck column.
-export const SpaceMain = ({ space }: { space: Space }) => {
+export const SpaceMain = ({ space, role }: { space: Space; role: 'main' | 'article' }) => {
   // const { graph } = useGraph();
   // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;
   const state = space.state.get();
   const ready = state === SpaceState.READY;
+  const Root = role === 'main' ? Main.Content : 'div';
   return (
     <ClipboardProvider>
-      <Main.Content
-        classNames={[
-          topbarBlockPaddingStart,
-          'min-bs-dvh grid gap-y-2 auto-rows-min before:bs-2 before:col-span-5',
-          'grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)]',
-          'md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]',
-        ]}
-        data-testid='spacePlugin.main'
+      <Root
+        {...(role === 'main'
+          ? { classNames: [topbarBlockPaddingStart, 'min-bs-dvh', spaceMainLayout] }
+          : { role: 'none', className: mx(topbarBlockPaddingStart, 'row-span-2', spaceMainLayout) })}
+        data-testid={`spacePlugin.${role}`}
         data-isready={ready ? 'true' : 'false'}
       >
         {/* {actionsMap && <InFlowSpaceActions actionsMap={actionsMap} />} */}
         {ready && <SpaceMembersSection space={space} />}
         <KeyShortcuts />
-      </Main.Content>
+      </Root>
     </ClipboardProvider>
   );
 };

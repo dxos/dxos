@@ -1,5 +1,5 @@
 # Class `Config`
-<sub>Declared in [packages/sdk/config/dist/types/src/config.d.ts:36]()</sub>
+<sub>Declared in [packages/sdk/config/dist/types/src/config.d.ts:37]()</sub>
 
 
 Global configuration object.

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -58,6 +58,14 @@ export class IndexSchema extends Resource implements Index {
     if (filter.typename === undefined) {
       return Array.from(this._index.values())
         .flatMap((ids) => Array.from(ids))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
+    // TODO(burdon): Handle inversion.
+    if (filter.inverted) {
+      return Array.from(this._index.entries())
+        .filter(([key]) => key !== filter.typename)
+        .flatMap(([, value]) => Array.from(value))
         .map((id) => ({ id, rank: 0 }));
     }
 

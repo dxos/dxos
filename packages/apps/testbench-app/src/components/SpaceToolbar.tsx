@@ -2,36 +2,51 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plus, Trash, UserPlus } from '@phosphor-icons/react';
-import React, { useEffect, useState } from 'react';
+import { ArrowSquareIn, ArrowSquareOut, ClockCounterClockwise, Plus, Trash, UserPlus } from '@phosphor-icons/react';
+import React from 'react';
 
-import { type PublicKey } from '@dxos/client';
-import { useClient } from '@dxos/react-client';
-import { useSpaces } from '@dxos/react-client/echo';
+import { PublicKey } from '@dxos/client';
+import { type Space } from '@dxos/react-client/echo';
 import { Select, Toolbar } from '@dxos/react-ui';
 
 export type SpaceToolbarProps = {
-  spaceKey?: PublicKey;
+  spaces?: Space[];
+  selected?: PublicKey;
   onCreate: () => void;
-  onClose: (space: PublicKey) => void;
+  onImport: (blob: Blob) => void;
   onSelect: (space: PublicKey | undefined) => void;
+  onToggleOpen: (space: PublicKey) => void;
+  onExport: (space: PublicKey) => void;
   onInvite: (space: PublicKey) => void;
 };
 
-export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect, onInvite }: SpaceToolbarProps) => {
-  const client = useClient();
-  const spaces = useSpaces().filter((space) => space !== client.spaces.default);
-  const [spaceKey, setSpaceKey] = useState<PublicKey | undefined>(_spaceKey ?? spaces[0]?.key);
-
-  useEffect(() => {
-    if (_spaceKey) {
-      setSpaceKey(_spaceKey);
-    }
-  }, [_spaceKey]);
+export const SpaceToolbar = ({
+  spaces = [],
+  selected,
+  onCreate,
+  onImport,
+  onSelect,
+  onToggleOpen,
+  onExport,
+  onInvite,
+}: SpaceToolbarProps) => {
+  const space = selected && spaces.find((space) => space.key.equals(selected));
 
   const handleChange = (value: string) => {
-    const key = spaces.find((space) => space.key.toHex() === value)?.key;
-    onSelect(key);
+    onSelect(PublicKey.from(value));
+  };
+
+  const handleImport = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        onImport(file);
+      }
+    };
+    input.click();
   };
 
   return (
@@ -39,8 +54,11 @@ export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect,
       <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
         <Plus />
       </Toolbar.Button>
+      <Toolbar.Button title='Import space.' onClick={handleImport}>
+        <ArrowSquareIn />
+      </Toolbar.Button>
       <div className='flex w-32'>
-        <Select.Root value={spaceKey?.toHex()} onValueChange={handleChange}>
+        <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
           <Select.TriggerButton classNames='is-full' />
           <Select.Portal>
             <Select.Content>
@@ -60,12 +78,15 @@ export const SpaceToolbar = ({ spaceKey: _spaceKey, onCreate, onClose, onSelect,
         <span>Space(s)</span>
       </div>
       <div className='grow' />
-      {spaceKey && (
+      {space && (
         <>
-          <Toolbar.Button onClick={() => onClose(spaceKey)} title='Close space.'>
-            <Trash />
+          <Toolbar.Button onClick={() => onToggleOpen(selected)} title={space.isOpen ? 'Close space.' : 'Open space.'}>
+            {space.isOpen ? <Trash /> : <ClockCounterClockwise />}
           </Toolbar.Button>
-          <Toolbar.Button onClick={() => onInvite(spaceKey)} title='Create space.'>
+          <Toolbar.Button onClick={() => onExport(selected)} title='Download backup.'>
+            <ArrowSquareOut />
+          </Toolbar.Button>
+          <Toolbar.Button onClick={() => onInvite(selected)} title='Create space.'>
             <UserPlus />
           </Toolbar.Button>
         </>

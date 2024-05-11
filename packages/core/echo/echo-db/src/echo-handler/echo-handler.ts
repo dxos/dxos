@@ -5,14 +5,8 @@
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
-import { encodeReference } from '@dxos/echo-pipeline';
-import {
-  Reference,
-  SchemaValidator,
-  DynamicEchoSchema,
-  StoredEchoSchema,
-  defineHiddenProperty,
-} from '@dxos/echo-schema';
+import { encodeReference, Reference } from '@dxos/echo-protocol';
+import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema, defineHiddenProperty } from '@dxos/echo-schema';
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, defaultMap, getDeep } from '@dxos/util';
