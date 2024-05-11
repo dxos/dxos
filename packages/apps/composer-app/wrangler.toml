@@ -24,7 +24,9 @@ d1_databases = [
 ]
 
 #
-# Staging
+# Preview
+# TODO(burdon): Must configure Env variables.
+#  Set-up scripts using `op` (see w3/hub).
 # https://staging.composer.space
 # NOTE: DNS CNAME points staging.composer.space => staging.dxos.pages.dev
 # NOTE: Restricted access set-up for previews (uses CF cookie).
