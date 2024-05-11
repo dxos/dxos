@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
@@ -12,20 +12,25 @@ import {
   resolvePlugin,
   type PluginDefinition,
 } from '@dxos/app-framework';
-import { Button, Dialog, Link } from '@dxos/react-ui';
+import { Button, Dialog } from '@dxos/react-ui';
+
+// @ts-ignore
+import NOTICE from './notice.md?raw';
 
 export const meta = {
   id: 'dxos.org/plugin/beta',
 };
 
-const DEPRECATED_DEPLOYMENT = window.location.origin === 'https://composer.dxos.org';
-const BETA_DEPLOYMENT = window.location.origin === 'https://composer.space';
+const url = new URL(window.location.href);
+const LOCALHOST = url.hostname === 'localhost';
+const DEPRECATED_DEPLOYMENT = url.hostname === 'composer.dxos.org';
+const BETA_DEPLOYMENT = url.hostname === 'composer.space';
 
 const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      if (DEPRECATED_DEPLOYMENT) {
+      if (DEPRECATED_DEPLOYMENT || LOCALHOST) {
         const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
         await dispatch?.({
           action: LayoutAction.SET_LAYOUT,
@@ -67,62 +72,50 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   };
 };
 
-// TODO(burdon): Replace with formatted markdown?
-//  https://www.npmjs.com/package/react-markdown (ESM only).
-//  https://www.npmjs.com/package/simple-markdown
-// const notice = [
-//   //
-//   'Composer is now in Beta and updates will now be published to the new site [https://composer.space](https://composer.space).',
-//   'Composer will remain free to use and we are still 100% committed to building privacy-preserving open source software.',
-//   "However, we're asking Beta users to sign-up to help us build Composer during this next stage of development.",
-//   // TODO(burdon): Why.
-//   // TODO(burdon): How.
-//   // TODO(burdon): Next steps.
-//   // TODO(burdon): Discord or Email us.
-// ];
-
-const SimpleLink = ({ children, href, target }: PropsWithChildren<{ href: string; target?: string }>) => (
-  <Link variant='neutral' href={href} target={target ?? '_blank'}>
-    {children}
-  </Link>
-);
+function link(this: any, d: any) {
+  if (d.type !== 'textDirective') {
+    return false;
+  }
+  this.tag('<a');
+  if (d.attributes && 'href' in d.attributes) {
+    // TODO(burdon): Class.
+    this.tag(
+      ' class="text-sky-600 dark:text-sky-300" target="_blank" rel="noreferrer" href="' +
+        this.encode(d.attributes.href) +
+        '"',
+    );
+  }
+  this.tag('>');
+  this.raw(d.label || '');
+  this.tag('</a>');
+}
 
 const BetaDialog = () => {
+  // TODO(burdon): Magic link Auto enable existing users without signing up?
   const SIGNUP_URL = 'https://dxos.org/composer#beta';
   const handleSignup = () => {
     window.open(SIGNUP_URL, '_blank');
   };
 
-  // TODO(burdon): Magic link Auto enable existing users without signing up?
+  const [html, setHtml] = useState<string>();
+  useEffect(() => {
+    setTimeout(async () => {
+      // https://github.com/micromark/micromark?tab=readme-ov-file#list-of-extensions
+      // https://github.com/micromark/micromark-extension-directive
+      const { micromark } = await import('micromark');
+      const { directive, directiveHtml } = await import('micromark-extension-directive');
+      setHtml(micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] }));
+    });
+  }, []);
+
+  if (!html) {
+    return null;
+  }
+
   return (
     <Dialog.Content classNames='md:max-is-[30rem]'>
       <Dialog.Title>Composer Beta Notice</Dialog.Title>
-      <p className='plb-2'>
-        <span className='font-bold'>Composer is now in Beta</span> and updates to Composer will now be published to the
-        new site
-        <SimpleLink href='https://composer.space'>https://composer.space</SimpleLink>.
-      </p>
-      <p className='plb-2'>
-        Composer will remain free to use and open source and we&apos;re still 100% committed to building preserving
-        applications. However, we&apos;re asking Beta users to sign-up during this next stage of development.
-      </p>
-      <p className='plb-2'>Why we are doing this.</p>
-      <ol className='plb-2'>
-        <li>1. We&apos;re looking to get more detailed feedback from early users.</li>
-        <li>2. We want to communicate (opt-in) with users via email about updates and progress.</li>
-      </ol>
-      <p className='plb-2'>
-        Please
-        <SimpleLink href='https://dxos.org/composer'>click here</SimpleLink> to sign-up for the beta.
-      </p>
-      <p className='plb-2'>
-        To transfer your data, you will be able to transfer your existing data by initiating a
-        <SimpleLink href='https://docs.dxos.org/guide/platform/halo.html#device-invitations'>
-          device invitation
-        </SimpleLink>{' '}
-        from your existing account on composer.dxos.org to move all your data over to{' '}
-        <SimpleLink href='https://composer.space'>composer.space</SimpleLink>.
-      </p>
+      <div role='none' className='plb-2 space-y-3' dangerouslySetInnerHTML={{ __html: html }} />
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>
           <Button>Dismiss</Button>

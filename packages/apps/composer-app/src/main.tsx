@@ -57,7 +57,7 @@ import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
 
-import { meta as BetaMeta } from './BetaPlugin';
+import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
