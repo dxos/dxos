@@ -10,6 +10,13 @@ name = "composer-app"
 compatibility_date = "2024-04-05"
 pages_build_output_dir = "./out/composer"
 
+#
+# Dev
+# http://localhost
+# pnpm nx bundle complser-app
+# wrangler pages dev
+#
+
 vars = { ENVIRONMENT = "dev" }
 
 d1_databases = [
@@ -17,6 +24,7 @@ d1_databases = [
 ]
 
 #
+# Staging
 # https://staging.composer.space
 # NOTE: DNS CNAME points staging.composer.space => staging.dxos.pages.dev
 # NOTE: Restricted access set-up for previews (uses CF cookie).
@@ -34,7 +42,10 @@ d1_databases = [
 ]
 
 #
+# Production
 # https://composer.space
+# Logs:
+# wrangler pages deployment tail --project-name composer
 #
 
 [env.production]
