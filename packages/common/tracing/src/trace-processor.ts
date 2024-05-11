@@ -290,7 +290,6 @@ export class TraceProcessor {
         }
 
         const context = getContextFromEntry(entry) ?? {};
-
         for (const key of Object.keys(context)) {
           context[key] = sanitizeValue(context[key], 0, this);
         }
@@ -395,6 +394,7 @@ export class TracingSpan {
   }
 }
 
+// TODO(burdon): Log cause.
 const serializeError = (err: unknown): SerializedError => {
   if (err instanceof Error) {
     return {
@@ -417,7 +417,6 @@ const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor
     case 'boolean':
     case 'undefined':
       return value;
-      break;
     case 'object':
     case 'function':
       if (value === null) {
