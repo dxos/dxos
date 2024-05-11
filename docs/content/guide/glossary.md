@@ -14,7 +14,7 @@ A protocol, application, and SDK for managing a decentralized user identity for 
 
 ### MESH
 
-The set of peer networking technologies behind ECHO and HALO.
+The set of peer networking technologies behind ECHO and HALO. MESH doesn't create a direct connection between each [device](#Device), but maintains a network so that all devices can reach each other, perhaps through intermediaries.
 
 ### [Space](./echo/#spaces)
 
@@ -40,7 +40,7 @@ A second factor provided to the invited member by the inviter to verify their id
 
 A value identifying a particular [space](#space).
 
-### Identity
+### [Identity](./halo/)
 
 Represents an agent or actor in the system.
 
@@ -67,3 +67,11 @@ A specific point in time when the members of a [space](#space) agree to drop or 
 ### [Shell](./halo/#shell)
 
 The shell implements a few generic UI flows for managing spaces, membership, and identity. The shell can be invoked by the dxos client API and is rendered in an iframe, minimizing impact to the consuming application.
+
+## Client
+
+Each browser tab running DXOS is a client. Thus there are multiple clients per [device](#device).
+
+## Device
+
+A combination of machine and browser which are connected to a DXOS [identity](#identity). So you can have multiple "devices" on the same computer, depending on how many browsers you have.
