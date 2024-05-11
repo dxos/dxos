@@ -6,17 +6,12 @@ import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { createCredentialSignerWithChain, CredentialGenerator } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  AutomergeHost,
-  MetadataStore,
-  type LevelDB,
-  SnapshotStore,
-  SpaceManager,
-  valueEncoding,
-} from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
+import { type LevelDB } from '@dxos/kv-store';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -54,7 +49,9 @@ export const createServiceContext = async ({
   const level = createTestLevel();
   await level.open();
 
-  return new ServiceContext(storage, level, networkManager, signalManager);
+  return new ServiceContext(storage, level, networkManager, signalManager, {
+    invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+  });
 };
 
 export const createPeers = async (numPeers: number) => {
@@ -105,7 +102,7 @@ export type TestPeerProps = {
   snapshotStore?: SnapshotStore;
   signingContext?: SigningContext;
   blobStore?: BlobStore;
-  automergeHost?: AutomergeHost;
+  echoHost?: EchoHost;
   invitationsManager?: InvitationsManager;
 };
 
@@ -178,9 +175,10 @@ export class TestPeer {
     return this._props.signingContext ?? failUndefined();
   }
 
-  get automergeHost() {
-    return (this._props.automergeHost ??= new AutomergeHost({
-      db: this.level.sublevel('automerge'),
+  get echoHost() {
+    return (this._props.echoHost ??= new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     }));
   }
 
@@ -191,7 +189,7 @@ export class TestPeer {
       this.keyring,
       this.identity,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
       this.invitationsManager,
     ));
   }

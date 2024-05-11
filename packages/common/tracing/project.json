@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "tracing",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/tracing/src",
   "projectType": "library",
   "targets": {

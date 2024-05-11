@@ -177,7 +177,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   className={mx(
                     'flex items-start rounded',
                     levelPadding(level),
-                    hoverableControls,
+                    level > 0 && hoverableControls,
                     hoverableFocusedWithinControls,
                     hoverableDescriptionIcons,
                     level < 1 && topLevelCollapsibleSpacing,

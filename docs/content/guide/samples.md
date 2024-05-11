@@ -28,5 +28,4 @@ A simple todo list app build with `dxos`.
 A fork of the [TodoMVC](https://todomvc.com/) sample running on top of `dxos`
 
 * Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/todomvc)
-* Run [TodoMVC](http://todomvc.kube.dxos.org) on `dxos.org`
   ![todomvc-dxos](../assets/images/todomvc.png)

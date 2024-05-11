@@ -9,32 +9,17 @@ Type: object
 
 
 ### [`Expando`]()
-Type: ExpandoConstructor
+Type: Schema&lt;[Expando](/api/@dxos/client/interfaces/Expando), [Expando](/api/@dxos/client/interfaces/Expando), never&gt; & object
 
 
 
-### [`TypedObject`]()
-Type: TypedObjectConstructor
-
-
-
-### [`base`]()
-Type: unique symbol
-
-
-
-### [`debug`]()
-Type: unique symbol
+### [`Properties`]()
+Type: Schema&lt;object, object, never&gt;
 
 
 
 ### [`defaultKey`]()
 Type: "__DEFAULT__"
-
-
-
-### [`subscribe`]()
-Type: unique symbol
 
 
 
@@ -48,7 +33,7 @@ Type: string
 
 
 
-### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/29a91026f/packages/sdk/client/src/testing/test-builder.ts#L33)
+### [`testConfigWithLocalSignal`](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/test-builder.ts#L34)
 Type: [Config](/api/@dxos/react-client/classes/Config)
 
 

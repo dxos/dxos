@@ -1,6 +1,6 @@
 {
   "name": "@dxos/testbench-app",
-  "version": "0.4.9",
+  "version": "0.5.0",
   "private": true,
   "description": "DXOS Testing",
   "homepage": "https://dxos.org",
@@ -12,6 +12,7 @@
     "@baselime/node-opentelemetry": "^0.5.8",
     "@baselime/react-rum": "^0.2.9",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-generator": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "react-metagraph",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/react-metagraph/src",
   "projectType": "library",
   "targets": {

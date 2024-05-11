@@ -1,5 +1,5 @@
 # Interface `SubscriptionHandle`
-> Declared in [`packages/core/echo/echo-schema/dist/types/src/object/subscription.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/types/src/query/subscription.d.ts`]()
 
 
 ## Properties

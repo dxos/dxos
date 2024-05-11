@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "teleport-extension-automerge-replicator",
+  "tags": [
+    "scope:mesh"
+  ],
   "sourceRoot": "packages/core/mesh/teleport-extension-automerge-replicator/src",
   "projectType": "library",
   "targets": {

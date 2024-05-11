@@ -1,7 +1,6 @@
 {
   "name": "@dxos/eslint-plugin-rules",
-  "version": "0.4.9",
-  "private": true,
+  "version": "0.5.0",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

@@ -6,6 +6,4 @@ export * from './indexer';
 export * from './index-metadata-store';
 export * from './index-schema';
 export * from './index-store';
-export * from './query-service';
-export * from './storage-callbacks';
 export * from './types';

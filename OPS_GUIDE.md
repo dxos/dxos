@@ -73,4 +73,4 @@ No system collects all client side logs entirely. Only the errors, traces, and r
 
 ## Diagram
 
-![Diagram](./docs/docs/ops/operations-diagram.drawio.svg)
+![Diagram](./docs/content/ops/operations-diagram.drawio.svg)

@@ -1,5 +1,5 @@
 # Type `Selection`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/object/subscription.d.ts:1]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/subscription.d.ts:1]()</sub>
 
 
 

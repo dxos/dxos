@@ -6,14 +6,10 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import {
-  type MetadataStore,
-  type Space,
-  createMappedFeedWriter,
-  type AutomergeHost,
-  type SpaceDoc,
-} from '@dxos/echo-pipeline';
+import { type EchoHost } from '@dxos/echo-db';
+import { type MetadataStore, type Space, createMappedFeedWriter } from '@dxos/echo-pipeline';
 import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -66,10 +62,10 @@ export type DataSpaceParams = {
   presence: Presence;
   keyring: Keyring;
   feedStore: FeedStore<FeedMessage>;
+  echoHost: EchoHost;
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
-  automergeHost: AutomergeHost;
 };
 
 export type CreateEpochOptions = {
@@ -92,7 +88,7 @@ export class DataSpace {
   private readonly _notarizationPlugin = new NotarizationPlugin();
   private readonly _callbacks: DataSpaceCallbacks;
   private readonly _cache?: SpaceCache = undefined;
-  private readonly _automergeHost: AutomergeHost;
+  private readonly _echoHost: EchoHost;
 
   // TODO(dmaretskyi): Move into Space?
   private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
@@ -120,7 +116,7 @@ export class DataSpace {
     this._metadataStore = params.metadataStore;
     this._signingContext = params.signingContext;
     this._callbacks = params.callbacks ?? {};
-    this._automergeHost = params.automergeHost;
+    this._echoHost = params.echoHost;
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () =>
@@ -363,8 +359,8 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
-    this._automergeHost._requestedDocs.add(rootUrl as any);
-    const handle = this._automergeHost.repo.find(rootUrl as any);
+    this._echoHost.replicateDocument(rootUrl);
+    const handle = this._echoHost.automergeRepo.find(rootUrl as any);
 
     queueMicrotask(async () => {
       try {
@@ -419,7 +415,7 @@ export class DataSpace {
         break;
       case CreateEpochRequest.Migration.INIT_AUTOMERGE:
         {
-          const document = this._automergeHost.repo.create();
+          const document = this._echoHost.automergeRepo.create();
           // TODO(dmaretskyi): Unify epoch construction.
           epoch = {
             previousId: this._automergeSpaceState.lastEpoch?.id,
@@ -432,9 +428,9 @@ export class DataSpace {
       case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY:
         {
           const currentRootUrl = this._automergeSpaceState.rootUrl;
-          const rootHandle = this._automergeHost.repo.find(currentRootUrl as any);
+          const rootHandle = this._echoHost.automergeRepo.find(currentRootUrl as any);
           await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
-          const newRoot = this._automergeHost.repo.create(rootHandle.docSync());
+          const newRoot = this._echoHost.automergeRepo.create(rootHandle.docSync());
           invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
           // TODO(dmaretskyi): Unify epoch construction.
           epoch = {
@@ -450,7 +446,7 @@ export class DataSpace {
           log.info('Fragmenting');
 
           const currentRootUrl = this._automergeSpaceState.rootUrl;
-          const rootHandle = this._automergeHost.repo.find<SpaceDoc>(currentRootUrl as any);
+          const rootHandle = this._echoHost.automergeRepo.find<SpaceDoc>(currentRootUrl as any);
           await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
 
           // Find properties object.
@@ -461,11 +457,11 @@ export class DataSpace {
 
           // Create a new space doc with the properties object.
           const newSpaceDoc: SpaceDoc = { ...rootHandle.docSync(), objects: Object.fromEntries([properties]) };
-          const newRoot = this._automergeHost.repo.create(newSpaceDoc);
+          const newRoot = this._echoHost.automergeRepo.create(newSpaceDoc);
           invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
 
           // Create new automerge documents for all objects.
-          const docLoader = new AutomergeDocumentLoaderImpl(this.key, this._automergeHost.repo);
+          const docLoader = new AutomergeDocumentLoaderImpl(this.key, this._echoHost.automergeRepo);
           await docLoader.loadSpaceRootDocHandle(this._ctx, { rootUrl: newRoot.url });
 
           otherObjects.forEach(([key, value]) => {

@@ -20,7 +20,7 @@ const Section: FC<PropsWithChildren & { className?: string }> = ({ children, cla
 export type ColumnSettingsFormProps = {
   column: ColumnProps;
   tableDef: TableDef;
-  tableDefs: TableDef[];
+  tablesToReference: TableDef[];
   onUpdate?: ((id: string, column: ColumnProps) => void) | undefined;
   onDelete?: ((id: string) => void) | undefined;
   onClose?: () => void;
@@ -29,7 +29,7 @@ export type ColumnSettingsFormProps = {
 export const ColumnSettingsForm = ({
   column,
   tableDef,
-  tableDefs,
+  tablesToReference,
   onUpdate,
   onDelete,
   onClose,
@@ -79,6 +79,11 @@ export const ColumnSettingsForm = ({
       refProp,
       digits: safeParseInt(digits),
     });
+    onClose?.();
+  };
+
+  const handleDelete = () => {
+    onDelete?.(column.id);
     onClose?.();
   };
 
@@ -150,7 +155,7 @@ export const ColumnSettingsForm = ({
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    {tableDefs
+                    {tablesToReference
                       .filter((t) => t.id !== tableDef.id)
                       .map(({ id, name }) => (
                         <Select.Option key={id} value={id}>
@@ -174,7 +179,7 @@ export const ColumnSettingsForm = ({
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {tableDefs
+                      {tablesToReference
                         .find((tableDef) => tableDef.id === formState.refTable)
                         ?.columns.map(({ id, label }) => (
                           <Select.Option key={id} value={id}>
@@ -203,7 +208,7 @@ export const ColumnSettingsForm = ({
           <div className='grow' />
           <X className={getSize(5)} />
         </Button>
-        <Button classNames='is-full flex gap-2' onClick={() => onDelete?.(column.id)}>
+        <Button classNames='is-full flex gap-2' onClick={handleDelete}>
           <span>{t('delete label')}</span>
           <div className='grow' />
           <Trash className={getSize(5)} />

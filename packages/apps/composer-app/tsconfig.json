@@ -16,6 +16,7 @@
   },
   "exclude": [
     "demos/*",
+    "src/functions/*",
     "vite.config.ts"
   ],
   "include": [
@@ -104,6 +105,9 @@
     },
     {
       "path": "../plugins/plugin-debug"
+    },
+    {
+      "path": "../plugins/plugin-deck"
     },
     {
       "path": "../plugins/plugin-explorer"

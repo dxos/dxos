@@ -73,8 +73,8 @@ export const SpaceManager = (props: SpaceManagerProps) => {
       icon: UsersThree,
       onClick: useCallback(() => {
         const invitation = space.share?.({
-          type: Invitation.Type.INTERACTIVE,
-          authMethod: Invitation.AuthMethod.NONE,
+          type: Invitation.Type.DELEGATED,
+          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
           multiUse: true,
           target,
         });
@@ -83,22 +83,6 @@ export const SpaceManager = (props: SpaceManagerProps) => {
         }
       }, [space]),
     },
-    // inviteNonPersistent: {
-    //   label: 'Invite one (nonpersistent)',
-    //   description: 'Only one user may join. Invitation does not resume if client is restarted.',
-    //   icon: UserPlus,
-    //   onClick: useCallback(() => {
-    //     const invitation = space.share?.({
-    //       type: Invitation.Type.INTERACTIVE,
-    //       authMethod: Invitation.AuthMethod.SHARED_SECRET,
-    //       persistent: false,
-    //       target,
-    //     });
-    //     if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
-    //       invitation.subscribe(onInvitationEvent);
-    //     }
-    //   }, [space]),
-    // },
   };
 
   return <SpaceManagerImpl {...props} invitations={invitations} inviteActions={inviteActions} />;

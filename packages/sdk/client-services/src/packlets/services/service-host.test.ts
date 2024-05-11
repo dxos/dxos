@@ -29,6 +29,12 @@ describe('ClientServicesHost', () => {
     isNode() && rmSync(dataRoot, { recursive: true, force: true });
   });
 
+  test('open and close', async () => {
+    const host = createServiceHost(new Config(), new MemorySignalManagerContext());
+    await host.open(new Context());
+    await host.close();
+  });
+
   test('queryCredentials', async () => {
     const host = createServiceHost(new Config(), new MemorySignalManagerContext());
     await host.open(new Context());

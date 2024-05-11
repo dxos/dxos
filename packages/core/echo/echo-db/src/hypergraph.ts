@@ -4,7 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type Reference } from '@dxos/echo-protocol';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -132,6 +133,16 @@ export class Hypergraph {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
       context.addQuerySource(provider.create());
+    }
+  }
+
+  /**
+   * Does not remove the provider from active query contexts.
+   */
+  unregisterQuerySourceProvider(provider: QuerySourceProvider) {
+    const index = this._querySourceProviders.indexOf(provider);
+    if (index !== -1) {
+      this._querySourceProviders.splice(index, 1);
     }
   }
 

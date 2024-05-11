@@ -5,7 +5,8 @@
 import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
-import { Reference, DynamicEchoSchema, requireTypeReference } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { DynamicEchoSchema, requireTypeReference } from '@dxos/echo-schema';
 import { getSchema, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -146,6 +147,7 @@ export class Filter<T extends {} = any> {
   // TODO(burdon): Make plain immutable object (unless generics are important).
   // TODO(burdon): Split into protobuf serializable and non-serializable (operator) predicates.
 
+  // TODO(dmaretskyi): Support expando.
   public readonly type?: Reference;
   public readonly properties?: Record<string, any>;
   public readonly text?: string;
@@ -191,7 +193,8 @@ export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefine
     return false;
   }
   const result = filterMatchInner(filter, core);
-  return filter.not ? !result : result;
+  // don't apply filter negation to deleted object handling, as it's part of filter options
+  return filter.not && !core.isDeleted() ? !result : result;
 };
 
 const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {

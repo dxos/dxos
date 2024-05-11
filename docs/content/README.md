@@ -90,4 +90,4 @@ const TaskList = ({ spaceKey, id }: { spaceKey: PublicKey; id: number }) => {
 
 The highlighted line above shows how easy it is to track state with ECHO.
 
-Simply mutate objects received from ECHO as you would any regular JavaScript object, and the changes will propagate to all connected peers automatically. Read more about [ECHO](/guide/echo/), [mutations in TypeScript](/guide/typescript/mutations/), and [React](/guide/react/mutations/).
+Simply mutate objects received from ECHO as you would any regular JavaScript object, and the changes will propagate to all connected peers automatically. Read more about [ECHO](/guide/), [mutations in TypeScript](/guide/typescript/mutations/), and [React](/guide/react/mutations/).

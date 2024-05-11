@@ -32,7 +32,7 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { IndexKind, type RuntimeSchemaRegistry } from '../echo';
+import { type RuntimeSchemaRegistry } from '../echo';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -364,6 +364,7 @@ export class Client {
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
     });
     await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -413,8 +414,6 @@ export class Client {
     if (err) {
       throw err;
     }
-
-    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
 
     await this._runtime.open();
 

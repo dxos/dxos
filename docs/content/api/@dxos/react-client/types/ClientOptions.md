@@ -1,5 +1,5 @@
 # Type `ClientOptions`
-<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:16]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/client/client.d.ts:14]()</sub>
 
 
 This options object configures the DXOS Client.
@@ -33,12 +33,6 @@ Custom services provider.
 Type: <code>string</code>
 
 Shell path.
-
-
-### [types]()
-Type: <code>[TypeCollection](/api/@dxos/react-client/classes/TypeCollection)</code>
-
-Types.
 
 
 

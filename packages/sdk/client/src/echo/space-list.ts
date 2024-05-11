@@ -30,7 +30,6 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
-import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
@@ -165,9 +164,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
 
-      this._echoClient.graph.registerQuerySourceProvider(
-        new IndexQuerySourceProvider({ echo: this, service: this._serviceProvider.services.QueryService! }),
-      );
       subscription.unsubscribe();
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
