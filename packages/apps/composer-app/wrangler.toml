@@ -10,19 +10,45 @@ name = "composer-app"
 compatibility_date = "2024-04-05"
 pages_build_output_dir = "./out/composer"
 
+#
+# Dev
+# http://localhost:8788
+# pnpm nx bundle composer-app
+# wrangler pages dev [--persist-to=/tmp/dxos/composer-app]
+#
+
 vars = { ENVIRONMENT = "dev" }
 
 d1_databases = [
   { binding = "DB", database_name = "dev-users", database_id = "756b796d-02e5-45e7-9067-12144a2124b2" }
 ]
 
+#
+# Preview
+# TODO(burdon): Configure CF ENV variables.
+#  Set-up scripts using `op` (see w3/hub).
+# https://staging.composer.space
+# NOTE: DNS CNAME points staging.composer.space => staging.dxos.pages.dev
+# NOTE: Restricted access set-up for previews (uses CF cookie).
+# https://developers.cloudflare.com/pages/configuration/preview-deployments/#customize-preview-deployments-access
+# Trigger build via (expect approx. 10m).
+# curl -X POST https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/bdcb157c-79a8-4b39-aeb3-440bc2aa0741
+#
+
 [env.preview]
 
-vars = { ENVIRONMENT = "staging" }
+vars = { ENVIRONMENT = "preview" }
 
 d1_databases = [
   { binding = "DB", database_name = "prod-users", database_id = "f48ca977-f25f-49d2-a203-5fc0cca01f55" }
 ]
+
+#
+# Production
+# https://composer.space
+# Logs:
+# wrangler pages deployment tail --project-name composer
+#
 
 [env.production]
 
