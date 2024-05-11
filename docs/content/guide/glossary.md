@@ -10,15 +10,11 @@ A second factor provided to the invited member by the inviter to verify their id
 
 ### Client
 
-Each browser tab running DXOS is a client. Thus there are multiple clients per [device](#device).
+A running instance of DXOS such a command line program or a browser tab. There can be multiple clients per [device](#device).
 
 ### Device
 
-A running instance of the DXOS `Client` represents a device on the network. Every browser profile acts as a device. A CLI application is it's own device. HALO replicates identity and credential information across devices securely and automatically and supports device revocation.
-
-### Device
-
-A combination of machine and browser which are connected to a DXOS [identity](#identity). So you can have multiple "devices" on the same computer, depending on how many browsers you have.
+A collection of [Clients](#client) connected to a DXOS [identity](#identity). Every browser profile is a device, with the tabs running DXOS as its clients. Thus there can be multiple "devices" per computer.
 
 ### [ECHO](./echo/)
 
