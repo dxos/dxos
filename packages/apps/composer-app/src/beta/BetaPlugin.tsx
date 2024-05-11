@@ -22,7 +22,7 @@ export const meta = {
 };
 
 const url = new URL(window.location.href);
-const LOCALHOST = url.hostname === 'localhost';
+// const LOCALHOST = url.hostname === 'localhost';
 const DEPRECATED_DEPLOYMENT = url.hostname === 'composer.dxos.org';
 const BETA_DEPLOYMENT = url.hostname === 'composer.space';
 
@@ -30,7 +30,7 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   return {
     meta,
     ready: async (plugins) => {
-      if (DEPRECATED_DEPLOYMENT || LOCALHOST) {
+      if (DEPRECATED_DEPLOYMENT) {
         const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
         await dispatch?.({
           action: LayoutAction.SET_LAYOUT,
