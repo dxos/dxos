@@ -180,7 +180,8 @@ const main = async () => {
         onClientInitialized: async (client) => {
           const url = new URL(window.location.href);
           // Match CF only.
-          // TODO(burdon): Factor out const.
+          // TODO(burdon): Check for Server: cloudflare header.
+          //  https://developers.cloudflare.com/pages/configuration/serving-pages
           if (!url.origin.endsWith('composer.space')) {
             return;
           }
