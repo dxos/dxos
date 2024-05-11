@@ -5,7 +5,18 @@
 import React, { useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
+<<<<<<< Updated upstream
 import { type LayoutRequest, ShellDisplay, ShellLayout, type ShellRuntime, useClient } from '@dxos/react-client';
+=======
+import {
+  type InvitationUrlRequest,
+  type LayoutRequest,
+  ShellDisplay,
+  ShellLayout,
+  type ShellRuntime,
+  useClient,
+} from '@dxos/react-client';
+>>>>>>> Stashed changes
 import { useSpace } from '@dxos/react-client/echo';
 
 import { IdentityDialog } from '../IdentityDialog';
