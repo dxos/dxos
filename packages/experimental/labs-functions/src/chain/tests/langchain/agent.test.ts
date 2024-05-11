@@ -26,6 +26,7 @@ import { describe, test } from '@dxos/test';
 import { getConfig, getKey } from '../../../util';
 
 // TODO(burdon): Bug requires conversion.
+// eslint-disable-next-line unused-imports/no-unused-vars
 const toChatHistory = async (memory: BufferMemory): Promise<string[]> => {
   const messages = await memory.chatHistory.getMessages();
 

@@ -54,11 +54,11 @@ describe.only('graph', () => {
   // TODO(burdon): Effects.
   // TODO(burdon): Trigger recalculation; signals?
 
-  test('cell', async () => {
-    // type Props = {};
-    // const retriever = async ({ text }) => 'dxos is a decentralized platform';
-    // LLM({ messages: [System Message, User Message, retriever(User Message) }].
-  });
+  // test('cell', async () => {
+  // type Props = {};
+  // const retriever = async ({ text }) => 'dxos is a decentralized platform';
+  // LLM({ messages: [System Message, User Message, retriever(User Message) }].
+  // });
 });
 
 /**
