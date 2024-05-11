@@ -80,6 +80,7 @@ type PackageJson = {
   version: string;
   type?: string;
   private: boolean;
+  exports?: string | Record<string, string | Record<string, string>>;
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   peerDependencies: Record<string, string>;
@@ -99,6 +100,12 @@ type ToolboxOptions = {
 
 const defaultOptions = {
   verbose: false,
+};
+
+type Diagnostic = {
+  code: string;
+  message: string;
+  path: string;
 };
 
 class Toolbox {
@@ -439,6 +446,7 @@ class Toolbox {
   }
 
   async getModuleStats() {
+    const diagnostics: Diagnostic[] = [];
     const fieldsForStats = ['exports', 'main', 'types', 'typesVersions', 'browser'] as const;
     const byField = fieldsForStats.reduce(
       (acc, field) => {
@@ -452,6 +460,7 @@ class Toolbox {
       module: [] as string[],
       unspecified: [] as string[],
     };
+    const byExportCondition: Record<string, string[]> = {};
 
     for (const project of this.projects) {
       const packageJson = await loadJson<PackageJson>(join(project.path, 'package.json'));
@@ -472,9 +481,22 @@ class Toolbox {
         default:
           byModuleType.unspecified.push(project.name);
       }
+
+      if (typeof packageJson.exports === 'object') {
+        for (const [key, value] of Object.entries(packageJson.exports)) {
+          if (typeof value === 'object') {
+            for (const key of Object.keys(value)) {
+              byExportCondition[key] ??= [];
+              if (!byExportCondition[key].includes(project.name)) {
+                byExportCondition[key].push(project.name);
+              }
+            }
+          }
+        }
+      }
     }
 
-    return { byField, byModuleType };
+    return { byField, byModuleType, byExportCondition, diagnostics };
   }
 
   _getProjectByPackageName(name: string): Project {
