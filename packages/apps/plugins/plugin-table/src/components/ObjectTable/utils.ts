@@ -51,6 +51,7 @@ export const createColumns = (
   onColumnDelete: (id: string) => void,
   onRowUpdate: (object: any, prop: string, value: any) => void,
   onRowDelete: (object: any) => void,
+  onColumnReorder: (columnId: string, direction: 'right' | 'left') => void,
 ) => {
   const tableDefs: TableDef[] = tables
     .filter((table) => table.schema)
@@ -66,6 +67,25 @@ export const createColumns = (
     return [];
   }
 
+  const props = table.props;
+  const getColumnIndex = (id: string) => props.findIndex((prop) => prop.id === id);
+
+  // Order table def columns by their position in table.props
+  tableDef.columns.sort((a, b) => {
+    try {
+      const aIdx = getColumnIndex(a.id!);
+      const bIdx = getColumnIndex(b.id!);
+
+      if (aIdx === -1 || bIdx === -1) {
+        return 0;
+      }
+
+      return aIdx - bIdx;
+    } catch {
+      return 0;
+    }
+  });
+
   return createColumnsFromTableDef({
     tableDef,
     tablesToReference: tableDefs,
@@ -74,5 +94,6 @@ export const createColumns = (
     onColumnDelete,
     onRowUpdate,
     onRowDelete,
+    onColumnReorder,
   });
 };
