@@ -42,11 +42,12 @@ const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   // TODO(nf): Dynamically discover based on runtime config.
   let agentHostingProviderClient: AgentHostingProviderClient | null = null;
   switch (agentHostingConfig.type) {
-    case 'LOCAL_TESTING':
-      log.info('using FakeAgentHostingProvider');
+    case 'LOCAL_TESTING': {
+      log('using FakeAgentHostingProvider');
       return new FakeAgentHostingProvider(config, halo);
+    }
 
-    case 'AGENTHOSTING_API':
+    case 'AGENTHOSTING_API': {
       agentHostingProviderClient = new AgentManagerClient(config, halo);
       if (agentHostingProviderClient.init()) {
         return agentHostingProviderClient;
@@ -54,8 +55,11 @@ const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
         // Not authorized or error initializing
         return null;
       }
-    default:
+    }
+
+    default: {
       log.error('Unknown agent hosting provider type: ' + agentHostingConfig.type);
       return null;
+    }
   }
 };

@@ -111,10 +111,6 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 plugin: SKETCH_PLUGIN,
                 action: SketchAction.CREATE,
               },
-              // TODO(burdon): Navigate directly (but return result to caller).
-              // {
-              //   action: NavigationAction.ACTIVATE,
-              // },
             ],
           },
         ],
@@ -125,13 +121,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case 'main':
               return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
             case 'section':
-              // TODO(burdon): Hide tools unless selected.
               return data.object instanceof SketchType ? (
                 <SketchComponent sketch={data.object} autoZoom={true} className={'h-[400px]'} />
               ) : null;
             case 'slide':
               return data.slide instanceof SketchType ? (
-                <SketchComponent sketch={data.slide} readonly={true} autoZoom={true} maxZoom={1.5} className={'p-16'} />
+                <SketchComponent sketch={data.slide} readonly autoZoom={true} maxZoom={1.5} className={'p-16'} />
               ) : null;
             default:
               return null;
