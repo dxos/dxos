@@ -112,6 +112,18 @@ export class Observability {
     this.setTag('mode', this._mode);
   }
 
+  get mode() {
+    return this._mode;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  get enabled() {
+    return this._mode !== 'disabled';
+  }
+
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
       const mergedSecrets = {
@@ -160,18 +172,6 @@ export class Observability {
 
   setMode(mode: Mode) {
     this._mode = mode;
-  }
-
-  get mode() {
-    return this._mode;
-  }
-
-  get group() {
-    return this._group;
-  }
-
-  get enabled() {
-    return this._mode !== 'disabled';
   }
 
   //
@@ -382,6 +382,7 @@ export class Observability {
         this.setTag('runtime', platform.runtime);
       }
     }
+
     scheduleTaskInterval(
       this._ctx,
       async () => {

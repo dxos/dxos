@@ -773,7 +773,13 @@ export const removeList = (type: List): StateCommand => {
       return false;
     }
 
-    dispatch(state.update({ changes, userEvent: 'format.list.remove', scrollIntoView: true }));
+    dispatch(
+      state.update({
+        changes,
+        userEvent: 'format.list.remove',
+        scrollIntoView: true,
+      }),
+    );
     return true;
   };
 };
@@ -945,7 +951,15 @@ export const addCodeblock: StateCommand = (target) => {
       { from: to, insert: '\n' + ' '.repeat(column) + '```' },
     ];
   });
-  dispatch(state.update({ changes, userEvent: 'format.codeblock.add', scrollIntoView: true }));
+
+  dispatch(
+    state.update({
+      changes,
+      userEvent: 'format.codeblock.add',
+      scrollIntoView: true,
+    }),
+  );
+
   return true;
 };
 
