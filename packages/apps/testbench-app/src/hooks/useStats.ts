@@ -48,9 +48,7 @@ export const useStats = (): [Stats, () => void] => {
   useEffect(() => {
     setTimeout(async () => {
       // client.experimental.graph;
-      // TODO(burdon): Polling?
       const diagnostics = await client.diagnostics();
-      // const q = client.services.services.QueryService;
       // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
       const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
       const queries: QueryInfo[] = Object.values(resources)
