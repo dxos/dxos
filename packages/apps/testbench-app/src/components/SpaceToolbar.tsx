@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowSquareIn, ClockCounterClockwise, DownloadSimple, Plus, Trash, UserPlus } from '@phosphor-icons/react';
+import { ClockCounterClockwise, DownloadSimple, Plus, Trash, UploadSimple, UserPlus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { PublicKey } from '@dxos/client';
@@ -54,9 +54,6 @@ export const SpaceToolbar = ({
       <Toolbar.Button title='Create space.' onClick={() => onCreate()}>
         <Plus />
       </Toolbar.Button>
-      <Toolbar.Button title='Import space.' onClick={handleImport}>
-        <ArrowSquareIn />
-      </Toolbar.Button>
       <div className='flex w-32'>
         <Select.Root value={selected?.toHex()} onValueChange={handleChange}>
           <Select.TriggerButton classNames='is-full' />
@@ -82,6 +79,9 @@ export const SpaceToolbar = ({
         <>
           <Toolbar.Button onClick={() => onToggleOpen(selected)} title={space.isOpen ? 'Close space.' : 'Open space.'}>
             {space.isOpen ? <Trash /> : <ClockCounterClockwise />}
+          </Toolbar.Button>
+          <Toolbar.Button onClick={handleImport} title='Import space.'>
+            <UploadSimple />
           </Toolbar.Button>
           <Toolbar.Button onClick={() => onExport(selected)} title='Download backup.'>
             <DownloadSimple />
