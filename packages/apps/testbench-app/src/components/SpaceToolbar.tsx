@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowSquareIn, ArrowSquareOut, ClockCounterClockwise, Plus, Trash, UserPlus } from '@phosphor-icons/react';
+import { ArrowSquareIn, ClockCounterClockwise, DownloadSimple, Plus, Trash, UserPlus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { PublicKey } from '@dxos/client';
@@ -84,9 +84,9 @@ export const SpaceToolbar = ({
             {space.isOpen ? <Trash /> : <ClockCounterClockwise />}
           </Toolbar.Button>
           <Toolbar.Button onClick={() => onExport(selected)} title='Download backup.'>
-            <ArrowSquareOut />
+            <DownloadSimple />
           </Toolbar.Button>
-          <Toolbar.Button onClick={() => onInvite(selected)} title='Create space.'>
+          <Toolbar.Button onClick={() => onInvite(selected)} title='Share.' variant='primary'>
             <UserPlus />
           </Toolbar.Button>
         </>
