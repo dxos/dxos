@@ -41,9 +41,10 @@ export type Stats = {
   memory?: Memory;
 };
 
-export const useStats = (): Stats => {
+export const useStats = (): [Stats, () => void] => {
   const client = useClient();
   const [stats, setStats] = useState<Stats>({});
+  const [update, forceUpdate] = useState({});
   useEffect(() => {
     setTimeout(async () => {
       // client.experimental.graph;
@@ -84,7 +85,7 @@ export const useStats = (): Stats => {
         queries,
       });
     });
-  }, []);
+  }, [update]);
 
-  return stats;
+  return [stats, () => forceUpdate({})];
 };

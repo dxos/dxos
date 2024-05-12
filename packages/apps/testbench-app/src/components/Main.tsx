@@ -29,7 +29,7 @@ export const Main = () => {
   // TODO(wittjosiah): Why filter out the default space?
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
-  const stats = useStats();
+  const [stats, refreshStats] = useStats();
 
   useEffect(() => {
     if (!space && spaces.length) {
@@ -226,7 +226,7 @@ export const Main = () => {
         <div className='grow' />
         <StatusBar flushing={flushing} />
         <div className='z-10 absolute right-0 bottom-[32px] w-[320px] border-l border-t'>
-          <StatsPanel stats={stats} />
+          <StatsPanel stats={stats} onRefresh={refreshStats} />
         </div>
       </div>
     </div>
