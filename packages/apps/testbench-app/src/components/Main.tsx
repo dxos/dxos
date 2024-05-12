@@ -225,7 +225,7 @@ export const Main = () => {
         <div>{objects.length} objects</div>
         <div className='grow' />
         <StatusBar flushing={flushing} />
-        <div className='z-10 absolute right-0 bottom-[32px] w-[300px] border-l border-t'>
+        <div className='z-10 absolute right-0 bottom-[32px] w-[320px] border-l border-t'>
           <StatsPanel stats={stats} />
         </div>
       </div>

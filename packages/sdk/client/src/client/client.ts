@@ -232,6 +232,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
+  // TODO(burdon): Type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);

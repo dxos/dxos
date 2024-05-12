@@ -34,8 +34,13 @@ export const StatsPanel = ({ stats }: QueryPanelProps) => {
         <tbody>
           {stats?.queries?.map((query, i) => (
             <tr key={i}>
-              <td className='px-2 py-1 text-right'>{query.objects}</td>
-              <td className='px-2 py-1 w-[80px] text-right'>{query.duration}</td>
+              <td className='px-2 py-1 text-right' title={JSON.stringify(query.filter, undefined, 2)}>
+                {/* TODO(burdon): Why itemId? */}
+                {query.filter.type?.itemId}
+              </td>
+              <td className='px-2 py-1 w-[80px] text-right'>
+                {Math.floor(query.metrics.executionTime).toLocaleString()}
+              </td>
             </tr>
           ))}
         </tbody>

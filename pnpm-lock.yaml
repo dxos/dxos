@@ -3966,6 +3966,9 @@ importers:
       classnames:
         specifier: ^2.3.2
         version: 2.3.2
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
       partysocket:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3997,6 +4000,9 @@ importers:
       '@sentry/vite-plugin':
         specifier: ^2.14.0
         version: 2.14.0
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -24613,7 +24619,7 @@ packages:
   /@types/lodash.get@4.4.7:
     resolution: {integrity: sha512-af34Mj+KdDeuzsJBxc/XeTtOx0SZHZNLd+hdrn+PcKGQs0EG2TJTzQAOTCZTgDJCArahlCzLWSy8c2w59JRz7Q==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.1
     dev: true
 
   /@types/lodash.isequal@4.5.6:

@@ -5,23 +5,23 @@
 import { type Event } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
-import { type FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
-import {
-  type DevicesService,
-  type IdentityService,
-  type InvitationsService,
-  type LoggingService,
-  type NetworkService,
-  type SpacesService,
-  type SystemService,
+import type { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
+import type {
+  DevicesService,
+  IdentityService,
+  InvitationsService,
+  LoggingService,
+  NetworkService,
+  SpacesService,
+  SystemService,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
+import type { DevtoolsHost } from '@dxos/protocols/proto/dxos/devtools/host';
+import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
+import type { DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import type { AppService, ShellService, WorkerService } from '@dxos/protocols/proto/dxos/iframe';
 import type { BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
-import { type TracingService } from '@dxos/protocols/proto/dxos/tracing';
-import { createServiceBundle, type ServiceBundle } from '@dxos/rpc';
+import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
+import { type ServiceBundle, createServiceBundle } from '@dxos/rpc';
 
 //
 // NOTE: Should contain client/proxy dependencies only.

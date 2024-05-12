@@ -2,8 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
+import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
+import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
 
 // TODO(burdon): Factor out.
@@ -25,29 +29,40 @@ type Memory = {
   used: number;
 };
 
-export type Query = {
-  objects: number;
-  duration: number;
+export type QueryInfo = {
+  filter: FilterParams;
+  metrics: QueryMetrics;
 };
 
 export type Stats = {
   diagnostics?: Diagnostics;
   objects?: number;
-  queries?: Query[];
+  queries?: QueryInfo[];
   memory?: Memory;
 };
 
 export const useStats = (): Stats => {
-  // const client = useClient();
+  const client = useClient();
   const [stats, setStats] = useState<Stats>({});
   useEffect(() => {
     setTimeout(async () => {
       // client.experimental.graph;
+      // TODO(burdon): Polling?
+      const diagnostics = await client.diagnostics();
+      // const q = client.services.services.QueryService;
+      // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
+      const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
+      const queries: QueryInfo[] = Object.values(resources)
+        .filter((res) => res.className === 'QueryState')
+        .map(
+          (res) =>
+            ({
+              filter: res.info._filter, // TODO(burdon): Is this serialized? Why underscore.
+              metrics: res.info.metrics,
+            }) satisfies QueryInfo,
+        );
 
-      const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
-      console.log(s);
-
-      // TODO(burdon): Factor out.
+      // TODO(burdon): Reconcile with diagnostics.
       const objects = Object.values(
         TRACE_PROCESSOR.findResourcesByClassName('AutomergeContext')[0]?.instance.deref().repo.handles,
       )
@@ -64,23 +79,9 @@ export const useStats = (): Stats => {
 
       setStats({
         diagnostics: TRACE_PROCESSOR.getDiagnostics(),
-        objects: objects.length,
         memory,
-        // TODO(burdon): Get from QueryState/QueryService.
-        queries: [
-          {
-            duration: 100,
-            objects: 10,
-          },
-          {
-            duration: 120,
-            objects: 20,
-          },
-          {
-            duration: 65,
-            objects: 12,
-          },
-        ],
+        objects: objects.length,
+        queries,
       });
     });
   }, []);

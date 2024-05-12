@@ -97,7 +97,7 @@ export class TraceProcessor {
   createTraceResource(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
 
-    // init metrics counters.
+    // Init metrics counters.
     const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
     for (const key of Object.keys(tracingContext.metricsProperties)) {
       (params.instance[key] as BaseCounter)._assign(params.instance, key);

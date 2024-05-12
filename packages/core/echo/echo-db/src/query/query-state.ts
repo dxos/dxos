@@ -25,6 +25,15 @@ type QueryRunResult = {
   changed: boolean;
 };
 
+export type QueryMetrics = {
+  objectsReturned: number;
+  objectsReturnedFromIndex: number;
+  documentsLoaded: number;
+  executionTime: number;
+  indexQueryTime: number;
+  documentLoadTime: number;
+};
+
 /**
  * Manages querying logic on service side.
  */
@@ -42,7 +51,7 @@ export class QueryState extends Resource {
   private _firstRun = true;
 
   @trace.info()
-  public metrics = {
+  public metrics: QueryMetrics = {
     objectsReturned: 0,
     objectsReturnedFromIndex: 0,
     documentsLoaded: 0,
@@ -62,7 +71,6 @@ export class QueryState extends Resource {
 
   @trace.span({ showInBrowserTimeline: true })
   async execQuery(): Promise<QueryRunResult> {
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     const filter = Filter.fromProto(this._params.request.filter);
     const beginQuery = performance.now();
     const hits = await this._params.indexer.execQuery(filterToIndexQuery(filter));
