@@ -12,3 +12,4 @@ export * from './Error';
 export * from './ItemList';
 export * from './ItemTable';
 export * from './Main';
+export * from './StatsPanel';

@@ -68,6 +68,6 @@ describe('tracing', () => {
 
   test('findByAnnotation', async () => {
     const store = new FeedStore();
-    expect(TRACE_PROCESSOR.findByAnnotation(FeedStoreResource)[0].instance.deref()).to.eq(store);
+    expect(TRACE_PROCESSOR.findResourcesByAnnotation(FeedStoreResource)[0].instance.deref()).to.eq(store);
   });
 });

@@ -171,6 +171,7 @@ export class Client {
     return this._status;
   }
 
+  // TODO(burdon): Comment
   get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
@@ -297,7 +298,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reIndex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
     }
 
     log.info('Repair succeeded', { repairSummary });

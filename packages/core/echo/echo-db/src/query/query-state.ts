@@ -25,8 +25,8 @@ type QueryRunResult = {
   changed: boolean;
 };
 
-/** s
- * Manages querying logic on service side
+/**
+ * Manages querying logic on service side.
  */
 @trace.resource()
 export class QueryState extends Resource {
@@ -61,10 +61,11 @@ export class QueryState extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async runQuery(): Promise<QueryRunResult> {
+  async execQuery(): Promise<QueryRunResult> {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
     const filter = Filter.fromProto(this._params.request.filter);
     const beginQuery = performance.now();
-    const hits = await this._params.indexer.find(filterToIndexQuery(filter));
+    const hits = await this._params.indexer.execQuery(filterToIndexQuery(filter));
     if (this._firstRun) {
       this.metrics.indexQueryTime = performance.now() - beginQuery;
     }

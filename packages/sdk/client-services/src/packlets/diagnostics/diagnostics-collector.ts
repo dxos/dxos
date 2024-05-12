@@ -54,12 +54,12 @@ export class DiagnosticsCollector {
 }
 
 const findSystemServiceProvider = (): ClientServicesProvider | null => {
-  const serviceProviders = TRACE_PROCESSOR.findByAnnotation(ClientServicesProviderResource);
+  const serviceProviders = TRACE_PROCESSOR.findResourcesByAnnotation(ClientServicesProviderResource);
   const providerResource = serviceProviders.find((r) => r.instance.deref()?.services?.SystemService != null);
   return providerResource?.instance?.deref() ?? null;
 };
 
 const findConfigs = (): Config[] => {
-  const configs = TRACE_PROCESSOR.findByAnnotation(ConfigResource);
+  const configs = TRACE_PROCESSOR.findResourcesByAnnotation(ConfigResource);
   return configs.map((r) => r.instance.deref()).filter(nonNullable);
 };

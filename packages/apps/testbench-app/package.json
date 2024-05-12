@@ -24,6 +24,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@ngneat/falso": "^7.1.1",
     "@opentelemetry/api": "^1.8.0",

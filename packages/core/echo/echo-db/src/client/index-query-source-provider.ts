@@ -29,8 +29,10 @@ export type IndexQueryProviderParams = {
 };
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
+  // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
+  // TODO(burdon): Rename createQuerySource
   create(): QuerySource {
     return new IndexQuerySource({ service: this._params.service, objectLoader: this._params.objectLoader });
   }
@@ -91,8 +93,8 @@ export class IndexQuerySource implements QuerySource {
     onError?: (error: Error) => void,
   ) {
     const start = Date.now();
-    const stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
     let currentCtx: Context;
+    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
     stream.subscribe(
       async (response) => {
         await currentCtx?.dispose();
@@ -138,7 +140,6 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getAutomergeObjectCore(object);
-
     const queryResult: QueryResult = {
       id: object.id,
       spaceKey: core.database!.spaceKey,
@@ -146,6 +147,7 @@ export class IndexQuerySource implements QuerySource {
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };
+
     return queryResult;
   }
 

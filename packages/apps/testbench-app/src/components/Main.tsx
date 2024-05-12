@@ -17,21 +17,19 @@ import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
+import { StatsPanel } from './StatsPanel';
 import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
+import { useStats } from '../hooks';
 import { exportData, importData } from '../util';
-
-// const dateRange = {
-//   from: new Date(),
-//   to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-// };
 
 export const Main = () => {
   const client = useClient();
   // TODO(wittjosiah): Why filter out the default space?
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
+  const stats = useStats();
 
   useEffect(() => {
     if (!space && spaces.length) {
@@ -175,7 +173,6 @@ export const Main = () => {
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
       const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
       download(backupBlob, `${filename}.json`);
     }
   };
@@ -224,10 +221,13 @@ export const Main = () => {
           </>
         )}
       </div>
-      <div className='flex p-2 items-center text-xs'>
+      <div className='flex h-[32px] p-2 items-center relative text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
         <StatusBar flushing={flushing} />
+        <div className='z-10 absolute right-0 bottom-[32px] w-[300px] border-l border-t'>
+          <StatsPanel stats={stats} />
+        </div>
       </div>
     </div>
   );
