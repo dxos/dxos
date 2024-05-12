@@ -6,6 +6,7 @@ import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
 import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
@@ -47,6 +48,8 @@ export const useStats = (): [Stats, () => void] => {
   const [update, forceUpdate] = useState({});
   useEffect(() => {
     setTimeout(async () => {
+      log.info('getting stats...');
+
       // client.experimental.graph;
       const diagnostics = await client.diagnostics();
       // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
