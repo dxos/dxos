@@ -30,7 +30,7 @@ export const Main = () => {
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
   const [stats, refreshStats] = useStats();
-
+  const [showStats, setShowStats] = useState<boolean>(true);
   useEffect(() => {
     if (!space && spaces.length) {
       setSpace(spaces[0]);
@@ -224,10 +224,12 @@ export const Main = () => {
       <div className='flex h-[32px] p-2 items-center relative text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <StatusBar flushing={flushing} />
-        <div className='z-100 absolute right-0 bottom-[32px] w-[400px] border-l border-t'>
-          <StatsPanel stats={stats} onRefresh={refreshStats} />
-        </div>
+        <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
+        {showStats && (
+          <div className='z-100 absolute right-0 bottom-[32px] w-[400px] border-l border-t'>
+            <StatsPanel stats={stats} onRefresh={refreshStats} />
+          </div>
+        )}
       </div>
     </div>
   );
