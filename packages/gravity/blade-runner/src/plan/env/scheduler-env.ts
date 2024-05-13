@@ -71,7 +71,6 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
   async close() {
     for (const replicant of this.replicants) {
-      log.info('killing replicant');
       replicant.kill(0);
     }
 
