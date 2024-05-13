@@ -130,7 +130,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     await rpcHandle.open();
     const replicantIdx = this.replicantIdx++;
 
-    const agentParams: AgentParams<any> = {
+    const agentParams: AgentParams<S> = {
       agentIdx: replicantIdx,
       agentId: `test-${this.params.testId}:replicant-${replicantIdx}`,
       outDir: path.join(this.params.outDir, String(replicantIdx)),
