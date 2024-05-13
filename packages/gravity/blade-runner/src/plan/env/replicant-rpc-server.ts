@@ -5,6 +5,7 @@
 import { Resource } from '@dxos/context';
 import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
+import { rpcCodec } from './util';
 import { type ReplicantEnv } from '../interface';
 
 export class ReplicantRpcServer extends Resource {
@@ -13,14 +14,11 @@ export class ReplicantRpcServer extends Resource {
   constructor({ handler, port }: { handler: ReplicantEnv; port: RpcPort }) {
     super();
     this._rpc = new RpcPeer({
-      callHandler: async (method, { value }) => {
-        const args = JSON.parse(Buffer.from(value).toString());
+      callHandler: async (method, payload) => {
+        const args = rpcCodec.decode(payload);
         const response = await (handler as any)[method](...args);
 
-        return {
-          type_url: 'google.protobuf.Any',
-          value: Buffer.from(JSON.stringify(response)),
-        };
+        return rpcCodec.encode(response);
       },
       port,
     });

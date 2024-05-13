@@ -4,6 +4,7 @@
 
 import type Redis from 'ioredis';
 
+import { type Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
@@ -47,4 +48,12 @@ export const createRedisRpcPort = ({
       };
     },
   };
+};
+
+export const rpcCodec = {
+  encode: (value: any): Any => ({
+    type_url: 'google.protobuf.Any',
+    value: Buffer.from(JSON.stringify(value)),
+  }),
+  decode: (value: Any): any => JSON.parse(Buffer.from(value.value).toString()),
 };

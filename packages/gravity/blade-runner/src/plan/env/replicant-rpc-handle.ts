@@ -5,6 +5,7 @@
 import { Resource } from '@dxos/context';
 import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
+import { rpcCodec } from './util';
 import { type ReplicantBrain } from '../interface';
 
 export class ReplicantRpcHandle<T> extends Resource {
@@ -26,10 +27,7 @@ export class ReplicantRpcHandle<T> extends Resource {
       }
       Object.defineProperty(this, method, {
         value: async (...args: any[]) => {
-          await this._rpc.call(method, {
-            type_url: 'google.protobuf.Any',
-            value: Buffer.from(JSON.stringify(args)),
-          });
+          return rpcCodec.decode(await this._rpc.call(method, rpcCodec.encode(args)));
         },
       });
     }
