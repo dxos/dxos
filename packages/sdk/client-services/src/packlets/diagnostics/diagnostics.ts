@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { asyncTimeout } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { getFirstStreamValue } from '@dxos/codec-protobuf';
 import { type Config, type ConfigProto } from '@dxos/config';
@@ -29,7 +30,6 @@ import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
 import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
-import { asyncTimeout } from '@dxos/async';
 
 const DEFAULT_TIMEOUT = 1_000;
 
