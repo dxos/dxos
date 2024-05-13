@@ -17,11 +17,11 @@ It has three key features:
 
 ## Peer-to-peer
 
-Composer gets its real-time collaboration and offline abilities through a peer-to-peer model.
+Composer gets its real-time collaboration and offline abilities from its peer-to-peer architecture.
 
 For example a running system might sync data like this:
 
-![](alice-and-bob-devices.svg)
+![](alice-and-bob-devices.png)
 
 Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per domain/browser profile combination, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
 
