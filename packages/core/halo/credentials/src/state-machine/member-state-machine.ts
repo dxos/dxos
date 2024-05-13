@@ -109,7 +109,7 @@ export class MemberStateMachine {
       children: [],
     };
     this._vertexByCredentialId.set(credential.id!, newVertex);
-    const parentIds = assertion.membershipChainHeads ?? [];
+    const parentIds = credential.parentCredentialIds ?? [];
     if (parentIds.length === 0) {
       this._root.children.push(newVertex);
       newVertex.parents.push(this._root);
@@ -463,10 +463,6 @@ export class MemberStateMachine {
     }
     if (update.assertion.role === SpaceMember.Role.OWNER) {
       return update.credential!.issuer.equals(this._spaceKey);
-    }
-    const isChangingOwnerRole = this._getRole(state, update.credential.subject.id) === SpaceMember.Role.OWNER;
-    if (isChangingOwnerRole) {
-      return false;
     }
     const issuer = update.credential.issuer;
     const isChangingOwnRole = issuer.equals(update.credential.subject.id);

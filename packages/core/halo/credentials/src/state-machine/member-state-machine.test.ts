@@ -14,7 +14,7 @@ import { createAdmissionCredentials, createCredentialSignerWithKey } from '../cr
 
 const keyring = new Keyring();
 
-describe.only('MemberStateMachine', () => {
+describe('MemberStateMachine', () => {
   const genesisFeedKey: PublicKey = PublicKey.random();
 
   let spaceKey: PublicKey;
@@ -36,6 +36,15 @@ describe.only('MemberStateMachine', () => {
     const spaceCreated = await createSpace(stateMachine, A);
     const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
     await remove(stateMachine, B, A, [aAdmitB]);
+    expectOwnerAndAdmins(stateMachine, [A, B]);
+  });
+
+  test('implicit owner removal forbidden', async () => {
+    const stateMachine = createStateMachine();
+    const [A, B] = await createPeers(2);
+    await admit(stateMachine, spaceKey, A, [], SpaceMember.Role.ADMIN);
+    const admitB = await admit(stateMachine, spaceKey, B, [], SpaceMember.Role.ADMIN);
+    await remove(stateMachine, B, A, [admitB]);
     expectOwnerAndAdmins(stateMachine, [A, B]);
   });
 

@@ -225,13 +225,13 @@ export const createAdmissionCredentials = async (
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
+      parentCredentialIds: membershipChainHeads,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
         role,
         profile,
         genesisFeedKey,
-        membershipChainHeads,
         invitationCredentialId,
       },
     }),

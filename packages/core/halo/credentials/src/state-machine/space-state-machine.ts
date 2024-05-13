@@ -255,7 +255,7 @@ export class SpaceStateMachine implements SpaceState {
 
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
-    return role === SpaceMember.Role.EDITOR || role === SpaceMember.Role.ADMIN;
+    return role === SpaceMember.Role.EDITOR || role === SpaceMember.Role.ADMIN || role === SpaceMember.Role.OWNER;
   }
 
   private _canRevokeCredentials(key: PublicKey): boolean {
