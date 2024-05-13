@@ -30,9 +30,11 @@ type Memory = {
   used: number;
 };
 
+// Represents the @info props in QueryState.
 export type QueryInfo = {
   filter: FilterParams;
   metrics: QueryMetrics;
+  active: boolean;
 };
 
 export type Stats = {
@@ -48,7 +50,6 @@ export const useStats = (): [Stats, () => void] => {
   const [update, forceUpdate] = useState({});
   useEffect(() => {
     setTimeout(async () => {
-      log.info('getting stats...');
       const begin = performance.now();
 
       // client.experimental.graph;
@@ -57,13 +58,9 @@ export const useStats = (): [Stats, () => void] => {
       const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
       const queries: QueryInfo[] = Object.values(resources)
         .filter((res) => res.className === 'QueryState')
-        .map(
-          (res) =>
-            ({
-              filter: res.info._filter, // TODO(burdon): Is this serialized? Why underscore.
-              metrics: res.info.metrics,
-            }) satisfies QueryInfo,
-        );
+        .map((res) => {
+          return res.info as QueryInfo;
+        });
 
       // TODO(burdon): Reconcile with diagnostics.
       const objects = Object.values(

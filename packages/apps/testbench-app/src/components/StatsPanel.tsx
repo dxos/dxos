@@ -3,7 +3,7 @@
 //
 
 import { ArrowClockwise, ChartBar, Cpu, Database, Timer } from '@phosphor-icons/react';
-import React, { type FC } from 'react';
+import React, { type FC, useEffect, useState } from 'react';
 
 import { Button } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -30,6 +30,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
 
+  // TODO(burdon): Break into panels.
   return (
     <div className='flex flex-col w-full h-full bg-neutral-50 divide-y divide-neutral-200 border-neutral-200'>
       <div className='flex items-center justify-between'>
@@ -41,6 +42,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
           <ArrowClockwise className={getSize(4)} />
         </Button>
       </div>
+      <Perf />
       <div className='flex flex-col'>
         <div className='flex items-center justify-between px-2 py-2'>
           <div className='flex items-center gap-1'>
@@ -86,6 +88,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
                     {/* TODO(burdon): Why itemId? */}
                     {query.filter.type?.itemId}
                   </td>
+                  <td>[{String(query.active)}]</td>
                   <td className='p-1 w-[80px] text-right'>{query.metrics.objectsReturned.toLocaleString()}</td>
                   <td className='p-1 w-[80px] text-right'>
                     <Trace duration={query.metrics.executionTime} />
@@ -130,4 +133,43 @@ const Unit = {
   M: 1_000 * 1_000,
   P: 1 / 100,
   fixed: (n: number, s = 1) => (n / s).toFixed(2),
+};
+
+console.log(PerformanceObserver.supportedEntryTypes);
+
+const Perf = () => {
+  // TODO(burdon): Warn if FPS drops.
+  const [fps, setFps] = useState(0);
+  useEffect(() => {
+    const times: number[] = [];
+    const refreshLoop = () => {
+      window.requestAnimationFrame(() => {
+        const now = performance.now();
+        while (times.length > 0 && times[0] <= now - 1000) {
+          times.shift();
+        }
+        times.push(now);
+        setFps(times.length);
+        refreshLoop();
+      });
+    };
+
+    refreshLoop();
+  }, []);
+
+  // console.log(Performance.getEntries());
+  useEffect(() => {
+    const po = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        // Log the entry and all associated details.
+        console.log(entry.toJSON());
+      }
+    });
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/Long_animation_frame_timing
+    po.observe({ entryTypes: ['longtask', 'largest-contentful-paint'], buffered: true });
+    return () => po.disconnect();
+  }, []);
+
+  return <div>{fps}</div>;
 };

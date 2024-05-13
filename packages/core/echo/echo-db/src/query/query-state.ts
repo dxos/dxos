@@ -3,8 +3,8 @@
 //
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Resource } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { LifecycleState, Resource } from '@dxos/context';
+import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
@@ -39,9 +39,6 @@ export type QueryMetrics = {
  */
 @trace.resource()
 export class QueryState extends Resource {
-  @trace.info({ depth: null })
-  private readonly _filter: FilterProto;
-
   private _results: QueryResult[] = [];
 
   /**
@@ -49,6 +46,9 @@ export class QueryState extends Resource {
    * We plan to change the query logic so that reactive updates do not require a full re-run of the query.
    */
   private _firstRun = true;
+
+  @trace.info({ depth: null })
+  public readonly filter: FilterProto;
 
   @trace.info()
   public metrics: QueryMetrics = {
@@ -60,9 +60,14 @@ export class QueryState extends Resource {
     documentLoadTime: 0,
   };
 
+  @trace.info()
+  get active() {
+    return this._lifecycleState === LifecycleState.OPEN;
+  }
+
   constructor(private readonly _params: QueryStateParams) {
     super();
-    this._filter = _params.request.filter;
+    this.filter = _params.request.filter;
   }
 
   getResults() {
