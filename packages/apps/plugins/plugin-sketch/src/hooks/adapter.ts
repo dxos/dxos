@@ -17,6 +17,11 @@ import { type Unsubscribe } from '../types';
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
+export interface StoreAdapter {
+  store?: TLStore;
+  readonly: boolean;
+}
+
 // TODO(burdon): Move to SketchType?
 export type TLDrawStoreData = {
   schema?: string; // Undefined means version 1.
@@ -26,31 +31,42 @@ export type TLDrawStoreData = {
 /**
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
-export class AutomergeStoreAdapter {
-  private readonly _store: TLStore;
+export class AutomergeStoreAdapter implements StoreAdapter {
   private readonly _subscriptions: Unsubscribe[] = [];
+  private _store?: TLStore;
+  private _readonly = false;
   private _lastHeads: A.Heads | undefined = undefined;
 
-  constructor(private readonly _options = { timeout: 250 }) {
-    this._store = createTLStore({ shapeUtils: defaultShapeUtils });
+  constructor(private readonly _options = { timeout: 250 }) {}
+
+  get isOpen() {
+    return !!this._store;
   }
 
   get store() {
     return this._store;
   }
 
+  get readonly() {
+    return this._readonly;
+  }
+
   // TODO(burdon): Just pass in object?
   open(accessor: DocAccessor<TLDrawStoreData>) {
-    if (this._subscriptions.length) {
+    if (this.isOpen) {
       this.close();
     }
 
     // Path: objects > xxx > data > content
-    log.info('opening...', { path: accessor.path });
+    log('opening...', { path: accessor.path });
     invariant(accessor.path.length);
 
     // Initial sync.
     const contentRecords: Record<string, TLRecord> | undefined = getDeep(accessor.handle.docSync()!, accessor.path);
+
+    // Create store.
+    const store = createTLStore({ shapeUtils: defaultShapeUtils });
+    this._store = store;
 
     // Initialize the store with the automerge doc records.
     // If the automerge doc is empty, initialize the automerge doc with the default store records.
@@ -60,16 +76,20 @@ export class AutomergeStoreAdapter {
     } else {
       // Replace the store records with the automerge doc records.
       transact(() => {
-        this._store.clear();
+        store.clear();
         const currentVersion = accessor.handle.docSync()?.schema;
         const version = maybeMigrateSnapshot(
-          this._store,
+          store,
           Object.values(contentRecords ?? {}).map((record) => decode(record)),
           currentVersion !== undefined ? parseInt(currentVersion) : undefined,
         );
 
         if (version !== undefined) {
-          saveStore(this._store, accessor);
+          if (version === -1) {
+            this._readonly = true;
+          } else {
+            saveStore(store, accessor);
+          }
         }
       });
     }
@@ -133,18 +153,21 @@ export class AutomergeStoreAdapter {
       });
 
       // Update/remove the records in the store.
-      this._store.mergeRemoteChanges(() => {
+      store.mergeRemoteChanges(() => {
         if (removed.size) {
-          this._store.remove(Array.from(removed));
+          store.remove(Array.from(removed));
         }
 
         if (updated.size) {
           const currentVersion = accessor.handle.docSync()?.schema;
-          maybeMigrateSnapshot(
-            this._store,
+          const version = maybeMigrateSnapshot(
+            store,
             Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
             currentVersion !== undefined ? parseInt(currentVersion) : undefined,
           );
+          if (version === -1) {
+            this._readonly = true;
+          }
         }
       });
 
@@ -213,7 +236,7 @@ export class AutomergeStoreAdapter {
   close() {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.length = 0;
-    this._store.clear();
+    this._store = undefined;
   }
 }
 
@@ -287,12 +310,12 @@ const decode = (value: any): any => {
 
 /**
  * Insert records into the store catching possible schema errors.
- * @returns The new schema version or undefined if no migration was needed.
+ * @returns The new schema version; undefined if no migration was needed; -1 if error.
  */
-// TODO(burdon): What if sync with peer on different version?
-const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | void => {
+// TODO(burdon): Make readonly if we are behind the records. Need to inform user.
+const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | undefined => {
   try {
-    log.info('loading', { records: records.length, schema: version });
+    log('loading', { records: records.length, schema: version });
     store.put(records);
   } catch (err) {
     log.info('migrating schema...', err);
@@ -303,13 +326,13 @@ const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number):
 
     const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
     try {
-      log.info('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
+      log('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
       store.loadSnapshot(snapshot);
       log.info('migrated schema', { version: CURRENT_VERSION });
       return CURRENT_VERSION;
     } catch (err) {
       // Fallback.
-      // TODO(burdon): Notify user shapes missing.
+      // TODO(burdon): Notify user shapes missing. Make readonly.
       log.info('loading records...');
       for (const record of Object.values(serialized)) {
         try {
@@ -318,6 +341,8 @@ const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number):
           log.catch(err, { record });
         }
       }
+
+      return -1;
     }
   }
 };

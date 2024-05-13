@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import './theme.css';
 import '@tldraw/tldraw/tldraw.css';
 
-import { DefaultGrid, type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -13,6 +14,7 @@ import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
+import { CustomGrid, CustomStylePanel } from './custom';
 import { useStoreAdapter } from '../hooks';
 
 export type SketchComponentProps = {
@@ -23,9 +25,12 @@ export type SketchComponentProps = {
   maxZoom?: number;
 };
 
-const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
+// TODO(burdon): Remove outline when focused (from tabster?)
+const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly = false, className }) => {
   const { themeMode } = useThemeContext();
-
+  // TODO(burdon): Need to go read-only if syncing with peers that have migrated to newer schema.
+  const adapter = useStoreAdapter(sketch.data!);
+  const [active, setActive] = useState(false);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
@@ -34,26 +39,27 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         isSnapMode: true,
       });
       editor.updateInstanceState({
-        isGridMode: !readonly,
-        isReadonly: !!readonly,
+        isGridMode: active,
+        isReadonly: !active,
       });
     }
-  }, [editor, themeMode]);
-
-  // TODO(dmaretskyi): Handle nullability.
-  const store = useStoreAdapter(sketch.data!);
+  }, [editor, active, themeMode]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
   useEffect(() => {
+    if (!adapter.store) {
+      return;
+    }
+
     editor?.zoomToFit({ duration: 0 });
     editor?.resetZoom();
     if (!autoZoom) {
       return;
     }
 
-    // TODO(burdon): Supported in 2.1.4
+    // TODO(burdon): Check new zoomToContent works in 2.1.4
     // const zoomToContent = (animate = true) => {
     //   editor?.zoomToContent({ duration: animate ? 250 : 0 });
     //   setReady(true);
@@ -89,42 +95,44 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
 
     zoomToContent(false);
     const onUpdate = debounce(zoomToContent, 200);
-    const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
-    return () => subscription();
-  }, [editor, width, height]);
+    const subscription = readonly ? adapter.store.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
+    return () => subscription?.();
+  }, [editor, adapter, width, height]);
+
+  if (!adapter) {
+    return null;
+  }
 
   // https://tldraw.dev/docs/user-interface
-  // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
-  // https://github.com/tldraw/tldraw/tree/main/apps/examples/src/examples
-  // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
-  // TODO(burdon): Fonts are hard coded in TextStylePickerSet.
-  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/ui/components/StylePanel/DefaultStylePanelContent.tsx
-  // https://github.com/tldraw/tldraw/blob/main/packages/tldraw/src/lib/styles.tsx
   return (
     <div
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx('w-full h-full', className)}
+      onPointerEnter={() => {
+        setActive(!readonly && !adapter.readonly);
+      }}
+      onPointerLeave={() => {
+        setActive(false);
+      }}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
-      {/*
-        TODO(burdon): Error when navigating between pages.
-          TypeError: Cannot read properties of undefined (reading 'currentPageId')
-          return this.getInstanceState().currentPageId;
-      */}
       <Tldraw
         // Setting the key forces re-rendering when the content changes.
         key={sketch.id}
-        store={store}
-        hideUi={readonly}
+        store={adapter.store}
+        hideUi={!active}
+        // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+        maxAssetSize={1024 * 1024}
         components={{
           DebugPanel: null,
-          Grid: DefaultGrid, // TODO(burdon): Customize.
+          Grid: CustomGrid,
           HelpMenu: null,
           MenuPanel: null,
           NavigationPanel: null,
+          StylePanel: CustomStylePanel,
           TopPanel: null,
-          // ZoomMenu: null,
+          ZoomMenu: null,
         }}
         onMount={setEditor}
       />
