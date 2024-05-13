@@ -19,9 +19,9 @@ It has three key features:
 
 Composer gets its real-time collaboration and offline abilities through a peer-to-peer model.
 
-For example a running system might sync data like this, where nodes represent devices:
+For example a running system might sync data like this:
 
-![Alice and Bob device example](alice-and-bob-devices.svg)
+![](alice-and-bob-devices.svg)
 
 Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per domain/browser profile combination, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
 
