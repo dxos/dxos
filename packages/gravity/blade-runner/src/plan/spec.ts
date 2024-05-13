@@ -15,10 +15,10 @@ export type GlobalOptions = {
   headless?: boolean;
 };
 
-export type TestParams<Spec> = {
+export type TestParams<S> = {
   testId: string;
   outDir: string;
-  spec: Spec;
+  spec: S;
 };
 
 /**
@@ -26,7 +26,7 @@ export type TestParams<Spec> = {
  */
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
-export type ReplicantParams<Spec> = {
+export type ReplicantParams<S> = {
   /**
    * Replicant class name. Used in registry.
    * Sent to replicant from orchestrator process.
@@ -34,13 +34,14 @@ export type ReplicantParams<Spec> = {
   replicantClass: string;
   replicantId: string;
   outDir: string;
+  logFile: string;
   planRunDir: string;
   redisPortSendQueue: string;
   redisPortReceiveQueue: string;
 
   runtime: ReplicantRuntimeParams;
   testId: string;
-  spec: Spec;
+  spec: S;
 };
 
 export type ReplicantRuntimeParams = {
@@ -48,15 +49,15 @@ export type ReplicantRuntimeParams = {
   platform?: Platform;
 };
 
-export type PlanResults<Spec> = {
-  replicants: { [replicantId: string]: ReplicantParams<Spec> };
+export type PlanResults<S> = {
+  replicants: { [replicantId: string]: ReplicantParams<S> };
 };
 
 // plan vs environment
-export interface TestPlan<Spec> {
+export interface TestPlan<S> {
   onError?: (err: Error) => void;
-  run(env: SchedulerEnv<Spec>, params: TestParams<Spec>): Promise<PlanResults<Spec>>;
+  run(env: SchedulerEnv<S>, params: TestParams<S>): Promise<PlanResults<S>>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze(params: TestParams<Spec>, results: PlanResults<Spec>): Promise<any>;
-  defaultSpec(): Spec;
+  analyze(params: TestParams<S>, results: PlanResults<S>): Promise<any>;
+  defaultSpec(): S;
 }

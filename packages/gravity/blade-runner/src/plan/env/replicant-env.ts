@@ -5,16 +5,19 @@
 import { type Callback, Redis, type RedisOptions } from 'ioredis';
 
 import { Trigger } from '@dxos/async';
+import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
+import { isNode } from '@dxos/util';
 
 import { ReplicantRpcServer } from './replicant-rpc-server';
 import { REDIS_PORT, createRedisRpcPort } from './util';
+import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../../analysys/resource-usage';
 import { type ReplicantEnv } from '../interface';
 import { type ReplicantParams } from '../spec';
 
 export { type RedisOptions };
 
-export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
+export class ReplicantEnvImpl<S> extends Resource implements ReplicantEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -36,9 +39,10 @@ export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
 
   constructor(
     public replicant: any,
-    public params: ReplicantParams<Spec>,
+    public params: ReplicantParams<S>,
     private readonly _redisOptions?: RedisOptions,
   ) {
+    super();
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
     this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
     this.rpcRequests = new Redis(this._redisOptions ?? { port: REDIS_PORT });
@@ -58,14 +62,17 @@ export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
     this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
-  async open() {
+  protected override async _open() {
+    const disableDiagnostics = initDiagnostics();
+    this._ctx.onDispose(() => disableDiagnostics?.());
+
     await this.redis.config('SET', 'notify-keyspace-events', 'AKE');
     await this.redisSub.config('SET', 'notify-keyspace-events', 'AKE');
 
     await this.replicantRpcServer.open();
   }
 
-  async close() {
+  protected override async _close() {
     await this.replicantRpcServer.close();
 
     this.redis.disconnect();
@@ -116,3 +123,29 @@ export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
     await this.redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
   }
 }
+
+const initDiagnostics = () => {
+  // TODO(mykola): track diagnostics in browser.
+  if (isNode()) {
+    let prevCpuUsage = process.cpuUsage();
+
+    log.trace(RESOURCE_USAGE_LOG, {
+      ts: performance.now(),
+    });
+
+    const interval = setInterval(() => {
+      const cpuUsage = process.cpuUsage(prevCpuUsage);
+      prevCpuUsage = process.cpuUsage();
+
+      const memoryUsage = process.memoryUsage();
+
+      log.trace(RESOURCE_USAGE_LOG, {
+        ts: performance.now(),
+        cpu: cpuUsage,
+        memory: memoryUsage,
+      } satisfies ResourceUsageLogEntry);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }
+};

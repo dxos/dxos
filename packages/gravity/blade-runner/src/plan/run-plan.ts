@@ -22,7 +22,7 @@ type TestSummary = {
   options: GlobalOptions;
   spec: any;
   stats: any;
-  results: PlanResults;
+  results: PlanResults<any>;
   params: {
     testId: string;
     outDir: string;
@@ -33,9 +33,9 @@ type TestSummary = {
   };
 };
 
-export type RunPlanParams<Spec> = {
-  plan: TestPlan<Spec>;
-  spec: Spec;
+export type RunPlanParams<S> = {
+  plan: TestPlan<S>;
+  spec: S;
   options: GlobalOptions;
 };
 
@@ -45,12 +45,12 @@ if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
 }
 
 // TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <Spec>(
+export const readYAMLSpecFile = async <S>(
   path: string,
-  plan: TestPlan<Spec>,
+  plan: TestPlan<S>,
   options: GlobalOptions,
 ): Promise<() => RunPlanParams<any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as Spec;
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
   return () => ({
     plan,
     spec: yamlSpec,
@@ -58,7 +58,7 @@ export const readYAMLSpecFile = async <Spec>(
   });
 };
 
-export const runPlan = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) => {
+export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode.
@@ -73,16 +73,16 @@ export const runPlan = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>
   await runPlanner({ plan, spec, options });
 };
 
-const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) => {
+const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   const testId = createTestPathname();
   const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
   const outDir = `${outDirBase}/out/results/${testId}`;
   fs.mkdirSync(outDir, { recursive: true });
-  log.info('starting plan', {
+  log.info('starting simulation...', {
     outDir,
   });
 
-  const testParams: TestParams<Spec> = {
+  const testParams: TestParams<S> = {
     testId,
     outDir,
     spec,
@@ -98,7 +98,6 @@ const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) =>
     });
   }
 
-  log.info('starting agents', { plan: Object.getPrototypeOf(plan).constructor.name });
 
   //
   // Start simulation
@@ -108,7 +107,7 @@ const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) =>
   await schedulerEnv.open();
   const result = await plan.run(schedulerEnv, testParams);
 
-  log.info('test complete', {
+  log.info('simulation complete', {
     summary: join(outDir, SUMMARY_FILENAME),
     result,
   });
@@ -145,7 +144,7 @@ const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) =>
   };
 
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));
-  log.info('plan complete');
+  log.info('done');
   process.exit(0);
 };
 

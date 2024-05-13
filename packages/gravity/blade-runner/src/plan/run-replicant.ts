@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'node:path';
-
 import { Context } from '@dxos/context';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
@@ -12,42 +10,37 @@ import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from './env';
 import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type RunParams } from './run-process';
-import { type ReplicantParams, AGENT_LOG_FILE } from './spec';
+import { type ReplicantParams } from './spec';
 import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
 
 /**
  * Entry point for process running in agent mode.
  */
-export const runReplicant = async <Spec>({ agentParams: params, options }: RunParams<Spec>) => {
+export const runReplicant = async <S>({ agentParams: params, options }: RunParams<S>) => {
   const ctx = new Context();
   try {
     initLogProcessor(params);
     const replicant = new (ReplicantRegistry.instance.get(params.replicantClass))();
 
-    const env = new ReplicantEnvImpl<Spec>(
+    const env = new ReplicantEnvImpl<S>(
       replicant,
       params,
       !isNode() ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions) : undefined,
     );
-    initDiagnostics();
     await env.open();
     ctx.onDispose(() => env.close());
+    process.once('beforeExit', () => env.close());
   } catch (err) {
     log.catch(err, { replicantId: params.replicantId });
     finish(1);
-  } finally {
-    log.info('agent complete', { replicantId: params.replicantId });
-    void ctx.dispose();
-    // TODO(mykola): Delete finish, `kill` will be called by env.
-    finish(0);
   }
 };
 
-const initLogProcessor = <Spec>(params: ReplicantParams<Spec>) => {
+const initLogProcessor = <S>(params: ReplicantParams<S>) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({
-        pathOrFd: join(params.outDir, AGENT_LOG_FILE),
+        pathOrFd: params.logFile,
         levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
       }),
     );
@@ -61,7 +54,6 @@ const initLogProcessor = <Spec>(params: ReplicantParams<Spec>) => {
   }
 };
 
-// TODO(mykola): Do we need finish function?
 const finish = (code: number) => {
   if (isNode()) {
     process.exit(code);

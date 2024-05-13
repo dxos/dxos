@@ -9,28 +9,27 @@ import { join } from 'node:path';
 import type { Browser, BrowserType } from 'playwright';
 import { v4 } from 'uuid';
 
-import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type ReplicantParams, type GlobalOptions, type Platform, AGENT_LOG_FILE } from './spec';
+import { type ReplicantParams, type GlobalOptions, type Platform } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
 type ProcessHandle = {
   /**
-   * Kill the agent process/browser.
+   * Kill the replicant process/browser.
    */
-  kill: () => void;
+  kill: (signal?: NodeJS.Signals | number) => void;
 };
 
-export type RunParams<Spec> = {
-  agentParams: ReplicantParams<Spec>;
+export type RunParams<S> = {
+  agentParams: ReplicantParams<S>;
   options: GlobalOptions;
 };
 
-export const runNode = <Spec>(params: RunParams<Spec>): ProcessHandle => {
+export const runNode = <S>(params: RunParams<S>): ProcessHandle => {
   const execArgv = process.execArgv;
 
   if (params.options.profile) {
@@ -68,14 +67,14 @@ export const runNode = <Spec>(params: RunParams<Spec>): ProcessHandle => {
   });
 
   return {
-    kill: () => {
-      childProcess.kill();
+    kill: (signal?: NodeJS.Signals | number) => {
+      log.trace('dxos.blade-runner.kill-replicant', { signal });
+      childProcess.kill(signal);
     },
   };
 };
 
-export const runBrowser = async <Spec>({ agentParams, options }: RunParams<Spec>): Promise<ProcessHandle> => {
-  const doneTrigger = new Trigger<number>();
+export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Promise<ProcessHandle> => {
   const ctx = new Context();
 
   const start = Date.now();
@@ -102,13 +101,13 @@ export const runBrowser = async <Spec>({ agentParams, options }: RunParams<Spec>
   });
 
   const fileProcessor = createFileProcessor({
-    pathOrFd: join(agentParams.outDir, AGENT_LOG_FILE),
+    pathOrFd: agentParams.logFile,
     levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
   });
 
   const apis: EposedApis = {
-    dxgravity_done: (code) => {
-      doneTrigger.wake(code);
+    dxgravity_done: (signal?: NodeJS.Signals | number) => {
+      log.trace('dxos.blade-runner.kill-replicant', { signal });
       void ctx.dispose();
     },
     // Expose log hook for playwright.
@@ -167,9 +166,7 @@ export const runBrowser = async <Spec>({ agentParams, options }: RunParams<Spec>
   });
 
   return {
-    kill: () => {
-      void ctx.dispose();
-    },
+    kill: apis.dxgravity_done,
   };
 };
 
@@ -265,6 +262,6 @@ const servePage = async (resources: Record<string, WebResource>, port = 5176) =>
 };
 
 type EposedApis = {
-  dxgravity_done: (code: number) => void;
+  dxgravity_done: (signal?: NodeJS.Signals | number) => void;
   dxgravity_log: LogProcessor;
 };

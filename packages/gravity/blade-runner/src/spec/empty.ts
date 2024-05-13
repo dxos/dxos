@@ -2,18 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import path from 'node:path';
-
 import { log } from '@dxos/log';
 
-import {
-  type PlanResults,
-  type Platform,
-  type TestParams,
-  type TestPlan,
-  type SchedulerEnvImpl,
-  AGENT_LOG_FILE,
-} from '../plan';
+import { type PlanResults, type Platform, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
 import { DumbReplicant } from '../replicants/dumb-replicant';
 
 export type EmptyTestSpec = {
@@ -29,11 +20,14 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
 
   defaultSpec(): EmptyTestSpec {
     return {
-      platform: 'chromium',
+      platform: 'nodejs',
     };
   }
 
-  async run(env: SchedulerEnvImpl<EmptyTestSpec>, params: TestParams<EmptyTestSpec>): Promise<PlanResults> {
+  async run(
+    env: SchedulerEnvImpl<EmptyTestSpec>,
+    params: TestParams<EmptyTestSpec>,
+  ): Promise<PlanResults<EmptyTestSpec>> {
     log.info('run', {
       message: 'Empty spec hello message, running dumb replicant.',
       params: env.params,
@@ -45,16 +39,13 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     log.info('result', { result });
     // TODO(mykola): Push in framework to handle results.
     return {
-      agents: {
-        [dumbReplicant.params.replicantId]: {
-          outDir: dumbReplicant.params.outDir,
-          logFile: path.join(dumbReplicant.params.outDir, AGENT_LOG_FILE),
-        },
+      replicants: {
+        [dumbReplicant.params.replicantId]: dumbReplicant.params,
       },
     };
   }
 
-  async analyze(params: TestParams<EmptyTestSpec>, results: PlanResults): Promise<any> {
+  async analyze(params: TestParams<EmptyTestSpec>, results: PlanResults<EmptyTestSpec>): Promise<any> {
     log.info('finished shutdown');
   }
 }

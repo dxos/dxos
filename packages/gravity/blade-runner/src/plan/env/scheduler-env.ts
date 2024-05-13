@@ -13,10 +13,15 @@ import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
 import { runBrowser, runNode } from '../run-process';
-import { type ReplicantRuntimeParams, type ReplicantParams, type GlobalOptions, type TestParams } from '../spec';
+import {
+  type ReplicantRuntimeParams,
+  type ReplicantParams,
+  type GlobalOptions,
+  type TestParams,
+  AGENT_LOG_FILE,
+} from '../spec';
 
-// TODO(mykola): Track replicants, kill them on close.
-export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
+export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -36,11 +41,16 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
   // Start websocket REDIS proxy for browser tests.
   private readonly _server = new WebSocketRedisProxy();
 
-  private replicantIdx: number = 0;
+  /**
+   * Used to generate Replicant ids
+   */
+  private _currentReplicant: number = 0;
+
+  public replicants = new Set<Replicant<any, S>>();
 
   constructor(
     private readonly _options: GlobalOptions,
-    public params: TestParams<Spec>,
+    public params: TestParams<S>,
     private readonly _redisOptions?: RedisOptions,
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
@@ -60,6 +70,11 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
   }
 
   async close() {
+    for (const replicant of this.replicants) {
+      log.info('killing replicant');
+      replicant.kill(0);
+    }
+
     this.redis.disconnect();
     this.redisSub.disconnect();
     this.rpcRequests.disconnect();
@@ -113,7 +128,7 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
   async spawn<T>(
     brain: ReplicantBrain<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
-  ): Promise<Replicant<T, Spec>> {
+  ): Promise<Replicant<T, S>> {
     const requestQueue = `replicant:requests:${this.params.testId}`;
     const responseQueue = `replicant:responses:${this.params.testId}`;
     const rpcPort = createRedisRpcPort({
@@ -129,11 +144,13 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
     });
 
     await rpcHandle.open();
-    const replicantIdx = String(this.replicantIdx++);
+    const replicantIdx = String(this._currentReplicant++);
+    const outDir = path.join(this.params.outDir, String(replicantIdx));
 
-    const agentParams: ReplicantParams<Spec> = {
+    const agentParams: ReplicantParams<S> = {
       replicantId: replicantIdx,
-      outDir: path.join(this.params.outDir, String(replicantIdx)),
+      outDir,
+      logFile: path.join(outDir, AGENT_LOG_FILE),
       replicantClass: brain.name,
       planRunDir: this.params.outDir,
       redisPortSendQueue: responseQueue,
@@ -144,7 +161,7 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
       spec: this.params.spec,
     };
 
-    let kill: () => void;
+    let kill: (signal?: NodeJS.Signals | number) => void;
     if (runtime.platform === 'nodejs') {
       kill = runNode({
         agentParams,
@@ -161,12 +178,14 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
 
     const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
-      kill: async () => {
+      kill: async (signal?: NodeJS.Signals | number) => {
         await rpcHandle.close();
-        kill();
+        kill(signal);
       },
       params: agentParams,
     };
+
+    this.replicants.add(replicantHandle);
 
     return replicantHandle;
   }

@@ -11,16 +11,16 @@ export interface CommonTestEnv {
 
 export interface ReplicantEnv extends CommonTestEnv {}
 
-export interface SchedulerEnv<Spec> extends CommonTestEnv {
-  spawn<T>(brain: ReplicantBrain<T>, runtime: ReplicantRuntimeParams): Promise<Replicant<T, Spec>>;
+export interface SchedulerEnv<S> extends CommonTestEnv {
+  spawn<T>(brain: ReplicantBrain<T>, runtime: ReplicantRuntimeParams): Promise<Replicant<T, S>>;
 }
 
 export type ReplicantBrain<T> = { new (): T };
 
-export interface Replicant<T, Spec> {
+export interface Replicant<T, S> {
   brain: RpcHandle<T>;
-  kill(code?: number): void;
-  params: ReplicantParams<Spec>;
+  kill(signal?: NodeJS.Signals | number): void;
+  params: ReplicantParams<S>;
 }
 
 export type RpcHandle<T> = {

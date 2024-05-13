@@ -279,11 +279,11 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
   });
 };
 
-export const getReader = (results: PlanResults) => {
+export const getReader = (results: PlanResults<any>) => {
   const start = Date.now();
   const reader = new LogReader();
 
-  for (const [replicantId, { logFile }] of Object.entries(results.agents)) {
+  for (const [replicantId, { logFile }] of Object.entries(results.replicants)) {
     reader.addFile(logFile, { preprocessor: (line) => ({ ...line, context: { ...line?.context, replicantId } }) });
   }
 

@@ -25,7 +25,7 @@ export type ResourceUsageStats = {
   }[];
 };
 
-export const analyzeResourceUsage = async <Spec>(results: PlanResults<Spec>): Promise<ResourceUsageStats> => {
+export const analyzeResourceUsage = async <S>(results: PlanResults<S>): Promise<ResourceUsageStats> => {
   const reader = getReader(results);
 
   const stats: ResourceUsageStats = {};
