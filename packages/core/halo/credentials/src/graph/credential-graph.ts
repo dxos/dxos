@@ -210,7 +210,13 @@ export class CredentialGraph<A, State> {
     }
     const updatedSubject = headCredential.subject.id;
     path.credentials.add(headCredential.id!);
-    if (this._stateHandler.isUpdateAllowed(path, headCredential, path.head.assertion)) {
+    let isUpdateAllowed = this._stateHandler.isUpdateAllowed(path, headCredential, path.head.assertion);
+    // Compatibility with old credentials where parent references were not specified.
+    if (!isUpdateAllowed && path.head.parents[0]?.id === this._root.id) {
+      const globalState = this.getGlobalStateScope();
+      isUpdateAllowed = this._stateHandler.isUpdateAllowed(globalState, headCredential, path.head.assertion);
+    }
+    if (isUpdateAllowed) {
       path.forkChangedSubjects.add(updatedSubject);
       path.forkIssuers.add(headCredential.issuer);
       path.state.set(updatedSubject, path.head);

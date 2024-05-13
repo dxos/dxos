@@ -14,6 +14,10 @@ export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 export type VerificationResult = { kind: 'pass' } | { kind: 'fail'; errors: string[] };
 
 export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
+  if (credential.parentCredentialIds?.length === 0) {
+    delete credential.parentCredentialIds;
+  }
+
   if (!credential.issuer.equals(credential.proof!.signer)) {
     if (!credential.proof!.chain) {
       return {

@@ -67,8 +67,11 @@ export const createCredential = async ({
       value: new Uint8Array(),
       nonce,
     },
-    parentCredentialIds,
   };
+
+  if ((parentCredentialIds?.length ?? 0) > 0) {
+    credential.parentCredentialIds = parentCredentialIds;
+  }
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);

@@ -22,6 +22,20 @@ describe('MemberStateMachine', () => {
     spaceKey = await keyring.createKey();
   });
 
+  test('compatibility with old credentials (no parent references)', async () => {
+    const stateMachine = createStateMachine();
+    const [A, B, C, D, E] = await createPeers(5);
+    await admit(stateMachine, spaceKey, A, []);
+    await admit(stateMachine, A, B, []);
+    await admit(stateMachine, B, C, []);
+    await admit(stateMachine, D, E, []);
+    expectOwnerAndAdmins(stateMachine, [A, B, C]);
+    expectRoles(stateMachine, [
+      [D, SpaceMember.Role.REMOVED],
+      [E, SpaceMember.Role.REMOVED],
+    ]);
+  });
+
   test('first member is the owner if no explicit credential', async () => {
     const stateMachine = createStateMachine();
     const [A, B] = await createPeers(2);
