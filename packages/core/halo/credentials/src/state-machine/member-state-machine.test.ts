@@ -446,38 +446,40 @@ describe.only('MemberStateMachine', () => {
                                         |J remove K|---+
                                         +----------+
    */
-  test('combined case', async () => {
-    const stateMachine = createStateMachine();
+  test('combined case ordering tolerance', async () => {
     const [A, B, C, D, E, F, G, H, I, J, K, L] = await createPeers(12);
-    const spaceCreated = await createSpace(stateMachine, A);
-    const aAdmitB = await admit(stateMachine, A, B, [spaceCreated]);
-    const bAdmitC = await admit(stateMachine, B, C, [aAdmitB]);
-    const cAdmitE = await admit(stateMachine, C, E, [bAdmitC]);
-    const bAdmitD = await admit(stateMachine, B, D, [aAdmitB]);
-    const dAdmitF = await admit(stateMachine, D, F, [bAdmitD]);
-    await remove(stateMachine, E, D, [bAdmitD, cAdmitE]);
-    expectRoles(stateMachine, [
-      [A, SpaceMember.Role.OWNER],
-      [C, SpaceMember.Role.ADMIN],
-      [E, SpaceMember.Role.ADMIN],
-      [B, SpaceMember.Role.ADMIN],
-      [D, SpaceMember.Role.REMOVED],
-      [F, SpaceMember.Role.REMOVED],
-    ]);
-    const aAdmitG = await admit(stateMachine, A, G, [spaceCreated]);
-    const gAdmitK = await admit(stateMachine, G, K, [aAdmitG]);
-    await admit(stateMachine, K, L, [gAdmitK]);
-    const gAdmitH = await admit(stateMachine, G, H, [aAdmitG]);
-    const hAdmitI = await admit(stateMachine, H, I, [gAdmitH]);
-    const iAdmitJ = await admit(stateMachine, I, J, [hAdmitI]);
-    await remove(stateMachine, J, K, [dAdmitF, iAdmitJ]);
-    expectOwnerAndAdmins(stateMachine, [A, B, C, E, G, H, I, J]);
-    expectRoles(stateMachine, [
-      [L, SpaceMember.Role.REMOVED],
-      [K, SpaceMember.Role.REMOVED],
-      [D, SpaceMember.Role.REMOVED],
-      [F, SpaceMember.Role.REMOVED],
-    ]);
+    const addLeftBranch = async (stateMachine: MemberStateMachine, genesis: PublicKey) => {
+      const aAdmitB = await admit(stateMachine, A, B, [genesis]);
+      const bAdmitC = await admit(stateMachine, B, C, [aAdmitB]);
+      const cAdmitE = await admit(stateMachine, C, E, [bAdmitC]);
+      const bAdmitD = await admit(stateMachine, B, D, [aAdmitB]);
+      const dAdmitF = await admit(stateMachine, D, F, [bAdmitD]);
+      await remove(stateMachine, E, D, [bAdmitD, cAdmitE]);
+      return dAdmitF;
+    };
+    const addRightBranch = async (stateMachine: MemberStateMachine, genesis: PublicKey) => {
+      const aAdmitG = await admit(stateMachine, A, G, [genesis]);
+      const gAdmitK = await admit(stateMachine, G, K, [aAdmitG]);
+      await admit(stateMachine, K, L, [gAdmitK]);
+      const gAdmitH = await admit(stateMachine, G, H, [aAdmitG]);
+      const hAdmitI = await admit(stateMachine, H, I, [gAdmitH]);
+      return admit(stateMachine, I, J, [hAdmitI]);
+    };
+    const branches = [addLeftBranch, addRightBranch];
+    for (const firstBranch of [0, 1]) {
+      const stateMachine = createStateMachine();
+      const spaceCreated = await createSpace(stateMachine, A);
+      const connectorParent1 = await branches[firstBranch](stateMachine, spaceCreated);
+      const connectorParent2 = await branches[1 - firstBranch](stateMachine, spaceCreated);
+      await remove(stateMachine, J, K, [connectorParent1, connectorParent2]);
+      expectOwnerAndAdmins(stateMachine, [A, B, C, E, G, H, I, J]);
+      expectRoles(stateMachine, [
+        [L, SpaceMember.Role.REMOVED],
+        [K, SpaceMember.Role.REMOVED],
+        [D, SpaceMember.Role.REMOVED],
+        [F, SpaceMember.Role.REMOVED],
+      ]);
+    }
   });
 
   const createSpace = async (stateMachine: MemberStateMachine, creator: PublicKey): Promise<PublicKey> => {

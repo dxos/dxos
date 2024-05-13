@@ -177,7 +177,7 @@ export class MemberStateMachine {
       const path = paths.pop()!;
       log('visit vertex', { id: path.head.id });
       this._updatePathState(path);
-      const convergedPaths = this._handleMergePoint(pendingPaths, path);
+      const convergedPaths = this._handleMergePoint(paths, pendingPaths, path);
       if (convergedPaths == null) {
         log('waiting for other paths');
         continue;
@@ -230,11 +230,19 @@ export class MemberStateMachine {
     pendingPaths.set(convergedPaths[0].head.id, clearedPending);
   }
 
-  private _handleMergePoint(pendingPaths: Map<number, PathState[]>, path: PathState): PathState[] | null {
+  private _handleMergePoint(
+    paths: PathState[],
+    pendingPaths: Map<number, PathState[]>,
+    path: PathState,
+  ): PathState[] | null {
     const pendingList = pendingPaths.get(path.head.id) ?? [];
+    pendingPaths.set(path.head.id, pendingList);
     pendingList.push(path);
     if (pendingList.length < path.head.parents.length) {
-      pendingPaths.set(path.head.id, pendingList);
+      return null;
+    }
+    if (path.head.id === this._sentinel.id && paths.length > 0) {
+      log('waiting for all the active paths to converge on sentinel');
       return null;
     }
     pendingPaths.delete(path.head.id);
