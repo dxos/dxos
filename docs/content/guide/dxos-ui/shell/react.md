@@ -91,7 +91,7 @@ main();
 
 ## Usage
 
-```tsx file=./snippets/shell.tsx#L5-
+```tsx file=../snippets/shell.tsx#L5-
 import React from 'react';
 
 import { useClient, PublicKey } from '@dxos/react-client';
