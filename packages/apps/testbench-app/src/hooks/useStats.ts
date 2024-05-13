@@ -49,6 +49,7 @@ export const useStats = (): [Stats, () => void] => {
   useEffect(() => {
     setTimeout(async () => {
       log.info('getting stats...');
+      const begin = performance.now();
 
       // client.experimental.graph;
       const diagnostics = await client.diagnostics();
@@ -79,6 +80,7 @@ export const useStats = (): [Stats, () => void] => {
       }
       memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
 
+      log.info('collected stats', { elapsed: performance.now() - begin });
       setStats({
         diagnostics: TRACE_PROCESSOR.getDiagnostics(),
         memory,

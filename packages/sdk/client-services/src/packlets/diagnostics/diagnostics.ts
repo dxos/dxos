@@ -29,6 +29,7 @@ import { DXOS_VERSION } from '../../version';
 import { type ServiceContext } from '../services';
 import { getPlatform } from '../services/platform';
 import { type DataSpace } from '../spaces';
+import { asyncTimeout } from '@dxos/async';
 
 const DEFAULT_TIMEOUT = 1_000;
 
@@ -102,75 +103,64 @@ export const createDiagnostics = async (
     trace: TRACE_PROCESSOR.getDiagnostics(),
   };
 
-  // Trace metrics.
-  // TODO(burdon): Move here from logging service?
-  {
-    invariant(clientServices.LoggingService, 'SystemService is not available.');
-    diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
-      timeout: DEFAULT_TIMEOUT,
-    }).catch(() => undefined);
-  }
+  await Promise.all([
+    (async () => {
+      // Trace metrics.
+      // TODO(burdon): Move here from logging service?
+      invariant(clientServices.LoggingService, 'SystemService is not available.');
+      diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
+        timeout: DEFAULT_TIMEOUT,
+      }).catch(() => undefined);
+    })(),
+    (async () => {
+      diagnostics.storage = await asyncTimeout(getStorageDiagnostics(), DEFAULT_TIMEOUT).catch(() => undefined);
+    })(),
+    async () => {
+      const identity = serviceContext.identityManager.identity;
+      if (identity) {
+        // Identity.
+        diagnostics.identity = {
+          identityKey: identity.identityKey,
+          spaceKey: identity.space.key,
+          profile: identity.profileDocument,
+        };
 
-  if (typeof navigator !== 'undefined' && navigator.storage) {
-    const map = new Map();
-    const dir = await navigator.storage.getDirectory();
-    for await (const filename of (dir as any)?.keys()) {
-      const idx = filename.indexOf('-', filename.indexOf('-') + 1);
-      if (idx === -1) {
-        continue;
+        // Devices.
+        const { devices } =
+          (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
+            timeout: DEFAULT_TIMEOUT,
+          }).catch(() => undefined)) ?? {};
+        diagnostics.devices = devices;
+
+        // TODO(dmaretskyi): Add metrics for halo space.
+
+        // Spaces.
+        if (serviceContext.dataSpaceManager) {
+          diagnostics.spaces = await Promise.all(
+            Array.from(serviceContext.dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)) ?? [],
+          );
+        }
+
+        // Feeds.
+        const { feeds = [] } =
+          (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
+            timeout: DEFAULT_TIMEOUT,
+          }).catch(() => undefined)) ?? {};
+        diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
+
+        // Signal servers.
+
+        const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
+          timeout: DEFAULT_TIMEOUT,
+        }).catch(() => undefined);
+        diagnostics.networkStatus = status;
+
+        // Networking.
+
+        diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
       }
-
-      map.set(filename.slice(0, idx), (map.get(filename.slice(0, idx)) ?? 0) + 1);
-    }
-
-    diagnostics.storage = Array.from(map.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([file, count]) => ({ file, count }));
-  }
-
-  const identity = serviceContext.identityManager.identity;
-  if (identity) {
-    // Identity.
-    diagnostics.identity = {
-      identityKey: identity.identityKey,
-      spaceKey: identity.space.key,
-      profile: identity.profileDocument,
-    };
-
-    // Devices.
-    const { devices } =
-      (await getFirstStreamValue(clientServices.DevicesService!.queryDevices(), {
-        timeout: DEFAULT_TIMEOUT,
-      }).catch(() => undefined)) ?? {};
-    diagnostics.devices = devices;
-
-    // TODO(dmaretskyi): Add metrics for halo space.
-
-    // Spaces.
-    if (serviceContext.dataSpaceManager) {
-      diagnostics.spaces = await Promise.all(
-        Array.from(serviceContext.dataSpaceManager.spaces.values()).map((space) => getSpaceStats(space)) ?? [],
-      );
-    }
-
-    // Feeds.
-    const { feeds = [] } =
-      (await getFirstStreamValue(clientServices.DevtoolsHost!.subscribeToFeeds({}), {
-        timeout: DEFAULT_TIMEOUT,
-      }).catch(() => undefined)) ?? {};
-    diagnostics.feeds = feeds.map(({ feedKey, bytes, length }) => ({ feedKey, bytes, length }));
-
-    // Signal servers.
-
-    const status = await getFirstStreamValue(clientServices.NetworkService!.queryStatus(), {
-      timeout: DEFAULT_TIMEOUT,
-    }).catch(() => undefined);
-    diagnostics.networkStatus = status;
-
-    // Networking.
-
-    diagnostics.swarms = serviceContext.networkManager.connectionLog?.swarms;
-  }
+    },
+  ]);
 
   diagnostics.config = config.values;
 
@@ -221,4 +211,24 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
   }
 
   return stats;
+};
+
+const getStorageDiagnostics = async () => {
+  if (typeof navigator === 'undefined' || !navigator.storage) {
+    return undefined;
+  }
+  const map = new Map();
+  const dir = await navigator.storage.getDirectory();
+  for await (const filename of (dir as any)?.keys()) {
+    const idx = filename.indexOf('-', filename.indexOf('-') + 1);
+    if (idx === -1) {
+      continue;
+    }
+
+    map.set(filename.slice(0, idx), (map.get(filename.slice(0, idx)) ?? 0) + 1);
+  }
+
+  return Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([file, count]) => ({ file, count }));
 };
