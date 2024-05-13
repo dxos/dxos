@@ -19,13 +19,13 @@ It has three key features:
 
 Composer gets its real-time collaboration and offline abilities through a peer-to-peer model.
 
-For example a running system might sync data like this, where nodes represent devices and edges represent syncing connections:
+For example a running system might sync data like this, where nodes represent devices:
 
 ![Alice and Bob device example](alice-and-bob-devices.svg)
 
-The syncing connections will re-adjust themselves as devices come on and offline. If Bob's desktop goes offline his smartphone will connect to either Alice's desktop or smartphone in order to stay up-to-date.
+Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per browser profile, so users can have multiple devices running on a physical machine.
 
-The use of an [Agent](../guide/tooling/cli/agent.md) is optional. Agents provide availability if all other devices are offline, but aren't required otherwise.
+[Agents](../guide/tooling/cli/agent.md) are DXOS instances running without an attached user interface. A common use of agents is to run on a server and provide availability if all other devices are offline, but this is completely optional.
 
 ## Read More
 
