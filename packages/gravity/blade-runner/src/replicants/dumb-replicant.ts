@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { sleep } from '@dxos/async';
 import { log } from '@dxos/log';
 
 import { ReplicantRegistry } from '../plan';
