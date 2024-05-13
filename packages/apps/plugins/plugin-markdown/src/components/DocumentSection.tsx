@@ -63,7 +63,7 @@ const DocumentSection: FC<{
   const handleAction = useActionHandler(editorView);
 
   return (
-    <div role='none' className='flex flex-col group'>
+    <div role='none' className='flex flex-col'>
       <div
         {...focusAttributes}
         ref={parentRef}
@@ -74,7 +74,7 @@ const DocumentSection: FC<{
         <Toolbar.Root
           state={formattingState}
           onAction={handleAction}
-          classNames={['z-[1] invisible group-focus-within:visible', sectionToolbarLayout]}
+          classNames={['z-[1] invisible group-focus-within/section:visible', sectionToolbarLayout]}
         >
           <Toolbar.Markdown />
           <Toolbar.Separator />
