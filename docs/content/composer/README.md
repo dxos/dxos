@@ -21,26 +21,7 @@ Composer gets its real-time collaboration and offline abilities through a peer-t
 
 For example a running system might sync data like this, where nodes represent devices and edges represent syncing connections:
 
-```mermaid
-graph BT;
-  subgraph Alice
-    AliceSmartphone["Alice's smartphone (Chrome)"]
-    AliceDesktop["Alice's desktop (Chrome)"]
-  end
-  subgraph Bob
-    BobDesktopChrome["Bob's desktop (Chrome)"]
-    BobDesktopFirefox["Bob's desktop (Firefox)"]
-    BobSmartphone["Bob's smartphone"]
-  end
-  subgraph Server
-    Agent["<a href='../guide/tooling/cli/agent.md'>Agent</a>"]
-  end
-  AliceSmartphone<-->AliceDesktop
-  AliceDesktop<-->BobDesktopChrome
-  BobSmartphone<-->BobDesktopChrome
-  BobDesktopFirefox<-->BobDesktopChrome
-  Agent<-.->AliceDesktop
-```
+![Alice and Bob device example](alice-and-bob-devices.svg)
 
 The syncing connections will re-adjust themselves as devices come on and offline. If Bob's desktop goes offline his smartphone will connect to either Alice's desktop or smartphone in order to stay up-to-date.
 
