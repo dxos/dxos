@@ -8,8 +8,7 @@ import { Context } from '@dxos/context';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import { ReplicantEnvImpl, type RedisOptions } from './env';
-import { ReplicantRegistry } from './env/replicant-registry';
+import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from './env';
 import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type RunParams } from './run-process';
@@ -19,18 +18,14 @@ import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/reso
 /**
  * Entry point for process running in agent mode.
  */
-export const runReplicant = async (params: RunParams) => {
-  const replicant = new (ReplicantRegistry.instance.get(params.replicantParams.name))();
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const replicantEnv = new ReplicantEnvImpl(replicant);
-};
-
-const runReplicant = async <S, C>(params: AgentParams<S, C>) => {
+export const runReplicant = async <Spec>({ agentParams: params, options }: RunParams<Spec>) => {
   const ctx = new Context();
   try {
     initLogProcessor(params);
+    const replicant = new (ReplicantRegistry.instance.get(params.name))();
 
-    const env = new ReplicantEnvImpl<S, C>(
+    const env = new ReplicantEnvImpl<Spec>(
+      replicant,
       params,
       !isNode() ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions) : undefined,
     );
@@ -47,7 +42,7 @@ const runReplicant = async <S, C>(params: AgentParams<S, C>) => {
   }
 };
 
-const initLogProcessor = <S, C>(params: AgentParams<S, C>) => {
+const initLogProcessor = <S>(params: AgentParams<S>) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({

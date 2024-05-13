@@ -23,8 +23,8 @@ export type TestParams<S> = {
 
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
-// TODO(mykola): Remove.
-export type AgentParams<S, C> = {
+// TODO(mykola): Rename to ReplicantParams.
+export type AgentParams<S> = {
   /**
    * Replicant name. Used in registry.
    */
@@ -32,16 +32,16 @@ export type AgentParams<S, C> = {
   agentIdx: number;
   agentId: string;
   outDir: string;
-  config: C;
   planRunDir: string;
-  runtime: AgentRuntimeParams;
   redisPortSendQueue: string;
   redisPortReceiveQueue: string;
 
+  runtime: AgentRuntimeParams;
   testId: string;
   spec: S;
 };
 
+// TODO(mykola): Rename to ReplicantRuntimeParams.
 export type AgentRuntimeParams = {
   // defaults to node.
   platform?: Platform;

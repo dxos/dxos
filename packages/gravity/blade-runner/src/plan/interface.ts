@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type AgentRuntimeParams } from './spec';
+
 export interface CommonTestEnv {
   syncBarrier(key: string, amount: number): Promise<void>;
   syncData<T>(key: string, amount: number, data?: T): Promise<T[]>;
@@ -10,7 +12,7 @@ export interface CommonTestEnv {
 export interface ReplicantEnv extends CommonTestEnv {}
 
 export interface SchedulerEnv extends CommonTestEnv {
-  spawn<T>(brain: ReplicantBrain<T>): Promise<Replicant<T>>;
+  spawn<T>(brain: ReplicantBrain<T>, runtime: AgentRuntimeParams): Promise<Replicant<T>>;
 }
 
 export type ReplicantBrain<T> = { new (): T };

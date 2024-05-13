@@ -25,12 +25,12 @@ type ProcessHandle = {
   kill: () => void;
 };
 
-export type RunParams<S, C> = {
-  agentParams: AgentParams<S, C>;
+export type RunParams<S> = {
+  agentParams: AgentParams<S>;
   options: GlobalOptions;
 };
 
-export const runNode = <S, C>(params: RunParams<S, C>): ProcessHandle => {
+export const runNode = <S>(params: RunParams<S>): ProcessHandle => {
   const execArgv = process.execArgv;
 
   if (params.options.profile) {
@@ -74,9 +74,9 @@ export const runNode = <S, C>(params: RunParams<S, C>): ProcessHandle => {
   };
 };
 
-export const runBrowser = <S, C>(
-  planName: string,
-  agentParams: AgentParams<S, C>,
+export const runBrowser = <S>(
+  planName: string, //
+  agentParams: AgentParams<S>,
   options: GlobalOptions,
 ): ProcessHandle => {
   const doneTrigger = new Trigger<number>();

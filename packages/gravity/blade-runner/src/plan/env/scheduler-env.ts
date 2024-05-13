@@ -3,6 +3,7 @@
 //
 
 import { type Callback, Redis, type RedisOptions } from 'ioredis';
+import path from 'node:path';
 
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
@@ -12,7 +13,7 @@ import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
 import { runNode } from '../run-process';
-import { type GlobalOptions, type TestParams } from '../spec';
+import { type AgentRuntimeParams, type AgentParams, type GlobalOptions, type TestParams } from '../spec';
 
 export class SchedulerEnvImpl<S> implements SchedulerEnv {
   public redis: Redis;
@@ -108,8 +109,10 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     await this.redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
   }
 
-  // TODO(mykola): Add options to spawn browser.
-  async spawn<T>(brain: ReplicantBrain<T>): Promise<Replicant<T>> {
+  async spawn<T>(
+    brain: ReplicantBrain<T>,
+    runtime: AgentRuntimeParams = { platform: 'nodejs' },
+  ): Promise<Replicant<T>> {
     const requestQueue = `replicant:requests:${this.params.testId}`;
     const responseQueue = `replicant:responses:${this.params.testId}`;
     const rpcPort = createRedisRpcPort({
@@ -125,17 +128,25 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     });
 
     await rpcHandle.open();
+    const replicantIdx = this.replicantIdx++;
+
+    const agentParams: AgentParams<any> = {
+      agentIdx: replicantIdx,
+      agentId: `test-${this.params.testId}:replicant-${replicantIdx}`,
+      outDir: path.join(this.params.outDir, String(replicantIdx)),
+      name: brain.name,
+      planRunDir: this.params.outDir,
+      redisPortSendQueue: responseQueue,
+      redisPortReceiveQueue: requestQueue,
+
+      runtime,
+      testId: this.params.testId,
+      spec: this.params.spec,
+    };
 
     const { kill } = runNode({
-      replicantIdx: this.replicantIdx++,
-      outDir: this.params.outDir,
-      profile: this._options.profile,
-      debug: this._options.debug,
-      replicantParams: {
-        name: brain.name,
-        portSendQueue: responseQueue,
-        portReceiveQueue: requestQueue,
-      },
+      agentParams,
+      options: this._options,
     });
 
     return {
