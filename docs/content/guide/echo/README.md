@@ -53,8 +53,8 @@ Units of data are referred to as `objects` (like documents or rows in other data
 
 ## How to use ECHO
 
-* Install the appropriate npm package [`@dxos/client`](../typescript) or [`@dxos/react-client`](../react)
-* Create a [Client](../typescript#configuration) (or a [ClientProvider](../react#cofiguration) in react)
+* Install the appropriate npm package [`@dxos/client`](./typescript/) or [`@dxos/react-client`](./react/)
+* Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
 * Set up an identity with [HALO](../halo/)
 * Create or Join a [Space](#spaces)
 * [Query objects](./typescript/queries.md) (in [react](./react/queries.md))
@@ -71,5 +71,5 @@ For Node.js applications, the ECHO database is implemented as an in-process stor
 
 ## Next steps
 
-* If using `react` see the [React guide](../react/)
-* Otherwise, follow the [TypeScript guide](../typescript/)
+* If using `react` see the [React guide](./react/)
+* Otherwise, follow the [TypeScript guide](./typescript/)

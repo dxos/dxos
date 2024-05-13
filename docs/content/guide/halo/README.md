@@ -67,8 +67,8 @@ Device Invitations allow users to synchronize their identity and data across mul
 
 How to use the HALO Shell in code:
 
-* Use [Shell with Typescript](../typescript#installation)
-* Use [Shell with React](../react/#installation)
+* Use [Shell with Typescript](../echo/typescript/)
+* Use [Shell with React](../echo/react/)
 
 How to read the HALO identity in code:
 

@@ -8,7 +8,7 @@ next: ./tutorial
 DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
 This guide shows how to use [ECHO](./echo/) for state consensus and [HALO](./halo/) for decentralized identity.
 
-DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
+DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./echo/typescript) and a [`react` API](./echo/react).
 
 ::: note In this guide
 
@@ -197,8 +197,8 @@ For example, with [Netlify](https://netlify.com):
 ## Next steps
 
 * Step-by-step [React tutorial](./echo/tutorial.md)
-* ECHO with [React](./react/)
-* ECHO with [TypeScript](./typescript/)
+* ECHO with [React](./echo/react/)
+* ECHO with [TypeScript](./echo/typescript/)
 * ECHO with [strongly typed objects](./echo/typescript/queries.md#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
