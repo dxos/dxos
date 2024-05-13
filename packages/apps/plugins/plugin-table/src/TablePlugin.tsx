@@ -30,6 +30,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            label: (object: any) => (object instanceof TableType ? object.title : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },

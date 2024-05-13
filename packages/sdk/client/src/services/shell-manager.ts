@@ -11,7 +11,12 @@ import {
 } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type AppContextRequest, type LayoutRequest, ShellDisplay } from '@dxos/protocols/proto/dxos/iframe';
+import {
+  type AppContextRequest,
+  type LayoutRequest,
+  ShellDisplay,
+  type InvitationUrlRequest,
+} from '@dxos/protocols/proto/dxos/iframe';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -54,6 +59,11 @@ export class ShellManager {
     this._display = ShellDisplay.FULLSCREEN;
     this.contextUpdate.emit({ display: this._display });
     await this._shellRpc.rpc.ShellService.setLayout(request, { timeout: RPC_TIMEOUT });
+  }
+
+  async setInvitationUrl(request: InvitationUrlRequest) {
+    log('set invitation url', request);
+    await this._shellRpc?.rpc.ShellService.setInvitationUrl(request, { timeout: RPC_TIMEOUT });
   }
 
   async open() {

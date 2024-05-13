@@ -32,7 +32,9 @@ import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-rep
 import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
 
-import { type BeforeSaveParams, LevelDBStorageAdapter, type StorageCallbacks } from './leveldb-storage-adapter';
+import { EchoNetworkAdapter } from './echo-network-adapter';
+import { type EchoReplicator } from './echo-replicator';
+import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
@@ -56,7 +58,7 @@ export class AutomergeHost {
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
   private readonly _db: SubLevelDB;
-  private readonly _storageCallbacks?: StorageCallbacks;
+  private readonly _echoNetworkAdapter = new EchoNetworkAdapter();
 
   private _repo!: Repo;
   private _meshNetwork!: MeshNetworkAdapter;
@@ -94,9 +96,10 @@ export class AutomergeHost {
 
     this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
+
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      network: [this._clientNetwork, this._meshNetwork],
+      network: [this._clientNetwork, this._meshNetwork, this._echoNetworkAdapter],
       storage: this._storage,
 
       // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
@@ -108,6 +111,11 @@ export class AutomergeHost {
 
         if (!documentId) {
           return false;
+        }
+
+        const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
+        if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
+          return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
         }
 
         const doc = this._repo.handles[documentId]?.docSync();
@@ -127,7 +135,7 @@ export class AutomergeHost {
           const authorizedDevices = this._authorizedDevices.get(PublicKey.from(spaceKey));
 
           // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-          const deviceKeyHex = (this.repo.peerMetadataByPeerId[peerId] as any)?.dxos_deviceKey;
+          const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
           if (!deviceKeyHex) {
             log('device key not found for share policy check', { peerId, documentId });
             return false;
@@ -152,18 +160,29 @@ export class AutomergeHost {
     });
     this._clientNetwork.ready();
     this._meshNetwork.ready();
+    await this._echoNetworkAdapter.open();
 
     await this._clientNetwork.whenConnected();
+    await this._echoNetworkAdapter.whenConnected();
   }
 
   async close() {
     await this._storage.close?.();
     await this._clientNetwork.close();
+    await this._echoNetworkAdapter.close();
     await this._ctx.dispose();
   }
 
   get repo(): Repo {
     return this._repo;
+  }
+
+  async addReplicator(replicator: EchoReplicator) {
+    await this._echoNetworkAdapter.addReplicator(replicator);
+  }
+
+  async removeReplicator(replicator: EchoReplicator) {
+    await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {

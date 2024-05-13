@@ -17,7 +17,7 @@ ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a p
 * Support for offline writes and conflict resolution when peers rejoin the network.
 
 ::: note Tell us what you think
-Join our [Discord](https://discord.gg/KsDBXuUxvD) and talk to us about the kind of database you are looking for.
+Join our [Discord](https://discord.gg/eXVfryv3sW) and talk to us about the kind of database you are looking for.
 :::
 
 ## Spaces

@@ -62,6 +62,8 @@ export const getKey = (config: Config, name: string) => {
   return key?.value;
 };
 
+export const multiline = (...parts: string[]): string => parts.filter(Boolean).join('\n');
+
 export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;

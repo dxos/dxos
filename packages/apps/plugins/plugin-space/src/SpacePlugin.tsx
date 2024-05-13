@@ -83,9 +83,17 @@ export type SpacePluginOptions = {
     personalSpaceFolder: FolderType;
     dispatch: IntentDispatcher;
   }) => Promise<void>;
+
+  /**
+   * Query string parameter to look for space invitation codes.
+   */
+  spaceInvitationParam?: string;
 };
 
-export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
+export const SpacePlugin = ({
+  onFirstRun,
+  spaceInvitationParam = 'spaceInvitationCode',
+}: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
   const state = create<PluginState>({
     awaiting: undefined,
@@ -140,7 +148,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
-      const spaceInvitationCode = searchParams.get('spaceInvitationCode');
+      const spaceInvitationCode = searchParams.get(spaceInvitationParam);
       if (spaceInvitationCode) {
         void client.shell.joinSpace({ invitationCode: spaceInvitationCode }).then(async ({ space, target }) => {
           if (!space) {
@@ -675,7 +683,7 @@ export const SpacePlugin = ({ onFirstRun }: SpacePluginOptions = {}): PluginDefi
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
-                            folder: intent.data?.folder,
+                            folder: intent.data?.folder?.data,
                           },
                         },
                       },

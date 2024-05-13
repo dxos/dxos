@@ -318,7 +318,7 @@ For more info on using DXOS, see:
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+* Join the DXOS [Discord](https://discord.gg/eXVfryv3sW)
 * DXOS [repository on GitHub](https://github.com/dxos/dxos)
 * File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 

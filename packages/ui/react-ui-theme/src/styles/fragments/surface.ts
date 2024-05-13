@@ -25,3 +25,5 @@ export const modalSurface = 'modal-surface';
 // Elements that actively have the user’s “attention”; prefer to select with CSS-native selectors like focus-within,
 // but may be applied by app state. ⚠️ Do not apply statically.
 export const attentionSurface = 'attention-surface';
+
+export const accentSurface = 'surface-accent fg-inverse';
