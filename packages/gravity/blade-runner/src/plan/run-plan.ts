@@ -63,7 +63,7 @@ export const runPlan = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>
   if (options.repeatAnalysis) {
     // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
-    await plan.analyses(
+    await plan.analyze(
       { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
       summary.results,
     );
@@ -124,7 +124,7 @@ const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) =>
 
   let stats: any;
   try {
-    stats = await plan.analyses({ spec, outDir, testId }, result);
+    stats = await plan.analyze({ spec, outDir, testId }, result);
   } catch (err) {
     log.warn('error finishing plan', err);
   }

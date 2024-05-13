@@ -15,6 +15,7 @@ import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle 
 import { runBrowser, runNode } from '../run-process';
 import { type AgentRuntimeParams, type AgentParams, type GlobalOptions, type TestParams } from '../spec';
 
+// TODO(mykola): Track replicants, kill them on close.
 export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
   public redis: Redis;
 
@@ -159,7 +160,7 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
       ).kill;
     }
 
-    return {
+    const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
       kill: async () => {
         await rpcHandle.close();
@@ -167,5 +168,7 @@ export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
       },
       params: agentParams,
     };
+
+    return replicantHandle;
   }
 }

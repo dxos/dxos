@@ -38,6 +38,7 @@ export const runReplicant = async <Spec>({ agentParams: params, options }: RunPa
   } finally {
     log.info('agent complete', { agentId: params.agentId });
     void ctx.dispose();
+    // TODO(mykola): Delete finish, `kill` will be called by env.
     finish(0);
   }
 };
@@ -71,6 +72,7 @@ const finish = (code: number) => {
 };
 
 const initDiagnostics = () => {
+  // TODO(mykola): track diagnostics in browser.
   if (isNode()) {
     let prevCpuUsage = process.cpuUsage();
 

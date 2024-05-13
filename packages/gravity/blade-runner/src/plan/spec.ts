@@ -26,10 +26,14 @@ export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 // TODO(mykola): Rename to ReplicantParams.
 export type AgentParams<Spec> = {
   /**
-   * Replicant name. Used in registry.
+   * Replicant class name. Used in registry.
+   * Sent to replicant from orchestrator process.
    */
+  // TODO(mykola): Rename to replicantClass.
   name: string;
+  // TODO(mykola): Delete agentIdx.
   agentIdx: number;
+  // TODO(mykola): Rename to ReplicantId.
   agentId: string;
   outDir: string;
   planRunDir: string;
@@ -47,7 +51,9 @@ export type AgentRuntimeParams = {
   platform?: Platform;
 };
 
+// TODO(mykola): Rename to ReplicantRunOptions.
 export type AgentRunOptions<C> = {
+  // TODO(nykola): Delete config.
   config: C;
   runtime?: AgentRuntimeParams;
 };
@@ -65,6 +71,7 @@ export type AgentLog = {
 export interface TestPlan<Spec> {
   onError?: (err: Error) => void;
   run(env: SchedulerEnv<Spec>, params: TestParams<Spec>): Promise<PlanResults>;
-  analyses(params: TestParams<Spec>, results: PlanResults): Promise<any>;
+  // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
+  analyze(params: TestParams<Spec>, results: PlanResults): Promise<any>;
   defaultSpec(): Spec;
 }

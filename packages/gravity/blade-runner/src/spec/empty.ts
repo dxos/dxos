@@ -17,7 +17,6 @@ import {
 import { DumbReplicant } from '../replicants/dumb-replicant';
 
 export type EmptyTestSpec = {
-  agents: number;
   platform: Platform;
 };
 
@@ -30,7 +29,6 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
 
   defaultSpec(): EmptyTestSpec {
     return {
-      agents: 1,
       platform: 'chromium',
     };
   }
@@ -45,6 +43,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
 
     const result = await dumbReplicant.brain.doSomethingFunny();
     log.info('result', { result });
+    // TODO(mykola): Push in framework to handle results.
     return {
       agents: {
         [dumbReplicant.params.agentId]: {
@@ -55,7 +54,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     };
   }
 
-  async analyses(params: TestParams<EmptyTestSpec>, results: PlanResults): Promise<any> {
+  async analyze(params: TestParams<EmptyTestSpec>, results: PlanResults): Promise<any> {
     log.info('finished shutdown');
   }
 }
