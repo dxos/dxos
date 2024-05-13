@@ -10,11 +10,15 @@ A second factor provided to the invited member by the inviter to verify their id
 
 ### Client
 
-A running instance of DXOS such a command line program or a browser tab. There can be multiple clients per [device](#device).
+A running instance of DXOS such a command line program or a browser tab.
+
+There can be multiple clients per [device](#device). An example is browser tabs in the same browser profile and at the same domain. Each is a client and they share a device.
 
 ### Device
 
-A collection of [Clients](#client) connected to a DXOS [identity](#identity). Every browser profile is a device, with the tabs running DXOS as its clients. Thus there can be multiple "devices" per computer.
+A collection of [Clients](#client) connected to a DXOS [identity](#identity). Every browser profile/domain combination is a device, with the tabs running DXOS as its clients.
+
+*Device* doesn't refer to a physical machine, there can be multiple devices per computer.
 
 ### [ECHO](./echo/)
 
