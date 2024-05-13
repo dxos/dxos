@@ -11,6 +11,7 @@ export type LinkStyleProps = {
   variant?: 'accent' | 'neutral';
 };
 
+// TODO(burdon): Export fragment.
 export const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc) =>
   mx(
     'underline decoration-1 underline-offset-2 transition-color rounded-sm',

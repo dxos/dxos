@@ -45,7 +45,7 @@ Visit [the certificates page](https://developer.apple.com/account/resources/cert
 
 ```ini
 [settings.apple]
-team_identifier = GV52DXHA2M # will be different than this
+team_identifier = 9428WC5MR8
 ```
 
 ### Signing Certificate
@@ -80,7 +80,8 @@ Every developer creating development builds a signing certificate.
 
 #### Add Signing Certificate ID to your .sscrc
 
-Either in your home folder or in the project folder in, create a `.sscrc` file. If its created in the project, add it to the `.gitignore` patterns.
+Either in your home folder or in the project folder in, create a `.sscrc` file. 
+If it's created in the project, add it to the `.gitignore` patterns.
 
 - In the console, run `security find-identity`
 - Under `Valid identities only`, you will see a list of signing certificate, with the one you created at the end of the list.
