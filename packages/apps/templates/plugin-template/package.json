@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-template",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "An template project for prototyping plugins for the DXOS app framework.",
   "keywords": [
     "dxos",
