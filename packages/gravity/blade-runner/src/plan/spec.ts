@@ -21,57 +21,42 @@ export type TestParams<Spec> = {
   spec: Spec;
 };
 
+/**
+ * Currently blade-runner supports only `nodejs` and `chromium`.
+ */
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
-// TODO(mykola): Rename to ReplicantParams.
-export type AgentParams<Spec> = {
+export type ReplicantParams<Spec> = {
   /**
    * Replicant class name. Used in registry.
    * Sent to replicant from orchestrator process.
    */
-  // TODO(mykola): Rename to replicantClass.
-  name: string;
-  // TODO(mykola): Delete agentIdx.
-  agentIdx: number;
-  // TODO(mykola): Rename to ReplicantId.
-  agentId: string;
+  replicantClass: string;
+  replicantId: string;
   outDir: string;
   planRunDir: string;
   redisPortSendQueue: string;
   redisPortReceiveQueue: string;
 
-  runtime: AgentRuntimeParams;
+  runtime: ReplicantRuntimeParams;
   testId: string;
   spec: Spec;
 };
 
-// TODO(mykola): Rename to ReplicantRuntimeParams.
-export type AgentRuntimeParams = {
+export type ReplicantRuntimeParams = {
   // defaults to node.
   platform?: Platform;
 };
 
-// TODO(mykola): Rename to ReplicantRunOptions.
-export type AgentRunOptions<C> = {
-  // TODO(nykola): Delete config.
-  config: C;
-  runtime?: AgentRuntimeParams;
-};
-
-export type PlanResults = {
-  agents: { [agentId: string]: AgentLog };
-};
-
-export type AgentLog = {
-  outDir: string;
-  logFile: string;
+export type PlanResults<Spec> = {
+  replicants: { [replicantId: string]: ReplicantParams<Spec> };
 };
 
 // plan vs environment
 export interface TestPlan<Spec> {
   onError?: (err: Error) => void;
-  run(env: SchedulerEnv<Spec>, params: TestParams<Spec>): Promise<PlanResults>;
+  run(env: SchedulerEnv<Spec>, params: TestParams<Spec>): Promise<PlanResults<Spec>>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze(params: TestParams<Spec>, results: PlanResults): Promise<any>;
+  analyze(params: TestParams<Spec>, results: PlanResults<Spec>): Promise<any>;
   defaultSpec(): Spec;
 }

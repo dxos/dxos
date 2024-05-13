@@ -12,7 +12,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { AgentEnv } from './agent-env';
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
-import { type AgentParams } from '../spec';
+import { type ReplicantParams } from '../spec';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.
@@ -65,7 +65,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
           {
             agents,
             testId,
-          } as unknown as AgentParams<any, any>,
+          } as unknown as ReplicantParams<any, any>,
           { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
         ),
     );

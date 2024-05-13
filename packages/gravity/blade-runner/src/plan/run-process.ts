@@ -14,7 +14,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type AgentParams, type GlobalOptions, type Platform, AGENT_LOG_FILE } from './spec';
+import { type ReplicantParams, type GlobalOptions, type Platform, AGENT_LOG_FILE } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
@@ -26,7 +26,7 @@ type ProcessHandle = {
 };
 
 export type RunParams<Spec> = {
-  agentParams: AgentParams<Spec>;
+  agentParams: ReplicantParams<Spec>;
   options: GlobalOptions;
 };
 
@@ -46,7 +46,7 @@ export const runNode = <Spec>(params: RunParams<Spec>): ProcessHandle => {
   const childProcess = fork(process.argv[1], {
     execArgv: params.options.debug
       ? [
-          '--inspect=:' + (DEBUG_PORT_START + params.agentParams.agentIdx), //
+          '--inspect=:' + (DEBUG_PORT_START + params.agentParams.replicantId), //
           ...execArgv,
         ]
       : execArgv,
@@ -162,7 +162,7 @@ export const runBrowser = async <Spec>({ agentParams, options }: RunParams<Spec>
   await page.goto(`http://localhost:${port}`, { timeout: 0 });
 
   log.info('browser started and page loaded', {
-    agentIdx: agentParams.agentIdx,
+    replicantId: agentParams.replicantId,
     time: Date.now() - start,
   });
 

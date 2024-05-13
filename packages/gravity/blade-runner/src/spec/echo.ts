@@ -24,7 +24,7 @@ import { isNode, randomInt, range } from '@dxos/util';
 
 import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
 import {
-  type AgentRunOptions,
+  type ReplicantRunOptions,
   type AgentEnv,
   type PlanResults,
   type TestParams,
@@ -49,7 +49,7 @@ export type EchoTestSpec = {
 };
 
 export type EchoAgentConfig = {
-  agentIdx: number;
+  replicantId: number;
   signalUrl: string;
   invitationTopic: string;
 
@@ -96,20 +96,20 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     };
   }
 
-  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<AgentRunOptions<EchoAgentConfig>[]> {
+  async init({ spec, outDir }: TestParams<EchoTestSpec>): Promise<ReplicantRunOptions<EchoAgentConfig>[]> {
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
       log.error('error in signal server', { err });
       this.onError?.(err);
     });
 
     const invitationTopic = PublicKey.random().toHex();
-    return range(spec.agents).map((agentIdx) => ({
+    return range(spec.agents).map((replicantId) => ({
       config: {
-        agentIdx,
+        replicantId,
         signalUrl: signal.url(),
         invitationTopic,
-        creator: agentIdx === 0,
-        ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && agentIdx === spec.agents - 1,
+        creator: replicantId === 0,
+        ephemeral: spec.measureNewAgentSyncTime && spec.agents > 1 && replicantId === spec.agents - 1,
       },
       runtime: { platform: spec.platform },
     }));
@@ -117,7 +117,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   async run(env: AgentEnv<EchoTestSpec, EchoAgentConfig>): Promise<void> {
     const { config, spec } = env.params;
-    const { agentIdx, signalUrl } = config;
+    const { replicantId, signalUrl } = config;
 
     if (!this.builder) {
       this.builder = new TestBuilder(undefined, undefined, spec.transport);
@@ -139,15 +139,15 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
       ? createStorage({ type: StorageType.RAM })
       : createStorage({
           type: isNode() ? StorageType.NODE : StorageType.WEBFS,
-          root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.agentId}`,
+          root: `/tmp/dxos/gravity/${env.params.testId}/${env.params.replicantId}`,
         });
     await this._init(env);
 
     const getMaximalTimeframe = async () => {
       const timeframes = await Promise.all(
-        Object.keys(env.params.agents).map((agentId) =>
+        Object.keys(env.params.agents).map((replicantId) =>
           env.redis
-            .get(`${env.params.testId}:timeframe:${agentId}`)
+            .get(`${env.params.testId}:timeframe:${replicantId}`)
             .then((timeframe) => (timeframe ? deserializeTimeframe(timeframe) : new Timeframe())),
         ),
       );
@@ -172,17 +172,17 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     scheduleTaskInterval(
       ctx,
       async () => {
-        log.info('iter', { iter, agentIdx });
+        log.info('iter', { iter, replicantId });
 
         // Reconnect previously disconnected agent.
         if (!config.ephemeral && !this.client.initialized) {
-          log.trace('dxos.test.echo.reconnect', { agentIdx, iter } satisfies ReconnectLog);
+          log.trace('dxos.test.echo.reconnect', { replicantId, iter } satisfies ReconnectLog);
           await this._init(env);
         }
 
         if (!config.ephemeral) {
           // await env.redis.set(
-          //   `${env.params.testId}:timeframe:${env.params.agentId}`,
+          //   `${env.params.testId}:timeframe:${env.params.replicantId}`,
           //   serializeTimeframe(this.getSpaceBackend().dataPipeline.pipelineState!.timeframe),
           // );
         }
@@ -203,18 +203,18 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
           // const epoch = this.getSpaceBackend().dataPipeline.currentEpoch?.subject.assertion.number ?? -1;
 
-          // log.info('stats', { lag, mutationsPerSec, agentIdx, epoch, totalMutations });
+          // log.info('stats', { lag, mutationsPerSec, replicantId, epoch, totalMutations });
           // log.trace('dxos.test.echo.stats', {
           //   lag,
           //   mutationsPerSec,
-          //   agentIdx,
+          //   replicantId,
           //   epoch,
           //   totalMutations,
           // } satisfies StatsLog);
 
           // Disconnect some of the agents for one iteration.
           const skipIterration =
-            spec.withReconnects && iter > 0 && agentIdx > 0 && iter % agentIdx === 0 && iter % 5 === 0;
+            spec.withReconnects && iter > 0 && replicantId > 0 && iter % replicantId === 0 && iter % 5 === 0;
           if (skipIterration) {
             await this.client.destroy();
           } else {
@@ -238,7 +238,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
             await this.space.db.flush();
 
-            if (agentIdx === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
+            if (replicantId === 0 && spec.epochPeriod > 0 && iter % spec.epochPeriod === 0) {
               await this.space.internal.createEpoch();
             }
           }
@@ -251,8 +251,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
           // const maximalTimeframe = await getMaximalTimeframe();
           // await this.getSpaceBackend().dataPipeline.pipelineState!.waitUntilTimeframe(maximalTimeframe);
 
-          log.info('sync time', { time: performance.now() - begin, agentIdx, iter });
-          log.trace('dxos.test.echo.sync', { time: performance.now() - begin, agentIdx, iter } satisfies SyncTimeLog);
+          log.info('sync time', { time: performance.now() - begin, replicantId, iter });
+          log.trace('dxos.test.echo.sync', { time: performance.now() - begin, replicantId, iter } satisfies SyncTimeLog);
 
           await this.client.destroy();
         }
@@ -274,7 +274,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     this.client.experimental.graph.runtimeSchemaRegistry.registerSchema(TextV0Type);
 
     if (!this.spaceKey) {
-      await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.agentIdx}` });
+      await this.client.halo.createIdentity({ displayName: `test agent ${env.params.config.replicantId}` });
       if (env.params.config.creator) {
         this.space = await this.client.spaces.create({ name: 'test space' });
         this.space.share({
@@ -314,7 +314,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
     invariant(
       this.space,
-      `Space is not defined for agent:${env.params.config.agentIdx} creator:${env.params.config.creator}`,
+      `Space is not defined for agent:${env.params.config.replicantId} creator:${env.params.config.creator}`,
     );
     await this.space.waitUntilReady();
   }
@@ -349,9 +349,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     const resultsSummary: Record<string, any> = {};
     if (reconnectLogs.length) {
       const reconnectsCountByAgent = Object.fromEntries(
-        range(params.spec.agents).map((agentIdx) => [
-          agentIdx,
-          reconnectLogs.filter((entry) => entry.context.agentIdx === agentIdx).length,
+        range(params.spec.agents).map((replicantId) => [
+          replicantId,
+          reconnectLogs.filter((entry) => entry.context.replicantId === replicantId).length,
         ]),
       );
       log.info('reconnects by agent', reconnectsCountByAgent);
@@ -359,9 +359,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
     }
 
     const mutationsByAgent = Object.fromEntries(
-      range(params.spec.agents).map((agentIdx) => {
+      range(params.spec.agents).map((replicantId) => {
         const mutationRates = statsLogs
-          .filter((entry) => entry.context.agentIdx === agentIdx)
+          .filter((entry) => entry.context.replicantId === replicantId)
           .map((entry) => entry.context.mutationsPerSec)
           .sort((n1, n2) => n1 - n2);
 
@@ -374,10 +374,10 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
             .reduce((sum, rate) => sum + rate, 0) / mutationRates.length;
 
         return [
-          agentIdx,
+          replicantId,
           {
             totalMutations:
-              statsLogs.filter((entry) => entry.context.agentIdx === agentIdx).findLast(() => true)?.context
+              statsLogs.filter((entry) => entry.context.replicantId === replicantId).findLast(() => true)?.context
                 .totalMutations ?? 0,
             meanMutationRate,
             medianMutationRate,
@@ -423,16 +423,16 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         await renderPNG({
           type: 'scatter',
           data: {
-            datasets: range(params.spec.agents).map((agentIdx) => ({
-              label: `Agent #${agentIdx}`,
+            datasets: range(params.spec.agents).map((replicantId) => ({
+              label: `Agent #${replicantId}`,
               showLine: true,
               data: statsLogs
-                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .filter((entry) => entry.context.replicantId === replicantId)
                 .map((entry) => ({
                   x: entry.timestamp,
                   y: entry.context.totalMutations,
                 })),
-              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+              backgroundColor: BORDER_COLORS[replicantId % BORDER_COLORS.length],
             })),
           },
           options: {},
@@ -443,16 +443,16 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
         await renderPNG({
           type: 'scatter',
           data: {
-            datasets: range(params.spec.agents).map((agentIdx) => ({
-              label: `Agent #${agentIdx}`,
+            datasets: range(params.spec.agents).map((replicantId) => ({
+              label: `Agent #${replicantId}`,
               showLine: true,
               data: syncLogs
-                .filter((entry) => entry.context.agentIdx === agentIdx)
+                .filter((entry) => entry.context.replicantId === replicantId)
                 .map((entry) => ({
                   x: entry.timestamp,
                   y: entry.context.time,
                 })),
-              backgroundColor: BORDER_COLORS[agentIdx % BORDER_COLORS.length],
+              backgroundColor: BORDER_COLORS[replicantId % BORDER_COLORS.length],
             })),
           },
           options: {},
@@ -472,17 +472,17 @@ type StatsLog = {
   lag: number;
   mutationsPerSec: number;
   epoch: number;
-  agentIdx: number;
+  replicantId: number;
   totalMutations: number;
 };
 
 type SyncTimeLog = {
   time: number;
-  agentIdx: number;
+  replicantId: number;
   iter: number;
 };
 
 type ReconnectLog = {
-  agentIdx: number;
+  replicantId: number;
   iter: number;
 };

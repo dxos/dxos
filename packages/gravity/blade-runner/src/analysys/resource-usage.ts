@@ -14,7 +14,7 @@ export type ResourceUsageLogEntry = {
 };
 
 export type ResourceUsageStats = {
-  [agentId: string]: {
+  [replicantId: string]: {
     ts: number;
     duration: number;
 
@@ -25,7 +25,7 @@ export type ResourceUsageStats = {
   }[];
 };
 
-export const analyzeResourceUsage = async (results: PlanResults): Promise<ResourceUsageStats> => {
+export const analyzeResourceUsage = async <Spec>(results: PlanResults<Spec>): Promise<ResourceUsageStats> => {
   const reader = getReader(results);
 
   const stats: ResourceUsageStats = {};
@@ -33,12 +33,12 @@ export const analyzeResourceUsage = async (results: PlanResults): Promise<Resour
 
   for (const log of reader) {
     if (log.message === RESOURCE_USAGE_LOG) {
-      const context = log.context as ResourceUsageLogEntry & { agentId: string };
+      const context = log.context as ResourceUsageLogEntry & { replicantId: string };
 
-      if (lastProbeTs[context.agentId] !== undefined) {
-        stats[context.agentId] ??= [];
-        const duration = context.ts - lastProbeTs[context.agentId];
-        stats[context.agentId].push({
+      if (lastProbeTs[context.replicantId] !== undefined) {
+        stats[context.replicantId] ??= [];
+        const duration = context.ts - lastProbeTs[context.replicantId];
+        stats[context.replicantId].push({
           ts: context.ts,
           duration,
           cpuSystem: context.cpu.system / duration / 1000,
@@ -48,7 +48,7 @@ export const analyzeResourceUsage = async (results: PlanResults): Promise<Resour
         });
       }
 
-      lastProbeTs[context.agentId] = context.ts;
+      lastProbeTs[context.replicantId] = context.ts;
     }
   }
 

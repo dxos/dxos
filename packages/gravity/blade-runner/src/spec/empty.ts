@@ -21,7 +21,7 @@ export type EmptyTestSpec = {
 };
 
 export type EmptyAgentConfig = {
-  agentIdx: number;
+  replicantId: number;
 };
 
 export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
@@ -46,7 +46,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     // TODO(mykola): Push in framework to handle results.
     return {
       agents: {
-        [dumbReplicant.params.agentId]: {
+        [dumbReplicant.params.replicantId]: {
           outDir: dumbReplicant.params.outDir,
           logFile: path.join(dumbReplicant.params.outDir, AGENT_LOG_FILE),
         },

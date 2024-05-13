@@ -283,8 +283,8 @@ export const getReader = (results: PlanResults) => {
   const start = Date.now();
   const reader = new LogReader();
 
-  for (const [agentId, { logFile }] of Object.entries(results.agents)) {
-    reader.addFile(logFile, { preprocessor: (line) => ({ ...line, context: { ...line?.context, agentId } }) });
+  for (const [replicantId, { logFile }] of Object.entries(results.agents)) {
+    reader.addFile(logFile, { preprocessor: (line) => ({ ...line, context: { ...line?.context, replicantId } }) });
   }
 
   log.info(`LogReader: ${Date.now() - start}ms`);

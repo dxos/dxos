@@ -14,7 +14,7 @@ import { range } from '@dxos/util';
 
 import {
   type AgentEnv,
-  type AgentRunOptions,
+  type ReplicantRunOptions,
   type PlanResults,
   type Platform,
   type TestParams,
@@ -50,7 +50,7 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
     };
   }
 
-  async init({ spec }: TestParams<StorageTestSpec>): Promise<AgentRunOptions<StorageAgentConfig>[]> {
+  async init({ spec }: TestParams<StorageTestSpec>): Promise<ReplicantRunOptions<StorageAgentConfig>[]> {
     return [
       {
         config: {},

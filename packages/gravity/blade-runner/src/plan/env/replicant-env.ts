@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { ReplicantRpcServer } from './replicant-rpc-server';
 import { REDIS_PORT, createRedisRpcPort } from './util';
 import { type ReplicantEnv } from '../interface';
-import { type AgentParams } from '../spec';
+import { type ReplicantParams } from '../spec';
 
 export { type RedisOptions };
 
@@ -36,7 +36,7 @@ export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
 
   constructor(
     public replicant: any,
-    public params: AgentParams<Spec>,
+    public params: ReplicantParams<Spec>,
     private readonly _redisOptions?: RedisOptions,
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
@@ -87,7 +87,7 @@ export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
     const syncKey = `${this.params.testId}:${key}`;
 
     if (data !== undefined) {
-      await this.redis.set(`${syncKey}:data:${this.params.agentIdx}`, JSON.stringify(data));
+      await this.redis.set(`${syncKey}:data:${this.params.replicantId}`, JSON.stringify(data));
     }
     await this._barrier(syncKey, amount);
 

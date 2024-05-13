@@ -10,7 +10,7 @@ import { type TestSwarmConnection } from '@dxos/network-manager/testing';
 type JoinSwarmOptions = {
   context: Context;
   swarmIdx: number;
-  agentIdx: number;
+  replicantId: number;
   numAgents: number;
   targetSwarmTimeout: number;
   fullSwarmTimeout: number;
@@ -22,7 +22,7 @@ type LeaveSwarmOptions = {
   swarmIdx: number;
   swarm: TestSwarmConnection;
   fullSwarmTimeout: number;
-  agentIdx: number;
+  replicantId: number;
 };
 
 /**
@@ -31,21 +31,21 @@ type LeaveSwarmOptions = {
 export const joinSwarm = async ({
   context,
   swarmIdx,
-  agentIdx,
+  replicantId,
   numAgents,
   targetSwarmTimeout,
   fullSwarmTimeout,
   swarm,
 }: JoinSwarmOptions) => {
-  log.info('joining swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+  log.info('joining swarm', { replicantId, swarmIdx, swarmTopic: swarm.topic });
   await cancelWithContext(context, swarm.join());
 
-  log.info('swarm joined', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+  log.info('swarm joined', { replicantId, swarmIdx, swarmTopic: swarm.topic });
 
   await sleep(targetSwarmTimeout);
 
   log.info('number of connections within duration', {
-    agentIdx,
+    replicantId,
     swarmIdx,
     swarmTopic: swarm.topic,
     connections: swarm.protocol.connections.size,
@@ -60,12 +60,12 @@ export const joinSwarm = async ({
       context,
       swarm.protocol.connected.waitForCondition(() => swarm.protocol.connections.size === numAgents - 1),
     );
-    log.info('all peers connected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+    log.info('all peers connected', { replicantId, swarmIdx, swarmTopic: swarm.topic });
   };
 
   asyncTimeout(waitTillConnected(), fullSwarmTimeout).catch((error) => {
     log.info('all peers not connected', {
-      agentIdx,
+      replicantId,
       swarmIdx,
       swarmTopic: swarm.topic,
       connections: swarm.protocol.connections.size,
@@ -77,10 +77,10 @@ export const joinSwarm = async ({
 /**
  * Leave swarm and wait till all peers are disconnected.
  */
-export const leaveSwarm = async ({ context, swarmIdx, swarm, agentIdx, fullSwarmTimeout }: LeaveSwarmOptions) => {
-  log.info('closing swarm', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+export const leaveSwarm = async ({ context, swarmIdx, swarm, replicantId, fullSwarmTimeout }: LeaveSwarmOptions) => {
+  log.info('closing swarm', { replicantId, swarmIdx, swarmTopic: swarm.topic });
   await cancelWithContext(context, swarm.leave());
-  log.info('swarm closed', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+  log.info('swarm closed', { replicantId, swarmIdx, swarmTopic: swarm.topic });
 
   /**
    * Wait till all peers are disconnected (with timeout).
@@ -90,12 +90,12 @@ export const leaveSwarm = async ({ context, swarmIdx, swarm, agentIdx, fullSwarm
       context,
       swarm.protocol.disconnected.waitForCondition(() => swarm.protocol.connections.size === 0),
     );
-    log.info('all peers disconnected', { agentIdx, swarmIdx, swarmTopic: swarm.topic });
+    log.info('all peers disconnected', { replicantId, swarmIdx, swarmTopic: swarm.topic });
   };
 
   asyncTimeout(waitTillDisconnected(), fullSwarmTimeout).catch((error) => {
     log.info('all peers not disconnected', {
-      agentIdx,
+      replicantId,
       swarmIdx,
       swarmTopic: swarm.topic,
       connections: swarm.protocol.connections.size,
@@ -107,17 +107,17 @@ export const leaveSwarm = async ({ context, swarmIdx, swarm, agentIdx, fullSwarm
  * Iterate over all swarms and all agents.
  */
 export const forEachSwarmAndAgent = async (
-  agentId: string,
+  replicantId: string,
   agentIds: string[],
   swarms: TestSwarmConnection[],
-  callback: (swarmIdx: number, swarm: TestSwarmConnection, agentId: string) => Promise<void>,
+  callback: (swarmIdx: number, swarm: TestSwarmConnection, replicantId: string) => Promise<void>,
 ) => {
   await Promise.all(
     agentIds
-      .filter((id) => id !== agentId)
-      .map(async (agentId) => {
+      .filter((id) => id !== replicantId)
+      .map(async (replicantId) => {
         for await (const [swarmIdx, swarm] of swarms.entries()) {
-          await callback(swarmIdx, swarm, agentId);
+          await callback(swarmIdx, swarm, replicantId);
         }
       }),
   );

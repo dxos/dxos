@@ -12,7 +12,7 @@ import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from './env';
 import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type RunParams } from './run-process';
-import { type AgentParams, AGENT_LOG_FILE } from './spec';
+import { type ReplicantParams, AGENT_LOG_FILE } from './spec';
 import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
 
 /**
@@ -22,7 +22,7 @@ export const runReplicant = async <Spec>({ agentParams: params, options }: RunPa
   const ctx = new Context();
   try {
     initLogProcessor(params);
-    const replicant = new (ReplicantRegistry.instance.get(params.name))();
+    const replicant = new (ReplicantRegistry.instance.get(params.replicantClass))();
 
     const env = new ReplicantEnvImpl<Spec>(
       replicant,
@@ -33,17 +33,17 @@ export const runReplicant = async <Spec>({ agentParams: params, options }: RunPa
     await env.open();
     ctx.onDispose(() => env.close());
   } catch (err) {
-    log.catch(err, { agentId: params.agentId });
+    log.catch(err, { replicantId: params.replicantId });
     finish(1);
   } finally {
-    log.info('agent complete', { agentId: params.agentId });
+    log.info('agent complete', { replicantId: params.replicantId });
     void ctx.dispose();
     // TODO(mykola): Delete finish, `kill` will be called by env.
     finish(0);
   }
 };
 
-const initLogProcessor = <Spec>(params: AgentParams<Spec>) => {
+const initLogProcessor = <Spec>(params: ReplicantParams<Spec>) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({

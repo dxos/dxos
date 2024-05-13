@@ -13,7 +13,7 @@ import { defaultMap, range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type AgentRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type ReplicantRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type TransportTestSpec = {
@@ -37,7 +37,7 @@ export type TransportTestSpec = {
 };
 
 export type TransportAgentConfig = {
-  agentIdx: number;
+  replicantId: number;
   signalUrl: string;
   swarmTopicIds: string[];
 };
@@ -64,16 +64,16 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     };
   }
 
-  async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<AgentRunOptions<TransportAgentConfig>[]> {
+  async init({ spec, outDir }: TestParams<TransportTestSpec>): Promise<ReplicantRunOptions<TransportAgentConfig>[]> {
     const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
       log.error('error in signal server', { err });
       this.onError?.(err);
     });
 
     const swarmTopicIds = range(spec.swarmsPerAgent).map(() => PublicKey.random().toHex());
-    return range(spec.agents).map((agentIdx) => ({
+    return range(spec.agents).map((replicantId) => ({
       config: {
-        agentIdx,
+        replicantId,
         signalUrl: signal.url(),
         swarmTopicIds,
       },
@@ -82,14 +82,12 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
   async run(env: AgentEnv<TransportTestSpec, TransportAgentConfig>): Promise<void> {
     const { config, spec, agents } = env.params;
-    const { agentIdx, swarmTopicIds, signalUrl } = config;
+    const { replicantId, swarmTopicIds, signalUrl } = config;
 
     const numAgents = Object.keys(agents).length;
 
     log.info('run', {
-      agentIdx,
-      runnerAgentIdx: config.agentIdx,
-      agentId: env.params.agentId.substring(0, 8),
+      replicantId,
     });
 
     const networkManagerBuilder = new NetworkManagerTestBuilder({
@@ -97,11 +95,11 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       transport: spec.transport,
     });
 
-    const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.agentId));
+    const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.replicantId));
     await peer.open();
-    log.info('peer created', { agentIdx });
+    log.info('peer created', { replicantId });
 
-    log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
+    log.info(`creating ${swarmTopicIds.length} swarms`, { replicantId });
 
     // Swarms to join.
     const swarms = swarmTopicIds.map((swarmTopicId, swarmIdx) => {
@@ -111,7 +109,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
     const delayedSwarm = peer.createSwarm(PublicKey.from('delayed'));
 
-    log.info('swarms created', { agentIdx });
+    log.info('swarms created', { replicantId });
 
     const ctx = new Context();
     let testCounter = 0;
@@ -128,14 +126,14 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
       // Join all swarms.
       // How many connections established within the target duration.
       {
-        log.info('joining all swarms', { agentIdx });
+        log.info('joining all swarms', { replicantId });
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
             await joinSwarm({
               context,
               swarmIdx,
-              agentIdx,
+              replicantId,
               numAgents,
               targetSwarmTimeout: spec.targetSwarmTimeout,
               fullSwarmTimeout: spec.fullSwarmTimeout,
@@ -151,41 +149,41 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       // Start streams on all swarms.
       {
-        log.info('starting streams', { agentIdx });
+        log.info('starting streams', { replicantId });
 
         // TODO(egorgripasov): Multiply by iteration number.
         const targetStreams = (numAgents - 1) * spec.swarmsPerAgent;
         let actualStreams = 0;
 
         await forEachSwarmAndAgent(
-          env.params.agentId,
+          env.params.replicantId,
           Object.keys(env.params.agents),
           swarms,
-          async (swarmIdx, swarm, agentId) => {
-            const to = env.params.agents[agentId].config.agentIdx;
-            if (agentIdx > to) {
+          async (swarmIdx, swarm, replicantId) => {
+            const to = env.params.agents[replicantId].config.replicantId;
+            if (replicantId > to) {
               return;
             }
 
-            log.info('starting stream', { from: agentIdx, to, swarmIdx });
+            log.info('starting stream', { from: replicantId, to, swarmIdx });
             try {
-              const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
+              const streamTag = `stream-test-${testCounter}-${env.params.replicantId}-${replicantId}-${swarmIdx}`;
               log.info('open stream', { streamTag });
               await swarm.protocol.openStream(
-                PublicKey.from(agentId),
+                PublicKey.from(replicantId),
                 streamTag,
                 spec.streamLoadInterval,
                 spec.streamLoadChunkSize,
               );
               actualStreams++;
-              log.info('test stream started', { agentIdx, swarmIdx });
+              log.info('test stream started', { replicantId, swarmIdx });
             } catch (error) {
-              log.error('test stream failed', { agentIdx, swarmIdx, error });
+              log.error('test stream failed', { replicantId, swarmIdx, error });
             }
           },
         );
 
-        log.info('streams started', { testCounter, agentIdx, targetStreems: targetStreams, actualStreams });
+        log.info('streams started', { testCounter, replicantId, targetStreems: targetStreams, actualStreams });
         await env.syncBarrier(`streams are started at ${testCounter}`);
       }
 
@@ -193,38 +191,38 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       // Test connections.
       {
-        log.info('start testing connections', { agentIdx, testCounter });
+        log.info('start testing connections', { replicantId, testCounter });
 
         const targetConnections = (numAgents - 1) * spec.swarmsPerAgent;
 
         let actualConnections = 0;
         await forEachSwarmAndAgent(
-          env.params.agentId,
+          env.params.replicantId,
           Object.keys(env.params.agents),
           swarms,
-          async (swarmIdx, swarm, agentId) => {
-            log.info('testing connection', { agentIdx, swarmIdx });
+          async (swarmIdx, swarm, replicantId) => {
+            log.info('testing connection', { replicantId, swarmIdx });
             try {
-              await swarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+              await swarm.protocol.testConnection(PublicKey.from(replicantId), 'hello world');
               actualConnections++;
-              log.info('test connection succeeded', { agentIdx, swarmIdx });
+              log.info('test connection succeeded', { replicantId, swarmIdx });
             } catch (error) {
-              log.info('test connection failed', { agentIdx, swarmIdx, error });
+              log.info('test connection failed', { replicantId, swarmIdx, error });
             }
           },
         );
 
-        log.info('test connections done', { testCounter, agentIdx, targetConnections, actualConnections });
+        log.info('test connections done', { testCounter, replicantId, targetConnections, actualConnections });
         await env.syncBarrier(`connections are tested on ${testCounter}`);
       }
 
       // Test delayed swarm.
       {
-        log.info('testing delayed swarm', { agentIdx, testCounter });
+        log.info('testing delayed swarm', { replicantId, testCounter });
         await joinSwarm({
           context,
           swarmIdx: swarmTopicIds.length,
-          agentIdx,
+          replicantId,
           numAgents,
           targetSwarmTimeout: spec.targetSwarmTimeout,
           fullSwarmTimeout: spec.fullSwarmTimeout,
@@ -233,12 +231,12 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
         await Promise.all(
           Object.keys(env.params.agents)
-            .filter((agentId) => agentId !== env.params.agentId)
-            .map(async (agentId) => {
+            .filter((replicantId) => replicantId !== env.params.replicantId)
+            .map(async (replicantId) => {
               try {
-                await delayedSwarm.protocol.testConnection(PublicKey.from(agentId), 'hello world');
+                await delayedSwarm.protocol.testConnection(PublicKey.from(replicantId), 'hello world');
               } catch (error) {
-                log.info('test delayed swarm failed', { agentIdx, error });
+                log.info('test delayed swarm failed', { replicantId, error });
               }
             }),
         );
@@ -247,7 +245,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
           context,
           swarmIdx: swarmTopicIds.length,
           swarm: delayedSwarm,
-          agentIdx,
+          replicantId,
           fullSwarmTimeout: spec.fullSwarmTimeout,
         });
 
@@ -256,26 +254,26 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
       // Close streams.
       {
-        log.info('closing streams', { agentIdx });
+        log.info('closing streams', { replicantId });
 
         await forEachSwarmAndAgent(
-          env.params.agentId,
+          env.params.replicantId,
           Object.keys(env.params.agents),
           swarms,
-          async (swarmIdx, swarm, agentId) => {
-            log.info('closing stream', { agentIdx, swarmIdx });
+          async (swarmIdx, swarm, replicantId) => {
+            log.info('closing stream', { replicantId, swarmIdx });
             try {
-              const streamTag = `stream-test-${testCounter}-${env.params.agentId}-${agentId}-${swarmIdx}`;
-              const stats = await swarm.protocol.closeStream(PublicKey.from(agentId), streamTag);
+              const streamTag = `stream-test-${testCounter}-${env.params.replicantId}-${replicantId}-${swarmIdx}`;
+              const stats = await swarm.protocol.closeStream(PublicKey.from(replicantId), streamTag);
 
-              log.info('test stream closed', { agentIdx, swarmIdx, ...stats });
+              log.info('test stream closed', { replicantId, swarmIdx, ...stats });
             } catch (error) {
-              log.info('test stream closing failed', { agentIdx, swarmIdx, error });
+              log.info('test stream closing failed', { replicantId, swarmIdx, error });
             }
           },
         );
 
-        log.info('streams closed', { testCounter, agentIdx });
+        log.info('streams closed', { testCounter, replicantId });
         await env.syncBarrier(`streams are closed at ${testCounter}`);
       }
 
@@ -285,7 +283,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
 
         await Promise.all(
           swarms.map(async (swarm, swarmIdx) => {
-            await leaveSwarm({ context, swarmIdx, swarm, agentIdx, fullSwarmTimeout: spec.fullSwarmTimeout });
+            await leaveSwarm({ context, swarmIdx, swarm, replicantId, fullSwarmTimeout: spec.fullSwarmTimeout });
           }),
         );
       }
@@ -303,7 +301,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     await sleep(spec.duration);
     await ctx.dispose();
 
-    log.info('test completed', { agentIdx });
+    log.info('test completed', { replicantId });
   }
 
   async finish(params: TestParams<TransportTestSpec>, results: PlanResults): Promise<any> {
@@ -424,7 +422,7 @@ type ConnectionEntry = {
   localPeerId: string;
   remotePeerId: string;
   initiator: string;
-  agentId: string;
+  replicantId: string;
   initiate: number;
   connected: number;
   error: number;
@@ -438,10 +436,10 @@ const analyzeConnections = (reader: LogReader): ConnectionsStats[] => {
   const peerConnections = new Map<string, Map<string, ConnectionEntry>>();
 
   reader.forEach((entry: SerializedLogEntry<any>) => {
-    let connections = peerConnections.get(entry.context.agentId);
+    let connections = peerConnections.get(entry.context.replicantId);
     if (!connections) {
       connections = new Map<string, ConnectionEntry>();
-      peerConnections.set(entry.context.agentId, connections);
+      peerConnections.set(entry.context.replicantId, connections);
     }
 
     switch (entry.message) {
