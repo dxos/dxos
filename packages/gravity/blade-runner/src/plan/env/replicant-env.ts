@@ -14,7 +14,7 @@ import { type AgentParams } from '../spec';
 
 export { type RedisOptions };
 
-export class ReplicantEnvImpl<S> implements ReplicantEnv {
+export class ReplicantEnvImpl<Spec> implements ReplicantEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -36,7 +36,7 @@ export class ReplicantEnvImpl<S> implements ReplicantEnv {
 
   constructor(
     public replicant: any,
-    public params: AgentParams<S>,
+    public params: AgentParams<Spec>,
     private readonly _redisOptions?: RedisOptions,
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });

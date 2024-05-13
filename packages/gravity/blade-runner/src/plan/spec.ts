@@ -15,16 +15,16 @@ export type GlobalOptions = {
   headless?: boolean;
 };
 
-export type TestParams<S> = {
+export type TestParams<Spec> = {
   testId: string;
   outDir: string;
-  spec: S;
+  spec: Spec;
 };
 
 export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
 // TODO(mykola): Rename to ReplicantParams.
-export type AgentParams<S> = {
+export type AgentParams<Spec> = {
   /**
    * Replicant name. Used in registry.
    */
@@ -38,7 +38,7 @@ export type AgentParams<S> = {
 
   runtime: AgentRuntimeParams;
   testId: string;
-  spec: S;
+  spec: Spec;
 };
 
 // TODO(mykola): Rename to ReplicantRuntimeParams.
@@ -53,21 +53,18 @@ export type AgentRunOptions<C> = {
 };
 
 export type PlanResults = {
-  agents: { [agentId: string]: AgentResult };
+  agents: { [agentId: string]: AgentLog };
 };
 
-export type AgentResult = {
-  result: number;
+export type AgentLog = {
   outDir: string;
   logFile: string;
-  startTs?: number;
-  endTs?: number;
 };
 
 // plan vs environment
 export interface TestPlan<Spec> {
   onError?: (err: Error) => void;
-  run(env: SchedulerEnv, params: TestParams<Spec>): Promise<void>;
+  run(env: SchedulerEnv<Spec>, params: TestParams<Spec>): Promise<PlanResults>;
   analyses(params: TestParams<Spec>, results: PlanResults): Promise<any>;
   defaultSpec(): Spec;
 }

@@ -12,10 +12,10 @@ import { ReplicantRpcHandle } from './replicant-rpc-handle';
 import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
-import { runNode } from '../run-process';
+import { runBrowser, runNode } from '../run-process';
 import { type AgentRuntimeParams, type AgentParams, type GlobalOptions, type TestParams } from '../spec';
 
-export class SchedulerEnvImpl<S> implements SchedulerEnv {
+export class SchedulerEnvImpl<Spec> implements SchedulerEnv<Spec> {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -39,7 +39,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
 
   constructor(
     private readonly _options: GlobalOptions,
-    public params: TestParams<S>,
+    public params: TestParams<Spec>,
     private readonly _redisOptions?: RedisOptions,
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
@@ -112,7 +112,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   async spawn<T>(
     brain: ReplicantBrain<T>,
     runtime: AgentRuntimeParams = { platform: 'nodejs' },
-  ): Promise<Replicant<T>> {
+  ): Promise<Replicant<T, Spec>> {
     const requestQueue = `replicant:requests:${this.params.testId}`;
     const responseQueue = `replicant:responses:${this.params.testId}`;
     const rpcPort = createRedisRpcPort({
@@ -130,7 +130,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     await rpcHandle.open();
     const replicantIdx = this.replicantIdx++;
 
-    const agentParams: AgentParams<S> = {
+    const agentParams: AgentParams<Spec> = {
       agentIdx: replicantIdx,
       agentId: `test-${this.params.testId}:replicant-${replicantIdx}`,
       outDir: path.join(this.params.outDir, String(replicantIdx)),
@@ -144,10 +144,20 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
       spec: this.params.spec,
     };
 
-    const { kill } = runNode({
-      agentParams,
-      options: this._options,
-    });
+    let kill: () => void;
+    if (runtime.platform === 'nodejs') {
+      kill = runNode({
+        agentParams,
+        options: this._options,
+      }).kill;
+    } else {
+      kill = (
+        await runBrowser({
+          agentParams,
+          options: this._options,
+        })
+      ).kill;
+    }
 
     return {
       brain: rpcHandle as RpcHandle<T>,
@@ -155,6 +165,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
         await rpcHandle.close();
         kill();
       },
+      params: agentParams,
     };
   }
 }

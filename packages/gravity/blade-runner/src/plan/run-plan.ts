@@ -31,12 +31,11 @@ type TestSummary = {
   diagnostics: {
     resourceUsage: ResourceUsageStats;
   };
-  agents: Record<string, any>;
 };
 
-export type RunPlanParams<S> = {
-  plan: TestPlan<S>;
-  spec: S;
+export type RunPlanParams<Spec> = {
+  plan: TestPlan<Spec>;
+  spec: Spec;
   options: GlobalOptions;
 };
 
@@ -46,12 +45,12 @@ if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
 }
 
 // TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <S>(
+export const readYAMLSpecFile = async <Spec>(
   path: string,
-  plan: TestPlan<S>,
+  plan: TestPlan<Spec>,
   options: GlobalOptions,
 ): Promise<() => RunPlanParams<any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
+  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as Spec;
   return () => ({
     plan,
     spec: yamlSpec,
@@ -59,7 +58,7 @@ export const readYAMLSpecFile = async <S>(
   });
 };
 
-export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+export const runPlan = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) => {
   options.randomSeed && seedrandom(options.randomSeed, { global: true });
   if (options.repeatAnalysis) {
     // Analysis mode.
@@ -74,7 +73,7 @@ export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   await runPlanner({ plan, spec, options });
 };
 
-const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
+const runPlanner = async <Spec>({ plan, spec, options }: RunPlanParams<Spec>) => {
   const testId = createTestPathname();
   const outDirBase = process.env.GRAVITY_OUT_BASE || process.cwd();
   const outDir = `${outDirBase}/out/results/${testId}`;
@@ -83,7 +82,7 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     outDir,
   });
 
-  const testParams: TestParams<S> = {
+  const testParams: TestParams<Spec> = {
     testId,
     outDir,
     spec,
@@ -118,14 +117,14 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
 
   let resourceUsageStats: ResourceUsageStats | undefined;
   try {
-    resourceUsageStats = await analyzeResourceUsage(planResults);
+    resourceUsageStats = await analyzeResourceUsage(result);
   } catch (err) {
     log.warn('error analyzing resource usage', err);
   }
 
   let stats: any;
   try {
-    stats = await plan.finish({ spec, outDir, testId }, planResults);
+    stats = await plan.analyses({ spec, outDir, testId }, result);
   } catch (err) {
     log.warn('error finishing plan', err);
   }
@@ -139,11 +138,10 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
       outDir,
       planName: Object.getPrototypeOf(plan).constructor.name,
     },
-    results: planResults,
+    results: result,
     diagnostics: {
       resourceUsage: resourceUsageStats ?? {},
     },
-    agents,
   };
 
   writeFileSync(join(outDir, SUMMARY_FILENAME), JSON.stringify(summary, null, 4));

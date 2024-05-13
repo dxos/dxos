@@ -5,6 +5,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -49,16 +50,14 @@ const start = async () => {
     return;
   }
 
-  // // Entry point for Replicant browser process.
-  // if ((globalThis as any).__DX_BROWSER_REPLICANT) {
-  //   log.info('running in browser');
-  //   const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
-  //   const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
-  //   invariant(name, 'missing GRAVITY_SPEC');
-  //   invariant(params, 'missing GRAVITY_AGENT_PARAMS');
-  //   await runReplicant(name, params, plans[name]());
-  //   return;
-  // }
+  // Entry point for Replicant browser process.
+  if ((globalThis as any).__DX_BROWSER_REPLICANT) {
+    log.info('running in browser');
+    const params = (globalThis as any).dx_blade_runner_env.DX_RUN_PARAMS;
+    invariant(params, 'missing DX_RUN_PARAMS');
+    await runReplicant(JSON.parse(params));
+    return;
+  }
 
   const argv = yargs(hideBin(process.argv))
     .options({

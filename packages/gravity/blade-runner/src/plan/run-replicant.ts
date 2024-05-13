@@ -42,7 +42,7 @@ export const runReplicant = async <Spec>({ agentParams: params, options }: RunPa
   }
 };
 
-const initLogProcessor = <S>(params: AgentParams<S>) => {
+const initLogProcessor = <Spec>(params: AgentParams<Spec>) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({
@@ -60,6 +60,7 @@ const initLogProcessor = <S>(params: AgentParams<S>) => {
   }
 };
 
+// TODO(mykola): Do we need finish function?
 const finish = (code: number) => {
   if (isNode()) {
     process.exit(code);
