@@ -115,7 +115,7 @@ Before an application can read or write user data, the device must be authentica
 
 Let's create a simple component called `Counter.tsx`.
 
-```tsx{6,8} file=./snippets/counter.tsx#L5-
+```tsx{6,8} file=./tutorial-snippets/counter.tsx#L5-
 import React from 'react';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -145,13 +145,13 @@ import { Counter } from './Counter';
 
 Now that the user has an identity and an ECHO database, let's update the UI to reflect the contents of the database. Add the `useQuery` hook to your imports:
 
-```tsx file=./snippets/counter-1.tsx#L6
+```tsx file=./tutorial-snippets/counter-1.tsx#L6
 import { useSpaces, useQuery } from '@dxos/react-client/echo';
 ```
 
 In the `Counter` component, replace the `return` with the following:
 
-```tsx file=./snippets/counter-1.tsx#L15-
+```tsx file=./tutorial-snippets/counter-1.tsx#L15-
   const [counter] = useQuery(space, { type: 'counter' });
 
   return (
@@ -172,13 +172,13 @@ We need an empty counter that we can increment.
 
 Grab an `Expando`:
 
-```tsx file=./snippets/counter-2.tsx#L6
+```tsx file=./tutorial-snippets/counter-2.tsx#L6
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 ```
 
 Above the `return` statement, add the following effect:
 
-```tsx file=./snippets/counter-2.tsx#L13-
+```tsx file=./tutorial-snippets/counter-2.tsx#L13-
 
   useEffect(() => {
     if (space && !counter) {
@@ -219,7 +219,7 @@ Let's add a button to update the count of the counter.
 
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
-```tsx{21-28} file=./snippets/counter-2.tsx#L5-
+```tsx{21-28} file=./tutorial-snippets/counter-2.tsx#L5-
 import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
