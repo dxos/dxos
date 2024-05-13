@@ -438,6 +438,9 @@ export class Client {
           iframe: this._iframeManager.iframe,
           origin,
         }),
+        handlerRpcOptions: {
+          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
+        },
       });
 
       await this._shellClientProxy.open();

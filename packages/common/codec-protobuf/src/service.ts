@@ -115,7 +115,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   /**
    * Request/response method call.
    */
-  async call(methodName: string, request: Any): Promise<Any> {
+  async call(methodName: string, request: Any, options?: RequestOptions): Promise<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     invariant(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     invariant(!method.responseStream, `Invalid RPC method call: response streaming mismatch. ${methodName}`);
@@ -124,7 +124,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const handler = await this._getHandler(mappedMethodName);
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
-    const response = await handler(requestDecoded);
+    const response = await handler(requestDecoded, options);
     const responseEncoded = responseCodec.encode(response, this._encodingOptions);
 
     return {
@@ -136,7 +136,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
   /**
    * Streaming method call.
    */
-  callStream(methodName: string, request: Any): Stream<Any> {
+  callStream(methodName: string, request: Any, options?: RequestOptions): Stream<Any> {
     const { method, requestCodec, responseCodec } = this._getMethodInfo(methodName);
     invariant(!method.requestStream, 'Invalid RPC method call: request streaming mismatch.');
     invariant(method.responseStream, `Invalid RPC method call: response streaming mismatch., ${methodName}`);
@@ -146,7 +146,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
 
     const requestDecoded = requestCodec.decode(request.value!, this._encodingOptions);
     const responseStream = Stream.unwrapPromise(
-      handlerPromise.then((handler) => handler(requestDecoded) as Stream<unknown>),
+      handlerPromise.then((handler) => handler(requestDecoded, options) as Stream<unknown>),
     );
     return Stream.map(
       responseStream,
@@ -157,7 +157,7 @@ export class ServiceHandler<S = {}> implements ServiceBackend {
     );
   }
 
-  private async _getHandler(method: string): Promise<(request: unknown) => unknown> {
+  private async _getHandler(method: string): Promise<(request: unknown, options?: RequestOptions) => unknown> {
     const service: S = await getAsyncValue(this._serviceProvider);
     const handler = service[method as keyof S];
     invariant(handler, `Handler is missing: ${method}`);

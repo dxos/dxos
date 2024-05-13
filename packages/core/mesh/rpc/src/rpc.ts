@@ -28,13 +28,18 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any) => Stream<Any>;
+  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
 
   /**
    * Do not require or send handshake messages.
    */
   noHandshake?: boolean;
+
+  /**
+   * What options get passed to the `callHandler` and `streamHandler`.
+   */
+  handlerRpcOptions?: RequestOptions;
 }
 
 /**
@@ -481,7 +486,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload);
+      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
       return {
         id: req.id,
         payload: response,
@@ -501,7 +506,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
       responseStream.onReady(() => {
         callback({
           id: req.id,
