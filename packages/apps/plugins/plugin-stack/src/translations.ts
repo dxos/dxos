@@ -20,6 +20,7 @@ export default [
         'add section before dialog title': 'Add a section',
         'add section after dialog title': 'Add a section',
         'add section input placeholder': 'Find the type of section to add',
+        'stack section creators heading': 'Add a new item',
       },
     },
   },

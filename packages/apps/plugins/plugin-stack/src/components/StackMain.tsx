@@ -16,9 +16,10 @@ import {
   parseFileManagerPlugin,
   useIntent,
   useResolvePlugin,
+  usePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
-import { Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Button, ButtonGroup, useTranslation, toLocalizedString, List, ListItem } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
   Stack,
@@ -32,6 +33,7 @@ import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
 import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
+import type { StackPluginProvides } from '../types';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
   // TODO(wittjosiah): Better section placeholder.
@@ -52,6 +54,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
   const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
+  const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
 
   useEffect(() => {
     if (!collection.views[StackView.typename]) {
@@ -169,7 +172,20 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     setCollapsedSections((prev) => ({ ...prev, [id]: collapsed }));
   };
 
-  return (
+  // Render a grid of stack section creators if any are available, otherwise delegate to `Stack`’s native empty message.
+  return items.length < 1 && (stackPlugin?.provides?.stack?.creators?.length ?? 0) > 0 ? (
+    <>
+      <h3>{t('stack section creators heading')}</h3>
+      <List role='menu'>
+        {stackPlugin!.provides.stack.creators.map(({ id, label, icon: Icon, intent, testId }) => (
+          <ListItem.Root key={id} id={id} role='menuitem' onClick={() => dispatch(intent)} data-testid={testId}>
+            <Icon weight='duotone' />
+            <ListItem.Heading>{toLocalizedString(label, t)}</ListItem.Heading>
+          </ListItem.Root>
+        ))}
+      </List>
+    </>
+  ) : (
     <>
       <Stack
         id={id}
