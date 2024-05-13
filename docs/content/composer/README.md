@@ -23,7 +23,7 @@ For example a running system might sync data like this, where nodes represent de
 
 ![Alice and Bob device example](alice-and-bob-devices.svg)
 
-Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per browser profile, so users can have multiple devices running on a physical machine.
+Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per browser profile, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
 
 [Agents](../guide/tooling/cli/agent.md) are DXOS instances running without an attached user interface. A common use of agents is to run on a server and provide availability if all other devices are offline, but this is completely optional.
 
