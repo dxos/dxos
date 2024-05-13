@@ -10,7 +10,7 @@ To create or join a [space](../echo/typescript/README.md) in ECHO, the user must
 
 ## Obtaining identity
 
-```ts{7} file=./snippets/get-identity.ts#L5-
+```ts{7} file=./snippets-typescript/get-identity.ts#L5-
 import { Client } from '@dxos/client';
 
 const client = new Client();
@@ -27,7 +27,7 @@ The object returned is of type [`Identity`](/api/@dxos/client/interfaces/Identit
 
 Create a new identity:
 
-```ts{7} file=./snippets/create-identity.ts#L5-
+```ts{7} file=./snippets-typescript/create-identity.ts#L5-
 import { Client } from '@dxos/client';
 
 const client = new Client();
@@ -41,7 +41,7 @@ const client = new Client();
 ::: details Creating an identity with a display name
 Pass `displayName` to `createProfile`:
 
-```ts{8} file=./snippets/create-identity-displayname.ts#L5-
+```ts{8} file=./snippets-typescript/create-identity-displayname.ts#L5-
 import { Client } from '@dxos/client';
 
 const client = new Client();

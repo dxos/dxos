@@ -10,7 +10,7 @@ This section describes how to obtain [HALO identity](../halo/) in `react`.
 
 The user's identity can be obtained by a react application with the `useIdentity` hook:
 
-```tsx file=./snippets/use-identity.tsx#L5-
+```tsx file=./snippets-react/use-identity.tsx#L5-
 import React from 'react';
 import { useIdentity } from '@dxos/react-client/halo';
 
