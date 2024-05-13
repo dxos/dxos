@@ -19,7 +19,7 @@ It has three key features:
 
 Composer gets its real-time collaboration and offline abilities through a peer-to-peer model.
 
-For example, a running system might sync data like this, where nodes represent devices and edges represent syncing connections:
+For example a running system might sync data like this, where nodes represent devices and edges represent syncing connections:
 
 ```mermaid
 graph BT;
@@ -42,7 +42,7 @@ graph BT;
   Agent<-.->AliceDesktop
 ```
 
-The syncing connections will re-adjust themselves as devices come on and offline. For instance, if Bob's desktop goes offline, his smartphone will connect to either Alice's desktop or smartphone in order to stay up-to-date.
+The syncing connections will re-adjust themselves as devices come on and offline. If Bob's desktop goes offline his smartphone will connect to either Alice's desktop or smartphone in order to stay up-to-date.
 
 The use of an [Agent](../guide/tooling/cli/agent.md) is optional. Agents provide availability if all other devices are offline, but aren't required otherwise.
 
