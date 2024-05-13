@@ -16,7 +16,7 @@ If using one of the DXOS application templates via [`npm init @dxos@latest`](../
 
 When using `react`, create a `ClientProvider` to wrap your application. This allows nested components to `useClient` and the other hooks in `@dxos/react-client`.
 
-```tsx file=./snippets/create-client-react.tsx#L5-
+```tsx file=../../snippets-react/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -58,7 +58,7 @@ Before manipulating data, a [user identity](../../halo/react.md) and a [space](.
 :::details Using a fallback element during initial load
 A fallback element is displayed while the Client is initializing. Any component can be used, and it will be given an instance of the `client` as a prop directly.
 
-```tsx file=./snippets/create-client-react-with-fallback.tsx#L5-
+```tsx file=../../snippets-react/create-client-react-with-fallback.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -84,7 +84,7 @@ createRoot(document.body).render(<App />);
 
 :::details Passing a custom Client object to ClientProvider
 
-```tsx file=./snippets/create-client-react-with-client.tsx#L5-
+```tsx file=../../snippets-react/create-client-react-with-client.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Client } from '@dxos/client';
@@ -107,7 +107,7 @@ createRoot(document.body).render(<App />);
 
 Alternatively, a config function may be supplied instead of a client, and a client will be generated internally.
 
-```tsx file=./snippets/create-client-react-with-config.tsx#L5-
+```tsx file=../../snippets-react/create-client-react-with-config.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';

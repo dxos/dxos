@@ -48,7 +48,7 @@ It's possible to receive strongly typed results from `query`. This is done by de
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
-```protobuf{6,13} file=../react/snippets/schema.proto
+```protobuf{6,13} file=../../snippets-react/schema.proto
 syntax = "proto3";
 
 package example.tasks;
@@ -111,7 +111,7 @@ For example, defining types in a folder named `schema`:
 The schema protobuf file:
 ::: details schema/schema.proto
 
-```protobuf{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=../../snippets-react/schema.proto
 syntax = "proto3";
 
 package example.tasks;

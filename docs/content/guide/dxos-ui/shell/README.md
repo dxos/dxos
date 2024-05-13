@@ -96,7 +96,7 @@ main();
 
 ## Usage
 
-```tsx file=./snippets/shell.ts#L5-
+```tsx file=../snippets/shell.ts#L5-
 import { Client, PublicKey } from '@dxos/client';
 
 const client = new Client();

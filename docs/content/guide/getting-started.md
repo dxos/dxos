@@ -31,7 +31,7 @@ npm install --save @dxos/client
 
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-```ts file=./typescript/snippets/create-client.ts#L5-
+```ts file=./snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client
@@ -64,7 +64,7 @@ npm install --save @dxos/react-client
 
 Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
 
-```tsx file=./react/snippets/create-client-react.tsx#L5-
+```tsx file=./snippets-react/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -99,7 +99,7 @@ createRoot(document.body).render(<App />);
 
 The [`SharedWorker`](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) allows resources to be shared between tabs and windows. Put the following in a file called `shared-worker.ts` in the same directory as your `App` component above:
 
-```tsx file=./react/snippets/shared-worker.ts#L5-
+```tsx file=./snippets-react/shared-worker.ts#L5-
 onconnect = async (event) => {
   const { onconnect } = await import('@dxos/react-client/worker');
   await onconnect(event);

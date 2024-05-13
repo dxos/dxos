@@ -48,7 +48,7 @@ With a nominal amount of continuous activity (400 mutations/sec), our communicat
 
 ## Browser Support
 
-+ Firefox doesn't work in private mode ([read more](https://github.com/dxos/dxos/issues/3551)).
+* Firefox doesn't work in private mode ([read more](https://github.com/dxos/dxos/issues/3551)).
 
 ## License
 

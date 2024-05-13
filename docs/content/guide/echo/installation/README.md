@@ -19,7 +19,7 @@ If using DXOS in a browser environment, [set up your Vite config](../../getting-
 
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-```ts file=./snippets/create-client.ts#L5-
+```ts file=../../snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client

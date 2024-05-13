@@ -74,7 +74,7 @@ DXOS provides a tool to generate these types from a schema definition file.
 
 Consider this expression of schema declared in [`protobuf`](https://protobuf.dev/):
 
-```protobuf{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=../../snippets-react/schema.proto
 syntax = "proto3";
 
 package example.tasks;
@@ -129,7 +129,7 @@ For example, defining types in a folder named `schema`:
 The schema protobuf file:
 ::: details schema/schema.proto
 
-```protobuf{6,13} file=./snippets/schema.proto
+```protobuf{6,13} file=../../snippets-react/schema.proto
 syntax = "proto3";
 
 package example.tasks;
