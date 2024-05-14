@@ -12,10 +12,16 @@ import { DatabasePanel, TimeSeries, MemoryPanel, PerformancePanel, QueriesPanel,
 import { Panel, type PanelProps } from './util';
 import { type Stats } from '../../hooks';
 
+const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
+
 export type QueryPanelProps = {
   stats?: Stats;
   onRefresh?: () => void;
 };
+
+type PanelKey = 'ts' | 'performance' | 'spans' | 'queries' | 'database' | 'memory';
+type PanelMap = Record<PanelKey, boolean | undefined>;
+const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'database', 'memory'];
 
 // TODO(burdon): Factor out (for Composer).
 // TODO(burdon): Reconcile with TraceView in diagnostics.
@@ -26,10 +32,16 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   const queries = [...(stats?.queries ?? [])];
   queries.reverse();
 
-  // TODO(burdon): Store in local storage.
-  const [panelState, setPanelState] = useState<Record<string, boolean>>({});
+  // Store in local storage.
+  const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
+    PANEL_KEYS.reduce<PanelMap>((acc, key) => {
+      acc[key] = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${key}`) !== 'false';
+      return acc;
+    }, {} as PanelMap),
+  );
   const handleToggle: PanelProps['onToggle'] = (id, open) => {
     setPanelState({ ...panelState, [id]: open });
+    localStorage.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
   };
 
   return (

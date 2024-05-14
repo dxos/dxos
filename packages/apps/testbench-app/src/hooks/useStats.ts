@@ -105,6 +105,10 @@ export const useStats = (): [Stats, () => void] => {
       )
         .map((handle: any) => handle.docSync())
         .filter(Boolean);
+      const database: DatabaseInfo = {
+        spaces: client.spaces.get().length,
+        objects: objects.length,
+      };
 
       const memory: MemoryInfo = (window.performance as any).memory;
       if ('measureUserAgentSpecificMemory' in window.performance) {
@@ -119,7 +123,7 @@ export const useStats = (): [Stats, () => void] => {
         performanceEntries,
         diagnostics: TRACE_PROCESSOR.getDiagnostics(),
         memory,
-        database: { spaces: 1, objects: objects.length },
+        database,
         queries,
       });
     });
