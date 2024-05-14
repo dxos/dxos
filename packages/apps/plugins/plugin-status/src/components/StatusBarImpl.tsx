@@ -40,7 +40,7 @@ export const StatusBarImpl = () => {
           </StatusBar.Item>
         </StatusBar.EndContent>
       </StatusBar.Container>
-      <Popover.Content>
+      <Popover.Content classNames='shadow-lg'>
         <StatusBarForm />
         <Popover.Arrow />
       </Popover.Content>
@@ -62,6 +62,8 @@ const StatusBarForm = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
 
+  const textInputClasses = 'text-sm';
+
   // TODO(Zan): Fix spacing and grouping
   return (
     <div className='p-3 flex flex-col gap-2'>
@@ -70,21 +72,30 @@ const StatusBarForm = () => {
       <Section className='space-b-1'>
         <Input.Root>
           <Input.Label>{translation('name label')}</Input.Label>
-          <Input.TextInput placeholder={translation('name placeholder')} autoFocus />
+          <Input.TextInput classNames={textInputClasses} placeholder={translation('name placeholder')} autoFocus />
         </Input.Root>
       </Section>
 
       <Section className='space-b-1'>
         <Input.Root>
           <Input.Label>{translation('email input label')}</Input.Label>
-          <Input.TextInput placeholder={translation('email input placeholder')} autoFocus />
+          <Input.TextInput
+            classNames={textInputClasses}
+            placeholder={translation('email input placeholder')}
+            autoFocus
+          />
         </Input.Root>
       </Section>
 
       <Section className='space-b-1'>
         <Input.Root>
           <Input.Label>{translation('feedback text area label')}</Input.Label>
-          <Input.TextArea placeholder={translation('feedback text area placeholder')} />
+          <Input.TextArea
+            classNames={textInputClasses}
+            rows={5}
+            cols={30}
+            placeholder={translation('feedback text area placeholder')}
+          />
         </Input.Root>
       </Section>
 
