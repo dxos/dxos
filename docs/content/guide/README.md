@@ -50,7 +50,10 @@ graph TD;
   subgraph DXOS["DXOS protocols"];
     ECHO["<a href='./halo/'>ECHO</a><br>Peer-to-peer object store"];
     HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
-    HALO-->ECHO;
+    MESH["MESH\nNetworking and replication"];
+    ECHO-->HALO;
+    ECHO-->MESH
+    HALO-->MESH;
   end
   Composer-->DXOS;
   TodoMVC-->DXOS;
