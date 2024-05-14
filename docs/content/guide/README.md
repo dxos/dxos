@@ -51,7 +51,7 @@ graph TD;
     ECHO["<a href='./halo/'>ECHO</a><br>Peer-to-peer object store"];
     HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
     MESH["MESH\nNetworking and replication"];
-    ECHO-->HALO;
+    ECHO-.->HALO;
     ECHO-->MESH
     HALO-->MESH;
   end
@@ -60,3 +60,5 @@ graph TD;
   Tasks-->DXOS;
   Etc2-->DXOS;
 ```
+
+The ECHO-to-HALO line is dashed because ECHO uses a pluggable identity provider. HALO is just one possible instantiation of it.
