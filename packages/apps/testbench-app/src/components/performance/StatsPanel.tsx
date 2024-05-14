@@ -6,7 +6,7 @@ import { ArrowClockwise, ChartBar } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
 import { Button } from '@dxos/react-ui';
-import { getSize } from '@dxos/react-ui-theme';
+import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { DatabasePanel, TimeSeries, MemoryPanel, PerformancePanel, QueriesPanel, SpansPanel } from './panels';
 import { Panel, type PanelProps } from './util';
@@ -45,7 +45,12 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   };
 
   return (
-    <div className='flex flex-col w-full h-full bg-neutral-50 divide-y divide-neutral-200 border-neutral-200'>
+    <div
+      className={mx(
+        'flex flex-col w-full h-full bg-neutral-50 dark:bg-neutral-800',
+        'divide-y divide-neutral-200 border-neutral-200 dark:border-neutral-800',
+      )}
+    >
       <Panel
         id='main'
         icon={ChartBar}
