@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { micromark } from 'micromark';
+import { directive, directiveHtml } from 'micromark-extension-directive';
+import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
@@ -96,20 +98,7 @@ const BetaDialog = () => {
     window.open(SIGNUP_URL, '_blank');
   };
 
-  const [html, setHtml] = useState<string>();
-  useEffect(() => {
-    setTimeout(async () => {
-      // https://github.com/micromark/micromark (ESM).
-      const { micromark } = await import('micromark');
-      // https://github.com/micromark/micromark-extension-directive
-      const { directive, directiveHtml } = await import('micromark-extension-directive');
-      setHtml(micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] }));
-    });
-  }, []);
-
-  if (!html) {
-    return null;
-  }
+  const html = micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] });
 
   return (
     <Dialog.Content classNames='md:max-is-[30rem]'>
