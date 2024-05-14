@@ -115,7 +115,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
     const composerBetaJwt = this._decodeComposerBetaJwt();
 
     // The AgentManager server will verify the JWT. This check is just to prevent unnecessary requests.
-    if (composerBetaJwt && composerBetaJwt.auth_agent && composerBetaJwt.auth_agent === 1) {
+    if (composerBetaJwt && composerBetaJwt.auth_agent) {
       return true;
     }
     return false;
