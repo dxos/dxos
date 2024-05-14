@@ -483,7 +483,7 @@ class Toolbox {
       }
 
       if (typeof packageJson.exports === 'object') {
-        for (const [key, value] of Object.entries(packageJson.exports)) {
+        for (const [_key, value] of Object.entries(packageJson.exports)) {
           if (typeof value === 'object') {
             for (const key of Object.keys(value)) {
               byExportCondition[key] ??= [];
@@ -503,8 +503,6 @@ class Toolbox {
     return this.projects.find((project) => project.name === name) ?? raise(new Error(`Package not found: ${name}`));
   }
 }
-
-const PRINT_MODULE_STATS = true;
 
 /**
  * Hook runs on `pnpm i` (see root `package.json` script `postinstall`).
