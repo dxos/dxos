@@ -69,6 +69,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
     }),
   ];
 
+  // TODO(burdon):
   return (
     <DensityProvider density={'fine'}>
       <Table.Table<SchemaRecord> columns={columns} data={data} />

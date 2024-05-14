@@ -123,6 +123,7 @@ export class Scheduler {
   }
 
   private _createSubscription(ctx: Context, space: Space, def: FunctionDef, triggerSubscription: TriggerSubscription) {
+    log.info('subscription', { space: space.key, triggerSubscription });
     const objectIds = new Set<string>();
     const task = new DeferredTask(ctx, async () => {
       await this._execFunction(def, {
@@ -135,6 +136,7 @@ export class Scheduler {
     // TODO(burdon): Standardize subscription handles.
     const subscriptions: (() => void)[] = [];
     const subscription = createSubscription(({ added, updated }) => {
+      log.info('updated', { added: added.length, updated: updated.length });
       for (const object of added) {
         objectIds.add(object.id);
       }
