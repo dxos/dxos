@@ -24,6 +24,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
       return undefined;
     }
 
+    // https://www.chartjs.org/docs/latest/configuration
     // Utils: https://www.chartjs.org/docs/latest/samples/utils.html
     const chart = new Chart(canvasRef.current, {
       type: 'line',
