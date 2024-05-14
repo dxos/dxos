@@ -68,7 +68,9 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<void> {}
+  async updateMemberRole(_: UpdateMemberRoleRequest): Promise<void> {
+    throw new Error('not implemented');
+  }
 
   querySpaces(): Stream<QuerySpacesResponse> {
     return new Stream<QuerySpacesResponse>(({ next, ctx }) => {
