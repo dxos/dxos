@@ -42,6 +42,6 @@ export class AgentAlreadyRunningError extends FriendlyError {
   }
 
   override get hint() {
-    return 'Check if an agent has been launched by a daemon process.';
+    return 'Check running agents (dx agent list) or daemon process.';
   }
 }
