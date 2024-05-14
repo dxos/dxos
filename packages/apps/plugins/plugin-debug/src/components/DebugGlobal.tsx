@@ -15,7 +15,7 @@ import { Json, Tree } from './Tree';
 
 const DebugGlobal: FC<{ graph: Graph }> = ({ graph }) => {
   const { themeMode } = useThemeContext();
-  const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('diagnostics');
+  const [view, setView] = useState<'config' | 'diagnostics' | 'graph'>('graph');
   const [data, setData] = useState<any>({});
   const client = useClient();
   const config = useConfig();
