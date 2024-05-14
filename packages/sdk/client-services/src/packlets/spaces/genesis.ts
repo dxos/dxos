@@ -36,7 +36,7 @@ export const spaceGenesis = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey: space.key,
-        role: SpaceMember.Role.ADMIN,
+        role: SpaceMember.Role.OWNER,
         profile: signingContext.getProfile(),
         genesisFeedKey: space.controlFeedKey ?? failUndefined(),
       },

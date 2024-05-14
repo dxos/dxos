@@ -208,7 +208,7 @@ message SpaceMember {
 
   Identity identity = 1;
   PresenceState presence = 2;
-  repeated PeerState peerStates = 3;
+  repeated dxos.mesh.presence.PeerState peerStates = 3;
 }
 
 /// Runtime state of the space object.
@@ -364,10 +364,18 @@ message CreateEpochRequest {
   optional Migration migration = 2;
 }
 
+message UpdateMemberRoleRequest {
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey member_key = 2;
+  dxos.halo.credentials.SpaceMember.Role new_role = 3;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
+
+  rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (google.protobuf.Empty);
 
   /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);
@@ -483,6 +491,9 @@ message Invitation {
 
   /// Present on Type.DELEGATED invitations.
   optional dxos.keys.PublicKey delegation_credential_id = 17;
+
+  /// Role of the admitted member, defaults to ADMIN.
+  optional dxos.halo.credentials.SpaceMember.Role role = 18;
 }
 
 message AdmissionKeypair {
@@ -492,7 +503,7 @@ message AdmissionKeypair {
 
 message AcceptInvitationRequest {
   Invitation invitation = 1;
-  optional dxos.credentials.DeviceProfileDocument device_profile = 2;
+  optional dxos.halo.credentials.DeviceProfileDocument device_profile = 2;
 }
 
 message AuthenticationRequest {
