@@ -58,7 +58,7 @@ export class EchoHost extends Resource {
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
     });
-    this._indexer.setIndexConfig(INDEXER_CONFIG);
+    this._indexer.setConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,

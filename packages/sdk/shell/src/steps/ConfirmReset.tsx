@@ -86,7 +86,7 @@ export const ConfirmResetImpl = ({
           }
           disabled={disabled}
           data-testid={`${testIdAffix}.reset-identity-input`}
-          placeholder={confirmationValue}
+          placeholder={t('confirmation placeholder', { confirmationValue })}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </div>
