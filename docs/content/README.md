@@ -5,13 +5,13 @@ heroText: false
 heroImage: /images/logotype/dxos-hero.svg
 heroImageDark: /images/logotype/dxos-hero-white.svg
 actions:
-  - text: DXOS Homepage
-    link: https://dxos.org/
-    type: primary
-  - text: Read the docs
+  - text: Composer
     link: /composer
+    type: primary
+  - text: SDK
+    link: /guide
     type: secondary
-  - text: Join Discord
-    link: https://discord.gg/eXVfryv3sW
+  - text: API
+    link: /api
     type: discord
 ---
