@@ -3,8 +3,8 @@
 //
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
-import { Resource } from '@dxos/context';
-import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
+import { LifecycleState, Resource } from '@dxos/context';
+import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
@@ -25,14 +25,20 @@ type QueryRunResult = {
   changed: boolean;
 };
 
-/** s
- * Manages querying logic on service side
+export type QueryMetrics = {
+  objectsReturned: number;
+  objectsReturnedFromIndex: number;
+  documentsLoaded: number;
+  executionTime: number;
+  indexQueryTime: number;
+  documentLoadTime: number;
+};
+
+/**
+ * Manages querying logic on service side.
  */
 @trace.resource()
 export class QueryState extends Resource {
-  @trace.info({ depth: null })
-  private readonly _filter: FilterProto;
-
   private _results: QueryResult[] = [];
 
   /**
@@ -41,8 +47,11 @@ export class QueryState extends Resource {
    */
   private _firstRun = true;
 
+  @trace.info({ depth: null })
+  public readonly filter: FilterProto;
+
   @trace.info()
-  public metrics = {
+  public metrics: QueryMetrics = {
     objectsReturned: 0,
     objectsReturnedFromIndex: 0,
     documentsLoaded: 0,
@@ -51,9 +60,14 @@ export class QueryState extends Resource {
     documentLoadTime: 0,
   };
 
+  @trace.info()
+  get active() {
+    return this._lifecycleState === LifecycleState.OPEN;
+  }
+
   constructor(private readonly _params: QueryStateParams) {
     super();
-    this._filter = _params.request.filter;
+    this.filter = _params.request.filter;
   }
 
   getResults() {
@@ -61,10 +75,10 @@ export class QueryState extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async runQuery(): Promise<QueryRunResult> {
+  async execQuery(): Promise<QueryRunResult> {
     const filter = Filter.fromProto(this._params.request.filter);
     const beginQuery = performance.now();
-    const hits = await this._params.indexer.find(filterToIndexQuery(filter));
+    const hits = await this._params.indexer.execQuery(filterToIndexQuery(filter));
     if (this._firstRun) {
       this.metrics.indexQueryTime = performance.now() - beginQuery;
     }

@@ -68,7 +68,6 @@
     "mailparser": "^3.6.4",
     "modelfusion": "^0.137.0",
     "node-fetch": "^2.6.0",
-    "open": "^9.1.0",
     "server-destroy": "^1.0.1",
     "split2": "^4.1.0",
     "textract": "^2.5.0",

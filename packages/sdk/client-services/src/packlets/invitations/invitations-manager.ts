@@ -20,6 +20,7 @@ import {
   type AuthenticationRequest,
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { InvitationProtocol } from './invitation-protocol';
 import { createAdmissionKeypair, type InvitationsHandler } from './invitations-handler';
@@ -195,6 +196,7 @@ export class InvitationsManager {
       persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = new Date(),
       guestKeypair = undefined,
+      role = SpaceMember.Role.ADMIN,
       lifetime = 86400, // 1 day,
       multiUse = false,
     } = options ?? {};
@@ -215,6 +217,7 @@ export class InvitationsManager {
         guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
       lifetime,
+      role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
       ...protocol.getInvitationContext(),

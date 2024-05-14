@@ -30,6 +30,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -46,6 +49,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/config"
