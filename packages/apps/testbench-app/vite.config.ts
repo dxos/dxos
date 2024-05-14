@@ -19,6 +19,13 @@ import { UserConfig } from 'vitest/config';
 export default defineConfig({
   server: {
     host: true,
+    cors: true,
+    // Set isolation to enable performance.measureUserAgentSpecificMemory
+    // https://web.dev/articles/coop-coep
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin'
+    },
     https:
       process.env.HTTPS === 'true'
         ? {
