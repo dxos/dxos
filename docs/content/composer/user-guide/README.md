@@ -15,11 +15,11 @@ All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 
 ### What it is
 
-An identity associates a user with their data. They play the role of accounts in traditional client/server systems.
+An identity associates a user with their data. It plays the role of an account in a traditional client/server system.
 
 ### Initial creation
 
-An identity is created the first time a user visits a DXOS-powered application in the browser.
+An identity is created the first time you visit a DXOS-powered application in the browser.
 
 ::: warning Single-device identities are fragile
 See [Account recovery](#account-recovery) below.
@@ -27,11 +27,11 @@ See [Account recovery](#account-recovery) below.
 
 ### Adding other devices
 
-From that browser the user can then asssociate another device with their identity:
+From that browser you can then asssociate another device with your identity:
 
 <video controls loop autoplay style="width:100%" src="/images/device-invitations.mp4"></video>
 
-Each of these devices synchronizes data and can also be used to add additional devices to the your identity.
+Each of these devices synchronizes data and can also be used to add additional devices to the the identity.
 
 Say you create an initial identity and then add two other devices to it. You know have:
 
