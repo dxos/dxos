@@ -283,6 +283,7 @@ const GroupedTableContent = () => {
 
 export const Table = {
   Root: TableRoot,
+  // TODO(burdon): Rename Table.Main?
   Table: TablePrimitive,
   Viewport: TableViewport,
 };
