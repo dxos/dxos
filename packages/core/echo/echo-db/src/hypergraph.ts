@@ -17,9 +17,9 @@ import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import {
+  filterMatch,
   Filter,
   Query,
-  filterMatch,
   type FilterSource,
   type QueryContext,
   type QueryResult,
@@ -48,7 +48,7 @@ export class Hypergraph {
   }
 
   /**
-   * Register a database in hyper-graph.
+   * Register a database.
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?

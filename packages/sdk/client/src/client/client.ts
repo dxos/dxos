@@ -171,6 +171,7 @@ export class Client {
     return this._status;
   }
 
+  // TODO(burdon): Comment
   get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
@@ -231,6 +232,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
+  // TODO(burdon): Type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);
@@ -297,7 +299,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reIndex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -436,6 +438,9 @@ export class Client {
           iframe: this._iframeManager.iframe,
           origin,
         }),
+        handlerRpcOptions: {
+          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
+        },
       });
 
       await this._shellClientProxy.open();

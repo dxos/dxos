@@ -175,8 +175,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
   }
 
-  async setIndexConfig(config: IndexConfig) {
-    await this._serviceProvider.services.QueryService?.setIndexConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
+  async setConfig(config: IndexConfig) {
+    await this._serviceProvider.services.QueryService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**
