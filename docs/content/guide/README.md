@@ -31,22 +31,8 @@ Dependency relationship of some of the technologies covered in the docs:
 
 ```mermaid
 graph TD;
-  subgraph Plugins["<a href="./composer-plugins/">Composer Plugins</a>"];
-    Surface["<a href="./composer-plugins/surface">Surface</a>"];
-    Layout["<a href="./composer-plugins/core#layout">Layout</a>"];
-    Theme["<a href="./composer-plugins/core#theme">Theme</a>"];
-    Etc1["..."];
-    Layout-->Surface;
-    Theme-->Surface;
-    Etc1-->Surface;
-  end
-  Surface-->Composer;
-  subgraph App["DXOS Apps"];
-    Composer;
-    TodoMVC["<a href='./samples/#todomvc'>TodoMVC</a>"];
-    Tasks["<a href='./samples/#tasks'>Tasks</a>"];
-    Etc2["..."];
-  end
+  %% Make the nodes closer together horizontally to narrow the graph:
+  %%{init:{'flowchart':{'nodeSpacing': 8}}}%%
   subgraph DXOS["DXOS protocols"];
     ECHO["<a href='./halo/'>ECHO</a><br>Peer-to-peer object store"];
     HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
@@ -55,10 +41,29 @@ graph TD;
     ECHO-.->MESH
     HALO-.->MESH;
   end
-  Composer-->DXOS;
+  subgraph Plugins["<a href="./composer-plugins/">Composer Plugins</a>"];
+    Layout["<a href="./composer-plugins/core#layout">Layout</a>"];
+    Theme["<a href="./composer-plugins/core#theme">Theme</a>"];
+    Etc1["..."];
+  end
+  subgraph AppFramework["App Framework"];
+    Surface["<a href="./composer-plugins/surface">Surface</a>"];
+    Intent["<a href="./composer-plugins/intent">Intent</a>"];
+    Graph["<a href="./composer-plugins/graph">Graph</a>"];
+  end
+  subgraph App["DXOS Apps"];
+    TodoMVC["<a href='./samples/#todomvc'>TodoMVC</a>"];
+    Tasks["<a href='./samples/#tasks'>Tasks</a>"];
+    Composer;
+    Etc2["..."];
+  end
   TodoMVC-->DXOS;
   Tasks-->DXOS;
-  Etc2-->DXOS;
+  Composer-->DXOS;
+  Composer-.->Plugins;
+  Composer-->AppFramework;
+  Plugins-->DXOS;
+  Plugins-->AppFramework;
 ```
 
 Here solid lines represent direct dependencies and dashed lines pluggable ones.
