@@ -9,6 +9,7 @@ import {
   type TranslationsProvides,
   type SurfaceProvides,
   type IntentResolverProvides,
+  type IntentResolver,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 
@@ -17,6 +18,7 @@ import { mkIntentBuilder } from './lib';
 import meta, { STATUS_BAR_PLUGIN } from './meta';
 import translations from './translations';
 
+// -- Types and constants.
 const STATUS_BAR_ACTION = `${STATUS_BAR_PLUGIN}/action`;
 
 export enum StatusBarAction {
@@ -35,8 +37,19 @@ export const statusBarIntent = mkIntentBuilder<StatusBarActions>(meta.id);
 
 export type StatusBarPluginProvides = SurfaceProvides & TranslationsProvides & IntentResolverProvides;
 
+// -- State and events.
 const state = create({ feedbackOpen: false });
 
+const resolver: IntentResolver = async (intent, _plugins) => {
+  switch (intent.action) {
+    case StatusBarAction.PROVIDE_FEEDBACK: {
+      state.feedbackOpen = true;
+      break;
+    }
+  }
+};
+
+// -- Root plugin definition.
 export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => {
   return {
     meta,
@@ -53,16 +66,7 @@ export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => 
           return null;
         },
       },
-      intent: {
-        resolver: async (intent, _plugins) => {
-          switch (intent.action) {
-            case StatusBarAction.PROVIDE_FEEDBACK: {
-              state.feedbackOpen = true;
-              break;
-            }
-          }
-        },
-      },
+      intent: { resolver },
     },
   };
 };
