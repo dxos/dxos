@@ -257,10 +257,6 @@ export class SpaceStateMachine implements SpaceState {
     const role = this._members.getRole(key);
     return role === SpaceMember.Role.EDITOR || role === SpaceMember.Role.ADMIN || role === SpaceMember.Role.OWNER;
   }
-
-  private _canRevokeCredentials(key: PublicKey): boolean {
-    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
-  }
 }
 
 // TODO(dmaretskyi): Simplify.
