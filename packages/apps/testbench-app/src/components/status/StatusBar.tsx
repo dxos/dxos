@@ -10,6 +10,19 @@ import { Button } from '@dxos/react-ui';
 import { ErrorIndicator } from './ErrorIndicator';
 import { NetworkIndicator } from './NetworkIndicator';
 
+/**
+ * @startuml
+ *
+ * [*] --> State1
+ * State1 --> [*]
+ * State1 : this is a string
+ * State1 : this is another string
+ *
+ * State1 -> State2
+ * State2 --> [*]
+ *
+ * @enduml
+ */
 export type StatusBarProps = {
   flushing?: boolean;
   showStats?: boolean;
