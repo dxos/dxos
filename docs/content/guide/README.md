@@ -52,8 +52,8 @@ graph TD;
     HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
     MESH["MESH\nNetworking and replication"];
     ECHO-.->HALO;
-    ECHO-->MESH
-    HALO-->MESH;
+    ECHO-.->MESH
+    HALO-.->MESH;
   end
   Composer-->DXOS;
   TodoMVC-->DXOS;
@@ -61,4 +61,4 @@ graph TD;
   Etc2-->DXOS;
 ```
 
-The ECHO-to-HALO line is dashed because ECHO uses a pluggable identity provider. HALO is just one possible instantiation of it.
+Here solid lines represent direct dependencies and dashed lines pluggable ones.
