@@ -32,7 +32,7 @@ export const ItemTable = <T extends EchoReactiveObject<any>>({ schema, objects =
   return (
     <Table.Root>
       <Table.Viewport classNames='overflow-auto'>
-        <Table.Table<T>
+        <Table.Main<T>
           role='grid'
           rowsSelectable='multi'
           keyAccessor={(row) => row.id}
