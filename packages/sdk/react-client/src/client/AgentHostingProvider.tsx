@@ -35,7 +35,7 @@ export const useAgentHostingClient = () => {
 const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   const agentHostingConfig = config.get('runtime.services.agentHosting');
   if (!agentHostingConfig) {
-    log.info('no agent hosting configured');
+    log('no agent hosting configured');
     return null;
   }
 

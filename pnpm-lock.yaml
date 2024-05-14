@@ -3912,6 +3912,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/devtools':
+        specifier: workspace:*
+        version: link:../../devtools/devtools
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -3948,6 +3951,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -3969,9 +3975,6 @@ importers:
       '@trpc/server':
         specifier: ^10.45.2
         version: 10.45.2
-      classnames:
-        specifier: ^2.3.2
-        version: 2.3.2
       partysocket:
         specifier: ^1.0.1
         version: 1.0.1
@@ -6661,6 +6664,15 @@ importers:
       change-case:
         specifier: ^4.1.2
         version: 4.1.2
+      chart.js:
+        specifier: ^3.9.1
+        version: 3.9.1
+      chartjs-adapter-luxon:
+        specifier: ^1.3.1
+        version: 1.3.1(chart.js@3.9.1)(luxon@3.4.4)
+      chartjs-plugin-streaming:
+        specifier: ^2.0.0
+        version: 2.0.0(chart.js@3.9.1)
       date-fns:
         specifier: ^3.3.1
         version: 3.3.1
@@ -6676,6 +6688,12 @@ importers:
       lodash.defaultsdeep:
         specifier: ^4.6.1
         version: 4.6.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      luxon:
+        specifier: ^3.4.4
+        version: 3.4.4
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -6728,6 +6746,9 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: ^4.6.6
         version: 4.6.7
+      '@types/lodash.get':
+        specifier: ^4.4.7
+        version: 4.4.7
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -28178,6 +28199,16 @@ packages:
   /chart.js@3.9.1:
     resolution: {integrity: sha512-Ro2JbLmvg83gXF5F4sniaQ+lTbSv18E+TIf2cOeiH1Iqd2PGFOtem+DUufMZsCJwFE7ywPOpfXFBwRTGq7dh6w==}
 
+  /chartjs-adapter-luxon@1.3.1(chart.js@3.9.1)(luxon@3.4.4):
+    resolution: {integrity: sha512-yxHov3X8y+reIibl1o+j18xzrcdddCLqsXhriV2+aQ4hCR66IYFchlRXUvrJVoxglJ380pgytU7YWtoqdIgqhg==}
+    peerDependencies:
+      chart.js: '>=3.0.0'
+      luxon: '>=1.0.0'
+    dependencies:
+      chart.js: 3.9.1
+      luxon: 3.4.4
+    dev: false
+
   /chartjs-node-canvas@4.1.6(chart.js@3.9.1):
     resolution: {integrity: sha512-UQJbPWrvqB/FoLclGA9BaLQmZbzSYlujF4w8NZd6Xzb+sqgACBb2owDX6m7ifCXLjUW5Nz0Qx0qqrTtQkkSoYw==}
     peerDependencies:
@@ -28189,6 +28220,14 @@ packages:
     transitivePeerDependencies:
       - encoding
       - supports-color
+    dev: false
+
+  /chartjs-plugin-streaming@2.0.0(chart.js@3.9.1):
+    resolution: {integrity: sha512-oBwHRmovGbPDS1h8PhpttnlKjI6eiJO13v4h+xz+mfbHhIc+iNF9xuMobCIFMKFH7rlVWi5TJAOIxoXyGElYYg==}
+    peerDependencies:
+      chart.js: ^3.0.0
+    dependencies:
+      chart.js: 3.9.1
     dev: false
 
   /check-error@1.0.2:

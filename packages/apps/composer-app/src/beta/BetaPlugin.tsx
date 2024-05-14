@@ -24,7 +24,7 @@ export const meta = {
 const url = new URL(window.location.href);
 // const LOCALHOST = url.hostname === 'localhost';
 const DEPRECATED_DEPLOYMENT = url.hostname === 'composer.dxos.org';
-const BETA_DEPLOYMENT = url.hostname === 'composer.space';
+const PRODUCTION_DEPLOYMENT = url.hostname === 'composer.space';
 
 const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
   return {
@@ -50,7 +50,7 @@ const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
         ?.identityKey.toHex();
 
       // TODO(burdon): Need way to trigger this from shell panel?
-      if (firstRun && identityKey && BETA_DEPLOYMENT) {
+      if (firstRun && identityKey && PRODUCTION_DEPLOYMENT) {
         void fetch('/connect', {
           method: 'POST',
           headers: new Headers({ 'Content-Type': 'application/json' }),

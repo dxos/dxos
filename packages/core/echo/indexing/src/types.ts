@@ -11,6 +11,7 @@ import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 /**
  * @deprecated To be replaced by a specialized API for each index.
  */
+// TODO(burdon): Reconcile with proto def.
 export type IndexQuery = {
   /**
    * null means all Expando objects.

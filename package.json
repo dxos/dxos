@@ -25,6 +25,7 @@
     "prepare": "[ \"$HUSKY\" != \"0\" ] && husky install || true",
     "serve": "serve",
     "test": "nx run-many --target=test",
+    "toolbox": "node -r @swc-node/register tools/executors/toolbox/src/toolbox.ts",
     "vitest": "nx run-many --target=vitest",
     "watch": "./node_modules/.bin/nx watch --all -- pnpm -w nx compile \"\\$NX_PROJECT_NAME\"",
     "watch-build": "./node_modules/.bin/nx watch --all -- pnpm -w nx build \"\\$NX_PROJECT_NAME\""

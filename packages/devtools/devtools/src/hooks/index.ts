@@ -11,3 +11,4 @@ export * from './useRoutes';
 export * from './useSections';
 export * from './useSpacesInfo';
 export * from './useSignal';
+export * from './useStats';

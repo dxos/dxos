@@ -7,6 +7,7 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryResponse,
@@ -29,8 +30,10 @@ export type IndexQueryProviderParams = {
 };
 
 export class IndexQuerySourceProvider implements QuerySourceProvider {
+  // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: IndexQueryProviderParams) {}
 
+  // TODO(burdon): Rename createQuerySource
   create(): QuerySource {
     return new IndexQuerySource({ service: this._params.service, objectLoader: this._params.objectLoader });
   }
@@ -91,9 +94,12 @@ export class IndexQuerySource implements QuerySource {
     onError?: (error: Error) => void,
   ) {
     const start = Date.now();
-    const stream = this._params.service.find({ filter: filter.toProto() }, { timeout: 20_000 });
     let currentCtx: Context;
-    stream.subscribe(
+    if (this._stream) {
+      log.warn('Query stream already open');
+    }
+    this._stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
+    this._stream.subscribe(
       async (response) => {
         await currentCtx?.dispose();
         const ctx = new Context();
@@ -112,7 +118,7 @@ export class IndexQuerySource implements QuerySource {
 
         const next = onResult(results);
         if (next === OnResult.CLOSE_STREAM) {
-          void stream.close().catch();
+          void this._stream?.close().catch();
         }
       },
       (err) => {
@@ -138,7 +144,6 @@ export class IndexQuerySource implements QuerySource {
     }
 
     const core = getAutomergeObjectCore(object);
-
     const queryResult: QueryResult = {
       id: object.id,
       spaceKey: core.database!.spaceKey,
@@ -146,6 +151,7 @@ export class IndexQuerySource implements QuerySource {
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
     };
+
     return queryResult;
   }
 
