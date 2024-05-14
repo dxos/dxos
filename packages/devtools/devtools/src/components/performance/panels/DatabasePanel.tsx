@@ -6,7 +6,7 @@ import { Database } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type DatabaseInfo } from '../../../hooks';
-import { type CustomPanelProps, Panel } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
 
 export const DatabasePanel = ({ database, ...props }: CustomPanelProps<{ database?: DatabaseInfo }>) => {
   return (

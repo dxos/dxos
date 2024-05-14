@@ -2,21 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TreeView } from '@phosphor-icons/react';
+import { Check, TreeView, X } from '@phosphor-icons/react';
 import React from 'react';
 
+import { getSize } from '@dxos/react-ui-theme';
+
 import { type QueryInfo } from '../../../hooks';
-import { Panel, Duration, type CustomPanelProps } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
+import { Duration } from '../util';
 
 export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: QueryInfo[] }>) => {
   return (
     <Panel {...props} icon={TreeView} title='Queries' info={<span>{queries.length.toLocaleString()}</span>}>
-      <table className='w-full text-xs font-mono'>
+      <table className='table-fixed w-full text-xs font-mono'>
         <tbody>
           {queries.map((query, i) => (
             <tr key={i}>
-              <td className='p-1 text-right'>{query.active && <span>A</span>}</td>
-              <td className='p-1 text-right' title={JSON.stringify(query.filter, undefined, 2)}>
+              <td className='p-1 w-[24px]'>
+                {query.active ? <Check className={getSize(4)} /> : <X className={getSize(4)} />}
+              </td>
+              <td className='p-1 text-right truncate' title={JSON.stringify(query.filter, undefined, 2)}>
                 {query.filter.type?.itemId}
               </td>
               <td className='p-1 w-[80px] text-right'>{query.metrics.objectsReturned.toLocaleString()}</td>

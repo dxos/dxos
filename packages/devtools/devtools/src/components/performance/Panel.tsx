@@ -3,21 +3,9 @@
 //
 
 import { type Icon } from '@phosphor-icons/react';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
-
-const SLOW_TIME = 250;
-
-export const Unit = {
-  M: 1_000 * 1_000,
-  P: 1 / 100,
-  fixed: (n: number, s = 1) => (n / s).toFixed(2),
-};
-
-export const Duration: FC<{ duration: number }> = ({ duration }) => (
-  <span className={mx(duration > SLOW_TIME && 'text-red-500')}>{Math.floor(duration).toLocaleString()}ms</span>
-);
 
 export type PanelProps = {
   id: string;
@@ -44,10 +32,13 @@ export const Panel = ({
   return (
     <div className='flex flex-col'>
       <div
-        className={mx('flex items-center justify-between px-3 cursor-pointer bg-neutral-100 dark:bg-neutral-800')}
+        className={mx(
+          'flex items-center justify-between px-3 text-sm text-fine cursor-pointer',
+          'bg-neutral-100 dark:bg-neutral-850 text-black dark:text-neutral-200',
+        )}
         onClick={() => onToggle?.(id, !open)}
       >
-        <div className='flex items-center gap-2 py-2'>
+        <div className='flex items-center gap-2 py-1'>
           <Icon className={getSize(4)} />
           <span>{title}</span>
         </div>
@@ -56,8 +47,9 @@ export const Panel = ({
       {children && (
         <div
           className={mx(
-            'w-full overflow-y-scroll transition-max-height max-h-[240px]',
-            open ? '' : 'max-h-0',
+            'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height max-h-[240px]',
+            'bg-white dark:bg-neutral-900 text-black dark:text-neutral-300',
+            open ? 'border-t border-neutral-200 dark:border-neutral-800' : 'max-h-0',
             padding && 'px-2',
           )}
         >

@@ -7,7 +7,8 @@ import React from 'react';
 
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
 
-import { Panel, Duration, type CustomPanelProps } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
+import { Duration } from '../util';
 
 export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[] }>) => {
   return (
@@ -17,7 +18,7 @@ export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[
       title='Spans'
       info={<span>{spans?.length.toLocaleString()}</span>}
     >
-      <table className='w-full text-xs font-mono'>
+      <table className='table-fixed w-full text-xs font-mono'>
         <tbody>
           {spans?.map(
             (span) =>
