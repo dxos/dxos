@@ -11,6 +11,8 @@ import { type JsonKeyOptions, jsonKeyReplacer, nonNullable } from '@dxos/util';
 import { createCollectDiagnosticsBroadcastSender } from './diagnostics-broadcast';
 import { ClientServicesProviderResource } from '../services';
 
+const GET_DIAGNOSTICS_RPC_TIMEOUT = 10_000;
+
 export interface CollectDiagnosticsBroadcastSender {
   broadcastDiagnosticsRequest(): any;
 }
@@ -28,13 +30,16 @@ export class DiagnosticsCollector {
     services: ClientServicesProvider | null = findSystemServiceProvider(),
     options: JsonKeyOptions = {},
   ): Promise<any> {
-    const serviceDiagnostics = await services?.services?.SystemService?.getDiagnostics({
-      keys: options.humanize
-        ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
-        : options.truncate
-          ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
-          : undefined,
-    });
+    const serviceDiagnostics = await services?.services?.SystemService?.getDiagnostics(
+      {
+        keys: options.humanize
+          ? GetDiagnosticsRequest.KEY_OPTION.HUMANIZE
+          : options.truncate
+            ? GetDiagnosticsRequest.KEY_OPTION.TRUNCATE
+            : undefined,
+      },
+      { timeout: GET_DIAGNOSTICS_RPC_TIMEOUT },
+    );
 
     const clientDiagnostics = {
       config,
@@ -54,12 +59,12 @@ export class DiagnosticsCollector {
 }
 
 const findSystemServiceProvider = (): ClientServicesProvider | null => {
-  const serviceProviders = TRACE_PROCESSOR.findByAnnotation(ClientServicesProviderResource);
+  const serviceProviders = TRACE_PROCESSOR.findResourcesByAnnotation(ClientServicesProviderResource);
   const providerResource = serviceProviders.find((r) => r.instance.deref()?.services?.SystemService != null);
   return providerResource?.instance?.deref() ?? null;
 };
 
 const findConfigs = (): Config[] => {
-  const configs = TRACE_PROCESSOR.findByAnnotation(ConfigResource);
+  const configs = TRACE_PROCESSOR.findResourcesByAnnotation(ConfigResource);
   return configs.map((r) => r.instance.deref()).filter(nonNullable);
 };

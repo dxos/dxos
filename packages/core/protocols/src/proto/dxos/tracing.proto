@@ -111,7 +111,6 @@ message Metric {
   }
 }
 
-
 service TracingService {
   rpc StreamTrace(google.protobuf.Empty) returns (stream StreamTraceEvent);
 }

@@ -1,5 +1,5 @@
 # Interface `EchoDatabase`
-> Declared in [`packages/core/echo/echo-schema/dist/types/src/database.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/types/src/database.d.ts`]()
 
 
 ## Properties

@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Level } from 'level';
-
 import { Trigger } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
@@ -14,6 +12,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type NetworkManager } from '@dxos/network-manager';
@@ -22,6 +21,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
+import type { TeleportParams } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
@@ -41,7 +41,8 @@ import {
 import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
+export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
+  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
 /**
  * Shared backend for all client services.
  */
@@ -79,10 +80,10 @@ export class ServiceContext extends Resource {
 
   constructor(
     public readonly storage: Storage,
-    public readonly level: Level<string, string>,
+    public readonly level: LevelDB,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
+    public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
     super();
 
@@ -124,7 +125,7 @@ export class ServiceContext extends Resource {
       storage: this.storage,
     });
 
-    this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
     this.invitationsManager = new InvitationsManager(
       this.invitations,
       (invitation) => this.getInvitationHandler(invitation),

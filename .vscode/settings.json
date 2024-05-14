@@ -10,6 +10,7 @@
     "bitfield",
     "burdon",
     "cbor",
+    "COOLDOWN",
     "CRDT",
     "dedup",
     "dxos",
@@ -48,5 +49,6 @@
   },
   "debug.javascript.terminalOptions": {
     "skipFiles": ["<node_internals>/**", "internal/*", "**/stream.ts", "**/events.ts", "**/wtfnode.js", "**/context.ts"]
-  }
+  },
+  "circleci.persistedProjectSelection": []
 }

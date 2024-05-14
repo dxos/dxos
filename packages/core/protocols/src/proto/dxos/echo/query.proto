@@ -18,6 +18,15 @@ message QueryRequest {
   dxos.echo.filter.Filter filter = 2;
 }
 
+/**
+ * Automerge heads.
+ * Used for encoding in Index metadata store.
+ * @see https://automerge.org/automerge-repo/types/_automerge_automerge_repo.Heads.html
+ */
+message Heads {
+  repeated string hashes = 1;
+}
+
 message QueryResult {
   string id = 1;
   dxos.keys.PublicKey spaceKey = 2;
@@ -31,7 +40,7 @@ message QueryResponse {
 }
 
 service QueryService {
-  rpc SetIndexConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
-  rpc Find(QueryRequest) returns (stream QueryResponse);
-  rpc ReIndex(google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc SetConfig(dxos.echo.indexing.IndexConfig) returns (google.protobuf.Empty);
+  rpc ExecQuery(QueryRequest) returns (stream QueryResponse);
+  rpc Reindex(google.protobuf.Empty) returns (google.protobuf.Empty);
 }

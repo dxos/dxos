@@ -1,5 +1,5 @@
 # Class `Query`
-<sub>Declared in [packages/core/echo/echo-schema/dist/types/src/query/query.d.ts:55]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/query.d.ts:79]()</sub>
 
 
 Predicate based query.
@@ -16,18 +16,18 @@ Arguments:
 
 `_queryContext`: <code>QueryContext</code>
 
-`filter`: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[EchoObject](/api/@dxos/client/interfaces/EchoObject)&gt;</code>
+`filter`: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;</code>
 
 
 
 ## Properties
 ### [filter]()
-Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;[EchoObject](/api/@dxos/client/interfaces/EchoObject)&gt;</code>
+Type: <code>[Filter](/api/@dxos/client/classes/Filter)&lt;any&gt;</code>
 
 
 
 ### [objects]()
-Type: <code>T[]</code>
+Type: <code>[EchoReactiveObject](/api/@dxos/client/types/EchoReactiveObject)&lt;T&gt;[]</code>
 
 
 
@@ -38,10 +38,23 @@ Type: <code>QueryResult&lt;T&gt;[]</code>
 
 
 ## Methods
-### [subscribe(callback, \[fire\])]()
+### [run(\[timeout\])]()
 
 
 
+
+Returns: <code>Promise&lt;OneShotQueryResult&lt;T&gt;&gt;</code>
+
+Arguments: 
+
+`timeout`: <code>object</code>
+
+
+### [subscribe(\[callback\], \[opts\])]()
+
+
+Subscribe to query results.
+Queries that have at least one subscriber are updated reactively when the underlying data changes.
 
 Returns: <code>[Subscription](/api/@dxos/client/types/Subscription)</code>
 
@@ -49,18 +62,6 @@ Arguments:
 
 `callback`: <code>function</code>
 
-`fire`: <code>boolean</code>
-
-
-### [update()]()
-
-
-Resend query to remote agents.
-
-Returns: <code>void</code>
-
-Arguments: none
-
-
+`opts`: <code>QuerySubscriptionOptions</code>
 
 

@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EncodedReferenceObject, encodeReference } from '@dxos/echo-pipeline';
-import { Reference, TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { type EncodedReferenceObject, encodeReference, Reference } from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { stripUndefinedValues } from '@dxos/util';
+import { nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
+
+const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
 /**
  * Archive of echo objects.
@@ -90,10 +92,15 @@ export class Serializer {
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const ids = database.automerge.getAllObjectIds();
-    const objects = await Promise.all(ids.map(async (id) => database.automerge.loadObjectById(id)));
+    // TODO(wittjosiah): Ideally batch to reduce load on services, but for now just provide a large timeout.
+
+    const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
+    for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
+      loadedObjects.push(...(await database.automerge.batchLoadObjects(chunk)));
+    }
 
     const data = {
-      objects: objects.map((object) => {
+      objects: loadedObjects.filter(nonNullable).map((object) => {
         return this.exportObject(object as any);
       }),
 
@@ -168,6 +175,7 @@ export class Serializer {
     }
 
     database.automerge.addCore(core);
+    // TODO(dmaretskyi): It is very slow to call flush after every object.
     await database.flush();
   }
 }
@@ -179,4 +187,17 @@ export const getTypeRef = (type?: EncodedReferenceObject | string): Reference | 
     // TODO(mykola): Never reached?
     return Reference.fromLegacyTypename(type);
   }
+};
+
+const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
+  if (arr.length === 0 || chunkSize < 1) {
+    return [];
+  }
+  let index = 0;
+  let resIndex = 0;
+  const result = new Array(Math.ceil(arr.length / chunkSize));
+  while (index < arr.length) {
+    result[resIndex++] = arr.slice(index, (index += chunkSize));
+  }
+  return result;
 };

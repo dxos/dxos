@@ -5,15 +5,15 @@
 import { DotsThreeVertical } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
+import { type Node } from '@dxos/app-graph';
 import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
-import { type TreeNode } from '@dxos/react-ui-navtree';
 
 import { KEY_BINDING, NAVTREE_PLUGIN } from '../meta';
 
 const TREE_ITEM_MAIN_HEADING = 'TreeItemMainHeading';
 
-export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeNode; popoverAnchorId?: string }) => {
+export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: Node; popoverAnchorId?: string }) => {
   const { t } = useTranslation(NAVTREE_PLUGIN);
 
   const ActionRoot =
@@ -22,7 +22,9 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeN
       ? Popover.Anchor
       : Fragment;
 
-  const Icon = activeNode.icon ?? DotsThreeVertical;
+  const Icon = activeNode.properties?.icon ?? DotsThreeVertical;
+  const actions = activeNode.actions();
+  const label = toLocalizedString(activeNode.properties?.label, t);
 
   const menuTriggerLabel = t('node actions menu invoker label');
 
@@ -31,8 +33,10 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeN
       <ActionRoot>
         <PlankHeading.ActionsMenu
           triggerLabel={menuTriggerLabel}
-          actions={activeNode.actions.flatMap((action) => ('invoke' in action ? [action] : []))}
-          onAction={(action) => action.invoke?.({ caller: TREE_ITEM_MAIN_HEADING })}
+          actions={actions}
+          onAction={(action) =>
+            typeof action.data === 'function' && action.data({ node: action as Node, caller: TREE_ITEM_MAIN_HEADING })
+          }
         >
           <PlankHeading.Button attendableId={activeNode.id}>
             <Icon {...plankHeadingIconProps} />
@@ -40,7 +44,7 @@ export const NavBarStart = ({ activeNode, popoverAnchorId }: { activeNode: TreeN
           </PlankHeading.Button>
         </PlankHeading.ActionsMenu>
       </ActionRoot>
-      <PlankHeading.Label attendableId={activeNode.id}>{toLocalizedString(activeNode.label, t)}</PlankHeading.Label>
+      <PlankHeading.Label attendableId={activeNode.id}>{label}</PlankHeading.Label>
     </>
   );
 };

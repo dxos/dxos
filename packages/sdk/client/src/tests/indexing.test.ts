@@ -7,9 +7,9 @@ import { expect } from 'chai';
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter } from '@dxos/echo-db';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { create } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, test } from '@dxos/test';
@@ -182,7 +182,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), 1000);
 
-      await client.services.services.QueryService?.reIndex();
+      await client.services.services.QueryService?.reindex();
       await queryIndexedContact(space, john);
     }
   });

@@ -3,19 +3,36 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type Heads } from '@dxos/automerge/automerge';
+import { type ObjectStructure } from '@dxos/echo-protocol';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 /**
  * @deprecated To be replaced by a specialized API for each index.
  */
+// TODO(burdon): Reconcile with proto def.
 export type IndexQuery = {
   /**
    * null means all Expando objects.
    * undefined means all objects (no filter).
    */
   typename?: string | null;
+
+  // TODO(burdon): Hack to exclude.
+  inverted?: boolean;
 };
+
+export type ObjectSnapshot = {
+  /**
+   * Index ID.
+   */
+  id: ObjectPointerEncoded;
+  object: Partial<ObjectStructure>;
+  heads: Heads;
+};
+
+export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
 
 export interface Index {
   identifier: string;
@@ -50,8 +67,3 @@ export const staticImplements =
   <U extends T>(constructor: U) => {
     return constructor;
   };
-
-/**
- * Document head hashes concatenated with a no separator.
- */
-export type ConcatenatedHeadHashes = string;

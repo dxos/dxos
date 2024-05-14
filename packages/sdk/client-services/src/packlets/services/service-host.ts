@@ -2,16 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Level } from 'level';
-
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { type ObjectStructure, encodeReference, type SpaceDoc, type LevelDB } from '@dxos/echo-pipeline';
+import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
 import { getTypeReference } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
 import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
@@ -82,7 +81,7 @@ export class ClientServicesHost {
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
-  private _level?: Level<string, string>;
+  private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
@@ -238,12 +237,12 @@ export class ClientServicesHost {
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
 
+    await this._resourceLock?.acquire();
+
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
     await this._level.open();
-
-    await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
@@ -340,10 +339,10 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
-    log('resetting...');
+    log.info('resetting...');
     await this._serviceContext?.close();
     await this._storage!.reset();
-    log('reset');
+    log.info('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }

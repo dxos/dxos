@@ -18,7 +18,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
-import { Main, Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
   Stack,
@@ -27,13 +27,7 @@ import {
   type AddSectionPosition,
   type StackSectionItem,
 } from '@dxos/react-ui-stack';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  getSize,
-  surfaceElevation,
-  staticDefaultButtonColors,
-} from '@dxos/react-ui-theme';
+import { getSize, surfaceElevation, staticDefaultButtonColors } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { FileUpload } from './FileUpload';
@@ -150,8 +144,8 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
 
   const handleNavigate = async (id: string) => {
     await dispatch({
-      action: NavigationAction.ACTIVATE,
-      data: { id },
+      action: NavigationAction.OPEN,
+      data: { activeParts: { main: [id] } },
     });
   };
 
@@ -176,7 +170,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <>
       <Stack
         id={id}
         data-testid='main.stack'
@@ -219,7 +213,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
           )}
         </ButtonGroup>
       </div>
-    </Main.Content>
+    </>
   );
 };
 

@@ -11,6 +11,8 @@ import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { SECTION_IDENTIFIER, STACK_PLUGIN } from './meta';
@@ -76,7 +78,15 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof Collection ? (
-                <StackMain collection={data.active} separation={settings.values.separation} />
+                <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+                  <StackMain collection={data.active} separation={settings.values.separation} />
+                </Main.Content>
+              ) : null;
+            case 'article':
+              return data.object instanceof Collection ? (
+                <div role='none' className='row-span-2 overflow-auto'>
+                  <StackMain collection={data.object} separation={settings.values.separation} />
+                </div>
               ) : null;
             case 'settings': {
               return data.plugin === meta.id ? <StackSettings settings={settings.values} /> : null;

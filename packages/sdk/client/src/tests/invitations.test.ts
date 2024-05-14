@@ -6,7 +6,7 @@ import chai, { expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncChain, asyncTimeout, Trigger, waitForCondition } from '@dxos/async';
+import { asyncChain, asyncTimeout, sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import {
   createAdmissionKeypair,
@@ -57,6 +57,7 @@ const successfulInvitation = async ({
   expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
   expect(guestInvitation?.state).to.eq(Invitation.State.SUCCESS);
   expect(guestInvitation!.target).to.eq(hostInvitation!.target);
+  await sleep(20);
 
   switch (hostInvitation!.kind) {
     case Invitation.Kind.SPACE:
@@ -132,17 +133,19 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
     const keypair1 = createAdmissionKeypair();
     const keypair2 = createAdmissionKeypair();
     const invalidKeypair = { publicKey: keypair1.publicKey, privateKey: keypair2.privateKey };
-    const [hostResult, guestResult] = performInvitation({
-      ...params,
-      options: {
-        ...params.options,
-        guestKeypair: invalidKeypair,
-        authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
-      },
-    });
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: {
+          ...params.options,
+          guestKeypair: invalidKeypair,
+          authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
+        },
+      }),
+    );
 
-    expect((await guestResult).error).to.exist;
-    await expect(asyncTimeout(hostResult, 100)).to.be.rejected;
+    expect(guestResult.error).to.exist;
+    expect(hostResult.error).to.exist;
   });
 
   test('incomplete shared keypair', async () => {
@@ -285,22 +288,23 @@ const testSuite = (getParams: () => PerformInvitationParams, getPeers: () => [Se
   test('network error', async () => {
     const [, guest] = getPeers();
     const params = getParams();
-    const [hostPromise, guestPromise] = performInvitation({
-      ...params,
-      options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
-      hooks: {
-        guest: {
-          onConnected: () => {
-            void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
-            return true;
+    const [hostResult, guestResult] = await Promise.all(
+      performInvitation({
+        ...params,
+        options: { ...params.options, authMethod: Invitation.AuthMethod.SHARED_SECRET },
+        codeInputDelay: 200,
+        hooks: {
+          guest: {
+            onConnected: () => {
+              void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
+              return true;
+            },
           },
         },
-      },
-    });
-    const guestResult = await guestPromise;
-
+      }),
+    );
     expect(guestResult.error).to.exist;
-    await expect(asyncTimeout(hostPromise, 100)).to.be.rejected;
+    expect(hostResult.error).to.exist;
 
     // Test cleanup fails if the guest is offline.
     await guest.networkManager.setConnectionState(ConnectionState.ONLINE);

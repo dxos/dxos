@@ -52,6 +52,9 @@
       }
     },
     "serve": {
+      "dependsOn": [
+        "^bundle"
+      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "todomvc:bundle"
