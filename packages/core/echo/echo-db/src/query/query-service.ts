@@ -97,6 +97,8 @@ export class QueryServiceImpl extends Resource implements QueryService {
       this._queries.add(query);
 
       queueMicrotask(async () => {
+        await query.state.open();
+
         try {
           const { changed } = await query.state.execQuery();
           if (changed) {
