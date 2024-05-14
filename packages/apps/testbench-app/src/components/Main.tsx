@@ -17,7 +17,7 @@ import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
-import { StatsPanel } from './StatsPanel';
+import { StatsPanel } from './performance';
 import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';

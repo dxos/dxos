@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './performance';
 export * from './status';
 
 export * from './AppContainer';
@@ -12,4 +13,3 @@ export * from './Error';
 export * from './ItemList';
 export * from './ItemTable';
 export * from './Main';
-export * from './StatsPanel';
