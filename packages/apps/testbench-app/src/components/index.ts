@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './performance';
 export * from './status';
 
 export * from './AppContainer';
