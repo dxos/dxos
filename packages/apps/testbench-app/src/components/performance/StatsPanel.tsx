@@ -47,8 +47,8 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   return (
     <div
       className={mx(
-        'flex flex-col w-full h-full bg-neutral-50 dark:bg-neutral-800',
-        'divide-y divide-neutral-200 border-neutral-200 dark:border-neutral-800',
+        'flex flex-col w-full h-full bg-neutral-50 dark:bg-neutral-900',
+        'divide-y divide-neutral-200 dark:divide-neutral-700',
       )}
     >
       <Panel

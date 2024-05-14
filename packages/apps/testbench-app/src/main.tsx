@@ -5,7 +5,6 @@
 import '@dxosTheme';
 
 import { BaselimeRum } from '@baselime/react-rum';
-import { DevSupport } from '@react-buddy/ide-toolbox';
 import { withProfiler } from '@sentry/react';
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -19,7 +18,6 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
-import { ComponentPreviews, useInitial } from './dev';
 import translations from './translations';
 
 void initializeAppObservability({
@@ -105,9 +103,7 @@ const main = async () => {
         shell='./shell.html'
         onInitialized={handleInitialized}
       >
-        <DevSupport ComponentPreviews={ComponentPreviews} useInitialHook={useInitial}>
-          <App />
-        </DevSupport>
+        <App />
       </ClientProvider>
     </BaselimeRum>,
     // </StrictMode>,

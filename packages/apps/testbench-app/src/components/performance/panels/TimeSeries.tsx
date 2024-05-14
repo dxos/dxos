@@ -56,7 +56,11 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
           },
           y: {
             min: 0,
-            max: 80,
+            max: 125,
+            ticks: {
+              stepSize: 30,
+              includeBounds: false,
+            },
           },
         },
         plugins: {

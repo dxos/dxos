@@ -43,7 +43,7 @@ export const Panel = ({
 }: PropsWithChildren<PanelProps>) => {
   return (
     <div className='flex flex-col'>
-      <div className={mx('flex items-center justify-between px-3 bg-neutral-100')}>
+      <div className={mx('flex items-center justify-between px-3 bg-neutral-100 dark:bg-neutral-800')}>
         <div className='flex items-center gap-2 py-2 cursor-pointer' onClick={() => onToggle?.(id, !open)}>
           <Icon className={getSize(4)} />
           <span>{title}</span>

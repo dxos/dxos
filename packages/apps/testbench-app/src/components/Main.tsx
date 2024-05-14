@@ -187,7 +187,7 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black divide-y'>
+    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
       <AppToolbar
         onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
@@ -226,7 +226,7 @@ export const Main = () => {
         <div className='grow' />
         <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
         {showStats && (
-          <div className='z-20 absolute right-0 bottom-[32px] w-[400px] border-l border-t'>
+          <div className='z-20 absolute right-0 bottom-[32px] w-[400px] border-l border-t border-neutral-500 dark:border-neutral-800'>
             <StatsPanel stats={stats} onRefresh={refreshStats} />
           </div>
         )}
