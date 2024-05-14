@@ -22,8 +22,9 @@ import {
   type SubscribeMessagesRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Provider } from '@dxos/util';
 
@@ -65,6 +66,10 @@ export class SpacesServiceImpl implements SpacesService {
           throw new ApiError('Invalid space state');
       }
     }
+  }
+
+  async updateMemberRole(_: UpdateMemberRoleRequest): Promise<void> {
+    throw new Error('not implemented');
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -213,11 +218,12 @@ export class SpacesServiceImpl implements SpacesService {
             identityKey: member.key,
             profile: member.profile ?? {},
           },
-          presence: member.removed
-            ? SpaceMember.PresenceState.REMOVED
-            : isMe || peers.length > 0
-              ? SpaceMember.PresenceState.ONLINE
-              : SpaceMember.PresenceState.OFFLINE,
+          presence:
+            member.role === HaloSpaceMember.Role.REMOVED
+              ? SpaceMember.PresenceState.REMOVED
+              : isMe || peers.length > 0
+                ? SpaceMember.PresenceState.ONLINE
+                : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
         };
       }),
