@@ -154,9 +154,11 @@ export default class Start extends BaseCommand<typeof Start> {
         gracefulStopComplete.wake();
       };
     };
+
     process.on('SIGINT', gracefulStop('SIGINT'));
     process.on('SIGTERM', gracefulStop('SIGTERM'));
-    // TODO(nf): handle SIGHUP/etc
+
+    // TODO(nf): Handle SIGHUP/etc.
 
     try {
       await this._agent.start();
@@ -166,6 +168,7 @@ export default class Start extends BaseCommand<typeof Start> {
       }
       throw err;
     }
+
     this.log('Agent started... (ctrl-c to exit)');
 
     await this._sendTelemetry();
