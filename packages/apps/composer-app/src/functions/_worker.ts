@@ -6,7 +6,7 @@ import { authMiddleware, type Env } from '@dxos/web-auth';
 
 const handler = authMiddleware({
   cookie: 'COMPOSER-BETA',
-  service: 'composer-app-worker',
+  service: 'composer-worker',
   redirectUrl: 'https://dxos.org/composer/#beta',
 });
 

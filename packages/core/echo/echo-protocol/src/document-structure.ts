@@ -17,7 +17,7 @@ export interface SpaceDoc {
    * Objects inlined in the current document.
    */
   objects?: {
-    [key: string]: ObjectStructure;
+    [id: string]: ObjectStructure;
   };
   /**
    * Object id points to an automerge doc url where the object is embedded.
@@ -31,9 +31,9 @@ export interface SpaceDoc {
  * Representation of an ECHO object in an AM document.
  */
 export type ObjectStructure = {
-  data: Record<string, any>;
-  meta: ObjectMeta;
   system: ObjectSystem;
+  meta: ObjectMeta;
+  data: Record<string, any>;
 };
 
 /**
@@ -52,7 +52,7 @@ export type ObjectMeta = {
 export type ForeignKey = {
   /**
    * Name of the foreign database/system.
-   * E.g. `github.com`.
+   * E.g., `github.com`.
    */
   source?: string;
 
@@ -68,12 +68,12 @@ export type ForeignKey = {
  */
 export type ObjectSystem = {
   /**
-   * Deletion marker.
-   */
-  deleted?: boolean;
-
-  /**
    * Object reference ('protobuf' protocol) type.
    */
   type?: EncodedReferenceObject;
+
+  /**
+   * Deletion marker.
+   */
+  deleted?: boolean;
 };

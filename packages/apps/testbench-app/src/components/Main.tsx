@@ -17,7 +17,7 @@ import { DataToolbar, type DataView } from './DataToolbar';
 import { ItemList } from './ItemList';
 import { ItemTable } from './ItemTable';
 import { SpaceToolbar } from './SpaceToolbar';
-import { StatsPanel } from './StatsPanel';
+import { StatsPanel } from './performance';
 import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
@@ -226,7 +226,7 @@ export const Main = () => {
         <div className='grow' />
         <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
         {showStats && (
-          <div className='z-100 absolute right-0 bottom-[32px] w-[400px] border-l border-t'>
+          <div className='z-20 absolute right-0 bottom-[32px] w-[400px] border-l border-t'>
             <StatsPanel stats={stats} onRefresh={refreshStats} />
           </div>
         )}
