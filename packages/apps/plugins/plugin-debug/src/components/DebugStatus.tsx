@@ -190,7 +190,7 @@ const SavingIndicator = () => {
 };
 
 const PerformanceIndicator = () => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const [stats, refreshStats] = useStats();
 
   return (

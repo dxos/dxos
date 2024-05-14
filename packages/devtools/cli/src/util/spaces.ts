@@ -21,10 +21,15 @@ export const selectSpace = async (spaces: Space[]) => {
       name: 'key',
       type: 'list',
       message: 'Select a space:',
-      choices: spaces.map((space) => ({
-        name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
-        value: space.key,
-      })),
+      choices: await Promise.all(
+        spaces.map(async (space) => {
+          await waitForSpace(space);
+          return {
+            name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
+            value: space.key,
+          };
+        }),
+      ),
     },
   ]);
 

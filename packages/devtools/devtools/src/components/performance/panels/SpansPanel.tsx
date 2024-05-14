@@ -11,6 +11,10 @@ import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';
 
 export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[] }>) => {
+  if (!spans?.length) {
+    return null;
+  }
+
   return (
     <Panel
       {...props}
