@@ -19,6 +19,7 @@ import {
   type GlobalOptions,
   type TestParams,
   AGENT_LOG_FILE,
+  type ReplicantsSummary,
 } from '../spec';
 
 export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
@@ -62,6 +63,16 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
     this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
     this.rpcRequests.on('error', (err) => log.info('Redis Client Error', err));
     this.rpcResponses.on('error', (err) => log.info('Redis Client Error', err));
+  }
+
+  getReplicantsSummary(): ReplicantsSummary<S> {
+    const summary: ReplicantsSummary<S> = {};
+
+    for (const replicant of this.replicants) {
+      summary[replicant.params.replicantId] = replicant.params;
+    }
+
+    return summary;
   }
 
   async open() {

@@ -13,7 +13,7 @@ import { defaultMap, range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type ReplicantRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type ReplicantRunOptions, type AgentEnv, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type TransportTestSpec = {
@@ -304,7 +304,7 @@ export class TransportTestPlan implements TestPlan<TransportTestSpec, TransportA
     log.info('test completed', { replicantId });
   }
 
-  async finish(params: TestParams<TransportTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<TransportTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.signalBuilder.destroy();
 
     const muxerStats = new Map<string, SerializedLogEntry<TeleportStatsLog>[]>();

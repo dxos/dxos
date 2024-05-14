@@ -13,21 +13,19 @@ import { log } from '@dxos/log';
 
 import { buildBrowserBundle } from './browser/browser-bundle';
 import { SchedulerEnvImpl } from './env';
-import { type GlobalOptions, type PlanResults, type TestPlan, type TestParams } from './spec';
+import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './spec';
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage';
 
 const SUMMARY_FILENAME = 'test.json';
 
 type TestSummary = {
+  planName: string;
   options: GlobalOptions;
+  testParams: TestParams<any>;
   spec: any;
   stats: any;
-  results: PlanResults<any>;
-  params: {
-    testId: string;
-    outDir: string;
-    planName: string;
-  };
+  results: any;
+  replicants: ReplicantsSummary<any>;
   diagnostics: {
     resourceUsage: ResourceUsageStats;
   };
@@ -64,7 +62,7 @@ export const runPlan = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     // Analysis mode.
     const summary: TestSummary = JSON.parse(fs.readFileSync(options.repeatAnalysis, 'utf8'));
     await plan.analyze(
-      { spec: summary.spec, outDir: summary.params?.outDir, testId: summary.params?.testId },
+      { spec: summary.spec, outDir: summary.testParams?.outDir, testId: summary.testParams?.testId },
       summary.results,
     );
     return;
@@ -98,7 +96,6 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
     });
   }
 
-
   //
   // Start simulation
   //
@@ -106,38 +103,38 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   const schedulerEnv = new SchedulerEnvImpl(options, testParams);
   await schedulerEnv.open();
   const result = await plan.run(schedulerEnv, testParams);
+  const replicants = schedulerEnv.getReplicantsSummary();
 
   log.info('simulation complete', {
     summary: join(outDir, SUMMARY_FILENAME),
     result,
+    replicants,
   });
 
   await schedulerEnv.close();
 
   let resourceUsageStats: ResourceUsageStats | undefined;
   try {
-    resourceUsageStats = await analyzeResourceUsage(result);
+    resourceUsageStats = await analyzeResourceUsage(replicants);
   } catch (err) {
     log.warn('error analyzing resource usage', err);
   }
 
   let stats: any;
   try {
-    stats = await plan.analyze({ spec, outDir, testId }, result);
+    stats = await plan.analyze({ spec, outDir, testId }, replicants, result);
   } catch (err) {
     log.warn('error finishing plan', err);
   }
 
   const summary: TestSummary = {
+    planName: Object.getPrototypeOf(plan).constructor.name,
     options,
     spec,
     stats,
-    params: {
-      testId,
-      outDir,
-      planName: Object.getPrototypeOf(plan).constructor.name,
-    },
+    testParams,
     results: result,
+    replicants,
     diagnostics: {
       resourceUsage: resourceUsageStats ?? {},
     },

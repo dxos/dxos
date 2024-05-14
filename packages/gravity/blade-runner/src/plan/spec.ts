@@ -49,15 +49,17 @@ export type ReplicantRuntimeParams = {
   platform?: Platform;
 };
 
-export type PlanResults<S> = {
-  replicants: { [replicantId: string]: ReplicantParams<S> };
-};
+export type ReplicantsSummary<S> = { [replicantId: string]: ReplicantParams<S> };
 
 // plan vs environment
-export interface TestPlan<S> {
+export interface TestPlan<S, R = void> {
   onError?: (err: Error) => void;
-  run(env: SchedulerEnv<S>, params: TestParams<S>): Promise<PlanResults<S>>;
+  /**
+   * Run the test.
+   * @returns results of the run will be passed to the `analyze` method.
+   */
+  run(env: SchedulerEnv<S>, params: TestParams<S>): Promise<R>;
   // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
-  analyze(params: TestParams<S>, results: PlanResults<S>): Promise<any>;
+  analyze(params: TestParams<S>, summary: ReplicantsSummary<S>, result: R): Promise<any>;
   defaultSpec(): S;
 }

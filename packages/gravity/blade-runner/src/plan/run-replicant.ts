@@ -11,7 +11,6 @@ import { WebSocketConnector } from './env/websocket-connector';
 import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type RunParams } from './run-process';
 import { type ReplicantParams } from './spec';
-import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
 
 /**
  * Entry point for process running in agent mode.
@@ -60,29 +59,5 @@ const finish = (code: number) => {
   } else {
     // NOTE: `dxgravity_done` is being exposed by playwright `.exposeFunction()` API.
     (window as any).dxgravity_done?.(code);
-  }
-};
-
-const initDiagnostics = () => {
-  // TODO(mykola): track diagnostics in browser.
-  if (isNode()) {
-    let prevCpuUsage = process.cpuUsage();
-
-    log.trace(RESOURCE_USAGE_LOG, {
-      ts: performance.now(),
-    });
-
-    setInterval(() => {
-      const cpuUsage = process.cpuUsage(prevCpuUsage);
-      prevCpuUsage = process.cpuUsage();
-
-      const memoryUsage = process.memoryUsage();
-
-      log.trace(RESOURCE_USAGE_LOG, {
-        ts: performance.now(),
-        cpu: cpuUsage,
-        memory: memoryUsage,
-      } satisfies ResourceUsageLogEntry);
-    }, 200);
   }
 };

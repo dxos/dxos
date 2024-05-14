@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 import {
   type AgentEnv,
   type ReplicantRunOptions,
-  type PlanResults,
+  type ReplicantsSummary,
   type Platform,
   type TestParams,
   type TestPlan,
@@ -128,7 +128,7 @@ export class StorageTestPlan implements TestPlan<StorageTestSpec, StorageAgentCo
     }
   }
 
-  async finish(params: TestParams<StorageTestSpec>, results: PlanResults): Promise<any> {}
+  async finish(params: TestParams<StorageTestSpec>, results: ReplicantsSummary): Promise<any> {}
 
   private _storageCtx = new Context();
   private _testId = PublicKey.random().toHex();

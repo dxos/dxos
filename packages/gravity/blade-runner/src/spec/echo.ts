@@ -26,7 +26,7 @@ import { type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG }
 import {
   type ReplicantRunOptions,
   type AgentEnv,
-  type PlanResults,
+  type ReplicantsSummary,
   type TestParams,
   type TestPlan,
   type Platform,
@@ -324,7 +324,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoAgentConfig> {
 
   getObj = () => this.space.db.objects.find((obj) => obj instanceof TextObject) as TextObject;
 
-  async finish(params: TestParams<EchoTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<EchoTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.signalBuilder.destroy();
 
     const statsLogs: SerializedLogEntry<StatsLog>[] = [];

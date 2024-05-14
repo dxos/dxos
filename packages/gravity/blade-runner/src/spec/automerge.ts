@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 import {
   type AgentEnv,
   type ReplicantRunOptions,
-  type PlanResults,
+  type ReplicantsSummary,
   type Platform,
   type TestParams,
   type TestPlan,
@@ -162,7 +162,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     await env.syncBarrier('done');
   }
 
-  async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
+  async finish(params: TestParams<AutomergeTestSpec>, results: ReplicantsSummary): Promise<any> {}
 
   private async _init(
     env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>,

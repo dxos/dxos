@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { type PlanResults, type Platform, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
+import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
 import { DumbReplicant } from '../replicants/dumb-replicant';
 
 export type EmptyTestSpec = {
@@ -24,10 +24,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     };
   }
 
-  async run(
-    env: SchedulerEnvImpl<EmptyTestSpec>,
-    params: TestParams<EmptyTestSpec>,
-  ): Promise<PlanResults<EmptyTestSpec>> {
+  async run(env: SchedulerEnvImpl<EmptyTestSpec>, params: TestParams<EmptyTestSpec>) {
     log.info('run', {
       message: 'Empty spec hello message, running dumb replicant.',
       params: env.params,
@@ -37,15 +34,9 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
 
     const result = await dumbReplicant.brain.doSomethingFunny();
     log.info('result', { result });
-    // TODO(mykola): Push in framework to handle results.
-    return {
-      replicants: {
-        [dumbReplicant.params.replicantId]: dumbReplicant.params,
-      },
-    };
   }
 
-  async analyze(params: TestParams<EmptyTestSpec>, results: PlanResults<EmptyTestSpec>): Promise<any> {
+  async analyze(params: TestParams<EmptyTestSpec>, results: ReplicantsSummary<EmptyTestSpec>): Promise<any> {
     log.info('finished shutdown');
   }
 }

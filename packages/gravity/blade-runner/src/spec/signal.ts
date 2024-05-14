@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type ReplicantRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
+import { type ReplicantRunOptions, type AgentEnv, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
 import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
@@ -187,7 +187,7 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     await sleep(spec.agentWaitTime);
   }
 
-  async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<SignalTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.builder.destroy();
 
     switch (params.spec.type) {

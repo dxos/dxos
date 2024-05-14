@@ -3,7 +3,7 @@
 //
 
 import { getReader } from './stats';
-import { type PlanResults } from '../plan';
+import { type ReplicantsSummary } from '../plan';
 
 export const RESOURCE_USAGE_LOG = 'dxos.blade-runner.resource-usage';
 
@@ -25,7 +25,7 @@ export type ResourceUsageStats = {
   }[];
 };
 
-export const analyzeResourceUsage = async <S>(results: PlanResults<S>): Promise<ResourceUsageStats> => {
+export const analyzeResourceUsage = async <S>(results: ReplicantsSummary<S>): Promise<ResourceUsageStats> => {
   const reader = getReader(results);
 
   const stats: ResourceUsageStats = {};

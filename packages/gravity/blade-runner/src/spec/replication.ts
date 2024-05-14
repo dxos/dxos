@@ -18,7 +18,7 @@ import { range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type SerializedLogEntry, getReader } from '../analysys';
-import { type PlanResults, type TestParams, type TestPlan, type AgentEnv, type ReplicantRunOptions } from '../plan';
+import { type ReplicantsSummary, type TestParams, type TestPlan, type AgentEnv, type ReplicantRunOptions } from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
@@ -408,7 +408,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     log.info('test completed', { replicantId });
   }
 
-  async finish(params: TestParams<ReplicationTestSpec>, results: PlanResults): Promise<any> {
+  async finish(params: TestParams<ReplicationTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.signalBuilder.destroy();
 
     // Map<replicantId, Map<swarmId, FeedStats>>
