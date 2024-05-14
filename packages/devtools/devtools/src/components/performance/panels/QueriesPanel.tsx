@@ -12,6 +12,10 @@ import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';
 
 export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: QueryInfo[] }>) => {
+  if (!queries?.length) {
+    return null;
+  }
+
   return (
     <Panel {...props} icon={TreeView} title='Queries' info={<span>{queries.length.toLocaleString()}</span>}>
       <table className='table-fixed w-full text-xs font-mono'>
