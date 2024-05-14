@@ -31,7 +31,13 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           storageKey: 'show-welcome',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         });
-      state.running = !!settings.values.showHints;
+      // TODO(zhenyasav): re-enable welcome tour on startup
+      // the following is not enough to re-enable the welcome tour
+      // for example, when is the right time to show it after
+      // a user landed on a shared piece of content?
+      // const isDeviceInvitation = window.location.pathname.indexOf('deviceInvitationCode') >= 0;
+      // const isSpaceInvitationCode = window.location.pathname.indexOf('spaceInvitationCode') >= 0;
+      // state.running = !!settings.values.showHints && !isDeviceInvitation && !isSpaceInvitationCode;
     },
     provides: {
       context: ({ children }) => {

@@ -46,12 +46,12 @@ describe('Indexer', () => {
         yield Array.from(pointersWithHash.entries()).map(([id]) => documents.find((doc) => doc.id === id)!);
       },
     });
-    afterTest(() => indexer.destroy());
+    afterTest(() => indexer.close());
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      indexer.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-      await indexer.initialize();
+      indexer.setConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
+      await indexer.open();
       await asyncTimeout(doneIndexing, 1000);
     }
 
@@ -74,7 +74,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.find({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -85,12 +85,12 @@ describe('Indexer', () => {
 
     {
       const doneIndexing = indexer.updated.waitForCount(1);
-      await indexer.reIndex(new Map(documents.map(({ id }) => [id, ['hash']])));
+      await indexer.reindex(new Map(documents.map(({ id }) => [id, ['hash']])));
       await asyncTimeout(doneIndexing, 1000);
     }
 
     {
-      const ids = await indexer.find({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typename: schemaURI });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -109,7 +109,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.find({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typename: schemaURI });
       expect(ids.length).to.equal(0);
     }
 
@@ -125,7 +125,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.find({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typename: schemaURI });
       expect(ids.length).to.equal(0);
     }
   });

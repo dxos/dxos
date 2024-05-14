@@ -31,7 +31,22 @@ export enum ClientAction {
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
 }
 
-export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean };
+export type ClientPluginOptions = ClientOptions & {
+  /**
+   * Used to track app-specific state in spaces.
+   */
+  appKey: string;
+
+  /**
+   * Query string parameter to look for device invitation codes.
+   */
+  deviceInvitationParam?: string;
+
+  /**
+   * Run after the client has been initialized.
+   */
+  onClientInitialized?: (client: Client) => Promise<void>;
+};
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
@@ -58,6 +73,8 @@ export const parseSchemaPlugin = (plugin?: Plugin) =>
 
 export const ClientPlugin = ({
   appKey,
+  deviceInvitationParam = 'deviceInvitationCode',
+  onClientInitialized,
   ...options
 }: ClientPluginOptions): PluginDefinition<
   Omit<ClientPluginProvides, 'client' | 'firstRun'>,
@@ -79,7 +96,9 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
+        // TODO(wittjosiah): Why is this here? Remove?
         client.addSchema(TextV0Type);
+        await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {
@@ -92,7 +111,7 @@ export const ClientPlugin = ({
 
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const deviceInvitationCode = searchParams.get(deviceInvitationParam);
         const identity = client.halo.identity.get();
         if (!identity && !deviceInvitationCode) {
           await client.halo.createIdentity();

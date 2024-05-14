@@ -53,9 +53,11 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
 
+import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
@@ -66,7 +68,6 @@ const main = async () => {
   registerSignalRuntime();
 
   let config = await setupConfig();
-
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
@@ -122,6 +123,7 @@ const main = async () => {
       ThemeMeta,
       // TODO(wittjosiah): Consider what happens to PWA updates when hitting error boundary.
       isSocket ? NativeMeta : PwaMeta,
+      BetaMeta,
 
       // UX
       isDeck ? DeckMeta : LayoutMeta,
@@ -167,6 +169,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
+      [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
@@ -174,6 +177,34 @@ const main = async () => {
         config,
         services,
         shell: './shell.html',
+        onClientInitialized: async (client) => {
+          const url = new URL(window.location.href);
+          // Match CF only.
+          // TODO(burdon): Check for Server: cloudflare header.
+          //  https://developers.cloudflare.com/pages/configuration/serving-pages
+          if (!url.origin.endsWith('composer.space')) {
+            return;
+          }
+
+          try {
+            // Retrieve the cookie.
+            const response = await fetch('/info');
+            if (!response.ok) {
+              throw new Error('Invalid response.');
+            }
+
+            const result: JWTPayload = await response.json();
+
+            // TODO(burdon): CamelCase vs. _ names.
+            await client.shell.setInvitationUrl({
+              invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
+              deviceInvitationParam: 'deviceInvitationCode',
+              spaceInvitationParam: 'spaceInvitationCode',
+            });
+          } catch (err) {
+            log.catch(err);
+          }
+        },
       }),
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
@@ -182,12 +213,11 @@ const main = async () => {
       [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
-      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
-        steps,
-      }),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), { steps }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
+      // DX_DECK=1
       ...(isDeck
         ? {
             [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {
@@ -243,6 +273,7 @@ const main = async () => {
     },
     core: [
       ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
       HelpMeta.id,

@@ -604,11 +604,6 @@
         },
         {
           "type": "json",
-          "path": "packages/experimental/labs-workers/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/experimental/metagraph/package.json",
           "jsonpath": "$.version"
         },

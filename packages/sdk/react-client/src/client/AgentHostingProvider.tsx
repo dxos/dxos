@@ -35,12 +35,12 @@ export const useAgentHostingClient = () => {
 const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
   const agentHostingConfig = config.get('runtime.services.agentHosting');
   if (!agentHostingConfig) {
-    log.info('no agent hosting configured');
+    log('no agent hosting configured');
     return null;
   }
-  // TODO: Dynamically discover based on runtime config
-  let agentHostingProviderClient: AgentHostingProviderClient | null = null;
 
+  // TODO(nf): Dynamically discover based on runtime config.
+  let agentHostingProviderClient: AgentHostingProviderClient | null = null;
   switch (agentHostingConfig.type) {
     case 'LOCAL_TESTING':
       log.info('using FakeAgentHostingProvider');
