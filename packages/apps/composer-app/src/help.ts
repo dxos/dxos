@@ -36,16 +36,16 @@ export const steps: Step[] = [
     ...base,
     before: ensureSidebar,
     target: '[data-testid="spacePlugin.personalSpace"]',
-    title: 'Your stuff',
-    content: 'The Personal space is synchronized across your devices.',
+    title: 'Private information',
+    content: 'The Personal space is synchronized across all of your devices.',
     placement: 'right',
   },
   {
     ...base,
     before: ensureSidebar,
     target: '[data-testid="spacePlugin.createObject"]',
-    title: 'Creating things',
-    content: 'Use (+) to create new content.',
+    title: 'Creating content',
+    content: 'Press (+) to add new content.',
     placement: 'right',
   },
   {
@@ -68,6 +68,6 @@ export const steps: Step[] = [
     before: ensureSidebar,
     target: '[data-joyride="welcome/settings"]',
     title: 'Settings',
-    content: 'Tweak settings and plugins.',
+    content: 'Configure settings and add plugins.',
   },
 ];

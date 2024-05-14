@@ -182,7 +182,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), 1000);
 
-      await client.services.services.QueryService?.reIndex();
+      await client.services.services.QueryService?.reindex();
       await queryIndexedContact(space, john);
     }
   });

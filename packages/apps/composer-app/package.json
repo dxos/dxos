@@ -68,8 +68,10 @@
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.46",
+    "@dxos/web-auth": "^0.4.62",
     "isomorphic-fetch": "^3.0.0",
+    "micromark": "^4.0.0",
+    "micromark-extension-directive": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-joyride": "^2.7.2"

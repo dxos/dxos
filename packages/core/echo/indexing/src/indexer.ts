@@ -70,7 +70,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  setIndexConfig(config: IndexConfig) {
+  setConfig(config: IndexConfig) {
     if (this._indexConfig) {
       log.warn('Index config is already set');
       return;
@@ -138,7 +138,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  async find(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
+  async execQuery(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
@@ -146,7 +146,7 @@ export class Indexer extends Resource {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
-  async reIndex(idToHeads: IdToHeads) {
+  async reindex(idToHeads: IdToHeads) {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToHeads, batch);
     this._metadataStore.dropFromClean(Array.from(idToHeads.keys()), batch);
