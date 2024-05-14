@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import { Circle, ChartBar, Lightning, LightningSlash } from '@phosphor-icons/react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin, firstMainId } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
+import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
+import { Button as NativeButton, type ButtonProps } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {
@@ -22,6 +24,10 @@ const styles = {
 // TODO(burdon): Move out of debug plugin.
 // TODO(burdon): Make pluggable (move indicators to relevant plugins).
 // TODO(burdon): Vault heartbeat indicator (global scope)?
+
+const Button = (props: ButtonProps) => (
+  <NativeButton {...props} density='fine' variant='ghost' classNames='px-2 py-0' />
+);
 
 /**
  * Ensure light doesn't flicker immediately after start.
@@ -59,7 +65,7 @@ const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: numbe
  * Global error handler.
  */
 // TODO(burdon): Integrate with Sentry?
-const ErrorIndicator: FC<IconProps> = (props) => {
+const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
   const errorRef = useRef<Error>();
   useEffect(() => {
@@ -93,15 +99,15 @@ const ErrorIndicator: FC<IconProps> = (props) => {
 
   if (errorRef.current) {
     return (
-      <span title={errorRef.current.message} onClick={handleReset}>
-        <Circle weight='fill' className={mx(styles.error, getSize(3))} {...props} />
-      </span>
+      <Button title={errorRef.current.message} onClick={handleReset}>
+        <Circle weight='fill' className={mx(styles.error, getSize(3))} />
+      </Button>
     );
   } else {
     return (
-      <span title='No errors.'>
-        <Circle weight='fill' className={getSize(3)} {...props} />
-      </span>
+      <Button title='No errors.'>
+        <Circle weight='fill' className={getSize(3)} />
+      </Button>
     );
   }
 };
@@ -109,7 +115,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
 /**
  * Swarm connection handler.
  */
-const SwarmIndicator: FC<IconProps> = (props) => {
+const SwarmIndicator = () => {
   const [state, setState] = useState(0);
   const { swarm } = useNetworkStatus();
   useEffect(() => {
@@ -118,15 +124,15 @@ const SwarmIndicator: FC<IconProps> = (props) => {
 
   if (state === 0) {
     return (
-      <span title='Connected to swarm.'>
-        <Lightning className={getSize(4)} {...props} />
-      </span>
+      <Button title='Connected to swarm.'>
+        <Lightning className={getSize(4)} />
+      </Button>
     );
   } else {
     return (
-      <span title='Disconnected from swarm.'>
-        <LightningSlash className={mx(styles.warning, getSize(4))} {...props} />
-      </span>
+      <Button title='Disconnected from swarm.'>
+        <LightningSlash className={mx(styles.warning, getSize(4))} />
+      </Button>
     );
   }
 };
@@ -134,7 +140,7 @@ const SwarmIndicator: FC<IconProps> = (props) => {
 /**
  * Space saving indicator.
  */
-const SavingIndicator: FC<IconProps> = (props) => {
+const SavingIndicator = () => {
   const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
@@ -163,30 +169,57 @@ const SavingIndicator: FC<IconProps> = (props) => {
   switch (state) {
     case 2:
       return (
-        <span title='Edit not saved.'>
-          <Circle weight='fill' className={mx(styles.warning, getSize(3))} {...props} />
-        </span>
+        <Button title='Edit not saved.'>
+          <Circle weight='fill' className={mx(styles.warning, getSize(3))} />
+        </Button>
       );
     case 1:
       return (
-        <span title='Saving...'>
-          <Circle weight='fill' className={mx(styles.success, getSize(3))} {...props} />
-        </span>
+        <Button title='Saving...'>
+          <Circle weight='fill' className={mx(styles.success, getSize(3))} />
+        </Button>
       );
     case 0:
     default:
       return (
-        <span title='Modified indicator.'>
-          <Circle weight='fill' className={getSize(3)} {...props} />
-        </span>
+        <Button title='Modified indicator.'>
+          <Circle weight='fill' className={getSize(3)} />
+        </Button>
       );
   }
 };
 
-export const DebugStatus = () => {
-  const indicators = [SavingIndicator, ErrorIndicator, SwarmIndicator];
+const PerformanceIndicator = () => {
+  const [visible, setVisible] = useState(true);
+  const [stats, refreshStats] = useStats();
+
   return (
-    <div className='flex items-center px-1 gap-1 h-6 text-neutral-200 dark:text-neutral-800'>
+    <>
+      <Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
+        <ChartBar />
+      </Button>
+      <div
+        className={mx(
+          'z-20 absolute transition-[right] bottom-[40px] w-[450px]',
+          'border-l border-y border-neutral-300 dark:border-neutral-700',
+          visible ? 'right-0' : 'right-[-450px]',
+        )}
+      >
+        <StatsPanel stats={stats} onRefresh={refreshStats} />
+      </div>
+    </>
+  );
+};
+
+export const DebugStatus = () => {
+  const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, SwarmIndicator];
+  return (
+    <div
+      className={mx(
+        'flex items-center bg-white dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600',
+        'border-t border-l border-neutral-300 dark:border-neutral-700',
+      )}
+    >
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}

@@ -5,8 +5,13 @@
 import { Cpu } from '@phosphor-icons/react';
 import React from 'react';
 
+import { mx } from '@dxos/react-ui-theme';
+
 import { type MemoryInfo } from '../../../hooks';
-import { type CustomPanelProps, Panel, Unit } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
+import { Unit } from '../util';
+
+const MEM_WARNING = 40 / 100;
 
 export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: MemoryInfo }>) => {
   return (
@@ -21,7 +26,9 @@ export const MemoryPanel = ({ memory, ...props }: CustomPanelProps<{ memory?: Me
             {Unit.fixed(memory?.totalJSHeapSize ?? 0, Unit.M).toLocaleString()} MB
           </span>
           {memory?.used !== undefined && (
-            <span title='Used (available)'>{Unit.fixed(memory?.used, Unit.P).toLocaleString()}%</span>
+            <span title='Used (available)' className={mx(memory?.used > MEM_WARNING && 'text-red-500')}>
+              {Unit.fixed(memory?.used, Unit.P).toLocaleString()}%
+            </span>
           )}
         </div>
       }
