@@ -25,6 +25,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-pipeline": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/esbuild-plugins": "workspace:*",

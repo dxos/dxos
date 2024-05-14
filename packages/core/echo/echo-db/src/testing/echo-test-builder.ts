@@ -125,6 +125,7 @@ export class EchoTestPeer extends Resource {
     const db = client.constructDatabase({ spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
+    this._ctx.onDispose(() => db.close());
     return db;
   }
 

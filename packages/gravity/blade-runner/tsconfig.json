@@ -67,6 +67,9 @@
       "path": "../../core/echo/automerge"
     },
     {
+      "path": "../../core/echo/echo-db"
+    },
+    {
       "path": "../../core/echo/echo-pipeline"
     },
     {

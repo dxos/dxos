@@ -4,14 +4,15 @@
   "tags": [
     "scope:echo"
   ],
-  "sourceRoot": "packages/core/echo/echo-db/src",
+  "sourceRoot": "{projectRoot}/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/echo/echo-db/src/index.ts"
+          "{projectRoot}/src/index.ts",
+          "{projectRoot}/src/testing/index.ts"
         ],
         "injectGlobals": true
       }
