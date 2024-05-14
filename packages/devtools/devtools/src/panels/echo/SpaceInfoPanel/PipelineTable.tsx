@@ -129,7 +129,7 @@ export const PipelineTable: FC<{
   return (
     <Table.Root>
       <Table.Viewport classNames='overflow-anchored'>
-        <Table.Table<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
+        <Table.Main<PipelineTableRow> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
         <AnchoredOverflow.Anchor />
       </Table.Viewport>
     </Table.Root>

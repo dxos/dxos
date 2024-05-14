@@ -154,7 +154,7 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
 
   return (
     <>
-      <Table.Table<any>
+      <Table.Main<any>
         keyAccessor={(row: any) => row.id}
         columns={columns}
         data={rows}
