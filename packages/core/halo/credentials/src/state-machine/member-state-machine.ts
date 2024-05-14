@@ -67,7 +67,9 @@ export class MemberStateMachine implements CredentialGraphStateHandler<SpaceMemb
         if (this._ownerKey == null && credential.issuer === this._spaceKey) {
           this._ownerKey = credential.subject.id;
         }
-        this._memberProfiles.set(credential.subject.id, assertion.profile);
+        if (assertion.profile != null) {
+          this._memberProfiles.set(credential.subject.id, assertion.profile);
+        }
         await this._hashgraph.addVertex(credential, assertion);
         break;
       }

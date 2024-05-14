@@ -365,8 +365,9 @@ message CreateEpochRequest {
 }
 
 message UpdateMemberRoleRequest {
-  dxos.keys.PublicKey member_public_key = 1;
-  dxos.halo.credentials.SpaceMember.Role new_role = 2;
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey member_key = 2;
+  dxos.halo.credentials.SpaceMember.Role new_role = 3;
 }
 
 service SpacesService {
