@@ -5,7 +5,7 @@
 import { getReader } from './stats';
 import { type PlanResults } from '../plan';
 
-export const RESOURCE_USAGE_LOG = 'dxos.gravity.resource-usage';
+export const RESOURCE_USAGE_LOG = 'dxos.blade-runner.resource-usage';
 
 export type ResourceUsageLogEntry = {
   ts: number;

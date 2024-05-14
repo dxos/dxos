@@ -12,7 +12,7 @@ import { ReplicantRpcHandle } from './replicant-rpc-handle';
 import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
-import { runBrowser, runNode } from '../run-process';
+import { type ProcessHandle, runBrowser, runNode } from '../run-process';
 import {
   type ReplicantRuntimeParams,
   type ReplicantParams,
@@ -71,7 +71,8 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
   async close() {
     for (const replicant of this.replicants) {
-      replicant.kill(0);
+      // Kill all replicants.
+      replicant.kill('SIGTERM');
     }
 
     this.redis.disconnect();
@@ -160,26 +161,24 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
       spec: this.params.spec,
     };
 
-    let kill: (signal?: NodeJS.Signals | number) => void;
+    let processHandle: ProcessHandle;
     if (runtime.platform === 'nodejs') {
-      kill = runNode({
+      processHandle = runNode({
         agentParams,
         options: this._options,
-      }).kill;
+      });
     } else {
-      kill = (
-        await runBrowser({
-          agentParams,
-          options: this._options,
-        })
-      ).kill;
+      processHandle = await runBrowser({
+        agentParams,
+        options: this._options,
+      });
     }
 
     const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
-      kill: async (signal?: NodeJS.Signals | number) => {
-        await rpcHandle.close();
-        kill(signal);
+      kill: (signal?: NodeJS.Signals | number) => {
+        processHandle.kill(signal);
+        void rpcHandle.close().catch((err) => log.catch(err));
       },
       params: agentParams,
     };

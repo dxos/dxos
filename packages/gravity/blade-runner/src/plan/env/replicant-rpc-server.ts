@@ -8,6 +8,10 @@ import { RpcPeer, type RpcPort } from '@dxos/rpc';
 import { rpcCodec } from './util';
 import { type ReplicantEnv } from '../interface';
 
+/**
+ * Server for a replicant RPC.
+ * Is created in replicant process.
+ */
 export class ReplicantRpcServer extends Resource {
   private readonly _rpc: RpcPeer;
 
@@ -29,6 +33,6 @@ export class ReplicantRpcServer extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    await this._rpc.close();
+    await this._rpc.abort();
   }
 }

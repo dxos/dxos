@@ -8,6 +8,10 @@ import { RpcPeer, type RpcPort } from '@dxos/rpc';
 import { rpcCodec } from './util';
 import { type ReplicantBrain } from '../interface';
 
+/**
+ * Client for a replicant RPC.
+ * Is created in orchestrator process.
+ */
 export class ReplicantRpcHandle<T> extends Resource {
   private readonly _rpc: RpcPeer;
 
@@ -38,6 +42,6 @@ export class ReplicantRpcHandle<T> extends Resource {
   }
 
   override async _close(): Promise<void> {
-    await this._rpc.close();
+    await this._rpc.abort();
   }
 }

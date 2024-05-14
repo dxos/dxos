@@ -17,7 +17,7 @@ import { type ReplicantParams, type GlobalOptions, type Platform } from './spec'
 
 const DEBUG_PORT_START = 9229;
 
-type ProcessHandle = {
+export type ProcessHandle = {
   /**
    * Kill the replicant process/browser.
    */
