@@ -19,6 +19,7 @@ import { type CredentialProcessor } from '../processor/credential-processor';
 
 export interface SpaceState {
   readonly members: ReadonlyMap<PublicKey, MemberInfo>;
+  readonly membershipChainHeads: PublicKey[];
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
@@ -42,8 +43,6 @@ export type CredentialEntry = {
   revoked: boolean;
 };
 
-const REVOCABLE_CREDENTIALS = ['dxos.halo.credentials.SpaceMember'];
-
 /**
  * Validates and processes credentials for a single space.
  * Keeps a list of members and feeds.
@@ -61,7 +60,7 @@ export class SpaceStateMachine implements SpaceState {
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
-  readonly onMemberAdmitted = this._members.onMemberAdmitted;
+  readonly onMemberRoleChanged = this._members.onMemberRoleChanged;
   readonly onFeedAdmitted = this._feeds.onFeedAdmitted;
   readonly onDelegatedInvitation = this._invitations.onDelegatedInvitation;
   readonly onDelegatedInvitationRemoved = this._invitations.onDelegatedInvitationRemoved;
@@ -74,6 +73,10 @@ export class SpaceStateMachine implements SpaceState {
 
   get members(): ReadonlyMap<PublicKey, MemberInfo> {
     return this._members.members;
+  }
+
+  get membershipChainHeads(): PublicKey[] {
+    return this._members.membershipChainHeads;
   }
 
   get feeds(): ReadonlyMap<PublicKey, FeedInfo> {
@@ -153,24 +156,6 @@ export class SpaceStateMachine implements SpaceState {
 
     const assertion = getCredentialAssertion(credential);
     switch (assertion['@type']) {
-      case 'dxos.halo.credentials.Revocation': {
-        if (!this._canRevokeCredentials(credential.issuer)) {
-          log.warn(`Space member is not authorized to invite new members: ${credential.issuer}`);
-          return false;
-        }
-        const toBeRevoked = this._credentialsById.get(credential.subject.id);
-        if (!toBeRevoked) {
-          log.warn(`Credential to revoke not found: ${credential.subject.id}`);
-          return false;
-        }
-        if (!this._credentialCanBeRevoked(toBeRevoked)) {
-          log.warn(`Credential cannot be revoked: ${credential.subject.id}`);
-        }
-
-        toBeRevoked.revoked = true;
-        await this._members.onRevoked(toBeRevoked.credential, credential);
-        break;
-      }
       case 'dxos.halo.credentials.SpaceGenesis': {
         if (this._genesisCredential) {
           log.warn('Space already has a genesis credential.');
@@ -184,7 +169,6 @@ export class SpaceStateMachine implements SpaceState {
           log.warn('Space genesis credential must be issued to space.');
           return false;
         }
-
         this._genesisCredential = credential;
         break;
       }
@@ -262,21 +246,16 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
-    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
+    return (
+      key.equals(this._spaceKey) ||
+      this._members.getRole(key) === SpaceMember.Role.ADMIN ||
+      this._members.getRole(key) === SpaceMember.Role.OWNER
+    );
   }
 
   private _canAdmitFeeds(key: PublicKey): boolean {
     const role = this._members.getRole(key);
-    return role === SpaceMember.Role.MEMBER || role === SpaceMember.Role.ADMIN;
-  }
-
-  private _canRevokeCredentials(key: PublicKey): boolean {
-    return key.equals(this._spaceKey) || this._members.getRole(key) === SpaceMember.Role.ADMIN;
-  }
-
-  private _credentialCanBeRevoked(entry: CredentialEntry) {
-    // TODO(dmaretskyi): Prohibit from removing space's creator member credential.
-    return REVOCABLE_CREDENTIALS.includes(entry.credential.subject.assertion['@type']);
+    return role === SpaceMember.Role.EDITOR || role === SpaceMember.Role.ADMIN || role === SpaceMember.Role.OWNER;
   }
 }
 
