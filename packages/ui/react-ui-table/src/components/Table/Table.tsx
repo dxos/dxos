@@ -283,6 +283,6 @@ const GroupedTableContent = () => {
 
 export const Table = {
   Root: TableRoot,
-  Table: TablePrimitive,
   Viewport: TableViewport,
+  Main: TablePrimitive,
 };

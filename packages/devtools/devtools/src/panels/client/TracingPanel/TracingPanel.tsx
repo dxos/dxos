@@ -118,7 +118,7 @@ export const TracingPanel = () => {
     <PanelContainer>
       <Table.Root>
         <Table.Viewport classNames={'overflow-anchored flex flex-col h-1/3 overflow-auto'}>
-          <Table.Table<ResourceState>
+          <Table.Main<ResourceState>
             columns={columns}
             data={Array.from(state.current.resources.values())}
             currentDatum={selectedResource}

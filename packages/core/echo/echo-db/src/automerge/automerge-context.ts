@@ -204,11 +204,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override send(message: Message): void {
-<<<<<<< HEAD
     log('sending...');
-=======
-    log.info('sending...');
->>>>>>> origin/main
     invariant(this.peerId);
     invariant(!this._isClosed);
     void this._dataService
@@ -220,11 +216,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
         { timeout: RPC_TIMEOUT }, // TODO(dmaretskyi): Set global timeout instead.
       )
       .then(() => {
-<<<<<<< HEAD
         log('sent');
-=======
-        log.info('sent');
->>>>>>> origin/main
       })
       .catch((err) => {
         if (!this._isClosed) {
