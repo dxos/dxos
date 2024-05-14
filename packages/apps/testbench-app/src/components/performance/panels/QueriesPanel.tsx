@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Database } from '@phosphor-icons/react';
+import { TreeView } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type QueryInfo } from '../../../hooks';
@@ -10,7 +10,7 @@ import { Panel, Duration, type CustomPanelProps } from '../util';
 
 export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: QueryInfo[] }>) => {
   return (
-    <Panel {...props} icon={Database} title='Queries' info={<span>{queries.length.toLocaleString()}</span>}>
+    <Panel {...props} icon={TreeView} title='Queries' info={<span>{queries.length.toLocaleString()}</span>}>
       <table className='w-full text-xs font-mono'>
         <tbody>
           {queries.map((query, i) => (

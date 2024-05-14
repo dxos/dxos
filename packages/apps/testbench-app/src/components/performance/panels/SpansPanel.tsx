@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Database } from '@phosphor-icons/react';
+import { AlignCenterHorizontalSimple } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Span } from '@dxos/protocols/proto/dxos/tracing';
@@ -11,7 +11,12 @@ import { Panel, Duration, type CustomPanelProps } from '../util';
 
 export const SpansPanel = ({ spans, ...props }: CustomPanelProps<{ spans?: Span[] }>) => {
   return (
-    <Panel {...props} icon={Database} title='Spans' info={<span>{spans?.length.toLocaleString()}</span>}>
+    <Panel
+      {...props}
+      icon={AlignCenterHorizontalSimple}
+      title='Spans'
+      info={<span>{spans?.length.toLocaleString()}</span>}
+    >
       <table className='w-full text-xs font-mono'>
         <tbody>
           {spans?.map(
