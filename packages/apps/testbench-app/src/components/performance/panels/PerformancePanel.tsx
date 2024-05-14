@@ -19,9 +19,7 @@ export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entri
         <tbody>
           {entries?.map((entry, i) => (
             <tr key={i}>
-              <td className='p-1 text-right'>
-                {entry.entryType}/{entry.name}
-              </td>
+              <td className='p-1 text-right'>{[entry.entryType, entry.name].filter(Boolean).join('/')}</td>
               <td className='p-1 w-[80px]' />
               <td className='p-1 w-[80px] text-right'>
                 <Duration duration={entry.duration} />

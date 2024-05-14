@@ -39,6 +39,8 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
         ],
       },
       options: {
+        responsive: true,
+        maintainAspectRatio: false,
         animation: false,
         layout: {
           padding: {
@@ -120,7 +122,9 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
 
   return (
     <Panel {...props} icon={ClockCountdown} title='Time Series' padding={false}>
-      <canvas ref={canvasRef} width={300} height={100} />
+      <div className='relative w-full h-[160px]'>
+        <canvas ref={canvasRef} />
+      </div>
     </Panel>
   );
 };
