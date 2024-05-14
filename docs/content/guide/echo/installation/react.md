@@ -9,7 +9,7 @@ npm install --save @dxos/react-client
 ```
 
 ::: note
-If using one of the DXOS application templates via [`npm init @dxos@latest`](../../tooling/app-templates.md) this is pre-installed
+If using one of the DXOS application templates via [`npm init @dxos@latest`](../../tooling/app-templates.md) this is pre-installed.
 :::
 
 ## Configuration
