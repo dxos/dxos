@@ -5,7 +5,8 @@
 import { HourglassSimpleLow } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Panel, Duration, type CustomPanelProps } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
+import { Duration } from '../util';
 
 export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entries?: PerformanceEntry[] }>) => {
   return (
@@ -15,7 +16,7 @@ export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entri
       title='Performance'
       info={<span>{entries?.length.toLocaleString()}</span>}
     >
-      <table className='w-full text-xs font-mono'>
+      <table className='table-fixed w-full text-xs font-mono'>
         <tbody>
           {entries?.map((entry, i) => (
             <tr key={i}>

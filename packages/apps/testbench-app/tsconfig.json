@@ -51,6 +51,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/devtools"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
