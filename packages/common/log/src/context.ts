@@ -51,14 +51,15 @@ export const getContextFromEntry = (entry: LogEntry): Record<string, any> | unde
     }
   }
 
-  if (entry.context) {
-    if (entry.context instanceof Error) {
+  const entryContext = typeof entry.context === 'function' ? entry.context() : entry.context;
+  if (entryContext) {
+    if (entryContext instanceof Error) {
       // Additional context from Error.
-      const c = (entry.context as any).context;
+      const c = (entryContext as any).context;
       // If ERROR then show stacktrace.
-      context = Object.assign(context ?? {}, { error: entry.context.stack, ...c });
-    } else if (typeof entry.context === 'object') {
-      context = Object.assign(context ?? {}, entry.context);
+      context = Object.assign(context ?? {}, { error: entryContext.stack, ...c });
+    } else if (typeof entryContext === 'object') {
+      context = Object.assign(context ?? {}, entryContext);
     }
   }
 
