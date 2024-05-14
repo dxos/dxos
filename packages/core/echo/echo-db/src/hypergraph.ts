@@ -179,6 +179,9 @@ export class Hypergraph {
         this._queryContexts.add(context);
       },
       onStop: () => {
+        for (const source of context.sources) {
+          source.close();
+        }
         this._queryContexts.delete(context);
       },
     });

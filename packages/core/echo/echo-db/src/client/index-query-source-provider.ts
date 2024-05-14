@@ -7,6 +7,7 @@ import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
   type QueryResponse,
@@ -94,8 +95,11 @@ export class IndexQuerySource implements QuerySource {
   ) {
     const start = Date.now();
     let currentCtx: Context;
-    const stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
-    stream.subscribe(
+    if (this._stream) {
+      log.warn('Query stream already open');
+    }
+    this._stream = this._params.service.execQuery({ filter: filter.toProto() }, { timeout: 20_000 });
+    this._stream.subscribe(
       async (response) => {
         await currentCtx?.dispose();
         const ctx = new Context();
@@ -114,7 +118,7 @@ export class IndexQuerySource implements QuerySource {
 
         const next = onResult(results);
         if (next === OnResult.CLOSE_STREAM) {
-          void stream.close().catch();
+          void this._stream?.close().catch();
         }
       },
       (err) => {
