@@ -6,6 +6,7 @@ import { ClockCountdown } from '@phosphor-icons/react';
 import { Chart, registerables } from 'chart.js';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import React, { createRef, useEffect, useState } from 'react';
+import 'chartjs-adapter-luxon';
 
 import { type CustomPanelProps, Panel } from '../util';
 
