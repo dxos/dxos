@@ -6,12 +6,13 @@ import { ClockCountdown } from '@phosphor-icons/react';
 import { Chart, registerables } from 'chart.js';
 import ChartStreaming from 'chartjs-plugin-streaming';
 import React, { createRef, useEffect, useState } from 'react';
-import 'chartjs-adapter-luxon';
 
 import { type CustomPanelProps, Panel } from '../util';
 
 Chart.register(...registerables);
 Chart.register(ChartStreaming);
+
+const SAMPLE_RATE = 2;
 
 // TODO(burdon): Add significant events to TS (e.g., ECHO/MESH events).
 export const TimeSeries = (props: CustomPanelProps<{}>) => {
@@ -105,7 +106,7 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
         // Manual decimation since chart.js can't do this for realtime data.
         // https://www.chartjs.org/docs/latest/configuration/decimation.html
         const t = Date.now();
-        if (!last || t - last > 500) {
+        if (!last || t - last > 1_000 / SAMPLE_RATE) {
           chart.data.datasets[0].data.push({ x: t, y: times.length });
           last = t;
         }
