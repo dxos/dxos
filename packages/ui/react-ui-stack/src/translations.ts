@@ -14,6 +14,8 @@ export default [
         'untitled section title': 'Untitled section',
         'add section before label': 'Add before',
         'add section after label': 'Add after',
+        'expand label': 'Expand',
+        'collapse label': 'Collapse',
       },
     },
   },

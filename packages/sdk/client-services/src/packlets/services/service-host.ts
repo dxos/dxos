@@ -339,10 +339,10 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
-    log('resetting...');
+    log.info('resetting...');
     await this._serviceContext?.close();
     await this._storage!.reset();
-    log('reset');
+    log.info('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }
