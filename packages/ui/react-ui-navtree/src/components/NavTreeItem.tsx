@@ -117,14 +117,14 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
       (action) => ('invoke' in action ? [action] : []),
     );
     const { t } = useTranslation(translationKey);
-    const { current, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
+    const { current, attention, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
     useEffect(() => {
-      if (current && Path.onPath(current, node.id)) {
+      if (current && Array.from(current).find((currentMember) => Path.onPath(currentMember, node.id))) {
         setOpen(true);
       }
     }, [current, path]);
@@ -182,13 +182,16 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     hoverableDescriptionIcons,
                     level < 1 && topLevelCollapsibleSpacing,
                     !renderPresence &&
-                      staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
+                      staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || current?.has(path) }),
                   )}
                   {
                     // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
                     //   without alerting the user (except for in the correct link element). See also:
                     //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-                    ...(path === current && { 'aria-current': '' as 'page', 'data-attention': true })
+                    ...(current?.has(path) && {
+                      'aria-current': '' as 'page',
+                      'data-attention': attention?.has(path) ?? false,
+                    })
                   }
                   onContextMenu={(event) => {
                     event.preventDefault();
@@ -202,7 +205,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       label: toLocalizedString(node.label, t),
                       icon: node.icon,
                       open,
-                      current: path === current,
+                      current: current?.has(path),
                       branch: node.properties?.role === 'branch' || node.children?.length > 0,
                       disabled: !!node.properties?.disabled,
                       error: !!node.properties?.error,

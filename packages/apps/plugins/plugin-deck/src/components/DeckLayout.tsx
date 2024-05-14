@@ -15,6 +15,7 @@ import {
   type PartIdentifier,
   NavigationAction,
   useIntent,
+  currentIds as getCurrentIds,
   SLUG_PATH_SEPARATOR,
 } from '@dxos/app-framework';
 import {
@@ -27,7 +28,7 @@ import {
   Status,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { Deck, PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { Deck, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -169,6 +170,7 @@ export const DeckLayout = ({
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
+  const currentIds = getCurrentIds(location.active);
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -235,6 +237,7 @@ export const DeckLayout = ({
               data={{
                 part: sidebarPart,
                 popoverAnchorId,
+                currentIds,
               }}
               limit={1}
             />
@@ -267,6 +270,7 @@ export const DeckLayout = ({
               data={{
                 part: complementaryPart,
                 popoverAnchorId,
+                currentIds,
               }}
               limit={1}
             />
@@ -304,10 +308,11 @@ export const DeckLayout = ({
               .map((id, index, main) => {
                 const node = resolveNodeFromSlug(graph, id);
                 const part = ['main', index, main.length] satisfies PartIdentifier;
+                const attendableAttrs = useAttendable(id);
                 return (
-                  <Deck.Plank key={id}>
+                  <Deck.Plank key={id} {...attendableAttrs}>
                     {id === NAV_ID ? (
-                      <Surface role='navigation' data={{ part, popoverAnchorId }} limit={1} />
+                      <Surface role='navigation' data={{ part, popoverAnchorId, currentIds }} limit={1} />
                     ) : node ? (
                       <>
                         <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />

@@ -54,7 +54,7 @@ export const isAdjustTransaction = (data: IntentData | undefined): data is Navig
 export const firstMainId = (active: Location['active']): string =>
   isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
 
-export const activeIds = (active: string | ActiveParts | undefined): Set<string> =>
+export const currentIds = (active: string | ActiveParts | undefined): Set<string> =>
   active
     ? isActiveParts(active)
       ? Object.values(active).reduce((acc, ids) => {

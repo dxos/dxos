@@ -182,7 +182,13 @@ export const DeckPlugin = ({
       },
       context: (props: PropsWithChildren) => {
         return (
-          <AttentionProvider attended={attention.attended}>
+          <AttentionProvider
+            attended={attention.attended}
+            onChangeAttend={(nextAttended) => {
+              console.log('[on change attend]', nextAttended);
+              attention.attended = nextAttended;
+            }}
+          >
             <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
           </AttentionProvider>
         );
