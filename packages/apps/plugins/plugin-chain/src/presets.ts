@@ -128,10 +128,10 @@ export const presets = [
   },
   {
     id: 'dxos.org/prompt/base',
-    title: 'Base',
+    title: 'RAG',
     prompt: () =>
       create(ChainPromptType, {
-        command: 'base',
+        command: 'rag',
         source: create(TextV0Type, {
           content: str(
             // prettier-ignore

@@ -59,7 +59,7 @@ export class SignalingClient {
 
     this.socket.addEventListener('message', async (event) => {
       const data = JSON.parse(event.data);
-      log.info('signaling.message', { room: this.socket?.room, data });
+      log('signaling.message', { room: this.socket?.room, data });
       const { description, candidate } = data;
 
       if (description) {
@@ -92,7 +92,7 @@ export class SignalingClient {
   }
 
   protected send<T extends Object>(data: T) {
-    log.info('sending', { data });
+    log('sending', { data });
     this.socket?.send(JSON.stringify(data));
   }
 }
