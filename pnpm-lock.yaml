@@ -3368,6 +3368,9 @@ importers:
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
