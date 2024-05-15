@@ -30,7 +30,13 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-generator"
@@ -43,6 +49,9 @@
     },
     {
       "path": "../../core/protocols"
+    },
+    {
+      "path": "../../devtools/devtools"
     },
     {
       "path": "../../sdk/config"

@@ -33,7 +33,7 @@ export const MasterDetailTable = <T extends {}>({
       <Table.Root>
         <Table.Viewport asChild>
           <TableContainer {...tableContainerStyles}>
-            <Table.Table<T>
+            <Table.Main<T>
               columns={columns}
               data={data}
               rowsSelectable

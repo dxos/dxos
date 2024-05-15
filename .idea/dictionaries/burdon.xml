@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>agenthosting</w>
       <w>alexjg</w>
       <w>automerge</w>
       <w>blueyard</w>
@@ -26,6 +27,7 @@
       <w>dxos's</w>
       <w>dxrpc</w>
       <w>echofs</w>
+      <w>embedder</w>
       <w>endcap</w>
       <w>faas</w>
       <w>faasd</w>
@@ -52,6 +54,7 @@
       <w>micromark</w>
       <w>mins</w>
       <w>minsize</w>
+      <w>mixtral</w>
       <w>mkcert</w>
       <w>multipass</w>
       <w>nadella</w>
@@ -59,6 +62,7 @@
       <w>nanomessage</w>
       <w>nanoresource</w>
       <w>navtree</w>
+      <w>nomic</w>
       <w>noreferrer</w>
       <w>observablehq</w>
       <w>oclif</w>
@@ -98,6 +102,7 @@
       <w>seedphrase</w>
       <w>seedrandom</w>
       <w>statable</w>
+      <w>stockfish</w>
       <w>streamx</w>
       <w>stringified</w>
       <w>subtiles</w>
@@ -124,6 +129,7 @@
       <w>unwant</w>
       <w>viewbox</w>
       <w>wittjosiah</w>
+      <w>wnfs</w>
       <w>workflowy</w>
       <w>zoomable</w>
     </words>

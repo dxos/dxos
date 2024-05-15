@@ -32,7 +32,7 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { IndexKind, type RuntimeSchemaRegistry } from '../echo';
+import { type RuntimeSchemaRegistry } from '../echo';
 import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
@@ -171,6 +171,7 @@ export class Client {
     return this._status;
   }
 
+  // TODO(burdon): Comment
   get spaces(): Echo {
     invariant(this._runtime, 'Client not initialized.');
     return this._runtime.spaces;
@@ -231,6 +232,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
+  // TODO(burdon): Type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);
@@ -297,7 +299,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reIndex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -364,6 +366,7 @@ export class Client {
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
+      queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
     });
     await this._echoClient.open(this._ctx);
     const mesh = new MeshProxy(this._services, this._instanceId);
@@ -414,8 +417,6 @@ export class Client {
       throw err;
     }
 
-    await this._runtime.spaces.setIndexConfig({ indexes: [{ kind: IndexKind.Kind.SCHEMA_MATCH }], enabled: true });
-
     await this._runtime.open();
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
@@ -437,6 +438,9 @@ export class Client {
           iframe: this._iframeManager.iframe,
           origin,
         }),
+        handlerRpcOptions: {
+          timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
+        },
       });
 
       await this._shellClientProxy.open();

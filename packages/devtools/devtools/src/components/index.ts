@@ -2,6 +2,8 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './performance';
+
 export * from './Bitbar';
 export * from './BooleanIcon';
 export * from './ErrorBoundary';

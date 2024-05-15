@@ -3,12 +3,8 @@
 //
 
 import '@dxos/util';
-import { Context } from './context';
 
-export interface Lifecycle {
-  open?(ctx?: Context): Promise<any> | any;
-  close?(): Promise<any> | any;
-}
+import { Context } from './context';
 
 export enum LifecycleState {
   CLOSED = 'CLOSED',
@@ -16,10 +12,15 @@ export enum LifecycleState {
   ERROR = 'ERROR',
 }
 
+export interface Lifecycle {
+  open?(ctx?: Context): Promise<any> | any;
+  close?(): Promise<any> | any;
+}
+
 /**
  * Base class for resources that need to be opened and closed.
  */
-export class Resource implements Lifecycle {
+export abstract class Resource implements Lifecycle {
   #lifecycleState = LifecycleState.CLOSED;
   #openPromise: Promise<void> | null = null;
   #closePromise: Promise<void> | null = null;
@@ -57,7 +58,7 @@ export class Resource implements Lifecycle {
 
   /**
    * Error handler for errors that are caught by the context.
-   * By default errors are bubbled up to the parent context which is passed to the open method.
+   * By default, errors are bubbled up to the parent context which is passed to the open method.
    */
   protected async _catch(err: Error): Promise<void> {
     throw err;
@@ -78,6 +79,7 @@ export class Resource implements Lifecycle {
         throw new Error(`Invalid state: ${this.#lifecycleState}`);
       default:
     }
+
     await this.#closePromise;
     await (this.#openPromise ??= this.#open(ctx));
 

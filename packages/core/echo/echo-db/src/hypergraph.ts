@@ -4,7 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Reference, type EchoReactiveObject } from '@dxos/echo-schema';
+import { type Reference } from '@dxos/echo-protocol';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -16,9 +17,9 @@ import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import {
+  filterMatch,
   Filter,
   Query,
-  filterMatch,
   type FilterSource,
   type QueryContext,
   type QueryResult,
@@ -47,7 +48,7 @@ export class Hypergraph {
   }
 
   /**
-   * Register a database in hyper-graph.
+   * Register a database.
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?
@@ -135,6 +136,16 @@ export class Hypergraph {
     }
   }
 
+  /**
+   * Does not remove the provider from active query contexts.
+   */
+  unregisterQuerySourceProvider(provider: QuerySourceProvider) {
+    const index = this._querySourceProviders.indexOf(provider);
+    if (index !== -1) {
+      this._querySourceProviders.splice(index, 1);
+    }
+  }
+
   private _onUpdate(updateEvent: ItemsUpdatedEvent) {
     const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
     if (listenerMap) {
@@ -168,6 +179,9 @@ export class Hypergraph {
         this._queryContexts.add(context);
       },
       onStop: () => {
+        for (const source of context.sources) {
+          source.close();
+        }
         this._queryContexts.delete(context);
       },
     });

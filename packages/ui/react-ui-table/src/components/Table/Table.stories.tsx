@@ -120,7 +120,7 @@ const MinimalTable = (props: any) => {
   return (
     <Table.Root>
       <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-        <Table.Table<any> {...props} />
+        <Table.Main<any> {...props} />
       </Table.Viewport>
     </Table.Root>
   );
@@ -216,7 +216,7 @@ export const Dynamic = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -247,7 +247,7 @@ export const Editable = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -278,7 +278,7 @@ export const PinnedLastRow = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -332,7 +332,7 @@ export const InsertDelete = {
         </div>
         <Table.Root>
           <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-            <Table.Table<Item>
+            <Table.Main<Item>
               role='grid'
               rowsSelectable='multi'
               keyAccessor={(row) => row.publicKey.toHex()}
@@ -362,7 +362,7 @@ export const Resizable = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
             columns={makeColumns(onUpdate)}
@@ -390,7 +390,7 @@ export const TenThousandRows = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -492,7 +492,7 @@ export const RealTimeUpdates = {
     return (
       <Table.Root>
         <Table.Viewport classNames='fixed inset-0 overflow-auto'>
-          <Table.Table<Item>
+          <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}

@@ -13,6 +13,7 @@ export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 export {
   type AppContextRequest,
   type LayoutRequest,
+  type InvitationUrlRequest,
   ShellDisplay,
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
@@ -30,5 +31,5 @@ export { ShellManager } from './shell-manager';
 export { fromSocket } from './socket';
 export { fromIFrame } from './utils';
 export { fromWorker, WorkerClientServices } from './worker-client-services';
-export { type AgentHostingProviderClient, DXOSAgentHostingProviderClient } from './agent-hosting-provider';
+export { type AgentHostingProviderClient, AgentManagerClient } from './agent-hosting-provider';
 export { FakeAgentHostingProvider } from './fake-agent-hosting-provider';

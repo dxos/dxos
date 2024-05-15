@@ -77,6 +77,7 @@ export const SettingsPlugin = (): PluginDefinition<SettingsPluginProvides> => {
                       data: {
                         element: 'dialog',
                         component: `${SETTINGS_PLUGIN}/Settings`,
+                        dialogBlockAlign: 'start',
                       },
                     },
                   ],

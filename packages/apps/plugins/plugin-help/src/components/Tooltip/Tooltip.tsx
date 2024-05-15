@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, useEffect, useRef } from 'react';
 import { type TooltipRenderProps, type Props } from 'react-joyride';
 
 import { Button, DensityProvider } from '@dxos/react-ui';
-import { getSize, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { getSize, mx, accentSurface } from '@dxos/react-ui-theme';
 
 import { useHelp } from '../../hooks';
 
@@ -22,7 +22,7 @@ export const floaterProps: Props['floaterProps'] = {
     },
     floater: {
       // TODO(burdon): Get tokens from theme.
-      filter: 'drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.1))',
+      filter: 'drop-shadow(0 0 0.75rem rgba(0, 0, 0, 0.2))',
     },
   },
 };
@@ -69,13 +69,14 @@ export const Tooltip = ({
     <DensityProvider density='fine'>
       <div
         className={mx(
-          'flex flex-col min-w-[12rem] max-w-[30rem] min-h-[10rem] overflow-hidden rounded',
-          attentionSurface,
+          'flex flex-col min-w-[12rem] max-w-[30rem] min-h-[10rem] overflow-hidden rounded-md',
+          'shadow-xl',
+          accentSurface,
         )}
       >
         <div className='flex p-2 items-center'>
-          <div className='grow px-2 text-lg text-primary-500'>{title}</div>
-          <Button variant='ghost' onClick={closeProps.onClick} title={closeProps['aria-label']}>
+          <div className='grow px-2 text-lg fg-inverse'>{title}</div>
+          <Button variant='primary' onClick={closeProps.onClick} title={closeProps['aria-label']}>
             <X className={getSize(4)} />
           </Button>
         </div>
@@ -90,11 +91,11 @@ export const Tooltip = ({
         />
         <div className='flex p-2 items-center justify-between'>
           {index > 0 && backProps ? (
-            <Button variant='ghost' onClick={backProps.onClick} title={backProps['aria-label']}>
+            <Button variant='primary' onClick={backProps.onClick} title={backProps['aria-label']}>
               <CaretLeft className={getSize(6)} />
             </Button>
           ) : (
-            <Button variant='ghost' classNames='invisible'>
+            <Button variant='primary' classNames='invisible'>
               <CaretLeft className={getSize(6)} />
             </Button>
           )}
@@ -117,7 +118,7 @@ export const Tooltip = ({
               Done
             </Button>
           ) : (
-            <Button variant='ghost' onClick={primaryProps.onClick} title={primaryProps['aria-label']}>
+            <Button variant='primary' onClick={primaryProps.onClick} title={primaryProps['aria-label']}>
               <CaretRight className={getSize(6)} />
             </Button>
           )}

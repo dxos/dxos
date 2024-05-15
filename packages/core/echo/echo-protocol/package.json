@@ -1,0 +1,30 @@
+{
+  "name": "@dxos/echo-protocol",
+  "version": "0.5.1",
+  "description": "Core ECHO APIs.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": "github:dxos/dxos",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    }
+  },
+  "main": "dist/lib/node/index.cjs",
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/protocols": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

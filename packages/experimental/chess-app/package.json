@@ -1,6 +1,6 @@
 {
   "name": "@dxos/chess-app",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "private": true,
   "description": "Chess app.",
   "homepage": "https://dxos.org",
@@ -40,7 +40,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.1.5",
-    "chess.js": "1.0.0-alpha.0",
+    "chess.js": "^1.0.0-beta.8",
     "react": "^18.2.0",
     "react-chessboard": "^2.0.7",
     "react-dom": "^18.2.0",

@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "plexus",
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/plexus/src",
   "projectType": "application",
   "targets": {

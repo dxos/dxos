@@ -5,15 +5,27 @@
 import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
-import { Reference, TypedObject, create } from '@dxos/echo-schema';
+import { Reference } from '@dxos/echo-protocol';
+import { TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
+import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
-import { compareType, Filter, filterMatch } from './filter';
+import { Filter, compareType, filterMatch } from './filter';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
-import { createDatabase } from '../testing';
+import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('properties', () => {
     const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
@@ -51,6 +63,16 @@ describe('Filter', () => {
     const filter2 = Filter.not(filter1);
 
     expect(filterMatch(filter1, core)).to.be.true;
+    expect(filterMatch(filter2, core)).to.be.false;
+  });
+
+  test('not preserves deleted handling', () => {
+    const core = createAutomergeObjectCore({ title: 'test' });
+    core.setDeleted(true);
+    const filter1 = Filter.from({ title: 'test' }, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
+    const filter2 = Filter.not(filter1);
+
+    expect(filterMatch(filter1, core)).to.be.false;
     expect(filterMatch(filter2, core)).to.be.false;
   });
 
@@ -100,7 +122,7 @@ describe('Filter', () => {
   test('dynamic schema', async () => {
     class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
 
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);
 
     const obj = db.add(create(schema, { title: 'test' }));

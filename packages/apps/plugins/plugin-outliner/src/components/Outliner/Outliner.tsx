@@ -13,13 +13,13 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 import { Button, DensityProvider, DropdownMenu, Input, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type CursorInfo,
-  useTextEditor,
   automerge,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   formattingKeymap,
+  useTextEditor,
 } from '@dxos/react-ui-editor';
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';

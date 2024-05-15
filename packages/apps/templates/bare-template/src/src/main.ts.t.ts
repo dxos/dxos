@@ -10,7 +10,7 @@ export default template.define.text({
     return (
       !react &&
       plate`
-      import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
+      import { Client, Config, Defaults, Local } from '@dxos/client';
 
     ${
       dxosUi &&
@@ -34,8 +34,8 @@ export default template.define.text({
       });
     
     void (async () => {
-      // Grab a configuration with defaults and dynamic values from KUBE.
-      const config = new Config(await Dynamics(), Local(), Defaults());
+      // Grab a configuration with defaults.
+      const config = new Config(Local(), Defaults());
       // Create a client.
       const client = new Client({ config, createWorker, shell: './shell.html' });
       // Initialize before using.

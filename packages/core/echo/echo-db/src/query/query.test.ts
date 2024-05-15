@@ -5,24 +5,27 @@
 import { expect } from 'chai';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Expando, create } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { Expando, create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
-import { afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
+import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
 import { type EchoDatabase } from '../database';
-import { Contact, TestBuilder, createDatabase } from '../testing';
+import { Contact, EchoTestBuilder, TestBuilder } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {
   return create(Expando, { idx, title: `Task ${idx}`, label });
 };
 
 describe('Queries', () => {
+  let builder: EchoTestBuilder;
   let db: EchoDatabase;
-  beforeAll(async () => {
-    ({ db } = await createDatabase());
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+
+    ({ db } = await builder.createDatabase());
 
     const objects = [createTestObject(9)]
       .concat(range(3).map((idx) => createTestObject(idx, 'red')))
@@ -36,6 +39,10 @@ describe('Queries', () => {
     await db.flush();
   });
 
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('filter properties', async () => {
     {
       const { objects } = await db.query().run();
@@ -45,7 +52,11 @@ describe('Queries', () => {
     {
       const { objects, results } = await db.query({ label: undefined }).run();
       expect(objects).to.have.length(1);
-      expect(results).to.have.length(1);
+
+      // TODO(dmaretskyi): 2 hits: one local one from index, we should dedup those.
+      expect(results).to.have.length(2);
+      expect(results.every((result) => result.id === objects[0].id)).to.be.true;
+
       expect(results[0].object).to.eq(objects[0]);
       expect(results[0].id).to.eq(objects[0].id);
       expect(results[0].spaceKey).to.eq(db.spaceKey);
@@ -128,11 +139,13 @@ describe('Queries', () => {
 
 // TODO(wittjosiah): 2/3 of these tests fail. They reproduce issues that we want to fix.
 describe.skip('Query updates', () => {
+  let builder: EchoTestBuilder;
   let db: EchoDatabase;
   let objects: EchoReactiveObject<any>[];
 
-  beforeEach(async () => {
-    ({ db } = await createDatabase());
+  beforeAll(async () => {
+    builder = await new EchoTestBuilder().open();
+    ({ db } = await builder.createDatabase());
 
     objects = range(3).map((idx) => createTestObject(idx, 'red'));
 
@@ -141,6 +154,10 @@ describe.skip('Query updates', () => {
     }
 
     await db.flush();
+  });
+
+  afterAll(async () => {
+    await builder.close();
   });
 
   test('fires only once when new objects are added', async () => {

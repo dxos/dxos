@@ -12,6 +12,7 @@ import { ThreadType, DocumentType, MessageType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
   LayoutAction,
+  NavigationAction,
   type LocationProvides,
   type Plugin,
   type PluginDefinition,
@@ -19,6 +20,9 @@ import {
   parseNavigationPlugin,
   resolvePlugin,
   parseGraphPlugin,
+  firstMainId,
+  SLUG_PATH_SEPARATOR,
+  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -56,6 +60,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
   const state = create<ThreadState>({ threads: {} });
 
   let navigationPlugin: Plugin<LocationProvides> | undefined;
+  let isDeckModel = false;
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let unsubscribe: UnsubscribeCallback | undefined;
   let queryUnsubscribe: UnsubscribeCallback | undefined;
@@ -66,6 +71,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       settings.prop({ key: 'standalone', type: LocalStorageStore.bool({ allowUndefined: true }) });
 
       navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
       const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
@@ -77,38 +83,51 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       //  This should have a better solution when deck is introduced.
       const threadsQuery = client.spaces.query(Filter.schema(ThreadType, (thread) => !thread.context));
       queryUnsubscribe = threadsQuery.subscribe();
-      unsubscribe = effect(() => {
-        const active = navigationPlugin?.provides.location.active;
-        const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
-        const space = activeNode ? (isSpace(activeNode.data) ? activeNode.data : getSpace(activeNode.data)) : undefined;
-        untracked(() => {
-          const [thread] = threadsQuery.objects.filter((thread) => getSpace(thread) === space);
-          if (activeNode && activeNode?.data instanceof DocumentType && (activeNode.data.comments?.length ?? 0) > 0) {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: {
-                element: 'complementary',
-                subject: activeNode.data,
-                state: isMinSm(),
-              },
+      unsubscribe = isDeckModel
+        ? effect(() => {
+            // TODO(thure); Open comments in a way that doesn’t cause an infinite loop.
+          })
+        : effect(() => {
+            const active = firstMainId(navigationPlugin?.provides.location.active);
+            const activeNode = active ? graphPlugin?.provides.graph.findNode(active) : undefined;
+            const space = activeNode
+              ? isSpace(activeNode.data)
+                ? activeNode.data
+                : getSpace(activeNode.data)
+              : undefined;
+            untracked(() => {
+              const [thread] = threadsQuery.objects.filter((thread) => getSpace(thread) === space);
+              if (
+                activeNode &&
+                activeNode?.data instanceof DocumentType &&
+                (activeNode.data.comments?.length ?? 0) > 0
+              ) {
+                // TODO(thure): `OPEN` instead of `SET_LAYOUT`.
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'complementary',
+                    subject: activeNode.data,
+                    state: isMinSm(),
+                  },
+                });
+              } else if (settings.values.standalone && thread && !(activeNode?.data instanceof ThreadType)) {
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: {
+                    element: 'complementary',
+                    subject: thread,
+                    state: isMinSm(),
+                  },
+                });
+              } else {
+                void intentPlugin?.provides.intent.dispatch({
+                  action: LayoutAction.SET_LAYOUT,
+                  data: { element: 'complementary', subject: null, state: false },
+                });
+              }
             });
-          } else if (settings.values.standalone && thread && !(activeNode?.data instanceof ThreadType)) {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: {
-                element: 'complementary',
-                subject: thread,
-                state: isMinSm(),
-              },
-            });
-          } else {
-            void intentPlugin?.provides.intent.dispatch({
-              action: LayoutAction.SET_LAYOUT,
-              data: { element: 'complementary', subject: null, state: false },
-            });
-          }
-        });
-      });
+          });
     },
     unload: async () => {
       unsubscribe?.();
@@ -224,6 +243,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               return data.plugin === meta.id ? <ThreadSettings settings={settings.values} /> : null;
             }
 
+            case 'article':
             case 'complementary': {
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
@@ -242,17 +262,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ?.filter(({ cursor }) => !cursor)
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
-
                 return (
                   <>
-                    <CommentsHeading attendableId={data.subject.id} />
-                    <ScrollArea.Root>
+                    {role === 'complementary' && <CommentsHeading attendableId={data.subject.id} />}
+                    <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads ?? []}
                           detached={detached ?? []}
                           currentId={state.current}
-                          context={{ object: location?.active }}
+                          context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
@@ -285,7 +304,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 return (
                   <>
                     <ChatHeading attendableId={data.subject.id} />
-                    <ChatContainer thread={data.subject} context={{ object: location?.active }} />
+                    <ChatContainer thread={data.subject} context={{ object: firstMainId(location?.active) }} />
                   </>
                 );
               }
@@ -384,14 +403,23 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     action: ThreadAction.SELECT,
                     data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
-                  {
-                    action: LayoutAction.SET_LAYOUT,
-                    data: {
-                      element: 'complementary',
-                      subject: doc,
-                      state: true,
-                    },
-                  },
+                  isDeckModel
+                    ? {
+                        action: NavigationAction.OPEN,
+                        data: {
+                          activeParts: {
+                            main: [`${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                          },
+                        },
+                      }
+                    : {
+                        action: LayoutAction.SET_LAYOUT,
+                        data: {
+                          element: 'complementary',
+                          subject: doc,
+                          state: true,
+                        },
+                      },
                 ]);
 
                 return thread.id;

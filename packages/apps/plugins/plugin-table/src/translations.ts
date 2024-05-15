@@ -19,6 +19,7 @@ export default [
         'new schema': 'New schema',
         'close dialog': 'Close',
         'cancel dialog': 'Cancel',
+        'create stack section label': 'Create table',
       },
     },
   },

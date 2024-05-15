@@ -18,7 +18,7 @@ const resource =
       class extends constructor {
         constructor(...rest: any[]) {
           super(...rest);
-          TRACE_PROCESSOR.traceResourceConstructor({ constructor, annotation: options?.annotation, instance: this });
+          TRACE_PROCESSOR.createTraceResource({ constructor, annotation: options?.annotation, instance: this });
         }
       })();
     Object.defineProperty(klass, 'name', { value: constructor.name });

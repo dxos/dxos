@@ -53,6 +53,9 @@ export const InvitationManager = ({
   const showAuthCode = statusValue === 3;
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
+    if (multiUse) {
+      return 'showing qr';
+    }
     switch (true) {
       case statusValue === 5:
       case statusValue < 0:

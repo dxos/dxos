@@ -4,10 +4,12 @@
 
 import { expect } from 'chai';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout } from '@dxos/async';
+import { getHeads } from '@dxos/automerge/automerge';
 import { AutomergeContext } from '@dxos/echo-db';
 import { AutomergeHost, DataServiceImpl } from '@dxos/echo-pipeline';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
+import { IndexMetadataStore } from '@dxos/indexing';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 describe('AutomergeHost', () => {
@@ -25,6 +27,7 @@ describe('AutomergeHost', () => {
 
     const host = new AutomergeHost({
       db: level.sublevel('automerge'),
+      indexMetadataStore: new IndexMetadataStore({ db: level.sublevel('index-metadata') }),
     });
     await host.open();
     afterTest(() => host.close());
@@ -50,9 +53,8 @@ describe('AutomergeHost', () => {
     doc.change((doc: any) => {
       doc.text = newText;
     });
+    await client.flush({ states: [{ documentId: doc.documentId, heads: getHeads(doc.docSync()) }] });
 
-    // TODO(mykola): Is there a way to know when automerge has started replication?
-    await sleep(100);
     await asyncTimeout(handle.whenReady(), 1_000);
     expect(handle.docSync().text).to.equal(newText);
   });

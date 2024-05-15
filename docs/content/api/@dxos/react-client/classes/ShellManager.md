@@ -57,6 +57,18 @@ Arguments: none
 
 
 
+### [setInvitationUrl(request)]()
+
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`request`: <code>[InvitationUrlRequest](/api/@dxos/react-client/interfaces/InvitationUrlRequest)</code>
+
+
 ### [setLayout(request)]()
 
 

@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Event, PushStream } from '@dxos/async';
+import { Event, PushStream, TimeoutError, Trigger } from '@dxos/async';
 import {
-  type AuthenticatingInvitation,
+  AuthenticatingInvitation,
   AUTHENTICATION_CODE_LENGTH,
   CancellableInvitation,
   INVITATION_TIMEOUT,
@@ -20,6 +20,7 @@ import {
   type AuthenticationRequest,
   Invitation,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { InvitationProtocol } from './invitation-protocol';
 import { createAdmissionKeypair, type InvitationsHandler } from './invitations-handler';
@@ -117,7 +118,8 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
-    const invitation = this._invitationsHandler.acceptInvitation(handler, options, request.deviceProfile);
+    const { ctx, invitation, stream, otpEnteredTrigger } = this._createObservableAcceptingInvitation(handler, options);
+    this._invitationsHandler.acceptInvitation(ctx, stream, handler, options, otpEnteredTrigger, request.deviceProfile);
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 
@@ -148,6 +150,10 @@ export class InvitationsManager {
       // remove from storage before modifying in-memory state, higher chance of failing
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
+      }
+      if (created.get().type === Invitation.Type.DELEGATED) {
+        const handler = this._getHandler(created.get());
+        await handler.cancelDelegation(created.get());
       }
       await created.cancel();
       this._createInvitations.delete(invitationId);
@@ -190,6 +196,7 @@ export class InvitationsManager {
       persistent = options?.authMethod !== Invitation.AuthMethod.KNOWN_PUBLIC_KEY, // default no not storing keypairs
       created = new Date(),
       guestKeypair = undefined,
+      role = SpaceMember.Role.ADMIN,
       lifetime = 86400, // 1 day,
       multiUse = false,
     } = options ?? {};
@@ -210,6 +217,7 @@ export class InvitationsManager {
         guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
       lifetime,
+      role,
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
       ...protocol.getInvitationContext(),
@@ -237,6 +245,40 @@ export class InvitationsManager {
       },
     });
     return { ctx, stream, observableInvitation };
+  }
+
+  private _createObservableAcceptingInvitation(handler: InvitationProtocol, initialState: Invitation) {
+    const otpEnteredTrigger = new Trigger<string>();
+    const stream = new PushStream<Invitation>();
+    const ctx = new Context({
+      onError: (err) => {
+        if (err instanceof TimeoutError) {
+          log('timeout', { ...handler.toJSON() });
+          stream.next({ ...initialState, state: Invitation.State.TIMEOUT });
+        } else {
+          log.warn('auth failed', err);
+          stream.next({ ...initialState, state: Invitation.State.ERROR });
+        }
+        void ctx.dispose();
+      },
+    });
+    ctx.onDispose(() => {
+      log('complete', { ...handler.toJSON() });
+      stream.complete();
+    });
+    const invitation = new AuthenticatingInvitation({
+      initialInvitation: initialState,
+      subscriber: stream.observable,
+      onCancel: async () => {
+        stream.next({ ...initialState, state: Invitation.State.CANCELLED });
+        await ctx.dispose();
+      },
+      onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
+        otpEnteredTrigger.wake(code);
+      },
+    });
+    return { ctx, invitation, stream, otpEnteredTrigger };
   }
 
   private async _persistIfRequired(
