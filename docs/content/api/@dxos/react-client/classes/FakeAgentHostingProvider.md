@@ -1,11 +1,11 @@
 # Class `FakeAgentHostingProvider`
-<sub>Declared in [packages/sdk/client/dist/types/src/services/fake-agent-hosting-provider.d.ts:3]()</sub>
+<sub>Declared in [packages/sdk/client/dist/types/src/services/fake-agent-hosting-provider.d.ts:4]()</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientConfig)]()
+### [constructor(_clientConfig, _halo)]()
 
 
 
@@ -15,6 +15,8 @@ Returns: <code>[FakeAgentHostingProvider](/api/@dxos/react-client/classes/FakeAg
 Arguments: 
 
 `_clientConfig`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+
+`_halo`: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
 
 
 
@@ -58,5 +60,17 @@ Returns: <code>Promise&lt;"null" | string&gt;</code>
 Arguments: 
 
 `agentID`: <code>string</code>
+
+
+### [init(authToken)]()
+
+
+Initialize the client, potentially using the authToken to check authorization.
+
+Returns: <code>boolean</code>
+
+Arguments: 
+
+`authToken`: <code>any</code>
 
 

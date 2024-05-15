@@ -62,6 +62,18 @@ Arguments:
 `options`: <code>Omit&lt;[LayoutRequest](/api/@dxos/react-client/interfaces/LayoutRequest), "layout"&gt;</code>
 
 
+### [setInvitationUrl(request)]()
+
+
+
+
+Returns: <code>Promise&lt;void&gt;</code>
+
+Arguments: 
+
+`request`: <code>object</code>
+
+
 ### [shareIdentity()]()
 
 

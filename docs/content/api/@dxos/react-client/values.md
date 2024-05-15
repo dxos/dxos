@@ -23,7 +23,12 @@ Type: "__DEFAULT__"
 
 
 
-### [`ClientContext`](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
+### [`AgentHostingContext`](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L21)
+Type: Context&lt;"null" | [AgentHostingProviderClient](/api/@dxos/react-client/interfaces/AgentHostingProviderClient)&gt;
+
+
+
+### [`ClientContext`](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/react-client/src/client/ClientContext.tsx#L37)
 Type: Context&lt;[ClientContextProps](/api/@dxos/react-client/types/ClientContextProps) | undefined&gt;
 
 
@@ -39,7 +44,7 @@ Type: string
 
 
 ### [`DXOS_VERSION`]()
-Type: "0.5.0"
+Type: "0.5.1"
 
 
 
