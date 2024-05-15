@@ -96,7 +96,6 @@ describe('presentation verifier', () => {
         parentCredentialIds: [],
       });
 
-      credential.parentCredentialIds = [];
       const presentation = await signPresentation({
         presentation: { credentials: [credential] },
         signer: keyring,
