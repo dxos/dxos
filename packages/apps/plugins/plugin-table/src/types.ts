@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type StackProvides } from '@braneframe/plugin-stack';
 import { TableType } from '@braneframe/types';
 import type {
   GraphBuilderProvides,
@@ -25,6 +26,7 @@ export type TablePluginProvides = SurfaceProvides &
   IntentResolverProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
+  StackProvides &
   TranslationsProvides;
 
 export const isTable = (object: unknown): object is TableType => {
