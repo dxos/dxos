@@ -6,14 +6,13 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import type { Browser, BrowserType } from 'playwright';
-import { v4 } from 'uuid';
+import type { BrowserContext, BrowserType } from 'playwright';
 
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type ReplicantParams, type GlobalOptions, type Platform } from './spec';
+import { type ReplicantParams, type GlobalOptions, type Platform, type ReplicantRuntimeParams } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
@@ -80,7 +79,7 @@ export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Pro
   const start = Date.now();
   invariant(agentParams.runtime.platform);
 
-  const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, {
+  const { page, context } = await getNewBrowserContext(agentParams.runtime, {
     headless: options.headless ?? true,
   });
   ctx.onDispose(async () => {
@@ -185,30 +184,28 @@ const getBrowser = (browserType: Platform): BrowserType => {
   }
 };
 
-const browsers: { [key: string]: Browser } = {};
+const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeParams, options: BrowserOptions) => {
+  invariant(platform, 'Invalid runtime');
 
-const getNewBrowserContext = async (browserType: Platform, options: BrowserOptions) => {
-  const userDataDir = `/tmp/browser-mocha/${v4()}`;
-  await mkdir(userDataDir, { recursive: true });
+  const browserRunner = getBrowser(platform);
 
-  let browser = browsers[browserType];
+  const playwrightOptions = {
+    headless: options.headless,
+    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
+  };
 
-  if (!browser) {
-    const browserRunner = getBrowser(browserType);
-    browser = await browserRunner.launch({
-      headless: options.headless,
-      args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
-    });
-
-    browsers[browserType] = browser;
+  let context: BrowserContext;
+  if (userDataDir) {
+    await mkdir(userDataDir, { recursive: true });
+    context = await browserRunner.launchPersistentContext(userDataDir, playwrightOptions);
+  } else {
+    const browser = await browserRunner.launch(playwrightOptions);
+    context = await browser.newContext();
   }
-
-  const context = await browser.newContext();
 
   const page = await context.newPage();
 
   return {
-    browserType,
     context,
     page,
   };

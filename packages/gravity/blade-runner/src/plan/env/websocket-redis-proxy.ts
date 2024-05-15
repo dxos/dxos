@@ -43,11 +43,6 @@ export class WebSocketRedisProxy {
    */
   private readonly _wsServer: Server;
 
-  /**
-   * WebSocket connection to client in playwright browser.
-   */
-  private _ws?: WebSocketDuplex;
-
   constructor(private readonly _params?: WebSocketRedisProxyParams) {
     this._wsServer = createServer(this._params?.websocketServer ?? DEFAULT_WEBSOCKET);
     this._wsServer.on('stream', (ws) => {

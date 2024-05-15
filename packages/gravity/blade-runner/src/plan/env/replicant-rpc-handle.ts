@@ -10,8 +10,6 @@ import { type ReplicantBrain } from '../interface';
 export const open = Symbol('open');
 export const close = Symbol('close');
 
-const RPC_TIMEOUT = 120_000;
-
 /**
  * Client for a replicant RPC.
  * Is created in orchestrator process.
@@ -26,6 +24,7 @@ export class ReplicantRpcHandle<T> {
       },
       noHandshake: true,
       port: rpcPort,
+      timeout: 0,
     });
 
     for (const method of Object.getOwnPropertyNames(brain.prototype)) {
@@ -34,7 +33,7 @@ export class ReplicantRpcHandle<T> {
       }
       Object.defineProperty(this, method, {
         value: async (...args: any[]) => {
-          return rpcCodec.decode(await this._rpc.call(method, rpcCodec.encode(args), { timeout: RPC_TIMEOUT }));
+          return rpcCodec.decode(await this._rpc.call(method, rpcCodec.encode(args)));
         },
       });
     }

@@ -46,6 +46,11 @@ export type ReplicantParams<S> = {
 export type ReplicantRuntimeParams = {
   // defaults to node.
   platform?: Platform;
+
+  /**
+   * Path to a browser context.
+   */
+  userDataDir?: string;
 };
 
 export type ReplicantsSummary<S> = { [replicantId: string]: ReplicantParams<S> };
