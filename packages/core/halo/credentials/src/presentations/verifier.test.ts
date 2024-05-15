@@ -96,6 +96,7 @@ describe('presentation verifier', () => {
         parentCredentialIds: [],
       });
 
+      credential.parentCredentialIds = [];
       const presentation = await signPresentation({
         presentation: { credentials: [credential] },
         signer: keyring,
@@ -103,7 +104,7 @@ describe('presentation verifier', () => {
         chain,
         nonce: randomBytes(32),
       });
-
+      expect(credential.parentCredentialIds).not.to.be.undefined;
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
     });
 

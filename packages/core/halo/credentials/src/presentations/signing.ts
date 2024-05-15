@@ -9,10 +9,11 @@ import { canonicalStringify } from '../credentials/signing';
 export const getPresentationProofPayload = (credentials: Credential[], proof: Proof): Uint8Array => {
   const copy = {
     credentials: credentials.map((credential) => {
-      if (credential.parentCredentialIds?.length === 0) {
-        delete credential.parentCredentialIds;
+      const copy = { ...credential };
+      if (copy.parentCredentialIds?.length === 0) {
+        delete copy.parentCredentialIds;
       }
-      return credential;
+      return copy;
     }),
     proof: {
       ...proof,
