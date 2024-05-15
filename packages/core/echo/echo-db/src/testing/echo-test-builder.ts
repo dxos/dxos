@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { expect } from 'chai';
+import isEqual from 'lodash.isequal';
 
 import { type Context, Resource } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -55,8 +56,6 @@ export class EchoTestPeer extends Resource {
       kv: this._kv,
       storage: this._storage,
     });
-    this._kv = createTestLevel();
-    this._storage = createStorage({ type: StorageType.RAM });
     this._initEcho();
   }
 
@@ -152,11 +151,11 @@ export const createDataAssertion = ({
       const { objects } = await db.query().run();
       const received = objects.find((object) => object.id === seedObject.id);
       if (onlyObject) {
-        expect(objects).to.have.length(1);
+        invariant(objects.length === 1);
       }
-      expect({ ...received }).to.deep.eq({ ...seedObject });
+      invariant(isEqual({ ...received }, { ...seedObject }));
       if (referenceEquality) {
-        expect(received === seedObject).to.be.true;
+        invariant(received === seedObject);
       }
     },
   };
