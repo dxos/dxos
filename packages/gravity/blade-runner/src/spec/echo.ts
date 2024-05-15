@@ -48,7 +48,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return {
       platform: 'nodejs',
 
-      numberOfObjects: 100,
+      numberOfObjects: 1000,
       numberOfInsertions: 10,
       insertionSize: 128,
       queryResolution: 'index',
@@ -75,12 +75,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       });
       performance.mark('create:end');
       results.creationTime = performance.measure('create', 'create:begin', 'create:end').duration;
-      log.info('objects created', {
-        count: params.spec.numberOfObjects,
-        size: params.spec.insertionSize * params.spec.numberOfInsertions,
-        resolution: params.spec.queryResolution,
-        time: results.creationTime,
-      });
+      log.info('objects created', { time: results.creationTime });
     }
 
     //
