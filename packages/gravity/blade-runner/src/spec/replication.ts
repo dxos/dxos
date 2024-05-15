@@ -18,7 +18,13 @@ import { range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type SerializedLogEntry, getReader } from '../analysys';
-import { type ReplicantsSummary, type TestParams, type TestPlan, type AgentEnv, type ReplicantRunOptions } from '../plan';
+import {
+  type ReplicantsSummary,
+  type TestParams,
+  type TestPlan,
+  type AgentEnv,
+  type ReplicantRunOptions,
+} from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 const REPLICATOR_EXTENSION_NAME = 'replicator';
@@ -110,7 +116,10 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     };
   }
 
-  async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<ReplicantRunOptions<ReplicationAgentConfig>[]> {
+  async init({
+    spec,
+    outDir,
+  }: TestParams<ReplicationTestSpec>): Promise<ReplicantRunOptions<ReplicationAgentConfig>[]> {
     if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
       throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
     }
@@ -131,7 +140,9 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
       const feedKey = await generateJWKKeyPair();
       feedKeys.push(feedKey);
       for (const [currentAgentIdx, agentFeeds] of feedsBySwarm.entries()) {
-        agentFeeds.get(swarmTopicId)!.push({ feedKey: feedKey.publicKeyHex, writable: currentAgentIdx === replicantId });
+        agentFeeds
+          .get(swarmTopicId)!
+          .push({ feedKey: feedKey.publicKeyHex, writable: currentAgentIdx === replicantId });
       }
     };
 

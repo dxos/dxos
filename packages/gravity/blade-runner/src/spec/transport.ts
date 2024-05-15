@@ -13,7 +13,13 @@ import { defaultMap, range } from '@dxos/util';
 
 import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
 import { type LogReader, type SerializedLogEntry, getReader, BORDER_COLORS, renderPNG, showPNG } from '../analysys';
-import { type ReplicantRunOptions, type AgentEnv, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import {
+  type ReplicantRunOptions,
+  type AgentEnv,
+  type ReplicantsSummary,
+  type TestParams,
+  type TestPlan,
+} from '../plan';
 import { TestBuilder as SignalTestBuilder } from '../test-builder';
 
 export type TransportTestSpec = {

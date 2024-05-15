@@ -10,7 +10,13 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type ReplicantRunOptions, type AgentEnv, type ReplicantsSummary, type TestParams, type TestPlan } from '../plan';
+import {
+  type ReplicantRunOptions,
+  type AgentEnv,
+  type ReplicantsSummary,
+  type TestParams,
+  type TestPlan,
+} from '../plan';
 import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
