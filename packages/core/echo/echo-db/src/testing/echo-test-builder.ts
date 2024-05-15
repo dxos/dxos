@@ -10,7 +10,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { type Storage, StorageType, createStorage } from '@dxos/random-access-storage';
 
 import { EchoClient } from '../client';
 import { type EchoDatabase } from '../database';
@@ -42,28 +41,16 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _clients = new Set<EchoClient>();
-  private readonly _kv: LevelDB;
-  private readonly _storage: Storage;
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
 
-  constructor() {
+  constructor(private readonly _kv: LevelDB = createTestLevel()) {
     super();
-
-    this._kv = createTestLevel();
-    this._storage = createStorage({ type: StorageType.RAM });
-    this._echoHost = new EchoHost({
-      kv: this._kv,
-      storage: this._storage,
-    });
     this._initEcho();
   }
 
   private _initEcho() {
-    this._echoHost = new EchoHost({
-      kv: this._kv,
-      storage: this._storage,
-    });
+    this._echoHost = new EchoHost({ kv: this._kv });
     this._clients.delete(this._echoClient);
     this._echoClient = new EchoClient({});
     this._clients.add(this._echoClient);
@@ -96,7 +83,6 @@ export class EchoTestPeer extends Resource {
     await this._echoHost.close(ctx);
 
     await this._kv.close();
-    await this._storage.close();
   }
 
   /**
