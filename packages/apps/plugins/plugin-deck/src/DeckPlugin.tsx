@@ -21,6 +21,7 @@ import {
   type GraphProvides,
   type Layout,
   type Location,
+  type Attention,
   type ActiveParts,
   IntentAction,
   isActiveParts,
@@ -31,7 +32,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout, NAV_ID } from './components';
+import { LayoutContext, LayoutSettings, DeckLayout, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
@@ -79,7 +80,7 @@ export const DeckPlugin = ({
     closed: [],
   });
 
-  const attention = create<AttentionState>({
+  const attention = create<Attention>({
     attended: new Set(),
   });
 

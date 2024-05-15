@@ -15,13 +15,24 @@ import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
+  attendableId: string;
+  activeIds: Set<string>;
+  attended?: Set<string>;
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
+export const MainLayout = ({
+  attended,
+  attendableId,
+  activeIds,
+  fullscreen,
+  showHintsFooter,
+  toasts,
+  onDismissToast,
+}: MainLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -70,7 +81,14 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar>
-          <Surface role='navigation' name='sidebar' />
+          <Surface
+            role='navigation'
+            data={{
+              popoverAnchorId,
+              activeIds,
+              attended,
+            }}
+          />
         </Main.NavigationSidebar>
 
         {/* Notch */}
@@ -124,17 +142,19 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface
-          role='main'
-          limit={1}
-          fallback={Fallback}
-          placeholder={
-            // TODO(wittjosiah): Better placeholder? Delay rendering?
-            <div className='flex bs-[100dvh] justify-center items-center'>
-              <Status indeterminate aria-label='Initializing' />
-            </div>
-          }
-        />
+        <div role='none' className='contents' data-attendable-id={attendableId}>
+          <Surface
+            role='main'
+            limit={1}
+            fallback={Fallback}
+            placeholder={
+              // TODO(wittjosiah): Better placeholder? Delay rendering?
+              <div className='flex bs-[100dvh] justify-center items-center'>
+                <Status indeterminate aria-label='Initializing' />
+              </div>
+            }
+          />
+        </div>
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}

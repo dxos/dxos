@@ -13,6 +13,7 @@ import {
   isActiveParts,
   type ActiveParts,
   type PartIdentifier,
+  type Attention,
   NavigationAction,
   useIntent,
   activeIds as getActiveIds,
@@ -37,17 +38,13 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
-export type AttentionState = {
-  attended: Set<string>;
-};
-
 export type DeckLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
-  attention: AttentionState;
+  attention: Attention;
 };
 
 export const NAV_ID = 'NavTree';
@@ -198,7 +195,7 @@ export const DeckLayout = ({
       <div role='none' className='sr-only'>
         <Surface
           role='document-title'
-          data={{ activeNode: graph.findNode(Array.from(attention.attended)[0]) }}
+          data={{ activeNode: graph.findNode(Array.from(attention.attended ?? [])[0]) }}
           limit={1}
         />
       </div>
