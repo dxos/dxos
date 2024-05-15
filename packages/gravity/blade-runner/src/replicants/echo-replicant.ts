@@ -3,11 +3,13 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Filter, type QueryResult, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { type ReactiveObject, S, TypedObject, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
 import { ReplicantRegistry } from '../plan';
@@ -17,18 +19,31 @@ export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', vers
 }) {}
 
 export class EchoReplicant {
-  private readonly _testPeer = new EchoTestPeer();
+  private _testPeer?: EchoTestPeer = undefined;
   private _db?: EchoDatabaseImpl = undefined;
-  private readonly _spaceKey = PublicKey.random();
 
-  async open(): Promise<void> {
+  async open({
+    spaceKey = PublicKey.random().toHex(),
+    path,
+    rootUrl,
+  }: { spaceKey?: string; path?: string; rootUrl?: AutomergeUrl } = {}) {
+    log.trace('dxos.echo-replicant.open', { spaceKey, path });
+    this._testPeer = new EchoTestPeer(path ? createTestLevel(path) : undefined);
     await this._testPeer.open();
-    this._db = await this._testPeer.createDatabase(this._spaceKey);
+    this._db = rootUrl
+      ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
+      : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
     this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+
+    return {
+      spaceKey: this._db.spaceKey.toHex(),
+      rootUrl: this._db.rootUrl,
+    };
   }
 
   async close(): Promise<void> {
-    await this._testPeer.close();
+    await this._db!.close();
+    await this._testPeer!.close();
   }
 
   async createDocuments({
@@ -41,21 +56,31 @@ export class EchoReplicant {
     mutationsSize: number;
   }) {
     performance.mark('create:begin');
+
     invariant(this._db, 'Database not initialized.');
     for (let i = 0; i < amount; i++) {
       const doc = create(Text, { content: '' }) satisfies ReactiveObject<Text>;
       this._db!.add(doc);
       for (let i = 0; i < insertions; i++) {
-        const content = doc.content + randomText(mutationsSize);
+        const content = doc.content.toString() + randomText(mutationsSize);
         doc.content = content;
       }
       if (i % 100 === 0) {
-        log.trace('dxos.replicant.echo.create.iteration', { i });
+        log.trace('dxos.echo-replicant.create.iteration', { i });
       }
     }
-    await this._db.flush();
+
+    {
+      performance.mark('flush:begin');
+      await this._db.flush();
+      performance.mark('flush:end');
+      log.trace('dxos.echo-replicant.flush', {
+        duration: performance.measure('flush', 'flush:begin', 'flush:end').duration,
+      });
+    }
+
     performance.mark('create:end');
-    log.trace('dxos.replicant.echo.create.done', {
+    log.trace('dxos.echo-replicant.create.done', {
       amount,
       insertions,
       mutationsSize,
@@ -70,11 +95,12 @@ export class EchoReplicant {
     expectedAmount: number;
     queryResolution?: Exclude<QueryResult<Text>['resolution'], undefined>['source'];
   }) {
+    log.trace('dxos.echo-replicant.query.init', { expectedAmount, queryResolution });
     performance.mark('query:begin');
     invariant(this._db, 'Database not initialized.');
     const queried = new Trigger();
 
-    const query = this._db.query(Filter.schema(Text));
+    const query = this._db.query(Filter.typename(Text.typename));
     query.subscribe(
       ({ results }) => {
         const ids = new Set<string>();
@@ -86,6 +112,10 @@ export class EchoReplicant {
             queried.wake();
           }
         }
+        log.trace('dxos.echo-replicant.query.iteration', {
+          expectedAmount,
+          receivedAmount: ids.size,
+        });
       },
       { fire: true },
     );
@@ -93,7 +123,7 @@ export class EchoReplicant {
     await queried.wait();
 
     performance.mark('query:end');
-    log.trace('dxos.replicant.echo.query.done', {
+    log.trace('dxos.echo-replicant.query.done', {
       expectedAmount,
       queryResolution,
       duration: performance.measure('query', 'query:begin', 'query:end').duration,

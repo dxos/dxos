@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { type QueryResult } from '@dxos/echo-db';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ReplicantsSummary, type Platform, type SchedulerEnv, type TestParams, type TestPlan } from '../plan';
@@ -10,8 +12,6 @@ import { EchoReplicant } from '../replicants/echo-replicant';
 
 type EchoTestSpec = {
   platform: Platform;
-  duration: number;
-  iterationDelay: number;
 
   numberOfObjects: number;
   /**
@@ -33,19 +33,22 @@ type EchoTestResult = {
   creationTime: number;
 
   /**
-   * Time to query all objects in [ms].
+   * Time to query all objects from cache in [ms].
    */
-  queryTime: number;
+  cachedQueryTime: number;
+
+  /**
+   * Time to query all objects from disk in [ms].
+   */
+  diskQueryTime: number;
 };
 
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
   defaultSpec(): EchoTestSpec {
     return {
-      duration: 10_000,
-      iterationDelay: 0,
       platform: 'nodejs',
 
-      numberOfObjects: 1000,
+      numberOfObjects: 100,
       numberOfInsertions: 10,
       insertionSize: 128,
       queryResolution: 'index',
@@ -54,38 +57,73 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
 
   async run(env: SchedulerEnv<EchoTestSpec>, params: TestParams<EchoTestSpec>) {
     const results = {} as EchoTestResult;
+    const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
+    const spaceKey = PublicKey.random().toHex();
 
-    const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform });
-    await replicant.brain.open();
+    const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
+    const { rootUrl } = await replicant.brain.open({ spaceKey, path: userDataDir });
 
-    performance.mark('create:begin');
-    await replicant.brain.createDocuments({
-      amount: params.spec.numberOfObjects,
-      insertions: params.spec.numberOfInsertions,
-      mutationsSize: params.spec.insertionSize,
-    });
-    performance.mark('create:end');
-    results.creationTime = performance.measure('create', 'create:begin', 'create:end').duration;
+    //
+    // Create objects.
+    //
+    {
+      performance.mark('create:begin');
+      await replicant.brain.createDocuments({
+        amount: params.spec.numberOfObjects,
+        insertions: params.spec.numberOfInsertions,
+        mutationsSize: params.spec.insertionSize,
+      });
+      performance.mark('create:end');
+      results.creationTime = performance.measure('create', 'create:begin', 'create:end').duration;
+      log.info('objects created', {
+        count: params.spec.numberOfObjects,
+        size: params.spec.insertionSize * params.spec.numberOfInsertions,
+        resolution: params.spec.queryResolution,
+        time: results.creationTime,
+      });
+    }
 
-    log.info('objects created', {
-      count: params.spec.numberOfObjects,
-      size: params.spec.insertionSize * params.spec.numberOfInsertions,
-      resolution: params.spec.queryResolution,
-      time: results.creationTime,
-    });
+    //
+    // Query objects from automerge cache.
+    //
+    {
+      performance.mark('cachedQuery:begin');
+      await replicant.brain.queryDocuments({
+        expectedAmount: params.spec.numberOfObjects,
+        queryResolution: params.spec.queryResolution,
+      });
+      performance.mark('cachedQuery:end');
+      results.cachedQueryTime = performance.measure('cachedQuery', 'cachedQuery:begin', 'cachedQuery:end').duration;
+      log.info('objects queried from cache', { time: results.cachedQueryTime });
+    }
+    await replicant.brain.close();
+    replicant.kill(0);
 
-    performance.mark('query:begin');
-    await replicant.brain.queryDocuments({
-      expectedAmount: params.spec.numberOfObjects,
-      queryResolution: params.spec.queryResolution,
-    });
-    performance.mark('query:end');
-    results.queryTime = performance.measure('query', 'query:begin', 'query:end').duration;
+    //
+    // Query objects from disk.
+    //
+    {
+      const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
+      await replicant.brain.open({ spaceKey, path: userDataDir, rootUrl: rootUrl as AutomergeUrl });
+
+      await replicant.brain.createDocuments({
+        amount: 1,
+        insertions: 1,
+        mutationsSize: 1,
+      });
+
+      performance.mark('diskQuery:begin');
+      await replicant.brain.queryDocuments({
+        expectedAmount: params.spec.numberOfObjects,
+        queryResolution: params.spec.queryResolution,
+      });
+      performance.mark('diskQuery:end');
+      results.diskQueryTime = performance.measure('diskQuery', 'diskQuery:begin', 'diskQuery:end').duration;
+      log.info('objects queried from disk', { time: results.cachedQueryTime });
+      await replicant.brain.close();
+    }
 
     log.info('done test', results);
-
-    await replicant.brain.close();
-
     return results;
   }
 

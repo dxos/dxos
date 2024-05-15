@@ -32,6 +32,7 @@ export const createRedisRpcPort = ({
           // eslint-disable-next-line no-unmodified-loop-condition
           while (!unsubscribed) {
             const message = await receiveClient.blpopBuffer(receiveQueue, 0);
+
             if (!message) {
               continue;
             }

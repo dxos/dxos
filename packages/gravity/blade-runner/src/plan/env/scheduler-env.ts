@@ -140,8 +140,11 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
     brain: ReplicantBrain<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
   ): Promise<Replicant<T, S>> {
-    const requestQueue = `replicant:requests:${this.params.testId}`;
-    const responseQueue = `replicant:responses:${this.params.testId}`;
+    const replicantId = String(this._currentReplicant++);
+    const outDir = path.join(this.params.outDir, String(replicantId));
+
+    const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;
+    const responseQueue = `replicant-${replicantId}:responses:${this.params.testId}`;
     const rpcPort = createRedisRpcPort({
       sendClient: this.rpcRequests,
       receiveClient: this.rpcResponses,
@@ -155,11 +158,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
     });
 
     await rpcHandle[open]();
-    const replicantIdx = String(this._currentReplicant++);
-    const outDir = path.join(this.params.outDir, String(replicantIdx));
 
     const agentParams: ReplicantParams<S> = {
-      replicantId: replicantIdx,
+      replicantId,
       outDir,
       logFile: path.join(outDir, AGENT_LOG_FILE),
       replicantClass: brain.name,
