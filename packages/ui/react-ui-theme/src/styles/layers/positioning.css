@@ -5,6 +5,9 @@
   .snap-block {
     scroll-snap-type: block var(--tw-scroll-snap-strictness);
   }
+  .sticky-top-0 {
+    --sticky-top: 0;
+  }
 }
 
 @layer components {
