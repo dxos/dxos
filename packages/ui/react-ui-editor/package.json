@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
