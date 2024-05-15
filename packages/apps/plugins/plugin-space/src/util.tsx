@@ -179,11 +179,16 @@ export const updateGraphWithSpace = ({
           {
             id: getId(SpaceAction.ADD_OBJECT.replace('object', 'folder')),
             data: () =>
-              dispatch({
-                plugin: SPACE_PLUGIN,
-                action: SpaceAction.ADD_OBJECT,
-                data: { target: folder, object: create(FolderType, { objects: [] }) },
-              }),
+              dispatch([
+                {
+                  plugin: SPACE_PLUGIN,
+                  action: SpaceAction.ADD_OBJECT,
+                  data: { target: folder, object: create(FolderType, { objects: [] }) },
+                },
+                {
+                  action: NavigationAction.OPEN,
+                },
+              ]),
             properties: {
               label: ['create folder label', { ns: SPACE_PLUGIN }],
               icon: (props: IconProps) => <FolderPlus {...props} />,

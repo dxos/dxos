@@ -653,7 +653,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: { ...object }, activeParts: { main: [object.id] } };
+                return { data: { ...object, activeParts: { main: [object.id] } } };
               }
 
               const space = intent.data?.target;
