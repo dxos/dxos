@@ -186,7 +186,6 @@ export const DeckPlugin = ({
           <AttentionProvider
             attended={attention.attended}
             onChangeAttend={(nextAttended) => {
-              console.log('[on change attend]', nextAttended);
               attention.attended = nextAttended;
             }}
           >
