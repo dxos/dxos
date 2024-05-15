@@ -38,7 +38,6 @@ export default template.define.script({
               </a>
               .
             </p>
-            <pre>pnpm run deploy</pre>
             <h2>Learn more:</h2>
             <ul>
               <li>

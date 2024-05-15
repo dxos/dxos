@@ -66,7 +66,6 @@ console.log(client.toJSON());
         <p>
           When you are ready you can deploy to any static hosting service. See sample <a href='https://docs.dxos.org/guide/tutorial.html#deploying-the-app' target='_blank' rel='noreferrer'>deploy instructions</a>.
         </p>
-        <pre>pnpm run deploy</pre>
         <h2>Learn more:</h2>
         <ul>
           <li>
