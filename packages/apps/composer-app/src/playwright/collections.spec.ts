@@ -72,8 +72,6 @@ test.describe('Collection tests', () => {
     test('moves item out of collection', async () => {
       await host.createSpace();
       await host.createCollection();
-      await host.toggleCollectionCollapsed(1);
-
       // Create an item inside the collection.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
@@ -90,12 +88,8 @@ test.describe('Collection tests', () => {
     test('moves collection with item out of collection', async () => {
       await host.createSpace();
       await host.createCollection();
-      await host.toggleCollectionCollapsed(1);
-
       // Create a collection inside the collection.
       await host.createCollection();
-      await host.toggleCollectionCollapsed(2);
-
       // Create an item inside the contained collection.
       await host.createObject('markdownPlugin');
       // Reduce flakiness in CI by waiting.
@@ -105,7 +99,6 @@ test.describe('Collection tests', () => {
 
       // Delete the containing collection.
       await host.deleteObject(1);
-      await host.toggleCollectionCollapsed(1);
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
