@@ -1,5 +1,5 @@
 # Class `ContactType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/data.ts#L19)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/testing/data.ts#L19)</sub>
 
 
 
