@@ -30,7 +30,7 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
   );
 
   return (
-    <SettingsDialog title={t('settings title')} open={open} onClose={onClose}>
+    <SettingsDialog title={t('settings title')} open={open} onClose={onClose} cancellable={false}>
       <Input.Root>
         <Input.TextInput
           placeholder={t('table name placeholder')}
