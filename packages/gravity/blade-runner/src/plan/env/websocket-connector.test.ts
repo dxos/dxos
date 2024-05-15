@@ -9,7 +9,7 @@ import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { AgentEnv } from './agent-env';
+import { ReplicantEnvImpl } from './replicant-env';
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type ReplicantParams } from '../spec';
@@ -24,7 +24,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
     const server = new WebSocketRedisProxy({
       redisTCPConnection: {
         host: 'localhost',
-        port: 6378,
+        port: 6379,
         family: 4,
       },
       websocketServer: {
@@ -47,7 +47,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
     const server = new WebSocketRedisProxy({
       redisTCPConnection: {
         host: 'localhost',
-        port: 6378,
+        port: 6379,
         family: 4,
       },
       websocketServer: {
@@ -61,11 +61,12 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
     const testId = PublicKey.random().toString();
     const envs = agents.map(
       () =>
-        new AgentEnv(
+        new ReplicantEnvImpl(
+          {},
           {
             agents,
             testId,
-          } as unknown as ReplicantParams<any, any>,
+          } as unknown as ReplicantParams<any>,
           { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
         ),
     );
@@ -75,7 +76,7 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
 
     const promises = [];
     for (const env of envs) {
-      promises.push(env.syncBarrier('testing sync barrier'));
+      promises.push(env.syncBarrier('testing sync barrier', agents.length));
     }
 
     await asyncTimeout(Promise.all(promises), 5000);
