@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-navtree",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -81,6 +81,14 @@ Host should resume invitation on startup until timeout.
 Options:
   - proto3_optional = true
 
+### [role]()
+Type: <code>Role</code>
+
+Role of the admitted member, defaults to ADMIN.
+
+Options:
+  - proto3_optional = true
+
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
