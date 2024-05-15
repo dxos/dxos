@@ -49,10 +49,13 @@ export class EchoReplicant {
         const content = doc.content + randomText(mutationsSize);
         doc.content = content;
       }
+      if (i % 100 === 0) {
+        log.trace('dxos.replicant.echo.create.iteration', { i });
+      }
     }
     await this._db.flush();
     performance.mark('create:end');
-    log.trace('dxos.replicant.echo.create', {
+    log.trace('dxos.replicant.echo.create.done', {
       amount,
       insertions,
       mutationsSize,
@@ -90,7 +93,7 @@ export class EchoReplicant {
     await queried.wait();
 
     performance.mark('query:end');
-    log.trace('dxos.replicant.echo.create', {
+    log.trace('dxos.replicant.echo.query.done', {
       expectedAmount,
       queryResolution,
       duration: performance.measure('query', 'query:begin', 'query:end').duration,
