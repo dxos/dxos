@@ -117,7 +117,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
       (action) => ('invoke' in action ? [action] : []),
     );
     const { t } = useTranslation(translationKey);
-    const { current, attention, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
+    const { current, attended, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
@@ -190,7 +190,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                     //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
                     ...(current?.has(path) && {
                       'aria-current': '' as 'page',
-                      'data-attention': attention?.has(path) ?? false,
+                      'data-attention': attended?.has(node.id) ?? false,
                     })
                   }
                   onContextMenu={(event) => {

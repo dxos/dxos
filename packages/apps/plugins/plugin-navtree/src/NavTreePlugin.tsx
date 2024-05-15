@@ -154,7 +154,8 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                   <NavTreeContainer
                     root={state.root}
                     paths={longestPaths}
-                    currentIds={data.currentIds as Set<string>}
+                    activeIds={data.activeIds as Set<string>}
+                    attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
                     part={data.part as PartIdentifier | undefined}
                   />

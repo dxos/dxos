@@ -279,7 +279,10 @@ export const LayoutPlugin = ({
                 },
               };
 
-        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
+        const attended = useMemo(
+          () => new Set(location.active ? [firstMainId(location.active)] : []),
+          [location.active],
+        );
 
         return (
           <AttentionProvider attended={attended}>

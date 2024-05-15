@@ -156,6 +156,7 @@ export const DeckPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
+      attention,
       translations,
       graph: {
         builder: (_, graph) => {

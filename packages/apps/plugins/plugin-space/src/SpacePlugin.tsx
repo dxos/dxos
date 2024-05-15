@@ -21,7 +21,7 @@ import {
   parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
-  currentIds,
+  activeIds,
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
@@ -177,7 +177,7 @@ export const SpacePlugin = ({
             const identity = client.halo.identity.get();
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
-              Array.from(currentIds(location.active)).forEach((id) => {
+              Array.from(activeIds(location.active)).forEach((id) => {
                 const space = getActiveSpace(graph, id);
                 if (space) {
                   void space

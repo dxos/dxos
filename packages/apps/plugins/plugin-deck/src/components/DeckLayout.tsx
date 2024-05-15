@@ -15,7 +15,7 @@ import {
   type PartIdentifier,
   NavigationAction,
   useIntent,
-  currentIds as getCurrentIds,
+  activeIds as getActiveIds,
   SLUG_PATH_SEPARATOR,
 } from '@dxos/app-framework';
 import {
@@ -170,7 +170,13 @@ export const DeckLayout = ({
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
-  const currentIds = getCurrentIds(location.active);
+  const activeIds = getActiveIds(location.active);
+
+  const navigationData = {
+    popoverAnchorId,
+    activeIds,
+    attended: attention.attended,
+  };
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -232,15 +238,7 @@ export const DeckLayout = ({
         {/* Sidebars */}
         <Main.NavigationSidebar>
           {sidebarSlug === NAV_ID ? (
-            <Surface
-              role='navigation'
-              data={{
-                part: sidebarPart,
-                popoverAnchorId,
-                currentIds,
-              }}
-              limit={1}
-            />
+            <Surface role='navigation' data={{ part: sidebarPart, ...navigationData }} limit={1} />
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
@@ -265,15 +263,7 @@ export const DeckLayout = ({
         </Main.NavigationSidebar>
         <Main.ComplementarySidebar>
           {complementarySlug === NAV_ID ? (
-            <Surface
-              role='navigation'
-              data={{
-                part: complementaryPart,
-                popoverAnchorId,
-                currentIds,
-              }}
-              limit={1}
-            />
+            <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
             <>
               <NodePlankHeading
@@ -312,7 +302,7 @@ export const DeckLayout = ({
                 return (
                   <Deck.Plank key={id} {...attendableAttrs}>
                     {id === NAV_ID ? (
-                      <Surface role='navigation' data={{ part, popoverAnchorId, currentIds }} limit={1} />
+                      <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
                     ) : node ? (
                       <>
                         <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />

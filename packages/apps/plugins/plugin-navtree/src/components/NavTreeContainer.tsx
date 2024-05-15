@@ -44,13 +44,15 @@ const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data=
 export const NavTreeContainer = ({
   root,
   paths,
-  currentIds,
+  activeIds,
+  attended,
   popoverAnchorId,
   part,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
-  currentIds: Set<string>;
+  activeIds: Set<string>;
+  attended: Set<string>;
   popoverAnchorId?: string;
   part?: PartIdentifier;
 }) => {
@@ -196,11 +198,11 @@ export const NavTreeContainer = ({
   const currentPaths = useMemo(
     () =>
       new Set(
-        Array.from(currentIds ?? [])
+        Array.from(activeIds ?? [])
           .map((id) => getMosaicPath(paths, id))
           .filter(Boolean) as string[],
       ),
-    [currentIds, paths],
+    [activeIds, paths],
   );
 
   return (
@@ -214,6 +216,7 @@ export const NavTreeContainer = ({
           <NavTree
             node={root}
             current={currentPaths}
+            attended={attended}
             type={NODE_TYPE}
             onSelect={handleSelect}
             isOver={isOver}
