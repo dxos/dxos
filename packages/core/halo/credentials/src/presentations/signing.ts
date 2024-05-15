@@ -8,7 +8,12 @@ import { canonicalStringify } from '../credentials/signing';
 
 export const getPresentationProofPayload = (credentials: Credential[], proof: Proof): Uint8Array => {
   const copy = {
-    credentials,
+    credentials: credentials.map((credential) => {
+      if (credential.parentCredentialIds?.length === 0) {
+        delete credential.parentCredentialIds;
+      }
+      return credential;
+    }),
     proof: {
       ...proof,
       value: new Uint8Array(),
