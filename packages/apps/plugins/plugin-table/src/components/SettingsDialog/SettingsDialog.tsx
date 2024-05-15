@@ -13,10 +13,18 @@ export type SettingsDialogProps = {
   title: string;
   className?: string;
   onClose?: (success: boolean) => void;
+  cancellable?: boolean;
 } & Pick<DialogRootProps, 'open' | 'children'>;
 
 // TODO(burdon): Factor out styles instead of wrapping?
-export const SettingsDialog: FC<SettingsDialogProps> = ({ title, className, open, children, onClose }) => {
+export const SettingsDialog: FC<SettingsDialogProps> = ({
+  title,
+  className,
+  open,
+  children,
+  onClose,
+  cancellable = true,
+}) => {
   const { t } = useTranslation(TABLE_PLUGIN);
   const success = useRef(false);
   useEffect(() => {
@@ -39,7 +47,8 @@ export const SettingsDialog: FC<SettingsDialogProps> = ({ title, className, open
             >
               <Button variant='primary'>{t('close dialog')}</Button>
             </Dialog.Close>
-            <Button onClick={() => onClose?.(false)}>{t('cancel dialog')}</Button>
+
+            {cancellable && <Button onClick={() => onClose?.(false)}>{t('cancel dialog')}</Button>}
           </ButtonBar>
         </Dialog.Content>
       </Dialog.Overlay>
