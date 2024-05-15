@@ -92,7 +92,6 @@ export class Serializer {
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const ids = database.automerge.getAllObjectIds();
-    // TODO(wittjosiah): Ideally batch to reduce load on services, but for now just provide a large timeout.
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
