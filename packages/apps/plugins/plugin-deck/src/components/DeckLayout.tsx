@@ -98,7 +98,7 @@ const NodePlankHeading = ({
             typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
           }
         >
-          <PlankHeading.Button>
+          <PlankHeading.Button attendableId={node.id}>
             <span className='sr-only'>{label}</span>
             <Icon {...plankHeadingIconProps} />
           </PlankHeading.Button>
