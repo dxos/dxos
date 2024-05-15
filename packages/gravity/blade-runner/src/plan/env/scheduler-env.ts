@@ -28,17 +28,6 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
   // Redis client for subscribing to sync events.
   public redisSub: Redis;
 
-  /**
-   * Redis client for submitting RPC requests.
-   */
-  public rpcRequests: Redis;
-
-  /**
-   * Redis client for pulling RPC responses.
-   * This client uses blocking pop operation to wait for responses
-   * so we need different clients for RPC requests and responses.
-   */
-  public rpcResponses: Redis;
   // Start websocket REDIS proxy for browser tests.
   private readonly _server = new WebSocketRedisProxy();
 
@@ -56,13 +45,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
   ) {
     this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
     this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.rpcRequests = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.rpcResponses = new Redis(this._redisOptions ?? { port: REDIS_PORT });
 
     this.redis.on('error', (err) => log.info('Redis Client Error', err));
     this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
-    this.rpcRequests.on('error', (err) => log.info('Redis Client Error', err));
-    this.rpcResponses.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   getReplicantsSummary(): ReplicantsSummary<S> {
@@ -88,8 +73,6 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
     this.redis.disconnect();
     this.redisSub.disconnect();
-    this.rpcRequests.disconnect();
-    this.rpcResponses.disconnect();
     await this._server.destroy();
   }
 
@@ -145,9 +128,23 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
     const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;
     const responseQueue = `replicant-${replicantId}:responses:${this.params.testId}`;
+
+    /**
+     * Redis client for submitting RPC requests.
+     */
+    const rpcRequests = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    rpcRequests.on('error', (err) => log.info('Redis Client Error', err));
+    /**
+     * Redis client for pulling RPC responses.
+     * This client uses blocking pop operation to wait for responses
+     * so we need different clients for RPC requests and responses.
+     */
+    const rpcResponses = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    rpcResponses.on('error', (err) => log.info('Redis Client Error', err));
+
     const rpcPort = createRedisRpcPort({
-      sendClient: this.rpcRequests,
-      receiveClient: this.rpcResponses,
+      sendClient: rpcRequests,
+      receiveClient: rpcResponses,
       sendQueue: requestQueue,
       receiveQueue: responseQueue,
     });
@@ -189,6 +186,8 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
     const replicantHandle = {
       brain: rpcHandle as RpcHandle<T>,
       kill: (signal?: NodeJS.Signals | number) => {
+        rpcRequests.disconnect();
+        rpcResponses.disconnect();
         processHandle.kill(signal);
         void rpcHandle[close]().catch((err) => log.catch(err));
       },

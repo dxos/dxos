@@ -27,7 +27,6 @@ export class EchoReplicant {
     path,
     rootUrl,
   }: { spaceKey?: string; path?: string; rootUrl?: AutomergeUrl } = {}) {
-    log.trace('dxos.echo-replicant.open', { spaceKey, path });
     this._testPeer = new EchoTestPeer(path ? createTestLevel(path) : undefined);
     await this._testPeer.open();
     this._db = rootUrl
@@ -35,6 +34,7 @@ export class EchoReplicant {
       : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
     this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
 
+    log.trace('dxos.echo-replicant.open', { spaceKey, path });
     return {
       spaceKey: this._db.spaceKey.toHex(),
       rootUrl: this._db.rootUrl,

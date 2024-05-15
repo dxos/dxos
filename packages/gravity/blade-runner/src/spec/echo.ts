@@ -46,10 +46,10 @@ type EchoTestResult = {
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
   defaultSpec(): EchoTestSpec {
     return {
-      platform: 'nodejs',
+      platform: 'chromium',
 
       numberOfObjects: 1000,
-      numberOfInsertions: 10,
+      numberOfInsertions: 8,
       insertionSize: 128,
       queryResolution: 'index',
     };
@@ -106,7 +106,6 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
         insertions: 1,
         mutationsSize: 1,
       });
-
       performance.mark('diskQuery:begin');
       await replicant.brain.queryDocuments({
         expectedAmount: params.spec.numberOfObjects,
@@ -114,7 +113,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       });
       performance.mark('diskQuery:end');
       results.diskQueryTime = performance.measure('diskQuery', 'diskQuery:begin', 'diskQuery:end').duration;
-      log.info('objects queried from disk', { time: results.cachedQueryTime });
+      log.info('objects queried from disk', { time: results.diskQueryTime });
       await replicant.brain.close();
     }
 
