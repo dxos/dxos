@@ -8,7 +8,7 @@ import path from 'node:path';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import { ReplicantRpcHandle } from './replicant-rpc-handle';
+import { ReplicantRpcHandle, open, close } from './replicant-rpc-handle';
 import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
 import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
@@ -154,7 +154,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
       rpcPort,
     });
 
-    await rpcHandle.open();
+    await rpcHandle[open]();
     const replicantIdx = String(this._currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantIdx));
 
@@ -189,7 +189,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
       brain: rpcHandle as RpcHandle<T>,
       kill: (signal?: NodeJS.Signals | number) => {
         processHandle.kill(signal);
-        void rpcHandle.close().catch((err) => log.catch(err));
+        void rpcHandle[close]().catch((err) => log.catch(err));
       },
       params: agentParams,
     };

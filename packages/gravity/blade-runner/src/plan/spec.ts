@@ -7,7 +7,6 @@ import { type SchedulerEnv } from './interface';
 export const AGENT_LOG_FILE = 'agent.log';
 
 export type GlobalOptions = {
-  staggerAgents?: number;
   repeatAnalysis?: string;
   randomSeed?: string;
   profile?: boolean;

@@ -38,7 +38,7 @@ type EchoTestResult = {
   queryTime: number;
 };
 
-export class EchoSpec implements TestPlan<EchoTestSpec, EchoTestResult> {
+export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
   defaultSpec(): EchoTestSpec {
     return {
       duration: 10_000,
@@ -46,7 +46,7 @@ export class EchoSpec implements TestPlan<EchoTestSpec, EchoTestResult> {
       platform: 'nodejs',
 
       numberOfObjects: 1000,
-      numberOfInsertions: 64,
+      numberOfInsertions: 10,
       insertionSize: 128,
       queryResolution: 'index',
     };

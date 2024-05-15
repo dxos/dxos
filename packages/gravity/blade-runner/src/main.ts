@@ -13,10 +13,10 @@ import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplic
 import { type RunParams } from './plan/run-process';
 import {
   EmptyTestPlan,
+  EchoTestPlan,
   // ReplicationTestPlan,
   // SignalTestPlan,
   // TransportTestPlan,
-  // EchoTestPlan,
   // AutomergeTestPlan,
   // StorageTestPlan,
 } from './spec';
@@ -24,10 +24,10 @@ import {
 // eslint-disable-next-line unused-imports/no-unused-vars
 const DXOS_REPO = process.env.DXOS_REPO;
 
-const plans: { [key: string]: () => TestPlan<any> } = {
+const plans: { [key: string]: () => TestPlan<any, any> } = {
   // signal: () => new SignalTestPlan(),
   // transport: () => new TransportTestPlan(),
-  // echo: () => new EchoTestPlan(),
+  echo: () => new EchoTestPlan(),
   // replication: () => new ReplicationTestPlan(),
   // automerge: () => new AutomergeTestPlan(),
   // storage: () => new StorageTestPlan(),
@@ -67,7 +67,6 @@ const start = async () => {
         alias: 'r',
         describe: 'skip the test, just process the output JSON file from a prior run',
       },
-      staggerAgents: { type: 'number', default: 1000, describe: 'stagger agent start time (ms)' },
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
     })
@@ -86,7 +85,6 @@ const start = async () => {
   }
 
   const options: GlobalOptions = {
-    staggerAgents: argv.staggerAgents,
     randomSeed: PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
