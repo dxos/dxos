@@ -66,7 +66,7 @@ export const usePerformanceObserver = (entryTypes: string[]) => {
       setEntries(list.getEntries());
     });
 
-    po.observe({ entryTypes, buffered: true });
+    po.observe({ entryTypes });
     return () => po.disconnect();
   }, []);
 

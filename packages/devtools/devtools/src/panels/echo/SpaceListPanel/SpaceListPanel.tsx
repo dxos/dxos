@@ -140,7 +140,7 @@ export const SpaceListPanel: FC = () => {
 
       <Table.Root>
         <Table.Viewport classNames='overflow-anchored'>
-          <Table.Table<SpaceData> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
+          <Table.Main<SpaceData> columns={columns} data={data} onDatumClick={handleSelect} fullWidth />
           <AnchoredOverflow.Anchor />
         </Table.Viewport>
       </Table.Root>

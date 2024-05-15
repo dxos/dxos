@@ -112,7 +112,7 @@ export type TableContentProps = StackSectionContent & Pick<TableProps<Item>, 'co
 export const TableContent = ({ data: { columns, data } }: { data: TableContentProps }) => (
   <Table.Root>
     <Table.Viewport>
-      <Table.Table columns={columns} data={data} />;
+      <Table.Main columns={columns} data={data} />;
     </Table.Viewport>
   </Table.Root>
 );
