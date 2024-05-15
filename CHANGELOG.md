@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.2](https://github.com/dxos/dxos/compare/v0.5.1...v0.5.2) (2024-05-15)
+
+
+### Bug Fixes
+
+* **plugin-space:** fix navigation to objects on creation ([#6688](https://github.com/dxos/dxos/issues/6688)) ([815041c](https://github.com/dxos/dxos/commit/815041c3c15461c1a49ef56c6257d5c12885670a))
+* pnpm install ([#6687](https://github.com/dxos/dxos/issues/6687)) ([2336313](https://github.com/dxos/dxos/commit/2336313ebbd1dda61a99913e37e57b8d107c378e))
+* presentation signing ([#6685](https://github.com/dxos/dxos/issues/6685)) ([f09438f](https://github.com/dxos/dxos/commit/f09438f68606eb586ff4388fe917f030f4c3304e))
+* reconcile pnpm versions ([#6686](https://github.com/dxos/dxos/issues/6686)) ([a6d4c02](https://github.com/dxos/dxos/commit/a6d4c024fec9286c76757acb826ac3450c52794c))
+
 ## [0.5.1](https://github.com/dxos/dxos/compare/v0.5.0...v0.5.1) (2024-05-15)
 
 
