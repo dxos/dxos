@@ -33,7 +33,12 @@ const useAttendable = (attendableId?: string) => {
   return { 'data-attendable-id': attendableId };
 };
 
-const getAttendables = (cursor: FocusEvent['target'], acc: string[] = []): string[] => {
+/**
+ * Accumulates all attendable id’s between the element provided and the root, inclusive.
+ * @param cursor
+ */
+const getAttendables = (cursor: Element, acc: string[] = []): string[] => {
+  // Find the closest element with `data-attendable-id`, if any; start from cursor and move up the DOM tree.
   const closestAttendable = cursor.closest('[data-attendable-id]');
   if (!closestAttendable) {
     return acc;
