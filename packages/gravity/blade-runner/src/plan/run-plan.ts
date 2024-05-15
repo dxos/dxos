@@ -89,10 +89,11 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   {
     // TODO(mykola): Detect somehow if we need to build the browser bundle.
     const begin = Date.now();
-    await buildBrowserBundle(join(outDir, 'browser.js'));
+    const pathToBundle = join(outDir, 'artifacts', 'browser.js');
+    await buildBrowserBundle(pathToBundle);
     log.info('browser bundle built', {
       time: Date.now() - begin,
-      size: fs.statSync(join(outDir, 'browser.js')).size,
+      size: fs.statSync(pathToBundle).size,
     });
   }
 
@@ -108,7 +109,6 @@ const runPlanner = async <S>({ plan, spec, options }: RunPlanParams<S>) => {
   log.info('simulation complete', {
     summary: join(outDir, SUMMARY_FILENAME),
     result,
-    replicants,
   });
 
   await schedulerEnv.close();

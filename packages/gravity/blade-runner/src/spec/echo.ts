@@ -48,7 +48,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return {
       platform: 'chromium',
 
-      numberOfObjects: 1000,
+      numberOfObjects: 400,
       numberOfInsertions: 8,
       insertionSize: 128,
       queryResolution: 'index',
@@ -57,10 +57,12 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
 
   async run(env: SchedulerEnv<EchoTestSpec>, params: TestParams<EchoTestSpec>) {
     const results = {} as EchoTestResult;
+    // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
     const spaceKey = PublicKey.random().toHex();
 
     const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
+    // TODO(mykola): `path` should be a constant.
     const { rootUrl } = await replicant.brain.open({ spaceKey, path: userDataDir });
 
     //
@@ -101,15 +103,9 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
       await replicant.brain.open({ spaceKey, path: userDataDir, rootUrl: rootUrl as AutomergeUrl });
 
-      await replicant.brain.createDocuments({
-        amount: 1,
-        insertions: 1,
-        mutationsSize: 1,
-      });
       performance.mark('diskQuery:begin');
       await replicant.brain.queryDocuments({
         expectedAmount: params.spec.numberOfObjects,
-        queryResolution: params.spec.queryResolution,
       });
       performance.mark('diskQuery:end');
       results.diskQueryTime = performance.measure('diskQuery', 'diskQuery:begin', 'diskQuery:end').duration;
