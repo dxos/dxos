@@ -32,6 +32,11 @@ Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
 
+### [parentCredentialIds]()
+Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)[]</code>
+
+
+
 ### [proof]()
 Type: <code>Proof</code>
 
