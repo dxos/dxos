@@ -7426,8 +7426,8 @@ importers:
         specifier: ^4.6.6
         version: 4.6.7
       '@types/lodash.startcase':
-        specifier: ^4.4.7
-        version: 4.4.8
+        specifier: ^4.4.9
+        version: 4.4.9
       '@types/mailparser':
         specifier: ^3.4.0
         version: 3.4.3
@@ -25623,10 +25623,10 @@ packages:
       '@types/lodash': 4.17.1
     dev: true
 
-  /@types/lodash.startcase@4.4.8:
-    resolution: {integrity: sha512-LVIbtpZ60Z65NvZ30KQ+dsDPZSGNuBRJwWmnSNazm1FUv034vJOW5GlSLY0ce78UtmPWAnDPfMc/MjiwOvppoQ==}
+  /@types/lodash.startcase@4.4.9:
+    resolution: {integrity: sha512-C0M4DlN1pnn2vEEhLHkTHxiRZ+3GlTegpoAEHHGXnuJkSOXyJMHGiSc+SLRzBlFZWHsBkixe6FqvEAEU04g14g==}
     dependencies:
-      '@types/lodash': 4.14.191
+      '@types/lodash': 4.17.1
     dev: true
 
   /@types/lodash.update@4.10.7:
