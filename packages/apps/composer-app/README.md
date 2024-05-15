@@ -12,7 +12,7 @@ The app can be bundled to native apps using [Socket Supply, Co.](https://sockets
 
 SSC needs to be installed globally:
 
-`npm i @socketsupply/socket -g`
+`npm i -g @socketsupply/socket`
 
 Before running SSC, Composer must be built using:
 

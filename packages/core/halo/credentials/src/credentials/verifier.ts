@@ -14,6 +14,10 @@ export const SIGNATURE_TYPE_ED25519 = 'ED25519Signature';
 export type VerificationResult = { kind: 'pass' } | { kind: 'fail'; errors: string[] };
 
 export const verifyCredential = async (credential: Credential): Promise<VerificationResult> => {
+  if (credential.parentCredentialIds?.length === 0) {
+    delete credential.parentCredentialIds;
+  }
+
   if (!credential.issuer.equals(credential.proof!.signer)) {
     if (!credential.proof!.chain) {
       return {
@@ -57,7 +61,7 @@ export const verifyCredentialSignature = async (credential: Credential): Promise
 };
 
 /**
- * Verifies the the signer has the delegated authority to create credentials on the half of the issuer.
+ * Verifies that the signer has the delegated authority to create credentials on behalf of the issuer.
  */
 export const verifyChain = async (
   chain: Chain,

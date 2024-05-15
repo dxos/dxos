@@ -82,8 +82,8 @@ export const DeviceListItem = forwardRef<
             <Avatar.Fallback text={fallbackValue.emoji} />
           )}
         </Avatar.Frame>
-        {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
         <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
+        {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
         {device.kind === DeviceKind.CURRENT && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>

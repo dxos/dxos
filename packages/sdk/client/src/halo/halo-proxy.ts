@@ -4,16 +4,9 @@
 
 import { inspect } from 'node:util';
 
-import {
-  asyncTimeout,
-  Event,
-  EventSubscriptions,
-  MulticastObservable,
-  observableError,
-  ObservableProvider,
-  Trigger,
-} from '@dxos/async';
+import { asyncTimeout, Event, EventSubscriptions, MulticastObservable, Trigger } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
+import type { Stream } from '@dxos/codec-protobuf';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -45,11 +38,15 @@ export class HaloProxy implements Halo {
   private readonly _identityChanged = new Event<Identity | null>(); // TODO(burdon): Move into Identity object.
   private readonly _devicesChanged = new Event<Device[]>();
   private readonly _contactsChanged = new Event<Contact[]>();
+  private readonly _credentialsChanged = new Event<Credential[]>();
 
   private readonly _identity = MulticastObservable.from(this._identityChanged, null);
   private readonly _devices = MulticastObservable.from(this._devicesChanged, []);
   private readonly _contacts = MulticastObservable.from(this._contactsChanged, []);
+  private readonly _credentials = MulticastObservable.from(this._credentialsChanged, []);
   private _invitationProxy?: InvitationsProxy;
+
+  private _haloCredentialStream?: Stream<Credential>;
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
@@ -90,6 +87,10 @@ export class HaloProxy implements Halo {
     return this._contacts;
   }
 
+  get credentials() {
+    return this._credentials;
+  }
+
   get invitations() {
     invariant(this._invitationProxy, 'HaloProxy not opened');
     return this._invitationProxy.created;
@@ -120,6 +121,22 @@ export class HaloProxy implements Halo {
       }),
     );
     await this._invitationProxy.open();
+
+    this._identityChanged.on((identity) => {
+      if (identity && !this._haloCredentialStream) {
+        invariant(this._serviceProvider.services.SpacesService, 'SpacesService not available');
+        this._haloCredentialStream = this._serviceProvider.services.SpacesService.queryCredentials(
+          {
+            spaceKey: identity.spaceKey!,
+          },
+          { timeout: RPC_TIMEOUT },
+        );
+        this._haloCredentialStream.subscribe((data) => {
+          this._credentialsChanged.emit([...this._credentials.get(), data]);
+        });
+        this._subscriptions.add(() => this._haloCredentialStream?.close());
+      }
+    });
 
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
@@ -230,56 +247,18 @@ export class HaloProxy implements Halo {
 
   /**
    * Get Halo credentials for the current user.
+   * Note: Will return an empty result if called before all credentials have been loaded.
    */
-  // TODO(wittjosiah): Get/Subscribe.
   queryCredentials({ ids, type }: { ids?: PublicKey[]; type?: string } = {}) {
-    const identity = this._identity.get();
-    if (!identity) {
-      throw new ApiError('Identity is not available.');
-    }
-    if (!this._serviceProvider.services.SpacesService) {
-      throw new ApiError('SpacesService is not available.');
-    }
-
-    const stream = this._serviceProvider.services.SpacesService.queryCredentials(
-      {
-        spaceKey: identity.spaceKey!,
-      },
-      { timeout: RPC_TIMEOUT },
-    );
-    this._subscriptions.add(() => stream.close());
-
-    const observable = new ObservableProvider<
-      { onUpdate: (credentials: Credential[]) => void; onError: (error?: Error) => void },
-      Credential[]
-    >();
-
-    const credentials: Credential[] = [];
-    stream.subscribe(
-      (credential) => {
-        credentials.push(credential);
-        const newCredentials = credentials
-          .filter((c) => !ids || (c.id && ids.some((id) => id.equals(c.id!))))
-          .filter((c) => !type || c.subject.assertion['@type'] === type);
-        if (
-          newCredentials.length !== observable.value?.length ||
-          !newCredentials.every(
-            (credential, index) =>
-              credential.id && observable.value![index] && credential.id.equals(observable.value![index].id!),
-          )
-        ) {
-          observable.setValue(newCredentials);
-          observable.callback.onUpdate(newCredentials);
-        }
-      },
-      (err) => {
-        if (err) {
-          observableError(observable, err);
-        }
-      },
-    );
-
-    return observable;
+    return this._credentials.get().filter((credential) => {
+      if (ids && !ids.some((id) => id.equals(credential.id!))) {
+        return false;
+      }
+      if (type && credential.subject.assertion['@type'] !== type) {
+        return false;
+      }
+      return true;
+    });
   }
 
   /**
@@ -340,20 +319,13 @@ export class HaloProxy implements Halo {
     if (!this._serviceProvider.services.IdentityService) {
       throw new ApiError('IdentityService is not available.');
     }
-
     const trigger = new Trigger<Credential[]>();
-    this.queryCredentials({ ids }).subscribe({
-      onUpdate: (credentials) => {
-        if (
-          credentials.every((credential) => ids.some((id) => id.equals(credential.id!))) &&
-          ids.every((id) => credentials.some((credential) => id.equals(credential.id!)))
-        ) {
-          trigger.wake(credentials);
-        }
-      },
-      onError: (err) => {
-        log.catch(err);
-      },
+
+    this._credentials.subscribe((credentials) => {
+      const credentialsToPresent = credentials.filter((credential) => ids.some((id) => id.equals(credential.id!)));
+      if (credentialsToPresent.length === ids.length) {
+        trigger.wake(credentialsToPresent);
+      }
     });
 
     const credentials = await asyncTimeout(

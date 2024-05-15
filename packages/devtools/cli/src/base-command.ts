@@ -109,8 +109,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     }),
 
     // TODO(burdon): '--no-' prefix is not working.
+    // This does not check whether an agent is running or not, and could potentially corrupt data.
+    // https://github.com/dxos/dxos/issues/6473
     'no-agent': Flags.boolean({
-      description: 'Run command without using or starting agent.',
+      description: 'Run command without using an agent.',
+      default: false,
+    }),
+
+    'no-start-agent': Flags.boolean({
+      description: 'Do not automatically start an agent if one is not running.',
       default: false,
     }),
 
@@ -357,11 +364,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Convert known errors to human readable messages.
     if (err instanceof FriendlyError) {
-      this.logToStderr(chalk`{red Error}: ${err.friendlyMessage}`);
-      err.suggestion && this.logToStderr(chalk`{gray Suggestion: ${err.suggestion}}`);
+      this.logToStderr(chalk`{red Error}: ${err.message}`);
+      err.hint && this.logToStderr(chalk`{gray HINT: ${err.hint}}`);
     } else {
       this.logToStderr(chalk`{red Error}: Something went wrong. Use --verbose for more details.`);
     }
+
     this.exit(1);
   }
 
@@ -402,7 +410,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-agent']) {
+    if (!this.flags['no-start-agent'] && !this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
@@ -420,9 +428,11 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     invariant(this._clientConfig);
     if (!this._client) {
       try {
+        // Create a client using a LocalClientServices "host mode" or by connecting to a remote ClientServices.
         if (this.flags['no-agent'] || this.flags.target) {
           this._client = new Client({ config: this._clientConfig });
         } else {
+          // Connect to a locally-running agent, possibly starting one if necessary.
           await this.maybeStartDaemon();
           this._client = new Client({
             config: this._clientConfig,

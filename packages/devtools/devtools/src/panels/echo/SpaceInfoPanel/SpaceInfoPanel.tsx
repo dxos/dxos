@@ -30,9 +30,9 @@ export const SpaceInfoPanel: FC = () => {
   const toggleActive = async () => {
     const state = space!.state.get();
     if (state === SpaceState.INACTIVE) {
-      await space!.internal.open();
+      await space!.open();
     } else {
-      await space!.internal.close();
+      await space!.close();
     }
   };
 

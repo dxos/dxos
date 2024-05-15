@@ -27,7 +27,7 @@ Plugins can exchange functionality by exposing a `provides` object.
 
 The contents of the provides object are of interest only to other plugins, which implement specific keys and values to define functionality with.
 
-For example, the [Surface](surface) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering:
+For example, the [Surface](surface.md) plugin defines a `provides.surface.component` object that `<Surface />` elements use to determine what components to use when rendering:
 
 ```tsx
 import { definePlugin, SurfaceProvides } from '@dxos/app-framework';
@@ -53,7 +53,7 @@ Plugins may provide a `context` component which will be used to wrap the entire 
 
 This enables plugins to share state and functionality with all the components of the app, most of which may be coming from other plugins.
 
-The order in which contexts are nested depends on the order in which the plugins were provided to the `<App />` component in the [entry point](entry).
+The order in which contexts are nested depends on the order in which the plugins were provided to the `<App />` component in the [entry point](entry.md).
 
 ```tsx
 import { PropsWithChildren } from 'react';

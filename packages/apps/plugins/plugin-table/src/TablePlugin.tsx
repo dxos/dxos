@@ -30,6 +30,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
+            label: (object: any) => (object instanceof TableType ? object.title : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
@@ -113,6 +114,17 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               return null;
           }
         },
+      },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-table',
+            testId: 'tablePlugin.createSectionSpaceSketch',
+            label: ['create stack section label', { ns: TABLE_PLUGIN }],
+            icon: (props: any) => <Table {...props} />,
+            intent: [{ plugin: TABLE_PLUGIN, action: TableAction.CREATE }],
+          },
+        ],
       },
       intent: {
         resolver: (intent) => {

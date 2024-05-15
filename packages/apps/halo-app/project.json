@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "halo-app",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/halo-app/src",
   "projectType": "library",
   "targets": {

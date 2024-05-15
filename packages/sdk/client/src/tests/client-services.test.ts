@@ -9,8 +9,8 @@ import { Trigger } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { invariant } from '@dxos/invariant';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
@@ -250,7 +250,7 @@ describe('Client services', () => {
       await waitForExpect(() => {
         const members = space.members.get();
         expect(members).to.have.length(2);
-
+        members.sort((m1, m2) => (m1.identity.identityKey.equals(client1.halo.identity.get()!.identityKey) ? -1 : 1));
         expect(members[0]).to.deep.include({
           identity: {
             identityKey: client1.halo.identity.get()!.identityKey,

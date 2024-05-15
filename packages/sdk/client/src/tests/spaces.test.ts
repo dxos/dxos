@@ -10,9 +10,9 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
-import { createTestLevel } from '@dxos/echo-pipeline/testing';
 import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
@@ -285,13 +285,13 @@ describe('Spaces', () => {
     const { id } = space.db.add(createEchoObject({ data: 'test' }));
     await space.db.flush();
 
-    await space.internal.close();
+    await space.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space.internal.open();
+    await space.open();
     await space.waitUntilReady();
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.READY);
@@ -331,13 +331,13 @@ describe('Spaces', () => {
       expect(space2.db.getObjectById(id)).to.exist;
     });
 
-    await space1.internal.close();
+    await space1.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space1.internal.open();
+    await space1.open();
 
     await space2.waitUntilReady();
     await waitForExpect(() => {

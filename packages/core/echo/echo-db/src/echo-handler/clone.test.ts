@@ -8,12 +8,22 @@ import { create, Expando } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { clone } from './clone';
-import { createDatabase } from '../testing';
+import { EchoTestBuilder } from '../testing';
 
 describe('clone', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
   test('clone to a different database', async () => {
-    const { db: db1 } = await createDatabase();
-    const { db: db2 } = await createDatabase();
+    const { db: db1 } = await builder.createDatabase();
+    const { db: db2 } = await builder.createDatabase();
 
     const task1 = create(Expando, {
       title: 'Main task',
@@ -36,7 +46,7 @@ describe('clone', () => {
   });
 
   test('clone to the same database by changing the id', async () => {
-    const { db } = await createDatabase();
+    const { db } = await builder.createDatabase();
 
     const task1 = create(Expando, {
       title: 'Main task',
@@ -55,8 +65,8 @@ describe('clone', () => {
   });
 
   test('clone with nested objects', async () => {
-    const { db: db1 } = await createDatabase();
-    const { db: db2 } = await createDatabase();
+    const { db: db1 } = await builder.createDatabase();
+    const { db: db2 } = await builder.createDatabase();
 
     const task1 = create(Expando, {
       title: 'Main task',
@@ -88,8 +98,8 @@ describe('clone', () => {
   });
 
   test('clone with nested text objects', async () => {
-    const { db: db1 } = await createDatabase();
-    const { db: db2 } = await createDatabase();
+    const { db: db1 } = await builder.createDatabase();
+    const { db: db2 } = await builder.createDatabase();
 
     const task1 = create(Expando, {
       title: 'Main task',

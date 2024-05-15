@@ -15,7 +15,7 @@ badges:
   # - '![Activity](https://img.shields.io/github/commit-activity/m/dxos/dxos)'
   # - '![Contributors](https://img.shields.io/github/contributors/dxos/dxos)'
 
-banner: '![DXOS](./docs/docs/assets/images/github-repo-banner.png)'
+banner: '![DXOS](./docs/content/assets/images/github-repo-banner.png)'
 quickStartUrl: https://docs.dxos.org/guide/quick-start
 guideUrl: https://docs.dxos.org/guide
 apiReferenceUrl: https://docs.dxos.org/api

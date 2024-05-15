@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "context",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/context/src",
   "projectType": "library",
   "targets": {

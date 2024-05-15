@@ -241,6 +241,10 @@ export class RequestProcessor {
           return context.text;
         };
       }
+
+      default: {
+        log.warn(`invalid input: ${type}`);
+      }
     }
 
     return null;

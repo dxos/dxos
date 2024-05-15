@@ -13,7 +13,7 @@ import { WebSocketWithTokenAuth } from './token-auth';
 export type WebsocketRpcClientParams<C, S> = {
   url: string;
   authenticationToken?: string;
-} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers'>;
+} & Pick<ProtoRpcPeerOptions<C, S>, 'requested' | 'exposed' | 'handlers' | 'noHandshake'>;
 
 export class WebsocketRpcClient<C, S> {
   private _socket?: WebSocket;
@@ -29,6 +29,7 @@ export class WebsocketRpcClient<C, S> {
       requested: this._params.requested,
       exposed: this._params.exposed,
       handlers: this._params.handlers,
+      noHandshake: this._params.noHandshake,
       port: {
         send: (msg) => {
           this._socket!.send(msg);

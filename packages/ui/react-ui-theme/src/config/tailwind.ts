@@ -78,6 +78,9 @@ export const tailwindConfig = ({
         boxShadow: {
           slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
         },
+        transitionProperty: {
+          'max-height': 'max-height',
+        },
         keyframes: {
           // Popper chrome
           slideDownAndFade: {

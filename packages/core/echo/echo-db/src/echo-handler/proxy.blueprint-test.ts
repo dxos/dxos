@@ -10,11 +10,15 @@ import { describe, test } from 'mocha';
 import { getProxyHandlerSlot } from '@dxos/echo-schema';
 import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { beforeAll, afterAll } from '@dxos/test';
 
 registerSignalRuntime();
 
+// TODO(dmaretskyi): Come up with a test fixture pattern?
 export interface TestConfiguration {
   objectsHaveId: boolean;
+  beforeAllCb?: () => Promise<void>;
+  afterAllCb?: () => Promise<void>;
   createObjectFn: (props?: Partial<TestSchema>) => Promise<TestSchema>;
 }
 
@@ -26,7 +30,15 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     if (testConfig == null) {
       continue;
     }
-    const { objectsHaveId, createObjectFn: createObject } = testConfig;
+    const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
+
+    beforeAll(async () => {
+      await beforeAllCb?.();
+    });
+
+    afterAll(async () => {
+      await afterAllCb?.();
+    });
 
     describe(`Proxy properties(schema=${schema != null})`, () => {
       test('handler type', async () => {

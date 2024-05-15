@@ -2,11 +2,7 @@
 
 # Known Issues
 
-The following issues are known to affect usability:
-
-* [Firefox browser does not work](https://github.com/dxos/dxos/issues/3551)
-
-# Stability and Security
+## Stability and Security
 
 The DXOS platform and SDK is currently in a technology preview state.
 
@@ -16,9 +12,9 @@ This means:
 * Protocols, libraries, and SDKs are likely to change, so DXOS SDK components should not yet be used for production.
 * Security of the platform and SDK is immature and incomplete. Identity and device authentication is verified using strong encryption. Data is encrypted in transit. Data stored locally, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) may not be encrypted.
 
-# Performance, Reliability, and Scale: Current state
+## Performance, Reliability, and Scale: Current state
 
-## Cold Start
+### Cold Start
 
 On startup, all mutations must be loaded before the space is available to use.
 
@@ -28,7 +24,7 @@ On startup, all mutations must be loaded before the space is available to use.
 
 Under normal conditions, a space will have 5,000 or less mutations, so cold startup time will be **less than a second**.
 
-## Replication
+### Replication
 
 Changes to a space need to be replicated to peers. When sharing a space to a new peer, or when a peer comes back online, it must receive all mutations.
 
@@ -46,7 +42,11 @@ Our communications protocol currently establishes a separate mesh of connections
 
 With a nominal amount of continuous activity (400 mutations/sec), our communications protocol can handle a maxmimum of 40 total connections.
 
-# License
+## Browser Support
+
+* Firefox doesn't work in private mode ([read more](https://github.com/dxos/dxos/issues/3551)).
+
+## License
 
 MIT License
 Copyright (c) 2023 DXOS

@@ -34,7 +34,11 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async delegate(invitation: Invitation): Promise<PublicKey> {
+  async delegate(): Promise<PublicKey> {
+    throw new Error('delegation not supported');
+  }
+
+  async cancelDelegation(): Promise<void> {
     throw new Error('delegation not supported');
   }
 

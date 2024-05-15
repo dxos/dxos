@@ -104,6 +104,8 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       metadata: {
         records: {
           [DocumentType.typename]: {
+            label: (object: any) =>
+              object instanceof DocumentType ? object.title ?? getFallbackTitle(object) : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -236,6 +238,20 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
+            case 'article': {
+              if (doc) {
+                return (
+                  <DocumentMain
+                    readonly={settings.values.state[doc.id]?.readonly}
+                    toolbar={settings.values.toolbar}
+                    document={doc}
+                    extensions={extensions}
+                  />
+                );
+              } else {
+                return null;
+              }
+            }
             case 'main': {
               if (data.active instanceof DocumentType) {
                 const { readonly } = settings.values.state[data.active.id] ?? {};

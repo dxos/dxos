@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "keys",
+  "tags": [
+    "scope:common"
+  ],
   "sourceRoot": "packages/common/keys/src",
   "projectType": "library",
   "targets": {

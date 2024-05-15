@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Step } from 'react-joyride';
-
 import { HelpPlugin } from './HelpPlugin';
+import { type Step } from './types';
 
 export type { Step };
 

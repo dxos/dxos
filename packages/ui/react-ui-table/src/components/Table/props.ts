@@ -6,6 +6,7 @@ import { type RowData, type RowSelectionState, type Table, type VisibilityState 
 
 import { type ClassNameValue } from '@dxos/react-ui-types';
 
+import { type ColumnSorting } from '../../hooks';
 import { type KeyValue, type TableColumnDef } from '../../types';
 
 export type TableFlags = Partial<{
@@ -37,6 +38,7 @@ export type TableProps<TData extends RowData> = TableFlags &
     data: TData[];
     columns: TableColumnDef<TData>[];
     onColumnResize: (state: Record<string, number>) => void;
+    onColumnReorder: (columnId: string, direction: 'left' | 'right') => void;
     columnVisibility: VisibilityState;
     // Controllable row selection
     rowSelection: RowSelectionState;
@@ -56,4 +58,4 @@ export type TableContextValue<TData> = TableFlags &
   Pick<TableProps<TData>, 'keyAccessor'> & {
     table: Table<TData>;
     isGrid: boolean;
-  };
+  } & ColumnSorting;

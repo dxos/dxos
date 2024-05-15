@@ -267,6 +267,14 @@ message Runtime {
       int32 interval = 2;
     }
 
+    /// https://github.com/ipfs/kubo/blob/master/docs/config.md#apiauthorizations
+    message KuboApiAuthorization {
+        /// Just for organizational purposes.
+        string name = 1;
+        string auth_secret = 2;
+        repeated string allowed_paths = 3;
+    }
+
     // TODO(burdon): Needs documentation/
     string host = 1;
     string port = 2;
@@ -282,6 +290,8 @@ message Runtime {
     Gravity gravity = 12;
     AppTunneling app_tunneling = 13;
     Bots bots = 14;
+    // TODO(nf): manage secret better.
+    repeated KuboApiAuthorization ipfs_api_authorizations = 15;
   }
 
   //
