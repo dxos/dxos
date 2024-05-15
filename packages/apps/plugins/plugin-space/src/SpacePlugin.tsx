@@ -165,6 +165,7 @@ export const SpacePlugin = ({
           const send = () => {
             const identity = client.halo.identity.get();
             if (identity && location.active) {
+              // TODO(wittjosiah): Group by space.
               Array.from(activeIds(location.active)).forEach((id) => {
                 const space = getActiveSpace(graph, id);
                 if (space) {
@@ -173,7 +174,7 @@ export const SpacePlugin = ({
                       identityKey: identity.identityKey.toHex(),
                       spaceKey: space.key.toHex(),
                       added: [id],
-                      removed: location.closed,
+                      removed: location.closed ? [location.closed].flat() : [],
                     })
                     .catch((err) => {
                       log.warn('Failed to broadcast active node for presence', { err: err.message });

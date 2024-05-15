@@ -115,6 +115,17 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           }
         },
       },
+      stack: {
+        creators: [
+          {
+            id: 'create-stack-section-table',
+            testId: 'tablePlugin.createSectionSpaceSketch',
+            label: ['create stack section label', { ns: TABLE_PLUGIN }],
+            icon: (props: any) => <Table {...props} />,
+            intent: [{ plugin: TABLE_PLUGIN, action: TableAction.CREATE }],
+          },
+        ],
+      },
       intent: {
         resolver: (intent) => {
           switch (intent.action) {

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-ipfs",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "IPFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -52,8 +52,8 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@oclif/core": "^2.9.4",
-    "@oclif/plugin-help": "^5.2.14",
+    "@oclif/core": "^3.26.6",
+    "@oclif/plugin-help": "^6.0.22",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -69,6 +69,7 @@
     "js-yaml": "^4.1.0",
     "kubo-rpc-client": "^4.1.1",
     "lodash.defaultsdeep": "^4.6.1",
+    "node-clipboardy": "^1.0.3",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0",
     "platform": "^1.3.6",
@@ -79,7 +80,7 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.31",
+    "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
@@ -90,7 +91,7 @@
     "@types/platform": "^1.3.4",
     "@types/react-dom": "^18.0.6",
     "fast-check": "^3.15.1",
-    "oclif": "^3.7.0",
+    "oclif": "^4.10.11",
     "prettier": "^3.2.4",
     "shx": "^0.3.3",
     "typescript": "^5.2.2"

@@ -54,7 +54,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     guestProfile?: ProfileDocument | undefined,
   ): Promise<AdmissionResponse> {
     invariant(this._spaceKey);
-    const space = await this._spaceManager.spaces.get(this._spaceKey);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
 
     invariant(request.space);
@@ -67,6 +67,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       identityKey,
       space.key,
       space.inner.genesisFeedKey,
+      invitation.role ?? SpaceMember.Role.ADMIN,
+      space.inner.spaceState.membershipChainHeads,
       guestProfile,
       invitation.delegationCredentialId,
     );
@@ -102,7 +104,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
         invitationId: invitation.invitationId,
         authMethod: invitation.authMethod,
         swarmKey: invitation.swarmKey,
-        role: SpaceMember.Role.ADMIN,
+        role: invitation.role ?? SpaceMember.Role.ADMIN,
         expiresOn: invitation.lifetime
           ? new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime)
           : undefined,

@@ -209,6 +209,13 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return this._values.values();
   }
 
+  mapValues<R>(mapper: (v: V, k: K) => R): ComplexMap<K, R> {
+    return new ComplexMap(
+      this._keyProjection,
+      [...this.entries()].map(([key, value]) => [key, mapper(value, key)]),
+    );
+  }
+
   get [Symbol.toStringTag](): string {
     return 'ComplexMap';
   }

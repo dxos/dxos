@@ -138,7 +138,11 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
 
         {/* Status info. */}
         {/* TODO(burdon): Currently obscured by complementary sidebar. */}
-        <div role='none' aria-label={t('status label')} className='fixed bottom-0 right-0 z-[1]'>
+        <div
+          role='none'
+          aria-label={t('status label')}
+          className='fixed bottom-0 right-0 h-[32px] flex justify-end z-[1]'
+        >
           <Surface role='status' limit={1} />
         </div>
 
