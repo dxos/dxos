@@ -56,6 +56,14 @@ export class Shell {
     this._spaces = spaces;
   }
 
+  async setInvitationUrl(request: {
+    invitationUrl: string;
+    deviceInvitationParam: string;
+    spaceInvitationParam: string;
+  }) {
+    await this._shellManager.setInvitationUrl(request);
+  }
+
   /**
    * Open the shell with the given layout.
    */

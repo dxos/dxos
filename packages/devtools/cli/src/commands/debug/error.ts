@@ -22,7 +22,7 @@ class TestError extends FriendlyError {
     return 'Friendly error message.';
   }
 
-  override get suggestion() {
+  override get hint() {
     return 'Error suggestion.';
   }
 }

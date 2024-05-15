@@ -5,11 +5,13 @@
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { StatsPanel, useStats } from '@dxos/devtools';
 import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
+import { type Space, useQuery, Filter, useSpaces } from '@dxos/react-client/echo';
+import { useFileDownload } from '@dxos/react-ui';
 
 import { AppToolbar } from './AppToolbar';
 import { DataToolbar, type DataView } from './DataToolbar';
@@ -19,22 +21,27 @@ import { SpaceToolbar } from './SpaceToolbar';
 import { StatusBar } from './status';
 import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
-// TODO(burdon): [API]: Import syntax?
-
-// const dateRange = {
-//   from: new Date(),
-//   to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-// };
+import { exportData, importData } from '../util';
 
 export const Main = () => {
   const client = useClient();
+  // TODO(wittjosiah): Why filter out the default space?
+  const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
+  const [stats, refreshStats] = useStats();
+  const [showStats, setShowStats] = useState<boolean>(true);
+  useEffect(() => {
+    if (!space && spaces.length) {
+      setSpace(spaces[0]);
+    }
+  }, []);
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
   const [filter, setFilter] = useState<string>();
   const [flushing, setFlushing] = useState(false);
   const flushingPromise = useRef<Promise<void>>();
+  const download = useFileDownload();
 
   // TODO(burdon): [BUG]: Shows deleted objects.
   // TODO(burdon): Remove restricted list of objects.
@@ -133,15 +140,40 @@ export const Main = () => {
     setSpace(space);
   };
 
-  const handleSpaceClose = async (spaceKey: PublicKey) => {
-    const space = client.spaces.get(spaceKey);
-    await space?.close(); // TODO(burdon): [BUG] Not implemented error.
-    setSpace(undefined);
+  const handleSpaceImport = async (backup: Blob) => {
+    // Validate backup.
+    try {
+      const backupString = await backup.text();
+      JSON.parse(backupString);
+    } catch (err) {
+      log.catch(err);
+    }
+
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+    await importData(space, backup);
   };
 
   const handleSpaceSelect = (spaceKey?: PublicKey) => {
     const space = spaceKey ? client.spaces.get(spaceKey) : undefined;
     setSpace(space);
+  };
+
+  const handleSpaceToggleOpen = async (spaceKey: PublicKey) => {
+    const space = client.spaces.get(spaceKey);
+    if (space) {
+      await (space.isOpen ? space.close() : space.open());
+    }
+  };
+
+  const handleSpaceExport = async (spaceKey: PublicKey) => {
+    const space = client.spaces.get(spaceKey);
+    if (space) {
+      await space.waitUntilReady();
+      const backupBlob = await exportData(space);
+      const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
+      download(backupBlob, `${filename}.json`);
+    }
   };
 
   const handleSpaceInvite = (spaceKey: PublicKey) => {
@@ -154,24 +186,25 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black divide-y'>
+    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
       <AppToolbar
         onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
           void client.shell.open();
         }}
       />
-
       <SpaceToolbar
-        spaceKey={space?.key}
+        spaces={spaces}
+        selected={space?.key ?? spaces[0]?.key}
         onCreate={handleSpaceCreate}
-        onClose={handleSpaceClose}
+        onImport={handleSpaceImport}
         onSelect={handleSpaceSelect}
+        onToggleOpen={handleSpaceToggleOpen}
+        onExport={handleSpaceExport}
         onInvite={handleSpaceInvite}
       />
-
       <div className='flex flex-col grow overflow-hidden'>
-        {space && (
+        {space?.isOpen && (
           <>
             <DataToolbar
               types={Array.from(typeMap.keys())}
@@ -187,11 +220,15 @@ export const Main = () => {
           </>
         )}
       </div>
-
-      <div className='flex p-2 items-center text-xs'>
+      <div className='flex h-[32px] p-2 items-center relative text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <StatusBar flushing={flushing} />
+        <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
+        {showStats && (
+          <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+            <StatsPanel stats={stats} onRefresh={refreshStats} />
+          </div>
+        )}
       </div>
     </div>
   );

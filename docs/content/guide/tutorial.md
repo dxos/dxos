@@ -306,10 +306,6 @@ For the sake of simplicity, we will deploy the app's static assets to Netlify. T
 
 That's it. Your app is now live!
 
-## Self-hosting
-
-We offer a compact self-hosting appliance called [KUBE](./kube/README.md) that you can also use to [deploy your app's assets to IPFS](./kube/deploying.md). This option is best for those who wish to deploy private, self-hosted, or air-gapped applications with full control over all the infrastructure of their app. KUBE can be used to host apps in a LAN and expose them to the wider area network with built-in automatic [tunneling](./kube/tunneling.md).
-
 ## Next steps
 
 This guide demonstrated how to create and deploy a local-first DXOS application.
@@ -322,7 +318,7 @@ For more info on using DXOS, see:
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 
-* Join the DXOS [Discord](https://discord.gg/KsDBXuUxvD)
+* Join the DXOS [Discord](https://discord.gg/eXVfryv3sW)
 * DXOS [repository on GitHub](https://github.com/dxos/dxos)
 * File a bug or idea in [Issues](https://github.com/dxos/dxos/issues)
 

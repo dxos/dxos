@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './handler-meta';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { ReactiveArray, type ReactiveHandler, createReactiveProxy, isValidProxyTarget } from '../proxy';
+import { ReactiveArray, type ReactiveHandler, createReactiveProxy, isValidProxyTarget, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -186,6 +186,9 @@ export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
 
 const makeArraysReactive = (target: any) => {
   for (const key in target) {
+    if (target[symbolIsProxy]) {
+      continue;
+    }
     if (Array.isArray(target[key])) {
       target[key] = ReactiveArray.from(target[key]);
     }

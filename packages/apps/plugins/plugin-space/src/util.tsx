@@ -313,16 +313,12 @@ export const updateGraphWithSpace = ({
   });
 
   // Update graph with all objects in the space.
-  // TODO(wittjosiah): If text objects are included in this query then it updates on every keystroke in the editor.
-  const query = space.db.query((obj: EchoReactiveObject<any>) => {
-    if (obj instanceof TextV0Type) {
-      return false;
-    }
-
-    return true;
-  });
+  // TODO(burdon): HACK: Skip loading sketches (filter Expandos also?)
+  // TODO(wittjosiah): Option not to trigger queries if content of document updates (otherwise each keystroke triggers change).
+  const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
   const unsubscribeQuery = query.subscribe();
+
   const unsubscribeQueryHandler = effect(() => {
     const folder =
       space.state.get() === SpaceState.READY ? getSpaceProperty<FolderType>(space, FolderType.typename) : null;
@@ -416,7 +412,7 @@ export const updateGraphWithSpace = ({
                   data: { target: object, object: create(FolderType, { objects: [] }) },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties: {
@@ -547,7 +543,7 @@ export const updateGraphWithAddObjectAction = ({
                   data: { target: space },
                 },
                 {
-                  action: NavigationAction.ACTIVATE,
+                  action: NavigationAction.OPEN,
                 },
               ]),
             properties,
@@ -573,7 +569,7 @@ export const updateGraphWithAddObjectAction = ({
                 data: { target: folder },
               },
               {
-                action: NavigationAction.ACTIVATE,
+                action: NavigationAction.OPEN,
               },
             ]),
           properties,

@@ -15,6 +15,7 @@ export type CreateCredentialSignerParams = {
   subject: PublicKey;
   assertion: TypedMessage;
   nonce?: Uint8Array;
+  parentCredentialIds?: PublicKey[];
 };
 
 export type CreateCredentialParams = {
@@ -28,6 +29,7 @@ export type CreateCredentialParams = {
   subject: PublicKey;
   assertion: TypedMessage;
   nonce?: Uint8Array;
+  parentCredentialIds?: PublicKey[];
 };
 
 /**
@@ -41,6 +43,7 @@ export const createCredential = async ({
   signingKey,
   chain,
   nonce,
+  parentCredentialIds,
 }: CreateCredentialParams): Promise<Credential> => {
   invariant(assertion['@type'], 'Invalid assertion.');
   invariant(!!signingKey === !!chain, 'Chain must be provided if and only if the signing key differs from the issuer.');
@@ -65,6 +68,10 @@ export const createCredential = async ({
       nonce,
     },
   };
+
+  if ((parentCredentialIds?.length ?? 0) > 0) {
+    credential.parentCredentialIds = parentCredentialIds;
+  }
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);
@@ -97,13 +104,14 @@ export interface CredentialSigner {
  */
 export const createCredentialSignerWithKey = (signer: Signer, issuer: PublicKey): CredentialSigner => ({
   getIssuer: () => issuer,
-  createCredential: ({ subject, assertion, nonce }) =>
+  createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
       issuer,
       subject,
       assertion,
       nonce,
+      parentCredentialIds,
     }),
 });
 

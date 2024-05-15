@@ -20,11 +20,11 @@ jobs:
         with:
           node-version: 18
 
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v3.0.0
         name: Install pnpm
         id: pnpm-install
         with:
-          version: 7
+          version: 9
           run_install: false
 
       - name: Get pnpm store directory

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -131,6 +131,7 @@
     "@dxos/indexing": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/network-manager": "workspace:*",
@@ -143,6 +144,7 @@
     "@dxos/util": "workspace:*",
     "@dxos/websocket-rpc": "workspace:*",
     "base-x": "~3.0.9",
+    "jwt-decode": "^4.0.0",
     "lodash.get": "^4.4.2",
     "lodash.isequal": "^4.5.0",
     "lodash.isequalwith": "^4.4.0"

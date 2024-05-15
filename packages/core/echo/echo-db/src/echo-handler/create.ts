@@ -116,7 +116,11 @@ const saveTypeInAutomerge = (internals: ObjectInternals, schema: S.Schema<any> |
   }
 };
 
-const validateInitialProps = (target: any) => {
+const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
+  if (seen.has(target)) {
+    return;
+  }
+  seen.add(target);
   for (const key in target) {
     const value = target[key];
     if (value === undefined) {
@@ -124,10 +128,11 @@ const validateInitialProps = (target: any) => {
     } else if (typeof value === 'object') {
       if (value instanceof DynamicEchoSchema) {
         target[key] = value.serializedSchema;
+        validateInitialProps(value.serializedSchema, seen);
       } else {
         throwIfCustomClass(key, value);
+        validateInitialProps(target[key], seen);
       }
-      validateInitialProps(target[key]);
     }
   }
 };

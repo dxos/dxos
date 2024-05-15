@@ -16,6 +16,8 @@ import { decodeRpcError } from './errors';
 const DEFAULT_TIMEOUT = 3_000;
 const BYE_SEND_TIMEOUT = 2_000;
 
+const DEBUG_CALLS = true;
+
 type MaybePromise<T> = Promise<T> | T;
 
 export interface RpcPeerOptions {
@@ -26,13 +28,18 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any) => Stream<Any>;
+  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
 
   /**
    * Do not require or send handshake messages.
    */
   noHandshake?: boolean;
+
+  /**
+   * What options get passed to the `callHandler` and `streamHandler`.
+   */
+  handlerRpcOptions?: RequestOptions;
 }
 
 /**
@@ -115,7 +122,7 @@ export class RpcPeer {
   private readonly _byeTrigger = new Trigger();
 
   private _nextId = 0;
-  private _state = RpcState.INITIAL;
+  private _state: RpcState = RpcState.INITIAL;
   private _unsubscribeFromPort: (() => void) | undefined = undefined;
   private _clearOpenInterval: (() => void) | undefined = undefined;
 
@@ -155,7 +162,7 @@ export class RpcPeer {
       return;
     }
 
-    log('sending open message');
+    log('sending open message', { state: this._state });
     await this._sendMessage({ open: true });
 
     if (this._state !== RpcState.OPENING) {
@@ -170,16 +177,15 @@ export class RpcPeer {
     await Promise.race([this._remoteOpenTrigger.wait(), this._closingTrigger.wait()]);
 
     this._clearOpenInterval?.();
-    this._state = RpcState.OPENED;
 
-    if (this._state !== RpcState.OPENED) {
+    if ((this._state as RpcState) !== RpcState.OPENED) {
       // Closed while opening.
       return; // TODO(dmaretskyi): Throw error?
     }
 
     // TODO(burdon): This seems error prone.
     // Send an "open" message in case the other peer has missed our first "open" message and is still waiting.
-    log('sending second open message');
+    log('sending second open message', { state: this._state });
     await this._sendMessage({ openAck: true });
   }
 
@@ -251,7 +257,7 @@ export class RpcPeer {
    */
   private async _receive(msg: Uint8Array): Promise<void> {
     const decoded = RpcMessage.decode(msg, { preserveAny: true });
-    log('received message', { type: Object.keys(decoded)[0] });
+    DEBUG_CALLS && log('received message', { type: Object.keys(decoded)[0] });
 
     if (decoded.request) {
       if (this._state !== RpcState.OPENED && this._state !== RpcState.OPENING) {
@@ -281,14 +287,14 @@ export class RpcPeer {
           });
         });
       } else {
-        log('request', { method: req.method });
+        DEBUG_CALLS && log('request', { method: req.method });
         const response = await this._callHandler(req);
-
-        log('sending response', {
-          method: req.method,
-          response: response.payload?.type_url,
-          error: response.error,
-        });
+        DEBUG_CALLS &&
+          log('sending response', {
+            method: req.method,
+            response: response.payload?.type_url,
+            error: response.error,
+          });
         await this._sendMessage({ response });
       }
     } else if (decoded.response) {
@@ -310,21 +316,22 @@ export class RpcPeer {
         this._outgoingRequests.delete(responseId);
       }
 
-      log('response', { type_url: decoded.response.payload?.type_url });
+      DEBUG_CALLS && log('response', { type_url: decoded.response.payload?.type_url });
       item.resolve(decoded.response);
     } else if (decoded.open) {
-      log('received open message');
+      log('received open message', { state: this._state });
       if (this._params.noHandshake) {
         return;
       }
 
       await this._sendMessage({ openAck: true });
     } else if (decoded.openAck) {
-      log('received openAck message');
+      log('received openAck message', { state: this._state });
       if (this._params.noHandshake) {
         return;
       }
 
+      this._state = RpcState.OPENED;
       this._remoteOpenTrigger.wake();
     } else if (decoded.streamClose) {
       if (this._state !== RpcState.OPENED) {
@@ -364,7 +371,7 @@ export class RpcPeer {
    * Peer should be open before making this call.
    */
   async call(method: string, request: Any, options?: RequestOptions): Promise<Any> {
-    log('calling', { method });
+    DEBUG_CALLS && log('calling', { method });
     throwIfNotOpen(this._state);
 
     let response: Response;
@@ -469,7 +476,7 @@ export class RpcPeer {
   }
 
   private async _sendMessage(message: RpcMessage, timeout?: number) {
-    log('sending message', { type: Object.keys(message)[0] });
+    DEBUG_CALLS && log('sending message', { type: Object.keys(message)[0] });
     await this._params.port.send(RpcMessage.encode(message, { preserveAny: true }), timeout);
   }
 
@@ -479,7 +486,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload);
+      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
       return {
         id: req.id,
         payload: response,
@@ -499,7 +506,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
       responseStream.onReady(() => {
         callback({
           id: req.id,

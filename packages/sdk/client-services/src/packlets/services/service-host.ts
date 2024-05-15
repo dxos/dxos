@@ -2,23 +2,15 @@
 // Copyright 2021 DXOS.org
 //
 
-import { type Level } from 'level';
-
 import { Event, synchronized } from '@dxos/async';
 import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import {
-  DataServiceImpl,
-  type ObjectStructure,
-  encodeReference,
-  type SpaceDoc,
-  type LevelDB,
-} from '@dxos/echo-pipeline';
+import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
 import { getTypeReference } from '@dxos/echo-schema';
-import { QueryServiceImpl } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
 import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
@@ -83,14 +75,13 @@ export class ClientServicesHost {
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
   private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
-  private _queryService!: QueryServiceImpl;
 
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private _signalManager?: SignalManager;
   private _networkManager?: NetworkManager;
   private _storage?: Storage;
-  private _level?: Level<string, string>;
+  private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
@@ -246,12 +237,12 @@ export class ClientServicesHost {
     this._opening = true;
     log('opening...', { lockKey: this._resourceLock?.lockKey });
 
+    await this._resourceLock?.acquire();
+
     if (!this._level) {
       this._level = await createLevel(this._config.get('runtime.client.storage', {})!);
     }
     await this._level.open();
-
-    await this._resourceLock?.acquire();
 
     await this._loggingService.open();
 
@@ -262,12 +253,6 @@ export class ClientServicesHost {
       this._signalManager,
       this._runtimeParams,
     );
-
-    this._queryService = new QueryServiceImpl({
-      indexer: this._serviceContext.indexer,
-      automergeHost: this._serviceContext.automergeHost,
-    });
-    await this._queryService.open(ctx);
 
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
@@ -292,9 +277,8 @@ export class ClientServicesHost {
         },
       ),
 
-      DataService: new DataServiceImpl(this._serviceContext.automergeHost),
-
-      QueryService: this._queryService,
+      DataService: this._serviceContext.echoHost.dataService,
+      QueryService: this._serviceContext.echoHost.queryService,
 
       NetworkService: new NetworkServiceImpl(this._serviceContext.networkManager, this._serviceContext.signalManager),
 
@@ -344,7 +328,6 @@ export class ClientServicesHost {
     await this._devtoolsProxy?.close();
     this._serviceRegistry.setServices({ SystemService: this._systemService });
     await this._loggingService.close();
-    await this._queryService.close();
     await this._serviceContext.close();
     await this._level?.close();
     this._open = false;
@@ -356,10 +339,10 @@ export class ClientServicesHost {
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.client-services-host.reset', trace.begin({ id: traceId }));
 
-    log('resetting...');
+    log.info('resetting...');
     await this._serviceContext?.close();
     await this._storage!.reset();
-    log('reset');
+    log.info('reset');
     log.trace('dxos.sdk.client-services-host.reset', trace.end({ id: traceId }));
     await this._callbacks?.onReset?.();
   }
@@ -373,7 +356,7 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.automergeHost.repo.find<SpaceDoc>(automergeIndex as any);
+    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.
@@ -393,7 +376,7 @@ export class ClientServicesHost {
       assignDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._serviceContext.automergeHost.repo.flush();
+    await this._serviceContext.echoHost.flush();
 
     return identity;
   }

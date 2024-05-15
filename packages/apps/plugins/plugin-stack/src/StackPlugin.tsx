@@ -14,6 +14,8 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Filter } from '@dxos/react-client/echo';
+import { Main } from '@dxos/react-ui';
+import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
@@ -144,7 +146,15 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof StackType ? (
-                <StackMain stack={data.active} separation={settings.values.separation} />
+                <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+                  <StackMain stack={data.active} separation={settings.values.separation} />
+                </Main.Content>
+              ) : null;
+            case 'article':
+              return data.object instanceof StackType ? (
+                <div role='none' className='row-span-2 overflow-auto'>
+                  <StackMain stack={data.object} separation={settings.values.separation} />
+                </div>
               ) : null;
             case 'settings': {
               return data.plugin === meta.id ? <StackSettings settings={settings.values} /> : null;

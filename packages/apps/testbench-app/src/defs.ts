@@ -3,5 +3,5 @@
 //
 
 export const defs = {
-  issueUrl: 'https://github.com/dxos/dxos/issues/6236',
+  issueUrl: 'https://github.com/dxos/dxos/issues',
 };

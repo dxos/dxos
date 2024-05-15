@@ -1,0 +1,47 @@
+{
+  "name": "@dxos/kv-store",
+  "version": "0.5.1",
+  "description": "DXOS key-value store.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": {
+      "browser": "./dist/lib/browser/index.mjs",
+      "import": "./dist/lib/browser/index.mjs",
+      "require": "./dist/lib/node/index.cjs",
+      "node": "./dist/lib/node/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "import": "./dist/lib/browser/testing/index.mjs",
+      "require": "./dist/lib/node/testing/index.cjs",
+      "node": "./dist/lib/node/testing/index.cjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/types/src/testing/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/keys": "workspace:*",
+    "@dxos/node-std": "workspace:*",
+    "abstract-level": "^1.0.2",
+    "level": "^8.0.1"
+  },
+  "devDependencies": {
+    "level-transcoder": "^1.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

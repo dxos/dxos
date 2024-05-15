@@ -24,7 +24,7 @@ import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
 import { TableRootContext, useTableRootContext } from './TableRootContext';
 import { type TableProps } from './props';
-import { useColumnResizing, usePinLastRow, useRowSelection } from '../../hooks';
+import { useColumnResizing, useColumnSorting, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
 
 type TableRootProps = { children: React.ReactNode };
@@ -87,6 +87,8 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
   const [grouping, handleGroupingChange] = useState<GroupingState>(props.grouping ?? []);
   useEffect(() => handleGroupingChange(props.grouping ?? []), [handleGroupingChange, props.grouping]);
 
+  const columnSorting = useColumnSorting();
+
   const table = useReactTable({
     // Data
     meta: {},
@@ -104,6 +106,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
       columnVisibility,
       columnSizing,
       columnSizingInfo,
+      sorting: columnSorting.sorting,
       rowSelection,
       grouping,
     },
@@ -146,7 +149,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
 
   return (
     <TableProvider
-      {...props}
+      {...{ ...props, ...columnSorting }}
       table={table}
       header={header}
       expand={expand}
@@ -280,6 +283,6 @@ const GroupedTableContent = () => {
 
 export const Table = {
   Root: TableRoot,
-  Table: TablePrimitive,
   Viewport: TableViewport,
+  Main: TablePrimitive,
 };

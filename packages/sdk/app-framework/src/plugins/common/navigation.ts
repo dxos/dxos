@@ -7,9 +7,18 @@ import { z } from 'zod';
 import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
+// NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
+export const SLUG_LIST_SEPARATOR = '.';
+export const SLUG_ENTRY_SEPARATOR = '_';
+export const SLUG_KEY_VALUE_SEPARATOR = '-';
+export const SLUG_PATH_SEPARATOR = '~';
+export const SLUG_COLLECTION_INDICATOR = '';
+
 //
 // Provides
 //
+
+export const ActiveParts = z.record(z.string(), z.union([z.string(), z.array(z.string())]));
 
 /**
  * Basic state provided by a navigation plugin.
@@ -17,12 +26,51 @@ import type { Plugin } from '../PluginHost';
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 // TODO(wittjosiah): We should align this more with `window.location` along the lines of what React Router does.
 export const Location = z.object({
-  active: z.string().optional().describe('Id of the currently active item.'),
-  // TODO(wittjosiah): History?
-  previous: z.string().optional(),
+  active: z
+    .union([z.string(), ActiveParts])
+    .optional()
+    .describe('Id of currently active item, or record of item id(s) keyed by the app part in which they are active.'),
+  closed: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .describe('Id or ids of recently closed items, in order of when they were closed.'),
 });
 
+export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
+/**
+ * Composed of [ part name, index within the part, size of the part ]
+ */
+export type PartIdentifier = [string, number, number];
+export type NavigationAdjustmentType = `${'pin' | 'increment'}-${'start' | 'end'}`;
+export type NavigationAdjustment = { part: PartIdentifier; type: NavigationAdjustmentType };
+
+export const isActiveParts = (active: string | ActiveParts | undefined): active is ActiveParts =>
+  !!active && typeof active !== 'string';
+
+export const isAdjustTransaction = (data: IntentData | undefined): data is NavigationAdjustment =>
+  !!data && 'part' in data && 'type' in data;
+
+export const firstMainId = (active: Location['active']): string =>
+  isActiveParts(active) ? (Array.isArray(active.main) ? active.main[0] : active.main) : active ?? '';
+
+export const activeIds = (active: string | ActiveParts | undefined): Set<string> =>
+  active
+    ? isActiveParts(active)
+      ? Object.values(active).reduce((acc, ids) => {
+          Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
+          return acc;
+        }, new Set<string>())
+      : new Set([active])
+    : new Set();
+
+export const isIdActive = (active: string | ActiveParts | undefined, id: string): boolean => {
+  return active
+    ? isActiveParts(active)
+      ? Object.values(active).findIndex((ids) => (Array.isArray(ids) ? ids.indexOf(id) > -1 : ids === id)) > -1
+      : active === id
+    : false;
+};
 
 /**
  * Provides for a plugin that can manage the app navigation.
@@ -45,23 +93,25 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
-  ACTIVATE = `${NAVIGATION_ACTION}/activate`,
+  OPEN = `${NAVIGATION_ACTION}/open`,
+  ADJUST = `${NAVIGATION_ACTION}/adjust`,
+  CLOSE = `${NAVIGATION_ACTION}/close`,
 }
 
 /**
  * Expected payload for navigation actions.
  */
 export namespace NavigationAction {
-  export type Activate = IntentData<{
-    /**
-     * Id to set as active.
-     */
-    id: string;
-
-    /**
-     * Location of the active item.
-     * Defaults to 'main'.
-     */
-    key?: string;
-  }>;
+  /**
+   * An additive overlay to apply to `location.active` (i.e. the result is a union of previous active and the argument)
+   */
+  export type Open = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
+   */
+  export type Close = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
+   */
+  export type Adjust = IntentData<NavigationAdjustment>;
 }

@@ -4,3 +4,4 @@
 
 export * from './testing';
 export * from './schema';
+export * from './echo-test-builder';

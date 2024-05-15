@@ -35,6 +35,9 @@ import {
   type TFunction,
   type ThemedClassName,
   ScrollArea,
+  toLocalizedString,
+  type Label,
+  isLabel,
 } from '@dxos/react-ui';
 import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
 import {
@@ -59,7 +62,7 @@ import { translationKey } from '../translations';
 
 const sectionActionDimensions = 'p-1 shrink-0 min-bs-0 is-[--rail-action] bs-min';
 
-export type StackSectionContent = MosaicDataItem & { title?: string };
+export type StackSectionContent = MosaicDataItem;
 
 export type CollapsedSections = Record<string, boolean>;
 
@@ -87,6 +90,7 @@ export type StackSectionItem = MosaicDataItem & {
   size?: SectionSize;
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
+  label?: ((data: any) => string | undefined) | Label;
   isResizable?: boolean;
 };
 
@@ -196,6 +200,19 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content>
                       <DropdownMenu.Viewport>
+                        {collapsed ? (
+                          <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                            <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                            <span className='grow'>{t('navigate to section label')}</span>
+                          </DropdownMenu.Item>
+                        ) : (
+                          <CollapsiblePrimitive.Trigger asChild>
+                            <DropdownMenu.Item>
+                              <CaretDownUp className={mx(getSize(5), 'mr-2')} />
+                              <span className='grow'>{t('collapse label')}</span>
+                            </DropdownMenu.Item>
+                          </CollapsiblePrimitive.Trigger>
+                        )}
                         <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
                           <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('add section before label')}</span>
@@ -203,10 +220,6 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                         <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
                           <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('add section after label')}</span>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                          <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                          <span className='grow'>{t('navigate to section label')}</span>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
                           <X className={mx(getSize(5), 'mr-2')} />
@@ -217,12 +230,24 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
-                <CollapsiblePrimitive.Trigger asChild>
-                  <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
-                    <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
-                    {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
+                {collapsed ? (
+                  <CollapsiblePrimitive.Trigger asChild>
+                    <Button variant='ghost' classNames={sectionActionDimensions}>
+                      <span className='sr-only'>{t('expand label')}</span>
+                      <CaretUpDown className={getSize(4)} />
+                    </Button>
+                  </CollapsiblePrimitive.Trigger>
+                ) : (
+                  <Button
+                    variant='ghost'
+                    classNames={sectionActionDimensions}
+                    onClick={onNavigate}
+                    data-testid='section.navigate-to'
+                  >
+                    <ArrowSquareOut className={mx(getSize(4))} />
+                    <span className='sr-only'>{t('navigate to section label')}</span>
                   </Button>
-                </CollapsiblePrimitive.Trigger>
+                )}
               </div>
             </div>
 
@@ -334,14 +359,13 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
     // TODO(thure): When `item` is a preview, it is a Graph.Node and has `data` instead of `object`.
     const itemObject = transformedItem.object ?? (transformedItem as unknown as { data: StackSectionContent }).data;
 
-    const title =
-      itemObject?.title ??
-      // TODO(wittjosiah): `t` function is thinks it might not always return a string here for some reason.
-      ((typeof transformedItem.placeholder === 'string'
-        ? transformedItem.placeholder
-        : transformedItem.placeholder
-          ? t(...transformedItem.placeholder)
-          : t('untitled section title')) as string);
+    const title: string =
+      (typeof transformedItem.label === 'function' ? transformedItem.label(itemObject) : undefined) ??
+      (isLabel(transformedItem.label)
+        ? toLocalizedString(transformedItem.label as Label, t)
+        : isLabel(transformedItem.placeholder)
+          ? toLocalizedString(transformedItem.placeholder, t)
+          : t('untitled section title'));
 
     const section = (
       <Section

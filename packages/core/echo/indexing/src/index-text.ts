@@ -5,14 +5,13 @@ import * as orama from '@orama/orama';
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type Filter } from '@dxos/echo-db';
-import { type ObjectStructure } from '@dxos/echo-pipeline';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements } from './types';
+import { type IndexQuery, staticImplements, type Index, type IndexStaticProps, type LoadParams } from './types';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
@@ -57,7 +56,7 @@ export class IndexText extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async find(filter: Filter): Promise<{ id: string; rank: number }[]> {
+  async find(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
     throw new Error('Method not implemented.');
   }
 
