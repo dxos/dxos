@@ -42,14 +42,14 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
  */
 const start = async () => {
   // Entry point for Replicant node process.
-  if (process.env.__DX_NODE_REPLICANT) {
+  if (process.env.__DX_REPLICANT) {
     const params: RunParams = JSON.parse(process.env.DX_RUN_PARAMS!);
     await runReplicant(params);
     return;
   }
 
   // Entry point for Replicant browser process.
-  if ((globalThis as any).__DX_BROWSER_REPLICANT) {
+  if ((globalThis as any).__DX_REPLICANT) {
     log.info('running in browser');
     const params = (globalThis as any).dx_blade_runner_env.DX_RUN_PARAMS;
     invariant(params, 'missing DX_RUN_PARAMS');
