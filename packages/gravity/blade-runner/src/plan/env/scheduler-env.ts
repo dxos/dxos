@@ -23,12 +23,19 @@ import {
 } from '../spec';
 
 export class SchedulerEnvImpl<S> implements SchedulerEnv {
+  /**
+   *  Redis client for data exchange.
+   */
   public redis: Redis;
 
-  // Redis client for subscribing to sync events.
+  /**
+   *  Redis client for subscribing to sync events.
+   */
   public redisSub: Redis;
 
-  // Start websocket REDIS proxy for browser tests.
+  /**
+   * Start websocket REDIS proxy for browser tests.
+   */
   private readonly _server = new WebSocketRedisProxy();
 
   /**
