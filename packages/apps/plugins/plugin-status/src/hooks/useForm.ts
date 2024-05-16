@@ -1,47 +1,60 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { type ChangeEvent, useState } from 'react';
+import { type ChangeEvent, useCallback, useState, useEffect } from 'react';
 
 import { type ValidationError } from '../util';
 
 interface FormOptions<T> {
-  initialState: T;
-  validate: (values: T) => ValidationError[] | undefined;
+  initialValues: T;
+  validate: (values: any) => ValidationError[] | undefined;
   onSubmit: (values: T) => void;
 }
 
-export const useForm = <T>({ initialState, validate, onSubmit }: FormOptions<T>) => {
-  const [values, setValues] = useState<T>(initialState);
+export const useForm = <T extends Record<string, any>>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
+  const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  // For now we can be super basic and use the field name as the key.
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const onValidate = useCallback(
+    (values: T) => {
+      const validationErrors = validate(values);
+      setErrors(collapseErrorArray(validationErrors ?? []));
+
+      return validationErrors === undefined;
+    },
+    [validate],
+  );
+
+  useEffect(() => {
+    onValidate(values);
+  }, [values, onValidate]);
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
-    setValues({ ...values, [name]: value });
+    setValues((values) => ({ ...values, [name]: value }));
+    setTouched((touched) => ({ ...touched, [name]: true }));
   };
 
-  const onValidate = () => {
-    const validationErrors = validate(values);
-
-    if (!validationErrors) {
-      setErrors({});
-      return;
-    }
-
-    setErrors(collapseErrorArray(validationErrors));
+  const touchOnBlur = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = event.target;
+    setTouched((touched) => ({ ...touched, [name]: true }));
   };
 
-  // Handles form submission with validation
-  const handleSubmit = () => {
-    if (Object.keys(errors).length !== 0) {
+  const handleSubmit = useCallback(() => {
+    const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
+    setTouched(allTouched);
+
+    if (!onValidate(values)) {
       return;
     }
 
     onSubmit(values);
-  };
+  }, [values, onValidate, onSubmit]);
 
-  return { values, handleChange, handleSubmit, errors, onValidate };
+  const isInvalid = Object.keys(errors).length !== 0;
+
+  return { values, handleChange, handleSubmit, errors, isInvalid, touched, touchOnBlur, onValidate };
 };
 
 const collapseErrorArray = (errors: ValidationError[]) =>

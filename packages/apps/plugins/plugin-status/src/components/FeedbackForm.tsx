@@ -3,24 +3,42 @@
 //
 
 import { X, PaperPlaneTilt } from '@phosphor-icons/react';
-import React, { type FC, type PropsWithChildren } from 'react';
+import React, { type FC, type PropsWithChildren, useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
+import { useForm } from '../hooks';
 import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
+import { validate } from '../util';
+
+const Email = S.string.pipe(
+  S.nonEmpty({ message: () => 'Email is required.' }),
+  S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i, {
+    message: () => 'Invalid email address.',
+  }),
+);
+
+const nonEmpty = (field: string) => S.nonEmpty({ message: () => `${field} is required.` });
+const maxLength = (field: string, length: number) => S.maxLength(length, { message: () => `${field} is too long.` });
 
 // -- Types and validation.
 const FeedbackFormSchema = S.struct({
-  name: S.optional(S.string),
-  email: S.optional(S.string),
-  message: S.optional(S.string),
+  name: S.string.pipe(nonEmpty('Name'), maxLength('Name', 256)),
+  email: Email.pipe(maxLength('Email', 256)),
+  message: S.string.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
 });
 
 type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;
+
+const initialValues: FeedbackFormState = {
+  name: '',
+  email: '',
+  message: '',
+};
 
 const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
   <div role='none' className={mx(className)}>
@@ -32,21 +50,20 @@ export const FeedbackForm = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
 
-  const [formState, setFormState] = React.useState<FeedbackFormState>({ name: '', email: '', message: '' });
-
   const dispatch = useIntentDispatcher();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormState((prevState) => ({ ...prevState, [name]: value }));
-  };
+  const onSubmit = useCallback(
+    (values: FeedbackFormState) => {
+      void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
+    },
+    [dispatch],
+  );
 
-  const handleSubmit = React.useCallback(() => {
-    void dispatch({
-      action: 'dxos.org/plugin/observability/capture-feedback',
-      data: formState,
-    });
-  }, [dispatch, formState]);
+  const { values, errors, handleChange, handleSubmit, isInvalid, touched, touchOnBlur } = useForm<FeedbackFormState>({
+    initialValues,
+    validate: (values) => validate(FeedbackFormSchema, values),
+    onSubmit: (values) => onSubmit(values),
+  });
 
   const textInputClasses = 'text-sm';
 
@@ -63,9 +80,12 @@ export const FeedbackForm = () => {
             placeholder={translation('name placeholder')}
             autoFocus
             name='name'
-            value={formState.name}
-            onChange={handleInputChange}
+            value={values.name}
+            onChange={handleChange}
+            onBlur={touchOnBlur}
+            aria-invalid={errors.name !== undefined}
           />
+          {touched.name && errors.name && <Input.Validation>{errors.name}</Input.Validation>}
         </Input.Root>
       </Section>
 
@@ -76,9 +96,12 @@ export const FeedbackForm = () => {
             classNames={textInputClasses}
             placeholder={translation('email input placeholder')}
             name='email'
-            value={formState.email}
-            onChange={handleInputChange}
+            value={values.email}
+            onChange={handleChange}
+            onBlur={touchOnBlur}
+            aria-invalid={errors.email !== undefined}
           />
+          {touched.email && errors.email && <Input.Validation>{errors.email}</Input.Validation>}
         </Input.Root>
       </Section>
 
@@ -91,14 +114,19 @@ export const FeedbackForm = () => {
             cols={30}
             placeholder={translation('feedback text area placeholder')}
             name='message'
-            value={formState.message}
-            onChange={handleInputChange}
+            value={values.message}
+            onChange={handleChange}
+            onBlur={touchOnBlur}
+            aria-invalid={errors.message !== undefined}
           />
+          <Input.Label>
+            {touched.message && errors.message && <Input.Validation>{errors.message}</Input.Validation>}
+          </Input.Label>
         </Input.Root>
       </Section>
 
       <Section className='space-b-2'>
-        <Button variant='primary' classNames='is-full flex gap-2' onClick={() => handleSubmit()}>
+        <Button variant='primary' classNames='is-full flex gap-2' disabled={isInvalid} onClick={() => handleSubmit()}>
           <span>{translation('send feedback label')}</span>
           <div className='grow' />
           <PaperPlaneTilt className={getSize(5)} />

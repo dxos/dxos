@@ -8,7 +8,7 @@ import { S } from '@dxos/echo-schema';
 export type ValidationError = { path: string; message: string };
 
 export const validate = <T>(schema: S.Schema<T>, data: any): ValidationError[] | undefined => {
-  const validator = S.decodeUnknownEither(schema);
+  const validator = S.decodeUnknownEither(schema, { errors: 'all' });
   const result = validator(data);
 
   if (result._tag === 'Left') {
