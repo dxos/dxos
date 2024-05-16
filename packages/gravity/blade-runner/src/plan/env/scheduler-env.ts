@@ -36,12 +36,12 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   /**
    * Start websocket REDIS proxy for browser tests.
    */
-  private readonly _server = new WebSocketRedisProxy();
+  public server = new WebSocketRedisProxy();
 
   /**
    * Used to generate Replicant ids.
    */
-  private _currentReplicant: number = 0;
+  public currentReplicant: number = 0;
 
   /**
    * List of all handles to replicants spawned by this scheduler.
@@ -83,7 +83,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
 
     this.redis.disconnect();
     this.redisSub.disconnect();
-    await this._server.destroy();
+    await this.server.destroy();
   }
 
   /**
@@ -139,7 +139,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     replicantClass: ReplicantClass<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
   ): Promise<ReplicantBrain<T>> {
-    const replicantId = String(this._currentReplicant++);
+    const replicantId = String(this.currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantId));
 
     const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;

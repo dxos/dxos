@@ -44,13 +44,13 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   constructor(
     public replicant: any,
     public params: ReplicantParams,
-    private readonly _redisOptions?: RedisOptions,
+    public redisOptions?: RedisOptions,
   ) {
     super();
-    this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.rpcRequests = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.rpcResponses = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    this.redis = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this.redisSub = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this.rpcRequests = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this.rpcResponses = new Redis(redisOptions ?? { port: REDIS_PORT });
 
     this.replicantRpcServer = new ReplicantRpcServer({
       handler: this.replicant,
