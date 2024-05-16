@@ -218,7 +218,7 @@ export class AutomergeDb {
   // TODO(Mykola): Reconcile with `getObjectById`.
   async loadObjectById<T = any>(
     objectId: string,
-    { timeout = 5000 }: { timeout?: number } = {},
+    { timeout }: { timeout?: number } = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
     // Check if deleted.
     if (this._objects.get(objectId)?.isDeleted()) {
@@ -230,13 +230,11 @@ export class AutomergeDb {
       return Promise.resolve(obj);
     }
     this._automergeDocLoader.loadObjectDocument(objectId);
+    const waitForUpdate = this._updateEvent
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .then(() => this.getObjectById(objectId));
 
-    return asyncTimeout(
-      this._updateEvent
-        .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)),
-      timeout,
-    );
+    return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
   }
 
   async batchLoadObjects(

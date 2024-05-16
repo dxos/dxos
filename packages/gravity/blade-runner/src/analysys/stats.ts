@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { entry, range } from '@dxos/util';
 
 import { LogReader, type TraceEvent, zapPreprocessor } from './logging';
-import { type PlanResults, type TestParams } from '../plan';
+import { type ReplicantsSummary, type TestParams } from '../plan';
 import { type SignalTestSpec } from '../spec';
 
 const seriesToJson = (s: Series) => {
@@ -57,7 +57,7 @@ export const mapToJson = (m: Map<string, any>) => {
   );
 };
 
-export const analyzeMessages = async (results: PlanResults) => {
+export const analyzeMessages = async (results: ReplicantsSummary) => {
   const messages = new Map<string, { sent?: number; received?: number }>();
 
   const reader = getReader(results);
@@ -97,7 +97,7 @@ export const analyzeMessages = async (results: PlanResults) => {
   });
 };
 
-export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: PlanResults) => {
+export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: ReplicantsSummary) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Series } = require('danfojs-node');
 
@@ -279,12 +279,12 @@ export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, res
   });
 };
 
-export const getReader = (results: PlanResults) => {
+export const getReader = (replicants: ReplicantsSummary<any>) => {
   const start = Date.now();
   const reader = new LogReader();
 
-  for (const [agentId, { logFile }] of Object.entries(results.agents)) {
-    reader.addFile(logFile, { preprocessor: (line) => ({ ...line, context: { ...line?.context, agentId } }) });
+  for (const [replicantId, { logFile }] of Object.entries(replicants)) {
+    reader.addFile(logFile, { preprocessor: (line) => ({ ...line, context: { ...line?.context, replicantId } }) });
   }
 
   log.info(`LogReader: ${Date.now() - start}ms`);

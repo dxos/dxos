@@ -7698,12 +7698,18 @@ importers:
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
@@ -7725,6 +7731,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/kv-store':
+        specifier: workspace:*
+        version: link:../../common/kv-store
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -7746,6 +7755,9 @@ importers:
       '@dxos/random-access-storage':
         specifier: workspace:*
         version: link:../../common/random-access-storage
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
       '@dxos/signal':
         specifier: workspace:*
         version: link:../../core/mesh/signal
