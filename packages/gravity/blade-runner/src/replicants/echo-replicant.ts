@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
-import { ReplicantRegistry } from '../plan';
+import { type ReplicantEnv, ReplicantRegistry } from '../plan';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
   content: S.string,
@@ -22,19 +22,20 @@ export class EchoReplicant {
   private _testPeer?: EchoTestPeer = undefined;
   private _db?: EchoDatabaseImpl = undefined;
 
+  constructor(private readonly env: () => ReplicantEnv) {}
+
   async open({
     spaceKey = PublicKey.random().toHex(),
-    path,
     rootUrl,
   }: { spaceKey?: string; path?: string; rootUrl?: AutomergeUrl } = {}) {
-    this._testPeer = new EchoTestPeer(path ? createTestLevel(path) : undefined);
+    this._testPeer = new EchoTestPeer(createTestLevel(this.env().params.outDir));
     await this._testPeer.open();
     this._db = rootUrl
       ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
       : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
     this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
 
-    log.trace('dxos.echo-replicant.open', { spaceKey, path });
+    log.trace('dxos.echo-replicant.open', { spaceKey });
     return {
       spaceKey: this._db.spaceKey.toHex(),
       rootUrl: this._db.rootUrl,

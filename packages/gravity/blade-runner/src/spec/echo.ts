@@ -55,15 +55,14 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     };
   }
 
-  async run(env: SchedulerEnv<EchoTestSpec>, params: TestParams<EchoTestSpec>) {
+  async run(env: SchedulerEnv, params: TestParams<EchoTestSpec>) {
     const results = {} as EchoTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
     const spaceKey = PublicKey.random().toHex();
 
     const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
-    // TODO(mykola): `path` should be a constant.
-    const { rootUrl } = await replicant.brain.open({ spaceKey, path: userDataDir });
+    const { rootUrl } = await replicant.brain.open({ spaceKey });
 
     //
     // Create objects.
