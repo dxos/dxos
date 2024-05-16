@@ -615,6 +615,9 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
+      '@braneframe/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugins/plugin-status
       '@braneframe/plugin-table':
         specifier: workspace:*
         version: link:../plugins/plugin-table
@@ -3347,6 +3350,76 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.10(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-status:
+    dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      leaflet:
+        specifier: ^1.9.3
+        version: 1.9.3
+      react-leaflet:
+        specifier: ^4.2.0
+        version: 4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/leaflet':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
