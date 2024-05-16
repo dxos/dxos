@@ -31,7 +31,7 @@ export const runReplicant = async ({ replicantParams, options }: RunParams) => {
     ctx.onDispose(() => env.close());
     process.once('beforeExit', () => env.close());
   } catch (err) {
-    log.catch(err, { replicantId: replicantParams.replicantId });
+    log.catch(err, { params: replicantParams });
     finish(1);
   }
 };

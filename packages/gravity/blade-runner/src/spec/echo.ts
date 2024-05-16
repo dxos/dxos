@@ -116,9 +116,5 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return results;
   }
 
-  async analyze(
-    params: TestParams<EchoTestSpec>,
-    summary: ReplicantsSummary<EchoTestSpec>,
-    result: EchoTestResult,
-  ): Promise<any> {}
+  async analyze(params: TestParams<EchoTestSpec>, summary: ReplicantsSummary, result: EchoTestResult): Promise<any> {}
 }
