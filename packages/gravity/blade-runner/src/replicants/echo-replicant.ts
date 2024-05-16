@@ -28,7 +28,7 @@ export class EchoReplicant {
     spaceKey = PublicKey.random().toHex(),
     rootUrl,
   }: { spaceKey?: string; path?: string; rootUrl?: AutomergeUrl } = {}) {
-    this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.outDir));
+    this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
     await this._testPeer.open();
     this._db = rootUrl
       ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
