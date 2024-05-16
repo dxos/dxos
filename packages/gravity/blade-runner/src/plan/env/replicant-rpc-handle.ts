@@ -10,6 +10,8 @@ import { type ReplicantClass } from '../interface';
 export const open = Symbol('open');
 export const close = Symbol('close');
 
+export type ReplicantRpcHandleParams<T> = { replicantClass: ReplicantClass<T>; rpcPort: RpcPort };
+
 /**
  * Client for a replicant RPC.
  * Is created in orchestrator process.
@@ -17,7 +19,7 @@ export const close = Symbol('close');
 export class ReplicantRpcHandle<T> {
   private readonly _rpc: RpcPeer;
 
-  constructor({ replicantClass, rpcPort }: { replicantClass: ReplicantClass<T>; rpcPort: RpcPort }) {
+  constructor({ replicantClass, rpcPort }: ReplicantRpcHandleParams<T>) {
     this._rpc = new RpcPeer({
       callHandler: async () => {
         throw new Error('Method not implemented');
