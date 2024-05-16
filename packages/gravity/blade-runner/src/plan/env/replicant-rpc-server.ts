@@ -7,6 +7,14 @@ import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
 import { rpcCodec } from './util';
 
+export type ReplicantRpcServerParams = {
+  /**
+   *  Instance of the replicant.
+   */
+  handler: any;
+  port: RpcPort;
+};
+
 /**
  * Server for a replicant RPC.
  * Is created in replicant process.
@@ -14,11 +22,7 @@ import { rpcCodec } from './util';
 export class ReplicantRpcServer extends Resource {
   private readonly _rpc: RpcPeer;
 
-  /**
-   *
-   * @param handler - Instance of the replicant.
-   */
-  constructor({ handler, port }: { handler: any; port: RpcPort }) {
+  constructor({ handler, port }: ReplicantRpcServerParams) {
     super();
     this._rpc = new RpcPeer({
       callHandler: async (method, payload) => {
