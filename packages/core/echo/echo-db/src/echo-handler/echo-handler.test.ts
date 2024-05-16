@@ -7,7 +7,7 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
 import {
   Expando,
   create,
@@ -460,6 +460,21 @@ describe('Reactive Object with ECHO database', () => {
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
+    });
+
+    test('json serialization with references', async () => {
+      const { db } = await builder.createDatabase();
+
+      const org = db.add({ name: 'DXOS' });
+      const employee = db.add({ name: 'John', worksAt: org });
+
+      const employeeJson = JSON.parse(JSON.stringify(employee));
+      expect(employeeJson).to.deep.eq({
+        '@id': employee.id,
+        '@meta': { keys: [] },
+        name: 'John',
+        worksAt: encodeReference(new Reference(org.id)),
+      });
     });
   });
 
