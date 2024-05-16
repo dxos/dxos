@@ -393,10 +393,9 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
+      const timeout = options?.timeout ?? this._params.timeout;
       const waiting =
-        (options?.timeout ?? this._params.timeout) === 0
-          ? responseReceived
-          : asyncTimeout<any>(responseReceived, options?.timeout ?? this._params.timeout ?? DEFAULT_TIMEOUT);
+        timeout === 0 ? responseReceived : asyncTimeout<any>(responseReceived, timeout ?? DEFAULT_TIMEOUT);
 
       await Promise.race([sending, waiting]);
       response = await waiting;
