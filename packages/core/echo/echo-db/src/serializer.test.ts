@@ -15,7 +15,6 @@ import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
 import { Serializer, type SerializedSpace } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
-import { inspect } from 'util';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
