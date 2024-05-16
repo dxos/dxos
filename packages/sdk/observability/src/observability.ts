@@ -71,6 +71,7 @@ export class Observability {
   // TODO(wittjosiah): Generic error logging interface.
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
+  private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
   private _setTag?: (key: string, value: string) => void;
 
   private _secrets: ObservabilitySecrets;
@@ -450,8 +451,10 @@ export class Observability {
 
   private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
-      const { captureException, configureTracing, init, setTag } = await import('./sentry');
+      const { captureException, configureTracing, captureUserFeedback, init, setTag } = await import('./sentry');
       this._captureException = captureException;
+      this._captureUserFeedback = captureUserFeedback;
+
       this._setTag = setTag;
 
       // TODO(nf): refactor package into this one?
@@ -501,7 +504,10 @@ export class Observability {
    *
    * The default implementation uses Sentry.
    */
-  captureUserFeedback(feedback: any) {
-    throw new Error('Method not implemented.');
+  captureUserFeedback(name: string, email: string, message: string) {
+    // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
+    // - Maybe if telemetry is disable we shouldn't enable replay.
+    // - (Check the browser.ts implementation for reference).
+    void this._captureUserFeedback?.(name, email, message);
   }
 }

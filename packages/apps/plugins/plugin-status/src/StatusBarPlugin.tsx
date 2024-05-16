@@ -11,7 +11,6 @@ import {
   type IntentResolverProvides,
   type IntentResolver,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
 
 import { StatusBarImpl } from './components';
 import { mkIntentBuilder } from './lib';
@@ -37,17 +36,7 @@ export const statusBarIntent = mkIntentBuilder<StatusBarActions>(meta.id);
 
 export type StatusBarPluginProvides = SurfaceProvides & TranslationsProvides & IntentResolverProvides;
 
-// -- State and events.
-const state = create({ feedbackOpen: false });
-
-const resolver: IntentResolver = async (intent, _plugins) => {
-  switch (intent.action) {
-    case StatusBarAction.PROVIDE_FEEDBACK: {
-      state.feedbackOpen = true;
-      break;
-    }
-  }
-};
+const resolver: IntentResolver = async (intent, _plugins) => {};
 
 // -- Root plugin definition.
 export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => {

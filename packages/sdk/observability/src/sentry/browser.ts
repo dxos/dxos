@@ -8,10 +8,13 @@ import {
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
   captureMessage as naturalCaptureMessage,
+  sendFeedback as naturalSendFeedback,
   withScope as naturalWithScope,
   BrowserTracing,
   replayIntegration,
   breadcrumbsIntegration,
+  feedbackIntegration,
+  sendFeedback,
 } from '@sentry/browser';
 import { httpClientIntegration } from '@sentry/integrations';
 
@@ -42,6 +45,7 @@ export const init = (options: InitOptions) => {
       integrations: [
         breadcrumbsIntegration({ console: false, fetch: false }),
         httpClientIntegration({ failedRequestStatusCodes: [[400, 599]] }),
+        feedbackIntegration({ autoInject: false }),
         ...(options.tracing ? [new BrowserTracing()] : []),
         ...(options.replay ? [replayIntegration({ blockAllMedia: true, maskAllText: true })] : []),
       ],
@@ -108,6 +112,11 @@ export const captureMessage: typeof naturalCaptureMessage = (exception, captureC
     log.catch('Failed to capture message', err);
     return 'unknown';
   }
+};
+
+export const captureUserFeedback = (name: string, email: string, message: string) => {
+  console.log('captureUserFeedback', { name, email, message });
+  return sendFeedback({ name, email, message }, { includeReplay: true });
 };
 
 export const withScope = naturalWithScope;

@@ -36,7 +36,7 @@ import type { EventOptions } from '@dxos/observability/segment';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
-import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction } from './meta';
+import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
 import translations from './translations';
 
 export type ObservabilityPluginState = {
@@ -197,12 +197,9 @@ export const ObservabilityPlugin = (options: {
             }
 
             case ObservabilityAction.CAPTURE_USER_FEEDBACK: {
-              // const data = intent.data as FeedbackOptions;
+              const feedback = intent.data as UserFeedback;
 
-              // TODO(Zan): Pipe data through this
-              const feedback = {};
-              observability.captureUserFeedback(feedback);
-              return { data: feedback };
+              observability.captureUserFeedback(feedback.email, feedback.name, feedback.message);
             }
           }
         },
