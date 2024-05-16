@@ -25,7 +25,7 @@ export type ResourceUsageStats = {
   }[];
 };
 
-export const analyzeResourceUsage = async <S>(results: ReplicantsSummary<S>): Promise<ResourceUsageStats> => {
+export const analyzeResourceUsage = async (results: ReplicantsSummary): Promise<ResourceUsageStats> => {
   const reader = getReader(results);
 
   const stats: ResourceUsageStats = {};

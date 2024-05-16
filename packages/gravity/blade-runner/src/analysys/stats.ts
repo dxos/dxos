@@ -57,7 +57,7 @@ export const mapToJson = (m: Map<string, any>) => {
   );
 };
 
-export const analyzeMessages = async (results: ReplicantsSummary<SignalTestSpec>) => {
+export const analyzeMessages = async (results: ReplicantsSummary) => {
   const messages = new Map<string, { sent?: number; received?: number }>();
 
   const reader = getReader(results);
@@ -97,10 +97,7 @@ export const analyzeMessages = async (results: ReplicantsSummary<SignalTestSpec>
   });
 };
 
-export const analyzeSwarmEvents = async (
-  params: TestParams<SignalTestSpec>,
-  results: ReplicantsSummary<SignalTestSpec>,
-) => {
+export const analyzeSwarmEvents = async (params: TestParams<SignalTestSpec>, results: ReplicantsSummary) => {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Series } = require('danfojs-node');
 
