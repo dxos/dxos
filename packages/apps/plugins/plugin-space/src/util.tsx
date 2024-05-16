@@ -226,6 +226,7 @@ export const updateGraphWithSpace = ({
               icon: (props: IconProps) => <Database {...props} />,
               disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
+              disabled: Migrations.running(space),
             },
             edges: [[space.key.toHex(), 'inbound']],
           },
