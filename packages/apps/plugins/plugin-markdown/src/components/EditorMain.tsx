@@ -25,7 +25,7 @@ import {
   useFormattingState,
   processAction,
 } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -104,10 +104,10 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <>
+    <div role='none' className='contents group/editor'>
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator'
           state={formattingState}
           onAction={handleAction}
         >
@@ -137,17 +137,17 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           moveToEndOfLine
           className={mx(
             focusRing,
-            attentionSurface,
             textBlockWidth,
             editorFillLayoutRoot,
-            'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+            'group-focus-within/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
           ref={editorRefCallback}
         />
+        a
       </div>
-    </>
+    </div>
   );
 };
 
