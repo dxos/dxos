@@ -48,7 +48,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return {
       platform: 'chromium',
 
-      numberOfObjects: 400,
+      numberOfObjects: 100,
       numberOfInsertions: 8,
       insertionSize: 128,
       queryResolution: 'index',
