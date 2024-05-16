@@ -7,7 +7,7 @@ import React, { type ChangeEvent, useState } from 'react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
-import { Actions, Action, Emoji, StepHeading } from '../../../components';
+import { Actions, Action, Emoji, StepHeading, Label } from '../../../components';
 import { type JoinStepProps } from '../JoinPanelProps';
 
 const pinLength = 6;
@@ -44,8 +44,7 @@ export const InvitationAuthenticator = ({
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
-        {invitationId && <Emoji text={hexToEmoji(invitationId)} />}
+      <div role='none' className='grow flex flex-col justify-center gap-4'>
         <Input.Root
           {...(failed && {
             validationValence: 'error',
@@ -74,6 +73,15 @@ export const InvitationAuthenticator = ({
             </Input.DescriptionAndValidation>
           )}
         </Input.Root>
+
+        {invitationId && (
+          <>
+            <Label>Be sure the other device is showing this symbol:</Label>
+            <div className='flex justify-center'>
+              <Emoji text={hexToEmoji(invitationId)} />
+            </div>
+          </>
+        )}
       </div>
       <Actions>
         <Action
