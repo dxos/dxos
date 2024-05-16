@@ -30,8 +30,8 @@ export interface ReplicantBrain<T> {
    * Field that holds the RPC handle to the replicant.
    */
   brain: RpcHandle<T>;
-  kill(signal?: NodeJS.Signals | number): void;
   params: ReplicantParams;
+  kill(signal?: NodeJS.Signals | number): void;
 }
 
 /**

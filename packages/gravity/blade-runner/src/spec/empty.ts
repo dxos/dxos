@@ -36,7 +36,7 @@ export class EmptyTestPlan implements TestPlan<EmptyTestSpec> {
     log.info('result', { result });
   }
 
-  async analyze(params: TestParams<EmptyTestSpec>, results: ReplicantsSummary<EmptyTestSpec>): Promise<any> {
+  async analyze(params: TestParams<EmptyTestSpec>, results: ReplicantsSummary): Promise<any> {
     log.info('finished shutdown');
   }
 }
