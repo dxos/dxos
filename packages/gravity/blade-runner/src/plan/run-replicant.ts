@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
@@ -16,7 +15,6 @@ import { type ReplicantParams } from './spec';
  * Entry point for process running in agent mode.
  */
 export const runReplicant = async ({ replicantParams, options }: RunParams) => {
-  const ctx = new Context();
   try {
     initLogProcessor(replicantParams);
 
@@ -28,7 +26,6 @@ export const runReplicant = async ({ replicantParams, options }: RunParams) => {
 
     env.setReplicant(replicant);
     await env.open();
-    ctx.onDispose(() => env.close());
     process.once('beforeExit', () => env.close());
   } catch (err) {
     log.catch(err, { params: replicantParams });
