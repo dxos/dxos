@@ -24,7 +24,7 @@ const noOpProps: JoinPanelImplProps = {
 
 const JoinDialog = (args: Partial<JoinPanelImplProps>) => (
   <StorybookDialog inOverlayLayout>
-    <JoinPanelImpl {...noOpProps} {...args} />
+    <JoinPanelImpl {...noOpProps} {...args} IdentityInput={IdentityInputImpl} ConfirmReset={ConfirmResetImpl} />
   </StorybookDialog>
 );
 
@@ -33,60 +33,32 @@ export default {
   component: JoinDialog,
   decorators: [withTheme],
   parameters: { chromatic: { disableSnapshot: false } },
-  args: {
-    IdentityInput: IdentityInputImpl,
-    ResetIdentity: ConfirmResetImpl,
-  },
 };
 
-export const AdditionMethodChooser = {
-  args: { mode: 'halo-only', activeView: 'addition method chooser' },
-};
+export const AdditionMethodChooser = () => <JoinDialog mode='halo-only' activeView='addition method chooser' />;
 
-export const ResetIdentity = {
-  args: { mode: 'halo-only', activeView: 'reset identity confirmation' },
-};
+export const ResetIdentityConfirmation = () => <JoinDialog mode='halo-only' activeView='reset identity confirmation' />;
 
-export const CreateIdentityInput = {
-  args: { mode: 'halo-only', activeView: 'create identity input' },
-};
+export const CreateIdentityInput = () => <JoinDialog mode='halo-only' activeView='create identity input' />;
 
-export const RecoverIdentityInput = {
-  args: { mode: 'halo-only', activeView: 'recover identity input' },
-};
+export const RecoverIdentityInput = () => <JoinDialog mode='halo-only' activeView='recover identity input' />;
 
-export const HaloInvitationInput = {
-  args: { mode: 'halo-only', activeView: 'halo invitation input' },
-};
+export const HaloInvitationInput = () => <JoinDialog mode='halo-only' activeView='halo invitation input' />;
 
-export const HaloInvitationRescuer = {
-  args: { mode: 'halo-only', activeView: 'halo invitation rescuer' },
-};
+export const HaloInvitationRescuer = () => <JoinDialog mode='halo-only' activeView='halo invitation rescuer' />;
 
-export const HaloInvitationAuthenticator = {
-  args: { mode: 'halo-only', activeView: 'halo invitation authenticator' },
-};
+export const HaloInvitationAuthenticator = () => (
+  <JoinDialog mode='halo-only' activeView='halo invitation authenticator' />
+);
 
-export const HaloInvitationAccepted = {
-  args: { mode: 'halo-only', activeView: 'halo invitation accepted' },
-};
+export const HaloInvitationAccepted = () => <JoinDialog mode='halo-only' activeView='halo invitation accepted' />;
 
-export const IdentityAdded = {
-  args: { mode: 'halo-only', activeView: 'identity added' },
-};
+export const IdentityAdded = () => <JoinDialog mode='halo-only' activeView='identity added' />;
 
-export const SpaceInvitationInput = {
-  args: { activeView: 'space invitation input' },
-};
+export const SpaceInvitationInput = () => <JoinDialog activeView='space invitation input' />;
 
-export const SpaceInvitationRescuer = {
-  args: { activeView: 'space invitation rescuer' },
-};
+export const SpaceInvitationRescuer = () => <JoinDialog activeView='space invitation rescuer' />;
 
-export const SpaceInvitationAuthenticator = {
-  args: { activeView: 'space invitation authenticator' },
-};
+export const SpaceInvitationAuthenticator = () => <JoinDialog activeView='space invitation authenticator' />;
 
-export const SpaceInvitationAccepted = {
-  args: { activeView: 'space invitation accepted' },
-};
+export const SpaceInvitationAccepted = () => <JoinDialog activeView='space invitation accepted' />;
