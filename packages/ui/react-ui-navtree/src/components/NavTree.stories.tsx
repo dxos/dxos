@@ -88,10 +88,10 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
 
   const [leafItemPaths, _] = useState<string[]>(leafItemPathAcc);
 
-  const [current, setCurrent] = useState<string>(leafItemPaths[0]);
+  const [current, setCurrent] = useState<Set<string>>(new Set([leafItemPaths[0]]));
 
   const handleSelect = useCallback(({ path }: { path: string }) => {
-    setCurrent(path);
+    setCurrent(new Set([path]));
   }, []);
 
   const handleOver = useCallback(({ active, over }: MosaicMoveEvent<number>) => {
@@ -136,9 +136,9 @@ const StorybookNavTree = ({ id = ROOT_ID, ...props }: StorybookNavTreeProps) => 
       <Button
         classNames='fixed block-start-2 inline-end-2'
         onClick={() => {
-          const index = leafItemPaths.indexOf(current);
+          const index = leafItemPaths.indexOf(Array.from(current)[0]);
           const nextPath = leafItemPaths[(index + 1) % leafItemPaths.length];
-          setCurrent(nextPath);
+          setCurrent(new Set([nextPath]));
         }}
       >
         Change current
