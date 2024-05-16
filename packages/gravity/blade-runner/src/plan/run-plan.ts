@@ -25,7 +25,7 @@ type TestSummary = {
   spec: any;
   stats: any;
   results: any;
-  replicants: ReplicantsSummary<any>;
+  replicants: ReplicantsSummary;
   diagnostics: {
     resourceUsage: ResourceUsageStats;
   };

@@ -14,11 +14,11 @@ import { type RunParams } from './plan/run-process';
 import {
   EmptyTestPlan,
   EchoTestPlan,
+  StorageTestPlan,
   // ReplicationTestPlan,
   // SignalTestPlan,
   // TransportTestPlan,
   // AutomergeTestPlan,
-  // StorageTestPlan,
 } from './spec';
 
 // eslint-disable-next-line unused-imports/no-unused-vars
@@ -30,7 +30,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
   echo: () => new EchoTestPlan(),
   // replication: () => new ReplicationTestPlan(),
   // automerge: () => new AutomergeTestPlan(),
-  // storage: () => new StorageTestPlan(),
+  storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
 

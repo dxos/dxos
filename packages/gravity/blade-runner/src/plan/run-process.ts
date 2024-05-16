@@ -23,19 +23,19 @@ export type ProcessHandle = {
   kill: (signal?: NodeJS.Signals | number) => void;
 };
 
-export type RunParams<S> = {
-  agentParams: ReplicantParams<S>;
+export type RunParams = {
+  replicantParams: ReplicantParams;
   options: GlobalOptions;
 };
 
-export const runNode = <S>(params: RunParams<S>): ProcessHandle => {
+export const runNode = (params: RunParams): ProcessHandle => {
   const execArgv = process.execArgv;
 
   if (params.options.profile) {
     execArgv.push(
       '--cpu-prof', //
       '--cpu-prof-dir',
-      params.agentParams.outDir,
+      params.replicantParams.outDir,
       '--cpu-prof-name',
       'agent.cpuprofile',
     );
@@ -44,7 +44,7 @@ export const runNode = <S>(params: RunParams<S>): ProcessHandle => {
   const childProcess = fork(process.argv[1], {
     execArgv: params.options.debug
       ? [
-          '--inspect=:' + (DEBUG_PORT_START + params.agentParams.replicantId), //
+          '--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId), //
           ...execArgv,
         ]
       : execArgv,
@@ -73,13 +73,13 @@ export const runNode = <S>(params: RunParams<S>): ProcessHandle => {
   };
 };
 
-export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Promise<ProcessHandle> => {
+export const runBrowser = async ({ replicantParams, options }: RunParams): Promise<ProcessHandle> => {
   const ctx = new Context();
 
   const start = Date.now();
-  invariant(agentParams.runtime.platform);
+  invariant(replicantParams.runtime.platform);
 
-  const { page, context } = await getNewBrowserContext(agentParams.runtime, {
+  const { page, context } = await getNewBrowserContext(replicantParams.runtime, {
     headless: options.headless ?? true,
   });
   ctx.onDispose(async () => {
@@ -100,7 +100,7 @@ export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Pro
   });
 
   const fileProcessor = createFileProcessor({
-    pathOrFd: agentParams.logFile,
+    pathOrFd: replicantParams.logFile,
     levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
   });
 
@@ -138,7 +138,7 @@ export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Pro
       window.__DX_BROWSER_REPLICANT = true
       window.dx_blade_runner_env = ${JSON.stringify({
         ...process.env,
-        DX_RUN_PARAMS: JSON.stringify({ agentParams, options }),
+        DX_RUN_PARAMS: JSON.stringify({ replicantParams, options }),
       })}
     </script>
     <script type="module" src="index.js"></script>
@@ -148,7 +148,7 @@ export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Pro
     },
     '/index.js': {
       contentType: 'text/javascript',
-      data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
+      data: await readFile(join(replicantParams.planRunDir, 'artifacts', 'browser.js'), 'utf8'),
     },
   });
 
@@ -160,7 +160,7 @@ export const runBrowser = async <S>({ agentParams, options }: RunParams<S>): Pro
   await page.goto(`http://localhost:${port}`, { timeout: 0 });
 
   log.info('browser started and page loaded', {
-    replicantId: agentParams.replicantId,
+    replicantId: replicantParams.replicantId,
     time: Date.now() - start,
   });
 

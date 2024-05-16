@@ -17,7 +17,7 @@ import { type ReplicantParams } from '../spec';
 
 export { type RedisOptions };
 
-export class ReplicantEnvImpl<S> extends Resource implements ReplicantEnv {
+export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -39,7 +39,7 @@ export class ReplicantEnvImpl<S> extends Resource implements ReplicantEnv {
 
   constructor(
     public replicant: any,
-    public params: ReplicantParams<S>,
+    public params: ReplicantParams,
     private readonly _redisOptions?: RedisOptions,
   ) {
     super();

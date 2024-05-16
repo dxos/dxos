@@ -22,7 +22,7 @@ import {
   type ReplicantsSummary,
 } from '../spec';
 
-export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
+export class SchedulerEnvImpl<S> implements SchedulerEnv {
   public redis: Redis;
 
   // Redis client for subscribing to sync events.
@@ -36,7 +36,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
    */
   private _currentReplicant: number = 0;
 
-  public replicants = new Set<Replicant<any, S>>();
+  public replicants = new Set<Replicant<any>>();
 
   constructor(
     private readonly _options: GlobalOptions,
@@ -50,8 +50,8 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
     this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
-  getReplicantsSummary(): ReplicantsSummary<S> {
-    const summary: ReplicantsSummary<S> = {};
+  getReplicantsSummary(): ReplicantsSummary {
+    const summary: ReplicantsSummary = {};
 
     for (const replicant of this.replicants) {
       summary[replicant.params.replicantId] = replicant.params;
@@ -122,7 +122,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
   async spawn<T>(
     brain: ReplicantBrain<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
-  ): Promise<Replicant<T, S>> {
+  ): Promise<Replicant<T>> {
     const replicantId = String(this._currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantId));
 
@@ -156,7 +156,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
     await rpcHandle[open]();
 
-    const agentParams: ReplicantParams<S> = {
+    const replicantParams: ReplicantParams = {
       replicantId,
       outDir,
       logFile: path.join(outDir, AGENT_LOG_FILE),
@@ -167,18 +167,17 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
 
       runtime,
       testId: this.params.testId,
-      spec: this.params.spec,
     };
 
     let processHandle: ProcessHandle;
     if (runtime.platform === 'nodejs') {
       processHandle = runNode({
-        agentParams,
+        replicantParams,
         options: this._options,
       });
     } else {
       processHandle = await runBrowser({
-        agentParams,
+        replicantParams,
         options: this._options,
       });
     }
@@ -191,7 +190,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv<S> {
         processHandle.kill(signal);
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
-      params: agentParams,
+      params: replicantParams,
     };
 
     this.replicants.add(replicantHandle);

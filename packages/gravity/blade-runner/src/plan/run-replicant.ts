@@ -15,27 +15,28 @@ import { type ReplicantParams } from './spec';
 /**
  * Entry point for process running in agent mode.
  */
-export const runReplicant = async <S>({ agentParams: params, options }: RunParams<S>) => {
+export const runReplicant = async ({ replicantParams, options }: RunParams) => {
   const ctx = new Context();
   try {
-    initLogProcessor(params);
-    const replicant = new (ReplicantRegistry.instance.get(params.replicantClass))();
+    initLogProcessor(replicantParams);
 
-    const env = new ReplicantEnvImpl<S>(
+    const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(() => env);
+
+    const env: ReplicantEnvImpl = new ReplicantEnvImpl(
       replicant,
-      params,
+      replicantParams,
       !isNode() ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions) : undefined,
     );
     await env.open();
     ctx.onDispose(() => env.close());
     process.once('beforeExit', () => env.close());
   } catch (err) {
-    log.catch(err, { replicantId: params.replicantId });
+    log.catch(err, { replicantId: replicantParams.replicantId });
     finish(1);
   }
 };
 
-const initLogProcessor = <S>(params: ReplicantParams<S>) => {
+const initLogProcessor = (params: ReplicantParams) => {
   if (isNode()) {
     log.addProcessor(
       createFileProcessor({

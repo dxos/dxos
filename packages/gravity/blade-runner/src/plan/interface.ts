@@ -9,18 +9,20 @@ export interface CommonTestEnv {
   syncData<T>(key: string, amount: number, data?: T): Promise<T[]>;
 }
 
-export interface ReplicantEnv extends CommonTestEnv {}
-
-export interface SchedulerEnv<S> extends CommonTestEnv {
-  spawn<T>(brain: ReplicantBrain<T>, runtime: ReplicantRuntimeParams): Promise<Replicant<T, S>>;
+export interface ReplicantEnv extends CommonTestEnv {
+  params: ReplicantParams;
 }
 
-export type ReplicantBrain<T> = { new (): T };
+export interface SchedulerEnv extends CommonTestEnv {
+  spawn<T>(brain: ReplicantBrain<T>, runtime: ReplicantRuntimeParams): Promise<Replicant<T>>;
+}
 
-export interface Replicant<T, S> {
+export type ReplicantBrain<T> = { new (replicantEnv: () => ReplicantEnv): T };
+
+export interface Replicant<T> {
   brain: RpcHandle<T>;
   kill(signal?: NodeJS.Signals | number): void;
-  params: ReplicantParams<S>;
+  params: ReplicantParams;
 }
 
 export type RpcHandle<T> = {
