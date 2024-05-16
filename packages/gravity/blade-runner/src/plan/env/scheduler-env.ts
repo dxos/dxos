@@ -83,6 +83,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     await this._server.destroy();
   }
 
+  /**
+   * Waits for all agents to reach this statement.
+   */
   async syncBarrier(key: string, amount: number) {
     const syncKey = `${this.params.testId}:${key}`;
 
@@ -107,6 +110,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     return result;
   }
 
+  /**
+   * Waits for all agents to reach this statement.
+   */
   private async _barrier(syncKey: string, count: number) {
     const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
