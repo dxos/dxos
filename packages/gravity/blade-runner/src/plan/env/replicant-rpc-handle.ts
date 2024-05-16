@@ -41,6 +41,7 @@ export class ReplicantRpcHandle<T> {
     }
   }
 
+  // NOTE: Used symbols here to not overlap with methods from `replicantClass`
   [open] = async () => {
     await this._rpc.open();
   };
