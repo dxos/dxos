@@ -64,7 +64,7 @@ const logSyncCall = (
   combinedMeta: CallMetadata,
 ) => {
   log.info(
-    `.${formatFunction(methodName)} (${formattedArgs}) ${chalk.gray('resolve')} ${inspect(result, false, 1, true)}`,
+    `.${formatFunction(methodName)} (${formattedArgs}) ${chalk.gray('=>')} ${inspect(result, false, 1, true)}`,
     {},
     combinedMeta,
   );

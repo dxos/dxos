@@ -231,9 +231,10 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 : undefined;
           const space = doc && getSpace(doc);
           const extensions = useMemo(() => {
-            const query = space?.db.query(Filter.schema(DocumentType));
-            query?.subscribe();
-            return getCustomExtensions(doc, query);
+            // TODO(wittjosiah): Autocomplete is not working and this query is causing performance issues.
+            // const query = space?.db.query(Filter.schema(DocumentType));
+            // query?.subscribe();
+            return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
           switch (role) {
