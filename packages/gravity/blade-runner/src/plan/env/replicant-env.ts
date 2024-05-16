@@ -39,10 +39,9 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
    */
   private readonly _rpcResponses: Redis;
 
-  private readonly _replicantRpcServer: ReplicantRpcServer;
+  private _replicantRpcServer!: ReplicantRpcServer;
 
   constructor(
-    public replicant: any,
     public params: ReplicantParams,
     public redisOptions?: RedisOptions,
   ) {
@@ -52,8 +51,13 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     this._rpcRequests = new Redis(redisOptions ?? { port: REDIS_PORT });
     this._rpcResponses = new Redis(redisOptions ?? { port: REDIS_PORT });
 
+    this._redis.on('error', (err) => log.info('Redis Client Error', err));
+    this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
+  }
+
+  setReplicant(replicant: any) {
     this._replicantRpcServer = new ReplicantRpcServer({
-      handler: this.replicant,
+      handler: replicant,
       port: createRedisRpcPort({
         sendClient: this._rpcRequests,
         receiveClient: this._rpcResponses,
@@ -61,9 +65,6 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
         receiveQueue: this.params.redisPortReceiveQueue,
       }),
     });
-
-    this._redis.on('error', (err) => log.info('Redis Client Error', err));
-    this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   protected override async _open() {

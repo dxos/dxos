@@ -117,7 +117,7 @@ export class SignalReplicant {
     scheduleTaskInterval(
       ctx,
       async () => {
-        await this.env().syncBarrier(`iteration-${testCounter}`, replicants);
+        await this.env.syncBarrier(`iteration-${testCounter}`, replicants);
         await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
         testCounter++;
       },

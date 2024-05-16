@@ -20,7 +20,7 @@ export interface SchedulerEnv extends CommonTestEnv {
 /**
  * Replicant class.
  */
-export type ReplicantClass<T> = { new (replicantEnv: () => ReplicantEnv): T };
+export type ReplicantClass<T> = { new (replicantEnv: ReplicantEnv): T };
 
 /**
  * RPC handle to a replicant that is running in a separate process or browser.

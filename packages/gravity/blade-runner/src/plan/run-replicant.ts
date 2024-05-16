@@ -20,13 +20,13 @@ export const runReplicant = async ({ replicantParams, options }: RunParams) => {
   try {
     initLogProcessor(replicantParams);
 
-    const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(() => env);
-
     const env: ReplicantEnvImpl = new ReplicantEnvImpl(
-      replicant,
       replicantParams,
       !isNode() ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions) : undefined,
     );
+    const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(env);
+
+    env.setReplicant(replicant);
     await env.open();
     ctx.onDispose(() => env.close());
     process.once('beforeExit', () => env.close());

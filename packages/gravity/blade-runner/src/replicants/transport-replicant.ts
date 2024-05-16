@@ -109,7 +109,7 @@ export class TransportReplicant {
           }),
         );
 
-        await this.env().syncBarrier(`swarms are ready on ${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`swarms are ready on ${testCounter}`, amountOfReplicants);
       }
 
       await sleep(10_000);
@@ -146,7 +146,7 @@ export class TransportReplicant {
         });
 
         log.info('streams started', { testCounter, swarmPeerId, targetStreems: targetStreams, actualStreams });
-        await this.env().syncBarrier(`streams are started at ${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`streams are started at ${testCounter}`, amountOfReplicants);
       }
 
       await sleep(streamsDelay);
@@ -170,7 +170,7 @@ export class TransportReplicant {
         });
 
         log.info('test connections done', { testCounter, swarmPeerId, targetConnections, actualConnections });
-        await this.env().syncBarrier(`connections are tested on ${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`connections are tested on ${testCounter}`, amountOfReplicants);
       }
 
       // Test delayed swarm.
@@ -206,7 +206,7 @@ export class TransportReplicant {
           fullSwarmTimeout,
         });
 
-        await this.env().syncBarrier(`delayed swarm is tested on ${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`delayed swarm is tested on ${testCounter}`, amountOfReplicants);
       }
 
       // Close streams.
@@ -226,7 +226,7 @@ export class TransportReplicant {
         });
 
         log.info('streams closed', { testCounter, swarmPeerId });
-        await this.env().syncBarrier(`streams are closed at ${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`streams are closed at ${testCounter}`, amountOfReplicants);
       }
 
       // Leave all swarms.
@@ -244,7 +244,7 @@ export class TransportReplicant {
     scheduleTaskInterval(
       ctx,
       async () => {
-        await this.env().syncBarrier(`iteration-${testCounter}`, amountOfReplicants);
+        await this.env.syncBarrier(`iteration-${testCounter}`, amountOfReplicants);
         await asyncTimeout(testRun(), duration);
         testCounter++;
       },

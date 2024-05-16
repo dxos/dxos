@@ -120,7 +120,7 @@ export class StorageReplicant {
         return new AutomergeStorageAdapter(storage.createDirectory('automerge'));
       }
       case 'leveldb': {
-        const level = await createLevel({ persistent: true, dataRoot: `/tmp/dxos/${this.env().params.testId}` });
+        const level = await createLevel({ persistent: true, dataRoot: `/tmp/dxos/${this.env.params.testId}` });
         this._storageCtx.onDispose(() => level.close());
         const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
         await adapter.open();
