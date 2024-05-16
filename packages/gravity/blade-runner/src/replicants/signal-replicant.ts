@@ -32,6 +32,7 @@ export class SignalReplicant {
   builder = new TestBuilder();
   constructor(private readonly env: () => ReplicantEnv) {}
 
+  // TODO(mykola): Refactor to smaller methods.
   async run({
     replicants,
     peersPerReplicant,
