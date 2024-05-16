@@ -25,7 +25,7 @@ export type RunResults = {
 export class StorageReplicant {
   private _storageCtx = new Context();
 
-  constructor(private readonly env: () => ReplicantEnv) {}
+  constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(mykola): Refactor to smaller methods.
   async run({

@@ -36,7 +36,7 @@ export type ReplicantRunParams = {
 };
 
 export class TransportReplicant {
-  constructor(private readonly env: () => ReplicantEnv) {}
+  constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(myklola): Refactor to a smaller methods.
   async run({

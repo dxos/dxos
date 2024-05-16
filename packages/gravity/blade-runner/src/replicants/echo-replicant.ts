@@ -22,7 +22,7 @@ export class EchoReplicant {
   private _testPeer?: EchoTestPeer = undefined;
   private _db?: EchoDatabaseImpl = undefined;
 
-  constructor(private readonly env: () => ReplicantEnv) {}
+  constructor(private readonly env: ReplicantEnv) {}
 
   async open({
     spaceKey = PublicKey.random().toHex(),
