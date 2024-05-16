@@ -26,38 +26,38 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   /**
    *  Redis client for data exchange.
    */
-  public redis: Redis;
+  private readonly _redis: Redis;
 
   /**
    *  Redis client for subscribing to sync events.
    */
-  public redisSub: Redis;
+  private readonly _redisSub: Redis;
 
   /**
    * Start websocket REDIS proxy for browser tests.
    */
-  public server = new WebSocketRedisProxy();
+  private readonly _server = new WebSocketRedisProxy();
 
   /**
    * Used to generate Replicant ids.
    */
-  public currentReplicant: number = 0;
+  private _currentReplicant: number = 0;
 
   /**
    * List of all handles to replicants spawned by this scheduler.
    */
-  public replicants: ReplicantBrain<any>[] = [];
+  readonly replicants: ReplicantBrain<any>[] = [];
 
   constructor(
     private readonly _options: GlobalOptions,
     public params: TestParams<S>,
     private readonly _redisOptions?: RedisOptions,
   ) {
-    this.redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this.redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    this._redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    this._redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
 
-    this.redis.on('error', (err) => log.info('Redis Client Error', err));
-    this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
+    this._redis.on('error', (err) => log.info('Redis Client Error', err));
+    this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   getReplicantsSummary(): ReplicantsSummary {
@@ -71,8 +71,8 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   }
 
   async open() {
-    await this.redis.config('SET', 'notify-keyspace-events', 'AKE');
-    await this.redisSub.config('SET', 'notify-keyspace-events', 'AKE');
+    await this._redis.config('SET', 'notify-keyspace-events', 'AKE');
+    await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
   }
 
   async close() {
@@ -81,9 +81,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
       replicant.kill('SIGTERM');
     }
 
-    this.redis.disconnect();
-    this.redisSub.disconnect();
-    await this.server.destroy();
+    this._redis.disconnect();
+    this._redisSub.disconnect();
+    await this._server.destroy();
   }
 
   /**
@@ -103,12 +103,12 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     const syncKey = `${this.params.testId}:${key}`;
 
     if (data !== undefined) {
-      await this.redis.set(`${syncKey}:data:scheduler`, JSON.stringify(data));
+      await this._redis.set(`${syncKey}:data:scheduler`, JSON.stringify(data));
     }
     await this._barrier(syncKey, amount);
 
-    const values = await this.redis.keys(`${syncKey}:data:*`);
-    const dataValues = await this.redis.mget(values);
+    const values = await this._redis.keys(`${syncKey}:data:*`);
+    const dataValues = await this._redis.mget(values);
     const result = dataValues.map((value) => JSON.parse(value!));
     return result;
   }
@@ -119,27 +119,27 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   private async _barrier(syncKey: string, count: number) {
     const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
-      const value = await this.redis.get(syncKey);
+      const value = await this._redis.get(syncKey);
 
       if (parseInt(value!) === count) {
         done.wake();
       }
     };
-    this.redisSub.on('message', listener);
-    await this.redisSub.subscribe(`__keyspace@0__:${syncKey}`);
+    this._redisSub.on('message', listener);
+    await this._redisSub.subscribe(`__keyspace@0__:${syncKey}`);
 
-    await this.redis.incr(syncKey);
+    await this._redis.incr(syncKey);
     await done.wait();
 
-    this.redisSub.off('message', listener);
-    await this.redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
+    this._redisSub.off('message', listener);
+    await this._redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
   }
 
   async spawn<T>(
     replicantClass: ReplicantClass<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
   ): Promise<ReplicantBrain<T>> {
-    const replicantId = String(this.currentReplicant++);
+    const replicantId = String(this._currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantId));
 
     const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;

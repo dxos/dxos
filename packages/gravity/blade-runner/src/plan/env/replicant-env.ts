@@ -20,26 +20,26 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   /**
    *  Redis client for data exchange.
    */
-  public redis: Redis;
+  private readonly _redis: Redis;
 
   /**
    *  Redis client for subscribing to sync events.
    */
-  public redisSub: Redis;
+  private readonly _redisSub: Redis;
 
   /**
    * Redis client for submitting RPC requests.
    */
-  public rpcRequests: Redis;
+  private readonly _rpcRequests: Redis;
 
   /**
    * Redis client for pulling RPC responses.
    * This client uses blocking pop operation to wait for responses
    * so we need different clients for RPC requests and responses.
    */
-  public rpcResponses: Redis;
+  private readonly _rpcResponses: Redis;
 
-  public replicantRpcServer: ReplicantRpcServer;
+  private readonly _replicantRpcServer: ReplicantRpcServer;
 
   constructor(
     public replicant: any,
@@ -47,42 +47,42 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     public redisOptions?: RedisOptions,
   ) {
     super();
-    this.redis = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this.redisSub = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this.rpcRequests = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this.rpcResponses = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this._redis = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this._redisSub = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this._rpcRequests = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this._rpcResponses = new Redis(redisOptions ?? { port: REDIS_PORT });
 
-    this.replicantRpcServer = new ReplicantRpcServer({
+    this._replicantRpcServer = new ReplicantRpcServer({
       handler: this.replicant,
       port: createRedisRpcPort({
-        sendClient: this.rpcRequests,
-        receiveClient: this.rpcResponses,
+        sendClient: this._rpcRequests,
+        receiveClient: this._rpcResponses,
         sendQueue: this.params.redisPortSendQueue,
         receiveQueue: this.params.redisPortReceiveQueue,
       }),
     });
 
-    this.redis.on('error', (err) => log.info('Redis Client Error', err));
-    this.redisSub.on('error', (err) => log.info('Redis Client Error', err));
+    this._redis.on('error', (err) => log.info('Redis Client Error', err));
+    this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
   }
 
   protected override async _open() {
     const disableDiagnostics = initDiagnostics();
     this._ctx.onDispose(() => disableDiagnostics?.());
 
-    await this.redis.config('SET', 'notify-keyspace-events', 'AKE');
-    await this.redisSub.config('SET', 'notify-keyspace-events', 'AKE');
+    await this._redis.config('SET', 'notify-keyspace-events', 'AKE');
+    await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
 
-    await this.replicantRpcServer.open();
+    await this._replicantRpcServer.open();
   }
 
   protected override async _close() {
-    await this.replicantRpcServer.close();
+    await this._replicantRpcServer.close();
 
-    this.redis.disconnect();
-    this.redisSub.disconnect();
-    this.rpcRequests.disconnect();
-    this.rpcResponses.disconnect();
+    this._redis.disconnect();
+    this._redisSub.disconnect();
+    this._rpcRequests.disconnect();
+    this._rpcResponses.disconnect();
   }
 
   async syncBarrier(key: string, amount: number) {
@@ -98,12 +98,12 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     const syncKey = `${this.params.testId}:${key}`;
 
     if (data !== undefined) {
-      await this.redis.set(`${syncKey}:data:${this.params.replicantId}`, JSON.stringify(data));
+      await this._redis.set(`${syncKey}:data:${this.params.replicantId}`, JSON.stringify(data));
     }
     await this._barrier(syncKey, amount);
 
-    const values = await this.redis.keys(`${syncKey}:data:*`);
-    const dataValues = await this.redis.mget(values);
+    const values = await this._redis.keys(`${syncKey}:data:*`);
+    const dataValues = await this._redis.mget(values);
     const result = dataValues.map((value) => JSON.parse(value!));
     return result;
   }
@@ -111,19 +111,19 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   private async _barrier(syncKey: string, count: number) {
     const done = new Trigger();
     const listener: Callback<unknown> = async (error, result) => {
-      const value = await this.redis.get(syncKey);
+      const value = await this._redis.get(syncKey);
 
       if (parseInt(value!) === count) {
         done.wake();
       }
     };
-    this.redisSub.on('message', listener);
-    await this.redisSub.subscribe(`__keyspace@0__:${syncKey}`);
+    this._redisSub.on('message', listener);
+    await this._redisSub.subscribe(`__keyspace@0__:${syncKey}`);
 
-    await this.redis.incr(syncKey);
+    await this._redis.incr(syncKey);
     await done.wait();
 
-    this.redisSub.off('message', listener);
-    await this.redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
+    this._redisSub.off('message', listener);
+    await this._redisSub.unsubscribe(`__keyspace@0__:${syncKey}`);
   }
 }
