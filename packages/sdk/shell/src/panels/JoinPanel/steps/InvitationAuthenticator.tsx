@@ -76,7 +76,7 @@ export const InvitationAuthenticator = ({
 
         {invitationId && (
           <>
-            <Label>Be sure the other device is showing this symbol:</Label>
+            <Label>{t('auth other device emoji message')}</Label>
             <div className='flex justify-center'>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>

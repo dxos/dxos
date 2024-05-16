@@ -83,6 +83,7 @@ export const os = {
   'space member list heading': 'Members',
   'space panel heading': 'Space membership',
   'auth code message': 'Enter the following auth code on the joining device.',
+  'auth other device emoji message': 'Be sure the other device shows the following symbol:',
   'display name input label': 'Display name',
   'display name input placeholder': 'Enter a display name',
   'invite one label': 'Single-use invitation',
