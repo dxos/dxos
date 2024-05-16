@@ -45,7 +45,7 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
 const start = async () => {
   // Entry point for Replicant node process.
   if (process.env.__DX_NODE_REPLICANT) {
-    const params: RunParams<any> = JSON.parse(process.env.DX_RUN_PARAMS!);
+    const params: RunParams = JSON.parse(process.env.DX_RUN_PARAMS!);
     await runReplicant(params);
     return;
   }
