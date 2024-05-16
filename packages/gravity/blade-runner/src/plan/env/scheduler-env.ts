@@ -22,6 +22,7 @@ import {
   type ReplicantsSummary,
 } from '../spec';
 
+// TODO(mykola): Unify with ReplicatorEnv.
 export class SchedulerEnvImpl<S> implements SchedulerEnv {
   /**
    *  Redis client for data exchange.
