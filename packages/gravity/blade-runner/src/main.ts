@@ -17,7 +17,7 @@ import {
   StorageTestPlan,
   // ReplicationTestPlan,
   // SignalTestPlan,
-  // TransportTestPlan,
+  TransportTestPlan,
   // AutomergeTestPlan,
 } from './spec';
 
@@ -26,7 +26,7 @@ const DXOS_REPO = process.env.DXOS_REPO;
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   // signal: () => new SignalTestPlan(),
-  // transport: () => new TransportTestPlan(),
+  transport: () => new TransportTestPlan(),
   echo: () => new EchoTestPlan(),
   // replication: () => new ReplicationTestPlan(),
   // automerge: () => new AutomergeTestPlan(),

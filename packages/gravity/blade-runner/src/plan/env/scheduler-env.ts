@@ -36,7 +36,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
    */
   private _currentReplicant: number = 0;
 
-  public replicants = new Set<Replicant<any>>();
+  public replicants: Replicant<any>[] = [];
 
   constructor(
     private readonly _options: GlobalOptions,
@@ -193,7 +193,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
       params: replicantParams,
     };
 
-    this.replicants.add(replicantHandle);
+    this.replicants.push(replicantHandle);
 
     return replicantHandle;
   }
