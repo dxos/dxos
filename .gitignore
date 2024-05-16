@@ -149,6 +149,3 @@ tools/intellij-plugin/build/
 
 # partykit
 .partykit
-
-# blade-runner artifacts
-dump.rdb
