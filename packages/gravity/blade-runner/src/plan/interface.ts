@@ -34,6 +34,9 @@ export interface ReplicantBrain<T> {
   params: ReplicantParams;
 }
 
+/**
+ * Extracts all methods from T and makes them async.
+ */
 export type RpcHandle<T> = {
   // todo: Events
   [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<R> : never;
