@@ -44,7 +44,7 @@ class DeepMapper {
       }
       return res;
     } else if (value !== null && typeof value === 'object') {
-      const res = {};
+      const res: any = {};
       this._cyclic.set(value, res);
       for (const key in value) {
         res[key] = this.map(value[key]);
