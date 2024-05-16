@@ -23,6 +23,8 @@ import {
 } from './echo-proxy-target';
 import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
+import { log } from '@dxos/log';
+import { deepMapValues } from '@dxos/util';
 
 export const PROPERTY_ID = 'id';
 
@@ -467,9 +469,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = !!this[symbolInternals].core.getType();
-    const proxy = handler.getReified(this);
-    invariant(proxy, '_proxyMap corrupted');
-    const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
+    const reified = handler.getReified(this);
+    reified.id = this[symbolInternals].core.id;
     return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
       ...options,
       compact: true,
@@ -481,21 +482,25 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _toJSON(target: ProxyTarget): any {
     const typeRef = target[symbolInternals].core.getType();
     const reified = this.getReified(target);
-    delete reified.id;
     return {
       '@type': typeRef ? encodeReference(typeRef) : undefined,
       ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
       '@meta': { ...this.getMeta(target) },
       '@id': target[symbolInternals].core.id,
-      ...reified,
+      ...deepMapValues(reified, (value, recurse) => {
+        if (value instanceof Reference) {
+          return encodeReference(value);
+        }
+        return recurse(value);
+      }),
     };
   }
 
-  private getReified(target: ProxyTarget) {
-    const proxy = this._proxyMap.get(target);
-    invariant(proxy, '_proxyMap corrupted');
-    // Will call proxy methods and construct a plain JS object.
-    return { ...proxy };
+  private getReified(target: ProxyTarget): any {
+    const dataPath = [...target[symbolPath]];
+    const fullPath = [getNamespace(target), ...dataPath];
+    const value = target[symbolInternals].core.getDecoded(fullPath);
+    return value;
   }
 }
 
