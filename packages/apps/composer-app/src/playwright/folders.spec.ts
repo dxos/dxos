@@ -32,6 +32,8 @@ test.describe('Folder tests', () => {
     await host.createFolder(1);
     await host.renameObject('Folder 1', 1);
     await host.renameObject('Folder 2', 2);
+    await host.toggleFolderCollapsed(1);
+    await host.toggleFolderCollapsed(2);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('Folder 2').hover();
@@ -51,7 +53,6 @@ test.describe('Folder tests', () => {
     await host.createSpace();
     await host.createObject('markdownPlugin', 1);
     await host.createFolder(1);
-    await host.toggleFolderCollapsed(2);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('New document').hover();
@@ -71,8 +72,6 @@ test.describe('Folder tests', () => {
     test('moves item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
-      await host.toggleFolderCollapsed(1);
-
       // Create an item inside the folder.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
@@ -89,12 +88,8 @@ test.describe('Folder tests', () => {
     test('moves folder with item out of folder', async () => {
       await host.createSpace();
       await host.createFolder();
-      await host.toggleFolderCollapsed(1);
-
       // Create a folder inside the folder.
       await host.createFolder();
-      await host.toggleFolderCollapsed(2);
-
       // Create an item inside the contained folder.
       await host.createObject('markdownPlugin');
       // Reduce flakiness in CI by waiting.
@@ -104,7 +99,6 @@ test.describe('Folder tests', () => {
 
       // Delete the containing folder.
       await host.deleteObject(1);
-      await host.toggleFolderCollapsed(1);
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
