@@ -100,6 +100,7 @@ export class ImapProcessor {
       subject,
       blocks: [],
     });
+
     getMeta(message).keys.push({ source: this._id, id: messageId });
 
     // Skip bulk mail.
@@ -121,12 +122,12 @@ export class ImapProcessor {
         content: create(TextV0Type, { content: body }),
       },
     ];
+
     return message;
   }
 }
 
 // TODO(burdon): Move to utils.
-
 const toRecipient = ({ address: email, name }: EmailAddress): RecipientType => ({
   email,
   name: name?.length ? name : undefined,
