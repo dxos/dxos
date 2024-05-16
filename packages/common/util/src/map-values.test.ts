@@ -1,5 +1,10 @@
-import { deepMapValues } from './map-values';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { test } from 'vitest';
+
+import { deepMapValues } from './map-values';
 
 test('deepMapValues', ({ expect }) => {
   const obj = {

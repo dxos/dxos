@@ -9,7 +9,7 @@ import { encodeReference, Reference } from '@dxos/echo-protocol';
 import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema, defineHiddenProperty } from '@dxos/echo-schema';
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { assignDeep, defaultMap, getDeep } from '@dxos/util';
+import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
 
 import { EchoArray } from './echo-array';
 import {
@@ -23,8 +23,6 @@ import {
 } from './echo-proxy-target';
 import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { log } from '@dxos/log';
-import { deepMapValues } from '@dxos/util';
 
 export const PROPERTY_ID = 'id';
 
