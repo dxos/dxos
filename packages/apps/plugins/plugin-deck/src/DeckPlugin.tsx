@@ -187,6 +187,7 @@ export const DeckPlugin = ({
           <AttentionProvider
             attended={attention.attended}
             onChangeAttend={(nextAttended) => {
+              // TODO(thure): Is this / could this be better handled by an intent?
               attention.attended = nextAttended;
             }}
           >
