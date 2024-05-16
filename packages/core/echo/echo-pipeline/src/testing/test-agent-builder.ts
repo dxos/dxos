@@ -191,6 +191,7 @@ export class TestAgent {
         );
       },
       onDelegatedInvitationStatusChange: async () => {},
+      onMemberRolesChanged: async () => {},
     });
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);

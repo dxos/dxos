@@ -4,7 +4,12 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
-import { getCredentialAssertion, type CredentialSigner, type DelegateInvitationCredential } from '@dxos/credentials';
+import {
+  getCredentialAssertion,
+  type CredentialSigner,
+  type DelegateInvitationCredential,
+  type MemberInfo,
+} from '@dxos/credentials';
 import { type EchoHost } from '@dxos/echo-db';
 import { type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
@@ -246,6 +251,7 @@ export class DataSpaceManager {
       onAuthFailure: () => {
         log.warn('auth failure');
       },
+      onMemberRolesChanged: async (members: MemberInfo[]) => {},
       memberKey: this._signingContext.identityKey,
       onDelegatedInvitationStatusChange: (invitation, isActive) => {
         return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
