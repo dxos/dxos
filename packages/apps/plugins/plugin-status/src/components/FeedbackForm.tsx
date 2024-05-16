@@ -6,19 +6,27 @@ import { X, PaperPlaneTilt } from '@phosphor-icons/react';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
+import { S } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
 
+// -- Types and validation.
+const FeedbackFormSchema = S.struct({
+  name: S.optional(S.string),
+  email: S.optional(S.string),
+  message: S.optional(S.string),
+});
+
+type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;
+
 const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
   <div role='none' className={mx(className)}>
     {children}
   </div>
 );
-
-type FeedbackFormState = { name: string; email: string; message: string };
 
 export const FeedbackForm = () => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
@@ -34,7 +42,6 @@ export const FeedbackForm = () => {
   };
 
   const handleSubmit = React.useCallback(() => {
-    console.log('Feedback form submitted:', formState);
     void dispatch({
       action: 'dxos.org/plugin/observability/capture-feedback',
       data: formState,
