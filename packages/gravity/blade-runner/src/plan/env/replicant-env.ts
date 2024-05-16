@@ -17,9 +17,14 @@ import { type ReplicantParams } from '../spec';
 export { type RedisOptions };
 
 export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
+  /**
+   *  Redis client for data exchange.
+   */
   public redis: Redis;
 
-  // Redis client for subscribing to sync events.
+  /**
+   *  Redis client for subscribing to sync events.
+   */
   public redisSub: Redis;
 
   /**
