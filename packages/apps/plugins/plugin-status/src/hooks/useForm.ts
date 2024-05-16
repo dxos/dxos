@@ -15,8 +15,9 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [attemptedSubmission, setAttemptedSubmission] = useState<boolean>(false);
 
-  const onValidate = useCallback(
+  const runValidation = useCallback(
     (values: T) => {
       const validationErrors = validate(values);
       setErrors(collapseErrorArray(validationErrors ?? []));
@@ -27,8 +28,8 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   );
 
   useEffect(() => {
-    onValidate(values);
-  }, [values, onValidate]);
+    runValidation(values);
+  }, [values, runValidation]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
@@ -42,19 +43,19 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   };
 
   const handleSubmit = useCallback(() => {
-    const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
-    setTouched(allTouched);
+    const touchAll = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
+    setTouched(touchAll);
+    setAttemptedSubmission(true);
 
-    if (!onValidate(values)) {
-      return;
+    if (runValidation(values)) {
+      onSubmit(values);
     }
+  }, [values, runValidation, onSubmit]);
 
-    onSubmit(values);
-  }, [values, onValidate, onSubmit]);
+  const isValid = Object.keys(errors).length === 0;
+  const canSubmit = attemptedSubmission ? isValid : true;
 
-  const isInvalid = Object.keys(errors).length !== 0;
-
-  return { values, handleChange, handleSubmit, errors, isInvalid, touched, touchOnBlur, onValidate };
+  return { values, handleChange, handleSubmit, errors, canSubmit, touched, touchOnBlur, onValidate: runValidation };
 };
 
 const collapseErrorArray = (errors: ValidationError[]) =>

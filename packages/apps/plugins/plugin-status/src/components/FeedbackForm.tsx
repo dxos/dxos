@@ -59,7 +59,7 @@ export const FeedbackForm = () => {
     [dispatch],
   );
 
-  const { values, errors, handleChange, handleSubmit, isInvalid, touched, touchOnBlur } = useForm<FeedbackFormState>({
+  const { values, errors, handleChange, handleSubmit, canSubmit, touched, touchOnBlur } = useForm<FeedbackFormState>({
     initialValues,
     validate: (values) => validate(FeedbackFormSchema, values),
     onSubmit: (values) => onSubmit(values),
@@ -128,7 +128,7 @@ export const FeedbackForm = () => {
       </Section>
 
       <Section className='space-b-2'>
-        <Button variant='primary' classNames='is-full flex gap-2' disabled={isInvalid} onClick={() => handleSubmit()}>
+        <Button variant='primary' classNames='is-full flex gap-2' disabled={!canSubmit} onClick={() => handleSubmit()}>
           <span>{translation('send feedback label')}</span>
           <div className='grow' />
           <PaperPlaneTilt className={getSize(5)} />
