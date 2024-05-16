@@ -124,7 +124,7 @@ export const createCredentialSignerWithChain = (
   signingKey: PublicKey,
 ): CredentialSigner => ({
   getIssuer: () => chain.credential.issuer,
-  createCredential: ({ subject, assertion, nonce }) =>
+  createCredential: ({ subject, assertion, nonce, parentCredentialIds }) =>
     createCredential({
       signer,
       issuer: chain.credential.issuer,
@@ -133,5 +133,6 @@ export const createCredentialSignerWithChain = (
       subject,
       assertion,
       nonce,
+      parentCredentialIds,
     }),
 });
