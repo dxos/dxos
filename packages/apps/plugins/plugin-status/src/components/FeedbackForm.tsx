@@ -70,8 +70,6 @@ export const FeedbackForm = () => {
   // TODO(Zan): Fix spacing and grouping
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
-      {/* <h2 className='text-lg font-medium'>{translation('feedback panel title')}</h2> */}
-
       <Section className='space-b-1'>
         <Input.Root>
           <Input.Label>{translation('name label')}</Input.Label>
@@ -85,7 +83,9 @@ export const FeedbackForm = () => {
             onBlur={touchOnBlur}
             aria-invalid={errors.name !== undefined}
           />
-          {touched.name && errors.name && <Input.Validation>{errors.name}</Input.Validation>}
+          <Input.DescriptionAndValidation>
+            {touched.name && errors.name && <Input.Validation>{errors.name}</Input.Validation>}
+          </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
@@ -101,12 +101,14 @@ export const FeedbackForm = () => {
             onBlur={touchOnBlur}
             aria-invalid={errors.email !== undefined}
           />
-          {touched.email && errors.email && <Input.Validation>{errors.email}</Input.Validation>}
+          <Input.DescriptionAndValidation>
+            {touched.email && errors.email && <Input.Validation>{errors.email}</Input.Validation>}
+          </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
       <Section className='space-b-1'>
-        <Input.Root>
+        <Input.Root validationValence='error'>
           <Input.Label>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
             classNames={textInputClasses}
@@ -119,9 +121,9 @@ export const FeedbackForm = () => {
             onBlur={touchOnBlur}
             aria-invalid={errors.message !== undefined}
           />
-          <Input.Label>
+          <Input.DescriptionAndValidation>
             {touched.message && errors.message && <Input.Validation>{errors.message}</Input.Validation>}
-          </Input.Label>
+          </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
