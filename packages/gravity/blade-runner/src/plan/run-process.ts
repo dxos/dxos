@@ -51,7 +51,6 @@ export const runNode = (params: RunParams): ProcessHandle => {
     env: {
       ...process.env,
       DX_RUN_PARAMS: JSON.stringify(params),
-      __DX_REPLICANT: 'true',
     },
   });
   childProcess.on('error', (err) => {
@@ -135,11 +134,7 @@ export const runBrowser = async ({ replicantParams, options }: RunParams): Promi
   <body>
     <h1>TESTING TESTING.</h1>
     <script>
-      window.__DX_REPLICANT = true
-      window.dx_blade_runner_env = ${JSON.stringify({
-        ...process.env,
-        DX_RUN_PARAMS: JSON.stringify({ replicantParams, options }),
-      })}
+      window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantParams, options }))}
     </script>
     <script type="module" src="index.js"></script>
   </body>
