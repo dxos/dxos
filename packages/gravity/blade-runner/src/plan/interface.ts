@@ -14,12 +14,21 @@ export interface ReplicantEnv extends CommonTestEnv {
 }
 
 export interface SchedulerEnv extends CommonTestEnv {
-  spawn<T>(brain: ReplicantBrain<T>, runtime: ReplicantRuntimeParams): Promise<Replicant<T>>;
+  spawn<T>(replicantClass: ReplicantClass<T>, runtime: ReplicantRuntimeParams): Promise<ReplicantBrain<T>>;
 }
 
-export type ReplicantBrain<T> = { new (replicantEnv: () => ReplicantEnv): T };
+/**
+ * Replicant class.
+ */
+export type ReplicantClass<T> = { new (replicantEnv: () => ReplicantEnv): T };
 
-export interface Replicant<T> {
+/**
+ * RPC handle to a replicant that is running in a separate process or browser.
+ */
+export interface ReplicantBrain<T> {
+  /**
+   * Field that holds the RPC handle to the replicant.
+   */
   brain: RpcHandle<T>;
   kill(signal?: NodeJS.Signals | number): void;
   params: ReplicantParams;

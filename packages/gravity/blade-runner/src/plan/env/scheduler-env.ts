@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { ReplicantRpcHandle, open, close } from './replicant-rpc-handle';
 import { REDIS_PORT, createRedisRpcPort } from './util';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
-import { type Replicant, type ReplicantBrain, type SchedulerEnv, type RpcHandle } from '../interface';
+import { type ReplicantBrain, type SchedulerEnv, type RpcHandle, type ReplicantClass } from '../interface';
 import { type ProcessHandle, runBrowser, runNode } from '../run-process';
 import {
   type ReplicantRuntimeParams,
@@ -39,11 +39,14 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   private readonly _server = new WebSocketRedisProxy();
 
   /**
-   * Used to generate Replicant ids
+   * Used to generate Replicant ids.
    */
   private _currentReplicant: number = 0;
 
-  public replicants: Replicant<any>[] = [];
+  /**
+   * List of all handles to replicants spawned by this scheduler.
+   */
+  public replicants: ReplicantBrain<any>[] = [];
 
   constructor(
     private readonly _options: GlobalOptions,
@@ -133,9 +136,9 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   }
 
   async spawn<T>(
-    brain: ReplicantBrain<T>,
+    replicantClass: ReplicantClass<T>,
     runtime: ReplicantRuntimeParams = { platform: 'nodejs' },
-  ): Promise<Replicant<T>> {
+  ): Promise<ReplicantBrain<T>> {
     const replicantId = String(this._currentReplicant++);
     const outDir = path.join(this.params.outDir, String(replicantId));
 
@@ -163,7 +166,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     });
 
     const rpcHandle = new ReplicantRpcHandle({
-      brain,
+      replicantClass,
       rpcPort,
     });
 
@@ -173,7 +176,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
       replicantId,
       outDir,
       logFile: path.join(outDir, AGENT_LOG_FILE),
-      replicantClass: brain.name,
+      replicantClass: replicantClass.name,
       planRunDir: this.params.outDir,
       redisPortSendQueue: responseQueue,
       redisPortReceiveQueue: requestQueue,

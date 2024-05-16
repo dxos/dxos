@@ -2,18 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReplicantBrain } from '../interface';
+import { type ReplicantClass } from '../interface';
 
+/**
+ * Registry for all replicants.
+ * Used to spawn correct replicants in subprocesses.
+ */
 export class ReplicantRegistry {
   public static readonly instance = new ReplicantRegistry();
 
-  private readonly _replicantBrains = new Map<string, ReplicantBrain<any>>();
+  private readonly _replicantClasses = new Map<string, ReplicantClass<any>>();
 
-  register(brain: ReplicantBrain<any>) {
-    this._replicantBrains.set(brain.name, brain);
+  register(replicantClass: ReplicantClass<any>) {
+    this._replicantClasses.set(replicantClass.name, replicantClass);
   }
 
-  get(name: string): ReplicantBrain<any> {
-    return this._replicantBrains.get(name)!;
+  get(name: string): ReplicantClass<any> {
+    return this._replicantClasses.get(name)!;
   }
 }

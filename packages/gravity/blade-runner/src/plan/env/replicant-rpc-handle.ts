@@ -5,7 +5,7 @@
 import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
 import { rpcCodec } from './util';
-import { type ReplicantBrain } from '../interface';
+import { type ReplicantClass } from '../interface';
 
 export const open = Symbol('open');
 export const close = Symbol('close');
@@ -17,7 +17,7 @@ export const close = Symbol('close');
 export class ReplicantRpcHandle<T> {
   private readonly _rpc: RpcPeer;
 
-  constructor({ brain, rpcPort }: { brain: ReplicantBrain<T>; rpcPort: RpcPort }) {
+  constructor({ replicantClass, rpcPort }: { replicantClass: ReplicantClass<T>; rpcPort: RpcPort }) {
     this._rpc = new RpcPeer({
       callHandler: async () => {
         throw new Error('Method not implemented');
@@ -27,7 +27,7 @@ export class ReplicantRpcHandle<T> {
       timeout: 0,
     });
 
-    for (const method of Object.getOwnPropertyNames(brain.prototype)) {
+    for (const method of Object.getOwnPropertyNames(replicantClass.prototype)) {
       if (method === 'constructor' || method.startsWith('_')) {
         continue;
       }
