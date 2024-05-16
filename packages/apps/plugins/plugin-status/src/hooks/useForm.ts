@@ -26,7 +26,9 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
     [validate],
   );
 
-  useEffect(() => onValidate(values), [values, onValidate]);
+  useEffect(() => {
+    onValidate(values);
+  }, [values, onValidate]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = event.target;
