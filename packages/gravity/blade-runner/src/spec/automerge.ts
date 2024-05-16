@@ -14,8 +14,8 @@ import { range } from '@dxos/util';
 
 import {
   type AgentEnv,
-  type AgentRunOptions,
-  type PlanResults,
+  type ReplicantRunOptions,
+  type ReplicantsSummary,
   type Platform,
   type TestParams,
   type TestPlan,
@@ -46,7 +46,7 @@ export type AutomergeTestSpec = {
 };
 
 export type AutomergeAgentConfig = {
-  agentIdx: number;
+  replicantId: number;
   port?: number;
   type: 'client' | 'server';
 };
@@ -69,14 +69,14 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     };
   }
 
-  async init({ spec }: TestParams<AutomergeTestSpec>): Promise<AgentRunOptions<AutomergeAgentConfig>[]> {
-    return range(spec.agents).map((agentIdx) => {
-      const type = agentIdx % 2 === 0 ? 'server' : 'client';
+  async init({ spec }: TestParams<AutomergeTestSpec>): Promise<ReplicantRunOptions<AutomergeAgentConfig>[]> {
+    return range(spec.agents).map((replicantId) => {
+      const type = replicantId % 2 === 0 ? 'server' : 'client';
       return {
         config: {
-          agentIdx,
+          replicantId,
           type,
-          port: type === 'server' ? 12340 + agentIdx : undefined,
+          port: type === 'server' ? 12340 + replicantId : undefined,
         },
         runtime: { platform: type === 'server' ? 'nodejs' : spec.platform },
       };
@@ -94,7 +94,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     const localDocs = range(docsToCreate).map((idx) => {
       const handle = this.repo.create();
       handle.change((doc: any) => {
-        doc.author = `agent-${config.agentIdx}`;
+        doc.author = `agent-${config.replicantId}`;
         doc.idx = idx;
       });
 
@@ -162,7 +162,7 @@ export class AutomergeTestPlan implements TestPlan<AutomergeTestSpec, AutomergeA
     await env.syncBarrier('done');
   }
 
-  async finish(params: TestParams<AutomergeTestSpec>, results: PlanResults): Promise<any> {}
+  async finish(params: TestParams<AutomergeTestSpec>, results: ReplicantsSummary): Promise<any> {}
 
   private async _init(
     env: AgentEnv<AutomergeTestSpec, AutomergeAgentConfig>,
