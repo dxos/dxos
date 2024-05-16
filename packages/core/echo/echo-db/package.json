@@ -12,6 +12,12 @@
       "import": "./dist/lib/browser/index.mjs",
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
+    },
+    "./testing": {
+      "browser": "./dist/lib/browser/testing/index.mjs",
+      "import": "./dist/lib/browser/testing/index.mjs",
+      "require": "./dist/lib/node/testing/index.cjs",
+      "node": "./dist/lib/node/testing/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
