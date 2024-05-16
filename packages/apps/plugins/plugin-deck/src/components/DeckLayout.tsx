@@ -13,8 +13,10 @@ import {
   isActiveParts,
   type ActiveParts,
   type PartIdentifier,
+  type Attention,
   NavigationAction,
   useIntent,
+  activeIds as getActiveIds,
   SLUG_PATH_SEPARATOR,
 } from '@dxos/app-framework';
 import {
@@ -27,7 +29,7 @@ import {
   Status,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { Deck, PlankHeading, plankHeadingIconProps } from '@dxos/react-ui-deck';
+import { Deck, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -36,17 +38,13 @@ import { useLayout } from './LayoutContext';
 import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
-export type AttentionState = {
-  attended: Set<string>;
-};
-
 export type DeckLayoutProps = {
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
-  attention: AttentionState;
+  attention: Attention;
 };
 
 export const NAV_ID = 'NavTree';
@@ -97,7 +95,7 @@ const NodePlankHeading = ({
             typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
           }
         >
-          <PlankHeading.Button>
+          <PlankHeading.Button attendableId={node.id}>
             <span className='sr-only'>{label}</span>
             <Icon {...plankHeadingIconProps} />
           </PlankHeading.Button>
@@ -169,6 +167,13 @@ export const DeckLayout = ({
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
+  const activeIds = getActiveIds(location.active);
+
+  const navigationData = {
+    popoverAnchorId,
+    activeIds,
+    attended: attention.attended,
+  };
 
   return fullscreen ? (
     <div className={fixedInsetFlexLayout}>
@@ -190,7 +195,7 @@ export const DeckLayout = ({
       <div role='none' className='sr-only'>
         <Surface
           role='document-title'
-          data={{ activeNode: graph.findNode(Array.from(attention.attended)[0]) }}
+          data={{ activeNode: graph.findNode(Array.from(attention.attended ?? [])[0]) }}
           limit={1}
         />
       </div>
@@ -230,14 +235,7 @@ export const DeckLayout = ({
         {/* Sidebars */}
         <Main.NavigationSidebar>
           {sidebarSlug === NAV_ID ? (
-            <Surface
-              role='navigation'
-              data={{
-                part: sidebarPart,
-                popoverAnchorId,
-              }}
-              limit={1}
-            />
+            <Surface role='navigation' data={{ part: sidebarPart, ...navigationData }} limit={1} />
           ) : sidebarNode ? (
             <>
               <NodePlankHeading
@@ -262,14 +260,7 @@ export const DeckLayout = ({
         </Main.NavigationSidebar>
         <Main.ComplementarySidebar>
           {complementarySlug === NAV_ID ? (
-            <Surface
-              role='navigation'
-              data={{
-                part: complementaryPart,
-                popoverAnchorId,
-              }}
-              limit={1}
-            />
+            <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
             <>
               <NodePlankHeading
@@ -304,10 +295,11 @@ export const DeckLayout = ({
               .map((id, index, main) => {
                 const node = resolveNodeFromSlug(graph, id);
                 const part = ['main', index, main.length] satisfies PartIdentifier;
+                const attendableAttrs = useAttendable(id);
                 return (
-                  <Deck.Plank key={id}>
+                  <Deck.Plank key={id} {...attendableAttrs}>
                     {id === NAV_ID ? (
-                      <Surface role='navigation' data={{ part, popoverAnchorId }} limit={1} />
+                      <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
                     ) : node ? (
                       <>
                         <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />
