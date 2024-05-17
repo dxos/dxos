@@ -21,7 +21,7 @@
     "@swc/core": "~1.4.0",
     "pirates": "~4.0.5",
     "sorcery": "^0.10.0",
-    "source-map": "^0.6.1"
+    "source-map": "^0.7.4"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
