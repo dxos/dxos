@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   NavigationAction,
@@ -44,13 +44,15 @@ const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data=
 export const NavTreeContainer = ({
   root,
   paths,
-  activeId,
+  activeIds,
+  attended,
   popoverAnchorId,
   part,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
-  activeId?: string;
+  activeIds: Set<string>;
+  attended: Set<string>;
   popoverAnchorId?: string;
   part?: PartIdentifier;
 }) => {
@@ -87,8 +89,6 @@ export const NavTreeContainer = ({
     }
     !isLg && closeNavigationSidebar();
   };
-
-  const currentPath = (activeId && getMosaicPath(paths, activeId)) ?? 'never';
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
@@ -195,6 +195,16 @@ export const NavTreeContainer = ({
     [root, paths],
   );
 
+  const currentPaths = useMemo(
+    () =>
+      new Set(
+        Array.from(activeIds ?? [])
+          .map((id) => getMosaicPath(paths, id))
+          .filter(Boolean) as string[],
+      ),
+    [activeIds, paths],
+  );
+
   return (
     <ElevationProvider elevation='chrome'>
       <div
@@ -205,7 +215,8 @@ export const NavTreeContainer = ({
         <div role='none' className='overflow-y-auto p-0.5'>
           <NavTree
             node={root}
-            current={currentPath}
+            current={currentPaths}
+            attended={attended}
             type={NODE_TYPE}
             onSelect={handleSelect}
             isOver={isOver}

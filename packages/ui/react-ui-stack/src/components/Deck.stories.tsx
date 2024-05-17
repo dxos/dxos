@@ -104,7 +104,7 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set());
+    const [attended] = useState(new Set<string>());
     return (
       <Mosaic.Root>
         <AttentionProvider attended={attended}>
@@ -188,7 +188,7 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attended] = useState(new Set());
+  const [attended] = useState(new Set<string>());
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
