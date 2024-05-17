@@ -67,7 +67,6 @@ export const FeedbackForm = () => {
 
   const textInputClasses = 'text-sm';
 
-  // TODO(Zan): Fix spacing and grouping
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
       <Section className='space-b-1'>

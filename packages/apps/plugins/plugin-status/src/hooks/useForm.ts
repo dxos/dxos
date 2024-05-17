@@ -1,7 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-import { type ChangeEvent, useCallback, useState, useEffect } from 'react';
+import { type ChangeEvent, useCallback, useState } from 'react';
 
 import { type ValidationError } from '../util';
 
@@ -14,8 +14,9 @@ interface FormOptions<T> {
 export const useForm = <T extends Record<string, any>>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [attemptedSubmission, setAttemptedSubmission] = useState<boolean>(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>(
+    Object.keys(initialValues).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
+  );
 
   const runValidation = useCallback(
     (values: T) => {
@@ -27,33 +28,37 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
     [validate],
   );
 
-  useEffect(() => {
-    runValidation(values);
-  }, [values, runValidation]);
+  const handleChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = event.target;
+      const newValues = { ...values, [name]: value };
+      setValues(newValues);
+      runValidation(newValues);
+    },
+    [values, runValidation],
+  );
 
-  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = event.target;
-    setValues((values) => ({ ...values, [name]: value }));
-    setTouched((touched) => ({ ...touched, [name]: true }));
-  };
-
-  const touchOnBlur = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name } = event.target;
-    setTouched((touched) => ({ ...touched, [name]: true }));
-  };
+  const touchOnBlur = useCallback(
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name } = event.target;
+      setTouched((touched) => ({ ...touched, [name]: true }));
+      runValidation(values);
+    },
+    [runValidation, values],
+  );
 
   const handleSubmit = useCallback(() => {
     const touchAll = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
     setTouched(touchAll);
-    setAttemptedSubmission(true);
 
     if (runValidation(values)) {
       onSubmit(values);
     }
   }, [values, runValidation, onSubmit]);
 
-  const isValid = Object.keys(errors).length === 0;
-  const canSubmit = attemptedSubmission ? isValid : true;
+  // NOTE: We can submit if there is no touched field that has an error.
+  // - Basically, if there's a validation message present in the form, submit should be disabled.
+  const canSubmit = Object.keys(values).every((key) => touched[key] === false || !errors[key]);
 
   return { values, handleChange, handleSubmit, errors, canSubmit, touched, touchOnBlur, onValidate: runValidation };
 };
