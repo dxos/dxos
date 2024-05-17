@@ -59,7 +59,7 @@ export const FeedbackForm = () => {
     [dispatch],
   );
 
-  const { values, errors, handleChange, handleSubmit, canSubmit, touched, touchOnBlur } = useForm<FeedbackFormState>({
+  const { values, errors, handleChange, handleSubmit, canSubmit, touched, handleBlur } = useForm<FeedbackFormState>({
     initialValues,
     validate: (values) => validate(FeedbackFormSchema, values),
     onSubmit: (values) => onSubmit(values),
@@ -79,7 +79,7 @@ export const FeedbackForm = () => {
             name='name'
             value={values.name}
             onChange={handleChange}
-            onBlur={touchOnBlur}
+            onBlur={handleBlur}
             aria-invalid={errors.name !== undefined}
           />
           <Input.DescriptionAndValidation>
@@ -97,7 +97,7 @@ export const FeedbackForm = () => {
             name='email'
             value={values.email}
             onChange={handleChange}
-            onBlur={touchOnBlur}
+            onBlur={handleBlur}
             aria-invalid={errors.email !== undefined}
           />
           <Input.DescriptionAndValidation>
@@ -117,7 +117,7 @@ export const FeedbackForm = () => {
             name='message'
             value={values.message}
             onChange={handleChange}
-            onBlur={touchOnBlur}
+            onBlur={handleBlur}
             aria-invalid={errors.message !== undefined}
           />
           <Input.DescriptionAndValidation>

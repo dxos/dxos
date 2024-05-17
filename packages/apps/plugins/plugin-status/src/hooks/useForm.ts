@@ -38,7 +38,7 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
     [values, runValidation],
   );
 
-  const touchOnBlur = useCallback(
+  const handleBlur = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
@@ -63,7 +63,16 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   // - Basically, if there's a validation message present in the form, submit should be disabled.
   const canSubmit = Object.keys(values).every((key) => touched[key] === false || !errors[key]);
 
-  return { values, handleChange, handleSubmit, errors, canSubmit, touched, touchOnBlur, onValidate: runValidation };
+  return {
+    values,
+    handleChange,
+    handleSubmit,
+    errors,
+    canSubmit,
+    touched,
+    handleBlur,
+    onValidate: runValidation,
+  };
 };
 
 const collapseErrorArray = <T>(errors: ValidationError[]) =>
