@@ -194,6 +194,7 @@ export const DeckLayout = ({
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
+  const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
 
   const navigationData = {
@@ -285,7 +286,7 @@ export const DeckLayout = ({
             </>
           ) : null}
         </Main.NavigationSidebar>
-        <Main.ComplementarySidebar>
+        <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
             <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
