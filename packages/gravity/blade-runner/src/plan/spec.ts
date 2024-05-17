@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type AgentEnv } from './env';
+import { type SchedulerEnv } from './interface';
 
 export const AGENT_LOG_FILE = 'agent.log';
 
-export type PlanOptions = {
-  staggerAgents?: number;
+export type GlobalOptions = {
   repeatAnalysis?: string;
   randomSeed?: string;
   profile?: boolean;
@@ -15,53 +14,55 @@ export type PlanOptions = {
   headless?: boolean;
 };
 
-export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 export type TestParams<S> = {
   testId: string;
   outDir: string;
   spec: S;
 };
 
-export type AgentParams<S, C> = {
-  agentIdx: number;
-  agentId: string;
-  outDir: string;
-  config: C;
-  planRunDir: string;
-  runtime: AgentRuntimeParams;
+/**
+ * Currently blade-runner supports only `nodejs` and `chromium`.
+ */
+export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
 
-  testId: string;
-  spec: S;
-  agents: Record<string, AgentRunOptions<C>>;
-};
-
-export type AgentRuntimeParams = {
-  // defaults to node.
-  platform?: Platform;
-};
-
-export type AgentRunOptions<C> = {
-  config: C;
-  runtime?: AgentRuntimeParams;
-};
-
-export type PlanResults = {
-  agents: { [agentId: string]: AgentResult };
-};
-
-export type AgentResult = {
-  result: number;
+export type ReplicantParams = {
+  /**
+   * Replicant class name. Used in registry.
+   * Sent to replicant from orchestrator process.
+   */
+  replicantClass: string;
+  replicantId: string;
   outDir: string;
   logFile: string;
-  startTs?: number;
-  endTs?: number;
+  planRunDir: string;
+  redisPortSendQueue: string;
+  redisPortReceiveQueue: string;
+
+  runtime: ReplicantRuntimeParams;
+  testId: string;
 };
 
+export type ReplicantRuntimeParams = {
+  // defaults to node.
+  platform?: Platform;
+
+  /**
+   * Path to a browser context.
+   */
+  userDataDir?: string;
+};
+
+export type ReplicantsSummary = { [replicantId: string]: ReplicantParams };
+
 // plan vs environment
-export interface TestPlan<S, C> {
+export interface TestPlan<S, R = void> {
   onError?: (err: Error) => void;
-  init(params: TestParams<S>): Promise<AgentRunOptions<C>[]>; // 1
-  run(env: AgentEnv<S, C>): Promise<void>; // N
-  finish(params: TestParams<S>, results: PlanResults): Promise<any>;
+  /**
+   * Run the test.
+   * @returns results of the run will be passed to the `analyze` method.
+   */
+  run(env: SchedulerEnv, params: TestParams<S>): Promise<R>;
+  // TODO(mykola): Add analysesEnv which will contain collected preprocessed logs.
+  analyze(params: TestParams<S>, summary: ReplicantsSummary, result: R): Promise<any>;
   defaultSpec(): S;
 }

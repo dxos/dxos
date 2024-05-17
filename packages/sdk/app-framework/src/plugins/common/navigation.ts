@@ -36,8 +36,14 @@ export const Location = z.object({
     .describe('Id or ids of recently closed items, in order of when they were closed.'),
 });
 
+export const Attention = z.object({
+  attended: z.set(z.string()).optional().describe('Ids of items which have focus.'),
+});
+
 export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
+export type Attention = z.infer<typeof Attention>;
+
 /**
  * Composed of [ part name, index within the part, size of the part ]
  */
@@ -77,6 +83,7 @@ export const isIdActive = (active: string | ActiveParts | undefined, id: string)
  */
 export type LocationProvides = {
   location: Readonly<Location>;
+  attention?: Readonly<Attention>;
 };
 
 /**
