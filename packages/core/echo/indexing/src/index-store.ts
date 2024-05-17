@@ -5,7 +5,7 @@
 import isEqual from 'lodash.isequal';
 
 import { invariant } from '@dxos/invariant';
-import { type SubLevelDB } from '@dxos/kv-store';
+import { type SublevelDB } from '@dxos/kv-store';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { IndexConstructors } from './index-constructors';
@@ -20,12 +20,12 @@ type IndexData = {
 };
 
 export type IndexStoreParams = {
-  db: SubLevelDB;
+  db: SublevelDB;
 };
 
 // TODO(mykola): Delete header from storage codec.
 export class IndexStore {
-  private readonly _db: SubLevelDB;
+  private readonly _db: SublevelDB;
   constructor({ db }: IndexStoreParams) {
     this._db = db;
   }
