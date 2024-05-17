@@ -51,7 +51,6 @@ export type EditorMainProps = {
 export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
@@ -76,6 +75,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
 
+  // TODO(burdon): Externalize onDrop.
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
     const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
     if (info) {

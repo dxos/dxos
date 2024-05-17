@@ -27,6 +27,7 @@ export enum MarkdownAction {
 export type MarkdownProperties = Record<string, any>;
 
 export type ExtensionsProvider = (props: { document?: DocumentType }) => Extension[];
+
 export type OnChange = (text: string) => void;
 
 export type MarkdownExtensionProvides = {

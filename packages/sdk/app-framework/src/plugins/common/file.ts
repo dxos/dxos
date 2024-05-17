@@ -17,6 +17,7 @@ export type FileInfo = {
   cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system? (e.g., WNFS).
 };
 
+// TODO(burdon): Extend to provide Space.
 export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
 
 /**
