@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-settings",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "DXOS app plugin for aggregating and rendering plugin settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/random",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Random data generator.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

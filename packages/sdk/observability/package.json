@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observability",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

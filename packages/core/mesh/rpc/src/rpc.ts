@@ -28,13 +28,18 @@ export interface RpcPeerOptions {
    */
   timeout?: number;
 
-  callHandler: (method: string, request: Any) => MaybePromise<Any>;
-  streamHandler?: (method: string, request: Any) => Stream<Any>;
+  callHandler: (method: string, request: Any, options?: RequestOptions) => MaybePromise<Any>;
+  streamHandler?: (method: string, request: Any, options?: RequestOptions) => Stream<Any>;
 
   /**
    * Do not require or send handshake messages.
    */
   noHandshake?: boolean;
+
+  /**
+   * What options get passed to the `callHandler` and `streamHandler`.
+   */
+  handlerRpcOptions?: RequestOptions;
 }
 
 /**
@@ -388,7 +393,10 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const waiting = asyncTimeout<any>(responseReceived, options?.timeout ?? this._params.timeout ?? DEFAULT_TIMEOUT);
+      const timeout = options?.timeout ?? this._params.timeout;
+      const waiting =
+        timeout === 0 ? responseReceived : asyncTimeout<any>(responseReceived, timeout ?? DEFAULT_TIMEOUT);
+
       await Promise.race([sending, waiting]);
       response = await waiting;
       invariant(response.id === id);
@@ -481,7 +489,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload);
+      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
       return {
         id: req.id,
         payload: response,
@@ -501,7 +509,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
       responseStream.onReady(() => {
         callback({
           id: req.id,

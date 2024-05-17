@@ -49,6 +49,11 @@ Type: <code>[Https](/api/@dxos/config/interfaces/Https)</code>
 
 
 
+### [ipfsApiAuthorizations]()
+Type: <code>[KuboApiAuthorization](/api/@dxos/config/interfaces/KuboApiAuthorization)[]</code>
+
+
+
 ### [monitoring]()
 Type: <code>[Monitoring](/api/@dxos/config/interfaces/Monitoring)</code>
 

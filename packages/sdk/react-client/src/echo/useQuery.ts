@@ -5,13 +5,13 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import {
-  type QueryOptions,
-  type Query,
-  type FilterSource,
-  type Space,
-  type EchoReactiveObject,
-  type Echo,
   isSpace,
+  type Echo,
+  type EchoReactiveObject,
+  type FilterSource,
+  type Query,
+  type QueryOptions,
+  type Space,
 } from '@dxos/client/echo';
 
 type UseQuery = {

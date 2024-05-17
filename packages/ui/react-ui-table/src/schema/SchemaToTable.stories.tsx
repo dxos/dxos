@@ -54,7 +54,7 @@ export const SchemaTable = {
     return (
       <Table.Root>
         <Table.Viewport classNames='inset-0 fixed'>
-          <Table.Table<ExampleSchema>
+          <Table.Main<ExampleSchema>
             role='grid'
             rowsSelectable='multi'
             keyAccessor={(row) => JSON.stringify(row)}

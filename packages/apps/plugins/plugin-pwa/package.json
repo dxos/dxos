@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-pwa",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "DXOS Surface plugin for PWA registration and update handling.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

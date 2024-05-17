@@ -1,5 +1,5 @@
 # Class `DocumentType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/27607ac6b/packages/sdk/client/src/testing/data.ts#L14)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:14](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/data.ts#L14)</sub>
 
 
 

@@ -57,7 +57,7 @@ import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
 
-import { meta as BetaMeta } from './BetaPlugin';
+import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
@@ -169,7 +169,7 @@ const main = async () => {
       SearchMeta,
     ],
     plugins: {
-      [BetaMeta.id]: Plugin.lazy(() => import('./BetaPlugin')),
+      [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
       [ChainMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chain')),
       [ChessMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-chess')),
       [ClientMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-client'), {
@@ -178,6 +178,14 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
+          const url = new URL(window.location.href);
+          // Match CF only.
+          // TODO(burdon): Check for Server: cloudflare header.
+          //  https://developers.cloudflare.com/pages/configuration/serving-pages
+          if (!url.origin.endsWith('composer.space')) {
+            return;
+          }
+
           try {
             // Retrieve the cookie.
             const response = await fetch('/info');
@@ -185,16 +193,15 @@ const main = async () => {
               throw new Error('Invalid response.');
             }
 
-            // TODO(burdon): CamelCase vs. _ names.
             const result: JWTPayload = await response.json();
+
+            // TODO(burdon): CamelCase vs. _ names.
             await client.shell.setInvitationUrl({
               invitationUrl: new URL(`?access_token=${result.access_token}`, window.location.origin).toString(),
               deviceInvitationParam: 'deviceInvitationCode',
               spaceInvitationParam: 'spaceInvitationCode',
             });
           } catch (err) {
-            // TODO(burdon): Need to notify user.
-            // Ignore (since composer.dxos.org does not implement the middleware).
             log.catch(err);
           }
         },
@@ -206,12 +213,11 @@ const main = async () => {
       [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
       [GridMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-grid')),
-      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), {
-        steps,
-      }),
+      [HelpMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-help'), { steps }),
       [InboxMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-inbox')),
       [IpfsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-ipfs')),
       [KanbanMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-kanban')),
+      // DX_DECK=1
       ...(isDeck
         ? {
             [DeckMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-deck'), {

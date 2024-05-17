@@ -8,7 +8,6 @@ import { TableType } from '@braneframe/types';
 import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
-import { DensityProvider } from '@dxos/react-ui';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 import { arrayMove } from '@dxos/util';
 
@@ -17,17 +16,17 @@ import { createColumns, deleteTableProp, updateTableProp } from './utils';
 import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
-export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
-  table: TableType;
-};
-
 const makeStarterTableSchema = () => {
   return TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
     title: S.optional(S.string),
   });
 };
 
-export const ObjectTable: FC<ObjectTableProps> = ({ table, role, stickyHeader }) => {
+export type ObjectTableProps = Pick<TableProps<any>, 'stickyHeader' | 'role'> & {
+  table: TableType;
+};
+
+export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => {
   const space = getSpace(table);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -154,8 +153,8 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
   }
 
   return (
-    <DensityProvider density='fine'>
-      <Table.Table<any>
+    <>
+      <Table.Main<any>
         keyAccessor={(row: any) => row.id}
         columns={columns}
         data={rows}
@@ -171,6 +170,6 @@ const ObjectTableImpl: FC<ObjectTableProps> = ({ table, role, stickyHeader }) =>
           <pre className='flex-1'>{JSON.stringify((table.schema as any)?._schema, undefined, 2)}</pre>
         </div>
       )}
-    </DensityProvider>
+    </>
   );
 };
