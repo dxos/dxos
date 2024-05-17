@@ -6,7 +6,7 @@ import { type EncodedReferenceObject, encodeReference, Reference } from '@dxos/e
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { nonNullable, stripUndefinedValues } from '@dxos/util';
+import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
@@ -92,7 +92,6 @@ export class Serializer {
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
     const ids = database.automerge.getAllObjectIds();
-    // TODO(wittjosiah): Ideally batch to reduce load on services, but for now just provide a large timeout.
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
@@ -146,8 +145,8 @@ export class Serializer {
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
     const typeRef = core.getType();
 
-    const data = core.getDecoded(['data']) as Record<string, any>;
-    const meta = core.getDecoded(['meta']) as Record<string, any>;
+    const data = serializeEchoData(core.getDecoded(['data']));
+    const meta = serializeEchoData(core.getDecoded(['meta']));
 
     return stripUndefinedValues({
       '@id': core.id,
@@ -201,3 +200,11 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
   }
   return result;
 };
+
+const serializeEchoData = (data: any): any =>
+  deepMapValues(data, (value, recurse) => {
+    if (value instanceof Reference) {
+      return encodeReference(value);
+    }
+    return recurse(value);
+  });

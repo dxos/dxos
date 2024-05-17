@@ -135,5 +135,15 @@ export const NodeModulesPlugin = (): Plugin => ({
         path: require.resolve('../../polyfills/empty-module-stub.js'),
       };
     });
+    onResolve({ filter: /^(node:)?url$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
+    onResolve({ filter: /^(node:)?querystring$/ }, (arg) => {
+      return {
+        path: require.resolve('../../polyfills/empty-module-stub.js'),
+      };
+    });
   },
 });
