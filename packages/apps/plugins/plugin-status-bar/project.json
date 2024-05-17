@@ -1,18 +1,18 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
-  "name": "plugin-status",
+  "name": "plugin-status-bar",
   "tags": [
     "scope:plugins"
   ],
-  "sourceRoot": "packages/apps/plugins/plugin-status/src",
+  "sourceRoot": "packages/apps/plugins/plugin-status-bar/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/plugins/plugin-status/src/index.ts",
-          "packages/apps/plugins/plugin-status/src/meta.tsx"
+          "packages/apps/plugins/plugin-status-bar/src/index.ts",
+          "packages/apps/plugins/plugin-status-bar/src/meta.tsx"
         ],
         "platforms": [
           "browser"

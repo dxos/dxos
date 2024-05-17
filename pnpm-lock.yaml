@@ -617,7 +617,7 @@ importers:
         version: link:../plugins/plugin-stack
       '@braneframe/plugin-status-bar':
         specifier: workspace:*
-        version: link:../plugins/plugin-status
+        version: link:../plugins/plugin-status-bar
       '@braneframe/plugin-table':
         specifier: workspace:*
         version: link:../plugins/plugin-table
@@ -3366,7 +3366,7 @@ importers:
         specifier: ^5.2.9
         version: 5.2.10(@types/node@18.11.9)
 
-  packages/apps/plugins/plugin-status:
+  packages/apps/plugins/plugin-status-bar:
     dependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*

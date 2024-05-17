@@ -1,4 +1,4 @@
-# @braneframe/plugin-status
+# @braneframe/plugin-status-bar
 
 Plugin status.
 

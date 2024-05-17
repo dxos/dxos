@@ -199,7 +199,7 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/plugins/plugin-status/package.json",
+          "path": "packages/apps/plugins/plugin-status-bar/package.json",
           "jsonpath": "$.version"
         },
         {
