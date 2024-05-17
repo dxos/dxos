@@ -1,17 +1,17 @@
 # Type `AgentHostingProviderProps`
-<sub>Declared in [packages/sdk/react-client/src/client/AgentHostingProvider.tsx:19](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)</sub>
+<sub>Declared in [packages/sdk/react-client/src/client/AgentHostingProvider.tsx:19](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)</sub>
 
 
 
 
 ## Properties
-### [config](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)
+### [config](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)
 Type: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 
 
 
-### [halo](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)
+### [halo](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L19)
 Type: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
 
 

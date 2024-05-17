@@ -1,5 +1,5 @@
 # Class `MessageType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/testing/data.ts#L38)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/data.ts#L38)</sub>
 
 
 
