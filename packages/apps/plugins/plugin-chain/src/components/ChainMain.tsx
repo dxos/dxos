@@ -7,7 +7,13 @@ import React, { type FC } from 'react';
 import { type ChainType } from '@braneframe/types';
 import { getSpace } from '@dxos/react-client/echo';
 import { DensityProvider, Main, Select, useTranslation } from '@dxos/react-ui';
-import { baseSurface, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  mx,
+  textBlockWidth,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { PromptTemplate, Section } from './PromptTemplate';
@@ -27,7 +33,7 @@ const ChainMain: FC<{ chain: ChainType }> = ({ chain }) => {
   };
 
   return (
-    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div className='flex flex-col my-2'>
           {chain.prompts.filter(nonNullable).map((prompt, i) => (

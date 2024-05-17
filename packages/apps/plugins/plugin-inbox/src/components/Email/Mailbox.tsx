@@ -6,7 +6,14 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedBorder, fixedInsetFlexLayout, topbarBlockPaddingStart, mx } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  fixedBorder,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
+  mx,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
@@ -71,7 +78,7 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   };
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
         <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].content?.content}</pre>}>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />

@@ -47,6 +47,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
   ({ classNames, children }, forwardedRef) => (
     <div
       className={mx(
+        'bs-[--statusbar-size]',
         'flex justify-end items-center gap-2 border-solid border-t border-gray-200 bg-gray-50 text-gray-500',
         'text-lg pointer-fine:text-xs',
         classNames,

@@ -8,7 +8,12 @@ import { useLayout } from '@braneframe/plugin-layout';
 import { type StackType } from '@braneframe/types';
 import { Surface, useIntent } from '@dxos/app-framework';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  fixedInsetFlexLayout,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 
 import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
@@ -35,7 +40,14 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   };
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, !fullscreen && topbarBlockPaddingStart]}>
+    <Main.Content
+      classNames={[
+        baseSurface,
+        fixedInsetFlexLayout,
+        !fullscreen && topbarBlockPaddingStart,
+        !fullscreen && bottombarBlockPaddingEnd,
+      ]}
+    >
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
         bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
