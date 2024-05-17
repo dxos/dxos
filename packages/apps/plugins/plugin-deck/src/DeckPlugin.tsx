@@ -339,7 +339,11 @@ export const DeckPlugin = ({
                               : []),
                           ],
                         };
-                  if (location.active.complementary && matchMedia('(min-width: 1024px)').matches) {
+                  if (
+                    isActiveParts(location.active) &&
+                    location.active.complementary &&
+                    matchMedia('(min-width: 1024px)').matches
+                  ) {
                     layout.values.complementarySidebarOpen = true;
                   }
                 }
