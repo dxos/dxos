@@ -1,6 +1,6 @@
 {
   "name": "@dxos/labs-functions",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "private": true,
   "description": "Experimental functions.",
   "homepage": "https://dxos.org",
@@ -85,7 +85,7 @@
     "@types/imap-simple": "^4.2.5",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash.defaultsdeep": "^4.6.6",
-    "@types/lodash.startcase": "^4.4.7",
+    "@types/lodash.startcase": "^4.4.9",
     "@types/mailparser": "^3.4.0",
     "@types/server-destroy": "^1.0.3",
     "@types/split2": "^3.2.1",

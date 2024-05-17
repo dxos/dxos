@@ -1,12 +1,11 @@
-Composer is now in Beta and regular updates will be published to the new site 
-:link[composer.space]{href="https://composer.space"}.
+The new location at :link[composer.space]{href="https://composer.space"} gives Composer its own home, and reflects our commitment to an open, extensible, and privacy-preserving knowledge space for everyone.
 
-Composer will remain free to use; we are still 100% committed to building privacy-preserving open source software.
-However, we are asking Beta users to sign-up and give us feedback to help us build Composer during this next stage of development.
+To help us stay in touch with your feedback, we are asking you to sign-up with an email at :link[composer.space]{href="https://composer.space"} and migrate your data by performing a :link[device invitation]{href="https://docs.dxos.org/guide/platform/halo.html#device-invitations"} from this version of the app to the new one.
 
-You will be able to transfer your existing data by initiating a
-:link[device invitation]{href="https://docs.dxos.org/guide/platform/halo.html#device-invitations"}.
-Please click the Sign-up button below to register for the Beta.
+Composer will remain free to use; we are committed to building privacy-preserving, open source software.
+
+This app at `composer.dxos.org` will eventually be sunset in favor of :link[composer.space]{href="https://composer.space"}, please don't wait to migrate your data.
 
 If you have questions or comments, please join our :link[Discord]{href="https://discord.gg/eXVfryv3sW"}.
+
 Thanks for your support!

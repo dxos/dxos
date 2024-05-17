@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-template",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "An application sample implementing a shared list with DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

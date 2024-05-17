@@ -41,7 +41,7 @@ Arguments:
 ### [_register(spaceKey, database, \[owningObject\])]()
 
 
-Register a database in hyper-graph.
+Register a database.
 
 Returns: <code>void</code>
 
@@ -84,6 +84,18 @@ Arguments:
 
 
 
+
+Returns: <code>void</code>
+
+Arguments: 
+
+`provider`: <code>QuerySourceProvider</code>
+
+
+### [unregisterQuerySourceProvider(provider)]()
+
+
+Does not remove the provider from active query contexts.
 
 Returns: <code>void</code>
 

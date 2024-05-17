@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-editor",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Document editing experience within a DXOS shell.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -82,7 +82,7 @@
     "@vitest/browser": "^1.5.0",
     "@vitest/ui": "^1.5.0",
     "happy-dom": "^13.3.1",
-    "jsdom": "^20.0.1",
+    "jsdom": "^24.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-test-renderer": "^18.2.0",
