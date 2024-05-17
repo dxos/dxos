@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
 import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
@@ -15,9 +15,11 @@ import {
   type PartIdentifier,
   type Attention,
   NavigationAction,
+  LayoutAction,
   useIntent,
   activeIds as getActiveIds,
   SLUG_PATH_SEPARATOR,
+  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -116,7 +118,31 @@ const NodePlankHeading = ({
           )
         }
         close
-      />
+      >
+        {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
+        {!!node.data?.comments && !slug.endsWith('comments') && (
+          <Button
+            variant='ghost'
+            classNames='p-1'
+            onClick={() =>
+              dispatch([
+                {
+                  action: NavigationAction.OPEN,
+                  data: {
+                    activeParts: {
+                      complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                    },
+                  },
+                },
+                { action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } },
+              ])
+            }
+          >
+            <span className='sr-only'>{t('open comments label')}</span>
+            <Chat />
+          </Button>
+        )}
+      </PlankHeading.Controls>
     </PlankHeading.Root>
   );
 };

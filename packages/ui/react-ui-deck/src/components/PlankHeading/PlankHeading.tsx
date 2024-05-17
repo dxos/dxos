@@ -202,7 +202,7 @@ type PlankControlEventType = 'close' | `${'pin' | 'increment'}-${'start' | 'end'
 
 type PlankControlHandler = (event: { type: PlankControlEventType; part: PartIdentifier }) => void;
 
-type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'children' | 'onClick'> & {
+type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   part: [string, number, number];
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
@@ -212,12 +212,15 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'children' | 'onClick'> 
 };
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
-  ({ part, onClick, variant = 'default', increment = true, pin, close = false, ...props }, forwardedRef) => {
+  ({ part, onClick, variant = 'default', increment = true, pin, close = false, children, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
+        {children}
         {pin && ['both', 'start'].includes(pin) && (
           <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-start', part })}>
+            <span className='sr-only'>{t('pin start label')}</span>
             <CaretLineLeft />
           </Button>
         )}
@@ -229,6 +232,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-start', part })}
             >
+              <span className='sr-only'>{t('increment start label')}</span>
               <CaretLeft />
             </Button>
             <Button
@@ -237,17 +241,20 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-end', part })}
             >
+              <span className='sr-only'>{t('increment end label')}</span>
               <CaretRight />
             </Button>
           </>
         )}
         {pin && ['both', 'end'].includes(pin) && (
           <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-end', part })}>
+            <span className='sr-only'>{t('pin end label')}</span>
             <CaretLineRight />
           </Button>
         )}
         {close && (
           <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'close', part })}>
+            <span className='sr-only'>{t('close label')}</span>
             <X />
           </Button>
         )}
