@@ -123,6 +123,33 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  test('replicating 2 database', async () => {
+    const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+    const dataAssertion = createDataAssertion();
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
+
+    {
+      await using db1 = await peer1.createDatabase(spaceKey1);
+      await dataAssertion.seed(db1);
+  
+      await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
+      await dataAssertion.verify(db2);
+    }
+
+    {
+      await using db1 = await peer1.createDatabase(spaceKey2);
+      await dataAssertion.seed(db1);
+  
+      await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
+      await dataAssertion.verify(db2);
+    }
+  });
+
   test('replication through MESH', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
