@@ -131,6 +131,8 @@ export class AutomergeHost {
 
   // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
   // Hosts, running in the worker, don't share documents unless requested by other peers.
+  // NOTE: If both peers return sharePolicy=false the replication will not happen
+  // https://github.com/automerge/automerge-repo/pull/292
   private async _sharePolicy(
     peerId: PeerId /* device key */,
     documentId?: DocumentId /* space key */,
@@ -143,11 +145,7 @@ export class AutomergeHost {
       return false;
     }
 
-    const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
-    if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
-      return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
-    }
-
+    // Workaround for https://github.com/automerge/automerge-repo/pull/292
     const doc = this._repo.handles[documentId]?.docSync();
     if (!doc) {
       // TODO(dmaretskyi): Verify that this works as intended.
@@ -155,6 +153,11 @@ export class AutomergeHost {
       const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
       log('doc share policy check', { peerId, documentId, isRequested });
       return isRequested;
+    }
+
+    const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
+    if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
+      return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
     }
 
     return false;
