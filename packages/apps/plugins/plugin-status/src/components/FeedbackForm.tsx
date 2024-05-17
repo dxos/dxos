@@ -34,11 +34,7 @@ const FeedbackFormSchema = S.struct({
 
 type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;
 
-const initialValues: FeedbackFormState = {
-  name: '',
-  email: '',
-  message: '',
-};
+const initialValues: FeedbackFormState = { name: '', email: '', message: '' };
 
 const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
   <div role='none' className={mx(className)}>
@@ -46,15 +42,15 @@ const Section: FC<PropsWithChildren & { className?: string }> = ({ children, cla
   </div>
 );
 
-export const FeedbackForm = () => {
+export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);
   const translation = mkTranslation(t);
-
   const dispatch = useIntentDispatcher();
 
   const onSubmit = useCallback(
     (values: FeedbackFormState) => {
       void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
+      onClose();
     },
     [dispatch],
   );
@@ -65,15 +61,13 @@ export const FeedbackForm = () => {
     onSubmit: (values) => onSubmit(values),
   });
 
-  const textInputClasses = 'text-sm';
-
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
       <Section className='space-b-1'>
         <Input.Root>
           <Input.Label htmlFor='name'>{translation('name label')}</Input.Label>
           <Input.TextInput
-            classNames={textInputClasses}
+            classNames={'text-sm'}
             placeholder={translation('name placeholder')}
             autoFocus
             {...getInputProps('name')}
@@ -88,7 +82,7 @@ export const FeedbackForm = () => {
         <Input.Root>
           <Input.Label htmlFor='email'>{translation('email input label')}</Input.Label>
           <Input.TextInput
-            classNames={textInputClasses}
+            classNames={'text-sm'}
             placeholder={translation('email input placeholder')}
             {...getInputProps('email')}
           />
@@ -102,7 +96,7 @@ export const FeedbackForm = () => {
         <Input.Root validationValence='error'>
           <Input.Label htmlFor='message'>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
-            classNames={textInputClasses}
+            classNames={'text-sm'}
             rows={5}
             cols={30}
             placeholder={translation('feedback text area placeholder')}

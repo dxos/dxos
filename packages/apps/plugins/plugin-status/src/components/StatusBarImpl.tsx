@@ -5,22 +5,20 @@
 import { DiscordLogo, Lightning, PaperPlaneTilt } from '@phosphor-icons/react';
 import React from 'react';
 
-import { useIntentDispatcher } from '@dxos/app-framework';
 import { Popover } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
-import { StatusBarAction as Action, statusBarIntent as intent } from '../StatusBarPlugin';
 
 export const StatusBarImpl = () => {
-  const dispatch = useIntentDispatcher();
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <Popover.Root>
+    <Popover.Root open={open} onOpenChange={setOpen}>
       <StatusBar.Container>
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
-            <StatusBar.Button onClick={() => dispatch(intent(Action.PROVIDE_FEEDBACK))}>
+            <StatusBar.Button>
               <PaperPlaneTilt />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
@@ -39,7 +37,7 @@ export const StatusBarImpl = () => {
         </StatusBar.EndContent>
       </StatusBar.Container>
       <Popover.Content classNames='shadow-lg'>
-        <FeedbackForm />
+        <FeedbackForm onClose={() => setOpen(false)} />
         <Popover.Arrow />
       </Popover.Content>
     </Popover.Root>
