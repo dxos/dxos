@@ -12,7 +12,6 @@ import {
   baseSurface,
   topbarBlockPaddingStart,
   fixedInsetFlexLayout,
-  bottombarBlockScrollPaddingEnd,
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 

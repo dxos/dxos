@@ -15,12 +15,7 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Filter } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import {
-  baseSurface,
-  topbarBlockPaddingStart,
-  bottombarScrollPadding,
-  bottombarBlockPaddingEnd,
-} from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
