@@ -49,30 +49,29 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
+
+  const zoomToContent = (animate = true) => {
+    const commonBounds = editor?.allShapesCommonBounds;
+    if (editor && width && height && commonBounds?.width && commonBounds?.height) {
+      const padding = 40;
+      // NOTE: Objects culled (unstyled) if outside of bounds.
+      const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+      if (zoom <= 0) {
+        throw new Error('Sketch has non-positive size.');
+      }
+      const center = {
+        x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+        y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+      };
+      editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
+      setReady(true);
+    }
+  };
+
   useEffect(() => {
-    if (!autoZoom) {
+    if (!autoZoom || width < 1 || (height ?? 0) < 1) {
       return;
     }
-
-    const zoomToContent = (animate = true) => {
-      const commonBounds = editor?.allShapesCommonBounds;
-      if (editor && width && height && commonBounds?.width && commonBounds?.height) {
-        const padding = 40;
-        // NOTE: Objects culled (unstyled) if outside of bounds.
-        const zoom = Math.min(
-          maxZoom,
-          (width - padding) / commonBounds.width,
-          (height - padding) / commonBounds.height,
-        );
-        const center = {
-          x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
-          y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
-        };
-
-        editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
-        setReady(true);
-      }
-    };
 
     editor?.updateViewportScreenBounds();
     zoomToContent(false);
@@ -89,7 +88,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx(
-        'w-full h-full',
+        'is-full bs-full',
         // 14Override z-index.
         '[&>div>span>div]:z-0',
         // 14Hide .tlui-menu-zone

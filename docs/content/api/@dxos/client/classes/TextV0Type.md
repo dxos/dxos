@@ -1,5 +1,5 @@
 # Class `TextV0Type`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:10](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/testing/data.ts#L10)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:10](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/data.ts#L10)</sub>
 
 
 
