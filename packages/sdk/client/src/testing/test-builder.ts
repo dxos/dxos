@@ -129,6 +129,7 @@ export class TestBuilder {
 
   /**
    * Create local services host.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
   createLocal(options?: { fastPeerPresenceUpdate?: boolean }) {
     const services = new LocalClientServices({
