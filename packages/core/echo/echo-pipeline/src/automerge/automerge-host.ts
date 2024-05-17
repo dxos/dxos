@@ -30,7 +30,7 @@ import {
 import { type Directory } from '@dxos/random-access-storage';
 import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, ComplexSet, defaultMap, mapValues } from '@dxos/util';
+import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
@@ -146,6 +146,7 @@ export class AutomergeHost {
     }
 
     // Workaround for https://github.com/automerge/automerge-repo/pull/292
+    // NOTE: This must override the per-connection policy.
     const doc = this._repo.handles[documentId]?.docSync();
     if (!doc) {
       // TODO(dmaretskyi): Verify that this works as intended.

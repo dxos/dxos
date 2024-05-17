@@ -6,10 +6,10 @@ import { Trigger, synchronized } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
-import { PublicKey } from '@dxos/keys';
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;

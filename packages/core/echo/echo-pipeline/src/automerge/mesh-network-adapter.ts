@@ -2,16 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
-import { NetworkAdapter, type Message, type PeerId, cbor } from '@dxos/automerge/automerge-repo';
+import { type Message, cbor } from '@dxos/automerge/automerge-repo';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { type PeerInfo } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
-import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
-import { EchoReplicator, EchoReplicatorContext, ReplicatorConnection, ShouldAdvertizeParams } from './echo-replicator';
-import { Context, Resource } from '@dxos/context';
-import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
+import { AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
+import { ComplexMap, ComplexSet, defaultMap } from '@dxos/util';
+
+import {
+  type EchoReplicator,
+  type EchoReplicatorContext,
+  type ReplicatorConnection,
+  type ShouldAdvertizeParams,
+} from './echo-replicator';
 
 /**
  * Used to replicate with other peers over the network.
@@ -55,7 +59,7 @@ export class MeshNetworkAdapter implements EchoReplicator {
 
         if (!this._connectionsPerPeer.has(connection.peerId)) {
           this._connectionsPerPeer.set(connection.peerId, connection);
-          connection.enable();
+          await connection.enable();
           this._context.onConnectionOpen(connection);
         }
       },
@@ -63,7 +67,7 @@ export class MeshNetworkAdapter implements EchoReplicator {
         log('onRemoteDisconnected', { peerId: connection.peerId });
         invariant(this._context);
         this._context.onConnectionClosed(connection);
-        connection.disable();
+        await connection.disable();
         this._connectionsPerPeer.delete(connection.peerId);
         this._connections.delete(connection);
       },

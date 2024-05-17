@@ -3,12 +3,12 @@
 //
 
 import { PublicKey } from '@dxos/keys';
-import { describe, test } from '@dxos/test';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
+import { describe, test } from '@dxos/test';
+import { deferAsync } from '@dxos/util';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
-import { defer, deferAsync } from '@dxos/util';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -136,7 +136,7 @@ describe('Integration tests', () => {
     {
       await using db1 = await peer1.createDatabase(spaceKey1);
       await dataAssertion.seed(db1);
-  
+
       await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
       await dataAssertion.verify(db2);
     }
@@ -144,7 +144,7 @@ describe('Integration tests', () => {
     {
       await using db1 = await peer1.createDatabase(spaceKey2);
       await dataAssertion.seed(db1);
-  
+
       await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
       await dataAssertion.verify(db2);
     }

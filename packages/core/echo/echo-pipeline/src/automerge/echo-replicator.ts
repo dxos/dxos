@@ -3,7 +3,7 @@
 //
 
 import { type Message } from '@dxos/automerge/automerge-repo';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
 
 export interface EchoReplicator {
   /**

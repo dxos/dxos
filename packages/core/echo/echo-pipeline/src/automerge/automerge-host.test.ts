@@ -17,6 +17,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -24,10 +25,9 @@ import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
+import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshNetworkAdapter } from './mesh-network-adapter';
-import { PublicKey } from '@dxos/keys';
-import { EchoNetworkAdapter } from './echo-network-adapter';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
