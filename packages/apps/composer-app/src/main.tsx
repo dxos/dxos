@@ -101,6 +101,7 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
   const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
+  const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -288,7 +289,8 @@ const main = async () => {
       WildcardMeta.id,
     ],
     defaults: [
-      // TODO(burdon): Add DebugMeta if dev build.
+      // prettier-ignore
+      ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
       StackMeta.id,
       ThreadMeta.id,
