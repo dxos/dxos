@@ -18,7 +18,7 @@ import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { type SubLevelDB } from '@dxos/kv-store';
+import { type SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { idCodec } from '@dxos/protocols';
 import {
@@ -43,7 +43,7 @@ import { levelMigration } from './migrations';
 export type { DocumentId };
 
 export type AutomergeHostParams = {
-  db: SubLevelDB;
+  db: SublevelDB;
   /**
    * For migration purposes.
    */
@@ -57,7 +57,7 @@ export class AutomergeHost {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _ctx = new Context();
   private readonly _directory?: Directory;
-  private readonly _db: SubLevelDB;
+  private readonly _db: SublevelDB;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter();
 
   private _repo!: Repo;
