@@ -99,33 +99,7 @@ export class AutomergeHost {
       network: [this._clientNetwork, this._echoNetworkAdapter],
       storage: this._storage,
 
-      // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
-      // Hosts, running in the worker, don't share documents unless requested by other peers.
-      sharePolicy: async (peerId /* device key */, documentId /* space key */) => {
-        if (peerId.startsWith('client-')) {
-          return false; // Only send docs to clients if they are requested.
-        }
-
-        if (!documentId) {
-          return false;
-        }
-
-        const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
-        if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
-          return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
-        }
-
-        const doc = this._repo.handles[documentId]?.docSync();
-        if (!doc) {
-          // TODO(dmaretskyi): Verify that this works as intended.
-          // TODO(dmaretskyi): Move to MESH replicator?
-          const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
-          log('doc share policy check', { peerId, documentId, isRequested });
-          return isRequested;
-        }
-
-        return false;
-      },
+      sharePolicy: this._sharePolicy.bind(this),
     });
     this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
@@ -153,6 +127,37 @@ export class AutomergeHost {
 
   async removeReplicator(replicator: EchoReplicator) {
     await this._echoNetworkAdapter.removeReplicator(replicator);
+  }
+
+  // TODO(dmaretskyi): Share based on HALO permissions and space affinity.
+  // Hosts, running in the worker, don't share documents unless requested by other peers.
+  private async _sharePolicy(
+    peerId: PeerId /* device key */,
+    documentId?: DocumentId /* space key */,
+  ): Promise<boolean> {
+    if (peerId.startsWith('client-')) {
+      return false; // Only send docs to clients if they are requested.
+    }
+
+    if (!documentId) {
+      return false;
+    }
+
+    const peerMetadata = this.repo.peerMetadataByPeerId[peerId];
+    if ((peerMetadata as any)?.dxos_peerSource === 'EchoNetworkAdapter') {
+      return this._echoNetworkAdapter.shouldAdvertize(peerId, { documentId });
+    }
+
+    const doc = this._repo.handles[documentId]?.docSync();
+    if (!doc) {
+      // TODO(dmaretskyi): Verify that this works as intended.
+      // TODO(dmaretskyi): Move to MESH replicator?
+      const isRequested = this._requestedDocs.has(`automerge:${documentId}`);
+      log('doc share policy check', { peerId, documentId, isRequested });
+      return isRequested;
+    }
+
+    return false;
   }
 
   private async _beforeSave({ path, batch }: BeforeSaveParams) {
