@@ -4,6 +4,8 @@
 
 import { readFileSync } from 'fs';
 
+import { log } from '@dxos/log';
+
 const data = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 
 const { stats } = data;

@@ -11,7 +11,7 @@ import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { REDIS_PORT } from './agent-env';
+import { REDIS_PORT } from './util';
 
 export type WebSocketRedisProxyParams = {
   /**
@@ -42,11 +42,6 @@ export class WebSocketRedisProxy {
    * WebSocket server to enable connection from playwright browser.
    */
   private readonly _wsServer: Server;
-
-  /**
-   * WebSocket connection to client in playwright browser.
-   */
-  private _ws?: WebSocketDuplex;
 
   constructor(private readonly _params?: WebSocketRedisProxyParams) {
     this._wsServer = createServer(this._params?.websocketServer ?? DEFAULT_WEBSOCKET);

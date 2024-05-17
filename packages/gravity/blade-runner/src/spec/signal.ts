@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { scheduleTaskInterval, sleep } from '@dxos/async';
-import { cancelWithContext, Context } from '@dxos/context';
-import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { type TraceEvent, analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type AgentRunOptions, type AgentEnv, type PlanResults, type TestParams, type TestPlan } from '../plan';
-import { type TestPeer, TestBuilder } from '../test-builder';
+import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
+import { type ReplicantsSummary, type TestParams, type TestPlan, type SchedulerEnvImpl } from '../plan';
+import { type ReplicantRunParams, SignalReplicant } from '../replicants/signal-replicant';
+import { TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 
 export type SignalTestSpec = {
@@ -19,13 +17,13 @@ export type SignalTestSpec = {
   serverOverride?: string;
   signalArguments: string[];
 
-  agents: number;
-  peersPerAgent: number;
+  replicants: number;
+  peersPerReplicant: number;
   serversPerAgent: number;
 
   type: 'discovery' | 'signaling';
   topicCount: number;
-  topicsPerAgent: number;
+  topicsPerReplicant: number;
 
   /**
    * Time to allow everything to init. NOTE: Sometimes first message is not dropped if it is sent too soon.
@@ -33,7 +31,7 @@ export type SignalTestSpec = {
   startWaitTime: number;
   discoverTimeout: number;
   repeatInterval: number;
-  agentWaitTime: number;
+  replicantWaitTime: number;
   duration: number;
   platform: 'nodejs';
 };
@@ -43,26 +41,26 @@ export type SignalAgentConfig = {
   topics: string[];
 };
 
-export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfig> {
+export class SignalTestPlan implements TestPlan<SignalTestSpec> {
   builder = new TestBuilder();
   onError?: (err: Error) => void;
 
   defaultSpec(): SignalTestSpec {
     return {
       servers: 1,
-      agents: 10,
-      peersPerAgent: 10,
+      replicants: 2,
+      peersPerReplicant: 10,
       serversPerAgent: 1,
       signalArguments: [
         // 'p2pserver'
         'globalsubserver', // TODO(burdon): Import/define types (for KUBE?)
       ],
       topicCount: 1,
-      topicsPerAgent: 1,
+      topicsPerReplicant: 1,
       startWaitTime: 1_000,
       discoverTimeout: 5_000,
       repeatInterval: 1_000,
-      agentWaitTime: 5_000,
+      replicantWaitTime: 5_000,
       duration: 20_000,
       type: 'discovery',
       platform: 'nodejs',
@@ -70,124 +68,50 @@ export class SignalTestPlan implements TestPlan<SignalTestSpec, SignalAgentConfi
     };
   }
 
-  async init({ spec, outDir }: TestParams<SignalTestSpec>): Promise<AgentRunOptions<SignalAgentConfig>[]> {
+  async run(env: SchedulerEnvImpl<SignalTestSpec>, params: TestParams<SignalTestSpec>): Promise<void> {
     await Promise.all(
-      range(spec.servers).map((num) =>
-        this.builder.createSignalServer(num, outDir, spec.signalArguments, (err) => {
+      range(params.spec.servers).map((num) =>
+        this.builder.createSignalServer(num, params.outDir, params.spec.signalArguments, (err) => {
           log.error('error in signal server', { err });
           this.onError?.(err);
         }),
       ),
     );
 
-    const topics = Array.from(range(spec.topicCount)).map(() => PublicKey.random());
+    const topics = Array.from(range(params.spec.topicCount)).map(() => PublicKey.random());
 
-    return range(spec.agents).map((): AgentRunOptions<SignalAgentConfig> => {
-      const servers = spec.serverOverride
-        ? [spec.serverOverride]
-        : randomArraySlice(
-            this.builder.servers.map((server) => server.url()),
-            spec.serversPerAgent,
-          );
+    for (let idx = 0; idx < params.spec.replicants; idx++) {
+      await env.spawn(SignalReplicant, { platform: params.spec.platform });
+    }
 
-      return {
-        config: { servers, topics: randomArraySlice(topics, spec.topicsPerAgent).map((topic) => topic.toHex()) },
-        runtime: {
-          platform: spec.platform,
-        },
-      };
-    });
+    await Promise.all(
+      env.replicants.map(async (replicant) => {
+        const servers = params.spec.serverOverride
+          ? [params.spec.serverOverride]
+          : randomArraySlice(
+              this.builder.servers.map((server) => server.url()),
+              params.spec.serversPerAgent,
+            );
+
+        const replicantParams: ReplicantRunParams = {
+          replicants: params.spec.replicants,
+          peersPerReplicant: params.spec.peersPerReplicant,
+          servers,
+          type: params.spec.type,
+          topics: randomArraySlice(topics, params.spec.topicsPerReplicant).map((topic) => topic.toHex()),
+          discoverTimeout: params.spec.discoverTimeout,
+
+          duration: params.spec.duration,
+          repeatInterval: params.spec.repeatInterval,
+          replicantWaitTime: params.spec.replicantWaitTime,
+        };
+
+        return replicant.brain.run(replicantParams);
+      }),
+    );
   }
 
-  async run(env: AgentEnv<SignalTestSpec, SignalAgentConfig>): Promise<void> {
-    const { agentId, agents, spec, config } = env.params;
-    log.info('start', { agentId });
-
-    const ctx = new Context();
-    let testCounter = 0;
-
-    const peers = await Promise.all(
-      range(spec.peersPerAgent).map(() =>
-        this.builder.createPeer({
-          signals: config.servers.map((server) => ({ server })),
-          peerId: PublicKey.random(),
-        }),
-      ),
-    );
-
-    const testRun = async (peer: TestPeer) => {
-      log.info(`${testCounter} test iteration running...`);
-
-      const context = ctx.derive({
-        onError: (err) => {
-          log.trace(
-            'dxos.test.signal.context.onError',
-            checkType<TraceEvent>({
-              type: 'ITERATION_ERROR',
-              err: {
-                name: err.name,
-                message: err.message,
-                stack: err.stack,
-              },
-              peerId: peer.peerId.toHex(),
-              iterationId: testCounter,
-            }),
-          );
-        },
-      });
-
-      log.trace(
-        'dxos.test.signal.iteration.start',
-        checkType<TraceEvent>({
-          type: 'ITERATION_START',
-          peerId: peer.peerId.toHex(),
-          iterationId: testCounter,
-        }),
-      );
-
-      switch (spec.type) {
-        case 'discovery': {
-          peer.regeneratePeerId();
-          const topics = config.topics.map((topic) => PublicKey.from(topic));
-          for (const topic of topics) {
-            await cancelWithContext(context, peer.joinTopic(PublicKey.from(topic)));
-          }
-
-          await sleep(spec.discoverTimeout);
-
-          await Promise.all(topics.map((topic) => cancelWithContext(context, peer.leaveTopic(PublicKey.from(topic)))));
-          break;
-        }
-        case 'signaling': {
-          await cancelWithContext(
-            context,
-            peer.sendMessage(PublicKey.from(randomArraySlice(Object.keys(agents), 1)[0])),
-          );
-          break;
-        }
-        default:
-          throw new Error(`Unknown test type: ${spec.type}`);
-      }
-
-      log.info('iteration finished');
-    };
-
-    scheduleTaskInterval(
-      ctx,
-      async () => {
-        await env.syncBarrier(`iteration-${testCounter}`);
-        await cancelWithContext(ctx, Promise.all(peers.map((peer) => testRun(peer))));
-        testCounter++;
-      },
-      spec.repeatInterval,
-    );
-
-    await sleep(spec.duration);
-    await ctx.dispose();
-    await sleep(spec.agentWaitTime);
-  }
-
-  async finish(params: TestParams<SignalTestSpec>, results: PlanResults): Promise<any> {
+  async analyze(params: TestParams<SignalTestSpec>, results: ReplicantsSummary): Promise<any> {
     await this.builder.destroy();
 
     switch (params.spec.type) {

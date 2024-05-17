@@ -21,11 +21,10 @@ const SketchMain: FC<SketchComponentProps> = (props) => {
         baseSurface,
         fixedInsetFlexLayout,
         topbarBlockPaddingStart,
-        'scroll-padding-bottom-96',
         bottombarBlockPaddingEnd,
       ]}
     >
-      <SketchComponent {...props} />{' '}
+      <SketchComponent {...props} />
     </Main.Content>
   );
 };
