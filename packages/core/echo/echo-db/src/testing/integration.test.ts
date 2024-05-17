@@ -4,9 +4,11 @@
 
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
+import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
+import { defer, deferAsync } from '@dxos/util';
 
 describe('Integration tests', () => {
   let builder: EchoTestBuilder;
@@ -97,6 +99,32 @@ describe('Integration tests', () => {
     await using peer2 = await builder.createPeer();
     await peer1.host.addReplicator(await network.createReplicator());
     await peer2.host.addReplicator(await network.createReplicator());
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    await dataAssertion.seed(db1);
+
+    await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
+    await dataAssertion.verify(db2);
+  });
+
+  test('replication through MESH', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
+    const teleportTestBuilder = new TeleportTestBuilder();
+    await using _ = deferAsync(() => teleportTestBuilder.destroy());
+
+    await using peer1 = await builder.createPeer();
+    await using peer2 = await builder.createPeer();
+
+    const [teleportPeer1, teleportPeer2] = teleportTestBuilder.createPeers({ factory: () => new TeleportTestPeer() });
+    const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
+    teleportConnections[0].teleport.addExtension('replicator', peer1.host.createReplicationExtension());
+    teleportConnections[1].teleport.addExtension('replicator', peer2.host.createReplicationExtension());
+
+    peer1.host.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    peer2.host.authorizeDevice(spaceKey, teleportPeer1.peerId);
+
+    // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);

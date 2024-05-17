@@ -138,6 +138,7 @@ export class EchoHost extends Resource {
 
   /**
    * Authorize remote device to access space.
+   * @deprecated
    */
   // TODO(dmaretskyi): Rethink replication/auth API.
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
@@ -146,12 +147,16 @@ export class EchoHost extends Resource {
 
   /**
    * This doc will be replicated from remote peers.
+   * @deprecated
    */
   // TODO(dmaretskyi): Rethink replication/auth API.
   replicateDocument(docUrl: string) {
     this._automergeHost._requestedDocs.add(docUrl);
   }
 
+  /**
+   * @deprecated
+   */
   // TODO(dmaretskyi): Rethink replication/auth API.
   createReplicationExtension(): TeleportExtension {
     return this._automergeHost.createExtension();
