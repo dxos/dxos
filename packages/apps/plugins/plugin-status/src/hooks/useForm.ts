@@ -13,9 +13,9 @@ interface FormOptions<T> {
 
 export const useForm = <T extends Record<string, any>>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
   const [values, setValues] = useState<T>(initialValues);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [touched, setTouched] = useState<Record<string, boolean>>(
-    Object.keys(initialValues).reduce((acc, key) => ({ ...acc, [key]: false }), {}),
+  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
+  const [touched, setTouched] = useState<Record<keyof T, boolean>>(
+    Object.keys(initialValues).reduce((acc, key) => ({ ...acc, [key]: false }), {} as Record<keyof T, boolean>),
   );
 
   const runValidation = useCallback(
@@ -48,7 +48,10 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   );
 
   const handleSubmit = useCallback(() => {
-    const touchAll = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
+    const touchAll = Object.keys(values).reduce(
+      (acc, key) => ({ ...acc, [key]: true }),
+      {} as Record<keyof T, boolean>,
+    );
     setTouched(touchAll);
 
     if (runValidation(values)) {
@@ -63,11 +66,12 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
   return { values, handleChange, handleSubmit, errors, canSubmit, touched, touchOnBlur, onValidate: runValidation };
 };
 
-const collapseErrorArray = (errors: ValidationError[]) =>
+const collapseErrorArray = <T>(errors: ValidationError[]) =>
   errors.reduce(
     (acc, { path, message }) => {
-      acc[path] = message;
+      // TODO(Zan): This won't play well with nesting.
+      acc[path as keyof T] = message;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<keyof T, string>,
   );
