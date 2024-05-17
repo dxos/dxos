@@ -21,6 +21,7 @@ export class Reference {
 
   // prettier-ignore
   constructor(
+    // TODO(burdon): Change to objectId (and typename).
     public readonly itemId: ItemID,
     public readonly protocol?: string,
     public readonly host?: string
