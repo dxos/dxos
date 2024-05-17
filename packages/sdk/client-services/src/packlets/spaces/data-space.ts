@@ -360,7 +360,8 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
-    // TODO(dmaretskyi): Do we need to return sharePolicy=true for it if we request it with `find`?.
+    // Override share policy = true for the root document.
+    // Workaround for https://github.com/automerge/automerge-repo/pull/292
     this._echoHost.replicateDocument(rootUrl);
     const handle = this._echoHost.automergeRepo.find(rootUrl as any);
 
