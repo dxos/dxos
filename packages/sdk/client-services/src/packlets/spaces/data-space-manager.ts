@@ -3,15 +3,22 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { Context, cancelWithContext } from '@dxos/context';
+import { cancelWithContext, Context } from '@dxos/context';
 import {
-  getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
+  getCredentialAssertion,
   type MemberInfo,
 } from '@dxos/credentials';
 import { type EchoHost } from '@dxos/echo-db';
-import { type MetadataStore, type Space, type SpaceManager } from '@dxos/echo-pipeline';
+import {
+  AuthStatus,
+  type MetadataStore,
+  type Space,
+  type SpaceManager,
+  type SpaceProtocol,
+  type SpaceProtocolSession,
+} from '@dxos/echo-pipeline';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -21,8 +28,9 @@ import { trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
@@ -251,7 +259,11 @@ export class DataSpaceManager {
       onAuthFailure: () => {
         log.warn('auth failure');
       },
-      onMemberRolesChanged: async (members: MemberInfo[]) => {},
+      onMemberRolesChanged: async (members: MemberInfo[]) => {
+        if (dataSpace?.state === SpaceState.READY) {
+          this._handleMemberRoleChanges(presence, space.protocol, members);
+        }
+      },
       memberKey: this._signingContext.identityKey,
       onDelegatedInvitationStatusChange: (invitation, isActive) => {
         return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
@@ -278,6 +290,7 @@ export class DataSpaceManager {
           log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
             await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
+            this._handleMemberRoleChanges(presence, space.protocol, [...space.spaceState.members.values()]);
             this.updated.emit();
           }
         },
@@ -286,6 +299,12 @@ export class DataSpaceManager {
         },
       },
       cache: metadata.cache,
+    });
+
+    presence.newPeer.on((peerState) => {
+      if (dataSpace.state === SpaceState.READY) {
+        this._handleNewPeerConnected(space, peerState);
+      }
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {
@@ -298,6 +317,42 @@ export class DataSpaceManager {
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
+    let closedSessions = 0;
+    for (const member of memberInfo) {
+      if (member.key.equals(presence.getLocalState().identityKey)) {
+        continue;
+      }
+      const peers = presence.getPeersByIdentityKey(member.key);
+      const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
+      const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
+        return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
+      });
+      sessionsToClose.forEach((session) => {
+        void session.close().catch(log.error);
+      });
+      closedSessions += sessionsToClose.length;
+    }
+    log('processed member role changes', {
+      roleChangeCount: memberInfo.length,
+      peersOnline: presence.getPeersOnline().length,
+      closedSessions,
+    });
+    // Handle the case when there was a removed peer online, we can now establish a connection with them
+    spaceProtocol.updateTopology();
+  }
+
+  private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
+    const role = space.spaceState.getMemberRole(peerState.identityKey);
+    if (role === SpaceMember.Role.REMOVED) {
+      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
+      if (session != null) {
+        log('closing a session with a removed peer', { peerId: peerState.peerId });
+        void session.close().catch(log.error);
+      }
+    }
   }
 
   private async _handleInvitationStatusChange(
