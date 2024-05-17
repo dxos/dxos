@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-theme",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
