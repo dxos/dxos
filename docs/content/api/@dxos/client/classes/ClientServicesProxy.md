@@ -1,12 +1,12 @@
 # Class `ClientServicesProxy`
-<sub>Declared in [packages/sdk/client/src/services/service-proxy.ts:18](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L18)</sub>
+<sub>Declared in [packages/sdk/client/src/services/service-proxy.ts:18](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L18)</sub>
 
 
 Implements services that are not local to the app.
 For example, the services can be located in Wallet Extension.
 
 ## Constructors
-### [constructor(_port, _timeout)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L22)
+### [constructor(_port, _timeout)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L22)
 
 
 
@@ -22,31 +22,31 @@ Arguments:
 
 
 ## Properties
-### [closed](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L19)
+### [closed](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L19)
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
 The connection to the services provider was termintaed.
 
 This should fire if the services disconnect unexpectedly or during a client reset.
 
-### [descriptors](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L34)
+### [descriptors](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L34)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [proxy](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L29)
+### [proxy](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L29)
 Type: <code>ProtoRpcPeer&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [services](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L38)
+### [services](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L38)
 Type: <code>[ClientServices](/api/@dxos/client/types/ClientServices)</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L64)
+### [close()](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L64)
 
 
 
@@ -58,7 +58,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/client/src/services/service-proxy.ts#L43)
+### [open()](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/service-proxy.ts#L43)
 
 
 
