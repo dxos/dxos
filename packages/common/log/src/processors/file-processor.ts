@@ -43,7 +43,7 @@ export const createFileProcessor = ({
       try {
         mkdirSync(dirname(pathOrFd));
       } catch {}
-      fd = openSync(pathOrFd, 'w');
+      fd = openSync(pathOrFd, 'a');
     }
 
     const record = {

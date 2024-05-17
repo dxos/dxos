@@ -6,7 +6,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 ENV NX_DAEMON=false
 ENV NODE_OPTIONS="--max_old_space_size=12288"
 
-RUN npm install -g pnpm@8.15.2
+RUN npm install -g pnpm@8.15.8
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y python3 make g++ libxtst-dev libpng++-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 
 COPY . /app

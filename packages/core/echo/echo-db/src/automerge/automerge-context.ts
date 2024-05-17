@@ -142,7 +142,7 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override connect(peerId: PeerId): void {
-    log.info('connecting...');
+    log('connecting...');
 
     // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
     invariant(!this._isClosed);
@@ -195,11 +195,11 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   async close() {
-    log.info('closing...');
+    log('closing...');
     this._isClosed = true;
     await this._stream?.close();
     this._stream = undefined;
-    log.info('closed');
+    log('closed');
     this.emit('close');
   }
 
