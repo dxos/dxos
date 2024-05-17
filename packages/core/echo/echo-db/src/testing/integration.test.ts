@@ -77,6 +77,22 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
+  test('client restart with open host', async () => {
+    const [spaceKey] = PublicKey.randomSequence();
+    const dataAssertion = createDataAssertion();
+    await using peer = await builder.createPeer();
+
+    await using db = await peer.createDatabase(spaceKey);
+    await dataAssertion.seed(db);
+
+    await peer.host.updateIndexes();
+    await peer.client.close();
+    await peer.client.open();
+
+    await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
+    await dataAssertion.verify(db2);
+  })
+
   test('2 clients', async () => {
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
