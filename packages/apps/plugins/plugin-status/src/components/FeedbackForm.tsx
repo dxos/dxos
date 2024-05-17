@@ -59,7 +59,7 @@ export const FeedbackForm = () => {
     [dispatch],
   );
 
-  const { values, errors, handleChange, handleSubmit, canSubmit, touched, handleBlur } = useForm<FeedbackFormState>({
+  const { errors, handleSubmit, canSubmit, touched, getInputProps } = useForm<FeedbackFormState>({
     initialValues,
     validate: (values) => validate(FeedbackFormSchema, values),
     onSubmit: (values) => onSubmit(values),
@@ -71,16 +71,12 @@ export const FeedbackForm = () => {
     <div role='form' className='p-3 flex flex-col gap-2'>
       <Section className='space-b-1'>
         <Input.Root>
-          <Input.Label>{translation('name label')}</Input.Label>
+          <Input.Label htmlFor='name'>{translation('name label')}</Input.Label>
           <Input.TextInput
             classNames={textInputClasses}
             placeholder={translation('name placeholder')}
             autoFocus
-            name='name'
-            value={values.name}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={errors.name !== undefined}
+            {...getInputProps('name')}
           />
           <Input.DescriptionAndValidation>
             {touched.name && errors.name && <Input.Validation>{errors.name}</Input.Validation>}
@@ -90,15 +86,11 @@ export const FeedbackForm = () => {
 
       <Section className='space-b-1'>
         <Input.Root>
-          <Input.Label>{translation('email input label')}</Input.Label>
+          <Input.Label htmlFor='email'>{translation('email input label')}</Input.Label>
           <Input.TextInput
             classNames={textInputClasses}
             placeholder={translation('email input placeholder')}
-            name='email'
-            value={values.email}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={errors.email !== undefined}
+            {...getInputProps('email')}
           />
           <Input.DescriptionAndValidation>
             {touched.email && errors.email && <Input.Validation>{errors.email}</Input.Validation>}
@@ -108,17 +100,13 @@ export const FeedbackForm = () => {
 
       <Section className='space-b-1'>
         <Input.Root validationValence='error'>
-          <Input.Label>{translation('feedback text area label')}</Input.Label>
+          <Input.Label htmlFor='message'>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
             classNames={textInputClasses}
             rows={5}
             cols={30}
             placeholder={translation('feedback text area placeholder')}
-            name='message'
-            value={values.message}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            aria-invalid={errors.message !== undefined}
+            {...getInputProps('message')}
           />
           <Input.DescriptionAndValidation>
             {touched.message && errors.message && <Input.Validation>{errors.message}</Input.Validation>}

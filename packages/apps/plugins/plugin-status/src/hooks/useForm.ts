@@ -11,7 +11,7 @@ interface FormOptions<T> {
   onSubmit: (values: T) => void;
 }
 
-export const useForm = <T extends Record<string, any>>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
+export const useForm = <T extends object>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>(
@@ -61,7 +61,15 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
 
   // NOTE: We can submit if there is no touched field that has an error.
   // - Basically, if there's a validation message present in the form, submit should be disabled.
-  const canSubmit = Object.keys(values).every((key) => touched[key] === false || !errors[key]);
+  const canSubmit = Object.keys(values).every((key) => touched[key as keyof T] === false || !errors[key as keyof T]);
+
+  const getInputProps = (key: keyof T) => ({
+    name: key,
+    value: values[key],
+    onChange: handleChange,
+    onBlur: handleBlur,
+    'aria-invalid': errors[key] !== undefined,
+  });
 
   return {
     values,
@@ -72,6 +80,7 @@ export const useForm = <T extends Record<string, any>>({ initialValues, validate
     touched,
     handleBlur,
     onValidate: runValidation,
+    getInputProps,
   };
 };
 
