@@ -47,6 +47,10 @@ export type JoinPanelImplProps = Pick<
     Halo: string;
     Space: string;
   }>;
+  invitationIds?: Partial<{
+    Halo: string;
+    Space: string;
+  }>;
   invitationStates?: Partial<{
     Halo: Invitation.State;
     Space: Invitation.State;

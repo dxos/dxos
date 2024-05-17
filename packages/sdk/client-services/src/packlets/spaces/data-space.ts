@@ -20,6 +20,7 @@ import { CancelledError, SystemError } from '@dxos/protocols';
 import { SpaceState, type Space as SpaceProto, CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AdmittedFeed,
   type ProfileDocument,
@@ -123,7 +124,7 @@ export class DataSpace {
         new ComplexSet(
           PublicKey.hash,
           Array.from(this._inner.spaceState.members.values())
-            .filter((member) => !member.removed)
+            .filter((member) => member.role !== SpaceMember.Role.REMOVED)
             .map((member) => member.key),
         ),
       update: this._inner.stateUpdate,

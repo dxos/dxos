@@ -5,11 +5,11 @@
 import { ArrowClockwise, ChartBar } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 
-import { Button } from '@dxos/react-ui';
+import { Button, DensityProvider } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
+import { Panel, type PanelProps } from './Panel';
 import { DatabasePanel, TimeSeries, MemoryPanel, PerformancePanel, QueriesPanel, SpansPanel } from './panels';
-import { Panel, type PanelProps } from './util';
 import { type Stats } from '../../hooks';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
@@ -45,33 +45,30 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   };
 
   return (
-    <div
-      className={mx(
-        'flex flex-col w-full h-full bg-neutral-50 dark:bg-neutral-900',
-        'divide-y divide-neutral-200 dark:divide-neutral-700',
-      )}
-    >
-      <Panel
-        id='main'
-        icon={ChartBar}
-        title='Stats'
-        info={
-          <Button classNames='!bg-transparent !p-0' density='fine' value='ghost' onClick={onRefresh}>
-            <ArrowClockwise className={getSize(4)} />
-          </Button>
-        }
-      />
-      <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
-      <PerformancePanel
-        id='performance'
-        open={panelState.performance}
-        onToggle={handleToggle}
-        entries={stats?.performanceEntries}
-      />
-      <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
-      <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
-      <DatabasePanel id='database' database={stats?.database} />
-      <MemoryPanel id='memory' memory={stats?.memory} />
-    </div>
+    <DensityProvider density='fine'>
+      <div className={mx('flex flex-col w-full h-full', 'divide-y divide-neutral-200 dark:divide-neutral-700')}>
+        <Panel
+          id='main'
+          icon={ChartBar}
+          title='Stats'
+          info={
+            <Button classNames='!bg-transparent !p-0' density='fine' value='ghost' onClick={onRefresh}>
+              <ArrowClockwise className={getSize(4)} />
+            </Button>
+          }
+        />
+        <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
+        <PerformancePanel
+          id='performance'
+          open={panelState.performance}
+          onToggle={handleToggle}
+          entries={stats?.performanceEntries}
+        />
+        <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
+        <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+        <DatabasePanel id='database' database={stats?.database} />
+        <MemoryPanel id='memory' memory={stats?.memory} />
+      </div>
+    </DensityProvider>
   );
 };

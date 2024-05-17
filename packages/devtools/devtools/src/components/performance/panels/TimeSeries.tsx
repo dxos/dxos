@@ -8,7 +8,7 @@ import ChartStreaming from 'chartjs-plugin-streaming';
 import React, { createRef, useEffect, useState } from 'react';
 import 'chartjs-adapter-luxon';
 
-import { type CustomPanelProps, Panel } from '../util';
+import { type CustomPanelProps, Panel } from '../Panel';
 
 Chart.register(...registerables);
 Chart.register(ChartStreaming);

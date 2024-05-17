@@ -1,6 +1,6 @@
 {
   "name": "@dxos/create-app-plugin",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Creates a project for prototyping a DXOS app-framework plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -429,7 +429,7 @@ type JoinState = StateFrom<JoinMachine>;
 type JoinSendVoid = (...params: Parameters<InterpreterFrom<JoinMachine>['send']>) => void;
 type JoinSend = InterpreterFrom<JoinMachine>['send'] | JoinSendVoid;
 
-const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
+export const defaultCodeFromUrl = (invitationType: 'halo' | 'space', text: string) => {
   try {
     const searchParams = new URLSearchParams(text.substring(text.lastIndexOf('?')));
     return (

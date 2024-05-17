@@ -43,7 +43,7 @@ describe('InvitationStateMachine', () => {
 
   test('multiple invitations', async () => {
     const stateMachine = createStateMachine();
-    const invitations = range(3).map(() => ({ ...baseInvitation, invitationId: PublicKey.random().toHex() }));
+    const invitations = range(3, () => ({ ...baseInvitation, invitationId: PublicKey.random().toHex() }));
     await Promise.all(
       invitations.map(async (invitation) => {
         return stateMachine.process(await delegateInvitation(invitation));
