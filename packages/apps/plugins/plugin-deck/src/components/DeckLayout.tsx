@@ -103,10 +103,11 @@ const NodePlankHeading = ({
       </ActionRoot>
       <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
       <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         part={part}
         increment={part[0] === 'main'}
-        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
+        // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'

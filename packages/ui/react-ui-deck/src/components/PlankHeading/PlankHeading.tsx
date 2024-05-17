@@ -212,7 +212,7 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'children' | 'onClick'> 
 };
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
-  ({ part, onClick, variant = 'default', increment = true, pin = 'both', close = false, ...props }, forwardedRef) => {
+  ({ part, onClick, variant = 'default', increment = true, pin, close = false, ...props }, forwardedRef) => {
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
     return (
       <ButtonGroup {...props} ref={forwardedRef}>

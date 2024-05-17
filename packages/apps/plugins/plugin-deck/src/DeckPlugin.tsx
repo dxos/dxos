@@ -308,12 +308,21 @@ export const DeckPlugin = ({
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce(
                           (acc: ActiveParts, [part, ids]) => {
-                            const partMembers = new Set<string>();
-                            (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                              partMembers.add(id),
-                            );
-                            (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
-                            acc[part] = Array.from(partMembers).filter(Boolean);
+                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
+                            if (part === 'main') {
+                              const partMembers = new Set<string>();
+                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
+                              //   the current `main` part newly opened slugs are added.
+                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
+                              (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach(
+                                (id) => partMembers.add(id),
+                              );
+                              acc[part] = Array.from(partMembers).filter(Boolean);
+                            } else {
+                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
+                              //   that position.
+                              acc[part] = Array.isArray(ids) ? ids[0] : ids;
+                            }
                             return acc;
                           },
                           { ...location.active },
@@ -330,12 +339,15 @@ export const DeckPlugin = ({
                               : []),
                           ],
                         };
+                  if (location.active.complementary && matchMedia('(min-width: 1024px)').matches) {
+                    layout.values.complementarySidebarOpen = true;
+                  }
                 }
               });
 
               const openedIds: string[] = Array.from(
-                intent.data
-                  ? Object.values(intent.data).reduce((acc, ids) => {
+                location.active
+                  ? Object.values(location.active).reduce((acc, ids) => {
                       Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
                       return acc;
                     }, new Set<string>())
