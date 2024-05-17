@@ -91,7 +91,7 @@ describe('Integration tests', () => {
 
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!);
     await dataAssertion.verify(db2);
-  })
+  });
 
   test('2 clients', async () => {
     const [spaceKey] = PublicKey.randomSequence();
