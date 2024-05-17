@@ -26,7 +26,7 @@ export const meta = {
 const url = new URL(window.location.href);
 const TEST_DEPRECATION = /show_beta_notice/.test(url.href);
 const DEPRECATED_DEPLOYMENT =
-  (false && (url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org')) || TEST_DEPRECATION;
+  url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
 const PRODUCTION_DEPLOYMENT = url.hostname === 'composer.space';
 
 const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {

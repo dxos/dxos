@@ -98,7 +98,7 @@ export const InvitationManager = ({
           <InvitationManagerView id='showing auth code'>
             <Label>{t('auth code message')}</Label>
             <AuthCode code={authCode} large classNames='text-black dark:text-white' />
-            <Label>Be sure the other device is showing this symbol:</Label>
+            <Label>{t('auth other device emoji message')}</Label>
             {emoji && <Emoji text={emoji} />}
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>

@@ -50,6 +50,9 @@ triggers:
 #    subscriptions:
 #     - type: 'braneframe.Calendar'
 
+#  - function: 'dxos.org/function/email'
+#    trigger: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+
   - function: 'dxos.org/function/chat'
     subscriptions:
       - type: 'braneframe.Message'
