@@ -78,7 +78,7 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           webhook: {
-            port: 9999,
+            port: 8080,
           },
         },
       ],
@@ -102,7 +102,7 @@ describe('scheduler', () => {
     await done.wait();
   });
 
-  test.only('websocket', async () => {
+  test('websocket', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
