@@ -47,39 +47,39 @@ functions:
 triggers:
 #  - function: 'dxos.org/function/calendar'
 #    schedule: '*/30 * * * * *'
-#    subscriptions:
+#    subscription:
 #     - type: 'braneframe.Calendar'
 
 #  - function: 'dxos.org/function/email'
 #    trigger: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
 
   - function: 'dxos.org/function/chat'
-    subscriptions:
+    subscription:
       - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/chess'
-    subscriptions:
+    subscription:
       - type: 'dxos.experimental.chess.Game'
 
   # - function: 'dxos.org/function/email'
   #   schedule: '*/30 * * * * *'
-  #   subscriptions:
+  #   subscription:
   #    - type: 'braneframe.Mailbox'
 
 #  - function: 'dxos.org/function/email-extractor'
-#    subscriptions:
+#    subscription:
 #      - type: 'braneframe.Message'
 #        delay: 5
 #        props:
 #          type: 'email'
 
   - function: 'dxos.org/function/embedding'
-    subscriptions:
+    subscription:
       - type: 'braneframe.Document'
         deep: true
         delay: 5
       - type: 'braneframe.File'
 
 #  - function: 'dxos.org/function/github'
-#    subscriptions:
+#    subscription:
 #      - type: 'example.com/schema/project'

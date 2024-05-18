@@ -10,15 +10,20 @@ import { TestBuilder } from '@dxos/client/testing';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler } from './scheduler';
-import { type FunctionManifest } from '../manifest';
+import { type FunctionManifest } from '../types';
 
+// TODO(burdon): Test can add and remove triggers.
+// TODO(burdon): Define as ECHO objects (Effect schema)
 describe('scheduler', () => {
-  test.only('callback', async () => {
+  let client: Client;
+  beforeEach(async () => {
     const testBuilder = new TestBuilder();
-    const client = new Client({ services: testBuilder.createLocal() });
+    client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     await client.halo.createIdentity();
+  });
 
+  test('timer', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -30,7 +35,9 @@ describe('scheduler', () => {
       triggers: [
         {
           function: 'example.com/function/test',
-          schedule: '0/1 * * * * *', // Every 1s.
+          timer: {
+            cron: '0/1 * * * * *', // Every 1s.
+          },
         },
       ],
     };
@@ -42,17 +49,52 @@ describe('scheduler', () => {
         if (++count === 3) {
           done.wake();
         }
-
-        return 200;
       },
     });
 
     await scheduler.start();
+    after(async () => {
+      await scheduler.stop();
+      await client.destroy();
+    });
 
     await done.wait();
     expect(count).to.equal(3);
+  });
 
-    await scheduler.stop();
-    await client.destroy();
+  test('webhook', async () => {
+    const manifest: FunctionManifest = {
+      functions: [
+        {
+          id: 'example.com/function/test',
+          name: 'test',
+          handler: 'test',
+        },
+      ],
+      triggers: [
+        {
+          function: 'example.com/function/test',
+          webhook: {
+            port: 9999,
+          },
+        },
+      ],
+    };
+
+    const done = new Trigger();
+    const scheduler = new Scheduler(client, manifest, {
+      callback: async () => {
+        done.wake();
+      },
+    });
+
+    await scheduler.start();
+    after(async () => {
+      await scheduler.stop();
+      await client.destroy();
+    });
+
+    void fetch('http://localhost:9999');
+    await done.wait();
   });
 });

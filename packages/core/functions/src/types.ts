@@ -15,22 +15,39 @@ export type FunctionDef = {
   description?: string;
 };
 
-// TODO(burdon): Query DSL.
-export type TriggerSubscription = {
+// TODO(burdon): Effect schema.
+// https://www.npmjs.com/package/aws-lambda
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
+export type FunctionTrigger = {
+  function: string;
+
+  timer?: TimerTrigger;
+  webhook?: WebhookTrigger;
+  websocket?: WebsocketTrigger;
+  subscription?: SubscriptionTrigger;
+};
+
+export type TimerTrigger = {
+  cron: string;
+};
+
+// TODO(burdon): Auth header.
+export type WebhookTrigger = {
+  port: number;
+};
+
+// TODO(burdon): Auth header.
+export type WebsocketTrigger = {
+  url: string;
+};
+
+// TODO(burdon): Effect schema.
+export type SubscriptionTrigger = {
   type: string;
   spaceKey: string;
   props?: Record<string, any>;
   deep?: boolean; // Watch changes to object (not just creation).
   delay?: number;
-};
-
-// TODO(burdon): Generalize binding.
-// https://www.npmjs.com/package/aws-lambda
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
-export type FunctionTrigger = {
-  function: string;
-  schedule?: string;
-  subscriptions?: TriggerSubscription[];
 };
 
 /**
