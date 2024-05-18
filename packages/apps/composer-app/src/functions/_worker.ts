@@ -16,7 +16,9 @@ const handler = authMiddleware({
  * Output _worker.js to <pages_build_output_dir> and deploy via git.
  */
 export default {
-  fetch: async (request, env, c) => {
-    return handler(request, env, c)
-  },
+  fetch: process.env.DX_AUTH
+    ? async (request, env, c) => {
+        return handler(request, env, c);
+      }
+    : undefined,
 } as ExportedHandler<Env>;
