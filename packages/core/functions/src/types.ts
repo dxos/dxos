@@ -41,13 +41,19 @@ export type WebsocketTrigger = {
   url: string;
 };
 
-// TODO(burdon): Effect schema.
 export type SubscriptionTrigger = {
-  type: string;
   spaceKey: string;
-  props?: Record<string, any>;
-  deep?: boolean; // Watch changes to object (not just creation).
-  delay?: number;
+  // TODO(burdon): Query DSL.
+  filter: {
+    type: string;
+    props?: Record<string, any>;
+  }[];
+  options?: {
+    // Watch changes to object (not just creation).
+    deep?: boolean;
+    // Debounce changes (delay in ms).
+    delay?: number;
+  };
 };
 
 /**

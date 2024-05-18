@@ -7,13 +7,13 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import { create, Expando } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler } from './scheduler';
 import { type FunctionManifest } from '../types';
 
 // TODO(burdon): Test can add and remove triggers.
-// TODO(burdon): Define as ECHO objects (Effect schema)
 describe('scheduler', () => {
   let client: Client;
   beforeEach(async () => {
@@ -21,6 +21,9 @@ describe('scheduler', () => {
     client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
     await client.halo.createIdentity();
+  });
+  after(async () => {
+    await client.destroy();
   });
 
   test('timer', async () => {
@@ -55,10 +58,9 @@ describe('scheduler', () => {
     await scheduler.start();
     after(async () => {
       await scheduler.stop();
-      await client.destroy();
     });
 
-    await done.wait();
+    await done.wait({ timeout: 5_000 });
     expect(count).to.equal(3);
   });
 
@@ -91,10 +93,60 @@ describe('scheduler', () => {
     await scheduler.start();
     after(async () => {
       await scheduler.stop();
-      await client.destroy();
     });
 
-    void fetch('http://localhost:9999');
+    setTimeout(() => {
+      void fetch('http://localhost:9999');
+    });
+    await done.wait();
+  });
+
+  test.only('subscription', async () => {
+    const manifest: FunctionManifest = {
+      functions: [
+        {
+          id: 'example.com/function/test',
+          name: 'test',
+          handler: 'test',
+        },
+      ],
+      triggers: [
+        {
+          function: 'example.com/function/test',
+          subscription: {
+            spaceKey: client.spaces.default.key.toHex(),
+            filter: [
+              {
+                type: 'Expando',
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    let count = 0;
+    const done = new Trigger();
+    const scheduler = new Scheduler(client, manifest, {
+      callback: async () => {
+        if (++count === 2) {
+          done.wake();
+        }
+      },
+    });
+
+    await scheduler.start();
+    after(async () => {
+      await scheduler.stop();
+    });
+
+    // TODO(burdon): Test schema.
+    setTimeout(() => {
+      const space = client.spaces.default;
+      const object = create(Expando, { title: 'Hello world!' });
+      space.db.add(object);
+    }, 500);
+
     await done.wait();
   });
 });

@@ -256,13 +256,13 @@ export class Scheduler {
 
     // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
     // TODO(burdon): Disable trigger if keeps failing.
-    const { type, props, deep, delay } = trigger;
+    const { filter, options: { deep, delay } = {} } = trigger;
     const update = ({ objects }: Query) => {
       subscription.update(objects);
 
       // TODO(burdon): Hack to monitor changes to Document's text object.
       if (deep) {
-        log.info('update', { type, deep, objects: objects.length });
+        log.info('update', { objects: objects.length });
         for (const object of objects) {
           const content = object.content;
           if (content instanceof TextV0Type) {
@@ -274,10 +274,12 @@ export class Scheduler {
       }
     };
 
+    // TODO(burdon): Is Filter.or implemented?
     // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
     // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-    const query = space.db.query(Filter.typename(type, props));
-    subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
+    // const query = space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
+    const query = space.db.query(Filter.typename(filter[0].type, filter[0].props));
+    subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
 
     ctx.onDispose(() => {
       subscriptions.forEach((unsubscribe) => unsubscribe());
