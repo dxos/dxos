@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create, Expando } from '@dxos/echo-schema';
+import { create, S, TypedObject } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler } from './scheduler';
@@ -102,6 +102,11 @@ describe('scheduler', () => {
   });
 
   test.only('subscription', async () => {
+    class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
+      title: S.string,
+    }) {}
+    client.addSchema(TestType);
+
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -117,7 +122,7 @@ describe('scheduler', () => {
             spaceKey: client.spaces.default.key.toHex(),
             filter: [
               {
-                type: 'Expando',
+                type: TestType.typename,
               },
             ],
           },
@@ -140,12 +145,12 @@ describe('scheduler', () => {
       await scheduler.stop();
     });
 
-    // TODO(burdon): Test schema.
+    // TODO(burdon): Query for Expando?
     setTimeout(() => {
       const space = client.spaces.default;
-      const object = create(Expando, { title: 'Hello world!' });
+      const object = create(TestType, { title: 'Hello world!' });
       space.db.add(object);
-    }, 500);
+    }, 100);
 
     await done.wait();
   });

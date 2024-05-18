@@ -239,7 +239,7 @@ export class Scheduler {
     });
 
     // TODO(burdon): Don't fire initially.
-    // TODO(burdon): Standardize subscription handles.
+    // TODO(burdon): Subscription is called THREE times.
     const subscriptions: (() => void)[] = [];
     const subscription = createSubscription(({ added, updated }) => {
       log.info('updated', { added: added.length, updated: updated.length });
