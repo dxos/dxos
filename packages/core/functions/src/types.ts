@@ -39,6 +39,8 @@ export type WebhookTrigger = {
 // TODO(burdon): Auth header.
 export type WebsocketTrigger = {
   url: string;
+  // Initial message on connect.
+  init?: Record<string, any>;
 };
 
 export type SubscriptionTrigger = {

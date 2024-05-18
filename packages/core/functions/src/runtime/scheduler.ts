@@ -223,6 +223,10 @@ export class Scheduler {
       Object.assign(ws, {
         onopen: () => {
           log.info('opened', { url });
+          if (trigger.init) {
+            ws.send(JSON.stringify(trigger.init));
+          }
+
           open.wake(true);
         },
 

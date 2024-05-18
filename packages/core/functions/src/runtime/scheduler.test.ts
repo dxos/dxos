@@ -117,6 +117,9 @@ describe('scheduler', () => {
           websocket: {
             // url: 'https://hub.dxos.network/api/mailbox/test',
             url: 'http://localhost:8081',
+            init: {
+              type: 'sync',
+            },
           },
         },
       ],
