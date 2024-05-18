@@ -96,7 +96,7 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
   });
 };
 
-export const printSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.table.Options = {}) => {
+export const hprintSpaces = (spaces: Space[], flags: MapSpacesOptions & Table.table.Options = {}) => {
   ux.table(
     mapSpaces(spaces, { ...flags, truncateKeys: true }),
     {
