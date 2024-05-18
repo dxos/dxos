@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import WebSocket from 'ws';
 
 import { Trigger } from '@dxos/async';
 import { Client } from '@dxos/client';
@@ -96,12 +97,53 @@ describe('scheduler', () => {
     });
 
     setTimeout(() => {
-      void fetch('http://localhost:9999');
+      void fetch('http://localhost:8080');
     });
     await done.wait();
   });
 
-  test.only('subscription', async () => {
+  test.only('websocket', async () => {
+    const manifest: FunctionManifest = {
+      functions: [
+        {
+          id: 'example.com/function/test',
+          name: 'test',
+          handler: 'test',
+        },
+      ],
+      triggers: [
+        {
+          function: 'example.com/function/test',
+          websocket: {
+            url: 'http://localhost:8081',
+          },
+        },
+      ],
+    };
+
+    const done = new Trigger();
+    const scheduler = new Scheduler(client, manifest, {
+      callback: async () => {
+        done.wake();
+      },
+    });
+
+    await scheduler.start();
+    after(async () => {
+      await scheduler.stop();
+    });
+
+    setTimeout(() => {
+      const wss = new WebSocket.Server({ port: 8081 });
+      wss.on('connection', (ws: WebSocket) => {
+        ws.send('Hello');
+      });
+    }, 500);
+
+    await done.wait();
+  });
+
+  test('subscription', async () => {
     class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
       title: S.string,
     }) {}

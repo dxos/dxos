@@ -7,7 +7,7 @@ import http from 'http';
 import WebSocket from 'ws';
 
 import { TextV0Type } from '@braneframe/types';
-import { debounce, DeferredTask } from '@dxos/async';
+import { debounce, DeferredTask, sleep, Trigger } from '@dxos/async';
 import { type Client, type PublicKey } from '@dxos/client';
 import { createSubscription, Filter, getAutomergeObjectCore, type Query, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
@@ -85,19 +85,19 @@ export class Scheduler {
       //
 
       if (trigger.timer) {
-        this._createTimer(ctx, space, def, trigger.timer);
+        await this._createTimer(ctx, space, def, trigger.timer);
       }
 
       if (trigger.webhook) {
-        this._createWebhook(ctx, space, def, trigger.webhook);
+        await this._createWebhook(ctx, space, def, trigger.webhook);
       }
 
       if (trigger.websocket) {
-        this._createWebsocket(ctx, space, def, trigger.websocket);
+        await this._createWebsocket(ctx, space, def, trigger.websocket);
       }
 
       if (trigger.subscription) {
-        this._createSubscription(ctx, space, def, trigger.subscription);
+        await this._createSubscription(ctx, space, def, trigger.subscription);
       }
     }
   }
@@ -143,7 +143,7 @@ export class Scheduler {
   /**
    * Cron timer.
    */
-  private _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: TimerTrigger) {
+  private async _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: TimerTrigger) {
     log.info('timer', { space: space.key, trigger });
     const { cron } = trigger;
 
@@ -178,7 +178,7 @@ export class Scheduler {
   /**
    * Webhook.
    */
-  private _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: WebhookTrigger) {
+  private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: WebhookTrigger) {
     log.info('webhook', { space: space.key, trigger });
     const { port } = trigger;
 
@@ -197,38 +197,60 @@ export class Scheduler {
   /**
    * Websocket.
    */
-  private _createWebsocket(ctx: Context, space: Space, def: FunctionDef, trigger: WebsocketTrigger) {
+  // TODO(burdon): Retry.
+  private async _createWebsocket(ctx: Context, space: Space, def: FunctionDef, trigger: WebsocketTrigger) {
     log.info('websocket', { space: space.key, trigger });
     const { url } = trigger;
 
-    const ws = new WebSocket(url);
-    Object.assign(ws, {
-      onopen: () => {
-        log.info('opened', { url });
-      },
+    const RETRY_DELAY = 2;
+    const MAX_ATTEMPTS = 5;
 
-      onclose: () => {
-        log.info('closed', { url });
-      },
+    let ws: WebSocket;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const open = new Trigger<boolean>();
 
-      onerror: (event) => {
-        log.catch(event.error, { url });
-      },
+      ws = new WebSocket(url);
+      Object.assign(ws, {
+        onopen: () => {
+          log.info('opened', { url });
+          open.wake(true);
+        },
 
-      onmessage: async (event) => {
-        await this._execFunction(def, { space: space.key, message: event.data });
-      },
-    } satisfies Partial<WebSocket>);
+        onclose: () => {
+          log.info('closed', { url });
+          open.wake(false);
+        },
+
+        onerror: (event) => {
+          log.catch(event.error, { url });
+        },
+
+        onmessage: async (event) => {
+          await this._execFunction(def, { space: space.key, message: event.data });
+        },
+      } satisfies Partial<WebSocket>);
+
+      const isOpen = await open.wait();
+      if (isOpen) {
+        break;
+      } else {
+        const wait = Math.pow(attempt, 2) * RETRY_DELAY;
+        if (attempt < MAX_ATTEMPTS) {
+          log.warn(`trying again in ${wait}s`, { attempt });
+          await sleep(wait * 1_000);
+        }
+      }
+    }
 
     ctx.onDispose(() => {
-      ws.close();
+      ws?.close();
     });
   }
 
   /**
    * ECHO subscription.
    */
-  private _createSubscription(ctx: Context, space: Space, def: FunctionDef, trigger: SubscriptionTrigger) {
+  private async _createSubscription(ctx: Context, space: Space, def: FunctionDef, trigger: SubscriptionTrigger) {
     log.info('subscription', { space: space.key, trigger });
     const objectIds = new Set<string>();
     const task = new DeferredTask(ctx, async () => {
