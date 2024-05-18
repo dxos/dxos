@@ -187,7 +187,9 @@ export class Scheduler {
       await this._execFunction(def, { space: space.key });
     });
 
-    server.listen(port, () => {});
+    server.listen(port, () => {
+      log.info('started webhook', { port });
+    });
 
     ctx.onDispose(() => {
       server.close();
@@ -197,16 +199,24 @@ export class Scheduler {
   /**
    * Websocket.
    */
-  // TODO(burdon): Retry.
-  private async _createWebsocket(ctx: Context, space: Space, def: FunctionDef, trigger: WebsocketTrigger) {
+  private async _createWebsocket(
+    ctx: Context,
+    space: Space,
+    def: FunctionDef,
+    trigger: WebsocketTrigger,
+    options: {
+      retryDelay: number;
+      maxAttempts: number;
+    } = {
+      retryDelay: 2,
+      maxAttempts: 5,
+    },
+  ) {
     log.info('websocket', { space: space.key, trigger });
     const { url } = trigger;
 
-    const RETRY_DELAY = 2;
-    const MAX_ATTEMPTS = 5;
-
     let ws: WebSocket;
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
       const open = new Trigger<boolean>();
 
       ws = new WebSocket(url);
@@ -234,9 +244,9 @@ export class Scheduler {
       if (isOpen) {
         break;
       } else {
-        const wait = Math.pow(attempt, 2) * RETRY_DELAY;
-        if (attempt < MAX_ATTEMPTS) {
-          log.warn(`trying again in ${wait}s`, { attempt });
+        const wait = Math.pow(attempt, 2) * options.retryDelay;
+        if (attempt < options.maxAttempts) {
+          log.warn(`failed to connect; trying again in ${wait}s`, { attempt });
           await sleep(wait * 1_000);
         }
       }

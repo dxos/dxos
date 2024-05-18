@@ -17,7 +17,7 @@ import { type FunctionManifest } from '../types';
 // TODO(burdon): Test can add and remove triggers.
 describe('scheduler', () => {
   let client: Client;
-  beforeEach(async () => {
+  before(async () => {
     const testBuilder = new TestBuilder();
     client = new Client({ services: testBuilder.createLocal() });
     await client.initialize();
@@ -115,6 +115,7 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           websocket: {
+            // url: 'https://hub.dxos.network/api/mailbox/test',
             url: 'http://localhost:8081',
           },
         },
@@ -123,7 +124,7 @@ describe('scheduler', () => {
 
     const done = new Trigger();
     const scheduler = new Scheduler(client, manifest, {
-      callback: async () => {
+      callback: async (data) => {
         done.wake();
       },
     });
