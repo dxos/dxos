@@ -277,8 +277,7 @@ export class Scheduler {
     // TODO(burdon): Is Filter.or implemented?
     // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
     // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-    // const query = space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
-    const query = space.db.query(Filter.typename(filter[0].type, filter[0].props));
+    const query = space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
     subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
 
     ctx.onDispose(() => {
