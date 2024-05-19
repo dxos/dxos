@@ -9,7 +9,8 @@
   },
   "exclude": [],
   "include": [
-    "src"
+    "src",
+    "tools"
   ],
   "references": [
     {
