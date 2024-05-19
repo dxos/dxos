@@ -4,7 +4,7 @@
 
 import { MailboxType, MessageType } from '@braneframe/types';
 import { Filter } from '@dxos/echo-db';
-import { create, getMeta, getTypename } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, type ForeignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -19,6 +19,8 @@ export type EmailMessage = {
   subject: string;
   body: string;
 };
+
+const SOURCE_ID = 'hub.dxos.network/mailbox';
 
 export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }> = async ({
   event,
@@ -37,25 +39,43 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     return;
   }
 
-  // TODO(burdon): Create mailbox if doesn't exist.
+  // TODO(burdon): Factor out.
+  // TODO(burdon): Impl query by meta.
+  const findObjectWithForeignKey = <T>(objects: EchoReactiveObject<T>[], foreignKey: ForeignKey) => {
+    return objects.find((result) => {
+      return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
+    });
+  };
+
+  // Create mailbox if doesn't exist.
   const { account } = context.data ?? { account: 'hello@dxos.network' };
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
-  const mailbox = mailboxes.find((mailbox) => mailbox.id === account);
-  log.info('mailbox', { id: mailbox?.id });
-
-  const SOURCE_ID = 'hub.dxos.network/mailbox';
+  const mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
+  if (!mailbox) {
+    space.db.add(
+      create(
+        MailboxType,
+        {
+          title: account,
+          messages: [],
+        },
+        {
+          keys: [
+            {
+              source: SOURCE_ID,
+              id: account,
+            },
+          ],
+        },
+      ),
+    );
+  }
 
   const { objects } = await space.db.query(Filter.schema(MessageType)).run();
   for (const message of messages) {
-    // TODO(burdon): Impl query by meta.
-    const current = objects.find((result) => {
-      return getMeta(result).keys.find(({ source, id }) => source === SOURCE_ID && id === String(message.id));
-    });
-
+    const current = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!current) {
       log.info('insert', { type: getTypename(message), id: message.id });
-
-      // TODO(burdon): Set meta keys.
       space.db.add(
         create(
           MessageType,
@@ -63,6 +83,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
             to: [{ email: message.to }],
             from: { email: message.from },
             subject: message.subject,
+            // TODO(burdon): Add message block.
             blocks: [
               // {
               //   timestamp: message.created,
