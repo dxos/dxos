@@ -19,7 +19,7 @@ describe('scheduler', () => {
   let client: Client;
   before(async () => {
     const testBuilder = new TestBuilder();
-    client = new Client({ services: testBuilder.createLocal() });
+    client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     await client.halo.createIdentity();
   });

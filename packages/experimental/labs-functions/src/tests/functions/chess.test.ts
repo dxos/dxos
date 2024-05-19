@@ -20,8 +20,6 @@ describe('Chess', () => {
   test('chess function', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
-    const services = testBuilder.createLocal();
-
     const config = new Config({
       runtime: {
         agent: {
@@ -37,12 +35,13 @@ describe('Chess', () => {
       },
     });
 
+    const services = testBuilder.createLocalClientServices();
     const client = new Client({ services, config });
     await client.initialize();
     afterTest(() => client.destroy());
 
     const functionsPlugin = new FunctionsPlugin();
-    await functionsPlugin.initialize({ client, clientServices: services, plugins: [] });
+    await functionsPlugin.initialize({ client, clientServices: services });
     await openAndClose(functionsPlugin);
 
     const manifest: FunctionManifest = {

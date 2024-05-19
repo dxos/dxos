@@ -20,7 +20,7 @@ export const getPluginConfig = (config: Config, id: string): Runtime.Agent.Plugi
 export type PluginContext = {
   client: Client;
   clientServices: ClientServicesProvider;
-  plugins: Plugin[];
+  plugins?: Plugin[];
 };
 
 export abstract class Plugin {

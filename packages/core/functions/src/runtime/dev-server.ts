@@ -111,7 +111,8 @@ export class DevServer {
     const trigger = new Trigger();
     this._server?.close(async () => {
       if (this._registrationId) {
-        await this._client.services.services.FunctionRegistryService!.unregister({
+        invariant(this._client.services.services.FunctionRegistryService);
+        await this._client.services.services.FunctionRegistryService.unregister({
           registrationId: this._registrationId,
         });
 

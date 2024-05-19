@@ -70,7 +70,7 @@ describe('Index queries', () => {
     afterTest(async () => {
       await builder.destroy();
     });
-    const client = await initClient(builder.createLocal());
+    const client = await initClient(builder.createLocalClientServices());
     afterTest(() => client.destroy());
 
     await client.halo.createIdentity();
@@ -92,7 +92,7 @@ describe('Index queries', () => {
     });
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -104,7 +104,7 @@ describe('Index queries', () => {
     }
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await asyncTimeout(client.spaces.isReady.wait(), 5000);
       const space = client.spaces.get(spaceKey)!;
@@ -124,7 +124,7 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -139,7 +139,7 @@ describe('Index queries', () => {
     await builder.level.sublevel('index-storage').clear();
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await client.spaces.isReady.wait({ timeout: 1000 });
       const space = client.spaces.get(spaceKey)!;
@@ -159,7 +159,7 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
 
       const space = await client.spaces.create();
@@ -176,7 +176,7 @@ describe('Index queries', () => {
     await builder.level.sublevel('index-metadata').clear();
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await client.spaces.isReady.wait();
       const space = client.spaces.get(spaceKey)!;

@@ -5,15 +5,18 @@
 import { expect } from 'chai';
 import path from 'path';
 
+import { FunctionsPlugin } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { describe, test } from '@dxos/test';
+import { type ClientServicesProvider } from '@dxos/client-protocol';
+import { describe, openAndClose, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
 import { type FunctionManifest } from '../types';
 
-describe.only('dev server', () => {
+describe('dev server', () => {
   let client: Client;
+  let services: ClientServicesProvider;
   let testBuilder: TestBuilder;
   before(async () => {
     testBuilder = new TestBuilder();
@@ -32,7 +35,9 @@ describe.only('dev server', () => {
       },
     });
 
-    client = new Client({ config, services: testBuilder.createLocal() });
+    services = testBuilder.createLocalClientServices();
+    client = new Client({ config, services });
+
     await client.initialize();
     await client.halo.createIdentity();
     testBuilder.ctx.onDispose(() => client.destroy());
@@ -41,7 +46,7 @@ describe.only('dev server', () => {
     await testBuilder.destroy();
   });
 
-  test('start/stop', async () => {
+  test.only('start/stop', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -59,6 +64,11 @@ describe.only('dev server', () => {
         },
       ],
     };
+
+    // TODO(burdon): Better way to configure plugin?
+    const functionsPlugin = new FunctionsPlugin();
+    await functionsPlugin.initialize({ client, clientServices: services });
+    await openAndClose(functionsPlugin);
 
     const server = new DevServer(client, {
       manifest,
