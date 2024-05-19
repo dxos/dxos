@@ -52,8 +52,7 @@ export type ClientServices = {
  */
 export interface ClientServicesProvider {
   /**
-   * The connection to the services provider was termintaed.
-   *
+   * The connection to the services provider was terminated.
    * This should fire if the services disconnect unexpectedly or during a client reset.
    */
   closed: Event<Error | undefined>;
