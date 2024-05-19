@@ -4,13 +4,6 @@
 
 import * as S from '@effect/schema/Schema';
 
-// TODO(burdon): Define schema (and add declaration to YML file).
-// # $schema:./schema.json
-// Lambda-like function definitions.
-// See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
-// https://www.npmjs.com/package/aws-lambda
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
-
 const TimerTriggerSchema = S.struct({
   cron: S.string,
 });
@@ -76,8 +69,8 @@ export type FunctionDef = S.Schema.Type<typeof FunctionDefSchema>;
  * Function manifest file.
  */
 export const FunctionManifestSchema = S.struct({
-  functions: S.array(FunctionDefSchema),
-  triggers: S.array(FunctionTriggerSchema),
+  functions: S.mutable(S.array(FunctionDefSchema)),
+  triggers: S.mutable(S.array(FunctionTriggerSchema)),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
