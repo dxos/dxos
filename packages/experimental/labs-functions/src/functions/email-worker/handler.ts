@@ -3,8 +3,8 @@
 //
 
 import { MailboxType, MessageType } from '@braneframe/types';
-import { Filter } from '@dxos/echo-db';
-import { create, type EchoReactiveObject, type ForeignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
+import { create, getTypename } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -38,14 +38,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-
-  // TODO(burdon): Factor out.
-  // TODO(burdon): Impl query by meta.
-  const findObjectWithForeignKey = <T>(objects: EchoReactiveObject<T>[], foreignKey: ForeignKey) => {
-    return objects.find((result) => {
-      return getMeta(result).keys.find(({ source, id }) => source === foreignKey.source && id === foreignKey.id);
-    });
-  };
 
   // Create mailbox if doesn't exist.
   const { account } = context.data ?? { account: 'hello@dxos.network' };

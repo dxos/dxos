@@ -49,8 +49,8 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     };
   }, [selected]);
 
-  const messages = [...mailbox.messages]
-    .filter(nonNullable)
+  const messages = [...(mailbox.messages ?? [])]
+    .filter(nonNullable) // TODO(burdon): Why is this necessary?
     .filter((message) => message.state !== MessageState.ARCHIVED && message.state !== MessageState.DELETED)
     .sort(byDate());
 

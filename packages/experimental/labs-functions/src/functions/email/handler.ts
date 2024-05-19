@@ -77,7 +77,7 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   for (const message of messages) {
     const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
-      mailbox.messages.push(message);
+      (mailbox.messages ??= []).push(message);
       added++;
     }
   }
