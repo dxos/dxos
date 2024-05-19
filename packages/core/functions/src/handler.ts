@@ -18,10 +18,13 @@ export interface Response {
   status(code: number): Response;
 }
 
-// TODO(burdon): Limit access to individual space?
 export interface FunctionContext {
+  // TODO(burdon): Limit access to individual space.
   client: Client;
+  // TODO(burdon): Replace with storage service abstraction.
   dataDir?: string;
+  // Data passed to function invocation.
+  data?: any;
 }
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.

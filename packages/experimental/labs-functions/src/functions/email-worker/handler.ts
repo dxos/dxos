@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MessageType } from '@braneframe/types';
+import { MailboxType, MessageType } from '@braneframe/types';
 import { Filter } from '@dxos/echo-db';
 import { create, getMeta } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
@@ -36,6 +36,10 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
+
+  const { account } = context.data;
+  const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
+  const mailbox = mailboxes.find((mailbox) => mailbox.id === account);
 
   const SOURCE_ID = 'hub.dxos.network/mailbox';
 

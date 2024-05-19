@@ -16,9 +16,9 @@ import { type FunctionContext, type FunctionHandler, type Response } from '../ha
 import { type FunctionDef, type FunctionManifest } from '../types';
 
 export type DevServerOptions = {
-  port?: number;
-  directory: string;
   manifest: FunctionManifest;
+  baseDir: string;
+  port?: number;
   reload?: boolean;
   dataDir?: string;
 };
@@ -78,6 +78,7 @@ export class DevServer {
           await this._load(def, true);
         }
 
+        // TODO(burdon): Get function context.
         res.statusCode = await this._invoke(name, req.body);
         res.end();
       } catch (err: any) {
@@ -132,7 +133,7 @@ export class DevServer {
    */
   private async _load(def: FunctionDef, flush = false) {
     const { id, name, handler } = def;
-    const path = join(this._options.directory, handler);
+    const path = join(this._options.baseDir, handler);
     log.info('loading', { id });
 
     // Remove from cache.

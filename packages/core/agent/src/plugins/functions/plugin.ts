@@ -57,8 +57,8 @@ export class FunctionsPlugin extends Plugin {
       }
     });
 
-    this._config.config = { ...DEFAULT_CONFIG, ...this._config.config };
-    const port = this._config.config!.port;
+    this.config.config = { ...DEFAULT_CONFIG, ...this.config.config };
+    const port = this.config.config!.port;
     const server = app.listen(port, () => {
       log.info('Functions plugin', { port });
     });

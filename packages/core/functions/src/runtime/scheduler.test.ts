@@ -102,7 +102,7 @@ describe('scheduler', () => {
     await done.wait();
   });
 
-  test.only('websocket', async () => {
+  test('websocket', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {

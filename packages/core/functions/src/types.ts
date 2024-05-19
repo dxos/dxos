@@ -39,6 +39,10 @@ const SubscriptionTriggerSchema = S.struct({
 const FunctionTriggerSchema = S.struct({
   function: S.string.pipe(S.description('Function ID/URI.')),
 
+  // Context passed to function.
+  context: S.optional(S.record(S.string, S.any)),
+
+  // Triggers.
   timer: S.optional(TimerTriggerSchema),
   webhook: S.optional(WebhookTriggerSchema),
   websocket: S.optional(WebsocketTriggerSchema),

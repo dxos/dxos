@@ -253,7 +253,7 @@ export class SpaceProxy implements Space {
       return;
     }
 
-    log.info('initializing...', { space: this.key });
+    log('initializing...', { space: this.key });
     this._initializing = true;
     await this._invitationsProxy.open();
     await this._initializeDb();
@@ -263,7 +263,7 @@ export class SpaceProxy implements Space {
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
-    log.info('initialized', { space: this.key });
+    log('initialized', { space: this.key });
   }
 
   @trace.span({ showInBrowserTimeline: true })

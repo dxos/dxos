@@ -28,8 +28,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
-    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     manifest: Flags.string({ description: 'Functions manifest file.' }),
+    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     reload: Flags.boolean({ description: 'Reload functions on change.' }),
   };
 
@@ -48,11 +48,11 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
+
       const server = new DevServer(client, {
-        directory,
         manifest,
+        baseDir: directory,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });

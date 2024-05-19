@@ -41,11 +41,6 @@ functions:
     handler: 'gpt'
     description: 'GPT Chat.'
 
-  - id: 'dxos.org/function/hello'
-    name: 'hello'
-    handler: 'hello'
-    description: 'Hello world.'
-
   - id: 'dxos.org/function/github'
     name: 'github'
     handler: 'github'
@@ -70,6 +65,8 @@ triggers:
       - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/email-worker'
+    context:
+      account: hello@dxos.network
     websocket:
       url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
       init:

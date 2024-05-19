@@ -57,15 +57,18 @@ export class TestBuilder {
 
   _transport: TransportKind;
 
-  // prettier-ignore
-  constructor (
+  constructor(
     config?: Config,
     public signalManagerContext = new MemorySignalManagerContext(),
-    // TODO(nf): configure better
+    // TODO(nf): Configure better.
     transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
+  }
+
+  public get ctx() {
+    return this._ctx;
   }
 
   /**
@@ -121,9 +124,8 @@ export class TestBuilder {
       runtimeParams,
       ...this.networking,
     });
-    this._ctx.onDispose(async () => {
-      await services.close();
-    });
+
+    this._ctx.onDispose(() => services.close());
     return services;
   }
 
@@ -138,9 +140,8 @@ export class TestBuilder {
       runtimeParams: { invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 } },
       ...this.networking,
     });
-    this._ctx.onDispose(async () => {
-      await services.close();
-    });
+
+    this._ctx.onDispose(() => services.close());
     return services;
   }
 
@@ -149,16 +150,14 @@ export class TestBuilder {
    */
   createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     const server = createProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
       port: hostPort,
     });
+
     this._ctx.onDispose(() => server.close());
-
-    // TODO(dmaretskyi): Refactor.
-
-    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
   }
@@ -171,9 +170,7 @@ export class TestBuilder {
 
 export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
   const object = create(Expando, {});
-
   createDb.add(object);
-
   await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };

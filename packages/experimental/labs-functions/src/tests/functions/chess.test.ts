@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { readFile } from 'fs/promises';
-import { load } from 'js-yaml';
 import { join } from 'path';
 
 import { FunctionsPlugin } from '@dxos/agent';
@@ -19,7 +17,7 @@ import { afterTest, openAndClose, test } from '@dxos/test';
 const FUNCTIONS_PORT = 8757;
 
 describe('Chess', () => {
-  test.skip('chess function', async () => {
+  test('chess function', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
     const services = testBuilder.createLocal();
@@ -44,18 +42,34 @@ describe('Chess', () => {
     afterTest(() => client.destroy());
 
     const functionsPlugin = new FunctionsPlugin();
-    await functionsPlugin.initialize({
-      client,
-      clientServices: services,
-      plugins: [],
-    });
+    await functionsPlugin.initialize({ client, clientServices: services, plugins: [] });
     await openAndClose(functionsPlugin);
 
-    const manifest = load(await readFile(join(__dirname, '../../../functions.yml'), 'utf8')) as FunctionManifest;
+    const manifest: FunctionManifest = {
+      functions: [
+        {
+          id: 'dxos.org/function/chess',
+          name: 'chess',
+          handler: 'chess',
+        },
+      ],
+      triggers: [
+        {
+          function: 'dxos.org/function/chess',
+          subscription: {
+            filter: [
+              {
+                type: 'dxos.experimental.chess.Game',
+              },
+            ],
+          },
+        },
+      ],
+    };
 
     const server = new DevServer(client, {
-      directory: join(__dirname, '../../functions'),
       manifest,
+      baseDir: join(__dirname, '../../functions'),
     });
 
     await server.initialize();
@@ -71,34 +85,45 @@ describe('Chess', () => {
 
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
+
+    // Create data.
+    client.addSchema(GameType);
     const game = client.spaces.default.db.add(create(GameType, {}));
     await client.spaces.default.db.flush();
 
-    const { Chess } = await import('chess.js');
-
+    // Trigger.
     const done = new Trigger();
-    const advanceGame = () => {
-      const chess = new Chess();
-      chess.loadPgn(game.pgn ?? '');
-      if (chess.isGameOver() || chess.history().length > 50) {
-        done.wake();
-      }
+    const cleanup = getAutomergeObjectCore(game).updates.on(async () => {
+      await doMove(game, 'b');
+      done.wake();
+    });
 
-      if (chess.turn() === 'w') {
-        const moves = chess.moves();
-        if (moves.length) {
-          const move = moves[Math.floor(Math.random() * moves.length)];
-          chess.move(move);
-          game.pgn = chess.pgn();
-          console.log(`move: ${chess.history().length}\n` + chess.ascii());
-        }
-      }
-    };
-
-    const cleanup = getAutomergeObjectCore(game).updates.on(advanceGame);
     afterTest(cleanup);
-    advanceGame();
 
+    await doMove(game, 'w');
     await done.wait();
   });
 });
+
+const doMove = async (game: GameType, turn: string) => {
+  const done = new Trigger();
+
+  const { Chess } = await import('chess.js');
+  const chess = new Chess();
+  chess.loadPgn(game.pgn ?? '');
+  if (chess.isGameOver() || chess.history().length > 50) {
+    done.wake();
+  }
+
+  if (chess.turn() === turn) {
+    const moves = chess.moves();
+    if (moves.length) {
+      const move = moves[Math.floor(Math.random() * moves.length)];
+      chess.move(move);
+      game.pgn = chess.pgn();
+      console.log(`move: ${chess.history().length}\n` + chess.ascii());
+    }
+  }
+
+  return done.wake();
+};
