@@ -5680,6 +5680,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/schema':
+        specifier: 0.64.7
+        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -5692,10 +5695,16 @@ importers:
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
+      ws:
+        specifier: ^8.14.2
+        version: 8.17.0
     devDependencies:
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
+      '@types/ws':
+        specifier: ^7.4.0
+        version: 7.4.7
 
   packages/core/halo/credentials:
     dependencies:
@@ -14694,7 +14703,7 @@ packages:
       '@vladfrangu/async_event_emitter': 2.2.4
       discord-api-types: 0.37.61
       tslib: 2.6.2
-      ws: 8.14.2
+      ws: 8.17.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -23540,7 +23549,7 @@ packages:
       util: 0.12.5
       util-deprecate: 1.0.2
       watchpack: 2.4.0
-      ws: 8.14.2
+      ws: 8.17.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -26932,14 +26941,14 @@ packages:
     resolution: {integrity: sha512-321F3sWafnlw93uRTSjEBVuvWCxTkWNDs7ektQS15drrroL3TMeFOynu4rDrIz0jXD9Vas0HCD2Tq/P0uxFLdw==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.12
     dev: true
 
   /@wdio/types@8.32.4:
     resolution: {integrity: sha512-pDPGcCvq0MQF8u0sjw9m4aMI2gAKn6vphyBB2+1IxYriL777gbbxd7WQ+PygMBvYVprCYIkLPvhUFwF85WakmA==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.12
     dev: true
 
   /@wdio/utils@8.33.1:
@@ -39747,7 +39756,7 @@ packages:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240320.1
-      ws: 8.14.2
+      ws: 8.17.0
       youch: 3.3.3
       zod: 3.22.4
     transitivePeerDependencies:
@@ -39770,7 +39779,7 @@ packages:
       stoppable: 1.1.0
       undici: 5.28.4
       workerd: 1.20240405.0
-      ws: 8.14.2
+      ws: 8.17.0
       youch: 3.3.3
       zod: 3.22.4
     transitivePeerDependencies:
@@ -48524,7 +48533,7 @@ packages:
     resolution: {integrity: sha512-QREF4c08omN9BPh3QDmz5h+OEvjdzDliuEcrDuXoDnHSMxIj1rsonzsgRaM2PXhFZuPeMIiKZYqc7Qg9BGbh6A==}
     engines: {node: ^16.13 || >=18}
     dependencies:
-      '@types/node': 20.11.16
+      '@types/node': 20.12.12
       '@types/ws': 8.5.9
       '@wdio/config': 8.33.1
       '@wdio/logger': 8.28.0
@@ -48534,7 +48543,7 @@ packages:
       deepmerge-ts: 5.1.0
       got: 12.6.1
       ky: 0.33.3
-      ws: 8.14.2
+      ws: 8.17.0
     transitivePeerDependencies:
       - bufferutil
       - supports-color

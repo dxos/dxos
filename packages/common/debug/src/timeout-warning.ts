@@ -15,7 +15,7 @@ export const warnAfterTimeout = async <T>(timeout: number, context: string, body
   const stack = new StackTrace();
   const timeoutId = setTimeout(() => {
     console.warn(
-      `Action \`${context}\` is taking more then ${timeout} ms to complete. This might be a bug.\n${stack.getStack()}`,
+      `Action \`${context}\` is taking more then ${timeout.toLocaleString()}ms to complete. This might be a bug.\n${stack.getStack()}`,
     );
   }, timeout);
   try {
