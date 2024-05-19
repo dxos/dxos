@@ -73,7 +73,7 @@ triggers:
     websocket:
       url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
       init:
-        type: 'init'
+        type: 'sync'
 
 #  - function: 'dxos.org/function/email'
 #    timer:
