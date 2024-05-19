@@ -48,7 +48,7 @@ export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
 
 export const isDeleted = <T extends {}>(obj: T): boolean => {
   const proxyHandlerSlot = getProxyHandlerSlot(obj);
-  return proxyHandlerSlot.handler?.isObjectDeleted(obj) ?? false;
+  return proxyHandlerSlot.handler?.isDeleted(obj) ?? false;
 };
 
 export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));

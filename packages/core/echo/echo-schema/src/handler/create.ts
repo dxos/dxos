@@ -29,7 +29,7 @@ const generateId = () => PublicKey.random().toHex();
 // TODO(dmaretskyi): Deep mutability.
 export const create: {
   <T extends {}>(obj: T): ReactiveObject<T>;
-  <T extends {}>(schema: typeof Expando, obj: T, meta?: ObjectMeta): ReactiveObject<Expando>;
+  <T extends {}>(schema: typeof Expando, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<Expando>;
   <T extends {}>(schema: S.Schema<T>, obj: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T>;
 } = <T extends {}>(schemaOrObj: S.Schema<T> | T, obj?: ExcludeId<T>, meta?: ObjectMeta): ReactiveObject<T> => {
   if (obj && (schemaOrObj as any) !== Expando) {
@@ -53,7 +53,7 @@ export const create: {
     prepareTypedTarget(obj as T, schema);
 
     // TODO(burdon): Comment.
-    return createReactiveProxy(obj, TypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
+    return createReactiveProxy<T>(obj as T, TypedReactiveHandler.instance as ReactiveHandler<any>);
   } else if (obj && (schemaOrObj as any) === Expando) {
     if (!isValidProxyTarget(obj)) {
       throw new Error('Value cannot be made into a reactive object.');
@@ -69,17 +69,15 @@ export const create: {
     initMeta(obj, meta);
 
     // Untyped.
-    return createReactiveProxy(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>) as ReactiveObject<T>;
+    return createReactiveProxy<T>(obj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   } else {
     if (!isValidProxyTarget(schemaOrObj)) {
       throw new Error('Value cannot be made into a reactive object.');
     }
+
     initMeta(schemaOrObj, meta);
 
     // Untyped.
-    return createReactiveProxy(
-      schemaOrObj as T,
-      UntypedReactiveHandler.instance as ReactiveHandler<any>,
-    ) as ReactiveObject<T>;
+    return createReactiveProxy<T>(schemaOrObj as T, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
