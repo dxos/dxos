@@ -15,7 +15,6 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionSubscriptionEvent } from '../handler';
 import {
   type FunctionDef,
   type FunctionManifest,
@@ -26,7 +25,7 @@ import {
   type WebsocketTrigger,
 } from '../types';
 
-type Callback = (data: FunctionSubscriptionEvent) => Promise<void>;
+export type Callback = (data: any) => Promise<void>;
 
 export type SchedulerOptions = {
   endpoint?: string;
@@ -148,7 +147,7 @@ export class Scheduler {
     const { cron } = trigger;
 
     const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, { space: space.key });
+      await this._execFunction(def, { spaceKey: space.key });
     });
 
     let last = 0;
@@ -182,7 +181,7 @@ export class Scheduler {
 
     // TODO(burdon): POST JSON.
     const server = http.createServer(async (req, res) => {
-      await this._execFunction(def, { space: space.key });
+      await this._execFunction(def, { spaceKey: space.key });
     });
 
     server.listen(port, () => {
@@ -240,7 +239,7 @@ export class Scheduler {
         onmessage: async (event) => {
           try {
             const data = JSON.parse(new TextDecoder().decode(event.data as Uint8Array));
-            await this._execFunction(def, { space: space.key, data });
+            await this._execFunction(def, { spaceKey: space.key, data });
           } catch (err) {
             log.catch(err, { url });
           }
@@ -271,7 +270,7 @@ export class Scheduler {
     log.info('subscription', { space: space.key, trigger });
     const objectIds = new Set<string>();
     const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, { space: space.key, objects: Array.from(objectIds) });
+      await this._execFunction(def, { spaceKey: space.key, objects: Array.from(objectIds) });
     });
 
     // TODO(burdon): Don't fire initially.

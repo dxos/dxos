@@ -8,9 +8,8 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-// TODO(burdon): Context?
 // Lambda-like function definitions.
-// See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
+// https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
 // https://www.npmjs.com/package/aws-lambda
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 
@@ -26,20 +25,18 @@ export interface FunctionContext {
 }
 
 // TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 export type FunctionHandler<T extends {}> = (params: {
   event: T;
   context: FunctionContext;
   response: Response;
 }) => Promise<Response | void>;
 
-export type FunctionSubscriptionEvent = {
-  space?: string; // TODO(burdon): Convert to PublicKey.
+export type RawSubscriptionEvent = {
+  spaceKey?: string;
   objects?: string[];
 };
 
-// TODO(burdon): ???
-export type FunctionSubscriptionEvent2 = {
+export type SubscriptionEvent = {
   space?: Space;
   objects?: EchoReactiveObject<any>[];
 };
@@ -55,16 +52,16 @@ export type FunctionSubscriptionEvent2 = {
  * NOTE: Get space key from devtools or `dx space list --json`
  */
 export const subscriptionHandler = (
-  handler: FunctionHandler<FunctionSubscriptionEvent2>,
-): FunctionHandler<FunctionSubscriptionEvent> => {
+  handler: FunctionHandler<SubscriptionEvent>,
+): FunctionHandler<RawSubscriptionEvent> => {
   return ({ event, context, ...rest }) => {
     const { client } = context;
-    const space = event.space ? client.spaces.get(PublicKey.from(event.space)) : undefined;
+    const space = event.spaceKey ? client.spaces.get(PublicKey.from(event.spaceKey)) : undefined;
     const objects =
       space &&
       event.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable);
 
-    if (!!event.space && !space) {
+    if (!!event.spaceKey && !space) {
       log.warn('invalid space', { event });
     } else {
       log.info('handler', { space: space?.key.truncate(), objects: objects?.length });

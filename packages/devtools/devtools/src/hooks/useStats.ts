@@ -105,6 +105,7 @@ export const useStats = (): [Stats, () => void] => {
       )
         .map((handle: any) => handle.docSync())
         .filter(Boolean);
+
       const database: DatabaseInfo = {
         spaces: client.spaces.get().length,
         objects: objects.length,
