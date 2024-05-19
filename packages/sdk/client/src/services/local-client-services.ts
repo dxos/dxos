@@ -25,7 +25,7 @@ export const fromHost = async (
   config = new Config(),
   params?: ClientServicesHostParams,
   observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean,
+  signalTelemetryEnabled?: boolean, // TODO(burdon): Not used?
 ): Promise<ClientServicesProvider> => {
   const getSignalMetadata = () => {
     return {
@@ -33,11 +33,13 @@ export const fromHost = async (
       ...(observabilityGroup ? { group: observabilityGroup } : {}),
     };
   };
+
   const services = new LocalClientServices({
     config,
     ...(await setupNetworking(config, {}, getSignalMetadata)),
     ...params,
   });
+
   return services;
 };
 

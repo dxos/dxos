@@ -49,7 +49,7 @@ export const testConfigWithLocalSignal = new Config({
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
 export class TestBuilder {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
   public storage?: Storage;
@@ -85,14 +85,17 @@ export class TestBuilder {
             iceServers: this.config.get('runtime.services.ice'),
           });
           break;
+
         case TransportKind.LIBDATACHANNEL:
           transportFactory = createLibDataChannelTransportFactory({
             iceServers: this.config.get('runtime.services.ice'),
           });
           break;
+
         case TransportKind.TCP:
           transportFactory = TcpTransportFactory;
           break;
+
         default:
           throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
       }
@@ -163,7 +166,7 @@ export class TestBuilder {
   }
 
   async destroy() {
-    await this._ctx.dispose();
+    await this._ctx.dispose(true);
     await this.level?.close();
   }
 }

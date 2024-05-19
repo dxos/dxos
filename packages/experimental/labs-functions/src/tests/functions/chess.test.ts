@@ -17,7 +17,7 @@ import { afterTest, openAndClose, test } from '@dxos/test';
 const FUNCTIONS_PORT = 8757;
 
 describe('Chess', () => {
-  test('chess function', async () => {
+  test.only('chess function', async () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
     const config = new Config({
@@ -36,7 +36,8 @@ describe('Chess', () => {
     });
 
     const services = testBuilder.createLocalClientServices();
-    const client = new Client({ services, config });
+    const client = new Client({ config, services });
+
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -78,7 +79,6 @@ describe('Chess', () => {
     const scheduler = new Scheduler(client, manifest, {
       endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
     });
-
     await scheduler.start();
     afterTest(() => scheduler.stop());
 

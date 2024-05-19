@@ -32,7 +32,7 @@ export class DevServer {
 
   private _server?: http.Server;
   private _port?: number;
-  private _registrationId?: string;
+  private _functionServiceRegistration?: string;
   private _proxy?: string;
   private _seq = 0;
 
@@ -66,6 +66,9 @@ export class DevServer {
   }
 
   async start() {
+    invariant(!this._server);
+    log.info('starting...');
+
     const app = express();
     app.use(express.json());
 
@@ -98,35 +101,46 @@ export class DevServer {
         functions: this.functions.map(({ def: { name } }) => ({ name })),
       });
 
-      log.info('registered', { registrationId, endpoint });
-      this._registrationId = registrationId;
+      log.info('registered', { endpoint });
       this._proxy = endpoint;
+      this._functionServiceRegistration = registrationId;
     } catch (err: any) {
       await this.stop();
       throw new Error('FunctionRegistryService not available (check plugin is configured).');
     }
+
+    log.info('started', { port: this._port });
   }
 
   async stop() {
+    invariant(this._server);
+    log.info('stopping...');
+
     const trigger = new Trigger();
-    this._server?.close(async () => {
-      if (this._registrationId) {
-        invariant(this._client.services.services.FunctionRegistryService);
-        await this._client.services.services.FunctionRegistryService.unregister({
-          registrationId: this._registrationId,
-        });
+    this._server.close(async () => {
+      log.info('server stopped');
+      try {
+        if (this._functionServiceRegistration) {
+          invariant(this._client.services.services.FunctionRegistryService);
+          await this._client.services.services.FunctionRegistryService.unregister({
+            registrationId: this._functionServiceRegistration,
+          });
 
-        log.info('unregistered', { registrationId: this._registrationId });
-        this._registrationId = undefined;
-        this._proxy = undefined;
+          log.info('unregistered', { registrationId: this._functionServiceRegistration });
+          this._functionServiceRegistration = undefined;
+          this._proxy = undefined;
+        }
+
+        trigger.wake();
+      } catch (err) {
+        trigger.throw(err);
       }
-
-      trigger.wake();
     });
 
     await trigger.wait();
     this._port = undefined;
     this._server = undefined;
+    log.info('stopped');
   }
 
   /**

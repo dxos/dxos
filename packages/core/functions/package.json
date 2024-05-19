@@ -41,7 +41,6 @@
   },
   "devDependencies": {
     "@dxos/agent": "workspace:*",
-    "@dxos/client-protocol": "workspace:*",
     "@types/express": "^4.17.17",
     "@types/ws": "^7.4.0"
   },
