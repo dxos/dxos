@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider } from '@dxos/client-protocol';
+import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
 import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
@@ -135,7 +135,7 @@ export class TestBuilder {
   /**
    * Create local services host.
    */
-  createLocalClientServices(): ClientServicesProvider {
+  createLocalClientServices(): LocalClientServices {
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,

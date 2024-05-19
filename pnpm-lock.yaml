@@ -5702,9 +5702,6 @@ importers:
       '@dxos/agent':
         specifier: workspace:*
         version: link:../agent
-      '@dxos/client-protocol':
-        specifier: workspace:*
-        version: link:../../sdk/client-protocol
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17

@@ -133,7 +133,7 @@ export class DevServer {
 
         trigger.wake();
       } catch (err) {
-        trigger.throw(err);
+        trigger.throw(err as Error);
       }
     });
 

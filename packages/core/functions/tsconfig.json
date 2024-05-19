@@ -37,9 +37,6 @@
       "path": "../../sdk/client"
     },
     {
-      "path": "../../sdk/client-protocol"
-    },
-    {
       "path": "../agent"
     },
     {
