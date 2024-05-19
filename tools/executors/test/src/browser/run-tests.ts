@@ -129,7 +129,7 @@ export const runTests = async (page: Page, browserType: BrowserType, bundleFile:
       return;
     }
 
-    console.log(`\n\nTests failed to load in ${INIT_TIMEOUT} ms.`);
+    console.log(`\n\nTests failed to load in ${INIT_TIMEOUT}ms.`);
     process.exit(-1);
   }, INIT_TIMEOUT);
 
