@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReplicantClass } from '../interface';
+import { type ReplicantClass } from '../plan';
 
 /**
  * Registry for all replicants.

@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { type TraceEvent } from '../analysys';
-import { ReplicantRegistry, type ReplicantEnv } from '../plan';
+import { ReplicantRegistry, type ReplicantEnv } from '../env';
 import { type TestPeer, TestBuilder } from '../test-builder';
 import { randomArraySlice } from '../util';
 

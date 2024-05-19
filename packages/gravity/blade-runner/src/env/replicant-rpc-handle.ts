@@ -4,8 +4,8 @@
 
 import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { rpcCodec } from './util';
-import { type ReplicantClass } from '../interface';
+import { type ReplicantClass } from '../plan';
+import { rpcCodec } from '../redis';
 
 export const open = Symbol('open');
 export const close = Symbol('close');

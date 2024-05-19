@@ -5,7 +5,7 @@
 import { log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../../analysys/resource-usage';
+import { RESOURCE_USAGE_LOG, type ResourceUsageLogEntry } from '../analysys/resource-usage';
 
 export const initDiagnostics = () => {
   // TODO(mykola): track diagnostics in browser.

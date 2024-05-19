@@ -12,7 +12,7 @@ import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../plan';
+import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
   content: S.string,
