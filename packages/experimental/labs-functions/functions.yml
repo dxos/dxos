@@ -49,25 +49,29 @@ triggers:
 #    timer:
 #      cron: '*/30 * * * * *'
 #    subscription:
-#      filters:
+#      filter:
 #      - type: 'braneframe.Calendar'
 
 #  - function: 'dxos.org/function/email'
-#    trigger: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+#    websocket:
+#      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
 
 #  - function: 'dxos.org/function/chat'
 #    subscription:
+#      filter:
 #      - type: 'braneframe.Message'
 
 #  - function: 'dxos.org/function/chess'
 #    subscription:
+#      filter:
 #      - type: 'dxos.experimental.chess.Game'
 
 # - function: 'dxos.org/function/email'
 #   timer:
 #     cron: '*/30 * * * * *'
 #   subscription:
-#     type: 'braneframe.Mailbox'
+#     filter:
+#     - type: 'braneframe.Mailbox'
 
 #  - function: 'dxos.org/function/email-extractor'
 #    subscription:

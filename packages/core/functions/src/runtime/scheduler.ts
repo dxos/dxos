@@ -34,7 +34,7 @@ export type SchedulerOptions = {
 };
 
 /**
- * Functions scheduler.
+ * The scheduler triggers function exectuion based on various triggers.
  */
 export class Scheduler {
   // Map of mounted functions.

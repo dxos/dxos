@@ -45,7 +45,7 @@ export type WebsocketTrigger = {
 
 export type SubscriptionTrigger = {
   spaceKey: string;
-  // TODO(burdon): Query DSL.
+  // TODO(burdon): Query DSL (OR).
   filter: {
     type: string;
     props?: Record<string, any>;
@@ -63,5 +63,6 @@ export type SubscriptionTrigger = {
  */
 export type FunctionManifest = {
   functions: FunctionDef[];
+  // TODO(burdon): Remove.
   triggers: FunctionTrigger[];
 };
