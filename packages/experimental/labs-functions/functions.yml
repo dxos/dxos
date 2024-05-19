@@ -72,6 +72,8 @@ triggers:
   - function: 'dxos.org/function/email-worker'
     websocket:
       url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+      init:
+        type: 'init'
 
 #  - function: 'dxos.org/function/email'
 #    timer:
