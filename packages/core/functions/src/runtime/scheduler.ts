@@ -224,7 +224,7 @@ export class Scheduler {
         onopen: () => {
           log.info('opened', { url });
           if (trigger.init) {
-            ws.send(JSON.stringify(trigger.init));
+            ws.send(new TextEncoder().encode(JSON.stringify(trigger.init)));
           }
 
           open.wake(true);

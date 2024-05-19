@@ -14,7 +14,7 @@ import { describe, test } from '@dxos/test';
 import { Scheduler } from './scheduler';
 import { type FunctionManifest } from '../types';
 
-// TODO(burdon): Test can add and remove triggers.
+// TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
   let client: Client;
   before(async () => {
@@ -102,7 +102,7 @@ describe('scheduler', () => {
     await done.wait();
   });
 
-  test('websocket', async () => {
+  test.only('websocket', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -137,10 +137,15 @@ describe('scheduler', () => {
       await scheduler.stop();
     });
 
+    // Test server.
     setTimeout(() => {
       const wss = new WebSocket.Server({ port: 8081 });
       wss.on('connection', (ws: WebSocket) => {
-        ws.send('Hello');
+        ws.on('message', (data) => {
+          const info = JSON.parse(new TextDecoder().decode(data as ArrayBuffer));
+          expect(info.type).to.equal('sync');
+          done.wake();
+        });
       });
     }, 500);
 
