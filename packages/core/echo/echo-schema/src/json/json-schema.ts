@@ -79,7 +79,7 @@ export interface JsonSchema {
 /**
  * @deprecated
  */
-export const getTypename = (schema: JsonSchema): string | undefined => {
+export const getSchemaTypename = (schema: JsonSchema): string | undefined => {
   const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
   if (match) {
     return match[1];

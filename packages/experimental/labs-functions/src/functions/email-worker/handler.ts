@@ -4,7 +4,7 @@
 
 import { MailboxType, MessageType } from '@braneframe/types';
 import { Filter } from '@dxos/echo-db';
-import { create, getMeta } from '@dxos/echo-schema';
+import { create, getMeta, getTypename } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -37,9 +37,11 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     return;
   }
 
-  const { account } = context.data;
+  // TODO(burdon): Create mailbox if doesn't exist.
+  const { account } = context.data ?? { account: 'hello@dxos.network' };
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
   const mailbox = mailboxes.find((mailbox) => mailbox.id === account);
+  log.info('mailbox', { id: mailbox?.id });
 
   const SOURCE_ID = 'hub.dxos.network/mailbox';
 
@@ -51,7 +53,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     });
 
     if (!current) {
-      log.info('insert', { message });
+      log.info('insert', { type: getTypename(message), id: message.id });
 
       // TODO(burdon): Set meta keys.
       space.db.add(

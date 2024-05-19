@@ -51,7 +51,7 @@ describe('dev server', () => {
     await testBuilder.destroy();
   });
 
-  test.only('start/stop', async () => {
+  test('start/stop', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
