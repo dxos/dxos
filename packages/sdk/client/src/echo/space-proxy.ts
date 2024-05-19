@@ -59,7 +59,6 @@ export class SpaceProxy implements Space {
    */
   public readonly _initializationComplete = new Trigger();
 
-  // TODO(burdon): Change to state property.
   @trace.info()
   private _initializing = false;
 
@@ -205,6 +204,7 @@ export class SpaceProxy implements Space {
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
       this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
+
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -252,13 +252,10 @@ export class SpaceProxy implements Space {
     if (this._initializing || this._initialized) {
       return;
     }
-    log('initializing...');
 
-    // TODO(burdon): Does this need to be set before method completes?
+    log.info('initializing...', { space: this.key });
     this._initializing = true;
-
     await this._invitationsProxy.open();
-
     await this._initializeDb();
 
     this._initialized = true;
@@ -266,7 +263,7 @@ export class SpaceProxy implements Space {
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
-    log('initialized');
+    log.info('initialized', { space: this.key });
   }
 
   @trace.span({ showInBrowserTimeline: true })

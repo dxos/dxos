@@ -37,13 +37,15 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     return;
   }
 
-  const SOURCE_ID = 'cloudflare';
+  const SOURCE_ID = 'hub.dxos.network/mailbox';
 
-  const { results } = await space.db.query(Filter.schema(MessageType)).run();
+  const { objects } = await space.db.query(Filter.schema(MessageType)).run();
   for (const message of messages) {
-    const current = results.find((result) => {
+    // TODO(burdon): Impl query by meta.
+    const current = objects.find((result) => {
       return getMeta(result).keys.find(({ source, id }) => source === SOURCE_ID && id === String(message.id));
     });
+
     if (!current) {
       log.info('insert', { message });
 
@@ -62,13 +64,14 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
               // },
             ],
           },
-          // {
-          //   keys: [
-          //     {
-          //       source: SOURCE_ID
-          //     }
-          //   ],
-          // },
+          {
+            keys: [
+              {
+                source: SOURCE_ID,
+                id: String(message.id),
+              },
+            ],
+          },
         ),
       );
     }

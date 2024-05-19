@@ -22,6 +22,7 @@ export const getSchema = <T extends {} = any>(obj: T | undefined): S.Schema<any>
     const proxyHandlerSlot = getProxyHandlerSlot(obj);
     return proxyHandlerSlot.handler?.getSchema(obj);
   }
+
   return undefined;
 };
 
@@ -36,6 +37,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation.storedSchemaId) {
     return new Reference(annotation.storedSchemaId);
   }
+
   return Reference.fromLegacyTypename(annotation.typename);
 };
 
@@ -56,9 +58,9 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
-    throw new Error(
-      'EchoObject schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))',
-    );
+    // TODO(burdon): Catalog user-facing errors (this is too verbose).
+    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))');
   }
+
   return typeReference;
 };
