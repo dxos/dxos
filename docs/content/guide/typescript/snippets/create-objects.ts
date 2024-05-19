@@ -13,7 +13,7 @@ const client = new Client();
 
   const space = client.spaces.get()[0];
 
-  const object = new Expando({ type: 'task', title: 'buy milk' });
+  const object = create(Expando, { type: 'task', title: 'buy milk' });
 
   await space.db.add(object);
 })();
