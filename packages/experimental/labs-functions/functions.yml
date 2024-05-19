@@ -26,6 +26,11 @@ functions:
     handler: 'email-extractor'
     description: 'Email Extractor.'
 
+  - id: 'dxos.org/function/email-worker'
+    name: 'email-worker'
+    handler: 'email-worker'
+    description: 'Email Sync with Cloudflare Worker.'
+
   - id: 'dxos.org/function/embedding'
     name: 'embedding'
     handler: 'embedding'

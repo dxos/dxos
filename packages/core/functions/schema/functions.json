@@ -119,7 +119,9 @@
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": [],
+                  "required": [
+                    "type"
+                  ],
                   "properties": {
                     "type": {
                       "type": "string",

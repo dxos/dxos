@@ -19,6 +19,9 @@
     "schema",
     "src"
   ],
+  "scripts": {
+    "schema": "ts-node ./tools/schema.ts"
+  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
