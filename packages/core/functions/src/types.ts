@@ -29,7 +29,7 @@ const SubscriptionTriggerSchema = S.struct({
   // TODO(burdon): Define query DSL.
   filter: S.array(
     S.struct({
-      type: S.optional(S.string),
+      type: S.string,
       props: S.optional(S.record(S.string, S.any)),
     }),
   ),

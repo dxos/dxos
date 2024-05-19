@@ -3,7 +3,7 @@
 //
 
 import { CronJob } from 'cron';
-import http from 'http';
+import http from 'node:http';
 import WebSocket from 'ws';
 
 import { TextV0Type } from '@braneframe/types';
