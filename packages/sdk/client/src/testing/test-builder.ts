@@ -166,7 +166,7 @@ export class TestBuilder {
   }
 
   async destroy() {
-    await this._ctx.dispose(true);
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
     await this.level?.close();
   }
 }

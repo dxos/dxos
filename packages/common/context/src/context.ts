@@ -121,6 +121,9 @@ export class Context {
       return this._disposePromise;
     }
 
+    // TODO(burdon): Set later?
+    this._isDisposed = true;
+
     // Set the promise before running the callbacks.
     let resolveDispose!: (value: boolean) => void;
     this._disposePromise = new Promise<boolean>((resolve) => {
@@ -152,7 +155,6 @@ export class Context {
     }
 
     resolveDispose(clean);
-    this._isDisposed = true; // TODO(burdon): ???
     if (this._name) {
       log.info('disposed', { context: this._name });
     }
