@@ -78,7 +78,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, name } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, name)}}`)
+              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
               .join('\n'),
         );
       }

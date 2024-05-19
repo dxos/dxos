@@ -46,7 +46,7 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
 
   async invoke(invocation: FunctionInvocation): Promise<FunctionInvocationResult> {
     const registration = this._registrations.findLast((registration) =>
-      registration.request.functions?.some(({ name }) => invocation.function === name),
+      registration.request.functions?.some(({ path }) => invocation.function === path),
     );
     if (!registration) {
       throw new Error(`Function not found: ${invocation.function} `);

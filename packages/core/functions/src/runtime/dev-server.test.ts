@@ -51,21 +51,13 @@ describe('dev server', () => {
     await testBuilder.destroy();
   });
 
-  test.skip('start/stop', async () => {
+  test.only('start/stop', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: 'test',
           handler: 'test',
-        },
-      ],
-      triggers: [
-        {
-          function: 'example.com/function/test',
-          timer: {
-            cron: '0/1 * * * * *', // Every 1s.
-          },
         },
       ],
     };
@@ -74,13 +66,15 @@ describe('dev server', () => {
       manifest,
       baseDir: path.join(__dirname, '../testing'),
     });
-
     await server.initialize();
     await server.start();
 
-    // TODO(burdon): Error: invariant violation [this._client.services.services.FunctionRegistryService]
+    // TODO(burdon): Doesn't shut down cleanly.
+    //  Error: invariant violation [this._client.services.services.FunctionRegistryService]
     testBuilder.ctx.onDispose(() => server.stop());
     expect(server).to.exist;
-    console.log(Object.keys(client.services.services));
+
+    await server.invoke('test', {});
+    expect(server.stats.seq).to.eq(1);
   });
 });

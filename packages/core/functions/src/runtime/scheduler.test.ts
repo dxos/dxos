@@ -32,7 +32,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: 'test',
           handler: 'test',
         },
       ],
@@ -70,7 +70,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: 'test',
           handler: 'test',
         },
       ],
@@ -107,7 +107,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: 'test',
           handler: 'test',
         },
       ],
@@ -162,7 +162,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: 'test',
           handler: 'test',
         },
       ],

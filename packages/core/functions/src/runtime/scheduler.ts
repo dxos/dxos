@@ -117,7 +117,7 @@ export class Scheduler {
       const { endpoint, callback } = this._options;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        await fetch(`${this._options.endpoint}/${def.name}`, {
+        await fetch(`${this._options.endpoint}/${def.path}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

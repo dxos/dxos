@@ -61,9 +61,10 @@ export type FunctionTrigger = S.Schema.Type<typeof FunctionTriggerSchema>;
 // TODO(burdon): Name vs. path?
 const FunctionDefSchema = S.struct({
   id: S.string,
+  // name: S.string,
   description: S.optional(S.string),
-  name: S.string,
-  // TODO(burdon): NPM/GitHub URL?
+  path: S.string,
+  // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,
 });
 
@@ -74,7 +75,7 @@ export type FunctionDef = S.Schema.Type<typeof FunctionDefSchema>;
  */
 export const FunctionManifestSchema = S.struct({
   functions: S.mutable(S.array(FunctionDefSchema)),
-  triggers: S.mutable(S.array(FunctionTriggerSchema)),
+  triggers: S.optional(S.mutable(S.array(FunctionTriggerSchema))),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;

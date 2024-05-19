@@ -7,42 +7,42 @@
 
 functions:
   - id: 'dxos.org/function/calendar'
-    name: 'calendar'
+    path: 'calendar'
     handler: 'calendar'
     description: 'Calendar Sync.'
 
   - id: 'dxos.org/function/chess'
-    name: 'chess'
+    path: 'chess'
     handler: 'chess'
     description: 'Chess.'
 
   - id: 'dxos.org/function/email'
-    name: 'email'
+    path: 'email'
     handler: 'email'
     description: 'Email Sync.'
 
   - id: 'dxos.org/function/email-extractor'
-    name: 'email-extractor'
+    path: 'email-extractor'
     handler: 'email-extractor'
     description: 'Email Extractor.'
 
   - id: 'dxos.org/function/email-worker'
-    name: 'email-worker'
+    path: 'email-worker'
     handler: 'email-worker'
     description: 'Email Sync with Cloudflare Worker.'
 
   - id: 'dxos.org/function/embedding'
-    name: 'embedding'
+    path: 'embedding'
     handler: 'embedding'
     description: 'Text embedding.'
 
   - id: 'dxos.org/function/gpt'
-    name: 'gpt'
+    path: 'gpt'
     handler: 'gpt'
     description: 'GPT Chat.'
 
   - id: 'dxos.org/function/github'
-    name: 'github'
+    path: 'github'
     handler: 'github'
     description: 'Github Sync.'
 

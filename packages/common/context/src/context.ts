@@ -121,7 +121,7 @@ export class Context {
       return this._disposePromise;
     }
 
-    // TODO(burdon): Set later?
+    // TODO(burdon): Probably should not be set until the dispose is complete, but causes tests to fail if moved.
     this._isDisposed = true;
 
     // Set the promise before running the callbacks.

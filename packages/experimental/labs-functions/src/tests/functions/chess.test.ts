@@ -49,7 +49,7 @@ describe('Chess', () => {
       functions: [
         {
           id: 'dxos.org/function/chess',
-          name: 'chess',
+          path: 'chess',
           handler: 'chess',
         },
       ],

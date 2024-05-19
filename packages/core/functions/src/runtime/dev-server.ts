@@ -7,7 +7,7 @@ import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
-import { Trigger } from '@dxos/async';
+import { Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -36,11 +36,19 @@ export class DevServer {
   private _proxy?: string;
   private _seq = 0;
 
+  public readonly update = new Event<number>();
+
   // prettier-ignore
   constructor(
     private readonly _client: Client,
     private readonly _options: DevServerOptions,
   ) {}
+
+  get stats() {
+    return {
+      seq: this._seq,
+    };
+  }
 
   get endpoint() {
     invariant(this._port);
@@ -72,17 +80,17 @@ export class DevServer {
     const app = express();
     app.use(express.json());
 
-    app.post('/:name', async (req, res) => {
-      const { name } = req.params;
+    app.post('/:path', async (req, res) => {
+      const { path } = req.params;
       try {
-        log.info('calling', { name });
+        log.info('calling', { path });
         if (this._options.reload) {
-          const { def } = this._handlers[name];
+          const { def } = this._handlers[path];
           await this._load(def, true);
         }
 
         // TODO(burdon): Get function context.
-        res.statusCode = await this._invoke(name, req.body);
+        res.statusCode = await this.invoke(path, req.body);
         res.end();
       } catch (err: any) {
         log.catch(err);
@@ -98,7 +106,7 @@ export class DevServer {
       // Register functions.
       const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint,
-        functions: this.functions.map(({ def: { name } }) => ({ name })),
+        functions: this.functions.map(({ def: { id, path } }) => ({ id, path })),
       });
 
       log.info('registered', { endpoint });
@@ -147,35 +155,44 @@ export class DevServer {
    * Load function.
    */
   private async _load(def: FunctionDef, flush = false) {
-    const { id, name, handler } = def;
-    const path = join(this._options.baseDir, handler);
+    const { id, path, handler } = def;
+    const filePath = join(this._options.baseDir, handler);
     log.info('loading', { id });
 
     // Remove from cache.
     if (flush) {
       Object.keys(require.cache)
-        .filter((key) => key.startsWith(path))
+        .filter((key) => key.startsWith(filePath))
         .forEach((key) => delete require.cache[key]);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require(path);
+    const module = require(filePath);
     if (typeof module.default !== 'function') {
       throw new Error(`Handler must export default function: ${id}`);
     }
 
-    this._handlers[name] = { def, handler: module.default };
+    this._handlers[path] = { def, handler: module.default };
   }
 
   /**
-   * Invoke function handler.
+   * Invoke function.
    */
-  private async _invoke(name: string, event: any) {
+  public async invoke(path: string, data: any): Promise<number> {
     const seq = ++this._seq;
     const now = Date.now();
 
-    log.info('req', { seq, name });
-    const { handler } = this._handlers[name];
+    log.info('req', { seq, path });
+    const statusCode = await this._invoke(path, data);
+
+    log.info('res', { seq, path, statusCode, duration: Date.now() - now });
+    this.update.emit(statusCode);
+    return statusCode;
+  }
+
+  private async _invoke(path: string, event: any) {
+    const { handler } = this._handlers[path] ?? {};
+    invariant(handler);
 
     const context: FunctionContext = {
       client: this._client,
@@ -191,8 +208,6 @@ export class DevServer {
     };
 
     await handler({ context, event, response });
-    log.info('res', { seq, name, statusCode, duration: Date.now() - now });
-
     return statusCode;
   }
 }
