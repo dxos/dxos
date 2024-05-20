@@ -17,10 +17,12 @@ import {
   type ShouldAdvertizeParams,
 } from './echo-replicator';
 
+// TODO(dmaretskyi): Move out of @dxos/echo-pipeline.
+
 /**
  * Used to replicate with other peers over the network.
  */
-export class MeshNetworkAdapter implements EchoReplicator {
+export class MeshEchoReplicator implements EchoReplicator {
   private readonly _connections = new Set<MeshReplicatorConnection>();
   /**
    * Using automerge peerId as a key.

@@ -3,14 +3,14 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Doc, next as automerge, getBackend, type Heads, getHeads } from '@dxos/automerge/automerge';
+import { next as automerge, getBackend, getHeads, type Doc, type Heads } from '@dxos/automerge/automerge';
 import {
-  type DocHandle,
   Repo,
+  type DocHandle,
+  type DocHandleChangePayload,
   type DocumentId,
   type PeerId,
   type StorageAdapterInterface,
-  type DocHandleChangePayload,
 } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context, type Lifecycle } from '@dxos/context';
@@ -28,15 +28,13 @@ import {
   type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
 import { type Directory } from '@dxos/random-access-storage';
-import { type AutomergeReplicator } from '@dxos/teleport-extension-automerge-replicator';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
-import { type BeforeSaveParams, LevelDBStorageAdapter } from './leveldb-storage-adapter';
+import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { MeshNetworkAdapter } from './mesh-network-adapter';
 import { levelMigration } from './migrations';
 
 // TODO: Remove
@@ -63,7 +61,6 @@ export class AutomergeHost {
   });
 
   private _repo!: Repo;
-  private _meshNetwork!: MeshNetworkAdapter;
   private _clientNetwork!: LocalHostNetworkAdapter;
   private _storage!: StorageAdapterInterface & Lifecycle;
 
@@ -91,7 +88,6 @@ export class AutomergeHost {
     await this._storage.open?.();
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
-    this._meshNetwork = new MeshNetworkAdapter();
     this._clientNetwork = new LocalHostNetworkAdapter();
 
     this._repo = new Repo({
@@ -106,8 +102,6 @@ export class AutomergeHost {
 
     await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
-
-    await this._echoNetworkAdapter.addReplicator(this._meshNetwork);
   }
 
   async close() {
@@ -261,18 +255,6 @@ export class AutomergeHost {
 
   async getHostInfo(): Promise<HostInfo> {
     return this._clientNetwork.getHostInfo();
-  }
-
-  //
-  // Mesh replication.
-  //
-
-  createExtension(): AutomergeReplicator {
-    return this._meshNetwork.createExtension();
-  }
-
-  authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    this._meshNetwork.authorizeDevice(spaceKey, deviceKey);
   }
 }
 

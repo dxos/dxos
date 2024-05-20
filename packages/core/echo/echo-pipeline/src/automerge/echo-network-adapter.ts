@@ -88,6 +88,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
 
+    this._replicators.add(replicator);
     await replicator.connect({
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
@@ -99,8 +100,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   @synchronized
   async removeReplicator(replicator: EchoReplicator) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    invariant(this._replicators.has(replicator));
+    invariant(this._replicators.has(replicator));''
     await replicator.disconnect();
+    this._replicators.delete(replicator);
   }
 
   async shouldAdvertize(peerId: PeerId, params: ShouldAdvertizeParams): Promise<boolean> {

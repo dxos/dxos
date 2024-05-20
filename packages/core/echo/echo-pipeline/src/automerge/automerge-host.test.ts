@@ -27,7 +27,7 @@ import { arrayToBuffer, bufferToArray } from '@dxos/util';
 import { AutomergeHost } from './automerge-host';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -272,7 +272,7 @@ describe('AutomergeHost', () => {
     const [spaceKey] = PublicKey.randomSequence();
 
     const createAutomergeRepo = async () => {
-      const meshAdapter = new MeshNetworkAdapter();
+      const meshAdapter = new MeshEchoReplicator();
       const echoAdapter = new EchoNetworkAdapter({
         getContainingSpaceForDocument: async () => spaceKey,
       });
