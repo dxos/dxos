@@ -267,9 +267,17 @@ export class Scheduler {
           open.wake(true);
         },
 
-        // TODO(burdon): Config retry if server closes?
         onclose: (event) => {
           log.info('closed', { url, code: event.code });
+          // Reconnect if server closes (e.g., CF restart).
+          // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
+          if (event.code === 1006) {
+            setTimeout(async () => {
+              log.info(`reconnecting in ${options.retryDelay}s...`, { url });
+              await this._createWebsocket(ctx, space, def, trigger, options);
+            }, options.retryDelay * 1_000);
+          }
+
           open.wake(false);
         },
 
