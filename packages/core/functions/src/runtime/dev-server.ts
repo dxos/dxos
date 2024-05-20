@@ -155,16 +155,18 @@ export class DevServer {
   /**
    * Load function.
    */
-  private async _load(def: FunctionDef, flush = false) {
+  private async _load(def: FunctionDef, force = false) {
     const { id, path, handler } = def;
     const filePath = join(this._options.baseDir, handler);
-    log.info('loading', { id });
+    log.info('loading', { id, force });
 
     // Remove from cache.
-    if (flush) {
+    if (force) {
       Object.keys(require.cache)
         .filter((key) => key.startsWith(filePath))
-        .forEach((key) => delete require.cache[key]);
+        .forEach((key) => {
+          delete require.cache[key];
+        });
     }
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
