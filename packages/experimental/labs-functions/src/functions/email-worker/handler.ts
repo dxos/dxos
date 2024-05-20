@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MailboxType, MessageType } from '@braneframe/types';
+import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { create, getTypename } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
@@ -75,12 +75,12 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
             to: [{ email: message.to }],
             from: { email: message.from },
             subject: message.subject,
-            // TODO(burdon): Add message block.
             blocks: [
-              // {
-              //   timestamp: message.created,
-              //   content: message.body,
-              // },
+              {
+                timestamp: new Date(message.created).toISOString(),
+                // TODO(burdon): API?
+                content: create(TextV0Type, { content: message.body }),
+              },
             ],
           },
           {
