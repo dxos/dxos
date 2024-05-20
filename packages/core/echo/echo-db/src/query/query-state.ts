@@ -6,6 +6,7 @@ import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -162,6 +163,11 @@ export class QueryState extends Resource {
 
 // TODO(burdon): Process Filter DSL.
 const filterToIndexQuery = (filter: Filter): IndexQuery => {
+  invariant(!(filter.type && filter.or.length > 0), 'Cannot mix type and or filters.');
+  invariant(
+    filter.or.map((subFilter) => !(subFilter.type && subFilter.or.length > 0)),
+    'Cannot mix type and or filters.',
+  );
   if (filter.type || (filter.or.length > 0 && filter.or.every((subFilter) => !subFilter.not && subFilter.type))) {
     return {
       typenames: filter.type?.itemId ? [filter.type.itemId] : filter.or.map((f) => f.type?.itemId).filter(nonNullable),
