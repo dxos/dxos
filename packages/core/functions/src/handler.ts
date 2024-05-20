@@ -13,11 +13,18 @@ import { nonNullable } from '@dxos/util';
 // https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
 // https://www.npmjs.com/package/aws-lambda
 
-// TODO(burdon): No response?
-export interface Response {
-  status(code: number): Response;
-}
+/**
+ * Function handler.
+ */
+export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
+  context: FunctionContext;
+  event: FunctionEvent<TData, TMeta>;
+  response: FunctionResponse;
+}) => Promise<FunctionResponse | void>;
 
+/**
+ * Function context.
+ */
 export interface FunctionContext {
   // TODO(burdon): Limit access to individual space.
   client: Client;
@@ -25,19 +32,30 @@ export interface FunctionContext {
   dataDir?: string;
 }
 
-export type FunctionHandler<T = {}> = (params: {
-  event: FunctionEvent<T>;
-  context: FunctionContext;
-  response: Response;
-}) => Promise<Response | void>;
-
-export type FunctionEventMeta = {
-  meta: any;
+/**
+ * Event payload.
+ */
+export type FunctionEvent<TData = {}, TMeta = {}> = {
+  data: FunctionEventMeta<TMeta> & TData;
 };
 
-export type FunctionEvent<T = {}> = {
-  data: FunctionEventMeta & T;
+/**
+ * Metadata from trigger.
+ */
+export type FunctionEventMeta<TMeta = {}> = {
+  meta: TMeta;
 };
+
+/**
+ * Function response.
+ */
+export interface FunctionResponse {
+  status(code: number): FunctionResponse;
+}
+
+//
+// Subscription utils.
+//
 
 export type RawSubscriptionData = {
   spaceKey?: string;
@@ -59,9 +77,9 @@ export type SubscriptionData = {
  *
  * NOTE: Get space key from devtools or `dx space list --json`
  */
-export const subscriptionHandler = (
-  handler: FunctionHandler<SubscriptionData>,
-): FunctionHandler<RawSubscriptionData> => {
+export const subscriptionHandler = <TMeta>(
+  handler: FunctionHandler<SubscriptionData, TMeta>,
+): FunctionHandler<RawSubscriptionData, TMeta> => {
   return ({ event: { data }, context, ...rest }) => {
     const { client } = context;
     const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;

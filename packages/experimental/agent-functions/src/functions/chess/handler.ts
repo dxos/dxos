@@ -8,7 +8,7 @@ import { registerTypes } from '../../util';
 
 import { Engine } from './engine';
 
-export const handler = subscriptionHandler(async ({ event }) => {
+export const handler = subscriptionHandler<{ level?: number }>(async ({ event }) => {
   const {
     meta: { level = 1 },
     space,

@@ -12,7 +12,7 @@ import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type FunctionContext, type FunctionEvent, type FunctionHandler, type Response } from '../handler';
+import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
 import { type FunctionDef, type FunctionManifest } from '../types';
 
 export type DevServerOptions = {
@@ -203,7 +203,7 @@ export class DevServer {
     };
 
     let statusCode = 200;
-    const response: Response = {
+    const response: FunctionResponse = {
       status: (code: number) => {
         statusCode = code;
         return response;

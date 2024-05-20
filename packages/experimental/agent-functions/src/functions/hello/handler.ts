@@ -5,7 +5,7 @@
 import { FunctionEventMeta, type FunctionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-export const handler: FunctionHandler<FunctionEventMeta> = async ({ event, response }) => {
+export const handler: FunctionHandler<FunctionEventMeta<{ sender: string }>> = async ({ event, response }) => {
   const {
     meta: { sender },
   } = event.data;
