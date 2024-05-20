@@ -4,7 +4,6 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { type TraceDiagnosticParams, type TraceDiagnostic } from './api';
 import { createId } from './util';
@@ -48,10 +47,6 @@ export class DiagnosticsManager {
   readonly registry = new Map<string, TraceDiagnosticImpl>();
 
   registerDiagnostic(params: TraceDiagnosticParams<any>): TraceDiagnostic {
-    if (this.registry.has(params.id)) {
-      log.warn('Duplicate diagnostic id', { id: params.id });
-    }
-
     const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.name ?? params.id, () => {
       if (this.registry.get(params.id) === impl) {
         this.registry.delete(params.id);
