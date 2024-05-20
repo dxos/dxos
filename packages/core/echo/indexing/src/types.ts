@@ -8,7 +8,7 @@ import { type ObjectStructure } from '@dxos/echo-protocol';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-export enum LogicalModifiers {
+export enum LogicalModifier {
   OR = 'OR',
 }
 
@@ -23,7 +23,7 @@ export type IndexQuery = {
    */
   typenames: (string | null | undefined)[];
 
-  modifier?: LogicalModifiers;
+  modifier?: LogicalModifier;
 
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;

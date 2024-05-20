@@ -18,7 +18,7 @@ import {
   staticImplements,
   type IndexQuery,
   type FindResult,
-  LogicalModifiers,
+  LogicalModifier,
 } from './types';
 
 @trace.resource()
@@ -58,7 +58,7 @@ export class IndexSchema extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
-    if (filter.typenames.length !== 1 && filter.modifier !== LogicalModifiers.OR) {
+    if (filter.typenames.length !== 1 && filter.modifier !== LogicalModifier.OR) {
       throw new Error('Only `or` queries are supported for more than one typename.');
     }
 
