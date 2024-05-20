@@ -29,7 +29,7 @@ describe('EpochMonitor', () => {
     await client.halo.createIdentity();
 
     plugin = new EpochMonitorPlugin();
-    await plugin.initialize({ client, clientServices: client.services, plugins: [] });
+    await plugin.initialize({ client, clientServices: client.services });
 
     ctx.onDispose(async () => {
       await client.destroy();

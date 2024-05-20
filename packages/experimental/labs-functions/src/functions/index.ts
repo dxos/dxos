@@ -7,5 +7,5 @@ export * from './chess';
 export * from './email';
 export * from './email-extractor';
 export * from './github';
-export * from './gpt';
 export * from './hello';
+export * from './gpt';
