@@ -153,7 +153,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: hidden ? true : space.state.get() !== SpaceState.INACTIVE,
+        condition: !enabled,
         removeEdges: true,
         nodes: [
           {
@@ -161,6 +161,7 @@ export const updateGraphWithSpace = ({
             data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.ENABLE, data: { space } }),
             properties: {
               disposition: 'default',
+              hidden: true,
             },
             edges: [[space.key.toHex(), 'inbound']],
           },

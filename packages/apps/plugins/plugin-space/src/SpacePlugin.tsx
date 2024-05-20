@@ -32,7 +32,14 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, getSpace, type PropertiesProps, isSpace, isEchoObject } from '@dxos/react-client/echo';
+import {
+  type Space,
+  getSpace,
+  type PropertiesProps,
+  isSpace,
+  isEchoObject,
+  fullyQualifiedId,
+} from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -677,7 +684,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
 
               const space = intent.data?.target;
@@ -688,7 +695,7 @@ export const SpacePlugin = ({
                 } else {
                   space.db.add(object);
                 }
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
               break;
             }
