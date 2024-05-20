@@ -360,6 +360,8 @@ export class DataSpace {
 
   private _onNewAutomergeRoot(rootUrl: string) {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
+    // Override share policy = true for the root document.
+    // Workaround for https://github.com/automerge/automerge-repo/pull/292
     this._echoHost.replicateDocument(rootUrl);
     const handle = this._echoHost.automergeRepo.find(rootUrl as any);
 
