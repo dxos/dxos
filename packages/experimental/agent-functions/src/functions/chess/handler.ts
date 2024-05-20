@@ -4,13 +4,16 @@
 
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-
-import { Engine } from './engine';
 import { registerTypes } from '../../util';
 
-export const handler = subscriptionHandler(async ({ context, event }) => {
-  const { space, objects } = event;
-  const { level = 1 } = context.data ?? {};
+import { Engine } from './engine';
+
+export const handler = subscriptionHandler(async ({ event }) => {
+  const {
+    meta: { level = 1 },
+    space,
+    objects,
+  } = event.data;
   invariant(space);
   registerTypes(space);
 

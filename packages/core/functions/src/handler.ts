@@ -8,10 +8,10 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-// Lambda-like function definitions.
+// TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 // https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
 // https://www.npmjs.com/package/aws-lambda
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
 
 // TODO(burdon): No response?
 export interface Response {
@@ -23,23 +23,28 @@ export interface FunctionContext {
   client: Client;
   // TODO(burdon): Replace with storage service abstraction.
   dataDir?: string;
-  // Data passed to function invocation.
-  data?: any;
 }
 
-// TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
-export type FunctionHandler<T extends {}> = (params: {
-  event: T;
+export type FunctionHandler<T = {}> = (params: {
+  event: FunctionEvent<T>;
   context: FunctionContext;
   response: Response;
 }) => Promise<Response | void>;
 
-export type RawSubscriptionEvent = {
+export type FunctionEventMeta = {
+  meta: any;
+};
+
+export type FunctionEvent<T = {}> = {
+  data: FunctionEventMeta & T;
+};
+
+export type RawSubscriptionData = {
   spaceKey?: string;
   objects?: string[];
 };
 
-export type SubscriptionEvent = {
+export type SubscriptionData = {
   space?: Space;
   objects?: EchoReactiveObject<any>[];
 };
@@ -55,21 +60,21 @@ export type SubscriptionEvent = {
  * NOTE: Get space key from devtools or `dx space list --json`
  */
 export const subscriptionHandler = (
-  handler: FunctionHandler<SubscriptionEvent>,
-): FunctionHandler<RawSubscriptionEvent> => {
-  return ({ event, context, ...rest }) => {
+  handler: FunctionHandler<SubscriptionData>,
+): FunctionHandler<RawSubscriptionData> => {
+  return ({ event: { data }, context, ...rest }) => {
     const { client } = context;
-    const space = event.spaceKey ? client.spaces.get(PublicKey.from(event.spaceKey)) : undefined;
-    const objects =
-      space &&
-      event.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable);
+    const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
+    const objects = space
+      ? data.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
+      : [];
 
-    if (!!event.spaceKey && !space) {
-      log.warn('invalid space', { event });
+    if (!!data.spaceKey && !space) {
+      log.warn('invalid space', { data });
     } else {
       log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
     }
 
-    return handler({ event: { space, objects }, context, ...rest });
+    return handler({ event: { data: { ...data, space, objects } }, context, ...rest });
   };
 };

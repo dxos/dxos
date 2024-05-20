@@ -44,7 +44,7 @@ const FunctionTriggerSchema = S.struct({
   function: S.string.pipe(S.description('Function ID/URI.')),
 
   // Context passed to function.
-  context: S.optional(S.record(S.string, S.any)),
+  meta: S.optional(S.record(S.string, S.any)),
 
   // Triggers.
   timer: S.optional(TimerTriggerSchema),
@@ -53,11 +53,12 @@ const FunctionTriggerSchema = S.struct({
   subscription: S.optional(SubscriptionTriggerSchema),
 });
 
+export type FunctionTrigger = S.Schema.Type<typeof FunctionTriggerSchema>;
+
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
-export type FunctionTrigger = S.Schema.Type<typeof FunctionTriggerSchema>;
 
 /**
  * Function definition.
@@ -67,6 +68,7 @@ const FunctionDefSchema = S.struct({
   id: S.string,
   // name: S.string,
   description: S.optional(S.string),
+  // TODO(burdon): Rename route?
   path: S.string,
   // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,

@@ -2,13 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+import { describe, test } from '@dxos/test';
 import { ChatOpenAI } from '@langchain/openai';
 import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { getConfig, getKey, loadJson } from '../../util';
 
 import { type Entity, type SchemaMap } from './schema';
-import { getConfig, getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('ChatModel', () => {
@@ -23,7 +22,7 @@ describe.skip('ChatModel', () => {
   test('basic', async () => {
     const chat = createChatModel();
     // TODO(burdon): Get dir.
-    const { messages } = loadJson('packages/experimental/labs-functions/testing/messages.json');
+    const { messages } = loadJson('packages/experimental/agent-functions/testing/messages.json');
     const result = await chat.call(messages);
     expect(result).to.exist;
   });

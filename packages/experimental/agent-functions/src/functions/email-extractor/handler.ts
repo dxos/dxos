@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 
 import { registerTypes } from '../../util';
 
-export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
+export const handler = subscriptionHandler(async ({ event }) => {
+  const { space, objects } = event.data;
   invariant(space);
   registerTypes(space);
   const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();

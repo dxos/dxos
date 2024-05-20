@@ -52,7 +52,7 @@
             "description": "Function ID/URI.",
             "title": "string"
           },
-          "context": {
+          "meta": {
             "type": "object",
             "required": [],
             "properties": {},
@@ -78,9 +78,14 @@
           "webhook": {
             "type": "object",
             "required": [
-              "port"
+              "method"
             ],
             "properties": {
+              "method": {
+                "type": "string",
+                "description": "a string",
+                "title": "string"
+              },
               "port": {
                 "type": "number",
                 "description": "a number",

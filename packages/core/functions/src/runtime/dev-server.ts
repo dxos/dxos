@@ -12,7 +12,7 @@ import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
+import { type FunctionContext, type FunctionEvent, type FunctionHandler, type Response } from '../handler';
 import { type FunctionDef, type FunctionManifest } from '../types';
 
 export type DevServerOptions = {
@@ -186,14 +186,14 @@ export class DevServer {
     const now = Date.now();
 
     log.info('req', { seq, path });
-    const statusCode = await this._invoke(path, data);
+    const statusCode = await this._invoke(path, { data });
 
     log.info('res', { seq, path, statusCode, duration: Date.now() - now });
     this.update.emit(statusCode);
     return statusCode;
   }
 
-  private async _invoke(path: string, event: any) {
+  private async _invoke(path: string, event: FunctionEvent) {
     const { handler } = this._handlers[path] ?? {};
     invariant(handler, `invalid path: ${path}`);
 
