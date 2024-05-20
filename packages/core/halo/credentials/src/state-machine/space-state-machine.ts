@@ -30,6 +30,9 @@ export interface SpaceState {
   removeCredentialProcessor(processor: CredentialProcessor): Promise<void>;
 
   getCredentialsOfType(type: TypedMessage['@type']): Credential[];
+
+  getMemberRole(memberKey: PublicKey): SpaceMember.Role;
+  hasMembershipManagementPermission(memberKey: PublicKey): boolean;
 }
 
 export type ProcessOptions = {
@@ -243,6 +246,14 @@ export class SpaceStateMachine implements SpaceState {
 
     await this.onCredentialProcessed.callIfSet(credential);
     return true;
+  }
+
+  public getMemberRole(memberKey: PublicKey): SpaceMember.Role {
+    return this._members.getRole(memberKey);
+  }
+
+  public hasMembershipManagementPermission(memberKey: PublicKey): boolean {
+    return this._canInviteNewMembers(memberKey);
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {

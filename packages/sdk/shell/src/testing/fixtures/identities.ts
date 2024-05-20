@@ -3,9 +3,10 @@
 //
 
 import { PublicKey } from '@dxos/react-client';
-import { SpaceMember } from '@dxos/react-client/echo';
+import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 
 export const alice: SpaceMember = {
+  role: HaloSpaceMember.Role.ADMIN,
   identity: {
     identityKey: PublicKey.random(),
     profile: {

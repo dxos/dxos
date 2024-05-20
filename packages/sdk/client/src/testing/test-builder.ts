@@ -129,13 +129,19 @@ export class TestBuilder {
 
   /**
    * Create local services host.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
-  createLocal() {
+  createLocal(options?: { fastPeerPresenceUpdate?: boolean }) {
     const services = new LocalClientServices({
       config: this.config,
       storage: this.storage,
       level: this.level,
-      runtimeParams: { invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 } },
+      runtimeParams: {
+        ...(options?.fastPeerPresenceUpdate
+          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
+          : {}),
+        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+      },
       ...this.networking,
     });
     this._ctx.onDispose(async () => {

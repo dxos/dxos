@@ -11,6 +11,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -86,6 +87,8 @@ export interface Space {
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   share(options?: Partial<Invitation>): CancellableInvitation;
+
+  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }

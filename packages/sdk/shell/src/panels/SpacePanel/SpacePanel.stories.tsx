@@ -7,7 +7,7 @@ import '@dxosTheme';
 import React from 'react';
 
 import { PublicKey } from '@dxos/keys';
-import { SpaceMember } from '@dxos/react-client/echo';
+import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Invitation } from '@dxos/react-client/invitations';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -177,6 +177,7 @@ export const SpaceManagerWithMember = () => {
                   members={[
                     {
                       presence: SpaceMember.PresenceState.ONLINE,
+                      role: HaloSpaceMember.Role.ADMIN,
                       identity: {
                         identityKey: PublicKey.random(),
                       },
@@ -209,6 +210,7 @@ export const SpaceManagerWithMembers = () => {
                   members={[
                     {
                       presence: SpaceMember.PresenceState.ONLINE,
+                      role: HaloSpaceMember.Role.ADMIN,
                       identity: {
                         identityKey: PublicKey.random(),
                         profile: {
@@ -248,6 +250,7 @@ export const SpaceManagerWithMoreMembers = () => {
                   members={[
                     {
                       presence: SpaceMember.PresenceState.ONLINE,
+                      role: HaloSpaceMember.Role.ADMIN,
                       identity: {
                         identityKey: PublicKey.random(),
                         profile: {
@@ -257,6 +260,7 @@ export const SpaceManagerWithMoreMembers = () => {
                     },
                     {
                       presence: SpaceMember.PresenceState.OFFLINE,
+                      role: HaloSpaceMember.Role.ADMIN,
                       identity: {
                         identityKey: PublicKey.random(),
                         profile: {
@@ -266,6 +270,7 @@ export const SpaceManagerWithMoreMembers = () => {
                     },
                     {
                       presence: SpaceMember.PresenceState.OFFLINE,
+                      role: HaloSpaceMember.Role.ADMIN,
                       identity: {
                         identityKey: PublicKey.random(),
                         profile: {
