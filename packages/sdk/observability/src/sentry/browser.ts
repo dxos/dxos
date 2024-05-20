@@ -14,7 +14,6 @@ import {
   replayIntegration,
   breadcrumbsIntegration,
   feedbackIntegration,
-  sendFeedback,
 } from '@sentry/browser';
 import { httpClientIntegration } from '@sentry/integrations';
 
@@ -115,7 +114,7 @@ export const captureMessage: typeof naturalCaptureMessage = (exception, captureC
 };
 
 export const captureUserFeedback = (name: string, email: string, message: string) => {
-  return sendFeedback({ name, email, message }, { includeReplay: true });
+  return naturalSendFeedback({ name, email, message }, { includeReplay: true });
 };
 
 export const withScope = naturalWithScope;
