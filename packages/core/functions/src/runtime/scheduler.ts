@@ -287,6 +287,7 @@ export class Scheduler {
 
       task.schedule();
     });
+
     subscriptions.push(() => subscription.unsubscribe());
 
     // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
