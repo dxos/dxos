@@ -51,22 +51,26 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
     [values, runValidation],
   );
 
+  const touchAll = useCallback(() => setTouched(mkAllTouched(values)), [values, setTouched]);
+
   const handleBlur = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name } = event.target;
       setTouched((touched) => ({ ...touched, [name]: true }));
+
+      // TODO(Zan): This should be configurable behavior.
+      if (event.relatedTarget?.getAttribute('type') === 'submit') {
+        // NOTE: We do this here instead of onSubmit, because the blur event is triggered before the submit event
+        //       and results in the submit button being disabled when the form is invalid.
+        touchAll();
+      }
+
       runValidation(values);
     },
-    [runValidation, values],
+    [runValidation, values, touchAll],
   );
 
   const handleSubmit = useCallback(() => {
-    const touchAll = Object.keys(values).reduce(
-      (acc, key) => ({ ...acc, [key]: true }),
-      {} as Record<keyof T, boolean>,
-    );
-    setTouched(touchAll);
-
     if (runValidation(values)) {
       onSubmit(values);
     }
@@ -76,13 +80,16 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
   // - Basically, if there's a validation message present in the form, submit should be disabled.
   const canSubmit = Object.keys(values).every((key) => touched[key as keyof T] === false || !errors[key as keyof T]);
 
-  const getInputProps = (key: keyof T) => ({
-    name: key,
-    value: values[key],
-    onChange: handleChange,
-    onBlur: handleBlur,
-    'aria-invalid': errors[key] !== undefined,
-  });
+  const getInputProps = useCallback(
+    (key: keyof T) => ({
+      name: key,
+      value: values[key],
+      onChange: handleChange,
+      onBlur: handleBlur,
+      'aria-invalid': errors[key] !== undefined,
+    }),
+    [values, handleChange, handleBlur, errors],
+  );
 
   return {
     values,
@@ -95,6 +102,10 @@ export const useForm = <T extends object>({ initialValues, validate, onSubmit }:
     onValidate: runValidation,
     getInputProps,
   };
+};
+
+const mkAllTouched = <T extends Record<keyof T, any>>(values: T) => {
+  return Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {} as Record<keyof T, boolean>);
 };
 
 const collapseErrorArray = <T>(errors: ValidationError[]) =>

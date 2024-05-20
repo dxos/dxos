@@ -52,7 +52,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
       void dispatch({ action: 'dxos.org/plugin/observability/capture-feedback', data: values });
       onClose();
     },
-    [dispatch],
+    [dispatch, onClose],
   );
 
   const { errors, handleSubmit, canSubmit, touched, getInputProps } = useForm<FeedbackFormState>({
@@ -64,8 +64,8 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
       <Section className='space-b-1'>
-        <Input.Root>
-          <Input.Label htmlFor='name'>{translation('name label')}</Input.Label>
+        <Input.Root validationValence={touched.name && errors.name ? 'error' : undefined}>
+          <Input.Label>{translation('name label')}</Input.Label>
           <Input.TextInput
             classNames={'text-sm'}
             placeholder={translation('name placeholder')}
@@ -73,28 +73,28 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             {...getInputProps('name')}
           />
           <Input.DescriptionAndValidation>
-            {touched.name && errors.name && <Input.Validation>{errors.name}</Input.Validation>}
+            <Input.Validation>{touched.name && errors.name}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
       <Section className='space-b-1'>
-        <Input.Root>
-          <Input.Label htmlFor='email'>{translation('email input label')}</Input.Label>
+        <Input.Root validationValence={touched.email && errors.email ? 'error' : undefined}>
+          <Input.Label>{translation('email input label')}</Input.Label>
           <Input.TextInput
             classNames={'text-sm'}
             placeholder={translation('email input placeholder')}
             {...getInputProps('email')}
           />
           <Input.DescriptionAndValidation>
-            {touched.email && errors.email && <Input.Validation>{errors.email}</Input.Validation>}
+            <Input.Validation>{touched.email && errors.email}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
       <Section className='space-b-1'>
-        <Input.Root validationValence='error'>
-          <Input.Label htmlFor='message'>{translation('feedback text area label')}</Input.Label>
+        <Input.Root validationValence={touched.message && errors.message ? 'error' : undefined}>
+          <Input.Label>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
             classNames={'text-sm'}
             rows={5}
@@ -103,13 +103,19 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             {...getInputProps('message')}
           />
           <Input.DescriptionAndValidation>
-            {touched.message && errors.message && <Input.Validation>{errors.message}</Input.Validation>}
+            <Input.Validation>{touched.message && errors.message}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
       </Section>
 
       <Section className='space-b-2'>
-        <Button variant='primary' classNames='is-full flex gap-2' disabled={!canSubmit} onClick={() => handleSubmit()}>
+        <Button
+          type='submit'
+          variant='primary'
+          classNames='is-full flex gap-2'
+          disabled={!canSubmit}
+          onClick={handleSubmit}
+        >
           <span>{translation('send feedback label')}</span>
           <div className='grow' />
           <PaperPlaneTilt className={getSize(5)} />
