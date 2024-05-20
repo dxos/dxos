@@ -73,7 +73,7 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0].content?.content}</pre>}>
+        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0]?.content?.content}</pre>}>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
         </MasterDetail>
       </div>

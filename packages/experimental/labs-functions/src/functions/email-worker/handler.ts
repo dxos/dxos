@@ -4,10 +4,13 @@
 
 import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, getTypename } from '@dxos/echo-schema';
+import { create, foreignKey, getTypename } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+
+// TODO(burdon): Factor out.
+export const text = (content: string) => create(TextV0Type, { content });
 
 // TODO(burdon): Import type from lib.
 export type EmailMessage = {
@@ -42,9 +45,9 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   // Create mailbox if doesn't exist.
   const { account } = context.data ?? { account: 'hello@dxos.network' };
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
-  const mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
+  let mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
   if (!mailbox) {
-    space.db.add(
+    mailbox = space.db.add(
       create(
         MailboxType,
         {
@@ -65,34 +68,47 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
 
   const { objects } = await space.db.query(Filter.schema(MessageType)).run();
   for (const message of messages) {
-    const current = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
-    if (!current) {
+    let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
+    if (!object) {
       log.info('insert', { type: getTypename(message), id: message.id });
-      space.db.add(
+      object = space.db.add(
         create(
           MessageType,
           {
             to: [{ email: message.to }],
             from: { email: message.from },
             subject: message.subject,
+            date: new Date(message.created).toISOString(),
             blocks: [
               {
                 timestamp: new Date(message.created).toISOString(),
-                // TODO(burdon): API?
-                content: create(TextV0Type, { content: message.body }),
+                content: text(message.body),
               },
             ],
           },
           {
-            keys: [
-              {
-                source: SOURCE_ID,
-                id: String(message.id),
-              },
-            ],
+            keys: [foreignKey(SOURCE_ID, String(message.id))],
           },
         ),
       );
+
+      (mailbox.messages ??= []).push(object);
+    } else {
+      log.info('update', { type: getTypename(message), id: message.id });
+
+      // TODO(burdon): Temp.
+      object.date = new Date(message.created).toISOString();
+      object.blocks = [
+        {
+          timestamp: new Date(message.created).toISOString(),
+          content: text(message.body),
+        },
+      ];
+
+      // TODO(burdon): Possibly undefined.
+      if (!mailbox.messages?.find((message) => message!.id === object!.id)) {
+        (mailbox.messages ??= []).push(object);
+      }
     }
   }
 
