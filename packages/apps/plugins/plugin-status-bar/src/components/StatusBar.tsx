@@ -1,7 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
-
+import { Slot } from '@radix-ui/react-slot';
 import React, { forwardRef, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -15,22 +15,30 @@ const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNa
   </span>
 ));
 
-type StatusBarButtonProps = ThemedClassName<{ children: ReactNode }> & React.HTMLAttributes<HTMLButtonElement>;
+type StatusBarButtonProps = ThemedClassName<{ children: ReactNode; asChild?: boolean }> &
+  React.HTMLAttributes<HTMLButtonElement>;
 
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
-  ({ classNames, children, ...props }, forwardedRef) => (
-    <button
-      className={mx(
-        'flex items-center gap-2 p-1 px-2 rounded-sm select-none hover:bg-gray-200 cursor-pointer active:bg-gray-300',
-        classNames,
-      )}
-      ref={forwardedRef}
-      {...props}
-    >
-      {children}
-    </button>
-  ),
+  ({ classNames, children, asChild, ...props }, forwardedRef) => {
+    const Component = asChild ? Slot : 'button';
+
+    return (
+      <Component
+        role='button'
+        className={mx(
+          'flex items-center gap-2 p-1 px-2 rounded-sm select-none hover:bg-gray-200 cursor-pointer active:bg-gray-300',
+          classNames,
+        )}
+        ref={forwardedRef}
+        {...props}
+      >
+        {children}
+      </Component>
+    );
+  },
 );
+
+export default StatusBarButton;
 
 type StatusBarItemProps = ThemedClassName<{ children: ReactNode }>;
 

@@ -8,7 +8,6 @@ import { STATUS_BAR_PLUGIN } from './meta';
 
 type StatusBarTranslationKeys =
   | 'plugin name'
-  | 'feedback panel title'
   | 'email input label'
   | 'email input placeholder'
   | 'feedback text area label'
@@ -28,13 +27,12 @@ export const mkTranslation = (t: ReturnType<typeof useTranslation>['t']) => (key
 const translations: Record<Language, TranslationEntry> = {
   'en-US': entry({
     'plugin name': 'Status Bar',
-    'feedback panel title': 'Feedback',
     'name label': 'Name',
-    'name placeholder': 'Full name',
+    'name placeholder': 'Preferred name',
     'email input label': 'Email',
     'email input placeholder': 'your-email@example.com',
     'feedback text area label': 'Feedback',
-    'feedback text area placeholder': 'tell us what you think',
+    'feedback text area placeholder': 'Experienced an issue? Have a suggestion? Let us know!',
     'send feedback label': 'Send Feedback',
   }),
 };

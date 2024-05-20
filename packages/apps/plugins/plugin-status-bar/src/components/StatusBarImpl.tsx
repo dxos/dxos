@@ -18,18 +18,18 @@ export const StatusBarImpl = () => {
       <StatusBar.Container>
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
-            <StatusBar.Button>
+            <StatusBar.Button aria-label={'Give feedback about composer'}>
               <PaperPlaneTilt />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
           </Popover.Trigger>
           {/* TODO(Zan): Configure this? */}
-          <a href='https://discord.gg/zsxWrKjteV' target='_blank' rel='noopener noreferrer'>
-            <StatusBar.Button>
+          <StatusBar.Button aria-label='Open DXOS Discord' asChild>
+            <a href='https://discord.gg/zsxWrKjteV' target='_blank' rel='noopener noreferrer'>
               <DiscordLogo />
               <StatusBar.Text classNames='hidden sm:block'>Discord</StatusBar.Text>
-            </StatusBar.Button>
-          </a>
+            </a>
+          </StatusBar.Button>
           <StatusBar.Item>
             <Lightning />
             <StatusBar.Text classNames='hidden sm:block'>Online</StatusBar.Text>
