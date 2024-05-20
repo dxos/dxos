@@ -9,7 +9,8 @@ import { type MosaicOperation, type MosaicDraggedItem, useMosaic } from '@dxos/r
 import type { TreeNode } from '../types';
 
 export type NavTreeContextType = {
-  current?: string;
+  current?: Set<string>;
+  attended?: Set<string>;
   popoverAnchorId?: string;
   onSelect?: (params: { path: string; node: TreeNode; level: number; position: number }) => void;
   isOver: (path: string) => boolean;

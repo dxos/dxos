@@ -60,6 +60,7 @@ export const createCredential = async ({
       id: subject,
       assertion,
     },
+    parentCredentialIds,
     proof: {
       type: SIGNATURE_TYPE_ED25519,
       creationDate: new Date(),
@@ -68,10 +69,6 @@ export const createCredential = async ({
       nonce,
     },
   };
-
-  if ((parentCredentialIds?.length ?? 0) > 0) {
-    credential.parentCredentialIds = parentCredentialIds;
-  }
 
   // Set proof after creating signature.
   const signedPayload = getCredentialProofPayload(credential);

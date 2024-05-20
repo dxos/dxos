@@ -1,6 +1,6 @@
 {
   "name": "@dxos/websocket-rpc",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "websocket-rpc",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

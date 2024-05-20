@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-protocol",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Core ECHO APIs.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

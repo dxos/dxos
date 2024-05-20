@@ -40,7 +40,7 @@ export class SchemaValidator {
         type = this.getPropertySchema(rootObjectSchema, [property, '0']);
       }
       return type.ast.annotations[annotation] != null;
-    } catch (e) {
+    } catch (err) {
       return false;
     }
   }
@@ -114,6 +114,7 @@ const getProperties = (
   if (typeAstList.length === 1) {
     return AST.getPropertySignatures(typeAstList[0]);
   }
+
   const typeDiscriminators = getTypeDiscriminators(typeAstList);
   const targetPropertyValue = getTargetPropertyFn(String(typeDiscriminators[0].name));
   const typeIndex = typeDiscriminators.findIndex((p) => targetPropertyValue === (p.type as AST.Literal).literal);
@@ -135,6 +136,7 @@ const getPropertyType = (
   if (typeAst == null) {
     return null;
   }
+
   const targetProperty = getProperties(typeAst, getTargetPropertyFn).find((p) => p.name === propertyName);
   if (targetProperty != null) {
     return unwrapAst(targetProperty.type);
@@ -181,7 +183,7 @@ const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST
 
 const unwrapArray = (ast: AST.AST) => unwrapAst(ast, AST.isTupleType) as AST.TupleType | null;
 
-export const validateIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
+export const checkIdNotPresentOnSchema = (schema: S.Schema<any, any, any>) => {
   invariant(isTypeLiteral(schema.ast));
   const idProperty = AST.getPropertySignatures(schema.ast).find((prop) => prop.name === 'id');
   if (idProperty != null) {

@@ -1,3 +1,5 @@
+# $schema:./node_modules/@dxos/functions/schema/functions.json
+
 ##
 ## Test:
 ## curl -s -X POST -H "Content-Type: application/json" http://localhost:7100/dev/hello | jq
@@ -8,11 +10,6 @@ functions:
     name: 'calendar'
     handler: 'calendar'
     description: 'Calendar Sync.'
-
-  - id: 'dxos.org/function/chat'
-    name: 'chat'
-    handler: 'chat'
-    description: 'GPT Chat.'
 
   - id: 'dxos.org/function/chess'
     name: 'chess'
@@ -29,10 +26,20 @@ functions:
     handler: 'email-extractor'
     description: 'Email Extractor.'
 
+  - id: 'dxos.org/function/email-worker'
+    name: 'email-worker'
+    handler: 'email-worker'
+    description: 'Email Sync with Cloudflare Worker.'
+
   - id: 'dxos.org/function/embedding'
     name: 'embedding'
     handler: 'embedding'
     description: 'Text embedding.'
+
+  - id: 'dxos.org/function/gpt'
+    name: 'gpt'
+    handler: 'gpt'
+    description: 'GPT Chat.'
 
   - id: 'dxos.org/function/hello'
     name: 'hello'
@@ -46,37 +53,54 @@ functions:
 
 triggers:
 #  - function: 'dxos.org/function/calendar'
-#    schedule: '*/30 * * * * *'
-#    subscriptions:
-#     - type: 'braneframe.Calendar'
+#    timer:
+#      cron: '*/30 * * * * *'
+#    subscription:
+#      filter:
+#      - type: 'braneframe.Calendar'
 
-  - function: 'dxos.org/function/chat'
-    subscriptions:
+  - function: 'dxos.org/function/gpt'
+    subscription:
+      filter:
       - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/chess'
-    subscriptions:
+    subscription:
+      filter:
       - type: 'dxos.experimental.chess.Game'
 
-  # - function: 'dxos.org/function/email'
-  #   schedule: '*/30 * * * * *'
-  #   subscriptions:
-  #    - type: 'braneframe.Mailbox'
+  - function: 'dxos.org/function/email-worker'
+    websocket:
+      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+      init:
+        type: 'sync'
+
+#  - function: 'dxos.org/function/email'
+#    timer:
+#      cron: '*/30 * * * * *'
+#    subscription:
+#      filter:
+#      - type: 'braneframe.Mailbox'
 
 #  - function: 'dxos.org/function/email-extractor'
-#    subscriptions:
+#    subscription:
+#      filter:
 #      - type: 'braneframe.Message'
-#        delay: 5
 #        props:
 #          type: 'email'
+#      options:
+#        delay: 5
 
   - function: 'dxos.org/function/embedding'
-    subscriptions:
+    subscription:
+      filter:
       - type: 'braneframe.Document'
+      - type: 'braneframe.File'
+      options:
         deep: true
         delay: 5
-      - type: 'braneframe.File'
 
 #  - function: 'dxos.org/function/github'
-#    subscriptions:
+#    subscription:
+#      filter:
 #      - type: 'example.com/schema/project'

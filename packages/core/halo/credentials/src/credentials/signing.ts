@@ -22,6 +22,9 @@ export const getCredentialProofPayload = (credential: Credential): Uint8Array =>
       chain: undefined,
     },
   };
+  if (copy.parentCredentialIds?.length === 0) {
+    delete copy.parentCredentialIds;
+  }
   delete copy.id; // ID is not part of the signature payload.
 
   return Buffer.from(canonicalStringify(copy));

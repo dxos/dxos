@@ -8,6 +8,12 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
+// TODO(burdon): Context?
+// Lambda-like function definitions.
+// See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
+// https://www.npmjs.com/package/aws-lambda
+// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
+
 // TODO(burdon): No response?
 export interface Response {
   status(code: number): Response;
@@ -32,6 +38,7 @@ export type FunctionSubscriptionEvent = {
   objects?: string[];
 };
 
+// TODO(burdon): ???
 export type FunctionSubscriptionEvent2 = {
   space?: Space;
   objects?: EchoReactiveObject<any>[];
