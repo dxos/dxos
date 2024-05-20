@@ -20,6 +20,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 
 import { QueryState } from './query-state';
+import { trace } from '@dxos/tracing';
 
 export type QueryServiceParams = {
   indexer: Indexer;
@@ -56,6 +57,19 @@ export class QueryServiceImpl extends Resource implements QueryService {
   // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: QueryServiceParams) {
     super();
+
+    trace.diagnostic({
+      id: 'active-queries',
+      title: 'Active Queries',
+      fetch: () => {
+        return Array.from(this._queries).map((query) => {
+          return {
+            filter: JSON.stringify(query.state.filter),
+            metrics: query.state.metrics,
+          };
+        });
+      },
+    });
   }
 
   override async _open() {

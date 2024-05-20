@@ -6,6 +6,7 @@ import { Context } from '@dxos/context';
 
 import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR } from './trace-processor';
+import { MaybePromise } from '@dxos/util';
 
 /**
  * Annotates a class as a tracked resource.
@@ -104,6 +105,22 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
   TRACE_PROCESSOR.addLink(parent, child, opts);
 };
 
+export type TraceDiagnosticParams<T> = {
+  id: string;
+  // TODO(dmaretskyi): Rename to `name`.
+  title?: string;
+  fetch: () => MaybePromise<T>;
+};
+
+export interface TraceDiagnostic {
+  id: string;
+  unregister(): void;
+}
+
+const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
+  return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
+};
+
 export const trace = {
   resource,
   info,
@@ -112,4 +129,6 @@ export const trace = {
   metricsCounter,
 
   addLink,
+
+  diagnostic,
 };
