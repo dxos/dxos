@@ -8,14 +8,13 @@ const TimerTriggerSchema = S.struct({
   cron: S.string,
 });
 
-const WebhookTriggerSchema = S.struct({
-  port: S.optional(
-    S.struct({
-      min: S.number,
-      max: S.number,
-    }),
-  ),
-});
+const WebhookTriggerSchema = S.mutable(
+  S.struct({
+    method: S.string,
+    // Assigned port.
+    port: S.optional(S.number),
+  }),
+);
 
 const WebsocketTriggerSchema = S.struct({
   url: S.string,

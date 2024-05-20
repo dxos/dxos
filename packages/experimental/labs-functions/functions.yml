@@ -54,9 +54,7 @@ functions:
 triggers:
   - function: 'dxos.org/function/hello'
     webhook:
-      port:
-        min: 7500
-        max: 7599
+      method: GET
 
 #  - function: 'dxos.org/function/calendar'
 #    timer:

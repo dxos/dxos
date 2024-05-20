@@ -40,15 +40,22 @@ export type SchedulerOptions = {
 export class Scheduler {
   // Map of mounted functions.
   private readonly _mounts = new ComplexMap<
-    { id: string; spaceKey: PublicKey },
+    { spaceKey: PublicKey; id: string },
     { ctx: Context; trigger: FunctionTrigger }
-  >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
+  >(({ spaceKey, id }) => `${spaceKey.toHex()}:${id}`);
 
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
   ) {}
+
+  get mounts() {
+    return Array.from(this._mounts.values()).reduce<FunctionTrigger[]>((acc, { trigger }) => {
+      acc.push(trigger);
+      return acc;
+    }, []);
+  }
 
   async start() {
     this._client.spaces.subscribe(async (spaces) => {
@@ -67,8 +74,11 @@ export class Scheduler {
     }
   }
 
+  /**
+   * Mount trigger.
+   */
   private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
-    const key = { id: trigger.function, spaceKey: space.key };
+    const key = { spaceKey: space.key, id: trigger.function };
     const def = this._manifest.functions.find((config) => config.id === trigger.function);
     invariant(def, `Function not found: ${trigger.function}`);
 
@@ -194,6 +204,11 @@ export class Scheduler {
 
     // TODO(burdon): Enable POST hook with payload.
     const server = http.createServer(async (req, res) => {
+      if (req.method !== trigger.method) {
+        res.statusCode = 405;
+        return res.end();
+      }
+
       res.statusCode = await this._execFunction(def, { spaceKey: space.key });
       res.end();
     });
@@ -209,6 +224,7 @@ export class Scheduler {
     // TODO(burdon): Update trigger object with actual port.
     server.listen(port, () => {
       log.info('started webhook', { port });
+      trigger.port = port;
     });
 
     ctx.onDispose(() => {
@@ -253,7 +269,7 @@ export class Scheduler {
 
         // TODO(burdon): Config retry if server closes?
         onclose: (event) => {
-          log.info('closed', { url, event });
+          log.info('closed', { url, code: event.code });
           open.wake(false);
         },
 

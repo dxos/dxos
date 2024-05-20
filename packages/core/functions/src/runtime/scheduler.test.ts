@@ -12,7 +12,7 @@ import { create, S, TypedObject } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler } from './scheduler';
-import { type FunctionManifest } from '../types';
+import { type FunctionManifest, type WebhookTrigger } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
@@ -78,10 +78,7 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           webhook: {
-            port: {
-              min: 7500,
-              max: 7599,
-            },
+            method: 'GET',
           },
         },
       ],
@@ -100,8 +97,12 @@ describe('scheduler', () => {
     });
 
     setTimeout(() => {
-      void fetch('http://localhost:8080');
+      const mount: WebhookTrigger = scheduler.mounts.find(
+        (mount) => mount.function === 'example.com/function/test',
+      )!.webhook!;
+      void fetch(`http://localhost:${mount.port}`);
     });
+
     await done.wait();
   });
 
