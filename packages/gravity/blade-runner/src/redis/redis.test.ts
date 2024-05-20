@@ -6,7 +6,9 @@ import { expect } from 'chai';
 import { Redis, type RedisOptions } from 'ioredis';
 
 import { type TaggedType } from '@dxos/codec-protobuf';
+import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
@@ -56,8 +58,7 @@ describe('Redis', () => {
     expect(response).to.deep.eq(createPayload('response'));
   });
 
-  test('Pass stream through Redis', async () => {
-    // Create two linked Redis ports.
+  test('pass web-stream through Redis', async () => {
     const [alicePort, bobPort] = await createLinkedRedisPorts();
 
     const streamAlice = new ReadableStream({
@@ -76,26 +77,112 @@ describe('Redis', () => {
     await bobPort.send(data);
     expect((await receivedChunk).value).to.deep.eq(data);
   });
+
+  test.only('echo replication through Redis', async () => {
+    const builder = new EchoTestBuilder();
+    await openAndClose(builder);
+    const dataAssertion = createDataAssertion();
+    const [spaceKey] = PublicKey.randomSequence();
+
+    const [aliceConnection, bobConnection] = await createLinkedTestEchoConnections();
+    const aliceReplicator: TestReplicator = new TestReplicator({
+      onConnect: async () => aliceReplicator.context?.onConnectionOpen(aliceConnection),
+      onDisconnect: async () => {
+        aliceReplicator.context?.onConnectionClosed(aliceConnection);
+        await bobReplicator.removeConnection(bobConnection);
+      },
+    });
+
+    const bobReplicator: TestReplicator = new TestReplicator({
+      onConnect: async () => bobReplicator.context?.onConnectionOpen(bobConnection),
+      onDisconnect: async () => {
+        bobReplicator.context?.onConnectionClosed(bobConnection);
+        await aliceReplicator.removeConnection(aliceConnection);
+      },
+    });
+
+    await using alice = await builder.createPeer();
+    await using bob = await builder.createPeer();
+    await alice.host.addReplicator(aliceReplicator);
+    await bob.host.addReplicator(bobReplicator);
+
+    await using db1 = await alice.createDatabase(spaceKey);
+    await dataAssertion.seed(db1);
+
+    await using db2 = await bob.openDatabase(spaceKey, db1.rootUrl!);
+    await dataAssertion.verify(db2);
+  });
 });
 
 const createLinkedRedisPorts = async () => {
-  const aliceQueue = 'alice-' + PublicKey.random().toHex();
-  const bobQueue = 'bob-' + PublicKey.random().toHex();
+  const alice = 'alice-' + PublicKey.random().toHex();
+  const bob = 'bob-' + PublicKey.random().toHex();
 
-  const alicePort = await createRedisRpcPort({
+  const alicePort = createRedisRpcPort({
     sendClient: await setupRedisClient(),
     receiveClient: await setupRedisClient(),
-    sendQueue: bobQueue,
-    receiveQueue: aliceQueue,
+    sendQueue: bob,
+    receiveQueue: alice,
   });
 
-  const bobPort = await createRedisRpcPort({
+  const bobPort = createRedisRpcPort({
     sendClient: await setupRedisClient(),
     receiveClient: await setupRedisClient(),
-    sendQueue: aliceQueue,
-    receiveQueue: bobQueue,
+    sendQueue: alice,
+    receiveQueue: bob,
   });
   return [alicePort, bobPort];
+};
+
+const createLinkedReadWriteStreams = async () => {
+  const queue = 'stream-queue' + PublicKey.random().toHex();
+  const readClient = await setupRedisClient();
+  const writeClient = await setupRedisClient();
+
+  const readStream = new ReadableStream({
+    start: (controller) => {
+      let unsubscribed = false;
+      afterTest(() => (unsubscribed = true));
+      queueMicrotask(async () => {
+        try {
+          // eslint-disable-next-line no-unmodified-loop-condition
+          while (!unsubscribed) {
+            const message = await readClient.blpopBuffer(queue, 0);
+
+            if (!message) {
+              continue;
+            }
+            controller.enqueue(message[1]);
+          }
+        } catch (err) {
+          if (!unsubscribed) {
+            log.catch(err);
+          }
+        }
+      });
+    },
+  });
+
+  const writeStream = new WritableStream({
+    write: async (chunk) => {
+      await writeClient.rpush(queue, chunk);
+    },
+  });
+
+  return { readStream, writeStream };
+};
+
+const createLinkedTestEchoConnections = async () => {
+  const alice = 'alice-' + PublicKey.random().toHex();
+  const bob = 'bob-' + PublicKey.random().toHex();
+
+  const { readStream: aliceReadable, writeStream: bobWritable } = await createLinkedReadWriteStreams();
+  const { readStream: bobReadable, writeStream: aliceWritable } = await createLinkedReadWriteStreams();
+  const aliceConnection = new TestReplicatorConnection(alice, aliceReadable, aliceWritable);
+  const bobConnection = new TestReplicatorConnection(bob, bobReadable, bobWritable);
+  aliceConnection.otherSide = bobConnection;
+  bobConnection.otherSide = aliceConnection;
+  return [aliceConnection, bobConnection];
 };
 
 const setupRedisClient = async () => {
