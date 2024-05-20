@@ -18,7 +18,6 @@ import {
   staticImplements,
   type IndexQuery,
   type FindResult,
-  LogicalModifier,
 } from './types';
 
 @trace.resource()
@@ -58,10 +57,6 @@ export class IndexSchema extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
-    if (filter.typenames.length !== 1 && filter.modifier !== LogicalModifier.OR) {
-      throw new Error('Only `or` queries are supported for more than one typename.');
-    }
-
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
@@ -70,17 +65,17 @@ export class IndexSchema extends Resource implements Index {
         .map((id) => ({ id, rank: 0 }));
     }
 
+    if (filter.typenames.length === 0) {
+      return Array.from(this._index.values())
+        .flatMap((ids) => Array.from(ids))
+        .map((id) => ({ id, rank: 0 }));
+    }
+
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
       if (typename === null) {
         // TODO(dmaretskyi): Implement querying for Expando objects.
         throw new Error('Not implemented');
-      } else if (typename === undefined) {
-        results.push(
-          ...Array.from(this._index.values())
-            .flatMap((ids) => Array.from(ids))
-            .map((id) => ({ id, rank: 0 })),
-        );
       } else {
         results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
       }

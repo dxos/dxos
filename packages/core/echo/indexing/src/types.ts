@@ -8,10 +8,6 @@ import { type ObjectStructure } from '@dxos/echo-protocol';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-export enum LogicalModifier {
-  OR = 'OR',
-}
-
 /**
  * @deprecated To be replaced by a specialized API for each index.
  */
@@ -21,9 +17,7 @@ export type IndexQuery = {
    * null means all Expando objects.
    * undefined means all objects (no filter).
    */
-  typenames: (string | null | undefined)[];
-
-  modifier?: LogicalModifier;
+  typenames: (string | null)[];
 
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;
