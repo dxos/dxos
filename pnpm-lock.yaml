@@ -615,6 +615,9 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
+      '@braneframe/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugins/plugin-status-bar
       '@braneframe/plugin-table':
         specifier: workspace:*
         version: link:../plugins/plugin-table
@@ -3347,6 +3350,85 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
+  packages/apps/plugins/plugin-status-bar:
+    dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+      '@fluentui/react-tabster':
+        specifier: ^9.19.0
+        version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
+      leaflet:
+        specifier: ^1.9.3
+        version: 1.9.3
+      react-leaflet:
+        specifier: ^4.2.0
+        version: 4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/leaflet':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/react':
         specifier: ^18.0.21
         version: 18.0.21
@@ -20300,7 +20382,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -20583,7 +20665,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-use-layout-effect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -20993,7 +21075,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-use-layout-effect': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
@@ -21100,7 +21182,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -21291,7 +21373,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -42494,7 +42576,7 @@ packages:
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@types/base16': 1.0.2
       '@types/lodash': 4.17.0
       base16: 1.0.0
@@ -42681,7 +42763,7 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       react: 18.2.0
     dev: false
 
@@ -48939,7 +49021,7 @@ packages:
       '@apideck/better-ajv-errors': 0.3.6(ajv@8.12.0)
       '@babel/core': 7.23.9
       '@babel/preset-env': 7.23.9(@babel/core@7.23.9)
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@rollup/plugin-babel': 5.3.1(@babel/core@7.23.9)(rollup@2.79.1)
       '@rollup/plugin-node-resolve': 11.2.1(rollup@2.79.1)
       '@rollup/plugin-replace': 2.4.2(rollup@2.79.1)
