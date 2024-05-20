@@ -224,4 +224,20 @@ describe('Index queries', () => {
       expect((await query.run()).objects.length).to.equal(2);
     }
   });
+
+  test('`not(or)` query', async () => {
+    const builder = new TestBuilder();
+    afterTest(async () => await builder.destroy());
+    const client = await initClient(builder.createLocal());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    const contact = await addContact(space, john);
+    const document = await addDocument(space, 'important document');
+
+    {
+      const query = space.db.query(Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType))));
+      const ids = (await query.run()).objects.map(({ id }) => id);
+      expect(ids.every((id) => contact.id !== id && document.id !== id)).to.be.true;
+    }
+  });
 });

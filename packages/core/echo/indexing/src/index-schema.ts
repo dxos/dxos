@@ -57,30 +57,34 @@ export class IndexSchema extends Resource implements Index {
 
   @trace.span({ showInBrowserTimeline: true })
   async find(filter: IndexQuery): Promise<FindResult[]> {
-    if (filter.or && filter.or.length > 0) {
-      return (await Promise.all(filter.or.map((subFilter: IndexQuery) => this.find(subFilter)))).flat();
-    }
-
-    if (filter.typename === null) {
-      // TODO(dmaretskyi): Implement querying for Expando objects.
-      throw new Error('Not implemented');
-    }
-
-    if (filter.typename === undefined) {
-      return Array.from(this._index.values())
-        .flatMap((ids) => Array.from(ids))
-        .map((id) => ({ id, rank: 0 }));
+    if (filter.typenames.length !== 1 && !filter.or) {
+      throw new Error('Only `or` queries are supported for more than one typename.');
     }
 
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
-        .filter(([key]) => key !== filter.typename)
+        .filter(([key]) => !filter.typenames.includes(key) === false)
         .flatMap(([, value]) => Array.from(value))
         .map((id) => ({ id, rank: 0 }));
     }
 
-    return Array.from(this._index.get(filter.typename) ?? []).map((id) => ({ id, rank: 0 }));
+    const results: FindResult[] = [];
+    for (const typename of filter.typenames) {
+      if (typename === null) {
+        // TODO(dmaretskyi): Implement querying for Expando objects.
+        throw new Error('Not implemented');
+      } else if (typename === undefined) {
+        results.push(
+          ...Array.from(this._index.values())
+            .flatMap((ids) => Array.from(ids))
+            .map((id) => ({ id, rank: 0 })),
+        );
+      } else {
+        results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
+      }
+    }
+    return results.flat();
   }
 
   @trace.span({ showInBrowserTimeline: true })

@@ -17,10 +17,13 @@ export type IndexQuery = {
    * null means all Expando objects.
    * undefined means all objects (no filter).
    */
-  typename?: string | null;
+  typenames: (string | null | undefined)[];
 
-  // TODO(mykola): Extract to QueryPlanner in future
-  or?: IndexQuery[];
+  /**
+   * Concatenate all results for each typename if `true`.
+   */
+  or?: boolean;
+
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;
 };
