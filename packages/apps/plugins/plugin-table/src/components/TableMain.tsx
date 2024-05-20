@@ -6,13 +6,17 @@ import React, { type FC } from 'react';
 
 import { DensityProvider, Main } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table';
-import { baseSurface } from '@dxos/react-ui-theme';
+import { baseSurface, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
 const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
   <Main.Content
-    classNames={[baseSurface, 'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-hidden']}
+    classNames={[
+      baseSurface,
+      'fixed inset-inline-0 block-start-[--topbar-size] block-end-0 overflow-hidden',
+      bottombarBlockPaddingEnd,
+    ]}
   >
     <DensityProvider density='fine'>
       <Table.Root>
