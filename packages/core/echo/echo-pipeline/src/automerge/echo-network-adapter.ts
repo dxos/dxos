@@ -100,7 +100,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   @synchronized
   async removeReplicator(replicator: EchoReplicator) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    invariant(this._replicators.has(replicator));''
+    invariant(this._replicators.has(replicator));
+    ('');
     await replicator.disconnect();
     this._replicators.delete(replicator);
   }
