@@ -19,7 +19,7 @@ export const StatusBarPlugin = (): PluginDefinition<StatusBarPluginProvides> => 
     provides: {
       translations,
       surface: {
-        component: ({ data, role }) => {
+        component: ({ role }) => {
           switch (role) {
             case 'status-bar': {
               return <StatusBarImpl />;

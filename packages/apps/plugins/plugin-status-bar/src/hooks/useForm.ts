@@ -5,12 +5,25 @@ import { type ChangeEvent, useCallback, useState } from 'react';
 
 import { type ValidationError } from '../util';
 
+// TODO(Zan): This module will be generally useful and we should factor it out after the
+// API crystallizes a bit more.
+
 interface FormOptions<T> {
   initialValues: T;
   validate: (values: any) => ValidationError[] | undefined;
   onSubmit: (values: T) => void;
 }
 
+/**
+ * Creates a hook for managing form state, including values, validation, and submission.
+ *
+ * @example
+ * const { values, handleChange, handleSubmit, errors, canSubmit, getInputProps } = useForm({
+ *   initialValues: { name: '', email: '' },
+ *   validate: (values) => { yourValidationLogic(values); },
+ *   onSubmit: (values) => { submissionLogic(values); },
+ * });
+ */
 export const useForm = <T extends object>({ initialValues, validate, onSubmit }: FormOptions<T>) => {
   const [values, setValues] = useState<T>(initialValues);
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);

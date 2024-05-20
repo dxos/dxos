@@ -177,7 +177,7 @@ export const MainLayout = ({
           </div>
         )}
 
-        <div className='fixed bottom-0 left-0 right-0'>
+        <div role='none' className='fixed block-end-0 inset-inline-0'>
           <Surface role='status-bar' limit={1} />
         </div>
 

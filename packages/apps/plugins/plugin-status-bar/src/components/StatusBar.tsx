@@ -35,14 +35,17 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 type StatusBarItemProps = ThemedClassName<{ children: ReactNode }>;
 
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)} ref={forwardedRef}>
+  <div
+    role='menuitem'
+    className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)}
+    ref={forwardedRef}
+  >
     {children}
   </div>
 ));
 type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 
-// TODO: Role content info
-// tabable group with tabster
+// TODO(zan): tabable group with tabster
 const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
   ({ classNames, children }, forwardedRef) => (
     <div
@@ -53,7 +56,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         classNames,
       )}
       ref={forwardedRef}
-      role='contentinfo'
+      role='menubar'
     >
       {children}
     </div>
@@ -63,7 +66,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
 type StartContentProps = ThemedClassName<{ children: ReactNode }>;
 
 const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+  <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));
@@ -71,7 +74,7 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
 type EndContentProps = ThemedClassName<{ children: ReactNode }>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+  <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
     {children}
   </div>
 ));

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { Info, type IconProps } from '@phosphor-icons/react';
@@ -13,6 +13,5 @@ export default pluginMeta({
   id: STATUS_BAR_PLUGIN,
   name: 'Status Bar',
   description: 'Display a bar with status and actions.',
-  tags: ['experimental'],
   iconComponent: (props: IconProps) => <Info {...props} />,
 });

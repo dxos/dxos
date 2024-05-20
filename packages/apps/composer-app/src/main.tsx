@@ -131,6 +131,7 @@ const main = async () => {
       NavTreeMeta,
       SettingsMeta,
       HelpMeta,
+      StatusBarMeta,
 
       // Data integrations
       ClientMeta,
@@ -149,7 +150,6 @@ const main = async () => {
       RegistryMeta,
 
       // Presentation
-      StatusBarMeta,
       ChainMeta,
       StackMeta,
       PresenterMeta,

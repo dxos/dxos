@@ -114,8 +114,8 @@ export const captureMessage: typeof naturalCaptureMessage = (exception, captureC
   }
 };
 
-export const captureUserFeedback = (name: string, email: string, message: string) => (
-  sendFeedback({ name, email, message }, { includeReplay: true });
-)
+export const captureUserFeedback = (name: string, email: string, message: string) => {
+  return sendFeedback({ name, email, message }, { includeReplay: true });
+};
 
 export const withScope = naturalWithScope;
