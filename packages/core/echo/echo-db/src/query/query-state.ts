@@ -163,8 +163,8 @@ export class QueryState extends Resource {
 // TODO(burdon): Process Filter DSL.
 const filterToIndexQuery = (filter: Filter): IndexQuery => {
   return {
-    or: filter.or.map(filterToIndexQuery),
     typename: filter.type?.itemId,
+    or: filter.or.map(filterToIndexQuery),
     inverted: filter.not,
   };
 };
