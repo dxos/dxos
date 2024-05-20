@@ -15,7 +15,7 @@ import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export type IndexQuery = {
   /**
    * null means all Expando objects.
-   * undefined means all objects (no filter).
+   * empty array means all objects (no filter).
    */
   typenames: (string | null)[];
 
