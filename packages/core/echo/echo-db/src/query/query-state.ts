@@ -5,7 +5,7 @@
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
-import { type Indexer, type IndexQuery } from '@dxos/indexing';
+import { LogicalModifiers, type Indexer, type IndexQuery } from '@dxos/indexing';
 import { PublicKey } from '@dxos/keys';
 import { idCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -164,7 +164,7 @@ export class QueryState extends Resource {
 const filterToIndexQuery = (filter: Filter): IndexQuery => {
   return {
     typenames: filter.or.length >= 1 ? filter.or.map((f) => f.type?.itemId) : [filter.type?.itemId],
-    or: filter.or.length > 0,
+    modifier: filter.or.length > 0 ? LogicalModifiers.OR : undefined,
     inverted: filter.not,
   };
 };
