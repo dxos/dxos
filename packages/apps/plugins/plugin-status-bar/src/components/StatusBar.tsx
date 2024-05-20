@@ -78,36 +78,19 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
 
 type StartContentProps = ThemedClassName<{ children: ReactNode }>;
 
-const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => {
-  const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
-
-  return (
-    <div
-      role='none'
-      className={mx('flex-grow flex items-center space-x-2', classNames)}
-      ref={forwardedRef}
-      {...groupAttrs}
-    >
-      {children}
-    </div>
-  );
-});
+const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
+  <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
+    {children}
+  </div>
+));
 
 type EndContentProps = ThemedClassName<{ children: ReactNode }>;
 
-const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => {
-  const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
-  return (
-    <div
-      role='none'
-      className={mx('flex-grow flex items-center justify-end', classNames)}
-      ref={forwardedRef}
-      {...groupAttrs}
-    >
-      {children}
-    </div>
-  );
-});
+const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
+  <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
+    {children}
+  </div>
+));
 
 export const StatusBar = {
   Container: StatusBarContainer,
