@@ -6,8 +6,8 @@ import { expect } from 'chai';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
-import { Filter, type Query } from '@dxos/echo-db';
-import { create, type S } from '@dxos/echo-schema';
+import { Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
+import { create, type S, Expando, getEchoObjectAnnotation } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -58,10 +58,15 @@ describe('Index queries', () => {
             object: (object as any).toJSON(),
             resolution,
           })),
-          instanceof: query.results.map(({ object }) => object instanceof (type as any)),
+          type: getEchoObjectAnnotation(type)?.typename,
         });
         for (const result of query.results) {
-          if (result.object instanceof (type as any) && result.resolution?.source === 'index') {
+          if (
+            result.resolution?.source === 'index' &&
+            ((getEchoObjectAnnotation(type)?.typename === 'Expando' &&
+              getAutomergeObjectCore(result.object!).getType().itemId === 'Expando') ||
+              result.object instanceof (type as any))
+          ) {
             unsub();
             receivedIndexedObject.wake(result.object);
           }
@@ -71,7 +76,7 @@ describe('Index queries', () => {
     );
     const obj = await receivedIndexedObject.wait({ timeout: 5000 });
     for (const key of Object.keys(content)) {
-      expect(obj[key]).to.equal(content[key]);
+      expect(obj[key]).to.deep.equal(content[key]);
     }
     return obj;
   };
@@ -239,5 +244,22 @@ describe('Index queries', () => {
       const ids = (await query.run()).objects.map(({ id }) => id);
       expect(ids.every((id) => contact.id !== id && document.id !== id)).to.be.true;
     }
+  });
+
+  test('query Expando objects', async () => {
+    const builder = new TestBuilder();
+    afterTest(async () => await builder.destroy());
+    const client = await initClient(builder.createLocal());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+
+    const expando = create(Expando, { data: { name: john } });
+    space.db.add(expando);
+    await space.db.flush();
+
+    const query = space.db.query(Filter.schema(Expando));
+    await query.run();
+
+    await checkIfQueryContainsObject(space.db.query(Filter.schema(Expando)), Expando, { data: { name: john } });
   });
 });

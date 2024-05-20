@@ -73,9 +73,8 @@ export class IndexSchema extends Resource implements Index {
 
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
-      if (typename === null) {
-        // TODO(dmaretskyi): Implement querying for Expando objects.
-        throw new Error('Not implemented');
+      if (typename === 'Expando') {
+        results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
       } else {
         results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
       }
