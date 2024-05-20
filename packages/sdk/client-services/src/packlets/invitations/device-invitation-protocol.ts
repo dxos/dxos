@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { AlreadyJoinedError } from '@dxos/protocols';
+import { AlreadyJoinedError, type ApiError } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
@@ -26,6 +26,10 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
 
   toJSON(): object {
     return {};
+  }
+
+  checkCanInviteNewMembers(): ApiError | undefined {
+    return undefined;
   }
 
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
