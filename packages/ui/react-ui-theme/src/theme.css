@@ -24,9 +24,16 @@
   --surface-text: black;
   --description-text: theme(colors.neutral.300);
   --topbar-size: theme(spacing.12);
+  --statusbar-size: theme(spacing.6);
   --sticky-top: 0;
   --rail-size: 48px;
   --rail-action: 40px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --statusbar-size: theme(spacing.8);
+  }
 }
 
 .dark {
