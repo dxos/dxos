@@ -39,7 +39,12 @@ import {
   type Label,
   isLabel,
 } from '@dxos/react-ui';
-import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
+import {
+  DropDownMenuDragHandleTrigger,
+  resizeHandle,
+  resizeHandleHorizontal,
+  useAttendable,
+} from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -153,6 +158,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     const sectionContentGroup = useFocusableGroup({});
 
     const collapsed = !!collapsedSections?.[id];
+    const attendableProps = useAttendable(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -163,6 +169,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
+          {...attendableProps}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
@@ -200,6 +207,19 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                   <DropdownMenu.Portal>
                     <DropdownMenu.Content>
                       <DropdownMenu.Viewport>
+                        {collapsed ? (
+                          <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
+                            <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
+                            <span className='grow'>{t('navigate to section label')}</span>
+                          </DropdownMenu.Item>
+                        ) : (
+                          <CollapsiblePrimitive.Trigger asChild>
+                            <DropdownMenu.Item>
+                              <CaretDownUp className={mx(getSize(5), 'mr-2')} />
+                              <span className='grow'>{t('collapse label')}</span>
+                            </DropdownMenu.Item>
+                          </CollapsiblePrimitive.Trigger>
+                        )}
                         <DropdownMenu.Item onClick={onAddBefore} data-testid='section.add-before'>
                           <ArrowLineUp className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('add section before label')}</span>
@@ -207,10 +227,6 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                         <DropdownMenu.Item onClick={onAddAfter} data-testid='section.add-after'>
                           <ArrowLineDown className={mx(getSize(5), 'mr-2')} />
                           <span className='grow'>{t('add section after label')}</span>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item onClick={onNavigate} data-testid='section.navigate-to'>
-                          <ArrowSquareOut className={mx(getSize(5), 'mr-2')} />
-                          <span className='grow'>{t('navigate to section label')}</span>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item onClick={() => onDelete?.()} data-testid='section.remove'>
                           <X className={mx(getSize(5), 'mr-2')} />
@@ -221,12 +237,24 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
                     </DropdownMenu.Content>
                   </DropdownMenu.Portal>
                 </DropdownMenu.Root>
-                <CollapsiblePrimitive.Trigger asChild>
-                  <Button variant='ghost' data-state='' classNames={sectionActionDimensions}>
-                    <span className='sr-only'>{t(collapsed ? 'expand label' : 'collapse label')}</span>
-                    {collapsed ? <CaretUpDown className={getSize(4)} /> : <CaretDownUp className={getSize(4)} />}
+                {collapsed ? (
+                  <CollapsiblePrimitive.Trigger asChild>
+                    <Button variant='ghost' classNames={sectionActionDimensions}>
+                      <span className='sr-only'>{t('expand label')}</span>
+                      <CaretUpDown className={getSize(4)} />
+                    </Button>
+                  </CollapsiblePrimitive.Trigger>
+                ) : (
+                  <Button
+                    variant='ghost'
+                    classNames={sectionActionDimensions}
+                    onClick={onNavigate}
+                    data-testid='section.navigate-to'
+                  >
+                    <ArrowSquareOut className={mx(getSize(4))} />
+                    <span className='sr-only'>{t('navigate to section label')}</span>
                   </Button>
-                </CollapsiblePrimitive.Trigger>
+                )}
               </div>
             </div>
 

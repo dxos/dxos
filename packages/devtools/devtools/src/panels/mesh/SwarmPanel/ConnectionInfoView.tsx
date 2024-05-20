@@ -49,7 +49,7 @@ export const ConnectionInfoView: FC<{ connection?: ConnectionInfo }> = ({ connec
 
       <Table.Root>
         <Table.Viewport classNames='flex grow overflow-anchored'>
-          <Table.Table<ConnectionInfo.StreamStats>
+          <Table.Main<ConnectionInfo.StreamStats>
             columns={columns}
             data={connection.streams ?? []}
             keyAccessor={(row) => row.id.toString()}

@@ -5,6 +5,7 @@
 import { randWord, randSentence } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { StatsPanel, useStats } from '@dxos/devtools';
 import { type ReactiveObject, type S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -22,17 +23,13 @@ import { ItemType, DocumentType } from '../data';
 import { defs } from '../defs';
 import { exportData, importData } from '../util';
 
-// const dateRange = {
-//   from: new Date(),
-//   to: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-// };
-
 export const Main = () => {
   const client = useClient();
   // TODO(wittjosiah): Why filter out the default space?
   const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
   const [space, setSpace] = useState<Space>();
-
+  const [stats, refreshStats] = useStats();
+  const [showStats, setShowStats] = useState<boolean>(true);
   useEffect(() => {
     if (!space && spaces.length) {
       setSpace(spaces[0]);
@@ -175,7 +172,6 @@ export const Main = () => {
       await space.waitUntilReady();
       const backupBlob = await exportData(space);
       const filename = space.properties.name?.replace(/\W/g, '_') || space.key.toHex();
-
       download(backupBlob, `${filename}.json`);
     }
   };
@@ -190,7 +186,7 @@ export const Main = () => {
   };
 
   return (
-    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black divide-y'>
+    <div className='flex flex-col grow max-w-[60rem] shadow-lg bg-white dark:bg-black'>
       <AppToolbar
         onHome={() => window.open(defs.issueUrl, 'DXOS')}
         onProfile={() => {
@@ -224,10 +220,15 @@ export const Main = () => {
           </>
         )}
       </div>
-      <div className='flex p-2 items-center text-xs'>
+      <div className='flex h-[32px] p-2 items-center relative text-xs'>
         <div>{objects.length} objects</div>
         <div className='grow' />
-        <StatusBar flushing={flushing} />
+        <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
+        {showStats && (
+          <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
+            <StatsPanel stats={stats} onRefresh={refreshStats} />
+          </div>
+        )}
       </div>
     </div>
   );

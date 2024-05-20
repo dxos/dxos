@@ -24,7 +24,7 @@ const INDEXER_CONFIG: IndexConfig = {
 
 export type EchoHostParams = {
   kv: LevelDB;
-  storage: Storage;
+  storage?: Storage;
 };
 
 /**
@@ -49,7 +49,7 @@ export class EchoHost extends Resource {
       db: kv.sublevel('automerge'),
       indexMetadataStore: this._indexMetadataStore,
       // TODO(dmaretskyi): Still needed for data migration -- remove before the next release.
-      directory: storage.createDirectory('automerge'),
+      directory: storage?.createDirectory('automerge'),
     });
 
     this._indexer = new Indexer({
@@ -58,7 +58,7 @@ export class EchoHost extends Resource {
       metadataStore: this._indexMetadataStore,
       loadDocuments: createSelectedDocumentsIterator(this._automergeHost),
     });
-    this._indexer.setIndexConfig(INDEXER_CONFIG);
+    this._indexer.setConfig(INDEXER_CONFIG);
 
     this._queryService = new QueryServiceImpl({
       automergeHost: this._automergeHost,

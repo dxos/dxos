@@ -5,6 +5,7 @@
 import expect from 'expect';
 
 import { Keyring } from '@dxos/keyring';
+import { type PublicKey } from '@dxos/keys';
 import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { describe, test } from '@dxos/test';
 
@@ -136,7 +137,7 @@ describe('SpaceStateMachine', () => {
       ),
     ).toEqual(true);
 
-    // Create the space member credential.
+    // // Create the space member credential.
     expect(
       await spaceState.process(
         await createCredential({
@@ -175,7 +176,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceMember',
             spaceKey: space,
-            role: SpaceMember.Role.MEMBER,
+            role: SpaceMember.Role.EDITOR,
             genesisFeedKey: feed,
           },
           signer: keyring,
@@ -187,22 +188,25 @@ describe('SpaceStateMachine', () => {
     ).toEqual(true);
 
     expect(spaceState.genesisCredential).toBeDefined();
-    expect(Array.from(spaceState.members.values())).toMatchObject([
-      {
-        key: identity,
-        assertion: {
-          spaceKey: space,
-          role: SpaceMember.Role.ADMIN,
+    const comparator = (m1: { key: PublicKey }, m2: { key: PublicKey }) => m1.key.toHex().localeCompare(m2.key.toHex());
+    expect(Array.from(spaceState.members.values()).sort(comparator)).toMatchObject(
+      [
+        {
+          key: identity,
+          assertion: {
+            spaceKey: space,
+            role: SpaceMember.Role.ADMIN,
+          },
         },
-      },
-      {
-        key: identity2,
-        assertion: {
-          spaceKey: space,
-          role: SpaceMember.Role.MEMBER,
+        {
+          key: identity2,
+          assertion: {
+            spaceKey: space,
+            role: SpaceMember.Role.EDITOR,
+          },
         },
-      },
-    ]);
+      ].sort(comparator),
+    );
     expect(Array.from(spaceState.feeds.values())).toMatchObject([]);
     expect(spaceState.credentials).toHaveLength(3);
   });

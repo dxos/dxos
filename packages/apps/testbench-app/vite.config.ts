@@ -19,6 +19,13 @@ import { UserConfig } from 'vitest/config';
 export default defineConfig({
   server: {
     host: true,
+    cors: true,
+    // Set isolation to enable performance.measureUserAgentSpecificMemory
+    // https://web.dev/articles/coop-coep
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
     https:
       process.env.HTTPS === 'true'
         ? {
@@ -37,6 +44,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    minify: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, './index.html'),
@@ -61,17 +69,11 @@ export default defineConfig({
       projects: ['../../../tsconfig.paths.json'],
     }),
     ConfigPlugin({
-      env: [
-        'DX_VAULT',
-        'BASELIME_API_KEY'
-      ]
+      env: ['DX_VAULT', 'BASELIME_API_KEY'],
     }),
     ThemePlugin({
       root: __dirname,
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),

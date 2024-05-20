@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-chain",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

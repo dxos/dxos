@@ -4,9 +4,9 @@
 
 import { authMiddleware, type Env } from '@dxos/web-auth';
 
-const handler = authMiddleware({
+const authHandler = authMiddleware({
   cookie: 'COMPOSER-BETA',
-  service: 'composer-app-worker',
+  service: 'composer-worker',
   redirectUrl: 'https://dxos.org/composer/#beta',
 });
 
@@ -15,8 +15,12 @@ const handler = authMiddleware({
  * https://developers.cloudflare.com/pages/functions/advanced-mode
  * Output _worker.js to <pages_build_output_dir> and deploy via git.
  */
-export default {
-  fetch: async (request, env, c) => {
-    return handler(request, env, c)
-  },
-} as ExportedHandler<Env>;
+const handler: ExportedHandler<Env> = {
+  fetch: process.env.DX_AUTH
+    ? authHandler
+    : async (request, env) => {
+        return env.ASSETS.fetch(request);
+      },
+};
+
+export default handler;

@@ -142,6 +142,8 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
   }
 
   override connect(peerId: PeerId): void {
+    log('connecting...');
+
     // NOTE: Expects that `AutomergeHost` host already running and listening for connections.
     invariant(!this._isClosed);
     invariant(!this._stream);
@@ -187,7 +189,22 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
       });
   }
 
+  override disconnect(): void {
+    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
+    // No-op.
+  }
+
+  async close() {
+    log('closing...');
+    this._isClosed = true;
+    await this._stream?.close();
+    this._stream = undefined;
+    log('closed');
+    this.emit('close');
+  }
+
   override send(message: Message): void {
+    log('sending...');
     invariant(this.peerId);
     invariant(!this._isClosed);
     void this._dataService
@@ -198,21 +215,14 @@ class LocalClientNetworkAdapter extends NetworkAdapter {
         },
         { timeout: RPC_TIMEOUT }, // TODO(dmaretskyi): Set global timeout instead.
       )
+      .then(() => {
+        log('sent');
+      })
       .catch((err) => {
-        log.catch(err);
+        if (!this._isClosed) {
+          log.catch(err);
+        }
       });
-  }
-
-  async close() {
-    this._isClosed = true;
-    await this._stream?.close();
-    this._stream = undefined;
-    this.emit('close');
-  }
-
-  override disconnect(): void {
-    // TODO(mykola): `disconnect` is not used anywhere in `Repo` from `@automerge/automerge-repo`. Should we remove it?
-    // No-op
   }
 }
 

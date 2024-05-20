@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-table",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "Table surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,7 @@
   ],
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
+    "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

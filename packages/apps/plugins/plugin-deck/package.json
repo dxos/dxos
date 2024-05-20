@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-deck",
-  "version": "0.4.9",
+  "version": "0.5.2",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

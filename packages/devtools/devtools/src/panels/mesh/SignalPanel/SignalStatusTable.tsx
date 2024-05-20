@@ -115,7 +115,7 @@ export const SignalStatusTable = () => {
   return (
     <Table.Root>
       <Table.Viewport classNames='overflow-anchored'>
-        <Table.Table<SignalStatus> columns={columns} data={status} />
+        <Table.Main<SignalStatus> columns={columns} data={status} />
         <AnchoredOverflow.Anchor />
       </Table.Viewport>
     </Table.Root>

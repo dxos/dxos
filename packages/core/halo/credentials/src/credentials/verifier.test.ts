@@ -142,6 +142,31 @@ describe('verifier', () => {
     });
   });
 
+  test('parent references are part of the proof', async () => {
+    const keyring = new Keyring();
+    const issuer = await keyring.createKey();
+    const credential = await createCredential({
+      parentCredentialIds: [PublicKey.random()],
+      assertion: {
+        '@type': 'dxos.halo.credentials.SpaceMember',
+        spaceKey: PublicKey.random(),
+        role: SpaceMember.Role.ADMIN,
+        genesisFeedKey: PublicKey.random(),
+      },
+      issuer,
+      signer: keyring,
+      subject: PublicKey.random(),
+    });
+    expect(credential.parentCredentialIds?.length).toEqual(1);
+    expect(await verifyCredential(credential)).toMatchObject({ kind: 'pass' });
+
+    // Tamper with the credential.
+    credential.parentCredentialIds?.push(PublicKey.random());
+    expect(await verifyCredential(credential)).toMatchObject({
+      kind: 'fail',
+    });
+  });
+
   describe('chain', () => {
     test('pass - delegated authority with 1 device', async () => {
       const keyring = new Keyring();

@@ -42,7 +42,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     await Promise.all(
       Array.from(this._queries).map(async (query) => {
         try {
-          const { changed } = await query.state.runQuery();
+          const { changed } = await query.state.execQuery();
           if (changed) {
             query.sendResults(query.state.getResults());
           }
@@ -53,6 +53,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     );
   });
 
+  // TODO(burdon): OK for options, but not params. Pass separately and type readonly here.
   constructor(private readonly _params: QueryServiceParams) {
     super();
   }
@@ -65,15 +66,15 @@ export class QueryServiceImpl extends Resource implements QueryService {
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
 
-  async setIndexConfig(config: IndexConfig): Promise<void> {
+  async setConfig(config: IndexConfig): Promise<void> {
     if (this._params.indexer.initialized) {
-      log.warn('Indexer already initialized. Cannot change config.');
+      log.warn('Indexer already initialized.');
       return;
     }
-    this._params.indexer.setIndexConfig(config);
+    this._params.indexer.setConfig(config);
   }
 
-  find(request: QueryRequest): Stream<QueryResponse> {
+  execQuery(request: QueryRequest): Stream<QueryResponse> {
     return new Stream<QueryResponse>(({ next, close, ctx }) => {
       const query: ActiveQuery = {
         state: new QueryState({
@@ -96,8 +97,10 @@ export class QueryServiceImpl extends Resource implements QueryService {
       this._queries.add(query);
 
       queueMicrotask(async () => {
+        await query.state.open();
+
         try {
-          const { changed } = await query.state.runQuery();
+          const { changed } = await query.state.execQuery();
           if (changed) {
             query.sendResults(query.state.getResults());
           }
@@ -113,7 +116,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   /**
    * Re-index all loaded documents.
    */
-  async reIndex() {
+  async reindex() {
     const iterator = createDocumentsIterator(this._params.automergeHost);
     const ids: IdToHeads = new Map();
     for await (const documents of iterator()) {
@@ -122,7 +125,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
       }
     }
 
-    await this._params.indexer.reIndex(ids);
+    await this._params.indexer.reindex(ids);
   }
 }
 
@@ -132,7 +135,6 @@ export class QueryServiceImpl extends Resource implements QueryService {
 const createDocumentsIterator = (automergeHost: AutomergeHost) =>
   /**
    * Recursively get all object data blobs from loaded documents from Automerge Repo.
-   * @param ids
    */
   // TODO(mykola): Unload automerge handles after usage.
   async function* getAllDocuments(): AsyncGenerator<ObjectSnapshot[], void, void> {

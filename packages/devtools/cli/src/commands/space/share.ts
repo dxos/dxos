@@ -4,6 +4,8 @@
 
 import { ux, Args, Flags } from '@oclif/core';
 import chalk from 'chalk';
+import { write as copy } from 'node-clipboardy';
+import { spawn } from 'node:child_process';
 
 import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
@@ -17,34 +19,39 @@ export default class Share extends BaseCommand<typeof Share> {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
   static override flags = {
     ...BaseCommand.flags,
-    multiple: Flags.boolean({
-      description: 'Multiple use.',
-    }),
-    'no-auth': Flags.boolean({
-      description: 'Skip authentication challenge.',
-    }),
+    // TODO(burdon): Move to base class.
     timeout: Flags.integer({
       description: 'Timeout in milliseconds.',
       default: 5_000,
-    }),
-    origin: Flags.string({
-      description: 'Base URL of the application to join the invitation, e.g. https://composer.dxos.org',
     }),
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
       default: 86400,
     }),
+    multiple: Flags.boolean({
+      description: 'Multiple use.',
+    }),
     persistent: Flags.boolean({
       description: 'Invitation should resume if client restarts',
       default: true,
     }),
-    // TODO(nf): --no- doesn't work
+    // TODO(nf): --no- doesn't work.
     'no-persistent': Flags.boolean({
       description: "Don't resume invitation if client restarts",
       default: true,
     }),
+    open: Flags.boolean({
+      description: 'Open browser with invitation.',
+    }),
+    host: Flags.string({
+      description: 'Application Host URL.',
+      default: 'https://composer.space',
+    }),
+    'no-auth': Flags.boolean({
+      description: 'Skip authentication challenge.',
+    }),
     'no-wait': Flags.boolean({
-      description: "Don't wait for a peer to connect before exiting CLI.",
+      description: "Don't wait for a peer to connect before exiting CLI",
       default: true,
     }),
   };
@@ -63,16 +70,25 @@ export default class Share extends BaseCommand<typeof Share> {
         persistent: this.flags.persistent,
         lifetime: this.flags.lifetime,
       });
+
       const invitationSuccess = hostInvitation({
         observable,
         callbacks: {
           onConnecting: async () => {
-            const invitationCode = InvitationEncoder.encode(observable.get());
-            this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
+            const invitation = observable.get();
+            const invitationCode = InvitationEncoder.encode(invitation);
+
             if (authMethod !== Invitation.AuthMethod.NONE) {
               this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
+              copy(invitation.authCode!);
+            }
+
+            if (this.flags.open) {
+              const url = new URL(this.flags.host);
+              url.searchParams.append('spaceInvitationCode', InvitationEncoder.encode(invitation));
+              spawn('open', [url.toString()]);
             } else {
-              this.log('');
+              this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
             }
           },
         },
