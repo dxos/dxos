@@ -14,6 +14,8 @@ import { nonNullable } from '@dxos/util';
 import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
 import { prohibitSignalActions } from '../guarded-scope';
+import { StackTrace } from '@dxos/debug';
+import { trace } from '@dxos/tracing';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1;
@@ -127,6 +129,11 @@ export class Query<T extends {} = any> {
   private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
   private _subscribers: number = 0;
 
+  /**
+   * @internal
+   */
+  _creationStack: StackTrace;
+
   constructor(
     private readonly _queryContext: QueryContext,
     filter: Filter,
@@ -148,6 +155,8 @@ export class Query<T extends {} = any> {
       source.close();
       this._sources.delete(source);
     });
+
+    this._creationStack = new StackTrace();
 
     log('construct', { filter: this._filter.toProto() });
   }
@@ -278,6 +287,7 @@ export class Query<T extends {} = any> {
       for (const source of this._sources) {
         this._subscribeToSourceUpdates(this._runningCtx, source);
       }
+      ACTIVE_QUERIES.add(this);
     }
   }
 
@@ -286,6 +296,7 @@ export class Query<T extends {} = any> {
       void this._runningCtx.dispose()?.catch();
       this._queryContext.stop();
       this._runningCtx = null;
+      ACTIVE_QUERIES.delete(this);
     }
   }
 
@@ -310,3 +321,18 @@ export class Query<T extends {} = any> {
     }
   }
 }
+
+const ACTIVE_QUERIES = new Set<Query>();
+
+trace.diagnostic({
+  id: 'client-queries',
+  name: 'Queries (Client)',
+  fetch: () => {
+    return Array.from(ACTIVE_QUERIES).map((query) => {
+      return {
+        filter: JSON.stringify(query?.filter),
+        creationStack: query?._creationStack.getStack(),
+      };
+    });
+  },
+});
