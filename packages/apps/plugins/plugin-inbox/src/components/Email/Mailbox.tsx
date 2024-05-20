@@ -6,7 +6,6 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
-
 import {
   mx,
   baseSurface,
@@ -15,7 +14,6 @@ import {
   topbarBlockPaddingStart,
   bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
-
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
