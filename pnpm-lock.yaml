@@ -5695,6 +5695,9 @@ importers:
       express:
         specifier: ^4.19.2
         version: 4.19.2
+      get-port:
+        specifier: ^6.1.2
+        version: 6.1.2
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
@@ -26971,7 +26974,7 @@ packages:
       deepmerge-ts: 5.1.0
       edgedriver: 5.3.9
       geckodriver: 4.3.1
-      get-port: 7.0.0
+      get-port: 7.1.0
       import-meta-resolve: 4.0.0
       locate-app: 2.2.15
       safaridriver: 0.1.2
@@ -33819,8 +33822,13 @@ packages:
     resolution: {integrity: sha512-3UBAyM3u4ZBVYDsxOQfJDxEa6XTbpBDrOjp4mf7ExFRt5BKs/QywQQiJsh2B+hxcZLSapWqCRvElUe8DnKcFHA==}
     dev: false
 
-  /get-port@7.0.0:
-    resolution: {integrity: sha512-mDHFgApoQd+azgMdwylJrv2DX47ywGq1i5VFJE7fZ0dttNq3iQMfsU4IvEgBHojA3KqEudyu7Vq+oN8kNaNkWw==}
+  /get-port@6.1.2:
+    resolution: {integrity: sha512-BrGGraKm2uPqurfGVj/z97/zv8dPleC6x9JBNRTrDNtCkkRF4rPwrQXFgL7+I+q8QSdU4ntLQX2D7KIxSy8nGw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+    dev: false
+
+  /get-port@7.1.0:
+    resolution: {integrity: sha512-QB9NKEeDg3xxVwCCwJQ9+xycaz6pBB6iQ76wiWMl1927n0Kir6alPiP+yuiICLLU4jpMe08dXfpebuQppFA2zw==}
     engines: {node: '>=16'}
     dev: true
 

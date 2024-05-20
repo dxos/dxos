@@ -6,6 +6,6 @@ import { type FunctionHandler } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export const handler: FunctionHandler<any> = async ({ response }) => {
-  log.info('hello');
+  log.info('hello world!');
   return response.status(200);
 };

@@ -77,6 +77,7 @@ export class DevServer {
     invariant(!this._server);
     log.info('starting...');
 
+    // TODO(burdon): Move to hono.
     const app = express();
     app.use(express.json());
 
@@ -85,12 +86,12 @@ export class DevServer {
       try {
         log.info('calling', { path });
         if (this._options.reload) {
-          const { def } = this._handlers[path];
+          const { def } = this._handlers['/' + path];
           await this._load(def, true);
         }
 
         // TODO(burdon): Get function context.
-        res.statusCode = await this.invoke(path, req.body);
+        res.statusCode = await this.invoke('/' + path, req.body);
         res.end();
       } catch (err: any) {
         log.catch(err);
@@ -192,7 +193,7 @@ export class DevServer {
 
   private async _invoke(path: string, event: any) {
     const { handler } = this._handlers[path] ?? {};
-    invariant(handler);
+    invariant(handler, `invalid path: ${path}`);
 
     const context: FunctionContext = {
       client: this._client,

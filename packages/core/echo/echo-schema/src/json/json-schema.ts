@@ -121,6 +121,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       [JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
     });
   };
+
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
   return JSONSchema.make(schemaWithRefinements);
 };

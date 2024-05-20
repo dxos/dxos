@@ -5,6 +5,7 @@
 import { CronJob } from 'cron';
 import { getPort } from 'get-port-please';
 import http from 'node:http';
+import path from 'node:path';
 import WebSocket from 'ws';
 
 import { TextV0Type } from '@braneframe/types';
@@ -26,7 +27,7 @@ import {
   type WebsocketTrigger,
 } from '../types';
 
-export type Callback = (data: any) => Promise<void>;
+export type Callback = (data: any) => Promise<void | number>;
 
 export type SchedulerOptions = {
   endpoint?: string;
@@ -34,7 +35,7 @@ export type SchedulerOptions = {
 };
 
 /**
- * The scheduler triggers function exectuion based on various triggers.
+ * The scheduler triggers function execution based on various triggers.
  */
 export class Scheduler {
   // Map of mounted functions.
@@ -112,27 +113,39 @@ export class Scheduler {
   }
 
   // TODO(burdon): Pass in Space key (common context).
-  private async _execFunction(def: FunctionDef, data: any) {
+  private async _execFunction(def: FunctionDef, data: any): Promise<number> {
     try {
-      log.info('exec', { function: def.id });
+      let status = 0;
       const { endpoint, callback } = this._options;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        await fetch(`${this._options.endpoint}/${def.path}`, {
+        const url = path.join(endpoint, def.path);
+        log.info('exec', { function: def.id, url });
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
         });
+
+        status = response.status;
       } else if (callback) {
-        await callback(data);
+        log.info('exec', { function: def.id });
+        status = (await callback(data)) ?? 200;
+      }
+
+      // Check errors.
+      if (status && status >= 400) {
+        throw new Error(`Response: ${status}`);
       }
 
       // const result = await response.json();
-      log.info('done', { function: def.id });
+      log.info('done', { function: def.id, status });
+      return status;
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
+      return 500;
     }
   }
 
@@ -179,18 +192,18 @@ export class Scheduler {
   private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: WebhookTrigger) {
     log.info('webhook', { space: space.key, trigger });
 
-    // TODO(burdon): POST JSON payload.
+    // TODO(burdon): Enable POST hook with payload.
     const server = http.createServer(async (req, res) => {
-      await this._execFunction(def, { spaceKey: space.key });
+      res.statusCode = await this._execFunction(def, { spaceKey: space.key });
+      res.end();
     });
 
-    const DEF_PORT_RANGE = { min: 7500, max: 7599 };
-    const portRange = Object.assign({}, trigger.port, DEF_PORT_RANGE) as WebhookTrigger['port'];
-    console.log('#######################', portRange);
+    // TODO(burdon): Not used.
+    // const DEF_PORT_RANGE = { min: 7500, max: 7599 };
+    // const portRange = Object.assign({}, trigger.port, DEF_PORT_RANGE) as WebhookTrigger['port'];
     const port = await getPort({
-      host: 'localhost',
-      port: portRange!.min,
-      portRange: [portRange!.min, portRange!.max],
+      random: true,
+      // portRange: [portRange!.min, portRange!.max],
     });
 
     // TODO(burdon): Update trigger object with actual port.
