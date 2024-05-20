@@ -42,6 +42,14 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     return;
   }
 
+  // TODO(burdon): Register schema (part of function metadata).
+  try {
+    const { client } = context;
+    client.addSchema(TextV0Type, MailboxType, MessageType);
+  } catch (err) {
+    log.catch(err);
+  }
+
   // Create mailbox if doesn't exist.
   const { account } = context.data ?? { account: 'hello@dxos.network' };
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
@@ -68,9 +76,9 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
 
   const { objects } = await space.db.query(Filter.schema(MessageType)).run();
   for (const message of messages) {
+    // NOTE: If external DB is reset, it will start to number again from 1.
     let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!object) {
-      log.info('insert', { type: getTypename(message), id: message.id });
       object = space.db.add(
         create(
           MessageType,
@@ -92,23 +100,10 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      (mailbox.messages ??= []).push(object);
-    } else {
-      log.info('update', { type: getTypename(message), id: message.id });
+      // TODO(burdon): ??= breaks the array?
+      mailbox.messages?.push(object);
 
-      // TODO(burdon): Temp.
-      object.date = new Date(message.created).toISOString();
-      object.blocks = [
-        {
-          timestamp: new Date(message.created).toISOString(),
-          content: text(message.body),
-        },
-      ];
-
-      // TODO(burdon): Possibly undefined.
-      if (!mailbox.messages?.find((message) => message!.id === object!.id)) {
-        (mailbox.messages ??= []).push(object);
-      }
+      log.info('inserted', { type: getTypename(message), id: message.id });
     }
   }
 

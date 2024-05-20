@@ -86,7 +86,7 @@ describe('Chess', () => {
     await client.spaces.isReady.wait();
 
     // Create data.
-    client.addSchema(GameType);
+`   client.addSchema(GameType);
     const game = client.spaces.default.db.add(create(GameType, {}));
     await client.spaces.default.db.flush();
 

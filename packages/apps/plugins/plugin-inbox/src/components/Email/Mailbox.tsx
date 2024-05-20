@@ -56,24 +56,27 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
 
   const handleAction = (message: MessageType, action: ActionType) => {
     switch (action) {
-      case 'archive':
+      case 'archive': {
         message.state = MessageState.ARCHIVED;
         setSelected(undefined);
         break;
-      case 'delete':
+      }
+      case 'delete': {
         message.state = MessageState.DELETED;
         setSelected(undefined);
         break;
-      case 'unread':
+      }
+      case 'unread': {
         message.read = false;
         break;
+      }
     }
   };
 
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
       <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-        <MasterDetail detail={selected && <pre className='text-sm'>{selected.blocks[0]?.content?.content}</pre>}>
+        <MasterDetail detail={selected && <div className='text-sm'>{selected.blocks[0]?.content?.content}</div>}>
           <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
         </MasterDetail>
       </div>

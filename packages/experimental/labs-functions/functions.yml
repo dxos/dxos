@@ -54,15 +54,15 @@ triggers:
 #      filter:
 #      - type: 'braneframe.Calendar'
 
-  - function: 'dxos.org/function/gpt'
-    subscription:
-      filter:
-      - type: 'braneframe.Message'
+#  - function: 'dxos.org/function/gpt'
+#    subscription:
+#      filter:
+#      - type: 'braneframe.Message'
 
-  - function: 'dxos.org/function/chess'
-    subscription:
-      filter:
-      - type: 'dxos.experimental.chess.Game'
+#  - function: 'dxos.org/function/chess'
+#    subscription:
+#      filter:
+#      - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/email-worker'
     context:
@@ -88,14 +88,14 @@ triggers:
 #      options:
 #        delay: 5
 
-  - function: 'dxos.org/function/embedding'
-    subscription:
-      filter:
-      - type: 'braneframe.Document'
-      - type: 'braneframe.File'
-      options:
-        deep: true
-        delay: 5
+#  - function: 'dxos.org/function/embedding'
+#    subscription:
+#      filter:
+#      - type: 'braneframe.Document'
+#      - type: 'braneframe.File'
+#      options:
+#        deep: true
+#        delay: 5
 
 #  - function: 'dxos.org/function/github'
 #    subscription:
