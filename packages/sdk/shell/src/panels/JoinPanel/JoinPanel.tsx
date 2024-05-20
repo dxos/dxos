@@ -32,6 +32,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     failed,
     mode,
     unredeemedCodes,
+    invitationIds,
     invitationStates,
     succeededKeys,
     failReasons,
@@ -102,6 +103,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
+              invitationId={invitationIds?.Halo}
               active={activeView === 'halo invitation authenticator'}
               onInvitationCancel={onHaloInvitationCancel}
               onInvitationAuthenticate={onHaloInvitationAuthenticate}
@@ -149,6 +151,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
             <InvitationAuthenticator
               send={send}
               Kind='Space'
+              invitationId={invitationIds?.Space}
               active={activeView === 'space invitation authenticator'}
               onInvitationCancel={onSpaceInvitationCancel}
               onInvitationAuthenticate={onSpaceInvitationAuthenticate}
@@ -359,6 +362,14 @@ export const JoinPanel = ({
     [joinState],
   );
 
+  const invitationIds = useMemo(
+    () => ({
+      Halo: joinState.context.halo.invitationObservable?.get().invitationId,
+      Space: joinState.context.space.invitationObservable?.get().invitationId,
+    }),
+    [joinState],
+  );
+
   const failReasons = useMemo(
     () => ({
       Halo: joinState.context.halo.failReason,
@@ -404,6 +415,7 @@ export const JoinPanel = ({
         failReasons,
         pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
         unredeemedCodes,
+        invitationIds,
         invitationStates,
         succeededKeys,
         identity,

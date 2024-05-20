@@ -110,10 +110,6 @@ export const authenticate = async (options: LocalAuthOptions): Promise<OAuth2Cli
         scope: scopes.join(' '),
       });
 
-      // TODO(burdon): 'open' has ESM issue.
-      // Open the auth url to start the workflow.
-      // const open = await import('open');
-      // open(authorizeUrl, { wait: false }).then((cp) => cp.unref());
       spawn('open', [authorizeUrl]);
     });
 

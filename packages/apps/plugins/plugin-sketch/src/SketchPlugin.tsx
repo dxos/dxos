@@ -120,13 +120,19 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
-            case 'section':
-              return data.object instanceof SketchType ? (
-                <SketchComponent sketch={data.object} autoZoom={true} className={'h-[400px]'} />
-              ) : null;
             case 'slide':
               return data.slide instanceof SketchType ? (
-                <SketchComponent sketch={data.slide} readonly autoZoom={true} maxZoom={1.5} className={'p-16'} />
+                <SketchComponent sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
+              ) : null;
+            case 'article':
+            case 'section':
+              return data.object instanceof SketchType ? (
+                <SketchComponent
+                  sketch={data.object}
+                  readonly={role === 'section'}
+                  className={role === 'article' ? 'row-span-2' : 'bs-96'}
+                  autoZoom
+                />
               ) : null;
             default:
               return null;

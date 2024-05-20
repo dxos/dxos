@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-layout",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

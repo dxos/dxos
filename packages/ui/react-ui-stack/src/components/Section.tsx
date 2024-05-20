@@ -39,7 +39,12 @@ import {
   type Label,
   isLabel,
 } from '@dxos/react-ui';
-import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
+import {
+  DropDownMenuDragHandleTrigger,
+  resizeHandle,
+  resizeHandleHorizontal,
+  useAttendable,
+} from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -153,6 +158,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     const sectionContentGroup = useFocusableGroup({});
 
     const collapsed = !!collapsedSections?.[id];
+    const attendableProps = useAttendable(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -163,6 +169,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
+          {...attendableProps}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',

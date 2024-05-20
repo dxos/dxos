@@ -135,7 +135,7 @@ export const SwarmPanel = () => {
     <PanelContainer classNames='divide-y'>
       <Table.Root>
         <Table.Viewport classNames='h-1/2 overflow-auto'>
-          <Table.Table<SwarmConnection>
+          <Table.Main<SwarmConnection>
             columns={columns}
             data={items}
             keyAccessor={(row) => row.id.toHex()}

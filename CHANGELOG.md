@@ -1,5 +1,99 @@
 # Changelog
 
+## [0.5.2](https://github.com/dxos/dxos/compare/v0.5.1...v0.5.2) (2024-05-17)
+
+
+### Features
+
+* Attention & relatedness ([#6662](https://github.com/dxos/dxos/issues/6662)) ([c55ea0f](https://github.com/dxos/dxos/commit/c55ea0f0cc5a4f140f179203a6253ec88e2917c6))
+* **plugin-sketch:** Sketch planks ([#6708](https://github.com/dxos/dxos/issues/6708)) ([16cd857](https://github.com/dxos/dxos/commit/16cd857bc4f4dd5fe62972828231e7e71f80c5ac))
+* show emoji on receiving side of join flow ([#6697](https://github.com/dxos/dxos/issues/6697)) ([51d50f2](https://github.com/dxos/dxos/commit/51d50f2b94361d016dd6200d2553be671e5fd39f))
+
+
+### Bug Fixes
+
+* **plugin-client:** remove device invitation code after invitation ([#6704](https://github.com/dxos/dxos/issues/6704)) ([b850c25](https://github.com/dxos/dxos/commit/b850c25f25264b58aac31cf322234cc9e4ed2bfa))
+* **plugin-space:** fix navigation to objects on creation ([#6688](https://github.com/dxos/dxos/issues/6688)) ([815041c](https://github.com/dxos/dxos/commit/815041c3c15461c1a49ef56c6257d5c12885670a))
+* pnpm install ([#6687](https://github.com/dxos/dxos/issues/6687)) ([2336313](https://github.com/dxos/dxos/commit/2336313ebbd1dda61a99913e37e57b8d107c378e))
+* presentation signing ([#6685](https://github.com/dxos/dxos/issues/6685)) ([f09438f](https://github.com/dxos/dxos/commit/f09438f68606eb586ff4388fe917f030f4c3304e))
+* reconcile pnpm versions ([#6686](https://github.com/dxos/dxos/issues/6686)) ([a6d4c02](https://github.com/dxos/dxos/commit/a6d4c024fec9286c76757acb826ac3450c52794c))
+* References serialization ([#6702](https://github.com/dxos/dxos/issues/6702)) ([515eb77](https://github.com/dxos/dxos/commit/515eb7720364a247ffe23cbe60ce5aa11f4f8585))
+* Remove nesting from ECHO object JSON serialization ([#6701](https://github.com/dxos/dxos/issues/6701)) ([5d833be](https://github.com/dxos/dxos/commit/5d833be9945a7150d80df8090a903dd32c5d329c))
+* tweak beta notice and enable ([#6706](https://github.com/dxos/dxos/issues/6706)) ([41b4fdd](https://github.com/dxos/dxos/commit/41b4fdd5b9d9feeaa0f1025ca40028b785028e1d))
+
+## [0.5.1](https://github.com/dxos/dxos/compare/v0.5.0...v0.5.1) (2024-05-15)
+
+
+### Features
+
+* Add query metrics ([#6585](https://github.com/dxos/dxos/issues/6585)) ([3c7169d](https://github.com/dxos/dxos/commit/3c7169dbdc416d99d424df1628c0058bc23385ad))
+* Adding performance panel to DebugPlugin ([#6664](https://github.com/dxos/dxos/issues/6664)) ([af17cdd](https://github.com/dxos/dxos/commit/af17cdd249d221979e9b80eca9072d4cc278af76))
+* agentmanager API authentication ([#6514](https://github.com/dxos/dxos/issues/6514)) ([3dd1b82](https://github.com/dxos/dxos/commit/3dd1b82d3eb0dd366d39c83f121880ca13844442))
+* Beta branch ([#6486](https://github.com/dxos/dxos/issues/6486)) ([6564b82](https://github.com/dxos/dxos/commit/6564b82abd599ad360b110ddf6b0236d4160dca3))
+* CF secrets script ([#6652](https://github.com/dxos/dxos/issues/6652)) ([1634f4d](https://github.com/dxos/dxos/commit/1634f4df6967df80bd909874adac244ab43d4244))
+* Clean-up CLI invitations and auto open connection. ([#6667](https://github.com/dxos/dxos/issues/6667)) ([f2d5836](https://github.com/dxos/dxos/commit/f2d5836945c7f67c3e3276ca6c3020de31b01546))
+* Echo replicator abstraction ([#6608](https://github.com/dxos/dxos/issues/6608)) ([4f405fb](https://github.com/dxos/dxos/commit/4f405fb60c1fb6e0be5a822ec91d7ac91e0bb4c8))
+* **halo:** delegated invitations ([#6557](https://github.com/dxos/dxos/issues/6557)) ([655aff8](https://github.com/dxos/dxos/commit/655aff819a25fdffc815bb784fe14870918fdf6c))
+* **halo:** member roles ([#6656](https://github.com/dxos/dxos/issues/6656)) ([6eeff4a](https://github.com/dxos/dxos/commit/6eeff4a113c63950a43de01c401d5febef93f398))
+* Index document on specified heads ([#6477](https://github.com/dxos/dxos/issues/6477)) ([ff7d242](https://github.com/dxos/dxos/commit/ff7d242a61e0daf1e954a72f6f8bdda46ac05c84))
+* joyride improvements ([#6615](https://github.com/dxos/dxos/issues/6615)) ([5c711f4](https://github.com/dxos/dxos/commit/5c711f4e0d2759e67bd3fefa26a2e666cfae6c30))
+* **native:** Added support for command palette global hotkey ([#5692](https://github.com/dxos/dxos/issues/5692)) ([7f021b8](https://github.com/dxos/dxos/commit/7f021b8199c5ed637318fec8be4c5967c14245b9))
+* Performance monitor ([#6643](https://github.com/dxos/dxos/issues/6643)) ([85b05df](https://github.com/dxos/dxos/commit/85b05df01939700a117f11659360adaf70c11849))
+* **plugin-deck:** Deck plugin ([#6397](https://github.com/dxos/dxos/issues/6397)) ([7ef92de](https://github.com/dxos/dxos/commit/7ef92de7eec7b028e55e78f660d011d0c9dba4a6))
+* **react-ui-stack:** Hoist navigate-to action ([#6661](https://github.com/dxos/dxos/issues/6661)) ([65333dc](https://github.com/dxos/dxos/commit/65333dc87a75f7f5687863db8edf486625caea44))
+* **shell:** Standing (delegated) invitations ([#6628](https://github.com/dxos/dxos/issues/6628)) ([4fc508c](https://github.com/dxos/dxos/commit/4fc508c7b9ad213391735151d6bf664fc2f5e2c5))
+* **tables:** Column ordering ([#6570](https://github.com/dxos/dxos/issues/6570)) ([8f625a2](https://github.com/dxos/dxos/commit/8f625a2fc3402e082ee2522dbebfb025805cd29c))
+* **testbench:** add space import/export ([#6499](https://github.com/dxos/dxos/issues/6499)) ([5d48d87](https://github.com/dxos/dxos/commit/5d48d871796c3398f84412f5a305e1337d4dc59a))
+* use COMPOSER-BETA cookie for agent authz ([#6602](https://github.com/dxos/dxos/issues/6602)) ([5ae8fc1](https://github.com/dxos/dxos/commit/5ae8fc15f3075703e1686e73bb019c93364f9fb3))
+
+
+### Bug Fixes
+
+* Add toJSON to SpaceProxy ([#6496](https://github.com/dxos/dxos/issues/6496)) ([5b8360b](https://github.com/dxos/dxos/commit/5b8360b03ac3a202029c25673279e071bfe6df9f))
+* **agenthosting:** invitation handler ([#6481](https://github.com/dxos/dxos/issues/6481)) ([2ed734f](https://github.com/dxos/dxos/commit/2ed734f11f6e64a5a042dd8635a981d7c654900e))
+* agentmanager auth check ([#6658](https://github.com/dxos/dxos/issues/6658)) ([26de2f3](https://github.com/dxos/dxos/commit/26de2f3ad153788fe18909f9af2639a525cf9be5))
+* **composer:** Anchor settings dialog to prevent content jumps ([#6640](https://github.com/dxos/dxos/issues/6640)) ([d8ffef0](https://github.com/dxos/dxos/commit/d8ffef096706d85dd7161948da1b2ea52b8149c6))
+* **composer:** pass folder instead of graph node ([#6613](https://github.com/dxos/dxos/issues/6613)) ([1670c35](https://github.com/dxos/dxos/commit/1670c35499dd6429498da9b84da5c4a52c936210))
+* **devtools:** handle spaces being closed ([#6500](https://github.com/dxos/dxos/issues/6500)) ([bc05254](https://github.com/dxos/dxos/commit/bc05254a3b22404ec21fa0dec60ecfb1030c3646))
+* **devtools:** SpaceListPanel ([#6497](https://github.com/dxos/dxos/issues/6497)) ([b833aa2](https://github.com/dxos/dxos/commit/b833aa2fb4a0c4790822a1e0fe4f437891483eee))
+* disable joyride on startup ([#6629](https://github.com/dxos/dxos/issues/6629)) ([39e0ee2](https://github.com/dxos/dxos/commit/39e0ee25077172ea8fafbcd8489b251367497bbd))
+* Dispose queries correctly ([#6663](https://github.com/dxos/dxos/issues/6663)) ([247377c](https://github.com/dxos/dxos/commit/247377cb555e36d2b56b1aacd78ba5fdeead9b7b))
+* Do not flush unloaded documents ([#6609](https://github.com/dxos/dxos/issues/6609)) ([1d3dae0](https://github.com/dxos/dxos/commit/1d3dae04ea218ae6ed9f92fce6d48f4aecb1abc5))
+* DocumentSection focus ([#6577](https://github.com/dxos/dxos/issues/6577)) ([af3690c](https://github.com/dxos/dxos/commit/af3690c81c069386b4a0e450a1d479fb6421b485))
+* **echo:** dynamic serializer timeout ([#6532](https://github.com/dxos/dxos/issues/6532)) ([6e20736](https://github.com/dxos/dxos/commit/6e20736626e0940db91db3ff7cc426e3bed02038))
+* **echo:** fix folder removal ([#6612](https://github.com/dxos/dxos/issues/6612)) ([d27379b](https://github.com/dxos/dxos/commit/d27379ba6c5e21d636912b306464e3f02291afc3))
+* **echo:** fixed space export with deleted objects ([#6524](https://github.com/dxos/dxos/issues/6524)) ([18af12a](https://github.com/dxos/dxos/commit/18af12a234813dc877618401e7673ba9852484e2))
+* **echo:** fixed table in a stack not serialized ([#6622](https://github.com/dxos/dxos/issues/6622)) ([3ccf9bd](https://github.com/dxos/dxos/commit/3ccf9bd2ca768acde258af955c77484e362790be))
+* **echo:** fixed trying to make EchoArray reactive ([#6614](https://github.com/dxos/dxos/issues/6614)) ([ac072cc](https://github.com/dxos/dxos/commit/ac072cc60187aa3591e4c8fb512cc2d254c5017f))
+* **echo:** try loading objects in chunks when exporting data ([#6529](https://github.com/dxos/dxos/issues/6529)) ([377e5f9](https://github.com/dxos/dxos/commit/377e5f91078c1b64d17e06884d67fef5eb3b011f))
+* Fix `Error: Iterator could not decode entries` ([#6523](https://github.com/dxos/dxos/issues/6523)) ([f02b2c7](https://github.com/dxos/dxos/commit/f02b2c779aae1c36444dcc87f0e83e33a52b5be8))
+* Hot fixes to staging for composer.space ([#6642](https://github.com/dxos/dxos/issues/6642)) ([7e2ec83](https://github.com/dxos/dxos/commit/7e2ec830402d0ef1ad93d4d59a3c51020ff422e8))
+* Initial space selection and remove strict mode. ([#6526](https://github.com/dxos/dxos/issues/6526)) ([77ab9c9](https://github.com/dxos/dxos/commit/77ab9c91c6436c572fbbb64675d449e43ddc0439))
+* Make dxos lint utils public ([#6555](https://github.com/dxos/dxos/issues/6555)) ([d514f85](https://github.com/dxos/dxos/commit/d514f85401e5680067513f6883dfcec4bcefba04))
+* Make indexer error non-critical ([#6607](https://github.com/dxos/dxos/issues/6607)) ([f81ddc4](https://github.com/dxos/dxos/commit/f81ddc4f793f802f994b83868d57f03343f10523))
+* Make indexer re-entrant & fix runaway tasks and unit-tests  ([#6619](https://github.com/dxos/dxos/issues/6619)) ([befa1bc](https://github.com/dxos/dxos/commit/befa1bc273df383b86fdba7791ad718a0e0c6d40))
+* make less astonishing error about hypergraphs ([#6534](https://github.com/dxos/dxos/issues/6534)) ([873f84c](https://github.com/dxos/dxos/commit/873f84ca18c39035cb81fc7a115dd1b90d544494))
+* peer dependencies ([#6621](https://github.com/dxos/dxos/issues/6621)) ([6df1309](https://github.com/dxos/dxos/commit/6df13090ce1f4779da057c08832ec99d9ebaf399))
+* **plugin-navtree:** Fix missing Deck condition ([#6580](https://github.com/dxos/dxos/issues/6580)) ([2641ae4](https://github.com/dxos/dxos/commit/2641ae4ed79d146f5efb79449f25546ed1888e89))
+* **plugin-space:** crash during device join ([#6479](https://github.com/dxos/dxos/issues/6479)) ([c37e119](https://github.com/dxos/dxos/commit/c37e11993cba20d4afaddf787319327eb0c88a51))
+* Plugins can provide a getter for object labels ([#6603](https://github.com/dxos/dxos/issues/6603)) ([260c093](https://github.com/dxos/dxos/commit/260c0933827a41e74f7c2f3bf48dd10c12847d77))
+* Publish @dxos/kv-store package ([#6633](https://github.com/dxos/dxos/issues/6633)) ([51d1e21](https://github.com/dxos/dxos/commit/51d1e21fc933ad4b6feec87f7db04bbec2fcde59))
+* **react-ui-navtree:** Only apply `hoverableControls` for navtree items not at root. ([#6639](https://github.com/dxos/dxos/issues/6639)) ([f0ff320](https://github.com/dxos/dxos/commit/f0ff320db2d144fea75fb59b0ecda00f3433b907))
+* **react-ui-stack:** Label getter call ([#6617](https://github.com/dxos/dxos/issues/6617)) ([295efe4](https://github.com/dxos/dxos/commit/295efe465dc565deb6aa5ea546915e0bce66ef41))
+* refactor Halo.queryCredentials ([#6536](https://github.com/dxos/dxos/issues/6536)) ([a94bc56](https://github.com/dxos/dxos/commit/a94bc56267b6f3cfad2d975626551d628a473123))
+* remove pnpm deploy from hello templates ([c75d0b9](https://github.com/dxos/dxos/commit/c75d0b90c1764673ca0514615434d743666a7f1b))
+* rename "standing" back to "multi-use" invitations ([5a770e3](https://github.com/dxos/dxos/commit/5a770e37707264cd685cf1118e06df5c0a164c89))
+* **shell:** ensure mesh is not bundled into the shell ([#6509](https://github.com/dxos/dxos/issues/6509)) ([89f6168](https://github.com/dxos/dxos/commit/89f6168e786b716285f23b75a33dda1702188e4a))
+* **shell:** Fix typo which broke reset flow ([#6616](https://github.com/dxos/dxos/issues/6616)) ([d3f3a55](https://github.com/dxos/dxos/commit/d3f3a55794c273fb8043b01964d11c054dd90c18))
+* **shell:** shell should always be closeable ([#6549](https://github.com/dxos/dxos/issues/6549)) ([72df8b8](https://github.com/dxos/dxos/commit/72df8b8fd9aecdc1333f5b6cba6a0eb7d372442c))
+* show debug info for agent device join ([#6480](https://github.com/dxos/dxos/issues/6480)) ([4e99b85](https://github.com/dxos/dxos/commit/4e99b85bff6a1d3e43091745671ece6d88b7f3ec))
+* **table:** Improve table in stacks ([#6669](https://github.com/dxos/dxos/issues/6669)) ([0ba1ecb](https://github.com/dxos/dxos/commit/0ba1ecbf653ff4df1bbe545dee2cddaea4eb3bb4))
+* **tables:** Column deletion ([#6474](https://github.com/dxos/dxos/issues/6474)) ([ad6ccc9](https://github.com/dxos/dxos/commit/ad6ccc973f997dab40c7528f1715e1ef619d2b2e))
+* **tables:** Durable cell focus when adding row ([#6489](https://github.com/dxos/dxos/issues/6489)) ([381f9ec](https://github.com/dxos/dxos/commit/381f9ece887ee97839b9b42870538416c65d3802))
+* **tables:** Sorting another column should clear current column sorting ([#6513](https://github.com/dxos/dxos/issues/6513)) ([395dec6](https://github.com/dxos/dxos/commit/395dec6509e1e87a190a874bcf6e375953648aca))
+* templates referencing kube deploy instructions ([#6512](https://github.com/dxos/dxos/issues/6512)) ([8569512](https://github.com/dxos/dxos/commit/85695124374cbdd99b938d45b5312a332d53ebe6))
+* Test graph query filter ([#6588](https://github.com/dxos/dxos/issues/6588)) ([51af927](https://github.com/dxos/dxos/commit/51af927e1b635acadf8cc7478b882ffd2aa98185))
+
 ## [0.5.0](https://github.com/dxos/dxos/compare/v0.4.9...v0.5.0) (2024-04-28)
 
 

@@ -7,9 +7,9 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
-    "src"
+    "src",
+    "tools"
   ],
   "references": [
     {

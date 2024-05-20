@@ -24,7 +24,7 @@ import { Context } from '@dxos/context';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base-command';
-import { FriendlyError } from '../../errors';
+import { AgentAlreadyRunningError } from '../../errors';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -154,9 +154,11 @@ export default class Start extends BaseCommand<typeof Start> {
         gracefulStopComplete.wake();
       };
     };
+
     process.on('SIGINT', gracefulStop('SIGINT'));
     process.on('SIGTERM', gracefulStop('SIGTERM'));
-    // TODO(nf): handle SIGHUP/etc
+
+    // TODO(nf): Handle SIGHUP/etc.
 
     try {
       await this._agent.start();
@@ -166,6 +168,7 @@ export default class Start extends BaseCommand<typeof Start> {
       }
       throw err;
     }
+
     this.log('Agent started... (ctrl-c to exit)');
 
     await this._sendTelemetry();
@@ -232,19 +235,5 @@ export default class Start extends BaseCommand<typeof Start> {
 
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
-  }
-}
-
-class AgentAlreadyRunningError extends FriendlyError {
-  constructor() {
-    super('Agent is already running.');
-  }
-
-  get friendlyMessage() {
-    return 'Agent is already running.';
-  }
-
-  override get suggestion() {
-    return 'Make sure you stop the daemonized agent process.';
   }
 }

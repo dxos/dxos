@@ -53,7 +53,7 @@ export const FeedTable: FC = () => {
   return (
     <Table.Root>
       <Table.Viewport classNames='overflow-anchored'>
-        <Table.Table<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
+        <Table.Main<FeedInfo> columns={columns} data={updatedFeeds} onDatumClick={handleSelect} fullWidth />
         <AnchoredOverflow.Anchor />
       </Table.Viewport>
     </Table.Root>

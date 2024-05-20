@@ -28,7 +28,7 @@ export type SketchComponentProps = {
 // TODO(burdon): Remove outline when focused (from tabster?)
 const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly = false, className }) => {
   const { themeMode } = useThemeContext();
-  // TODO(burdon): Need to go read-only if syncing with peers that have migrated to newer schema.
+  // TODO(burdon): Need to set read-only if syncing with peers that have migrated to newer schema.
   const adapter = useStoreAdapter(sketch.data!);
   const [active, setActive] = useState(false);
   const [editor, setEditor] = useState<Editor>();
@@ -49,55 +49,27 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
   useEffect(() => {
-    if (!adapter.store) {
+    if (!editor || !adapter || width === undefined || height === undefined) {
       return;
     }
 
-    editor?.zoomToFit({ duration: 0 });
-    editor?.resetZoom();
+    editor.zoomToFit({ duration: 0 });
+    editor.resetZoom();
+
+    setReady(true);
     if (!autoZoom) {
       return;
     }
 
-    // TODO(burdon): Check new zoomToContent works in 2.1.4
-    // const zoomToContent = (animate = true) => {
-    //   editor?.zoomToContent({ duration: animate ? 250 : 0 });
-    //   setReady(true);
-    // };
-
-    const zoomToContent = (animate = true) => {
-      if (!editor) {
-        return;
-      }
-
-      // Custom zoom to fit.
-      const commonBounds = editor.getCurrentPageBounds();
-      if (width && height && commonBounds?.width && commonBounds?.height) {
-        const padding = 60;
-        // NOTE: Objects are culled (un-styled) if outside of bounds.
-        const zoom = Math.min(
-          maxZoom,
-          (width - padding) / commonBounds.width,
-          (height - padding) / commonBounds.height,
-        );
-
-        const center = {
-          x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
-          y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
-          z: zoom,
-        };
-
-        editor.setCamera(center, animate ? { duration: 250 } : undefined);
-      }
-
-      setReady(true);
+    const zoom = (animate = true) => {
+      zoomToContent(editor, width, height, maxZoom, animate);
     };
 
-    zoomToContent(false);
-    const onUpdate = debounce(zoomToContent, 200);
-    const subscription = readonly ? adapter.store.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
+    zoom(false);
+    const onUpdate = debounce(zoom, 200);
+    const subscription = readonly ? adapter.store!.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
     return () => subscription?.();
-  }, [editor, adapter, width, height]);
+  }, [editor, adapter, width, height, autoZoom]);
 
   if (!adapter) {
     return null;
@@ -108,7 +80,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     <div
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('w-full h-full', className)}
+      className={mx('is-full bs-full', className)}
       onPointerEnter={() => {
         setActive(!readonly && !adapter.readonly);
       }}
@@ -139,5 +111,30 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
     </div>
   );
 };
+
+/**
+ * Zoom to fit content.
+ */
+const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: number, animate = true) => {
+  const commonBounds = editor.getCurrentPageBounds();
+  if (width && height && commonBounds?.width && commonBounds?.height) {
+    const padding = 60;
+    // NOTE: Objects are culled (un-styled) if outside of bounds.
+    const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+    const center = {
+      x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+      y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+      z: zoom,
+    };
+
+    editor.setCamera(center, animate ? { duration: 250 } : undefined);
+  }
+};
+
+// TODO(burdon): Check new zoomToContent works in 2.1.4
+// const zoomToContent = (animate = true) => {
+//   editor?.zoomToContent({ duration: animate ? 250 : 0 });
+//   setReady(true);
+// };
 
 export default SketchComponent;

@@ -364,11 +364,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // Convert known errors to human readable messages.
     if (err instanceof FriendlyError) {
-      this.logToStderr(chalk`{red Error}: ${err.friendlyMessage}`);
-      err.suggestion && this.logToStderr(chalk`{gray Suggestion: ${err.suggestion}}`);
+      this.logToStderr(chalk`{red Error}: ${err.message}`);
+      err.hint && this.logToStderr(chalk`{gray HINT: ${err.hint}}`);
     } else {
       this.logToStderr(chalk`{red Error}: Something went wrong. Use --verbose for more details.`);
     }
+
     this.exit(1);
   }
 

@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { micromark } from 'micromark';
+import { directive, directiveHtml } from 'micromark-extension-directive';
+import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import {
@@ -22,8 +24,9 @@ export const meta = {
 };
 
 const url = new URL(window.location.href);
-// const LOCALHOST = url.hostname === 'localhost';
-const DEPRECATED_DEPLOYMENT = url.hostname === 'composer.dxos.org';
+const TEST_DEPRECATION = /show_beta_notice/.test(url.href);
+const DEPRECATED_DEPLOYMENT =
+  url.hostname === 'composer.dxos.org' || url.hostname === 'composer.staging.dxos.org' || TEST_DEPRECATION;
 const PRODUCTION_DEPLOYMENT = url.hostname === 'composer.space';
 
 const BetaPlugin = (): PluginDefinition<SurfaceProvides> => {
@@ -96,24 +99,11 @@ const BetaDialog = () => {
     window.open(SIGNUP_URL, '_blank');
   };
 
-  const [html, setHtml] = useState<string>();
-  useEffect(() => {
-    setTimeout(async () => {
-      // https://github.com/micromark/micromark (ESM).
-      const { micromark } = await import('micromark');
-      // https://github.com/micromark/micromark-extension-directive
-      const { directive, directiveHtml } = await import('micromark-extension-directive');
-      setHtml(micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] }));
-    });
-  }, []);
-
-  if (!html) {
-    return null;
-  }
+  const html = micromark(NOTICE, { extensions: [directive()], htmlExtensions: [directiveHtml({ link })] });
 
   return (
     <Dialog.Content classNames='md:max-is-[30rem]'>
-      <Dialog.Title>Composer Beta Notice</Dialog.Title>
+      <Dialog.Title>Composer is moving!</Dialog.Title>
       <div role='none' className='plb-2 space-y-3' dangerouslySetInnerHTML={{ __html: html }} />
       <div role='none' className='flex justify-end gap-2'>
         <Dialog.Close asChild>

@@ -6,154 +6,123 @@ import { mkdir, readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { join } from 'node:path';
-import type { Browser, BrowserType } from 'playwright';
-import { v4 } from 'uuid';
+import type { BrowserContext, BrowserType } from 'playwright';
 
-import { Trigger, scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LogProcessor, log, createFileProcessor, LogLevel, CONSOLE_PROCESSOR } from '@dxos/log';
 
-import { type AgentResult, type AgentParams, type PlanOptions, type Platform, AGENT_LOG_FILE } from './spec';
+import { type ReplicantParams, type GlobalOptions, type Platform, type ReplicantRuntimeParams } from './spec';
 
 const DEBUG_PORT_START = 9229;
 
-type ProcessHandle = {
+export type ProcessHandle = {
   /**
-   * Promise that resolves when the agent finishes.
+   * Kill the replicant process/browser.
    */
-  result: Promise<AgentResult>;
-
-  /**
-   * Kill the agent process/browser.
-   */
-  kill: () => void;
+  kill: (signal?: NodeJS.Signals | number) => void;
 };
 
-export const runNode = <S, C>(
-  planName: string,
-  agentParams: AgentParams<S, C>,
-  options: PlanOptions,
-): ProcessHandle => {
+export type RunParams = {
+  replicantParams: ReplicantParams;
+  options: GlobalOptions;
+};
+
+export const runNode = (params: RunParams): ProcessHandle => {
   const execArgv = process.execArgv;
 
-  if (options.profile) {
+  if (params.options.profile) {
     execArgv.push(
       '--cpu-prof', //
       '--cpu-prof-dir',
-      agentParams.outDir,
+      params.replicantParams.outDir,
       '--cpu-prof-name',
       'agent.cpuprofile',
     );
   }
 
-  const startTs = performance.now();
   const childProcess = fork(process.argv[1], {
-    execArgv: options.debug
+    execArgv: params.options.debug
       ? [
-          '--inspect=:' + (DEBUG_PORT_START + agentParams.agentIdx), //
+          '--inspect=:' + (DEBUG_PORT_START + params.replicantParams.replicantId), //
           ...execArgv,
         ]
       : execArgv,
     env: {
       ...process.env,
-      GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-      GRAVITY_SPEC: planName,
+      DX_RUN_PARAMS: JSON.stringify(params),
     },
+  });
+  childProcess.on('error', (err) => {
+    log.info('child process error', { err });
+  });
+  childProcess.on('exit', async (exitCode, signal) => {
+    if (exitCode == null) {
+      log.warn('agent exited with signal', { signal });
+    } else if (exitCode !== 0) {
+      log.warn('agent exited with non-zero exit code', { exitCode });
+    }
   });
 
   return {
-    result: new Promise<AgentResult>((resolve, reject) => {
-      childProcess.on('error', (err) => {
-        log.info('child process error', { err });
-        reject(err);
-      });
-      childProcess.on('exit', async (exitCode, signal) => {
-        if (exitCode == null) {
-          log.warn('agent exited with signal', { signal });
-          reject(new Error(`agent exited with signal ${signal}`));
-          return;
-        }
-
-        if (exitCode !== 0) {
-          log.warn('agent exited with non-zero exit code', { exitCode });
-          reject(new Error(`agent exited with non-zero exit code ${exitCode}`));
-          return;
-        }
-
-        resolve({
-          result: exitCode ?? -1,
-          outDir: agentParams.outDir,
-          logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-          startTs,
-          endTs: performance.now(),
-        });
-      });
-      // TODO(nf): add timeout for agent completion
-    }),
-    kill: () => {
-      childProcess.kill();
+    kill: (signal?: NodeJS.Signals | number) => {
+      log.trace('dxos.blade-runner.kill-replicant', { signal });
+      childProcess.kill(signal);
     },
   };
 };
 
-export const runBrowser = <S, C>(
-  planName: string,
-  agentParams: AgentParams<S, C>,
-  options: PlanOptions,
-): ProcessHandle => {
-  const doneTrigger = new Trigger<number>();
+export const runBrowser = async ({ replicantParams, options }: RunParams): Promise<ProcessHandle> => {
   const ctx = new Context();
 
-  scheduleMicroTask(ctx, async () => {
-    const start = Date.now();
-    invariant(agentParams.runtime.platform);
+  const start = Date.now();
+  invariant(replicantParams.runtime.platform);
 
-    const { page, context } = await getNewBrowserContext(agentParams.runtime.platform, {
-      headless: options.headless ?? true,
-    });
-    ctx.onDispose(async () => {
-      await page.close();
-      await context.close();
-    });
+  const { page, context } = await getNewBrowserContext(replicantParams.runtime, {
+    headless: options.headless ?? true,
+  });
+  ctx.onDispose(async () => {
+    await page.close();
+    await context.close();
+  });
 
-    page.on('crash', () => {
-      log.error('page crashed');
-    });
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') {
-        log.error('page console error', { msg });
-      }
-    });
-    page.on('pageerror', (error) => {
-      log.error('page error', { error });
-    });
-
-    const fileProcessor = createFileProcessor({
-      pathOrFd: join(agentParams.outDir, AGENT_LOG_FILE),
-      levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
-    });
-
-    const apis: EposedApis = {
-      dxgravity_done: (code) => {
-        doneTrigger.wake(code);
-        void ctx.dispose();
-      },
-      // Expose log hook for playwright.
-      dxgravity_log: (config, entry) => {
-        fileProcessor(config, entry);
-        CONSOLE_PROCESSOR(config, entry);
-      },
-    };
-
-    for (const [name, fn] of Object.entries(apis)) {
-      await page.exposeFunction(name, fn);
+  page.on('crash', () => {
+    log.error('page crashed');
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      log.error('page console error', { msg });
     }
+  });
+  page.on('pageerror', (error) => {
+    log.error('page error', { error });
+  });
 
-    const server = await servePage({
-      '/index.html': {
-        contentType: 'text/html',
-        data: `
+  const fileProcessor = createFileProcessor({
+    pathOrFd: replicantParams.logFile,
+    levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+  });
+
+  const apis: EposedApis = {
+    dxgravity_done: (signal?: NodeJS.Signals | number) => {
+      log.trace('dxos.blade-runner.kill-replicant', { signal });
+      void ctx.dispose();
+    },
+    // Expose log hook for playwright.
+    dxgravity_log: (config, entry) => {
+      fileProcessor(config, entry);
+      CONSOLE_PROCESSOR(config, entry);
+    },
+  };
+
+  for (const [name, fn] of Object.entries(apis)) {
+    await page.exposeFunction(name, fn);
+  }
+
+  const server = await servePage({
+    '/index.html': {
+      contentType: 'text/html',
+      data: `
         <!DOCTYPE html>
   <html lang="en">
   <head>
@@ -165,45 +134,33 @@ export const runBrowser = <S, C>(
   <body>
     <h1>TESTING TESTING.</h1>
     <script>
-      window.dxgravity_env = ${JSON.stringify({
-        ...process.env,
-        GRAVITY_AGENT_PARAMS: JSON.stringify(agentParams),
-        GRAVITY_SPEC: planName,
-      })}
+      window.DX_RUN_PARAMS = ${JSON.stringify(JSON.stringify({ replicantParams, options }))}
     </script>
     <script type="module" src="index.js"></script>
   </body>
   </html>
   `,
-      },
-      '/index.js': {
-        contentType: 'text/javascript',
-        data: await readFile(join(agentParams.planRunDir, 'browser.js'), 'utf8'),
-      },
-    });
+    },
+    '/index.js': {
+      contentType: 'text/javascript',
+      data: await readFile(join(replicantParams.planRunDir, 'artifacts', 'browser.js'), 'utf8'),
+    },
+  });
 
-    ctx.onDispose(() => {
-      server.close();
-    });
+  ctx.onDispose(() => {
+    server.close();
+  });
 
-    const port = (server.address() as AddressInfo).port;
-    await page.goto(`http://localhost:${port}`, { timeout: 0 });
+  const port = (server.address() as AddressInfo).port;
+  await page.goto(`http://localhost:${port}`, { timeout: 0 });
 
-    log.info('browser started and page loaded', {
-      agentIdx: agentParams.agentIdx,
-      time: Date.now() - start,
-    });
+  log.info('browser started and page loaded', {
+    replicantId: replicantParams.replicantId,
+    time: Date.now() - start,
   });
 
   return {
-    result: (async () => ({
-      result: await doneTrigger.wait(),
-      outDir: agentParams.outDir,
-      logFile: join(agentParams.outDir, AGENT_LOG_FILE),
-    }))(),
-    kill: () => {
-      void ctx.dispose();
-    },
+    kill: apis.dxgravity_done,
   };
 };
 
@@ -222,30 +179,28 @@ const getBrowser = (browserType: Platform): BrowserType => {
   }
 };
 
-const browsers: { [key: string]: Browser } = {};
+const getNewBrowserContext = async ({ platform, userDataDir }: ReplicantRuntimeParams, options: BrowserOptions) => {
+  invariant(platform, 'Invalid runtime');
 
-const getNewBrowserContext = async (browserType: Platform, options: BrowserOptions) => {
-  const userDataDir = `/tmp/browser-mocha/${v4()}`;
-  await mkdir(userDataDir, { recursive: true });
+  const browserRunner = getBrowser(platform);
 
-  let browser = browsers[browserType];
+  const playwrightOptions = {
+    headless: options.headless,
+    args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
+  };
 
-  if (!browser) {
-    const browserRunner = getBrowser(browserType);
-    browser = await browserRunner.launch({
-      headless: options.headless,
-      args: [...(options.headless ? [] : ['--auto-open-devtools-for-tabs']), ...(options.browserArgs ?? [])],
-    });
-
-    browsers[browserType] = browser;
+  let context: BrowserContext;
+  if (userDataDir) {
+    await mkdir(userDataDir, { recursive: true });
+    context = await browserRunner.launchPersistentContext(userDataDir, playwrightOptions);
+  } else {
+    const browser = await browserRunner.launch(playwrightOptions);
+    context = await browser.newContext();
   }
-
-  const context = await browser.newContext();
 
   const page = await context.newPage();
 
   return {
-    browserType,
     context,
     page,
   };
@@ -299,6 +254,6 @@ const servePage = async (resources: Record<string, WebResource>, port = 5176) =>
 };
 
 type EposedApis = {
-  dxgravity_done: (code: number) => void;
+  dxgravity_done: (signal?: NodeJS.Signals | number) => void;
   dxgravity_log: LogProcessor;
 };

@@ -9,6 +9,10 @@ import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';
 
 export const PerformancePanel = ({ entries, ...props }: CustomPanelProps<{ entries?: PerformanceEntry[] }>) => {
+  if (!entries?.length) {
+    return null;
+  }
+
   return (
     <Panel
       {...props}

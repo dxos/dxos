@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowClockwise, ChartBar } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { ChartBar, Pause, Play } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
-import { Button, DensityProvider } from '@dxos/react-ui';
+import { DensityProvider, Toggle } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { Panel, type PanelProps } from './Panel';
@@ -26,6 +26,16 @@ const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'databa
 // TODO(burdon): Factor out (for Composer).
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
+  const [live, setLive] = useState(true);
+  const handleToggleLive = () => setLive((live) => !live);
+
+  useEffect(() => {
+    if (live && onRefresh) {
+      const interval = setInterval(onRefresh, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [live, onRefresh]);
+
   const spans = [...(stats?.diagnostics?.spans ?? [])];
   spans.reverse();
 
@@ -52,9 +62,15 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
           icon={ChartBar}
           title='Stats'
           info={
-            <Button classNames='!bg-transparent !p-0' density='fine' value='ghost' onClick={onRefresh}>
-              <ArrowClockwise className={getSize(4)} />
-            </Button>
+            <Toggle
+              pressed={live}
+              classNames='!bg-transparent !p-0'
+              density='fine'
+              value='ghost'
+              onClick={handleToggleLive}
+            >
+              {live ? <Pause className={getSize(4)} /> : <Play className={getSize(4)} />}
+            </Toggle>
           }
         />
         <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
