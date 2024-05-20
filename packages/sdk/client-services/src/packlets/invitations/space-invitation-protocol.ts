@@ -13,7 +13,13 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError } from '@dxos/protocols';
+import {
+  AlreadyJoinedError,
+  type ApiError,
+  AuthorizationError,
+  InvalidInvitationError,
+  SpaceNotFoundError,
+} from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -41,6 +47,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
+  checkCanInviteNewMembers(): ApiError | undefined {
+    if (this._spaceKey == null) {
+      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+    }
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    if (space == null) {
+      return new SpaceNotFoundError(this._spaceKey);
+    }
+    if (!space?.inner.spaceState.hasMembershipManagementPermission(this._signingContext.identityKey)) {
+      return new AuthorizationError('No member management permission.');
+    }
+    return undefined;
+  }
+
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.SPACE,
@@ -59,6 +79,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
 
     invariant(request.space);
     const { identityKey, deviceKey } = request.space;
+
+    if (space.inner.spaceState.getMemberRole(identityKey) !== SpaceMember.Role.REMOVED) {
+      throw new AlreadyJoinedError();
+    }
 
     log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
     // TODO(burdon): Check if already admitted.
@@ -139,7 +163,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
   }
 
   checkInvitation(invitation: Partial<Invitation>) {
-    if (invitation.spaceKey && this._spaceManager.spaces.has(invitation.spaceKey)) {
+    if (invitation.spaceKey == null) {
+      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+    }
+    if (this._spaceManager.spaces.has(invitation.spaceKey)) {
       return new AlreadyJoinedError('Already joined space.');
     }
   }

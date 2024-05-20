@@ -5695,9 +5695,6 @@ importers:
       express:
         specifier: ^4.19.2
         version: 4.19.2
-      get-port:
-        specifier: ^6.1.2
-        version: 6.1.2
       get-port-please:
         specifier: ^3.1.1
         version: 3.1.1
@@ -33820,11 +33817,6 @@ packages:
 
   /get-port-please@3.1.1:
     resolution: {integrity: sha512-3UBAyM3u4ZBVYDsxOQfJDxEa6XTbpBDrOjp4mf7ExFRt5BKs/QywQQiJsh2B+hxcZLSapWqCRvElUe8DnKcFHA==}
-    dev: false
-
-  /get-port@6.1.2:
-    resolution: {integrity: sha512-BrGGraKm2uPqurfGVj/z97/zv8dPleC6x9JBNRTrDNtCkkRF4rPwrQXFgL7+I+q8QSdU4ntLQX2D7KIxSy8nGw==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
   /get-port@7.1.0:

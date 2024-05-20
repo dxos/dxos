@@ -17,6 +17,7 @@ import {
 } from '@dxos/automerge/automerge-repo';
 import { IndexMetadataStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
+import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
@@ -24,8 +25,9 @@ import { afterTest, describe, openAndClose, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { AutomergeHost } from './automerge-host';
+import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-import { MeshNetworkAdapter } from './mesh-network-adapter';
+import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -267,16 +269,24 @@ describe('AutomergeHost', () => {
   });
 
   test('integration test with teleport', async () => {
-    const createAutomergeRepo = () => {
-      const meshAdapter = new MeshNetworkAdapter();
-      const repo = new Repo({
-        network: [meshAdapter],
+    const [spaceKey] = PublicKey.randomSequence();
+
+    const createAutomergeRepo = async () => {
+      const meshAdapter = new MeshEchoReplicator();
+      const echoAdapter = new EchoNetworkAdapter({
+        getContainingSpaceForDocument: async () => spaceKey,
       });
-      meshAdapter.ready();
+      const repo = new Repo({
+        network: [echoAdapter],
+      });
+      await echoAdapter.open();
+      await echoAdapter.whenConnected();
+      await echoAdapter.addReplicator(meshAdapter);
       return { repo, meshAdapter };
     };
-    const peer1 = createAutomergeRepo();
-    const peer2 = createAutomergeRepo();
+    const peer1 = await createAutomergeRepo();
+    const peer2 = await createAutomergeRepo();
+
     const handle = peer1.repo.create();
 
     const teleportBuilder = new TeleportBuilder();
@@ -294,8 +304,11 @@ describe('AutomergeHost', () => {
       handle.change((doc: any) => {
         doc.text = text;
       });
-      const docOnPeer2 = peer2.repo.find(handle.url);
-      await waitForExpect(async () => expect((await asyncTimeout(docOnPeer2.doc(), 1000)).text).toEqual(text), 1000);
+      await waitForExpect(async () => {
+        const docOnPeer2 = peer2.repo.find(handle.url);
+        const doc = await asyncTimeout(docOnPeer2.doc(), 1000);
+        expect(doc.text).toEqual(text);
+      }, 1000);
     }
 
     const offlineText = 'This has been written while the connection was off';

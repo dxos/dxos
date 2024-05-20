@@ -4,19 +4,18 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
-import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { Filter, type Query } from '@dxos/echo-db';
+import { create, type S } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { QueryOptions } from '../echo';
-import { ContactType, TestBuilder } from '../testing';
+import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
 
 describe('Index queries', () => {
   const john = 'John Doe';
@@ -24,8 +23,8 @@ describe('Index queries', () => {
   const initClient = async (services: ClientServicesProvider) => {
     const client = new Client({ services });
     await client.initialize();
-    if (!client.experimental.graph.runtimeSchemaRegistry.isSchemaRegistered(ContactType)) {
-      client.experimental.graph.runtimeSchemaRegistry.registerSchema(ContactType);
+    for (const schema of [ContactType, DocumentType, TextV0Type]) {
+      client.experimental.graph.runtimeSchemaRegistry.registerSchema(schema);
     }
     return client;
   };
@@ -38,9 +37,19 @@ describe('Index queries', () => {
     return contact;
   };
 
-  const queryIndexedContact = async (space: Space, name: string) => {
-    const receivedIndexedContact = new Trigger<ContactType>();
-    const query = space.db.query(Filter.schema(ContactType), { dataLocation: QueryOptions.DataLocation.ALL });
+  const addDocument = async (space: Space, title: string) => {
+    await space.waitUntilReady();
+    const document = create(DocumentType, {
+      title,
+      content: create(TextV0Type, { content: 'very important text' }),
+    });
+    space.db.add(document);
+    await space.db.flush();
+    return document;
+  };
+
+  const checkIfQueryContainsObject = async (query: Query, type: S.Schema<any>, content: Record<string, any>) => {
+    const receivedIndexedObject = new Trigger<any>();
     const unsub = query.subscribe(
       (query) => {
         log('Query results', {
@@ -49,20 +58,22 @@ describe('Index queries', () => {
             object: (object as any).toJSON(),
             resolution,
           })),
+          instanceof: query.results.map(({ object }) => object instanceof (type as any)),
         });
         for (const result of query.results) {
-          if (result.object instanceof ContactType && result.resolution?.source === 'index') {
+          if (result.object instanceof (type as any) && result.resolution?.source === 'index') {
             unsub();
-            receivedIndexedContact.wake(result.object);
+            receivedIndexedObject.wake(result.object);
           }
         }
       },
       { fire: true },
     );
-    const contact = await receivedIndexedContact.wait({ timeout: 5000 });
-    expect(contact).to.be.instanceOf(ContactType);
-    expect(contact.name).to.equal(john);
-    return contact;
+    const obj = await receivedIndexedObject.wait({ timeout: 5000 });
+    for (const key of Object.keys(content)) {
+      expect(obj[key]).to.equal(content[key]);
+    }
+    return obj;
   };
 
   test('index queries work with client', async () => {
@@ -78,7 +89,7 @@ describe('Index queries', () => {
     const space = await client.spaces.create();
     await addContact(space, john);
 
-    await queryIndexedContact(space, john);
+    await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
   });
 
   test('indexes persists between client restarts', async () => {
@@ -98,7 +109,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addContact(space, john);
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
 
       await client.destroy();
     }
@@ -110,7 +121,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
     }
   });
 
@@ -130,7 +141,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addContact(space, john);
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
 
       await client.destroy();
     }
@@ -145,7 +156,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), 1000);
 
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
     }
   });
 
@@ -166,7 +177,7 @@ describe('Index queries', () => {
       spaceKey = space.key;
 
       await addContact(space, john);
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
 
       await client.destroy();
     }
@@ -183,7 +194,50 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), 1000);
 
       await client.services.services.QueryService?.reindex();
-      await queryIndexedContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
+    }
+  });
+
+  test('`or` query', async () => {
+    const builder = new TestBuilder();
+    afterTest(async () => await builder.destroy());
+    const client = await initClient(builder.createLocalClientServices());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+
+    {
+      await addContact(space, john);
+      await checkIfQueryContainsObject(space.db.query(Filter.schema(ContactType)), ContactType, { name: john });
+    }
+
+    {
+      const query = space.db.query(Filter.schema(DocumentType));
+      await addDocument(space, 'important document');
+      await checkIfQueryContainsObject(query, DocumentType, { title: 'important document' });
+      expect((await query.run()).objects.length).to.equal(1);
+    }
+
+    {
+      const query = space.db.query(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType)));
+      await checkIfQueryContainsObject(query, ContactType, { name: john });
+      await checkIfQueryContainsObject(query, DocumentType, { title: 'important document' });
+      expect((await query.run()).objects.length).to.equal(2);
+    }
+  });
+
+  test('`not(or)` query', async () => {
+    const builder = new TestBuilder();
+    afterTest(async () => await builder.destroy());
+    const client = await initClient(builder.createLocalClientServices());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    const contact = await addContact(space, john);
+    const document = await addDocument(space, 'important document');
+
+    {
+      const query = space.db.query(Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType))));
+      const ids = (await query.run()).objects.map(({ id }) => id);
+      expect(ids.every((id) => contact.id !== id && document.id !== id)).to.be.true;
     }
   });
 });
