@@ -4,14 +4,14 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout } from '@dxos/async';
+import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter, type Query } from '@dxos/echo-db';
-import { type S, create } from '@dxos/echo-schema';
+import { create, type S } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { afterTest, test } from '@dxos/test';
 
 import { Client } from '../client';
@@ -81,7 +81,7 @@ describe('Index queries', () => {
     afterTest(async () => {
       await builder.destroy();
     });
-    const client = await initClient(builder.createLocal());
+    const client = await initClient(builder.createLocalClientServices());
     afterTest(() => client.destroy());
 
     await client.halo.createIdentity();
@@ -103,7 +103,7 @@ describe('Index queries', () => {
     });
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -115,7 +115,7 @@ describe('Index queries', () => {
     }
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await asyncTimeout(client.spaces.isReady.wait(), 5000);
       const space = client.spaces.get(spaceKey)!;
@@ -135,7 +135,7 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
@@ -150,7 +150,7 @@ describe('Index queries', () => {
     await builder.level.sublevel('index-storage').clear();
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await client.spaces.isReady.wait({ timeout: 1000 });
       const space = client.spaces.get(spaceKey)!;
@@ -170,7 +170,7 @@ describe('Index queries', () => {
 
     let spaceKey: PublicKey;
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
 
       const space = await client.spaces.create();
@@ -187,7 +187,7 @@ describe('Index queries', () => {
     await builder.level.sublevel('index-metadata').clear();
 
     {
-      const client = await initClient(builder.createLocal());
+      const client = await initClient(builder.createLocalClientServices());
       afterTest(() => client.destroy());
       await client.spaces.isReady.wait();
       const space = client.spaces.get(spaceKey)!;
@@ -201,7 +201,7 @@ describe('Index queries', () => {
   test('`or` query', async () => {
     const builder = new TestBuilder();
     afterTest(async () => await builder.destroy());
-    const client = await initClient(builder.createLocal());
+    const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
 
@@ -228,7 +228,7 @@ describe('Index queries', () => {
   test('`not(or)` query', async () => {
     const builder = new TestBuilder();
     afterTest(async () => await builder.destroy());
-    const client = await initClient(builder.createLocal());
+    const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
     const contact = await addContact(space, john);

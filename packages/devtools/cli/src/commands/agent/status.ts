@@ -14,7 +14,7 @@ export default class Status extends BaseCommand<typeof Status> {
   static override description = 'Show agent status';
 
   static override flags = {
-    ...super.flags,
+    ...BaseCommand.flags,
     // TODO(nf): pass as flag to execWithClient instead of setting default flag.
     'no-start-agent': Flags.boolean({
       description: 'Do not automatically start an agent if one is not running.',

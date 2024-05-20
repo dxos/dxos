@@ -37,7 +37,7 @@ type PeersInSpaceProps = {
 const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
   const { count = 1, registerSignalFactory: register = true, types, onCreateSpace } = options;
   register && registerSignalFactory();
-  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
+  const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
   await Promise.all(clients.map((client) => client.initialize()));
   await Promise.all(clients.map((client) => client.halo.createIdentity()));
   types && clients.map((client) => client.addSchema(...types));

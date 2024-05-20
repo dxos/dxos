@@ -21,8 +21,11 @@ export const printFunctions = (functions: FunctionDef[], flags = {}) => {
       id: {
         header: 'id',
       },
-      name: {
-        header: 'name',
+      path: {
+        header: 'path',
+      },
+      handler: {
+        header: 'handler',
       },
       description: {
         header: 'description',

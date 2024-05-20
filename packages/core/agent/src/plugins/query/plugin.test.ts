@@ -38,7 +38,7 @@ describe('QueryPlugin', () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
-    const services1 = builder.createLocal();
+    const services1 = builder.createLocalClientServices();
     const client1 = new Client({
       services: services1,
       config: new Config({
@@ -62,12 +62,12 @@ describe('QueryPlugin', () => {
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
-    await plugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+    await plugin.initialize({ client: client1, clientServices: services1 });
 
     await plugin.open();
     afterTest(() => plugin.close());
 
-    const services2 = builder.createLocal();
+    const services2 = builder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client2.initialize();
     afterTest(() => client2.destroy());
@@ -127,7 +127,7 @@ describe('QueryPlugin', () => {
 
       {
         // Init agent (client with a plugin).
-        const services = builder.createLocal();
+        const services = builder.createLocalClientServices();
         agent = new Client({
           services,
           config: new Config({
@@ -138,7 +138,7 @@ describe('QueryPlugin', () => {
         await agent.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
         plugin = new QueryPlugin();
-        await plugin.initialize({ client: agent, clientServices: services, plugins: [] });
+        await plugin.initialize({ client: agent, clientServices: services });
         await plugin.open();
       }
 
@@ -156,7 +156,7 @@ describe('QueryPlugin', () => {
       }
 
       {
-        const services = builder.createLocal();
+        const services = builder.createLocalClientServices();
         client = new Client({ services });
         await client.initialize();
       }
