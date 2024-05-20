@@ -106,9 +106,20 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
 };
 
 export type TraceDiagnosticParams<T> = {
+  /**
+   * Unique ID. 
+   */
   id: string;
-  // TODO(dmaretskyi): Rename to `name`.
+
+  /**
+   * Human-readable name.
+   * @defaults Defaults to `id`
+   */
   name?: string;
+
+  /**
+   * Function that will be called to fetch the diagnostic data.
+   */
   fetch: () => MaybePromise<T>;
 };
 
@@ -117,6 +128,9 @@ export interface TraceDiagnostic {
   unregister(): void;
 }
 
+/**
+ * Register a diagnostic that could be queried.
+ */
 const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
   return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
 };
