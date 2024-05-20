@@ -203,12 +203,12 @@ message SpaceMember {
   enum PresenceState {
     OFFLINE = 0;
     ONLINE = 1;
-    REMOVED = 2;
   }
 
   Identity identity = 1;
   PresenceState presence = 2;
   repeated dxos.mesh.presence.PeerState peerStates = 3;
+  dxos.halo.credentials.SpaceMember.Role role = 4;
 }
 
 /// Runtime state of the space object.

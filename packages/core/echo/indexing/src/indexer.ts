@@ -16,7 +16,7 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot } from './types';
+import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot, type FindResult } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -138,7 +138,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  async execQuery(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
+  async execQuery(filter: IndexQuery): Promise<FindResult[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }

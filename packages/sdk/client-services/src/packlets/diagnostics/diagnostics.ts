@@ -180,6 +180,7 @@ const getSpaceStats = async (space: DataSpace): Promise<SpaceStats> => {
       })),
 
     members: Array.from(space.inner.spaceState.members.values()).map((member) => ({
+      role: member.role,
       identity: {
         identityKey: member.key,
         profile: {

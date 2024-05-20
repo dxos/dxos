@@ -3,8 +3,8 @@
 //
 
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
-import { Resource, type Context, LifecycleState } from '@dxos/context';
-import { type FeedInfo, type DelegateInvitationCredential } from '@dxos/credentials';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -13,7 +13,7 @@ import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { Callback, type AsyncCallback } from '@dxos/util';
+import { type AsyncCallback, Callback } from '@dxos/util';
 
 import { ControlPipeline } from './control-pipeline';
 import { type SpaceProtocol } from './space-protocol';
@@ -37,6 +37,7 @@ export type SpaceParams = {
   snapshotId?: string | undefined;
 
   onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
+  onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
 };
 
 export type CreatePipelineParams = {
@@ -108,6 +109,10 @@ export class Space extends Resource {
     this._controlPipeline.onDelegatedInvitationRemoved.set(async (invitation) => {
       log('onDelegatedInvitationRemoved', { invitation });
       await params.onDelegatedInvitationStatusChange(invitation, false);
+    });
+    this._controlPipeline.onMemberRoleChanged.set(async (changedMembers) => {
+      log('onMemberRoleChanged', () => ({ changedMembers: changedMembers.map((m) => [m.key, m.role]) }));
+      await params.onMemberRolesChanged(changedMembers);
     });
 
     // Start replicating the genesis feed.
