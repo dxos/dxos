@@ -200,6 +200,7 @@ export const ObservabilityPlugin = (options: {
               const feedback = intent.data as UserFeedback;
 
               observability.captureUserFeedback(feedback.email, feedback.name, feedback.message);
+              return { data: true };
             }
           }
         },
