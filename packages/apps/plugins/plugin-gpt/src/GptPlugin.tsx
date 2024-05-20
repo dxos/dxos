@@ -7,6 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
+import { parseSpacePlugin } from '@braneframe/plugin-space';
 import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
@@ -50,48 +51,52 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
         // TODO(wittjosiah): Consider a builder which subscribes to the graph itself to add actions.
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              if (space.state.get() !== SpaceState.READY) {
-                return;
-              }
+          const unsubscribe = effect(() => {
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                if (space.state.get() !== SpaceState.READY) {
+                  return;
+                }
 
-              const query = space.db.query(Filter.schema(DocumentType));
-              subscriptions.add(query.subscribe());
-              let previousObjects: DocumentType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
+                const query = space.db.query(Filter.schema(DocumentType));
+                subscriptions.add(query.subscribe());
+                let previousObjects: DocumentType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                    previousObjects = query.objects;
 
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
-                    query.objects.forEach((object) =>
-                      graph.addNodes({
-                        id: `${GptAction.ANALYZE}/${object.id}`,
-                        data: () =>
-                          dispatch([
-                            {
-                              plugin: GPT_PLUGIN,
-                              action: GptAction.ANALYZE,
-                            },
-                          ]),
-                        properties: {
-                          label: ['analyze document label', { ns: GPT_PLUGIN }],
-                          icon: (props: IconProps) => <Brain {...props} />,
-                        },
-                      }),
-                    );
-                  });
-                }),
-              );
-            });
+                    batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
+                      query.objects.forEach((object) =>
+                        graph.addNodes({
+                          id: `${GptAction.ANALYZE}/${object.id}`,
+                          data: () =>
+                            dispatch([
+                              {
+                                plugin: GPT_PLUGIN,
+                                action: GptAction.ANALYZE,
+                              },
+                            ]),
+                          properties: {
+                            label: ['analyze document label', { ns: GPT_PLUGIN }],
+                            icon: (props: IconProps) => <Brain {...props} />,
+                          },
+                        }),
+                      );
+                    });
+                  }),
+                );
+              });
           });
 
           return () => {

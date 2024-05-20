@@ -7,7 +7,7 @@ import { batch, effect, untracked } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { ThreadType, DocumentType, MessageType } from '@braneframe/types';
 import {
   type IntentPluginProvides,
@@ -28,7 +28,14 @@ import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, getTextInRange, Filter, isSpace, createDocAccessor } from '@dxos/react-client/echo';
+import {
+  getSpace,
+  getTextInRange,
+  Filter,
+  isSpace,
+  createDocAccessor,
+  fullyQualifiedId,
+} from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
@@ -162,15 +169,16 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+          const unsubscribe = effect(() => {
             subscriptions.clear();
-            spaces.forEach((space) => {
+            client.spaces.get().forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
                   graph,
@@ -186,44 +194,49 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   dispatch,
                 }),
               );
+            });
 
-              // Add all threads not linked to documents to the graph.
-              const query = space.db.query(Filter.schema(ThreadType));
-              subscriptions.add(query.subscribe());
-              // TODO(wittjosiah): There should be a better way to do this.
-              //  Resolvers in echo schema is likely the solution.
-              const documentQuery = space.db.query(Filter.schema(DocumentType));
-              subscriptions.add(documentQuery.subscribe());
-              let previousObjects: ThreadType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const documentThreads = documentQuery.objects
-                    .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
-                    .filter(nonNullable);
-                  const objects = query.objects.filter((thread) => !documentThreads.includes(thread.id));
-                  const removedObjects = previousObjects.filter((object) => !objects.includes(object));
-                  previousObjects = objects;
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                // Add all threads not linked to documents to the graph.
+                const query = space.db.query(Filter.schema(ThreadType));
+                subscriptions.add(query.subscribe());
+                // TODO(wittjosiah): There should be a better way to do this.
+                //  Resolvers in echo schema is likely the solution.
+                const documentQuery = space.db.query(Filter.schema(DocumentType));
+                subscriptions.add(documentQuery.subscribe());
+                let previousObjects: ThreadType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const documentThreads = documentQuery.objects
+                      .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
+                      .filter(nonNullable);
+                    const objects = query.objects.filter((thread) => !documentThreads.includes(thread.id));
+                    const removedObjects = previousObjects.filter((object) => !objects.includes(object));
+                    previousObjects = objects;
 
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(object.id));
-                    objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: object.title || ['thread title placeholder', { ns: THREAD_PLUGIN }],
-                          icon: (props: IconProps) => <Chat {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
+                    batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: object.title || ['thread title placeholder', { ns: THREAD_PLUGIN }],
+                            icon: (props: IconProps) => <Chat {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
                       });
                     });
-                  });
-                }),
-              );
-            });
+                  }),
+                );
+              });
           });
 
           return () => {

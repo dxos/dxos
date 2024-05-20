@@ -66,6 +66,10 @@ import {
 import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
+const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
+
+export const parseSpacePlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
 
 export type SpacePluginOptions = {
   /**
@@ -99,6 +103,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
+    enabled: [],
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -145,6 +150,21 @@ export const SpacePlugin = ({
           dispatch,
         });
       }
+
+      // Enable spaces.
+      state.enabled.push(client.spaces.default.key);
+      subscriptions.add(
+        effect(() => {
+          Array.from(activeIds(location.active)).forEach((part) => {
+            const [key] = part.split(':');
+            const spaceKey = PublicKey.safeFrom(key);
+            const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
+            if (spaceKey && index === -1) {
+              state.enabled.push(spaceKey);
+            }
+          });
+        }),
+      );
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
@@ -204,38 +224,40 @@ export const SpacePlugin = ({
       subscriptions.add(
         client.spaces.subscribe((spaces) => {
           spaceSubscriptions.clear();
-          spaces.forEach((space) => {
-            spaceSubscriptions.add(
-              space.listen('viewing', (message) => {
-                const { added, removed } = message.payload;
-                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
-                if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  added.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      if (!(objectId in state.viewersByObject)) {
-                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+          spaces
+            .filter((space) => !!state.enabled.find((key) => key.equals(space.key)))
+            .forEach((space) => {
+              spaceSubscriptions.add(
+                space.listen('viewing', (message) => {
+                  const { added, removed } = message.payload;
+                  const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+                  const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
+                  if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
+                    added.forEach((objectIdAny) => {
+                      if (objectIdAny) {
+                        const objectId = objectIdAny.toString();
+                        if (!(objectId in state.viewersByObject)) {
+                          state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+                        }
+                        state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                        if (!state.viewersByIdentity.has(identityKey)) {
+                          state.viewersByIdentity.set(identityKey, new Set());
+                        }
+                        state.viewersByIdentity.get(identityKey)!.add(objectId);
                       }
-                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
-                      if (!state.viewersByIdentity.has(identityKey)) {
-                        state.viewersByIdentity.set(identityKey, new Set());
+                    });
+                    removed.forEach((objectIdAny) => {
+                      if (objectIdAny) {
+                        const objectId = objectIdAny.toString();
+                        state.viewersByObject[objectId]?.delete(identityKey);
+                        state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                        // It’s okay for these to be empty sets/maps, reduces churn.
                       }
-                      state.viewersByIdentity.get(identityKey)!.add(objectId);
-                    }
-                  });
-                  removed.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      state.viewersByObject[objectId]?.delete(identityKey);
-                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
-                      // It’s okay for these to be empty sets/maps, reduces churn.
-                    }
-                  });
-                }
-              }),
-            );
-          });
+                    });
+                  }
+                }),
+              );
+            });
         }).unsubscribe,
       );
     },
@@ -273,7 +295,7 @@ export const SpacePlugin = ({
                 <SpaceMain space={primary} role={role} />
               ) : primary instanceof FolderType ? (
                 <FolderMain folder={primary} />
-              ) : typeof primary === 'string' && primary.length === 64 ? (
+              ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
@@ -476,6 +498,7 @@ export const SpacePlugin = ({
                 updateGraphWithSpace({
                   graph,
                   space,
+                  enabled: !!state.enabled.find((key) => key.equals(space.key)),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
                   dispatch,
@@ -521,6 +544,7 @@ export const SpacePlugin = ({
               const folder = create(FolderType, { objects: [] });
               setSpaceProperty(space, FolderType.typename, folder);
               await space.waitUntilReady();
+              state.enabled.push(space.key);
 
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
@@ -739,6 +763,15 @@ export const SpacePlugin = ({
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
               return { data: true };
+            }
+
+            case SpaceAction.ENABLE: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                state.enabled.push(space.key);
+                return { data: true };
+              }
+              break;
             }
           }
         },
