@@ -9,6 +9,7 @@ interface ResourceLike {
   close(): Promise<any>;
 }
 
+// TODO(burdon): Replace with abstraction relating to Context object?
 export const openAndClose = async (...resources: ResourceLike[]) => {
   for (const resourceLike of resources) {
     await resourceLike.open();

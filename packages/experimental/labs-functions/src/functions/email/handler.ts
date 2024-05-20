@@ -19,6 +19,7 @@ import { getKey, registerTypes } from '../../util';
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space, objects } = event;
   const { client } = context;
+  invariant(space);
   registerTypes(space);
 
   // TODO(burdon): Generalize util for getting properties from config/env.
@@ -77,7 +78,7 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   for (const message of messages) {
     const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
-      mailbox.messages.push(message);
+      (mailbox.messages ??= []).push(message);
       added++;
     }
   }

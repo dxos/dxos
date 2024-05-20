@@ -38,7 +38,7 @@ class TestProcessorBuilder {
     const builder = new TestBuilder();
     const config = getConfig()!;
 
-    this._client = new Client({ config, services: builder.createLocal() });
+    this._client = new Client({ config, services: builder.createLocalClientServices() });
     await this._client.initialize();
     await this._client.halo.createIdentity();
 

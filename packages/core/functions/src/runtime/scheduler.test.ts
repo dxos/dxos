@@ -12,14 +12,14 @@ import { create, S, TypedObject } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler } from './scheduler';
-import { type FunctionManifest } from '../types';
+import { type FunctionManifest, type WebhookTrigger } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
   let client: Client;
   before(async () => {
     const testBuilder = new TestBuilder();
-    client = new Client({ services: testBuilder.createLocal() });
+    client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     await client.halo.createIdentity();
   });
@@ -32,7 +32,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -70,7 +70,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -78,7 +78,7 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           webhook: {
-            port: 8080,
+            method: 'GET',
           },
         },
       ],
@@ -97,17 +97,21 @@ describe('scheduler', () => {
     });
 
     setTimeout(() => {
-      void fetch('http://localhost:8080');
+      const mount: WebhookTrigger = scheduler.mounts.find(
+        (mount) => mount.function === 'example.com/function/test',
+      )!.webhook!;
+      void fetch(`http://localhost:${mount.port}`);
     });
+
     await done.wait();
   });
 
-  test.only('websocket', async () => {
+  test('websocket', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -162,7 +166,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          name: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],

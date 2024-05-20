@@ -17,9 +17,6 @@ const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) =>
     <DensityProvider density='fine'>
       <Table.Root>
         <Table.Viewport classNames='flex flex-col h-full overflow-auto'>
-          {/* TODO(burdon): Floating "add row" jumps by 1 pixel on scroll. */}
-          {/* TODO(burdon): Blue focus highlight is clipped by 1px on the left. */}
-          {/* TODO(burdon): Focused row and focus ring passes over the sticky header. */}
           <ObjectTable
             key={table.id} // New component instance per table.
             table={table}

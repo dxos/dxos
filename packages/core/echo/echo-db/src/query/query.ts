@@ -184,6 +184,7 @@ export class Query<T extends {} = any> {
     if (runTasks.length === 0) {
       return { objects: [], results: [] };
     }
+
     const mergedResults = (await Promise.all(runTasks)).flatMap((r) => r ?? []);
     const filteredResults = this._filterResults(filter, mergedResults);
     return {

@@ -12,12 +12,12 @@ import { log } from '@dxos/log';
 import { registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event: { space, objects } }) => {
-  let i = 0;
   invariant(space);
+  registerTypes(space);
   const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();
   const objectsByEmail = new Map<string, ContactType>();
-  registerTypes(space);
 
+  let i = 0;
   const getOrCreateContact = (recipient: RecipientType): ContactType | undefined => {
     invariant(recipient.email);
     let contact =
