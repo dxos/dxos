@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Event } from '@dxos/async';
+import { Event, synchronized } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -147,6 +147,7 @@ export class NetworkManager {
   /**
    * Join the swarm.
    */
+  @synchronized
   async joinSwarm({
     topic,
     peerId,
@@ -198,6 +199,7 @@ export class NetworkManager {
   /**
    * Close the connection.
    */
+  @synchronized
   async leaveSwarm(topic: PublicKey) {
     if (!this._swarms.has(topic)) {
       // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
