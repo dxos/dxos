@@ -14,7 +14,12 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 
 import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
@@ -124,7 +129,9 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
           switch (role) {
             case 'main':
               return data.active instanceof ScriptType ? (
-                <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+                <Main.Content
+                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
+                >
                   <ScriptBlockWrapper
                     // prettier-ignore
                     script={data.active}
