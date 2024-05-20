@@ -8,7 +8,7 @@ import { waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
-import { Invitation, SpaceMember, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -105,7 +105,7 @@ describe('Spaces/member-management', () => {
 
     const clients = range(
       count,
-      () => new Client({ services: testBuilder.createLocal({ fastPeerPresenceUpdate: true }) }),
+      () => new Client({ services: testBuilder.createLocalClientServices({ fastPeerPresenceUpdate: true }) }),
     );
     const initialized = await Promise.all(
       clients.map(async (c, index) => {

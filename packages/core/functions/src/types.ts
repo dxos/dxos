@@ -8,9 +8,13 @@ const TimerTriggerSchema = S.struct({
   cron: S.string,
 });
 
-const WebhookTriggerSchema = S.struct({
-  port: S.number,
-});
+const WebhookTriggerSchema = S.mutable(
+  S.struct({
+    method: S.string,
+    // Assigned port.
+    port: S.optional(S.number),
+  }),
+);
 
 const WebsocketTriggerSchema = S.struct({
   url: S.string,
@@ -39,6 +43,10 @@ const SubscriptionTriggerSchema = S.struct({
 const FunctionTriggerSchema = S.struct({
   function: S.string.pipe(S.description('Function ID/URI.')),
 
+  // Context passed to function.
+  context: S.optional(S.record(S.string, S.any)),
+
+  // Triggers.
   timer: S.optional(TimerTriggerSchema),
   webhook: S.optional(WebhookTriggerSchema),
   websocket: S.optional(WebsocketTriggerSchema),
@@ -57,9 +65,10 @@ export type FunctionTrigger = S.Schema.Type<typeof FunctionTriggerSchema>;
 // TODO(burdon): Name vs. path?
 const FunctionDefSchema = S.struct({
   id: S.string,
+  // name: S.string,
   description: S.optional(S.string),
-  name: S.string,
-  // TODO(burdon): NPM/GitHub URL?
+  path: S.string,
+  // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,
 });
 
@@ -70,7 +79,7 @@ export type FunctionDef = S.Schema.Type<typeof FunctionDefSchema>;
  */
 export const FunctionManifestSchema = S.struct({
   functions: S.mutable(S.array(FunctionDefSchema)),
-  triggers: S.mutable(S.array(FunctionTriggerSchema)),
+  triggers: S.optional(S.mutable(S.array(FunctionTriggerSchema))),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;

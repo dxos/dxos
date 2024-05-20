@@ -17,7 +17,7 @@ export default class Share extends BaseCommand<typeof Share> {
   static override description = 'List valid invitations.';
 
   static override flags = {
-    ...super.flags,
+    ...BaseCommand.flags,
     'no-truncate': Flags.boolean({
       description: 'Do not truncate keys.',
     }),

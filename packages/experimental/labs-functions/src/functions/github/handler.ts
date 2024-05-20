@@ -18,12 +18,10 @@ type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['
 export const handler = subscriptionHandler(async ({ event, context }) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   const { space, objects } = event;
-  if (!space || !objects?.length) {
-    return;
-  }
+  invariant(space);
   registerTypes(space);
 
-  for (const project of objects) {
+  for (const project of objects ?? []) {
     if (!project.repo || !project.repo.includes('github.com') || getMeta(project).keys.length !== 0) {
       return;
     }

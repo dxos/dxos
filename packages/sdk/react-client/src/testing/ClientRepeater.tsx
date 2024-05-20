@@ -60,7 +60,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
+      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
       await Promise.all(clients.map((client) => client.initialize()));
       schema && clients.map((client) => client.addSchema(...schema));
 

@@ -21,10 +21,6 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   const { client, dataDir } = context;
   const { space, objects } = event;
   registerTypes(space);
-  // TODO(burdon): Option to process all spaces.
-  // if (!space || !objects?.length) {
-  //   return response.status(400);
-  // }
 
   invariant(dataDir);
   const docs: ChainDocument[] = [];

@@ -14,9 +14,9 @@ message FunctionsConfig {
   optional string manifest = 2;
 }
 
-// TODO(burdon): Reconcile with typedefs.
 message Function {
-  string name = 1;
+  string id = 1;
+  string path = 2;
 }
 
 message RegisterRequest {

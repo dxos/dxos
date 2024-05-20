@@ -26,7 +26,7 @@ export default class Open extends BaseCommand<typeof Open> {
   };
 
   static override flags = {
-    ...super.flags,
+    ...BaseCommand.flags,
     instances: Flags.integer({
       description: 'Amount of test instances.',
       default: 1,
