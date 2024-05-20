@@ -165,7 +165,7 @@ export class QueryState extends Resource {
 const filterToIndexQuery = (filter: Filter): IndexQuery => {
   invariant(!(filter.type && filter.or.length > 0), 'Cannot mix type and or filters.');
   invariant(
-    filter.or.map((subFilter) => !(subFilter.type && subFilter.or.length > 0)),
+    filter.or.every((subFilter) => !(subFilter.type && subFilter.or.length > 0)),
     'Cannot mix type and or filters.',
   );
   if (filter.type || (filter.or.length > 0 && filter.or.every((subFilter) => !subFilter.not && subFilter.type))) {
