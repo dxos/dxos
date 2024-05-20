@@ -3,6 +3,7 @@
 //
 
 import { CronJob } from 'cron';
+import { getPort } from 'get-port-please';
 import http from 'node:http';
 import WebSocket from 'ws';
 
@@ -177,13 +178,22 @@ export class Scheduler {
    */
   private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: WebhookTrigger) {
     log.info('webhook', { space: space.key, trigger });
-    const { port } = trigger;
 
-    // TODO(burdon): POST JSON.
+    // TODO(burdon): POST JSON payload.
     const server = http.createServer(async (req, res) => {
       await this._execFunction(def, { spaceKey: space.key });
     });
 
+    const DEF_PORT_RANGE = { min: 7500, max: 7599 };
+    const portRange = Object.assign({}, trigger.port, DEF_PORT_RANGE) as WebhookTrigger['port'];
+    console.log('#######################', portRange);
+    const port = await getPort({
+      host: 'localhost',
+      port: portRange!.min,
+      portRange: [portRange!.min, portRange!.max],
+    });
+
+    // TODO(burdon): Update trigger object with actual port.
     server.listen(port, () => {
       log.info('started webhook', { port });
     });
@@ -195,6 +205,7 @@ export class Scheduler {
 
   /**
    * Websocket.
+   * NOTE: The port must be unique, so the same hook cannot be used for multiple spaces.
    */
   private async _createWebsocket(
     ctx: Context,
@@ -227,8 +238,9 @@ export class Scheduler {
           open.wake(true);
         },
 
-        onclose: () => {
-          log.info('closed', { url });
+        // TODO(burdon): Config retry if server closes?
+        onclose: (event) => {
+          log.info('closed', { url, event });
           open.wake(false);
         },
 

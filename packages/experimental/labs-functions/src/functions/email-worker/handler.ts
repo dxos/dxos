@@ -101,6 +101,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
       );
 
       // TODO(burdon): ??= breaks the array?
+      // (mailbox.messages ??= []).push(object);
       mailbox.messages?.push(object);
 
       log.info('inserted', { type: getTypename(message), id: message.id });

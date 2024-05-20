@@ -136,11 +136,13 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
     if (echoRefinement?.type && key === 'id') {
       immutableIdField = jsonToEffectSchema(value, defs);
     } else {
-      fields[key] = root.required.includes(key)
+      // TODO(burdon): Mutable cast.
+      (fields as any)[key] = root.required.includes(key)
         ? jsonToEffectSchema(value, defs)
         : S.optional(jsonToEffectSchema(value, defs));
     }
   }
+
   let schemaWithoutEchoId: S.Schema<any, any, unknown>;
   if (typeof root.additionalProperties !== 'object') {
     schemaWithoutEchoId = S.struct(fields);
@@ -152,9 +154,11 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
       schemaWithoutEchoId = S.record(S.string, indexValue);
     }
   }
+
   if (echoRefinement == null) {
     return schemaWithoutEchoId as any;
   }
+
   invariant(immutableIdField, 'no id in echo type');
   const schema = S.extend(S.mutable(schemaWithoutEchoId), S.struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
@@ -163,6 +167,7 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }
   }
+
   return schema.annotations(annotations) as any;
 };
 
@@ -171,6 +176,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   if ('type' in root && root.type === 'object') {
     return jsonToEffectTypeSchema(root, defs);
   }
+
   let result: S.Schema<any>;
   if ('$id' in root) {
     switch (root.$id) {
@@ -224,6 +230,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   } else {
     result = S.unknown;
   }
+
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
   return refinement?.fieldMeta
     ? result.annotations({ [EchoObjectFieldMetaAnnotationId]: refinement.fieldMeta })

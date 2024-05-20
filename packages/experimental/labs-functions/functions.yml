@@ -6,47 +6,58 @@
 ##
 
 functions:
+  - id: 'dxos.org/function/hello'
+    path: '/hello'
+    handler: 'hello'
+    description: 'Hello World!'
+
   - id: 'dxos.org/function/calendar'
-    path: 'calendar'
+    path: '/calendar'
     handler: 'calendar'
     description: 'Calendar Sync.'
 
   - id: 'dxos.org/function/chess'
-    path: 'chess'
+    path: '/chess'
     handler: 'chess'
     description: 'Chess.'
 
   - id: 'dxos.org/function/email'
-    path: 'email'
+    path: '/email'
     handler: 'email'
     description: 'Email Sync.'
 
   - id: 'dxos.org/function/email-extractor'
-    path: 'email-extractor'
+    path: '/email-extractor'
     handler: 'email-extractor'
     description: 'Email Extractor.'
 
   - id: 'dxos.org/function/email-worker'
-    path: 'email-worker'
+    path: '/email-worker'
     handler: 'email-worker'
     description: 'Email Sync with Cloudflare Worker.'
 
   - id: 'dxos.org/function/embedding'
-    path: 'embedding'
+    path: '/embedding'
     handler: 'embedding'
     description: 'Text embedding.'
 
   - id: 'dxos.org/function/gpt'
-    path: 'gpt'
+    path: '/gpt'
     handler: 'gpt'
     description: 'GPT Chat.'
 
   - id: 'dxos.org/function/github'
-    path: 'github'
+    path: '/github'
     handler: 'github'
     description: 'Github Sync.'
 
 triggers:
+  - function: 'dxos.org/function/hello'
+    webhook:
+      port:
+        min: 7500
+        max: 7599
+
 #  - function: 'dxos.org/function/calendar'
 #    timer:
 #      cron: '*/30 * * * * *'

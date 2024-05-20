@@ -32,7 +32,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          path: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -70,7 +70,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          path: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -78,7 +78,10 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           webhook: {
-            port: 8080,
+            port: {
+              min: 7500,
+              max: 7599,
+            },
           },
         },
       ],
@@ -107,7 +110,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          path: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],
@@ -162,7 +165,7 @@ describe('scheduler', () => {
       functions: [
         {
           id: 'example.com/function/test',
-          path: 'test',
+          path: '/test',
           handler: 'test',
         },
       ],

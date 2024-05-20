@@ -9,7 +9,12 @@ const TimerTriggerSchema = S.struct({
 });
 
 const WebhookTriggerSchema = S.struct({
-  port: S.number,
+  port: S.optional(
+    S.struct({
+      min: S.number,
+      max: S.number,
+    }),
+  ),
 });
 
 const WebsocketTriggerSchema = S.struct({
