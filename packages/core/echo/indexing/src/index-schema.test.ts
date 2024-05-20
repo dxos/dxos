@@ -109,7 +109,7 @@ describe('IndexSchema', () => {
     }
   });
 
-  test('or filter', async () => {
+  test('`or` filter', async () => {
     const index = new IndexSchema();
     await index.open();
     afterTest(() => index.close());
