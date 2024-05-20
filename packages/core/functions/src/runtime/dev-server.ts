@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
-import { type FunctionDef, type FunctionManifest } from '../manifest';
+import { type FunctionDef, type FunctionManifest } from '../types';
 
 export type DevServerOptions = {
   port?: number;

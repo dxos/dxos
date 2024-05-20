@@ -13,7 +13,7 @@ pages_build_output_dir = "./out/composer"
 #
 # Dev
 # http://localhost:8788
-# pnpm nx bundle composer-app
+# pnpm -w nx bundle composer-app
 # wrangler pages dev [--persist-to=/tmp/dxos/composer-app]
 #
 

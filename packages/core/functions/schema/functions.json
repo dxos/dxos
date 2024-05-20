@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "functions",
+    "triggers"
+  ],
+  "properties": {
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "handler"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "handler": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "function"
+        ],
+        "properties": {
+          "function": {
+            "type": "string",
+            "description": "Function ID/URI.",
+            "title": "string"
+          },
+          "timer": {
+            "type": "object",
+            "required": [
+              "cron"
+            ],
+            "properties": {
+              "cron": {
+                "type": "string",
+                "description": "a string",
+                "title": "string"
+              }
+            },
+            "additionalProperties": false
+          },
+          "webhook": {
+            "type": "object",
+            "required": [
+              "port"
+            ],
+            "properties": {
+              "port": {
+                "type": "number",
+                "description": "a number",
+                "title": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "websocket": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "a string",
+                "title": "string"
+              },
+              "init": {
+                "type": "object",
+                "required": [],
+                "properties": {},
+                "additionalProperties": {
+                  "$id": "/schemas/any",
+                  "title": "any"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "subscription": {
+            "type": "object",
+            "required": [
+              "filter"
+            ],
+            "properties": {
+              "spaceKey": {
+                "type": "string",
+                "description": "a string",
+                "title": "string"
+              },
+              "filter": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "a string",
+                      "title": "string"
+                    },
+                    "props": {
+                      "type": "object",
+                      "required": [],
+                      "properties": {},
+                      "additionalProperties": {
+                        "$id": "/schemas/any",
+                        "title": "any"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "options": {
+                "type": "object",
+                "required": [],
+                "properties": {
+                  "deep": {
+                    "type": "boolean",
+                    "description": "a boolean",
+                    "title": "boolean"
+                  },
+                  "delay": {
+                    "type": "number",
+                    "description": "a number",
+                    "title": "number"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
