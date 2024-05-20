@@ -108,7 +108,7 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
 export type TraceDiagnosticParams<T> = {
   id: string;
   // TODO(dmaretskyi): Rename to `name`.
-  title?: string;
+  name?: string;
   fetch: () => MaybePromise<T>;
 };
 

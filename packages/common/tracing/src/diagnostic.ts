@@ -14,7 +14,7 @@ export const DIAGNOSTICS_TIMEOUT = 10_000;
 export type DiagnosticMetadata = {
   id: string;
   instanceId: string;
-  title: string;
+  name: string;
 };
 
 export type DiagnosticsRequest = {
@@ -33,7 +33,7 @@ export class TraceDiagnosticImpl implements TraceDiagnostic {
   constructor(
     public id: string,
     public fetch: () => any,
-    public title: string,
+    public name: string,
     private readonly _onUnregister: () => void,
   ) {}
 
@@ -52,7 +52,7 @@ export class DiagnosticsManager {
       log.warn('Duplicate diagnostic id', { id: params.id });
     }
 
-    const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.title ?? params.id, () => {
+    const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.name ?? params.id, () => {
       if (this.registry.get(params.id) === impl) {
         this.registry.delete(params.id);
       }
@@ -62,10 +62,10 @@ export class DiagnosticsManager {
   }
 
   list(): DiagnosticMetadata[] {
-    return Array.from(this.registry.values()).map((d) => ({
-      id: d.id,
+    return Array.from(this.registry.values()).map((diagnostic) => ({
+      id: diagnostic.id,
       instanceId: this.instanceId,
-      title: d.title,
+      name: diagnostic.name,
     }));
   }
 

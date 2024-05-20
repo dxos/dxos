@@ -60,7 +60,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
 
     trace.diagnostic({
       id: 'active-queries',
-      title: 'Active Queries',
+      name: 'Active Queries',
       fetch: () => {
         return Array.from(this._queries).map((query) => {
           return {
