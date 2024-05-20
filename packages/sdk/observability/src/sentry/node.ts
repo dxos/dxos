@@ -113,4 +113,9 @@ export const captureMessage: typeof naturalCaptureMessage = (exception, captureC
   }
 };
 
+export const captureUserFeedback = (name: string, email: string, message: string): Promise<void> => {
+  const feedback = `User feedback: ${name} ${email} ${message}`;
+  throw new Error(`Capture user feedback not implemented in node. Use @sentry/browser. Message: ${feedback}`);
+};
+
 export const withScope = naturalWithScope;
