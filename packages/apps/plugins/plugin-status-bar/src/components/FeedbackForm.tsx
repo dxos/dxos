@@ -63,7 +63,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div role='form' className='p-3 flex flex-col gap-2'>
-      <Section className='space-b-1'>
+      <div role='none' className='space-b-1'>
         <Input.Root validationValence={touched.name && errors.name ? 'error' : undefined}>
           <Input.Label>{translation('name label')}</Input.Label>
           <Input.TextInput
@@ -76,9 +76,9 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             <Input.Validation>{touched.name && errors.name}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
-      </Section>
+      </div>
 
-      <Section className='space-b-1'>
+      <div role='none' className='space-b-1'>
         <Input.Root validationValence={touched.email && errors.email ? 'error' : undefined}>
           <Input.Label>{translation('email input label')}</Input.Label>
           <Input.TextInput
@@ -90,9 +90,9 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             <Input.Validation>{touched.email && errors.email}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
-      </Section>
+      </div>
 
-      <Section className='space-b-1'>
+      <div role='none' className='space-b-1'>
         <Input.Root validationValence={touched.message && errors.message ? 'error' : undefined}>
           <Input.Label>{translation('feedback text area label')}</Input.Label>
           <Input.TextArea
@@ -106,9 +106,9 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             <Input.Validation>{touched.message && errors.message}</Input.Validation>
           </Input.DescriptionAndValidation>
         </Input.Root>
-      </Section>
+      </div>
 
-      <Section className='space-b-2'>
+      <div role='none' className='space-b-2'>
         <Button
           type='submit'
           variant='primary'
@@ -127,7 +127,7 @@ export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
             <X className={getSize(5)} />
           </Button>
         </Popover.Close>
-      </Section>
+      </div>
     </div>
   );
 };
