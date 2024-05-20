@@ -18,7 +18,7 @@ import { REDIS_PORT, createRedisRpcPort } from './util';
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe.skip('Redis', () => {
+describe('Redis', () => {
   test('two redis client can exchange messages', async () => {
     const client = await setupRedisClient();
     const server = await setupRedisClient();
@@ -54,6 +54,27 @@ describe.skip('Redis', () => {
 
     const response = await bob.call('method', createPayload('request'));
     expect(response).to.deep.eq(createPayload('response'));
+  });
+
+  test('Pass stream through Redis', async () => {
+    // Create two linked Redis ports.
+    const [alicePort, bobPort] = await createLinkedRedisPorts();
+
+    const streamAlice = new ReadableStream({
+      start: (controller) => {
+        const unsub = alicePort.subscribe((chunk) => {
+          controller.enqueue(chunk);
+        });
+        afterTest(() => unsub?.());
+      },
+    });
+
+    const reader = streamAlice.getReader();
+    const receivedChunk = reader.read();
+
+    const data = Buffer.from('hello');
+    await bobPort.send(data);
+    expect((await receivedChunk).value).to.deep.eq(data);
   });
 });
 
