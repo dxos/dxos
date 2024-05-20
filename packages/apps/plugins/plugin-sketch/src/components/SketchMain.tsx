@@ -16,14 +16,7 @@ import SketchComponent, { type SketchComponentProps } from './Sketch';
 
 const SketchMain: FC<SketchComponentProps> = (props) => {
   return (
-    <Main.Content
-      classNames={[
-        baseSurface,
-        fixedInsetFlexLayout,
-        topbarBlockPaddingStart,
-        bottombarBlockPaddingEnd,
-      ]}
-    >
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <SketchComponent {...props} />
     </Main.Content>
   );
