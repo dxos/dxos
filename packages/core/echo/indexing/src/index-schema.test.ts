@@ -120,7 +120,7 @@ describe('IndexSchema', () => {
     expect(ids.length).to.equal(1);
     expect(ids[0].id).to.equal('0');
 
-    const ids2 = await index.find({ typenames: [schemaURI, '@example.org/schema/Document'], or: true });
+    const ids2 = await index.find({ typenames: [schemaURI, '@example.org/schema/Document'] });
     expect(ids2.length).to.equal(2);
     expect(ids2[0].id).to.equal('0');
     expect(ids2[1].id).to.equal('1');
