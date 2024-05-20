@@ -3374,6 +3374,9 @@ importers:
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
@@ -3384,8 +3387,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
@@ -3408,9 +3411,6 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugin-stack
-      '@dxos/app-framework':
-        specifier: workspace:*
-        version: link:../../../sdk/app-framework
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../../ui/react-ui
