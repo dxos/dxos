@@ -17,7 +17,7 @@ import { Button, useThemeContext } from '@dxos/react-ui';
 import {
   comments,
   type CommentsOptions,
-  focusComment,
+  scrollThreadIntoView,
   useComments,
   type Comment,
   type Range,
@@ -88,7 +88,7 @@ const Editor: FC<{
     if (view && !view.hasFocus && selectedValue !== selected) {
       setSelected(selectedValue);
       if (selectedValue) {
-        focusComment(view, selectedValue);
+        scrollThreadIntoView(view, selectedValue);
       }
     }
   }, [view, selected, commentRanges, selectedValue]);

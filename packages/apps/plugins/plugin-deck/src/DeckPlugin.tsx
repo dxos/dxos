@@ -268,6 +268,11 @@ export const DeckPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
+            case LayoutAction.SCROLL_INTO_VIEW: {
+              layout.values.scrollIntoView = intent.data?.id ?? undefined;
+              return undefined;
+            }
+
             case IntentAction.SHOW_UNDO: {
               // TODO(wittjosiah): Support undoing further back than the last action.
               if (currentUndoId) {
@@ -311,12 +316,13 @@ export const DeckPlugin = ({
                             // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
                             if (part === 'main') {
                               const partMembers = new Set<string>();
+                              const prev = new Set(
+                                Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
+                              );
                               // NOTE(thure): The order of the following `forEach` calls will determine to which end of
                               //   the current `main` part newly opened slugs are added.
-                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
-                              (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach(
-                                (id) => partMembers.add(id),
-                              );
+                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
+                              Array.from(prev).forEach((id) => partMembers.add(id));
                               acc[part] = Array.from(partMembers).filter(Boolean);
                             } else {
                               // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
@@ -349,7 +355,7 @@ export const DeckPlugin = ({
                 }
               });
 
-              const openedIds: string[] = Array.from(
+              const openIds: string[] = Array.from(
                 location.active
                   ? Object.values(location.active).reduce((acc, ids) => {
                       Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
@@ -360,11 +366,11 @@ export const DeckPlugin = ({
 
               return {
                 data: {
-                  ids: openedIds,
+                  ids: openIds,
                 },
                 intents: [
                   observability
-                    ? openedIds.map((id) => ({
+                    ? openIds.map((id) => ({
                         // TODO(thure): Can this handle Deck’s multifariousness?
                         action: ObservabilityAction.SEND_EVENT,
                         data: {

@@ -277,10 +277,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;
                               void dispatch?.({
-                                action: LayoutAction.FOCUS,
-                                data: {
-                                  object: thread.id,
-                                },
+                                action: LayoutAction.SCROLL_INTO_VIEW,
+                                data: { id: thread.id },
                               });
                             }
                           }}
@@ -408,7 +406,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: NavigationAction.OPEN,
                         data: {
                           activeParts: {
-                            main: [`${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                            complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
                           },
                         },
                       }

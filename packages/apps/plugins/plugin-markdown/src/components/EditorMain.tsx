@@ -19,7 +19,7 @@ import {
   dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
-  focusComment,
+  scrollThreadIntoView,
   useComments,
   useActionHandler,
   useFormattingState,
@@ -61,11 +61,11 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
-      case LayoutAction.FOCUS: {
-        const object = data?.object;
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        const id = data?.id;
         if (editorView) {
-          focusComment(editorView, object);
-          return { data: true };
+          scrollThreadIntoView(editorView, id);
+          return undefined;
         }
         break;
       }

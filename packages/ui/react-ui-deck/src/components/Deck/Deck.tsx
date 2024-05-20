@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useState } from 'react';
+import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -32,17 +33,22 @@ const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(({ classNames, childr
 
 type DeckPlankUnit = 'rem' | 'px';
 
-type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & { unit?: DeckPlankUnit };
+type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
+  unit?: DeckPlankUnit;
+  scrollIntoViewOnMount?: boolean;
+};
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
-  ({ unit = 'rem', classNames, style, children, ...props }, forwardedRef) => {
+  ({ unit = 'rem', classNames, style, children, scrollIntoViewOnMount, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
     const [size, setSize] = useState<number>(40);
     const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
+    const articleElement = useRef<HTMLDivElement | null>(null);
+    const ref = useComposedRefs(articleElement, forwardedRef);
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
     const handlePointerMove = useCallback(
@@ -68,13 +74,19 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
       };
     }, [handlePointerUp, handlePointerMove, resizing]);
 
+    useEffect(() => {
+      if (scrollIntoViewOnMount) {
+        articleElement.current?.scrollIntoView({ inline: 'start' });
+      }
+    }, [scrollIntoViewOnMount]);
+
     return (
       <>
         <article
           {...props}
           style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
           className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
-          ref={forwardedRef}
+          ref={ref}
         >
           {children}
         </article>
