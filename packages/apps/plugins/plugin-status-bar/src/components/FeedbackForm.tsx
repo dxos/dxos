@@ -3,12 +3,12 @@
 //
 
 import { X, PaperPlaneTilt } from '@phosphor-icons/react';
-import React, { type FC, type PropsWithChildren, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { useIntentDispatcher } from '@dxos/app-framework';
 import { S } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { getSize, mx } from '@dxos/react-ui-theme';
+import { getSize } from '@dxos/react-ui-theme';
 
 import { useForm } from '../hooks';
 import { STATUS_BAR_PLUGIN } from '../meta';
@@ -35,12 +35,6 @@ const FeedbackFormSchema = S.struct({
 type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;
 
 const initialValues: FeedbackFormState = { name: '', email: '', message: '' };
-
-const Section: FC<PropsWithChildren & { className?: string }> = ({ children, className }) => (
-  <div role='none' className={mx(className)}>
-    {children}
-  </div>
-);
 
 export const FeedbackForm = ({ onClose }: { onClose: () => void }) => {
   const { t } = useTranslation(STATUS_BAR_PLUGIN);

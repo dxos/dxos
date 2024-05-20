@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
 import React, { forwardRef, type ReactNode } from 'react';
 
@@ -55,37 +56,58 @@ type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 
 // TODO(zan): tabable group with tabster
 const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
-  ({ classNames, children }, forwardedRef) => (
-    <div
-      className={mx(
-        'bs-[--statusbar-size]',
-        'flex justify-end items-center gap-2 border-solid border-t border-gray-200 bg-gray-50 text-gray-500',
-        'text-lg pointer-fine:text-xs',
-        classNames,
-      )}
-      ref={forwardedRef}
-      role='menubar'
-    >
-      {children}
-    </div>
-  ),
+  ({ classNames, children }, forwardedRef) => {
+    const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
+    return (
+      <div
+        {...groupAttrs}
+        className={mx(
+          'bs-[--statusbar-size]',
+          'flex justify-end items-center gap-2 border-solid border-t border-gray-200 bg-gray-50 text-gray-500',
+          'text-lg pointer-fine:text-xs',
+          classNames,
+        )}
+        ref={forwardedRef}
+        role='menubar'
+      >
+        {children}
+      </div>
+    );
+  },
 );
 
 type StartContentProps = ThemedClassName<{ children: ReactNode }>;
 
-const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center space-x-2', classNames)} ref={forwardedRef}>
-    {children}
-  </div>
-));
+const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames, children }, forwardedRef) => {
+  const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
+
+  return (
+    <div
+      role='none'
+      className={mx('flex-grow flex items-center space-x-2', classNames)}
+      ref={forwardedRef}
+      {...groupAttrs}
+    >
+      {children}
+    </div>
+  );
+});
 
 type EndContentProps = ThemedClassName<{ children: ReactNode }>;
 
-const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
-  <div role='none' className={mx('flex-grow flex items-center justify-end', classNames)} ref={forwardedRef}>
-    {children}
-  </div>
-));
+const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => {
+  const groupAttrs = useArrowNavigationGroup({ axis: 'horizontal' });
+  return (
+    <div
+      role='none'
+      className={mx('flex-grow flex items-center justify-end', classNames)}
+      ref={forwardedRef}
+      {...groupAttrs}
+    >
+      {children}
+    </div>
+  );
+});
 
 export const StatusBar = {
   Container: StatusBarContainer,
