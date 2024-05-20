@@ -11,7 +11,14 @@ import { PublicKey } from '@dxos/keys';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 
-import { type IndexQuery, staticImplements, type Index, type IndexStaticProps, type LoadParams } from './types';
+import {
+  type IndexQuery,
+  staticImplements,
+  type Index,
+  type IndexStaticProps,
+  type LoadParams,
+  type FindResult,
+} from './types';
 
 // Note: By default, Orama search returns 10 results.
 // const ORAMA_LIMIT = 1_000_000;
@@ -56,7 +63,7 @@ export class IndexText extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async find(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
+  async find(filter: IndexQuery): Promise<FindResult[]> {
     throw new Error('Method not implemented.');
   }
 

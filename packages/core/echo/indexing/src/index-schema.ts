@@ -11,7 +11,14 @@ import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements, type IndexQuery } from './types';
+import {
+  type Index,
+  type IndexStaticProps,
+  type LoadParams,
+  staticImplements,
+  type IndexQuery,
+  type FindResult,
+} from './types';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()
@@ -49,7 +56,11 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async find(filter: IndexQuery) {
+  async find(filter: IndexQuery): Promise<FindResult[]> {
+    if (filter.or && filter.or.length > 0) {
+      return (await Promise.all(filter.or.map((subFilter: IndexQuery) => this.find(subFilter)))).flat();
+    }
+
     if (filter.typename === null) {
       // TODO(dmaretskyi): Implement querying for Expando objects.
       throw new Error('Not implemented');

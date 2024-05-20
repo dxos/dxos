@@ -19,6 +19,8 @@ export type IndexQuery = {
    */
   typename?: string | null;
 
+  // TODO(mykola): Extract to QueryPlanner in future
+  or?: IndexQuery[];
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;
 };
@@ -33,6 +35,7 @@ export type ObjectSnapshot = {
 };
 
 export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
+export type FindResult = { id: string; rank: number };
 
 export interface Index {
   identifier: string;
@@ -49,7 +52,7 @@ export interface Index {
   remove(id: string): Promise<void>;
 
   // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
-  find(filter: IndexQuery): Promise<{ id: string; rank: number }[]>;
+  find(filter: IndexQuery): Promise<FindResult[]>;
 
   serialize(): Promise<string>;
 }

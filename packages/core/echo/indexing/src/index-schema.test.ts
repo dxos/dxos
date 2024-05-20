@@ -108,4 +108,21 @@ describe('IndexSchema', () => {
       expect(ids[0].id).to.equal('0');
     }
   });
+
+  test('or filter', async () => {
+    const index = new IndexSchema();
+    await index.open();
+    afterTest(() => index.close());
+
+    await Promise.all(objects.map((object, id) => index.update(String(id), object)));
+
+    const ids = await index.find({ typename: schemaURI });
+    expect(ids.length).to.equal(1);
+    expect(ids[0].id).to.equal('0');
+
+    const ids2 = await index.find({ or: [{ typename: schemaURI }, { typename: '@example.org/schema/Document' }] });
+    expect(ids2.length).to.equal(2);
+    expect(ids2[0].id).to.equal('0');
+    expect(ids2[1].id).to.equal('1');
+  });
 });
