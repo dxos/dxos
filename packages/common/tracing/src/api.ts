@@ -3,10 +3,10 @@
 //
 
 import { Context } from '@dxos/context';
+import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR } from './trace-processor';
-import { MaybePromise } from '@dxos/util';
 
 /**
  * Annotates a class as a tracked resource.

@@ -10,12 +10,12 @@ import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error'
 import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
-import type { AddLinkOptions, TraceDiagnosticParams } from './api';
+import type { AddLinkOptions } from './api';
+import { DiagnosticsManager } from './diagnostic';
+import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
-import { DiagnosticsManager } from './diagnostic';
-import { DiagnosticsChannel } from './diagnostics-channel';
 
 export type Diagnostics = {
   resources: Record<string, Resource>;

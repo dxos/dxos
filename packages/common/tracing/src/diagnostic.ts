@@ -1,7 +1,12 @@
-import { invariant } from '@dxos/invariant';
-import { TraceDiagnosticParams, type TraceDiagnostic } from './api';
-import { log } from '@dxos/log';
+//
+// Copyright 2024 DXOS.org
+//
+
 import { asyncTimeout } from '@dxos/async';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+
+import { type TraceDiagnosticParams, type TraceDiagnostic } from './api';
 import { createId } from './util';
 
 export const DIAGNOSTICS_TIMEOUT = 10_000;
@@ -44,7 +49,7 @@ export class DiagnosticsManager {
 
   registerDiagnostic(params: TraceDiagnosticParams<any>): TraceDiagnostic {
     if (this.registry.has(params.id)) {
-      log.warn(`Duplicate diagnostic id`, { id: params.id });
+      log.warn('Duplicate diagnostic id', { id: params.id });
     }
 
     const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.title ?? params.id, () => {
@@ -65,10 +70,10 @@ export class DiagnosticsManager {
   }
 
   async fetch(request: DiagnosticsRequest): Promise<DiagnosticsData> {
-    invariant(request.instanceId === this.instanceId, `Invalid instance id`);
+    invariant(request.instanceId === this.instanceId, 'Invalid instance id');
     const { id } = request;
     const diagnostic = this.registry.get(id);
-    invariant(diagnostic, `Diagnostic not found`);
+    invariant(diagnostic, 'Diagnostic not found');
     try {
       const data = await asyncTimeout(diagnostic.fetch(), DIAGNOSTICS_TIMEOUT);
       return {

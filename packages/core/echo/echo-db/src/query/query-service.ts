@@ -18,9 +18,9 @@ import {
   type QueryService,
   type QueryResult,
 } from '@dxos/protocols/proto/dxos/echo/query';
+import { trace } from '@dxos/tracing';
 
 import { QueryState } from './query-state';
-import { trace } from '@dxos/tracing';
 
 export type QueryServiceParams = {
   indexer: Indexer;

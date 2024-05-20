@@ -1,12 +1,17 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { Trigger, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+
 import {
   DIAGNOSTICS_TIMEOUT,
-  DiagnosticMetadata,
-  DiagnosticsData,
-  DiagnosticsManager,
-  DiagnosticsRequest,
+  type DiagnosticMetadata,
+  type DiagnosticsData,
+  type DiagnosticsManager,
+  type DiagnosticsRequest,
 } from './diagnostic';
-import { Trigger, sleep } from '@dxos/async';
 import { createId } from './util';
 
 const DEFAULT_CHANNEL_NAME = 'dxos-diagnostics';
