@@ -60,6 +60,7 @@
     "html-to-text": "^9.0.4",
     "imap": "^0.8.19",
     "imap-simple": "^5.1.0",
+    "js-chess-engine": "^1.0.2",
     "js-yaml": "^4.1.0",
     "langchain": "^0.1.12",
     "lodash.defaultsdeep": "^4.6.1",

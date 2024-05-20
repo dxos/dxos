@@ -7369,6 +7369,9 @@ importers:
       imap-simple:
         specifier: ^5.1.0
         version: 5.1.0
+      js-chess-engine:
+        specifier: ^1.0.2
+        version: 1.0.2
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -37213,6 +37216,10 @@ packages:
 
   /jose@5.2.3:
     resolution: {integrity: sha512-KUXdbctm1uHVL8BYhnyHkgp3zDX5KW8ZhAKVFEfUbU2P8Alpzjb+48hHvjOdQIyPshoblhzsuqOwEEAbtHVirA==}
+    dev: false
+
+  /js-chess-engine@1.0.2:
+    resolution: {integrity: sha512-oOFuP3/+Ef7SAWcL+8tDAQNcPFuyul6XI/2NypRblqchI4UbYkWNNxVi//XEQW8L242Jk21ljLhllSyRGEFlGg==}
     dev: false
 
   /js-cookie@3.0.5:

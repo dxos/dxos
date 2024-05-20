@@ -59,10 +59,12 @@ triggers:
 #      filter:
 #      - type: 'braneframe.Message'
 
-#  - function: 'dxos.org/function/chess'
-#    subscription:
-#      filter:
-#      - type: 'dxos.experimental.chess.Game'
+  - function: 'dxos.org/function/chess'
+    context:
+      level: 2
+    subscription:
+      filter:
+      - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/email-worker'
     context:

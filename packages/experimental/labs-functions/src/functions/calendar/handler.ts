@@ -12,6 +12,7 @@ import { Filter } from '@dxos/echo-db';
 import { type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { ObjectSyncer } from '../../sync';
@@ -19,9 +20,7 @@ import { getYaml, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space } = event;
-  if (!space) {
-    return;
-  }
+  invariant(space);
   registerTypes(space);
 
   // TODO(burdon): Prevent multiple calls from scheduler.

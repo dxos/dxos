@@ -19,6 +19,7 @@ import { getKey, registerTypes } from '../../util';
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { space, objects } = event;
   const { client } = context;
+  invariant(space);
   registerTypes(space);
 
   // TODO(burdon): Generalize util for getting properties from config/env.

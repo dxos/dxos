@@ -64,10 +64,15 @@ export const getKey = (config: Config, name: string) => {
 
 export const multiline = (...parts: string[]): string => parts.filter(Boolean).join('\n');
 
+/**
+ * @deprecated
+ */
+// TODO(burdon): Register types vi function metadata.
 export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;
   }
+
   const registry = space.db.graph.runtimeSchemaRegistry;
   const schemaList: S.Schema<any>[] = [
     MessageType,
@@ -82,6 +87,7 @@ export const registerTypes = (space: Space | undefined) => {
     ContactType,
     TextV0Type,
   ];
+
   for (const type of schemaList) {
     if (!registry.isSchemaRegistered(type)) {
       registry.registerSchema(type);
