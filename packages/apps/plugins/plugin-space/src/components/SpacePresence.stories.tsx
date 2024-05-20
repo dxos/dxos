@@ -7,7 +7,7 @@ import React from 'react';
 import '@dxosTheme';
 
 import { PublicKey } from '@dxos/keys';
-import { SpaceMember } from '@dxos/react-client/echo';
+import { HaloSpaceMember, SpaceMember } from '@dxos/react-client/echo';
 import { Tooltip } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -23,6 +23,7 @@ export default {
 
 const nViewers = (n: number, match = true): Member[] =>
   Array.from({ length: n }, () => ({
+    role: HaloSpaceMember.Role.ADMIN,
     identity: {
       identityKey: PublicKey.random(),
     },
