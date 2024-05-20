@@ -107,7 +107,7 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
 
 export type TraceDiagnosticParams<T> = {
   /**
-   * Unique ID. 
+   * Unique ID.
    */
   id: string;
 
