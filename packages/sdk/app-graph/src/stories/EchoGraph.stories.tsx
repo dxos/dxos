@@ -33,7 +33,7 @@ const DEFAULT_PERIOD = 500;
 
 registerSignalRuntime();
 const testBuilder = new TestBuilder();
-const client = new Client({ services: testBuilder.createLocal() });
+const client = new Client({ services: testBuilder.createLocalClientServices() });
 await client.initialize();
 await client.halo.createIdentity();
 await client.spaces.create();

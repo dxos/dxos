@@ -9,19 +9,21 @@ import { sleep } from '@dxos/async';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey, registerTypes } from '../../util';
 
-export const handler = subscriptionHandler(async ({ event, context, response }) => {
+export const handler = subscriptionHandler(async ({ event, context }) => {
   const { client, dataDir } = context;
   const { space, objects } = event;
-  if (!space || !objects?.length) {
-    return response.status(400);
-  }
+  invariant(space);
   registerTypes(space);
+  if (!objects) {
+    return;
+  }
 
   // TODO(burdon): The handler is called before the mutation is processed!
   await sleep(500);

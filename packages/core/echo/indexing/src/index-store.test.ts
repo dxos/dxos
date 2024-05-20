@@ -33,7 +33,7 @@ describe('IndexStore', () => {
     {
       await Promise.all(objects.map((object, id) => index.update(String(id), object)));
 
-      const ids = await index.find({ typename: schemaURI });
+      const ids = await index.find({ typenames: [schemaURI] });
       expect(ids.length).to.equal(1);
 
       expect(ids[0].id).to.equal('0');
@@ -43,7 +43,7 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ typename: schemaURI });
+      const ids = await loadedIndex.find({ typenames: [schemaURI] });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -79,7 +79,7 @@ describe('IndexStore', () => {
       const identifier = [...kinds.keys()][0];
       const loadedIndex = await store.load(identifier);
 
-      const ids = await loadedIndex.find({ typename: schemaURI });
+      const ids = await loadedIndex.find({ typenames: [schemaURI] });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
 
@@ -93,7 +93,7 @@ describe('IndexStore', () => {
     {
       const loadedIndex = await store.load(index.identifier);
 
-      const ids = await loadedIndex.find({ typename: schemaURI });
+      const ids = await loadedIndex.find({ typenames: [schemaURI] });
       expect(ids.length).to.equal(2);
       expect(ids.map(({ id }) => id)).to.deep.eq(['0', '3']);
     }

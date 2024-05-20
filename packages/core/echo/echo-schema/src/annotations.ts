@@ -8,7 +8,7 @@ import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
-import { validateIdNotPresentOnSchema } from './ast';
+import { checkIdNotPresentOnSchema } from './ast';
 import { type Identifiable, type Ref } from './types';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
@@ -26,6 +26,12 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
     Option.getOrElse(() => undefined),
   );
 
+/**
+ *
+ * @param typename
+ * @param version
+ */
+// TODO(burdon): Rename createSchema.
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
@@ -34,11 +40,10 @@ export const echoObject =
       throw new Error('echoObject can only be applied to S.struct instances.');
     }
 
-    validateIdNotPresentOnSchema(self);
+    checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
     const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
-
     return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } })) as S.Schema<
       Simplify<Identifiable & ToMutable<A>>
     >;
