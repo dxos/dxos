@@ -43,6 +43,7 @@ const PRESENCE_CHANNEL_ID = 'dxos.mesh.presence.Presence';
  */
 export class Presence {
   public readonly updated = new Event<void>();
+  public readonly newPeer = new Event<PeerState>();
   private readonly _ctx = new Context({
     onError: (err) => {
       log.catch(err);
@@ -50,6 +51,7 @@ export class Presence {
   });
 
   private readonly _peerStates = new ComplexMap<PublicKey, GossipMessage>(PublicKey.hash);
+  private readonly _peersByIdentityKey = new ComplexMap<PublicKey, GossipMessage[]>(PublicKey.hash);
 
   // remotePeerId -> PresenceExtension
 
@@ -88,8 +90,12 @@ export class Presence {
 
     // Remove peer state when connection is closed.
     this._params.gossip.connectionClosed.on((peerId) => {
-      this._peerStates.delete(peerId);
-      this.updated.emit();
+      const peerState = this._peerStates.get(peerId);
+      if (peerState != null) {
+        this._peerStates.delete(peerId);
+        this._removePeerFromIdentityKeyIndex(peerState);
+        this.updated.emit();
+      }
     });
   }
 
@@ -97,11 +103,19 @@ export class Presence {
     return Array.from(this._peerStates.values()).map((message) => message.payload);
   }
 
+  getPeersByIdentityKey(key: PublicKey): PeerState[] {
+    return (this._peersByIdentityKey.get(key) ?? []).filter(this._isOnline).map((m) => m.payload);
+  }
+
   getPeersOnline(): PeerState[] {
     return Array.from(this._peerStates.values())
-      .filter((message) => message.timestamp.getTime() > Date.now() - this._params.offlineTimeout)
+      .filter(this._isOnline)
       .map((message) => message.payload);
   }
+
+  private _isOnline = (message: GossipMessage): boolean => {
+    return message.timestamp.getTime() > Date.now() - this._params.offlineTimeout;
+  };
 
   getLocalState(): PeerState {
     return {
@@ -123,7 +137,32 @@ export class Presence {
       (message.payload as PeerState).peerId = message.peerId;
 
       this._peerStates.set(message.peerId, message);
+      this._updatePeerInIdentityKeyIndex(message);
       this.updated.emit();
+    }
+  }
+
+  private _removePeerFromIdentityKeyIndex(peerState: GossipMessage) {
+    const identityPeerList = this._peersByIdentityKey.get((peerState.payload as PeerState).identityKey) ?? [];
+    const peerIdIndex = identityPeerList.findIndex((id) => id.peerId?.equals(peerState.peerId));
+    if (peerIdIndex >= 0) {
+      identityPeerList.splice(peerIdIndex, 1);
+    }
+  }
+
+  private _updatePeerInIdentityKeyIndex(newState: GossipMessage) {
+    const identityKey = (newState.payload as PeerState).identityKey;
+    const identityKeyPeers = this._peersByIdentityKey.get(identityKey) ?? [];
+    const existingIndex = identityKeyPeers.findIndex((p) => p.peerId && newState.peerId?.equals(p.peerId));
+    if (existingIndex >= 0) {
+      const oldState = identityKeyPeers.splice(existingIndex, 1, newState)[0];
+      if (!this._isOnline(oldState)) {
+        this.newPeer.emit(newState.payload);
+      }
+    } else {
+      this._peersByIdentityKey.set(identityKey, identityKeyPeers);
+      identityKeyPeers.push(newState);
+      this.newPeer.emit(newState.payload);
     }
   }
 }
