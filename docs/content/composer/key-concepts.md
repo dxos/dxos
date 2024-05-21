@@ -2,19 +2,15 @@
 order: 3
 ---
 
-# Concepts and Details
-
-### Protocol based
-
-The open source DXOS [SDK](../guide/) provides protocols for developing local-first applications. Composer is the flagship example of building on them, but they're available for any other project you can think of.
-
-### Extensibility
-
-Every feature is implemented through the extensibility model, leaving nothing off-limits to malleability.
+# Key Concepts
 
 ### Local first
 
 All data is stored locally on-device, and is never stored on any servers. This means that the user's data is always available, even when offline, and is never at risk of being lost due to server outages or data breaches.
+
+### Extensible
+
+Every feature is implemented through the extensibility model, leaving nothing off-limits to malleability.
 
 ### Automatic replication
 
@@ -35,6 +31,12 @@ When online, users can sense each other's presence and collaborate in real-time.
 ### Runs everywhere
 
 Designed for mobile and desktop, works in modern browsers.
+
+### Protocol based
+
+The open source DXOS [SDK](../guide/) provides protocols for developing local-first applications. Composer is the flagship example of building on them, but they're available for any other project you can think of.
+
+
 
 ### Availability
 

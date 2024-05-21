@@ -5,19 +5,16 @@ headerDepth: 0
 
 # About Composer
 
-*Composer is built on the DXOS framework. If you want to know more about the framework, check out the [SDK docs](../guide).*
+Composer is a collaborative productivity app where developers can build and organize knowledge, extend with custom data and UI, and run private AI against their knowledge locally.
 
-Composer is a team notetaking, whiteboarding, and knowledge management program.
-
-It has three key features:
+Key features:
 
 * **Extensibility**: If your team is operating in a challenging problem domain you need knowledge tools specific to your work. Composer is built for customization from the ground up.
 * **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
-* **Openness**: Not only are Composer and the DXOS protocols it's built on open source, the application is cloudless as well. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
+* **Openness**: Composer and the DXOS framework are open source. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
+* **Privacy**: Composer is built on the peer-to-peer protocols of DXOS which are designed to be private by default. The data is stored on your device and only shared with others you explicitly invite.
 
-## Peer-to-peer
-
-Composer gets its real-time collaboration and offline abilities from its peer-to-peer architecture.
+## Devices and Agents
 
 For example a running system might sync data like this:
 
