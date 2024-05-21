@@ -3,33 +3,37 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Main, type MainProps, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { resizeHandle, resizeHandleVertical } from '../../fragments';
 import { translationKey } from '../../translations';
 
-type DeckRootProps = MainProps;
+type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?: boolean };
 
 const deckGrid =
   'grid grid-rows-[var(--rail-size)_[toolbar-start]_var(--rail-action)_[content-start]_1fr_[content-end]] grid-cols-[repeat(99,min-content)]';
 
 // TODO(thure): `justify-center` will hide some content if overflowing, nor will something like `dialogLayoutFragment` containing the Deck behave the same way. Currently `justify-center-if-no-scroll` is used, which relies on support for `animation-timeline: scroll(inline self)`, which is not broad.
 const deckLayout =
-  'fixed inset-0 z-0 overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ' +
+  'overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ' +
   deckGrid;
 
 const resizeButtonStyles = mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3');
 
-const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(({ classNames, children, ...props }, forwardedRef) => {
-  return (
-    <Main.Content {...props} classNames={[deckLayout, classNames]} ref={forwardedRef}>
-      {children}
-    </Main.Content>
-  );
-});
+const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
+  ({ classNames, children, asChild, ...props }, forwardedRef) => {
+    const Root = asChild ? Slot : 'div';
+    return (
+      <Root {...props} className={mx(deckLayout, classNames)} ref={forwardedRef}>
+        {children}
+      </Root>
+    );
+  },
+);
 
 type DeckPlankUnit = 'rem' | 'px';
 
