@@ -34,7 +34,7 @@ export class Scheduler {
     this.functions.onFunctionsRegistered.on(async ({ space, newFunctions }) => {
       await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), newFunctions);
     });
-    this.triggers.onTriggersRegistered.on(async ({ space, triggers }) => {
+    this.triggers.registered.on(async ({ space, triggers }) => {
       await this._safeActivateTriggers(space, triggers, this.functions.getFunctions(space));
     });
   }

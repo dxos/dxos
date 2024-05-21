@@ -172,7 +172,6 @@ describe('scheduler', () => {
     await scheduler.register(client.spaces.default, manifest);
     await scheduler.start();
 
-    // TODO(burdon): Query for Expando?
     setTimeout(() => {
       const space = client.spaces.default;
       const object = create(TestType, { title: 'Hello world!' });

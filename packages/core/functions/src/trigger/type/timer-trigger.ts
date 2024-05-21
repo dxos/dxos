@@ -9,13 +9,13 @@ import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import type { TimerTrigger } from '../../types';
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
 
 export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
   ctx: Context,
-  triggerContext: FunctionTriggerContext,
+  triggerContext: TriggerContext,
   spec: TimerTrigger,
-  callback: OnTriggerCallback,
+  callback: TriggerCallback,
 ) => {
   const task = new DeferredTask(ctx, async () => {
     await callback({});

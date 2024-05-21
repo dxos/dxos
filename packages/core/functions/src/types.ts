@@ -76,7 +76,7 @@ export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | Sub
  * Function definition.
  */
 export class FunctionDef extends TypedObject({
-  typename: 'dxos.org/function/FunctionDef', // TODO(burdon): Important.
+  typename: 'dxos.org/type/FunctionDef',
   version: '0.1.0',
 })({
   uri: S.string,
@@ -87,7 +87,7 @@ export class FunctionDef extends TypedObject({
 }) {}
 
 export class FunctionTrigger extends TypedObject({
-  typename: 'dxos.org/function/FunctionTrigger',
+  typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
   function: S.string.pipe(S.description('Function ID/URI.')),

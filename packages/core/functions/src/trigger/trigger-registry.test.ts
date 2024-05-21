@@ -22,14 +22,14 @@ import { type FunctionManifest, FunctionTrigger, FunctionTriggerType } from '../
 const testManifest: FunctionManifest = {
   triggers: [
     {
-      function: 'example.com/function/foo',
+      function: 'example.com/function/webhook-test',
       spec: {
         type: FunctionTriggerType.WEBHOOK,
         method: 'GET',
       },
     },
     {
-      function: 'example.com/function/bar',
+      function: 'example.com/function/subscription-test',
       spec: {
         type: FunctionTriggerType.SUBSCRIPTION,
         filter: [{ type: TestType.typename }],
@@ -155,13 +155,13 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test('onTriggersRegistered called with all registered when opened', async () => {
+    test('event fired when all registered when opened', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const triggers = createTriggersInSpace(client.spaces.default, 3);
 
       const triggersRegistered = new Trigger<FunctionTrigger[]>();
-      registry.onTriggersRegistered.on((fn) => {
+      registry.registered.on((fn) => {
         expect(fn.space.key.toHex()).to.eq(client.spaces.default.key.toHex());
         triggersRegistered.wake(fn.triggers);
       });
@@ -171,13 +171,13 @@ describe('trigger registry', () => {
       expect(functions.map((fn) => fn.id).sort()).to.deep.eq(expected);
     });
 
-    test('onTriggersRegistered called when a new trigger is added', async () => {
+    test('event fired when a new trigger is added', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
 
       const triggerRegistered = new Trigger<FunctionTrigger>();
-      registry.onTriggersRegistered.on((fn) => {
+      registry.registered.on((fn) => {
         expect(fn.triggers.length).to.eq(1);
         triggerRegistered.wake(fn.triggers[0]);
       });
@@ -187,17 +187,17 @@ describe('trigger registry', () => {
       expect(registered.function).to.eq(testManifest.triggers![0].function);
     });
 
-    test('onTriggersRemoved called when a new trigger is removed', async () => {
+    test('event fired when a new trigger is removed', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
       const triggers = createTriggersInSpace(space, 3);
 
       const triggerLoaded = new Trigger();
-      registry.onTriggersRegistered.on((fn) => triggerLoaded.wake());
+      registry.registered.on((fn) => triggerLoaded.wake());
 
       const triggerRemoved = new Trigger<FunctionTrigger>();
-      registry.onTriggersRemoved.on((fn) => {
+      registry.removed.on((fn) => {
         expect(fn.triggers.length).to.eq(1);
         triggerRemoved.wake(fn.triggers[0]);
       });

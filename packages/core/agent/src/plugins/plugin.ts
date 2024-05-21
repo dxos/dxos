@@ -51,7 +51,7 @@ export abstract class Plugin {
 
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
-    log(`initializing: ${this.id}`);
+    log('initializing', { id: this.id });
     this._pluginCtx = pluginCtx;
 
     // TODO(burdon): Require config.
@@ -69,19 +69,19 @@ export abstract class Plugin {
       throw new Error(`Plugin not configured: ${this.id}`);
     }
 
-    log(`opening: ${this.id}`);
+    log.info('opening...', { id: this.id });
     await this.onOpen();
     this.statusUpdate.emit();
-    log(`opened: ${this.id}`);
+    log.info('opened', { id: this.id });
   }
 
   async close() {
     invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
-    log(`closing: ${this.id}`);
+    log.info('closing...', { id: this.id });
     await this.onClose();
     void this._ctx.dispose();
     this.statusUpdate.emit();
-    log(`closed: ${this.id}`);
+    log.info('closed', { id: this.id });
   }
 
   protected async onOpen(): Promise<void> {}

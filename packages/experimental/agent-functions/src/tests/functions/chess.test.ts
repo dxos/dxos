@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+import { Chess } from 'chess.js';
 import { join } from 'path';
 
 import { FunctionsPlugin } from '@dxos/agent';
@@ -44,15 +46,32 @@ describe('Chess', () => {
 
     const services = testBuilder.createLocalClientServices();
     const client = new Client({ config, services });
-
     await client.initialize();
+    await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
     afterTest(() => client.destroy());
 
     const functionsPlugin = new FunctionsPlugin();
     await functionsPlugin.initialize({ client, clientServices: services });
     await openAndClose(functionsPlugin);
 
-    // TODO(burdon): ???
+    const functionRegistry = new FunctionRegistry(client);
+    const server = new DevServer(client, functionRegistry, {
+      baseDir: join(__dirname, '../../functions'),
+    });
+
+    const triggerRegistry = new TriggerRegistry(client);
+    const scheduler = new Scheduler(functionRegistry, triggerRegistry, {
+      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
+    });
+
+    await server.start();
+    await scheduler.start();
+    afterTest(async () => {
+      await scheduler?.stop();
+      await server?.stop();
+    });
+
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -76,30 +95,14 @@ describe('Chess', () => {
       ],
     };
 
-    const functionRegistry = new FunctionRegistry(client);
-    const server = new DevServer(client, functionRegistry, {
-      baseDir: join(__dirname, '../../functions'),
-    });
-
-    const triggerRegistry = new TriggerRegistry(client);
-    const scheduler = new Scheduler(functionRegistry, triggerRegistry, {
-      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
-    });
-
-    await server.start();
-    await scheduler.start();
-    afterTest(async () => {
-      await scheduler?.stop();
-      await server?.stop();
-    });
-
-    await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
-
     // Create data.
     client.addSchema(GameType);
-    const game = client.spaces.default.db.add(create(GameType, {}));
+    const space = client.spaces.default;
+    const game = space.db.add(create(GameType, {}));
     await client.spaces.default.db.flush();
+
+    // Create trigger.
+    await triggerRegistry.register(space, manifest);
 
     // Trigger.
     const done = new Trigger();
@@ -107,13 +110,14 @@ describe('Chess', () => {
       await doMove(game, 'b');
       done.wake();
     });
-
-    // TODO(burdon): ???
     afterTest(cleanup);
 
     await doMove(game, 'w');
     await done.wait();
-  });
+    const chess = new Chess();
+    chess.loadPgn(game.pgn!);
+    expect(chess.moveNumber()).to.eq(2);
+  }); // TODO(burdon): Hangs after passing.
 });
 
 const doMove = async (game: GameType, turn: string) => {

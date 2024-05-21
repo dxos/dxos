@@ -9,7 +9,7 @@ import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { type WebsocketTrigger } from '../../types';
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
 
 interface WebsocketTriggerOptions {
   retryDelay: number;
@@ -22,9 +22,9 @@ interface WebsocketTriggerOptions {
  */
 export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketTriggerOptions> = async (
   ctx: Context,
-  triggerCtx: FunctionTriggerContext,
+  triggerCtx: TriggerContext,
   spec: WebsocketTrigger,
-  callback: OnTriggerCallback,
+  callback: TriggerCallback,
   options: WebsocketTriggerOptions = { retryDelay: 2, maxAttempts: 5 },
 ) => {
   const { url, init } = spec;

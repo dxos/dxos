@@ -9,13 +9,13 @@ import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import type { WebhookTrigger } from '../../types';
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
 
 export const createWebhookTrigger: TriggerFactory<WebhookTrigger> = async (
   ctx: Context,
-  _: FunctionTriggerContext,
+  _: TriggerContext,
   spec: WebhookTrigger,
-  callback: OnTriggerCallback,
+  callback: TriggerCallback,
 ) => {
   // TODO(burdon): Enable POST hook with payload.
   const server = http.createServer(async (req, res) => {

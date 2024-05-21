@@ -16,19 +16,21 @@ import { type FunctionManifest, FunctionTrigger, FunctionTriggerType, type Trigg
 
 type ResponseCode = number;
 
-export type OnTriggerCallback = (args: object) => Promise<ResponseCode>;
+export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
-export type FunctionTriggerContext = { space: Space };
+export type TriggerContext = { space: Space };
 
 export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   ctx: Context,
-  triggerContext: FunctionTriggerContext,
+  context: TriggerContext,
   spec: Spec,
-  callback: OnTriggerCallback,
+  callback: TriggerCallback,
   options?: Options,
 ) => Promise<void>;
 
-const triggerHandlers: { [type in FunctionTriggerType]: TriggerFactory<any> } = {
+export type TriggerHandlerMap = { [type in FunctionTriggerType]: TriggerFactory<any> };
+
+const triggerHandlers: TriggerHandlerMap = {
   [FunctionTriggerType.SUBSCRIPTION]: createSubscriptionTrigger,
   [FunctionTriggerType.TIMER]: createTimerTrigger,
   [FunctionTriggerType.WEBHOOK]: createWebhookTrigger,
@@ -40,20 +42,20 @@ export type TriggerEvent = {
   triggers: FunctionTrigger[];
 };
 
-interface RegisteredTrigger {
-  trigger: FunctionTrigger;
+type RegisteredTrigger = {
   activationCtx?: Context;
-}
+  trigger: FunctionTrigger;
+};
 
 export class TriggerRegistry extends Resource {
-  private _triggersBySpaceKey = new ComplexMap<PublicKey, RegisteredTrigger[]>(PublicKey.hash);
+  private readonly _triggersBySpaceKey = new ComplexMap<PublicKey, RegisteredTrigger[]>(PublicKey.hash);
 
-  public onTriggersRegistered = new Event<TriggerEvent>();
-  public onTriggersRemoved = new Event<TriggerEvent>();
+  public readonly registered = new Event<TriggerEvent>();
+  public readonly removed = new Event<TriggerEvent>();
 
   constructor(
     private readonly _client: Client,
-    private readonly _options?: { [type in FunctionTriggerType]: (typeof triggerHandlers)[type] },
+    private readonly _options?: TriggerHandlerMap,
   ) {
     super();
   }
@@ -66,19 +68,16 @@ export class TriggerRegistry extends Resource {
     return this._getTriggers(space, (t) => t.activationCtx == null);
   }
 
-  async activate(
-    triggerCtx: FunctionTriggerContext,
-    trigger: FunctionTrigger,
-    callback: OnTriggerCallback,
-  ): Promise<void> {
-    log('activate', { trigger, spaceKey: triggerCtx.space.key });
+  async activate(triggerCtx: TriggerContext, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
+    log('activate', { space: triggerCtx.space.key, trigger });
     const activationCtx = new Context({ name: `trigger_${trigger.function}` });
     this._ctx.onDispose(() => activationCtx.dispose());
     const registeredTrigger = this._triggersBySpaceKey
       .get(triggerCtx.space.key)
       ?.find((reg) => reg.trigger.id === trigger.id);
-    invariant(registeredTrigger, `Trigger for ${trigger.function} is not registered, triggerId: ${trigger.id}.`);
+    invariant(registeredTrigger, `Trigger is not registered: ${trigger.function}`);
     registeredTrigger.activationCtx = activationCtx;
+
     try {
       const options = this._options?.[trigger.spec.type];
       await triggerHandlers[trigger.spec.type](activationCtx, triggerCtx, trigger.spec, callback, options);
@@ -89,15 +88,17 @@ export class TriggerRegistry extends Resource {
   }
 
   /**
-   * The method loads triggers from the manifest into the space.
+   * Loads triggers from the manifest into the space.
    */
   public async register(space: Space, manifest: FunctionManifest): Promise<void> {
+    log('register', { space: space.key });
     if (!manifest.triggers?.length) {
       return;
     }
     if (!space.db.graph.runtimeSchemaRegistry.isSchemaRegistered(FunctionTrigger)) {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
+
     const reactiveObjects = manifest.triggers.map((template: Omit<FunctionTrigger, 'id'>) =>
       create(FunctionTrigger, { ...template }),
     );
@@ -110,6 +111,7 @@ export class TriggerRegistry extends Resource {
         if (this._triggersBySpaceKey.has(space.key)) {
           continue;
         }
+
         const registered: RegisteredTrigger[] = [];
         this._triggersBySpaceKey.set(space.key, registered);
         await space.waitUntilReady();
@@ -120,21 +122,28 @@ export class TriggerRegistry extends Resource {
           await this._handleRemovedTriggers(space, triggers.objects, registered);
           this._handleNewTriggers(space, triggers.objects, registered);
         });
+
         this._ctx.onDispose(functionsSubscription);
       }
     });
+
     this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
+  }
+
+  protected override async _close(_: Context): Promise<void> {
+    this._triggersBySpaceKey.clear();
   }
 
   private _handleNewTriggers(space: Space, allTriggers: FunctionTrigger[], registered: RegisteredTrigger[]) {
     const newTriggers = allTriggers.filter((candidate) => {
       return registered.find((reg) => reg.trigger.id === candidate.id) == null;
     });
+
     if (newTriggers.length > 0) {
       const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
       log('registered new triggers', () => ({ spaceKey: space.key, functions: newTriggers.map((t) => t.function) }));
-      this.onTriggersRegistered.emit({ space, triggers: newTriggers });
+      this.registered.emit({ space, triggers: newTriggers });
     }
   }
 
@@ -153,13 +162,10 @@ export class TriggerRegistry extends Resource {
         removed.push(unregistered.trigger);
       }
     }
-    if (removed.length > 0) {
-      this.onTriggersRemoved.emit({ space, triggers: removed });
-    }
-  }
 
-  protected override async _close(_: Context): Promise<void> {
-    this._triggersBySpaceKey.clear();
+    if (removed.length > 0) {
+      this.removed.emit({ space, triggers: removed });
+    }
   }
 
   private _getTriggers(space: Space, predicate: (trigger: RegisteredTrigger) => boolean): FunctionTrigger[] {

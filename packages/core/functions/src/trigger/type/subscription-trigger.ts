@@ -9,13 +9,13 @@ import { createSubscription, Filter, getAutomergeObjectCore, type Query } from '
 import { log } from '@dxos/log';
 
 import type { SubscriptionTrigger } from '../../types';
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
 
 export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = async (
   ctx: Context,
-  triggerCtx: FunctionTriggerContext,
+  triggerCtx: TriggerContext,
   spec: SubscriptionTrigger,
-  callback: OnTriggerCallback,
+  callback: TriggerCallback,
 ) => {
   const objectIds = new Set<string>();
   const task = new DeferredTask(ctx, async () => {
