@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import React, { useEffect } from 'react';
 
 export const Counter = () => {
   useIdentity();
@@ -13,7 +13,7 @@ export const Counter = () => {
 
   useEffect(() => {
     if (space && !counter) {
-      const counter = new Expando({ type: 'counter', values: [] });
+      const counter = create(Expando, { type: 'counter', values: [] });
       space.db.add(counter);
     }
   }, [space, counter]);

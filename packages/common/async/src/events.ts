@@ -71,6 +71,7 @@ export type ListenerOptions = {
  * 6. Removes the cases where event names intersect when used in cases with inheritance.
  * 7. Remove the need to namespace events when developing a class with events that will be used as a base-class.
  */
+// TODO(burdon): Rename EventSink? (Event is a built-in type).
 export class Event<T = void> implements ReadOnlyEvent<T> {
   static wrap<T>(emitter: EventEmitterLike, eventName: string): Event<T> {
     const event = new Event<T>();

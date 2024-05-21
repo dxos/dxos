@@ -211,8 +211,9 @@ const PerformanceIndicator = () => {
   );
 };
 
+const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, SwarmIndicator];
+
 export const DebugStatus = () => {
-  const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, SwarmIndicator];
   return (
     <div
       className={mx(

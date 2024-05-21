@@ -3,13 +3,13 @@
 //
 
 import {
+  type IconProps,
   Compass,
   Desktop,
   DeviceMobile,
   Devices,
   DotsThree,
-  type IconProps,
-  Intersect,
+  ShareFat,
   Power,
   Robot,
 } from '@phosphor-icons/react';
@@ -103,7 +103,7 @@ export const DeviceListItem = forwardRef<
                 {/*  {t('edit device label')} */}
                 {/* </DropdownMenu.Item> */}
                 <DropdownMenu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                  <Intersect className={getSize(5)} />
+                  <ShareFat className={getSize(5)} />
                   {t('choose join new identity label')}
                 </DropdownMenu.Item>
                 <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
