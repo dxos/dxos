@@ -6,40 +6,45 @@ import { expect } from 'chai';
 import WebSocket from 'ws';
 
 import { Trigger } from '@dxos/async';
-import { Client } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { create, S, TypedObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
-import { Scheduler } from './scheduler';
-import { type FunctionManifest, type WebhookTrigger } from '../types';
+import { Scheduler, type SchedulerOptions } from './scheduler';
+import { FunctionRegistry } from '../functions';
+import { createInitializedClients } from '../testing/setup';
+import { TestType } from '../testing/types';
+import { triggerWebhook } from '../testing/util';
+import { TriggerRegistry } from '../trigger';
+import { type FunctionManifest, FunctionTriggerType } from '../types';
 
 // TODO(burdon): Test we can add and remove triggers.
 describe('scheduler', () => {
+  let testBuilder: TestBuilder;
   let client: Client;
   before(async () => {
-    const testBuilder = new TestBuilder();
-    client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    await client.halo.createIdentity();
+    testBuilder = new TestBuilder();
+    client = (await createInitializedClients(testBuilder, 1))[0];
   });
   after(async () => {
-    await client.destroy();
+    await testBuilder.destroy();
   });
 
   test('timer', async () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'example.com/function/test',
-          path: '/test',
+          functionId: 'example.com/function/test',
+          route: '/test',
           handler: 'test',
         },
       ],
       triggers: [
         {
           function: 'example.com/function/test',
-          timer: {
+          spec: {
+            type: FunctionTriggerType.TIMER,
             cron: '0/1 * * * * *', // Every 1s.
           },
         },
@@ -48,18 +53,13 @@ describe('scheduler', () => {
 
     let count = 0;
     const done = new Trigger();
-    const scheduler = new Scheduler(client, manifest, {
-      callback: async () => {
-        if (++count === 3) {
-          done.wake();
-        }
-      },
+    const scheduler = createScheduler(async () => {
+      if (++count === 3) {
+        done.wake();
+      }
     });
-
+    await scheduler.register(client.spaces.default, manifest);
     await scheduler.start();
-    after(async () => {
-      await scheduler.stop();
-    });
 
     await done.wait({ timeout: 5_000 });
     expect(count).to.equal(3);
@@ -69,15 +69,16 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'example.com/function/test',
-          path: '/test',
+          functionId: 'example.com/function/test',
+          route: '/test',
           handler: 'test',
         },
       ],
       triggers: [
         {
           function: 'example.com/function/test',
-          webhook: {
+          spec: {
+            type: FunctionTriggerType.WEBHOOK,
             method: 'GET',
           },
         },
@@ -85,23 +86,14 @@ describe('scheduler', () => {
     };
 
     const done = new Trigger();
-    const scheduler = new Scheduler(client, manifest, {
-      callback: async () => {
-        done.wake();
-      },
+    const scheduler = createScheduler(async () => {
+      done.wake();
     });
-
+    const space = await client.spaces.create();
+    await scheduler.register(space, manifest);
     await scheduler.start();
-    after(async () => {
-      await scheduler.stop();
-    });
 
-    setTimeout(() => {
-      const mount: WebhookTrigger = scheduler.mounts.find(
-        (mount) => mount.function === 'example.com/function/test',
-      )!.webhook!;
-      void fetch(`http://localhost:${mount.port}`);
-    });
+    setTimeout(async () => triggerWebhook(space, manifest.functions![0].functionId));
 
     await done.wait();
   });
@@ -110,15 +102,16 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'example.com/function/test',
-          path: '/test',
+          functionId: 'example.com/function/test',
+          route: '/test',
           handler: 'test',
         },
       ],
       triggers: [
         {
           function: 'example.com/function/test',
-          websocket: {
+          spec: {
+            type: FunctionTriggerType.WEBSOCKET,
             // url: 'https://hub.dxos.network/api/mailbox/test',
             url: 'http://localhost:8081',
             init: {
@@ -130,16 +123,11 @@ describe('scheduler', () => {
     };
 
     const done = new Trigger();
-    const scheduler = new Scheduler(client, manifest, {
-      callback: async (data) => {
-        done.wake();
-      },
+    const scheduler = createScheduler(async () => {
+      done.wake();
     });
-
+    await scheduler.register(client.spaces.default, manifest);
     await scheduler.start();
-    after(async () => {
-      await scheduler.stop();
-    });
 
     // Test server.
     setTimeout(() => {
@@ -157,29 +145,20 @@ describe('scheduler', () => {
   });
 
   test('subscription', async () => {
-    class TestType extends TypedObject({ typename: 'example.com/type/Test', version: '0.1.0' })({
-      title: S.string,
-    }) {}
-    client.addSchema(TestType);
-
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'example.com/function/test',
-          path: '/test',
+          functionId: 'example.com/function/test',
+          route: '/test',
           handler: 'test',
         },
       ],
       triggers: [
         {
           function: 'example.com/function/test',
-          subscription: {
-            spaceKey: client.spaces.default.key.toHex(),
-            filter: [
-              {
-                type: TestType.typename,
-              },
-            ],
+          spec: {
+            type: FunctionTriggerType.ECHO,
+            filter: [{ type: TestType.typename }],
           },
         },
       ],
@@ -187,18 +166,13 @@ describe('scheduler', () => {
 
     let count = 0;
     const done = new Trigger();
-    const scheduler = new Scheduler(client, manifest, {
-      callback: async () => {
-        if (++count === 2) {
-          done.wake();
-        }
-      },
+    const scheduler = createScheduler(async () => {
+      if (++count === 2) {
+        done.wake();
+      }
     });
-
+    await scheduler.register(client.spaces.default, manifest);
     await scheduler.start();
-    after(async () => {
-      await scheduler.stop();
-    });
 
     // TODO(burdon): Query for Expando?
     setTimeout(() => {
@@ -209,4 +183,12 @@ describe('scheduler', () => {
 
     await done.wait();
   });
+
+  const createScheduler = (callback: SchedulerOptions['callback']) => {
+    const scheduler = new Scheduler(new FunctionRegistry(client), new TriggerRegistry(client), { callback });
+    after(async () => {
+      await scheduler.stop();
+    });
+    return scheduler;
+  };
 });

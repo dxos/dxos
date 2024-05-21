@@ -140,11 +140,6 @@
                   "type": {
                     "const": "echo"
                   },
-                  "spaceKey": {
-                    "type": "string",
-                    "description": "a string",
-                    "title": "string"
-                  },
                   "filter": {
                     "type": "array",
                     "items": {

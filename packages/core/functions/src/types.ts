@@ -42,7 +42,6 @@ export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 const SubscriptionTriggerSchema = S.struct({
   type: S.literal(FunctionTriggerType.ECHO),
-  spaceKey: S.optional(S.string),
   // TODO(burdon): Define query DSL.
   filter: S.array(
     S.struct({

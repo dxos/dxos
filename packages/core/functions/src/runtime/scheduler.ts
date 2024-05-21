@@ -2,22 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CronJob } from 'cron';
-import { getPort } from 'get-port-please';
-import http from 'node:http';
 import path from 'node:path';
-import WebSocket from 'ws';
 
-import { TextV0Type } from '@braneframe/types';
-import { debounce, DeferredTask, sleep, Trigger } from '@dxos/async';
-import { type Client, type PublicKey } from '@dxos/client';
-import { createSubscription, Filter, getAutomergeObjectCore, type Query, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
 
+import { type FunctionRegistry } from '../functions';
 import { type FunctionEventMeta } from '../handler';
+import { type TriggerRegistry } from '../trigger';
 import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
 export type Callback = (data: any) => Promise<void | number>;
@@ -31,100 +24,79 @@ export type SchedulerOptions = {
  * The scheduler triggers function execution based on various triggers.
  */
 export class Scheduler {
-  // Map of mounted functions.
-  private readonly _mounts = new ComplexMap<
-    { spaceKey: PublicKey; id: string },
-    { ctx: Context; trigger: FunctionTrigger }
-  >(({ spaceKey, id }) => `${spaceKey.toHex()}:${id}`);
+  private _ctx = createContext();
 
   constructor(
-    private readonly _client: Client,
-    private readonly _manifest: FunctionManifest,
+    public readonly functions: FunctionRegistry,
+    public readonly triggers: TriggerRegistry,
     private readonly _options: SchedulerOptions = {},
-  ) {}
-
-  get mounts() {
-    return Array.from(this._mounts.values()).reduce<FunctionTrigger[]>((acc, { trigger }) => {
-      acc.push(trigger);
-      return acc;
-    }, []);
-  }
-
-  async start() {
-    this._client.spaces.subscribe(async (spaces) => {
-      for (const space of spaces) {
-        await space.waitUntilReady();
-        for (const trigger of this._manifest.triggers ?? []) {
-          await this.mount(new Context(), space, trigger);
-        }
-      }
+  ) {
+    this.functions.onFunctionsRegistered.on(async ({ space, newFunctions }) => {
+      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), newFunctions);
+    });
+    this.triggers.onTriggersRegistered.on(async ({ space, triggers }) => {
+      await this._safeActivateTriggers(space, triggers, this.functions.getFunctions(space));
     });
   }
 
+  async start() {
+    await this._ctx.dispose();
+    this._ctx = createContext();
+    await this.functions.open(this._ctx);
+    await this.triggers.open(this._ctx);
+  }
+
   async stop() {
-    for (const { id, spaceKey } of this._mounts.keys()) {
-      await this.unmount(id, spaceKey);
-    }
+    await this._ctx.dispose();
+    await this.functions.close();
+    await this.triggers.close();
   }
 
-  /**
-   * Mount trigger.
-   */
-  private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
-    const key = { spaceKey: space.key, id: trigger.function };
-    const def = this._manifest.functions.find((config) => config.id === trigger.function);
-    invariant(def, `Function not found: ${trigger.function}`);
-
-    // TODO(burdon): Currently supports only one trigger declaration per function.
-    const exists = this._mounts.get(key);
-    if (!exists) {
-      this._mounts.set(key, { ctx, trigger });
-      log('mount', { space: space.key, trigger });
-      if (ctx.disposed) {
-        return;
-      }
-
-      //
-      // Triggers types.
-      //
-
-      if (trigger.timer) {
-        await this._createTimer(ctx, space, def, trigger);
-      }
-
-      if (trigger.webhook) {
-        await this._createWebhook(ctx, space, def, trigger);
-      }
-
-      if (trigger.websocket) {
-        await this._createWebsocket(ctx, space, def, trigger);
-      }
-
-      if (trigger.subscription) {
-        await this._createSubscription(ctx, space, def, trigger);
-      }
-    }
+  public async register(space: Space, manifest: FunctionManifest) {
+    await this.functions.register(space, manifest);
+    await this.triggers.register(space, manifest);
   }
 
-  private async unmount(id: string, spaceKey: PublicKey) {
-    const key = { id, spaceKey };
-    const { ctx } = this._mounts.get(key) ?? {};
-    if (ctx) {
-      this._mounts.delete(key);
-      await ctx.dispose();
-    }
+  private async _safeActivateTriggers(
+    space: Space,
+    triggers: FunctionTrigger[],
+    functions: FunctionDef[],
+  ): Promise<void> {
+    const mountTasks = triggers.map((trigger) => {
+      return this.activate(space, functions, trigger);
+    });
+    await Promise.all(mountTasks).catch(log.catch);
   }
 
-  private async _execFunction<TData, TMeta>(def: FunctionDef, trigger: FunctionTrigger, data: TData): Promise<number> {
+  private async activate(space: Space, functions: FunctionDef[], fnTrigger: FunctionTrigger) {
+    const definition = functions.find((def) => def.functionId === fnTrigger.function);
+    if (!definition) {
+      log.info('function is not found for trigger', { fnTrigger });
+      return;
+    }
+
+    log('activated trigger', { space: space.key, trigger: fnTrigger });
+    await this.triggers.activate({ space }, fnTrigger, async (args) => {
+      return this._execFunction(definition, {
+        meta: fnTrigger.meta,
+        data: { ...args, spaceKey: space.key },
+      });
+    });
+  }
+
+  private async _execFunction<TData, TMeta>(
+    def: FunctionDef,
+    { data, meta }: { data: TData; meta?: TMeta },
+  ): Promise<number> {
     let status = 0;
     try {
       // TODO(burdon): Pass in Space key (common context)?
-      const payload = Object.assign({}, { meta: trigger.meta as TMeta } satisfies FunctionEventMeta<TMeta>, data);
+      const payload = Object.assign({}, meta && ({ meta } satisfies FunctionEventMeta<TMeta>), data);
 
       const { endpoint, callback } = this._options;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        const url = path.join(endpoint, def.path);
+        const url = path.join(endpoint, def.route);
         log.info('exec', { function: def.id, url });
         const response = await fetch(url, {
           method: 'POST',
@@ -154,218 +126,6 @@ export class Scheduler {
 
     return status;
   }
-
-  //
-  // Triggers
-  //
-
-  /**
-   * Cron timer.
-   */
-  private async _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
-    log.info('timer', { space: space.key, trigger });
-    const spec = trigger.timer!;
-
-    const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, trigger, { spaceKey: space.key });
-    });
-
-    let last = 0;
-    let run = 0;
-    // https://www.npmjs.com/package/cron#constructor
-    const job = CronJob.from({
-      cronTime: spec.cron,
-      runOnInit: false,
-      onTick: () => {
-        // TODO(burdon): Check greater than 30s (use cron-parser).
-        const now = Date.now();
-        const delta = last ? now - last : 0;
-        last = now;
-
-        run++;
-        log.info('tick', { space: space.key.truncate(), count: run, delta });
-        task.schedule();
-      },
-    });
-
-    job.start();
-    ctx.onDispose(() => job.stop());
-  }
-
-  /**
-   * Webhook.
-   */
-  private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
-    log.info('webhook', { space: space.key, trigger });
-    const spec = trigger.webhook!;
-
-    // TODO(burdon): Enable POST hook with payload.
-    const server = http.createServer(async (req, res) => {
-      if (req.method !== spec.method) {
-        res.statusCode = 405;
-        return res.end();
-      }
-
-      res.statusCode = await this._execFunction(def, trigger, { spaceKey: space.key });
-      res.end();
-    });
-
-    // TODO(burdon): Not used.
-    // const DEF_PORT_RANGE = { min: 7500, max: 7599 };
-    // const portRange = Object.assign({}, trigger.port, DEF_PORT_RANGE) as WebhookTrigger['port'];
-    const port = await getPort({
-      random: true,
-      // portRange: [portRange!.min, portRange!.max],
-    });
-
-    // TODO(burdon): Update trigger object with actual port.
-    server.listen(port, () => {
-      log.info('started webhook', { port });
-      spec.port = port;
-    });
-
-    ctx.onDispose(() => {
-      server.close();
-    });
-  }
-
-  /**
-   * Websocket.
-   * NOTE: The port must be unique, so the same hook cannot be used for multiple spaces.
-   */
-  private async _createWebsocket(
-    ctx: Context,
-    space: Space,
-    def: FunctionDef,
-    trigger: FunctionTrigger,
-    options: {
-      retryDelay: number;
-      maxAttempts: number;
-    } = {
-      retryDelay: 2,
-      maxAttempts: 5,
-    },
-  ) {
-    log.info('websocket', { space: space.key, trigger });
-    const spec = trigger.websocket!;
-    const { url, init } = spec;
-
-    let ws: WebSocket;
-    for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
-      const open = new Trigger<boolean>();
-
-      ws = new WebSocket(url);
-      Object.assign(ws, {
-        onopen: () => {
-          log.info('opened', { url });
-          if (spec.init) {
-            ws.send(new TextEncoder().encode(JSON.stringify(init)));
-          }
-
-          open.wake(true);
-        },
-
-        onclose: (event) => {
-          log.info('closed', { url, code: event.code });
-          // Reconnect if server closes (e.g., CF restart).
-          // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
-          if (event.code === 1006) {
-            setTimeout(async () => {
-              log.info(`reconnecting in ${options.retryDelay}s...`, { url });
-              await this._createWebsocket(ctx, space, def, trigger, options);
-            }, options.retryDelay * 1_000);
-          }
-
-          open.wake(false);
-        },
-
-        onerror: (event) => {
-          log.catch(event.error, { url });
-        },
-
-        onmessage: async (event) => {
-          try {
-            const data = JSON.parse(new TextDecoder().decode(event.data as Uint8Array));
-            await this._execFunction(def, trigger, { spaceKey: space.key, data });
-          } catch (err) {
-            log.catch(err, { url });
-          }
-        },
-      } satisfies Partial<WebSocket>);
-
-      const isOpen = await open.wait();
-      if (isOpen) {
-        break;
-      } else {
-        const wait = Math.pow(attempt, 2) * options.retryDelay;
-        if (attempt < options.maxAttempts) {
-          log.warn(`failed to connect; trying again in ${wait}s`, { attempt });
-          await sleep(wait * 1_000);
-        }
-      }
-    }
-
-    ctx.onDispose(() => {
-      ws?.close();
-    });
-  }
-
-  /**
-   * ECHO subscription.
-   */
-  private async _createSubscription(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
-    log.info('subscription', { space: space.key, trigger });
-    const spec = trigger.subscription!;
-
-    const objectIds = new Set<string>();
-    const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, trigger, { spaceKey: space.key, objects: Array.from(objectIds) });
-    });
-
-    // TODO(burdon): Don't fire initially?
-    // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
-    const subscriptions: (() => void)[] = [];
-    const subscription = createSubscription(({ added, updated }) => {
-      log.info('updated', { added: added.length, updated: updated.length });
-      for (const object of added) {
-        objectIds.add(object.id);
-      }
-      for (const object of updated) {
-        objectIds.add(object.id);
-      }
-
-      task.schedule();
-    });
-
-    subscriptions.push(() => subscription.unsubscribe());
-
-    // TODO(burdon): Disable trigger if keeps failing.
-    const { filter, options: { deep, delay } = {} } = spec;
-    const update = ({ objects }: Query) => {
-      subscription.update(objects);
-
-      // TODO(burdon): Hack to monitor changes to Document's text object.
-      if (deep) {
-        log.info('update', { objects: objects.length });
-        for (const object of objects) {
-          const content = object.content;
-          if (content instanceof TextV0Type) {
-            subscriptions.push(
-              getAutomergeObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)),
-            );
-          }
-        }
-      }
-    };
-
-    // TODO(burdon): Is Filter.or implemented?
-    // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
-    // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-    const query = space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
-    subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
-
-    ctx.onDispose(() => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-    });
-  }
 }
+
+const createContext = () => new Context({ name: 'FunctionScheduler' });

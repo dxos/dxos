@@ -5747,6 +5747,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
@@ -5762,9 +5765,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0

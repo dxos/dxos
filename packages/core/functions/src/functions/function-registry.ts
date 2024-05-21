@@ -17,9 +17,9 @@ export type FunctionsRegisteredEvent = {
 };
 
 export class FunctionRegistry extends Resource {
-  private _functionBySpaceKey = new ComplexMap<PublicKey, FunctionDef[]>(PublicKey.hash);
+  private readonly _functionBySpaceKey = new ComplexMap<PublicKey, FunctionDef[]>(PublicKey.hash);
 
-  public onFunctionsRegistered = new Event<FunctionsRegisteredEvent>();
+  public readonly onFunctionsRegistered = new Event<FunctionsRegisteredEvent>();
 
   constructor(private readonly _client: Client) {
     super();
@@ -29,6 +29,10 @@ export class FunctionRegistry extends Resource {
     return this._functionBySpaceKey.get(space.key) ?? [];
   }
 
+  /**
+   * The method loads function definitions from the manifest into the space.
+   * We first load all the definitions from the space to deduplicate by functionId.
+   */
   public async register(space: Space, manifest: FunctionManifest): Promise<void> {
     if (!manifest.functions?.length) {
       return;
@@ -42,14 +46,14 @@ export class FunctionRegistry extends Resource {
     reactiveObjects.forEach((obj) => space.db.add(obj));
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     const spaceListSubscription = this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         if (this._functionBySpaceKey.has(space.key)) {
           continue;
         }
         await space.waitUntilReady();
-        if (ctx.disposed) {
+        if (this._ctx.disposed) {
           break;
         }
         const registered: FunctionDef[] = [];
@@ -61,10 +65,10 @@ export class FunctionRegistry extends Resource {
             this.onFunctionsRegistered.emit({ space, newFunctions });
           }
         });
-        ctx.onDispose(functionsSubscription);
+        this._ctx.onDispose(functionsSubscription);
       }
     });
-    ctx.onDispose(() => spaceListSubscription.unsubscribe());
+    this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
   }
 
   protected override async _close(_: Context): Promise<void> {

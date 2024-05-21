@@ -8,6 +8,7 @@ import { create, Filter, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { createEchoSubscriptionTrigger } from './echo-trigger';
@@ -70,7 +71,7 @@ export class TriggerRegistry extends Resource {
     trigger: FunctionTrigger,
     callback: OnTriggerCallback,
   ): Promise<void> {
-    // TODO: log call
+    log('activate', { trigger, spaceKey: triggerCtx.space.key });
     const activationCtx = new Context({ name: `trigger_${trigger.function}` });
     this._ctx.onDispose(() => activationCtx.dispose());
     const registeredTrigger = this._triggersBySpaceKey
@@ -87,6 +88,9 @@ export class TriggerRegistry extends Resource {
     }
   }
 
+  /**
+   * The method loads triggers from the manifest into the space.
+   */
   public async register(space: Space, manifest: FunctionManifest): Promise<void> {
     if (!manifest.triggers?.length) {
       return;
