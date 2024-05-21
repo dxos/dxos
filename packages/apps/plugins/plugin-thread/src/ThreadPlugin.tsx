@@ -30,6 +30,7 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, getTextInRange, Filter, isSpace, createDocAccessor } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
+import { useAttendable } from '@dxos/react-ui-deck';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -262,25 +263,27 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ?.filter(({ cursor }) => !cursor)
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
+
+                const attention = navigationPlugin?.provides.attention?.attended ?? new Set([data.subject.id]);
+                const attendableAttrs = useAttendable(data.subject.id);
+
                 return (
-                  <>
+                  <div role='none' className='contents group/attention' {...attendableAttrs}>
                     {role === 'complementary' && <CommentsHeading attendableId={data.subject.id} />}
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads ?? []}
                           detached={detached ?? []}
-                          currentId={state.current}
+                          currentId={attention.has(data.subject.id) ? state.current : undefined}
                           context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;
                               void dispatch?.({
-                                action: LayoutAction.FOCUS,
-                                data: {
-                                  object: thread.id,
-                                },
+                                action: LayoutAction.SCROLL_INTO_VIEW,
+                                data: { id: thread.id },
                               });
                             }
                           }}
@@ -298,7 +301,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         </ScrollArea.Scrollbar>
                       </ScrollArea.Viewport>
                     </ScrollArea.Root>
-                  </>
+                  </div>
                 );
               } else if (data.subject instanceof ThreadType) {
                 return (
@@ -408,7 +411,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: NavigationAction.OPEN,
                         data: {
                           activeParts: {
-                            main: [`${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                            complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
                           },
                         },
                       }
