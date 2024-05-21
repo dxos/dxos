@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+
 import { sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -11,13 +14,10 @@ import { Filter } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-
-import { createInitializedClients, TestType, triggerWebhook } from '../testing';
-import { type FunctionManifest, FunctionTrigger, FunctionTriggerType } from '../types';
 
 import { TriggerRegistry } from './trigger-registry';
+import { createInitializedClients, TestType, triggerWebhook } from '../testing';
+import { type FunctionManifest, FunctionTrigger, FunctionTriggerType } from '../types';
 
 const testManifest: FunctionManifest = {
   triggers: [
@@ -31,7 +31,7 @@ const testManifest: FunctionManifest = {
     {
       function: 'example.com/function/bar',
       spec: {
-        type: FunctionTriggerType.ECHO,
+        type: FunctionTriggerType.SUBSCRIPTION,
         filter: [{ type: TestType.typename }],
       },
     },
@@ -112,7 +112,7 @@ describe('trigger registry', () => {
       await waitHasInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === FunctionTriggerType.ECHO)!;
+      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === FunctionTriggerType.SUBSCRIPTION)!;
       let count = 0;
       await registry.activate({ space }, echoTrigger, async () => {
         count++;
@@ -139,7 +139,7 @@ describe('trigger registry', () => {
       await waitHasInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === FunctionTriggerType.ECHO)!;
+      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === FunctionTriggerType.SUBSCRIPTION)!;
       let count = 0;
       await registry.activate({ space }, echoTrigger, async () => {
         count++;

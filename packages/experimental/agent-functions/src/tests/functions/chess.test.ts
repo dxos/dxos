@@ -65,7 +65,7 @@ describe('Chess', () => {
         {
           function: 'dxos.org/function/chess',
           spec: {
-            type: FunctionTriggerType.ECHO,
+            type: FunctionTriggerType.SUBSCRIPTION,
             filter: [
               {
                 type: 'dxos.experimental.chess.Game',

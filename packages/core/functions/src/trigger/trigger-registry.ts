@@ -11,10 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { createEchoSubscriptionTrigger } from './echo-trigger';
-import { createTimerTrigger } from './timer-trigger';
-import { createWebhookTrigger } from './webhook-trigger';
-import { createWebsocketTrigger } from './websocket-trigger';
+import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, FunctionTriggerType, type TriggerSpec } from '../types';
 
 type ResponseCode = number;
@@ -32,10 +29,10 @@ export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
 ) => Promise<void>;
 
 const triggerHandlers: { [type in FunctionTriggerType]: TriggerFactory<any> } = {
-  [FunctionTriggerType.WEBHOOK]: createWebhookTrigger,
+  [FunctionTriggerType.SUBSCRIPTION]: createSubscriptionTrigger,
   [FunctionTriggerType.TIMER]: createTimerTrigger,
+  [FunctionTriggerType.WEBHOOK]: createWebhookTrigger,
   [FunctionTriggerType.WEBSOCKET]: createWebsocketTrigger,
-  [FunctionTriggerType.ECHO]: createEchoSubscriptionTrigger,
 };
 
 export type TriggerEvent = {

@@ -8,10 +8,10 @@ import { type Context } from '@dxos/context';
 import { createSubscription, Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from './trigger-registry';
-import type { SubscriptionTrigger } from '../types';
+import type { SubscriptionTrigger } from '../../types';
+import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
 
-export const createEchoSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = async (
+export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = async (
   ctx: Context,
   triggerCtx: FunctionTriggerContext,
   spec: SubscriptionTrigger,

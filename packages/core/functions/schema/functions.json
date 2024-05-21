@@ -138,7 +138,7 @@
                 ],
                 "properties": {
                   "type": {
-                    "const": "echo"
+                    "const": "subscription"
                   },
                   "filter": {
                     "type": "array",

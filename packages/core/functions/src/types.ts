@@ -15,10 +15,10 @@ const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(A
  */
 // TODO(burdon): Is this better than a string literal?
 export enum FunctionTriggerType {
+  SUBSCRIPTION = 'subscription',
   TIMER = 'timer',
   WEBHOOK = 'webhook',
   WEBSOCKET = 'websocket',
-  ECHO = 'echo', // TODO(burdon): Rename subscription.
 }
 
 const TimerTriggerSchema = S.struct({
@@ -45,7 +45,7 @@ const WebsocketTriggerSchema = S.struct({
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 const SubscriptionTriggerSchema = S.struct({
-  type: S.literal(FunctionTriggerType.ECHO),
+  type: S.literal(FunctionTriggerType.SUBSCRIPTION),
   // TODO(burdon): Define query DSL.
   filter: S.array(
     S.struct({

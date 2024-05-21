@@ -8,8 +8,8 @@ import http from 'node:http';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from './trigger-registry';
-import type { WebhookTrigger } from '../types';
+import type { WebhookTrigger } from '../../types';
+import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 export const createWebhookTrigger: TriggerFactory<WebhookTrigger> = async (
   ctx: Context,

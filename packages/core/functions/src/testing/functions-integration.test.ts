@@ -28,7 +28,7 @@ describe('functions e2e', () => {
     await testBuilder.destroy();
   });
 
-  test('a function gets triggered in response to another peer object creations', async () => {
+  test.only('a function gets triggered in response to another peer object creations', async () => {
     // TODO(burdon): Create builder pattern.
     const functionRuntime = await createFunctionRuntime(testBuilder);
     const devServer = await startDevServer(functionRuntime);
@@ -40,13 +40,13 @@ describe('functions e2e', () => {
 
     const uri = 'example.com/function/test';
     space.db.add(create(FunctionDef, { uri, route: '/test', handler: 'test' }));
-    const triggerMeta: FunctionTrigger['meta'] = { foo: 'bar' };
+    const triggerMeta: FunctionTrigger['meta'] = { name: 'DXOS' };
     space.db.add(
       create(FunctionTrigger, {
         function: uri,
         meta: triggerMeta,
         spec: {
-          type: FunctionTriggerType.ECHO,
+          type: FunctionTriggerType.SUBSCRIPTION,
           filter: [{ type: TestType.typename }],
         },
       }),
@@ -70,6 +70,8 @@ describe('functions e2e', () => {
   const waitTriggersReplicated = async (space: Space, scheduler: Scheduler) => {
     await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
   };
+
+  // TODO(burdon): Factor out utils to builder pattern.
 
   const startScheduler = async (client: Client, devServer: DevServer) => {
     const functionRegistry = new FunctionRegistry(client);

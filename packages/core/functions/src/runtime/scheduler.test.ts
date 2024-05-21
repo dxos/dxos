@@ -155,7 +155,7 @@ describe('scheduler', () => {
         {
           function: 'example.com/function/test',
           spec: {
-            type: FunctionTriggerType.ECHO,
+            type: FunctionTriggerType.SUBSCRIPTION,
             filter: [{ type: TestType.typename }],
           },
         },

@@ -8,8 +8,8 @@ import { DeferredTask } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from './trigger-registry';
-import type { TimerTrigger } from '../types';
+import type { TimerTrigger } from '../../types';
+import { type FunctionTriggerContext, type OnTriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
   ctx: Context,
