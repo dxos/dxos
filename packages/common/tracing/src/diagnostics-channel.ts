@@ -48,6 +48,18 @@ export class DiagnosticsChannel {
 
   destroy() {
     void this._ctx.dispose();
+    this._channel.close();
+  }
+
+  /**
+   * In node.js, the channel will keep the process alive.
+   * This method allows the process to exit.
+   * Noop in the browser.
+   */
+  unref() {
+    if (typeof (this._channel as any).unref === 'function') {
+      (this._channel as any).unref();
+    }
   }
 
   serve(manager: DiagnosticsManager) {

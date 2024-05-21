@@ -95,6 +95,7 @@ export class TraceProcessor {
     unrefTimeout(refreshInterval);
 
     this.diagnosticsChannel.serve(this.diagnostics);
+    this.diagnosticsChannel.unref();
   }
 
   /**
