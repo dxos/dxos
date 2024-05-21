@@ -9,7 +9,7 @@ for (( i=1; i<=NUM; i++ ))
 do
   TEXT=$(curl -s https://api.quotable.io/random | jq -r ".content")
   CITY=$(curl -s https://randomuser.me/api | jq -r ".results[0].location.city")
-  echo ${TEXT} | mail -s "Hello ${CITY}" ${ACCOUNT}
+  echo ${TEXT} | mail -s "Hello from ${CITY}" ${ACCOUNT}
   echo "Message ${i}"
   sleep ${SLEEP}
 done

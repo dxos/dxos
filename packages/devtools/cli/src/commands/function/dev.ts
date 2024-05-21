@@ -11,7 +11,14 @@ import { dirname, join } from 'node:path';
 import { Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
+import {
+  DevServer,
+  type FunctionManifest,
+  FunctionRegistry,
+  FunctionTrigger,
+  Scheduler,
+  TriggerRegistry,
+} from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -47,48 +54,53 @@ export default class Dev extends BaseCommand<typeof Dev> {
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
+      // Local files.
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
 
       // Local dev server.
-      const server = new DevServer(client, {
-        manifest,
+      const registry = new FunctionRegistry(client);
+      const server = new DevServer(client, registry, {
         baseDir: directory,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
 
-      await server.initialize();
       await server.start();
 
       // TODO(burdon): Move to agent's FunctionsPlugin.
-      const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
+      const triggerRegistry = new TriggerRegistry(client);
+      const scheduler = new Scheduler(registry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
+
+      // TODO(burdon): Register for all spaces; add import command.
+      client.addSchema(FunctionTrigger);
+      const space = client.spaces.default;
+      await registry.register(space, manifest);
+      await scheduler.register(space, manifest);
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       const run = new Trigger();
       process.on('SIGINT', async () => {
         await scheduler.stop();
         await server.stop();
-        // process.exit();
         run.wake();
       });
 
-      // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
+        // TODO(burdon): Get list of functions from plugin API endpoint.
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
+              .map(({ def: { uri, route } }) => chalk`- ${uri.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),
         );
       }
 
       // Wait until exit (via SIGINT).
       await run.wait();
-      // await new Promise(() => {});
     });
   }
 }

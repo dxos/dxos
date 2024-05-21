@@ -3401,6 +3401,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.0.1
         version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: ^2.4.19
+        version: 2.4.19
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -5753,24 +5756,30 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
