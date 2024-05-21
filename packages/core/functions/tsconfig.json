@@ -40,6 +40,9 @@
       "path": "../agent"
     },
     {
+      "path": "../echo/echo-db"
+    },
+    {
       "path": "../echo/echo-schema"
     }
   ]

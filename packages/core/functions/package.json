@@ -20,19 +20,20 @@
     "src"
   ],
   "scripts": {
-    "gen-schema": "ts-node ./tools/schema.ts"
+    "gen-schema": "ts-node ./tools/schema.ts",
+    "prebuild": "pnpm gen-schema"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.64.20",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
     "effect": "^2.4.19",

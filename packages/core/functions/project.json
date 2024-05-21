@@ -16,6 +16,7 @@
         "injectGlobals": true
       }
     },
+    "prebuild": {},
     "lint": {},
     "test": {
       "options": {
