@@ -67,7 +67,7 @@ export const multiline = (...parts: string[]): string => parts.filter(Boolean).j
 /**
  * @deprecated
  */
-// TODO(burdon): Register types vi function metadata.
+// TODO(burdon): Register types via function metadata. Export default meta.
 export const registerTypes = (space: Space | undefined) => {
   if (!space) {
     return;

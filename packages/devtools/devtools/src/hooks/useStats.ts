@@ -157,3 +157,13 @@ export const useStats = (): [Stats, () => void] => {
 
   return [stats, () => forceUpdate({})];
 };
+
+// TODO(burdon): Move to util.
+export const removeEmpty = (obj: any): any => {
+  const maybeTruncateKey = (str: string) => (str.length > 32 ? str.slice(0, 8) : str);
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
+      .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
+  );
+};
