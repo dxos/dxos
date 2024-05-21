@@ -19,7 +19,7 @@ import { ObjectSyncer } from '../../sync';
 import { getYaml, registerTypes } from '../../util';
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
-  const { space } = event;
+  const { space } = event.data;
   invariant(space);
   registerTypes(space);
 

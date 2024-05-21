@@ -115,11 +115,11 @@ export class Scheduler {
     }
   }
 
-  private async _execFunction<T>(def: FunctionDef, trigger: FunctionTrigger, data: T): Promise<number> {
+  private async _execFunction<TData, TMeta>(def: FunctionDef, trigger: FunctionTrigger, data: TData): Promise<number> {
     let status = 0;
     try {
       // TODO(burdon): Pass in Space key (common context)?
-      const payload = Object.assign({}, { meta: trigger.meta } satisfies FunctionEventMeta, data);
+      const payload = Object.assign({}, { meta: trigger.meta as TMeta } satisfies FunctionEventMeta<TMeta>, data);
 
       const { endpoint, callback } = this._options;
       if (endpoint) {
