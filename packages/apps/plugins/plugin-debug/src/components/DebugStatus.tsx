@@ -95,9 +95,9 @@ const ErrorIndicator = () => {
 
   if (errorRef.current) {
     return (
-      <StatusBar.Item title={errorRef.current.message} onClick={handleReset}>
+      <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
         <Circle weight='fill' className={mx(styles.error, getSize(3))} />
-      </StatusBar.Item>
+      </StatusBar.Button>
     );
   } else {
     return (
