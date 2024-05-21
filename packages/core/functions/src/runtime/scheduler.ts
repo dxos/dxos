@@ -75,13 +75,13 @@ export class Scheduler {
       return;
     }
 
-    log('activated trigger', { space: space.key, trigger: fnTrigger });
     await this.triggers.activate({ space }, fnTrigger, async (args) => {
       return this._execFunction(definition, {
         meta: fnTrigger.meta,
         data: { ...args, spaceKey: space.key },
       });
     });
+    log('activated trigger', { space: space.key, trigger: fnTrigger });
   }
 
   private async _execFunction<TData, TMeta>(

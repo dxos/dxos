@@ -3398,6 +3398,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.0.1
         version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
+      effect:
+        specifier: ^2.4.19
+        version: 2.4.19
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -5762,6 +5765,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

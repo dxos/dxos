@@ -50,6 +50,7 @@ export class DevServer {
     this._functionsRegistry.onFunctionsRegistered.on(async ({ newFunctions }) => {
       newFunctions.forEach((def) => this._load(def));
       await this._safeUpdateRegistration();
+      log('new functions loaded', { newFunctions });
     });
   }
 

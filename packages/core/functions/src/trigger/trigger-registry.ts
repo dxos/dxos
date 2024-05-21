@@ -61,9 +61,12 @@ export class TriggerRegistry extends Resource {
     super();
   }
 
+  public getActiveTriggers(space: Space): FunctionTrigger[] {
+    return this._getTriggers(space, (t) => t.activationCtx != null);
+  }
+
   public getInactiveTriggers(space: Space): FunctionTrigger[] {
-    const allSpaceTriggers = this._triggersBySpaceKey.get(space.key) ?? [];
-    return allSpaceTriggers.filter((t) => t.activationCtx == null).map((t) => t.trigger);
+    return this._getTriggers(space, (t) => t.activationCtx == null);
   }
 
   async activate(
@@ -110,12 +113,12 @@ export class TriggerRegistry extends Resource {
         if (this._triggersBySpaceKey.has(space.key)) {
           continue;
         }
+        const registered: RegisteredTrigger[] = [];
+        this._triggersBySpaceKey.set(space.key, registered);
         await space.waitUntilReady();
         if (this._ctx.disposed) {
           break;
         }
-        const registered: RegisteredTrigger[] = [];
-        this._triggersBySpaceKey.set(space.key, registered);
         const functionsSubscription = space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
           await this._handleRemovedTriggers(space, triggers.objects, registered);
           this._handleNewTriggers(space, triggers.objects, registered);
@@ -133,6 +136,7 @@ export class TriggerRegistry extends Resource {
     if (newTriggers.length > 0) {
       const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
+      log('registered new triggers', () => ({ spaceKey: space.key, functions: newTriggers.map((t) => t.function) }));
       this.onTriggersRegistered.emit({ space, triggers: newTriggers });
     }
   }
@@ -158,5 +162,10 @@ export class TriggerRegistry extends Resource {
 
   protected override async _close(_: Context): Promise<void> {
     this._triggersBySpaceKey.clear();
+  }
+
+  private _getTriggers(space: Space, predicate: (t: RegisteredTrigger) => boolean): FunctionTrigger[] {
+    const allSpaceTriggers = this._triggersBySpaceKey.get(space.key) ?? [];
+    return allSpaceTriggers.filter(predicate).map((t) => t.trigger);
   }
 }

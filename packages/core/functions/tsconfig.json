@@ -44,6 +44,9 @@
     },
     {
       "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

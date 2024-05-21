@@ -19,7 +19,10 @@ export const createEchoSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> 
 ) => {
   const objectIds = new Set<string>();
   const task = new DeferredTask(ctx, async () => {
-    await callback({ objects: Array.from(objectIds) });
+    if (objectIds.size > 0) {
+      await callback({ objects: Array.from(objectIds) });
+      objectIds.clear();
+    }
   });
 
   // TODO(burdon): Don't fire initially?

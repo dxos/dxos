@@ -1,0 +1,98 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import { expect } from 'chai';
+import path from 'path';
+
+import { Trigger, waitForCondition } from '@dxos/async';
+import { type Client } from '@dxos/client';
+import { create, type Space } from '@dxos/client/echo';
+import { performInvitation, TestBuilder } from '@dxos/client/testing';
+import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { describe, test } from '@dxos/test';
+
+import { DevServer } from './dev-server';
+import { Scheduler } from './scheduler';
+import { FunctionRegistry } from '../functions';
+import { createFunctionRuntime, createInitializedClients } from '../testing/setup';
+import { setTestCallHandler } from '../testing/test/handler';
+import { TestType } from '../testing/types';
+import { TriggerRegistry } from '../trigger';
+import { FunctionDef, FunctionTrigger, FunctionTriggerType } from '../types';
+
+describe('functions e2e', () => {
+  let testBuilder: TestBuilder;
+  before(async () => {
+    testBuilder = new TestBuilder();
+  });
+  after(async () => {
+    await testBuilder.destroy();
+  });
+
+  test('a functions gets triggered in response to another peer object creations', async () => {
+    const functionRuntime = await createFunctionRuntime(testBuilder);
+    const devServer = await startDevServer(functionRuntime);
+    const scheduler = await startScheduler(functionRuntime, devServer);
+
+    const app = (await createInitializedClients(testBuilder, 1))[0];
+    const space = await app.spaces.create();
+    await inviteMember(space, functionRuntime);
+
+    const functionId = 'example.com/function/test';
+    space.db.add(create(FunctionDef, { functionId, route: '/test', handler: 'test' }));
+    const triggerMeta: FunctionTrigger['meta'] = { foo: 'bar' };
+    space.db.add(
+      create(FunctionTrigger, {
+        function: functionId,
+        meta: triggerMeta,
+        spec: {
+          type: FunctionTriggerType.ECHO,
+          filter: [{ type: TestType.typename }],
+        },
+      }),
+    );
+
+    const called = new Trigger<any>();
+    setTestCallHandler(async (args) => {
+      called.wake(args.event.data);
+      return args.response.status(200);
+    });
+
+    await waitTriggersReplicated(space, scheduler);
+    const addedObject = space.db.add(create(TestType, { title: '42' }));
+
+    const callArgs = await called.wait();
+    expect(callArgs.meta).to.deep.eq(triggerMeta);
+    expect(callArgs.objects).to.deep.eq([addedObject.id]);
+    expect(callArgs.spaceKey).to.eq(space.key.toHex());
+  });
+
+  const waitTriggersReplicated = async (space: Space, scheduler: Scheduler) => {
+    await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
+  };
+
+  const startScheduler = async (functionRuntime: Client, devServer: DevServer) => {
+    const functionRegistry = new FunctionRegistry(functionRuntime);
+    const triggerRegistry = new TriggerRegistry(functionRuntime);
+    const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: devServer.endpoint });
+    await scheduler.start();
+    testBuilder.ctx.onDispose(() => scheduler.stop());
+    return scheduler;
+  };
+
+  const startDevServer = async (functionRuntime: Client) => {
+    const functionRegistry = new FunctionRegistry(functionRuntime);
+    const server = new DevServer(functionRuntime, functionRegistry, {
+      baseDir: path.join(__dirname, '../testing'),
+    });
+    await server.start();
+    testBuilder.ctx.onDispose(() => server.stop());
+    return server;
+  };
+
+  const inviteMember = async (host: Space, guest: Client) => {
+    const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host, guest: guest.spaces }));
+    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
+  };
+});

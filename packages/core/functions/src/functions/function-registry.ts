@@ -52,12 +52,12 @@ export class FunctionRegistry extends Resource {
         if (this._functionBySpaceKey.has(space.key)) {
           continue;
         }
+        const registered: FunctionDef[] = [];
+        this._functionBySpaceKey.set(space.key, registered);
         await space.waitUntilReady();
         if (this._ctx.disposed) {
           break;
         }
-        const registered: FunctionDef[] = [];
-        this._functionBySpaceKey.set(space.key, registered);
         const functionsSubscription = space.db.query(Filter.schema(FunctionDef)).subscribe((definitions) => {
           const newFunctions = getNewDefinitions(definitions.objects, registered);
           if (newFunctions.length > 0) {

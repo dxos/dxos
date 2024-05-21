@@ -5,15 +5,14 @@
 import { expect } from 'chai';
 import path from 'path';
 
-import { FunctionsPlugin } from '@dxos/agent';
 import { waitForCondition } from '@dxos/async';
-import { type Client, Config } from '@dxos/client';
+import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
 import { FunctionRegistry } from '../functions';
-import { createInitializedClients } from '../testing/setup';
+import { createFunctionRuntime } from '../testing/setup';
 import { type FunctionManifest } from '../types';
 
 describe('dev server', () => {
@@ -21,21 +20,7 @@ describe('dev server', () => {
   let testBuilder: TestBuilder;
   before(async () => {
     testBuilder = new TestBuilder();
-    const config = new Config({
-      runtime: {
-        agent: {
-          plugins: [{ id: 'dxos.org/agent/plugin/functions', config: { port: 8080 } }],
-        },
-      },
-    });
-
-    client = (await createInitializedClients(testBuilder, 1, config))[0];
-
-    // TODO(burdon): Better way to configure plugin? (Rationalize chess.test).
-    const functionsPlugin = new FunctionsPlugin();
-    await functionsPlugin.initialize({ client, clientServices: client.services });
-    await openAndClose(functionsPlugin);
-
+    client = await createFunctionRuntime(testBuilder);
     expect(client.services.services.FunctionRegistryService).to.exist;
   });
 
