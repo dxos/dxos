@@ -11,7 +11,14 @@ import { dirname, join } from 'node:path';
 import { Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionManifest, FunctionRegistry, Scheduler, TriggerRegistry } from '@dxos/functions';
+import {
+  DevServer,
+  type FunctionManifest,
+  FunctionRegistry,
+  FunctionTrigger,
+  Scheduler,
+  TriggerRegistry,
+} from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -68,6 +75,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await scheduler.start();
 
       // TODO(burdon): Register for all spaces; add import command.
+      client.addSchema(FunctionTrigger);
       const space = client.spaces.default;
       await registry.register(space, manifest);
       await scheduler.register(space, manifest);
@@ -86,7 +94,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, route } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
+              .map(({ def: { uri, route } }) => chalk`- ${uri.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),
         );
       }
