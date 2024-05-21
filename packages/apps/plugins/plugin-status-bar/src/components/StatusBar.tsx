@@ -71,7 +71,7 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
           'bs-[--statusbar-size]',
           'flex justify-end items-center gap-2',
           'surface-base fg-description',
-          'border-solid border-t border-bs separator-separator',
+          'border-bs separator-separator',
           'text-lg pointer-fine:text-xs',
           classNames,
         )}
