@@ -167,8 +167,8 @@ describe('trigger registry', () => {
       });
       void registry.open(ctx);
       const functions = await triggersRegistered.wait();
-      const expected = triggers.map((d) => d.id).sort();
-      expect(functions.map((f) => f.id).sort()).to.deep.eq(expected);
+      const expected = triggers.map((obj) => obj.id).sort();
+      expect(functions.map((fn) => fn.id).sort()).to.deep.eq(expected);
     });
 
     test('onTriggersRegistered called when a new trigger is added', async () => {
@@ -193,20 +193,20 @@ describe('trigger registry', () => {
       const space = await client.spaces.create();
       const triggers = createTriggersInSpace(space, 3);
 
-      const onTriggersLoaded = new Trigger();
-      registry.onTriggersRegistered.on((fn) => onTriggersLoaded.wake());
+      const triggerLoaded = new Trigger();
+      registry.onTriggersRegistered.on((fn) => triggerLoaded.wake());
 
-      const onTriggerRemoved = new Trigger<FunctionTrigger>();
+      const triggerRemoved = new Trigger<FunctionTrigger>();
       registry.onTriggersRemoved.on((fn) => {
         expect(fn.triggers.length).to.eq(1);
-        onTriggerRemoved.wake(fn.triggers[0]);
+        triggerRemoved.wake(fn.triggers[0]);
       });
       await registry.register(space, testManifest);
       await registry.open(ctx);
-      await onTriggersLoaded.wait();
+      await triggerLoaded.wait();
 
       space.db.remove(triggers[0]);
-      const removedTrigger = await onTriggerRemoved.wait();
+      const removedTrigger = await triggerRemoved.wait();
       expect(removedTrigger.id).to.eq(triggers[0].id);
     });
   });
@@ -222,7 +222,6 @@ describe('trigger registry', () => {
   };
 
   const createTriggersInSpace = (space: Space, count: number) => {
-    space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     const triggers = range(count, () => create(FunctionTrigger, { ...testManifest.triggers![0] }));
     triggers.forEach((def) => space.db.add(def));
     return triggers;

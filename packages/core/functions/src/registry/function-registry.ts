@@ -40,6 +40,7 @@ export class FunctionRegistry extends Resource {
     if (!space.db.graph.runtimeSchemaRegistry.isSchemaRegistered(FunctionDef)) {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
     }
+
     const { objects: existingDefinitions } = await space.db.query(Filter.schema(FunctionDef)).run();
     const newDefinitions = getNewDefinitions(manifest.functions, existingDefinitions);
     const reactiveObjects = newDefinitions.map((template) => create(FunctionDef, { ...template }));
@@ -58,6 +59,7 @@ export class FunctionRegistry extends Resource {
         if (this._ctx.disposed) {
           break;
         }
+
         const functionsSubscription = space.db.query(Filter.schema(FunctionDef)).subscribe((definitions) => {
           const newFunctions = getNewDefinitions(definitions.objects, registered);
           if (newFunctions.length > 0) {
@@ -77,5 +79,5 @@ export class FunctionRegistry extends Resource {
 }
 
 const getNewDefinitions = <T extends { uri: string }>(candidateList: T[], existing: FunctionDef[]): T[] => {
-  return candidateList.filter((candidate) => existing.find((def) => def.id === candidate.uri) == null);
+  return candidateList.filter((candidate) => existing.find((def) => def.uri === candidate.uri) == null);
 };

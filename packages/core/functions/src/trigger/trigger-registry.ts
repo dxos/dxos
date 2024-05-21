@@ -145,7 +145,8 @@ export class TriggerRegistry extends Resource {
   ): Promise<void> {
     const removed: FunctionTrigger[] = [];
     for (let i = registered.length - 1; i >= 0; i--) {
-      const wasRemoved = allTriggers.find((t: FunctionTrigger) => t.id === registered[i].trigger.id) == null;
+      const wasRemoved =
+        allTriggers.find((trigger: FunctionTrigger) => trigger.id === registered[i].trigger.id) == null;
       if (wasRemoved) {
         const unregistered = registered.splice(i, 1)[0];
         await unregistered.activationCtx?.dispose();
@@ -161,8 +162,8 @@ export class TriggerRegistry extends Resource {
     this._triggersBySpaceKey.clear();
   }
 
-  private _getTriggers(space: Space, predicate: (t: RegisteredTrigger) => boolean): FunctionTrigger[] {
+  private _getTriggers(space: Space, predicate: (trigger: RegisteredTrigger) => boolean): FunctionTrigger[] {
     const allSpaceTriggers = this._triggersBySpaceKey.get(space.key) ?? [];
-    return allSpaceTriggers.filter(predicate).map((t) => t.trigger);
+    return allSpaceTriggers.filter(predicate).map((trigger) => trigger.trigger);
   }
 }

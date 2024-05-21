@@ -28,7 +28,7 @@ describe('functions e2e', () => {
     await testBuilder.destroy();
   });
 
-  test.only('a function gets triggered in response to another peer object creations', async () => {
+  test('a function gets triggered in response to another peer object creations', async () => {
     // TODO(burdon): Create builder pattern.
     const functionRuntime = await createFunctionRuntime(testBuilder);
     const devServer = await startDevServer(functionRuntime);

@@ -69,7 +69,7 @@ export class Scheduler {
   }
 
   private async activate(space: Space, functions: FunctionDef[], fnTrigger: FunctionTrigger) {
-    const definition = functions.find((def) => def.id === fnTrigger.function);
+    const definition = functions.find((def) => def.uri === fnTrigger.function);
     if (!definition) {
       log.info('function is not found for trigger', { fnTrigger });
       return;
@@ -97,7 +97,7 @@ export class Scheduler {
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const url = path.join(endpoint, def.route);
-        log.info('exec', { function: def.id, url });
+        log.info('exec', { function: def.uri, url });
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -108,7 +108,7 @@ export class Scheduler {
 
         status = response.status;
       } else if (callback) {
-        log.info('exec', { function: def.id });
+        log.info('exec', { function: def.uri });
         status = (await callback(payload)) ?? 200;
       }
 
@@ -118,9 +118,9 @@ export class Scheduler {
       }
 
       // const result = await response.json();
-      log.info('done', { function: def.id, status });
+      log.info('done', { function: def.uri, status });
     } catch (err: any) {
-      log.error('error', { function: def.id, error: err.message });
+      log.error('error', { function: def.uri, error: err.message });
       status = 500;
     }
 

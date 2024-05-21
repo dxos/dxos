@@ -47,19 +47,18 @@ describe('function registry', () => {
       await registry.register(space, testManifest);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
-      expect(definitions[0].id).to.eq(testManifest.functions?.[0]?.uri);
+      expect(definitions[0].uri).to.eq(testManifest.functions?.[0]?.uri);
     });
 
     test('de-duplicates by function URI', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
       const existing = space.db.add(create(FunctionDef, { ...testManifest.functions![0] }));
       await registry.register(space, testManifest);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
-      expect(definitions[0].id).to.eq(existing.id);
+      expect(definitions[0].uri).to.eq(existing.uri);
     });
   });
 
@@ -68,7 +67,6 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
       const definitions = range(3, () => create(FunctionDef, { ...testManifest.functions![0] }));
       definitions.forEach((def) => space.db.add(def));
 
@@ -78,8 +76,8 @@ describe('function registry', () => {
       });
       void registry.open(ctx);
       const functions = await functionRegistered.wait();
-      const expected = definitions.map((d) => d.id).sort();
-      expect(functions.map((f) => f.id).sort()).to.deep.eq(expected);
+      const expected = definitions.map((def) => def.uri).sort();
+      expect(functions.map((fn) => fn.uri).sort()).to.deep.eq(expected);
     });
 
     test('called when a new functions is added', async () => {
@@ -95,7 +93,7 @@ describe('function registry', () => {
       await registry.open(ctx);
       await registry.register(space, testManifest);
       const registered = await functionRegistered.wait();
-      expect(registered.id).to.eq(testManifest.functions![0].uri);
+      expect(registered.uri).to.eq(testManifest.functions![0].uri);
     });
   });
 
