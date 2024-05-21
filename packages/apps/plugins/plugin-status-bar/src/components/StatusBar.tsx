@@ -22,11 +22,11 @@ type StatusBarButtonProps = ThemedClassName<{ children: ReactNode; asChild?: boo
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
-      classNames,
       'flex items-center gap-2 p-1 px-2 rounded-sm',
       'select-none cursor-pointer',
       'hover:bg-neutral-75 active:bg-neutral-150',
       'dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
+      classNames,
     );
 
     return asChild ? (
