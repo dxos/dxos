@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, Archive, Circle, Trash } from '@phosphor-icons/react';
-import React, { type MouseEvent } from 'react';
+import { ArrowClockwise, Archive, Trash } from '@phosphor-icons/react';
+import React, { useState, type MouseEvent } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -52,6 +52,8 @@ export type MessageItemProps = {
 };
 
 export const MessageItem = ({ message, selected, onSelect, onAction }: MessageItemProps) => {
+  const [expanded, setExpanded] = useState(false);
+
   const { t } = useTranslation(INBOX_PLUGIN);
 
   const handleAction = (event: MouseEvent<HTMLButtonElement>, action: ActionType) => {
@@ -65,17 +67,23 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('group flex cursor-pointer border-b', fixedBorder, ghostHover, selected && styles.selected)}
+        className={mx('p-2 group flex border', fixedBorder, ghostHover, selected && styles.selected)}
         onClick={() => onSelect?.()}
       >
-        <div>
+        {/* <div>
           <Button variant='ghost' onClick={() => onSelect?.()}>
             <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
           </Button>
-        </div>
+        </div> */}
 
         <div className='flex flex-col w-full overflow-hidden'>
-          <div className={mx('flex text-sm justify-between text-neutral-500 pb-1', !selected && 'font-thin')}>
+          <div
+            className={mx(
+              'flex text-sm justify-between text-neutral-500 pb-1 cursor-pointer',
+              !selected && 'font-thin',
+            )}
+            onClick={() => setExpanded((e) => !e)}
+          >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
               <div className='hidden group-hover:flex flex shrink-0'>
@@ -96,13 +104,35 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
                 </Button>
               </div>
             )}
-            <div className={mx('shrink-0 whitespace-nowrap p-2', onAction && 'group-hover:hidden')}>
+            <div className={mx('shrink-0 whitespace-nowrap p-2 text-sm', onAction && 'group-hover:hidden')}>
               {formatDate(new Date(), date)}
             </div>
           </div>
-          <div className={mx('mb-1 mr-2 overflow-hidden line-clamp-3', message.read && 'text-neutral-500')}>
+
+          <div
+            className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'text-neutral-500')}
+            onClick={() => setExpanded((e) => !e)}
+          >
             {subject}
           </div>
+
+          {expanded && (
+            <div className='flex flex-col gap-2 pbs-2 mt-2 border-t border-neutral-200'>
+              {message.blocks.toReversed().map((block, index) => (
+                <React.Fragment key={index}>
+                  <div className='grid grid-cols-[4fr,1fr] gap-2'>
+                    <div>{block.content?.content}</div>
+                    <div className='text-xs font-thin text-right text-neutral-500'>
+                      {formatDate(new Date(), new Date(block.timestamp))}
+                    </div>
+                  </div>
+                  {index !== message.blocks.length - 1 && (
+                    <div className={mx('border-t fixedBorder h-none')} role='none' />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DensityProvider>
