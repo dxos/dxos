@@ -21,20 +21,22 @@ type StatusBarButtonProps = ThemedClassName<{ children: ReactNode; asChild?: boo
 
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
-    const Component = asChild ? Slot : 'button';
+    const classes = mx(
+      'flex items-center gap-2 p-1 px-2 rounded-sm',
+      'select-none cursor-pointer',
+      'hover:bg-neutral-75 active:bg-neutral-150',
+      'dark:hover:bg-neutral-750 dark:active:bg-neutral-700',
+      classNames,
+    );
 
-    return (
-      <Component
-        role='button'
-        className={mx(
-          'flex items-center gap-2 p-1 px-2 rounded-sm select-none hover:bg-gray-200 cursor-pointer active:bg-gray-300',
-          classNames,
-        )}
-        ref={forwardedRef}
-        {...props}
-      >
+    return asChild ? (
+      <Slot role='button' ref={forwardedRef} className={classes} {...props}>
         {children}
-      </Component>
+      </Slot>
+    ) : (
+      <button className={classes} ref={forwardedRef} {...props}>
+        {children}
+      </button>
     );
   },
 );
@@ -66,7 +68,9 @@ const StatusBarContainer = forwardRef<HTMLDivElement, StatusBarContainerProps>(
         {...groupAttrs}
         className={mx(
           'bs-[--statusbar-size]',
-          'flex justify-end items-center gap-2 border-solid border-t border-gray-200 bg-gray-50 text-gray-500',
+          'flex justify-end items-center gap-2',
+          'surface-base fg-description',
+          'border-bs separator-separator',
           'text-lg pointer-fine:text-xs',
           classNames,
         )}
