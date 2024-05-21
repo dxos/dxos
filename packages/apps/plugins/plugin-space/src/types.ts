@@ -46,7 +46,6 @@ export enum SpaceAction {
 
 export type ObjectViewerProps = {
   lastSeen: number;
-  spaceKey: PublicKey;
 };
 
 export type ObjectId = string;
@@ -56,6 +55,7 @@ export type PluginState = {
    * Which objects are currently being viewed by which peers.
    */
   viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+
   /**
    * Which peers are currently viewing which objects.
    */

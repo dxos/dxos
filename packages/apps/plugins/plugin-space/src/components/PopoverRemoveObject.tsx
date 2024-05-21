@@ -13,7 +13,7 @@ import {
   isIdActive,
 } from '@dxos/app-framework';
 import { type Expando } from '@dxos/echo-schema';
-import { getSpace, isEchoObject } from '@dxos/react-client/echo';
+import { fullyQualifiedId, getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -30,11 +30,12 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: E
       return;
     }
 
+    const objectId = fullyQualifiedId(object);
     // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-    if (isIdActive(navigationPlugin?.provides.location.active, object.id)) {
+    if (isIdActive(navigationPlugin?.provides.location.active, objectId)) {
       await intentPlugin?.provides.intent.dispatch({
         action: NavigationAction.CLOSE,
-        data: { activeParts: { main: object.id, sidebar: object.id, complementary: object.id } },
+        data: { activeParts: { main: objectId, sidebar: objectId, complementary: objectId } },
       });
     }
 

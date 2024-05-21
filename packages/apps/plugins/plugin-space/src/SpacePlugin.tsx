@@ -18,7 +18,6 @@ import {
   resolvePlugin,
   parseIntentPlugin,
   parseNavigationPlugin,
-  parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
   activeIds,
@@ -70,7 +69,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
+import { SHARED, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
@@ -130,15 +129,13 @@ export const SpacePlugin = ({
       });
 
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (!clientPlugin || !navigationPlugin || !intentPlugin || !graphPlugin) {
+      if (!clientPlugin || !navigationPlugin || !intentPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      const graph = graphPlugin.provides.graph;
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
@@ -205,12 +202,12 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
               Array.from(activeIds(location.active)).forEach((id) => {
-                const space = getActiveSpace(graph, id);
+                const [spaceKey] = id.split(':');
+                const space = client.spaces.get(PublicKey.from(spaceKey));
                 if (space) {
                   void space
                     .postMessage('viewing', {
                       identityKey: identity.identityKey.toHex(),
-                      spaceKey: space.key.toHex(),
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
@@ -229,35 +226,33 @@ export const SpacePlugin = ({
 
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
-        client.spaces.subscribe((spaces) => {
+        effect(() => {
           spaceSubscriptions.clear();
-          spaces
+          client.spaces
+            .get()
             .filter((space) => !!state.enabled.find((key) => key.equals(space.key)))
             .forEach((space) => {
               spaceSubscriptions.add(
                 space.listen('viewing', (message) => {
                   const { added, removed } = message.payload;
                   const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                  const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
-                  if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                    added.forEach((objectIdAny) => {
-                      if (objectIdAny) {
-                        const objectId = objectIdAny.toString();
-                        if (!(objectId in state.viewersByObject)) {
-                          state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+                  if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+                    added.forEach((id) => {
+                      if (typeof id === 'string') {
+                        if (!(id in state.viewersByObject)) {
+                          state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                         }
-                        state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
+                        state.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
                         if (!state.viewersByIdentity.has(identityKey)) {
                           state.viewersByIdentity.set(identityKey, new Set());
                         }
-                        state.viewersByIdentity.get(identityKey)!.add(objectId);
+                        state.viewersByIdentity.get(identityKey)!.add(id);
                       }
                     });
-                    removed.forEach((objectIdAny) => {
-                      if (objectIdAny) {
-                        const objectId = objectIdAny.toString();
-                        state.viewersByObject[objectId]?.delete(identityKey);
-                        state.viewersByIdentity.get(identityKey)?.delete(objectId);
+                    removed.forEach((id) => {
+                      if (typeof id === 'string') {
+                        state.viewersByObject[id]?.delete(identityKey);
+                        state.viewersByIdentity.get(identityKey)?.delete(id);
                         // It’s okay for these to be empty sets/maps, reduces churn.
                       }
                     });
@@ -265,7 +260,7 @@ export const SpacePlugin = ({
                 }),
               );
             });
-        }).unsubscribe,
+        }),
       );
     },
     unload: async () => {
@@ -566,6 +561,7 @@ export const SpacePlugin = ({
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
+                  state.enabled.push(space.key);
                   const spaceHex = space.key.toHex();
                   return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
                 }
@@ -711,7 +707,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
@@ -721,7 +717,7 @@ export const SpacePlugin = ({
                       },
                       {
                         action: NavigationAction.CLOSE,
-                        data: { activeParts: { main: [object.id] } },
+                        data: { activeParts: { main: [fullyQualifiedId(object)] } },
                       },
                     ],
                   ],
@@ -741,7 +737,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RenameObjectPopover',
                           subject: object,
                         },
