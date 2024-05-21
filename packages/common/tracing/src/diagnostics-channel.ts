@@ -40,15 +40,19 @@ export type DiagnosticChannelMessage =
 export class DiagnosticsChannel {
   private _ctx = new Context();
 
-  private readonly _channel: BroadcastChannel;
+  // Separate channels becauase the client and server may be in the same process.
+  private readonly _serveChannel: BroadcastChannel;
+  private readonly _clientChannel: BroadcastChannel;
 
   constructor(private readonly _channelName: string = DEFAULT_CHANNEL_NAME) {
-    this._channel = new BroadcastChannel(_channelName);
+    this._serveChannel = new BroadcastChannel(_channelName);
+    this._clientChannel = new BroadcastChannel(_channelName);
   }
 
   destroy() {
     void this._ctx.dispose();
-    this._channel.close();
+    this._serveChannel.close();
+    this._clientChannel.close();
   }
 
   /**
@@ -57,8 +61,9 @@ export class DiagnosticsChannel {
    * Noop in the browser.
    */
   unref() {
-    if (typeof (this._channel as any).unref === 'function') {
-      (this._channel as any).unref();
+    if (typeof (this._serveChannel as any).unref === 'function') {
+      (this._serveChannel as any).unref();
+      (this._clientChannel as any).unref();
     }
   }
 
@@ -67,7 +72,10 @@ export class DiagnosticsChannel {
       switch (event.data.type) {
         case 'DIAGNOSTICS_DISCOVER': {
           const diagnostics = manager.list();
-          this._channel.postMessage({ type: 'DIAGNOSTICS_ANNOUNCE', diagnostics } satisfies DiagnosticChannelMessage);
+          this._serveChannel.postMessage({
+            type: 'DIAGNOSTICS_ANNOUNCE',
+            diagnostics,
+          } satisfies DiagnosticChannelMessage);
           break;
         }
         case 'DIAGNOSTICS_FETCH': {
@@ -77,7 +85,7 @@ export class DiagnosticsChannel {
           }
 
           const data = await manager.fetch(request);
-          this._channel.postMessage({
+          this._serveChannel.postMessage({
             type: 'DIAGNOSTICS_RESPONSE',
             requestId,
             data,
@@ -87,8 +95,8 @@ export class DiagnosticsChannel {
       }
     };
 
-    this._channel.addEventListener('message', listener);
-    this._ctx.onDispose(() => this._channel.removeEventListener('message', listener));
+    this._serveChannel.addEventListener('message', listener);
+    this._ctx.onDispose(() => this._serveChannel.removeEventListener('message', listener));
   }
 
   async discover(): Promise<DiagnosticMetadata[]> {
@@ -104,8 +112,8 @@ export class DiagnosticsChannel {
     };
 
     try {
-      this._channel.addEventListener('message', collector);
-      this._channel.postMessage({ type: 'DIAGNOSTICS_DISCOVER' } satisfies DiagnosticChannelMessage);
+      this._clientChannel.addEventListener('message', collector);
+      this._clientChannel.postMessage({ type: 'DIAGNOSTICS_DISCOVER' } satisfies DiagnosticChannelMessage);
 
       await sleep(DISCOVER_TIME);
 
@@ -119,7 +127,7 @@ export class DiagnosticsChannel {
 
       return diagnostics;
     } finally {
-      this._channel.removeEventListener('message', collector);
+      this._clientChannel.removeEventListener('message', collector);
     }
   }
 
@@ -135,15 +143,19 @@ export class DiagnosticsChannel {
     };
 
     try {
-      this._channel.addEventListener('message', listener);
-      this._channel.postMessage({ type: 'DIAGNOSTICS_FETCH', requestId, request } satisfies DiagnosticChannelMessage);
+      this._clientChannel.addEventListener('message', listener);
+      this._clientChannel.postMessage({
+        type: 'DIAGNOSTICS_FETCH',
+        requestId,
+        request,
+      } satisfies DiagnosticChannelMessage);
 
       // NOTE: Must have await keyword in this block.
       const result = await trigger.wait({ timeout: DIAGNOSTICS_TIMEOUT });
 
       return result;
     } finally {
-      this._channel.removeEventListener('message', listener);
+      this._clientChannel.removeEventListener('message', listener);
     }
   }
 }
