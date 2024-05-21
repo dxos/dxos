@@ -3,22 +3,25 @@
 //
 
 import { DiscordLogo, PaperPlaneTilt } from '@phosphor-icons/react';
-import React from 'react';
+import React, { useState } from 'react';
 
+import { Surface } from '@dxos/app-framework';
 import { Popover } from '@dxos/react-ui';
 
 import { FeedbackForm } from './FeedbackForm';
 import { StatusBar } from './StatusBar';
 
+// TODO(wittjosiah): Rename.
 export const StatusBarImpl = () => {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
+  // TODO(wittjosiah): Factor out feedback and discord buttons.
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <StatusBar.Container>
         <StatusBar.EndContent>
           <Popover.Trigger asChild>
-            <StatusBar.Button aria-label={'Give feedback about composer'}>
+            <StatusBar.Button aria-label='Give feedback about composer'>
               <PaperPlaneTilt />
               <StatusBar.Text classNames='hidden sm:block'>Feedback</StatusBar.Text>
             </StatusBar.Button>
@@ -31,6 +34,7 @@ export const StatusBarImpl = () => {
             </a>
           </StatusBar.Button>
         </StatusBar.EndContent>
+        <Surface role='status' />
       </StatusBar.Container>
       <Popover.Content classNames='shadow-lg'>
         <FeedbackForm onClose={() => setOpen(false)} />
