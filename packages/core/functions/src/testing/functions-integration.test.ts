@@ -38,12 +38,12 @@ describe('functions e2e', () => {
     const space = await app.spaces.create();
     await inviteMember(space, functionRuntime);
 
-    const functionId = 'example.com/function/test';
-    space.db.add(create(FunctionDef, { functionId, route: '/test', handler: 'test' }));
+    const uri = 'example.com/function/test';
+    space.db.add(create(FunctionDef, { uri, route: '/test', handler: 'test' }));
     const triggerMeta: FunctionTrigger['meta'] = { foo: 'bar' };
     space.db.add(
       create(FunctionTrigger, {
-        function: functionId,
+        function: uri,
         meta: triggerMeta,
         spec: {
           type: FunctionTriggerType.ECHO,

@@ -12,10 +12,8 @@ import { create } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler, type SchedulerOptions } from './scheduler';
-import { FunctionRegistry } from '../functions';
-import { createInitializedClients } from '../testing/setup';
-import { TestType } from '../testing/types';
-import { triggerWebhook } from '../testing/util';
+import { FunctionRegistry } from '../registry';
+import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
 import { type FunctionManifest, FunctionTriggerType } from '../types';
 
@@ -35,7 +33,7 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'example.com/function/test',
+          uri: 'example.com/function/test',
           route: '/test',
           handler: 'test',
         },
@@ -69,7 +67,7 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'example.com/function/test',
+          uri: 'example.com/function/test',
           route: '/test',
           handler: 'test',
         },
@@ -93,7 +91,7 @@ describe('scheduler', () => {
     await scheduler.register(space, manifest);
     await scheduler.start();
 
-    setTimeout(async () => triggerWebhook(space, manifest.functions![0].functionId));
+    setTimeout(async () => triggerWebhook(space, manifest.functions![0].uri));
 
     await done.wait();
   });
@@ -102,7 +100,7 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'example.com/function/test',
+          uri: 'example.com/function/test',
           route: '/test',
           handler: 'test',
         },
@@ -148,7 +146,7 @@ describe('scheduler', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'example.com/function/test',
+          uri: 'example.com/function/test',
           route: '/test',
           handler: 'test',
         },

@@ -7,9 +7,9 @@ import { invariant } from '@dxos/invariant';
 
 import { FunctionTrigger, FunctionTriggerType } from '../types';
 
-export const triggerWebhook = async (space: Space, functionId: string) => {
+export const triggerWebhook = async (space: Space, uri: string) => {
   const trigger = (
-    await space.db.query(Filter.schema(FunctionTrigger, (t: FunctionTrigger) => t.function === functionId)).run()
+    await space.db.query(Filter.schema(FunctionTrigger, (t: FunctionTrigger) => t.function === uri)).run()
   ).objects[0];
   invariant(trigger.spec.type === FunctionTriggerType.WEBHOOK);
   void fetch(`http://localhost:${trigger.spec.port}`);

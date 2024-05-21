@@ -8,12 +8,12 @@
       "items": {
         "type": "object",
         "required": [
-          "functionId",
+          "uri",
           "route",
           "handler"
         ],
         "properties": {
-          "functionId": {
+          "uri": {
             "type": "string",
             "description": "a string",
             "title": "string"

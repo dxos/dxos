@@ -13,8 +13,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type FunctionRegistry } from '../functions';
 import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
+import { type FunctionRegistry } from '../registry';
 import { type FunctionDef } from '../types';
 
 export type DevServerOptions = {

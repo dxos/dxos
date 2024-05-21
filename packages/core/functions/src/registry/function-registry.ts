@@ -76,6 +76,6 @@ export class FunctionRegistry extends Resource {
   }
 }
 
-const getNewDefinitions = <T extends { functionId: string }>(candidateList: T[], existing: FunctionDef[]): T[] => {
-  return candidateList.filter((candidate) => existing.find((def) => def.functionId === candidate.functionId) == null);
+const getNewDefinitions = <T extends { uri: string }>(candidateList: T[], existing: FunctionDef[]): T[] => {
+  return candidateList.filter((candidate) => existing.find((def) => def.id === candidate.uri) == null);
 };

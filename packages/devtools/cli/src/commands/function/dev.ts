@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
+import { DevServer, type FunctionManifest, FunctionRegistry, Scheduler, TriggerRegistry } from '@dxos/functions';
 
 import { BaseCommand } from '../../base-command';
 
@@ -52,18 +52,18 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
 
       // Local dev server.
-      const server = new DevServer(client, {
-        manifest,
+      const functionRegistry = new FunctionRegistry(client);
+      const server = new DevServer(client, functionRegistry, {
         baseDir: directory,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
 
-      await server.initialize();
       await server.start();
 
       // TODO(burdon): Move to agent's FunctionsPlugin.
-      const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
+      const triggerRegistry = new TriggerRegistry(client);
+      const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
@@ -71,7 +71,6 @@ export default class Dev extends BaseCommand<typeof Dev> {
       process.on('SIGINT', async () => {
         await scheduler.stop();
         await server.stop();
-        // process.exit();
         run.wake();
       });
 
@@ -81,14 +80,13 @@ export default class Dev extends BaseCommand<typeof Dev> {
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, route } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
+              .map(({ def: { id, route } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),
         );
       }
 
       // Wait until exit (via SIGINT).
       await run.wait();
-      // await new Promise(() => {});
     });
   }
 }

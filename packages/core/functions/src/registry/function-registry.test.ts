@@ -14,13 +14,13 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { FunctionRegistry } from './function-registry';
-import { createInitializedClients } from '../testing/setup';
+import { createInitializedClients } from '../testing';
 import { FunctionDef, type FunctionManifest } from '../types';
 
 const testManifest: FunctionManifest = {
   functions: [
     {
-      functionId: 'dxos.functions.test/hello',
+      uri: 'dxos.functions.test/hello',
       route: '/hello',
       handler: 'test',
     },
@@ -47,10 +47,10 @@ describe('function registry', () => {
       await registry.register(space, testManifest);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
-      expect(definitions[0].functionId).to.eq(testManifest.functions?.[0]?.functionId);
+      expect(definitions[0].id).to.eq(testManifest.functions?.[0]?.uri);
     });
 
-    test('de-duplicates by functionId', async () => {
+    test('de-duplicates by function URI', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
@@ -95,7 +95,7 @@ describe('function registry', () => {
       await registry.open(ctx);
       await registry.register(space, testManifest);
       const registered = await functionRegistered.wait();
-      expect(registered.functionId).to.eq(testManifest.functions![0].functionId);
+      expect(registered.id).to.eq(testManifest.functions![0].uri);
     });
   });
 

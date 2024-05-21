@@ -52,10 +52,11 @@ describe('Chess', () => {
     await functionsPlugin.initialize({ client, clientServices: services });
     await openAndClose(functionsPlugin);
 
+    // TODO(burdon): ???
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'dxos.org/function/chess',
+          uri: 'dxos.org/function/chess',
           route: 'chess',
           handler: 'chess',
         },

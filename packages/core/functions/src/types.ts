@@ -4,6 +4,9 @@
 
 import { AST, S, TypedObject } from '@dxos/echo-schema';
 
+// TODO(burdon): Factor out.
+const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(AST.omit(schema.ast, ['id']));
+
 /**
  * Type discriminator for TriggerSpec.
  * Every spec has a type field of type FunctionTriggerType that we can use to understand which
@@ -76,8 +79,7 @@ export class FunctionDef extends TypedObject({
   typename: 'dxos.functions.FunctionDef',
   version: '0.1.0',
 })({
-  // TODO(burdon): Change to id.
-  functionId: S.string,
+  uri: S.string,
   description: S.optional(S.string),
   route: S.string,
   // TODO(burdon): NPM/GitHub/Docker/CF URL?
@@ -91,7 +93,6 @@ export class FunctionTrigger extends TypedObject({ typename: 'dxos.functions.Fun
   spec: TriggerSpecSchema,
 }) {}
 
-const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(AST.omit(schema.ast, ['id']));
 /**
  * Function manifest file.
  */

@@ -8,8 +8,8 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { type FunctionRegistry } from '../functions';
 import { type FunctionEventMeta } from '../handler';
+import { type FunctionRegistry } from '../registry';
 import { type TriggerRegistry } from '../trigger';
 import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
@@ -69,7 +69,7 @@ export class Scheduler {
   }
 
   private async activate(space: Space, functions: FunctionDef[], fnTrigger: FunctionTrigger) {
-    const definition = functions.find((def) => def.functionId === fnTrigger.function);
+    const definition = functions.find((def) => def.id === fnTrigger.function);
     if (!definition) {
       log.info('function is not found for trigger', { fnTrigger });
       return;

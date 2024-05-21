@@ -11,8 +11,8 @@ import { TestBuilder } from '@dxos/client/testing';
 import { describe, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
-import { FunctionRegistry } from '../functions';
-import { createFunctionRuntime } from '../testing/setup';
+import { FunctionRegistry } from '../registry';
+import { createFunctionRuntime } from '../testing';
 import { type FunctionManifest } from '../types';
 
 describe('dev server', () => {
@@ -32,7 +32,7 @@ describe('dev server', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          functionId: 'example.com/function/test',
+          uri: 'example.com/function/test',
           route: 'test',
           handler: 'test',
         },
