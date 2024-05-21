@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -28,6 +28,7 @@ import {
   isAdjustTransaction,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -149,6 +150,14 @@ export const DeckPlugin = ({
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
+
+      effect(() => {
+        const id = Array.from(attention.attended ?? [])[0];
+        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
+        if (path) {
+          Keyboard.singleton.setCurrentContext(path.join('/'));
+        }
+      });
     },
     unload: async () => {
       layout.close();
@@ -300,13 +309,6 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
               batch(() => {
                 if (intent.data) {
                   location.active =
@@ -388,14 +390,7 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
-              return batch(() => {
+              batch(() => {
                 // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
                 if (intent.data && isActiveParts(location.active)) {
                   location.active = Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
