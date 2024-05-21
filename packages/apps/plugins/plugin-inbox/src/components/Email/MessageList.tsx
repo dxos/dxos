@@ -7,7 +7,7 @@ import React, { useState, type MouseEvent } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { fixedBorder, getSize, ghostHover, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { fixedBorder, getSize, ghostHover, mx, baseSurface } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -27,19 +27,17 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, attentionSurface)}>
-      <div className='flex flex-col overflow-y-auto'>
-        {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
-        {messages?.map((message) => (
-          <MessageItem
-            key={message.id}
-            message={message}
-            selected={message.id === selected}
-            onSelect={onSelect ? () => onSelect(message) : undefined}
-            onAction={onAction ? (action) => onAction(message, action) : undefined}
-          />
-        ))}
-      </div>
+    <div className={mx('flex flex-col overflow-y-auto is-full', baseSurface)}>
+      {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
+      {messages?.map((message) => (
+        <MessageItem
+          key={message.id}
+          message={message}
+          selected={message.id === selected}
+          onSelect={onSelect ? () => onSelect(message) : undefined}
+          onAction={onAction ? (action) => onAction(message, action) : undefined}
+        />
+      ))}
     </div>
   );
 };
@@ -76,12 +74,9 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </Button>
         </div> */}
 
-        <div className='flex flex-col w-full overflow-hidden'>
+        <div className='flex flex-col is-full overflow-hidden'>
           <div
-            className={mx(
-              'flex text-sm justify-between text-neutral-500 pb-1 cursor-pointer',
-              !selected && 'font-thin',
-            )}
+            className={mx('flex text-sm font-semibold justify-between fg-description pb-1 cursor-pointer')}
             onClick={() => setExpanded((e) => !e)}
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
@@ -117,14 +112,12 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </div>
 
           {expanded && (
-            <div className='flex flex-col gap-2 pbs-2 mt-2 border-t border-neutral-200'>
-              {message.blocks.toReversed().map((block, index) => (
+            <div className='flex flex-col gap-2 pbs-2 mt-2 border-bs-2 separator-separator border-description'>
+              {message.blocks.map((block, index) => (
                 <React.Fragment key={index}>
-                  <div className='grid grid-cols-[4fr,1fr] gap-2'>
-                    <div>{block.content?.content}</div>
-                    <div className='text-xs font-thin text-right text-neutral-500'>
-                      {formatDate(new Date(), new Date(block.timestamp))}
-                    </div>
+                  <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
+                    <div className='text-sm'>{block.content?.content}</div>
+                    <div className='text-xs text-right'>{formatDate(new Date(), new Date(block.timestamp))}</div>
                   </div>
                   {index !== message.blocks.length - 1 && (
                     <div className={mx('border-t fixedBorder h-none')} role='none' />
