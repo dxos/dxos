@@ -35,17 +35,27 @@ const useAttendable = (attendableId?: string) => {
 
 /**
  * Accumulates all attendable id’s between the element provided and the root, inclusive.
- * @param cursor
  */
-const getAttendables = (cursor: Element, acc: string[] = []): string[] => {
+const getAttendables = (selector: string, cursor: Element, acc: string[] = []): string[] => {
   // Find the closest element with `data-attendable-id`, if any; start from cursor and move up the DOM tree.
-  const closestAttendable = cursor.closest('[data-attendable-id]');
+  const closestAttendable = cursor.closest(selector);
   if (!closestAttendable) {
     return acc;
   } else {
-    acc.push(closestAttendable.getAttribute('data-attendable-id')!);
-    // (attempt tail recursion)
-    return !closestAttendable.parentElement ? acc : getAttendables(closestAttendable.parentElement, acc);
+    const attendableId = closestAttendable.getAttribute('data-attendable-id');
+    if (!attendableId) {
+      // this has an id of an aria-controls elsewhere on the page, move cursor to that trigger
+      const trigger = document.querySelector(`[aria-controls="${closestAttendable.getAttribute('id')}"]`);
+      if (!trigger) {
+        return acc;
+      } else {
+        return getAttendables(selector, trigger, acc);
+      }
+    } else {
+      acc.push(attendableId);
+      // (attempt tail recursion)
+      return !closestAttendable.parentElement ? acc : getAttendables(selector, closestAttendable.parentElement, acc);
+    }
   }
 };
 
@@ -67,7 +77,16 @@ const AttentionProvider = ({
     onChange: onChangeAttend,
   });
   const handleFocus = (event: FocusEvent) => {
-    setAttended(new Set(getAttendables(event.target)));
+    const selector = [
+      '[data-attendable-id]',
+      ...Array.from(document.querySelectorAll('[aria-controls]')).map(
+        (el) => `[id="${el.getAttribute('aria-controls')}"]`,
+      ),
+    ].join(',');
+    const nextAttended = new Set(getAttendables(selector, event.target));
+    const [prev, next] = [Array.from(attended), Array.from(nextAttended)];
+    // Only update state if the result is different.
+    (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id)) && setAttended(nextAttended);
   };
   return (
     <AttentionContextProvider attended={attended}>

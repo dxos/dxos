@@ -415,6 +415,13 @@ export const LayoutPlugin = ({
                 ],
               };
             }
+
+            case NavigationAction.CLOSE: {
+              batch(() => {
+                location.closed = firstMainId(location.active);
+                location.active = undefined;
+              });
+            }
           }
         },
       },

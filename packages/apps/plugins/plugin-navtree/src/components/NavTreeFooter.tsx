@@ -130,12 +130,15 @@ export const NavTreeFooter = ({ part = ['sidebar', 0, 1] }: { part?: PartIdentif
         </Tooltip.Portal>
       </Tooltip.Root>
 
+      {/* NOTE(thure): Unpinning from the NavTree’s default position in Deck is temporarily disabled. */}
       {navigationPlugin?.meta.id === 'dxos.org/plugin/deck' && (
         <PlankHeading.Controls
           part={part}
           variant='hide-disabled'
           increment={part[0] === 'main'}
-          pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
+          pin={
+            part[0] === 'sidebar' ? /* 'end' */ undefined : part[0] === 'complementary' ? 'start' : /* 'both' */ 'start'
+          }
           onClick={({ type, part }) => dispatch({ action: NavigationAction.ADJUST, data: { type, part } })}
         />
       )}
