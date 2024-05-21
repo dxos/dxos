@@ -14,7 +14,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
-import { ChainMain } from './components';
+import { ChainArticle, ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
 import { ChainAction, type ChainPluginProvides } from './types';
@@ -124,6 +124,8 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
+            case 'article':
+              return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
           }
 
           return null;

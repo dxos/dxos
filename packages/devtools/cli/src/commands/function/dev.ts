@@ -8,6 +8,7 @@ import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
@@ -28,8 +29,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
-    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     manifest: Flags.string({ description: 'Functions manifest file.' }),
+    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     reload: Flags.boolean({ description: 'Reload functions on change.' }),
   };
 
@@ -48,11 +49,12 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
+
+      // Local dev server.
       const server = new DevServer(client, {
-        directory,
         manifest,
+        baseDir: directory,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
@@ -60,31 +62,33 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.initialize();
       await server.start();
 
-      // TODO(burdon): Move to plugin (make independent of runtime).
+      // TODO(burdon): Move to agent's FunctionsPlugin.
       const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
       await scheduler.start();
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
+      const run = new Trigger();
       process.on('SIGINT', async () => {
         await scheduler.stop();
         await server.stop();
-        process.exit();
+        // process.exit();
+        run.wake();
       });
 
-      // TODO(burdon): Command to print table.
       // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
           'Functions:\n' +
             server.functions
-              .map(({ def: { id, name } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, name)}}`)
+              .map(({ def: { id, path } }) => chalk`- ${id.padEnd(40)} {blue ${join(server.proxy!, path)}}`)
               .join('\n'),
         );
       }
 
       // Wait until exit (via SIGINT).
-      await new Promise(() => {});
+      await run.wait();
+      // await new Promise(() => {});
     });
   }
 }

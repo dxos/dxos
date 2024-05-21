@@ -25,10 +25,9 @@ const ObjectMetaSchema = S.struct({
 });
 type ObjectMetaType = S.Schema.Type<typeof ObjectMetaSchema>;
 
-export const initMeta = (obj: any) => {
-  const metaObject: ObjectMeta = { keys: [] };
-  prepareTypedTarget(metaObject, ObjectMetaSchema);
-  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(metaObject, TypedReactiveHandler.instance as any));
+export const initMeta = (obj: any, meta: ObjectMeta = { keys: [] }) => {
+  prepareTypedTarget(meta, ObjectMetaSchema);
+  defineHiddenProperty(obj, symbolTargetMeta, createReactiveProxy(meta, TypedReactiveHandler.instance as any));
 };
 
 export const getTargetMeta = (target: any): ObjectMetaType => {

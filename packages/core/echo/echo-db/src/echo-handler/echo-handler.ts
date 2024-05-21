@@ -304,7 +304,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
-  isObjectDeleted(target: any): boolean {
+  isDeleted(target: any): boolean {
     return target[symbolInternals].core.isDeleted();
   }
 

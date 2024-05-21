@@ -35,14 +35,14 @@ export class EpochMonitorPlugin extends Plugin {
    * Monitor spaces for which the agent is the leader.
    */
   override async onOpen() {
-    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
+    this.config.config = { ...DEFAULT_OPTIONS, ...this.config.config };
 
     const monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!monitors.has(space.key)) {
-          invariant(this._config.config);
-          const monitor = new SpaceMonitor(this.context.client, space, this._config.config);
+          invariant(this.config.config);
+          const monitor = new SpaceMonitor(this.context.client, space, this.config.config);
           monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });

@@ -8,6 +8,7 @@ import { rmSync } from 'node:fs';
 
 import {
   Agent,
+  type AgentHttpParams,
   ChainPlugin,
   DashboardPlugin,
   DiscordPlugin,
@@ -16,7 +17,6 @@ import {
   FunctionsPlugin,
   QueryPlugin,
   parseAddress,
-  type AgentHttpParams,
 } from '@dxos/agent';
 import { asyncTimeout, runInContext, scheduleTaskInterval, Trigger } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
@@ -183,7 +183,7 @@ export default class Start extends BaseCommand<typeof Start> {
         await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
         await this._observability.startRuntimeMetrics(this._agent.client!);
         // initAgentMetrics(this._ctx, this._observability, this._startTime);
-        //  initClientMetrics(this._ctx, this._observability, this._agent!);
+        // initClientMetrics(this._ctx, this._observability, this._agent!);
       }
     }
 

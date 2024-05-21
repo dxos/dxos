@@ -14,7 +14,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
-import { TableMain, TableSection, TableSlide } from './components';
+import { TableMain, TableSection, TableSlide, TableArticle } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
@@ -116,6 +116,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
             case 'section':
               return isTable(data.object) ? <TableSection table={data.object} /> : null;
+            case 'article':
+              return isTable(data.object) ? <TableArticle table={data.object} /> : null;
             default:
               return null;
           }

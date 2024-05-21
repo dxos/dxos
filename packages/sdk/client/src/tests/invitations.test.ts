@@ -621,8 +621,8 @@ describe('Invitations', () => {
     beforeEach(async () => {
       const testBuilder = new TestBuilder();
 
-      host = new Client({ services: testBuilder.createLocal() });
-      guest = new Client({ services: testBuilder.createLocal() });
+      host = new Client({ services: testBuilder.createLocalClientServices() });
+      guest = new Client({ services: testBuilder.createLocalClientServices() });
       await host.initialize();
       await guest.initialize();
 
@@ -645,8 +645,8 @@ describe('Invitations', () => {
     beforeEach(async () => {
       const testBuilder = new TestBuilder();
 
-      host = new Client({ services: testBuilder.createLocal() });
-      guest = new Client({ services: testBuilder.createLocal() });
+      host = new Client({ services: testBuilder.createLocalClientServices() });
+      guest = new Client({ services: testBuilder.createLocalClientServices() });
       await host.initialize();
       await guest.initialize();
       await host.halo.createIdentity({ displayName: 'Peer 1' });

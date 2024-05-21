@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
@@ -14,7 +14,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain, Mailbox } from './components';
+import { ContactsMain, EventsMain, MailboxMain, MailboxArticle } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { InboxAction, type InboxPluginProvides } from './types';
@@ -193,7 +193,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           switch (role) {
             case 'main':
               if (data.active instanceof MailboxType) {
-                return <Mailbox mailbox={data.active} />;
+                return <MailboxMain mailbox={data.active} />;
               }
               if (data.active instanceof AddressBookType) {
                 return <ContactsMain contacts={data.active} />;
@@ -202,6 +202,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                 return <EventsMain calendar={data.active} />;
               }
               return null;
+            case 'article': {
+              if (data.object instanceof MailboxType) {
+                return <MailboxArticle mailbox={data.object} />;
+              }
+              return null;
+            }
+
             default:
               return null;
           }

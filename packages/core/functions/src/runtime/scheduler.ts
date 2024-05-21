@@ -3,7 +3,9 @@
 //
 
 import { CronJob } from 'cron';
+import { getPort } from 'get-port-please';
 import http from 'node:http';
+import path from 'node:path';
 import WebSocket from 'ws';
 
 import { TextV0Type } from '@braneframe/types';
@@ -15,18 +17,10 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
-import { type FunctionSubscriptionEvent } from '../handler';
-import {
-  type FunctionDef,
-  type FunctionManifest,
-  type FunctionTrigger,
-  type SubscriptionTrigger,
-  type TimerTrigger,
-  type WebhookTrigger,
-  type WebsocketTrigger,
-} from '../types';
+import { type FunctionEventMeta } from '../handler';
+import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
-type Callback = (data: FunctionSubscriptionEvent) => Promise<void>;
+export type Callback = (data: any) => Promise<void | number>;
 
 export type SchedulerOptions = {
   endpoint?: string;
@@ -34,20 +28,27 @@ export type SchedulerOptions = {
 };
 
 /**
- * The scheduler triggers function exectuion based on various triggers.
+ * The scheduler triggers function execution based on various triggers.
  */
 export class Scheduler {
   // Map of mounted functions.
   private readonly _mounts = new ComplexMap<
-    { id: string; spaceKey: PublicKey },
+    { spaceKey: PublicKey; id: string },
     { ctx: Context; trigger: FunctionTrigger }
-  >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
+  >(({ spaceKey, id }) => `${spaceKey.toHex()}:${id}`);
 
   constructor(
     private readonly _client: Client,
     private readonly _manifest: FunctionManifest,
     private readonly _options: SchedulerOptions = {},
   ) {}
+
+  get mounts() {
+    return Array.from(this._mounts.values()).reduce<FunctionTrigger[]>((acc, { trigger }) => {
+      acc.push(trigger);
+      return acc;
+    }, []);
+  }
 
   async start() {
     this._client.spaces.subscribe(async (spaces) => {
@@ -66,8 +67,11 @@ export class Scheduler {
     }
   }
 
+  /**
+   * Mount trigger.
+   */
   private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
-    const key = { id: trigger.function, spaceKey: space.key };
+    const key = { spaceKey: space.key, id: trigger.function };
     const def = this._manifest.functions.find((config) => config.id === trigger.function);
     invariant(def, `Function not found: ${trigger.function}`);
 
@@ -85,19 +89,19 @@ export class Scheduler {
       //
 
       if (trigger.timer) {
-        await this._createTimer(ctx, space, def, trigger.timer);
+        await this._createTimer(ctx, space, def, trigger);
       }
 
       if (trigger.webhook) {
-        await this._createWebhook(ctx, space, def, trigger.webhook);
+        await this._createWebhook(ctx, space, def, trigger);
       }
 
       if (trigger.websocket) {
-        await this._createWebsocket(ctx, space, def, trigger.websocket);
+        await this._createWebsocket(ctx, space, def, trigger);
       }
 
       if (trigger.subscription) {
-        await this._createSubscription(ctx, space, def, trigger.subscription);
+        await this._createSubscription(ctx, space, def, trigger);
       }
     }
   }
@@ -111,29 +115,44 @@ export class Scheduler {
     }
   }
 
-  // TODO(burdon): Pass in Space key (common context).
-  private async _execFunction(def: FunctionDef, data: any) {
+  private async _execFunction<TData, TMeta>(def: FunctionDef, trigger: FunctionTrigger, data: TData): Promise<number> {
+    let status = 0;
     try {
-      log.info('exec', { function: def.id });
+      // TODO(burdon): Pass in Space key (common context)?
+      const payload = Object.assign({}, { meta: trigger.meta as TMeta } satisfies FunctionEventMeta<TMeta>, data);
+
       const { endpoint, callback } = this._options;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        await fetch(`${this._options.endpoint}/${def.name}`, {
+        const url = path.join(endpoint, def.path);
+        log.info('exec', { function: def.id, url });
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
+
+        status = response.status;
       } else if (callback) {
-        await callback(data);
+        log.info('exec', { function: def.id });
+        status = (await callback(payload)) ?? 200;
+      }
+
+      // Check errors.
+      if (status && status >= 400) {
+        throw new Error(`Response: ${status}`);
       }
 
       // const result = await response.json();
-      log.info('done', { function: def.id });
+      log.info('done', { function: def.id, status });
     } catch (err: any) {
       log.error('error', { function: def.id, error: err.message });
+      status = 500;
     }
+
+    return status;
   }
 
   //
@@ -143,19 +162,19 @@ export class Scheduler {
   /**
    * Cron timer.
    */
-  private async _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: TimerTrigger) {
+  private async _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
     log.info('timer', { space: space.key, trigger });
-    const { cron } = trigger;
+    const spec = trigger.timer!;
 
     const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, { space: space.key });
+      await this._execFunction(def, trigger, { spaceKey: space.key });
     });
 
     let last = 0;
     let run = 0;
     // https://www.npmjs.com/package/cron#constructor
     const job = CronJob.from({
-      cronTime: cron,
+      cronTime: spec.cron,
       runOnInit: false,
       onTick: () => {
         // TODO(burdon): Check greater than 30s (use cron-parser).
@@ -176,17 +195,33 @@ export class Scheduler {
   /**
    * Webhook.
    */
-  private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: WebhookTrigger) {
+  private async _createWebhook(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
     log.info('webhook', { space: space.key, trigger });
-    const { port } = trigger;
+    const spec = trigger.webhook!;
 
-    // TODO(burdon): POST JSON.
+    // TODO(burdon): Enable POST hook with payload.
     const server = http.createServer(async (req, res) => {
-      await this._execFunction(def, { space: space.key });
+      if (req.method !== spec.method) {
+        res.statusCode = 405;
+        return res.end();
+      }
+
+      res.statusCode = await this._execFunction(def, trigger, { spaceKey: space.key });
+      res.end();
     });
 
+    // TODO(burdon): Not used.
+    // const DEF_PORT_RANGE = { min: 7500, max: 7599 };
+    // const portRange = Object.assign({}, trigger.port, DEF_PORT_RANGE) as WebhookTrigger['port'];
+    const port = await getPort({
+      random: true,
+      // portRange: [portRange!.min, portRange!.max],
+    });
+
+    // TODO(burdon): Update trigger object with actual port.
     server.listen(port, () => {
       log.info('started webhook', { port });
+      spec.port = port;
     });
 
     ctx.onDispose(() => {
@@ -196,12 +231,13 @@ export class Scheduler {
 
   /**
    * Websocket.
+   * NOTE: The port must be unique, so the same hook cannot be used for multiple spaces.
    */
   private async _createWebsocket(
     ctx: Context,
     space: Space,
     def: FunctionDef,
-    trigger: WebsocketTrigger,
+    trigger: FunctionTrigger,
     options: {
       retryDelay: number;
       maxAttempts: number;
@@ -211,7 +247,8 @@ export class Scheduler {
     },
   ) {
     log.info('websocket', { space: space.key, trigger });
-    const { url } = trigger;
+    const spec = trigger.websocket!;
+    const { url, init } = spec;
 
     let ws: WebSocket;
     for (let attempt = 1; attempt <= options.maxAttempts; attempt++) {
@@ -221,15 +258,24 @@ export class Scheduler {
       Object.assign(ws, {
         onopen: () => {
           log.info('opened', { url });
-          if (trigger.init) {
-            ws.send(new TextEncoder().encode(JSON.stringify(trigger.init)));
+          if (spec.init) {
+            ws.send(new TextEncoder().encode(JSON.stringify(init)));
           }
 
           open.wake(true);
         },
 
-        onclose: () => {
-          log.info('closed', { url });
+        onclose: (event) => {
+          log.info('closed', { url, code: event.code });
+          // Reconnect if server closes (e.g., CF restart).
+          // https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code
+          if (event.code === 1006) {
+            setTimeout(async () => {
+              log.info(`reconnecting in ${options.retryDelay}s...`, { url });
+              await this._createWebsocket(ctx, space, def, trigger, options);
+            }, options.retryDelay * 1_000);
+          }
+
           open.wake(false);
         },
 
@@ -240,7 +286,7 @@ export class Scheduler {
         onmessage: async (event) => {
           try {
             const data = JSON.parse(new TextDecoder().decode(event.data as Uint8Array));
-            await this._execFunction(def, { space: space.key, data });
+            await this._execFunction(def, trigger, { spaceKey: space.key, data });
           } catch (err) {
             log.catch(err, { url });
           }
@@ -267,15 +313,17 @@ export class Scheduler {
   /**
    * ECHO subscription.
    */
-  private async _createSubscription(ctx: Context, space: Space, def: FunctionDef, trigger: SubscriptionTrigger) {
+  private async _createSubscription(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
     log.info('subscription', { space: space.key, trigger });
+    const spec = trigger.subscription!;
+
     const objectIds = new Set<string>();
     const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, { space: space.key, objects: Array.from(objectIds) });
+      await this._execFunction(def, trigger, { spaceKey: space.key, objects: Array.from(objectIds) });
     });
 
-    // TODO(burdon): Don't fire initially.
-    // TODO(burdon): Subscription is called THREE times.
+    // TODO(burdon): Don't fire initially?
+    // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
     const subscriptions: (() => void)[] = [];
     const subscription = createSubscription(({ added, updated }) => {
       log.info('updated', { added: added.length, updated: updated.length });
@@ -288,11 +336,11 @@ export class Scheduler {
 
       task.schedule();
     });
+
     subscriptions.push(() => subscription.unsubscribe());
 
-    // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
     // TODO(burdon): Disable trigger if keeps failing.
-    const { filter, options: { deep, delay } = {} } = trigger;
+    const { filter, options: { deep, delay } = {} } = spec;
     const update = ({ objects }: Query) => {
       subscription.update(objects);
 

@@ -615,6 +615,9 @@ importers:
       '@braneframe/plugin-stack':
         specifier: workspace:*
         version: link:../plugins/plugin-stack
+      '@braneframe/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugins/plugin-status-bar
       '@braneframe/plugin-table':
         specifier: workspace:*
         version: link:../plugins/plugin-table
@@ -3366,6 +3369,85 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
 
+  packages/apps/plugins/plugin-status-bar:
+    dependencies:
+      '@braneframe/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../types
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../../sdk/app-framework
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../../sdk/react-client
+      '@effect/schema':
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+      '@fluentui/react-tabster':
+        specifier: ^9.19.0
+        version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
+      '@preact/signals-core':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@radix-ui/react-slot':
+        specifier: ^1.0.1
+        version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
+      leaflet:
+        specifier: ^1.9.3
+        version: 1.9.3
+      react-leaflet:
+        specifier: ^4.2.0
+        version: 4.2.0(leaflet@1.9.3)(react-dom@18.2.0)(react@18.2.0)
+      react-resize-detector:
+        specifier: ^7.1.2
+        version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
+    devDependencies:
+      '@braneframe/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@braneframe/plugin-stack':
+        specifier: workspace:*
+        version: link:../plugin-stack
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui
+      '@dxos/react-ui-theme':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-theme
+      '@dxos/storybook-utils':
+        specifier: workspace:*
+        version: link:../../../ui/storybook-utils
+      '@phosphor-icons/react':
+        specifier: ^2.1.5
+        version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
+      '@types/leaflet':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@types/react':
+        specifier: ^18.0.21
+        version: 18.0.21
+      '@types/react-dom':
+        specifier: ^18.0.6
+        version: 18.0.6
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.2.0(react@18.2.0)
+      vite:
+        specifier: ^5.2.9
+        version: 5.2.9(@types/node@18.11.9)
+
   packages/apps/plugins/plugin-table:
     dependencies:
       '@braneframe/plugin-space':
@@ -5288,14 +5370,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: 2.4.9
-        version: 2.4.9
+        specifier: ^2.4.19
+        version: 2.4.19
       level:
         specifier: ^8.0.1
         version: 8.0.1
@@ -5525,14 +5607,14 @@ importers:
         specifier: workspace:*
         version: link:../../protocols
       '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       effect:
-        specifier: 2.4.9
-        version: 2.4.9
+        specifier: ^2.4.19
+        version: 2.4.19
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
@@ -5607,6 +5689,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5684,14 +5769,17 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
       cron:
         specifier: ^3.1.6
         version: 3.1.6
+      effect:
+        specifier: ^2.4.19
+        version: 2.4.19
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -5702,6 +5790,9 @@ importers:
         specifier: ^8.14.2
         version: 8.17.0
     devDependencies:
+      '@dxos/agent':
+        specifier: workspace:*
+        version: link:../agent
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
@@ -7053,6 +7144,227 @@ importers:
         specifier: ^5.2.9
         version: 5.2.9(@types/node@18.11.9)
 
+  packages/experimental/agent-functions:
+    dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/chess-app':
+        specifier: workspace:*
+        version: link:../chess-app
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
+      '@dxos/client-services':
+        specifier: workspace:*
+        version: link:../../sdk/client-services
+      '@dxos/config':
+        specifier: workspace:*
+        version: link:../../sdk/config
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/crypto':
+        specifier: workspace:*
+        version: link:../../common/crypto
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-generator':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-generator
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
+      '@dxos/node-std':
+        specifier: workspace:*
+        version: link:../../common/node-std
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      '@effect/schema':
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+      '@langchain/community':
+        specifier: ^0.0.43
+        version: 0.0.43(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@24.0.0)
+      '@langchain/core':
+        specifier: ^0.1.51
+        version: 0.1.62(openai@4.26.1)
+      '@langchain/mistralai':
+        specifier: ^0.0.16
+        version: 0.0.16
+      '@langchain/openai':
+        specifier: ^0.0.23
+        version: 0.0.23
+      '@modelfusion/mathjs-tool':
+        specifier: ^0.1.1
+        version: 0.1.1(modelfusion@0.137.0)(zod@3.22.4)
+      '@octokit/rest':
+        specifier: ^19.0.5
+        version: 19.0.5
+      amadeus:
+        specifier: ^8.0.0
+        version: 8.1.0
+      assert:
+        specifier: ^2.0.0
+        version: 2.1.0
+      chess.js:
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
+      cross-fetch:
+        specifier: ^3.1.5
+        version: 3.1.5
+      csv-parse:
+        specifier: ^5.3.6
+        version: 5.5.2
+      date-fns:
+        specifier: ^3.3.1
+        version: 3.3.1
+      discord.js:
+        specifier: ^14.14.1
+        version: 14.14.1
+      effect:
+        specifier: ^2.4.19
+        version: 2.4.19
+      email-addresses:
+        specifier: ^5.0.0
+        version: 5.0.0
+      faiss-node:
+        specifier: ^0.5.1
+        version: 0.5.1
+      fast-xml-parser:
+        specifier: ^4.3.2
+        version: 4.3.2
+      google-auth-library:
+        specifier: ^8.9.0
+        version: 8.9.0
+      googleapis:
+        specifier: ^126.0.1
+        version: 126.0.1
+      html-to-text:
+        specifier: ^9.0.4
+        version: 9.0.5
+      imap:
+        specifier: ^0.8.19
+        version: 0.8.19
+      imap-simple:
+        specifier: ^5.1.0
+        version: 5.1.0
+      js-chess-engine:
+        specifier: ^1.0.2
+        version: 1.0.2
+      js-yaml:
+        specifier: ^4.1.0
+        version: 4.1.0
+      langchain:
+        specifier: ^0.1.12
+        version: 0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@24.0.0)
+      lodash.defaultsdeep:
+        specifier: ^4.6.1
+        version: 4.6.1
+      lodash.get:
+        specifier: ^4.4.2
+        version: 4.4.2
+      lodash.startcase:
+        specifier: ^4.4.0
+        version: 4.4.0
+      mailparser:
+        specifier: ^3.6.4
+        version: 3.6.5
+      modelfusion:
+        specifier: ^0.137.0
+        version: 0.137.0
+      node-fetch:
+        specifier: ^2.6.0
+        version: 2.7.0
+      server-destroy:
+        specifier: ^1.0.1
+        version: 1.0.1
+      split2:
+        specifier: ^4.1.0
+        version: 4.2.0
+      textract:
+        specifier: ^2.5.0
+        version: 2.5.0
+      ts-jest:
+        specifier: ^28.0.0
+        version: 28.0.8(esbuild@0.19.6)(jest@28.1.3)(typescript@5.2.2)
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+      zod-to-json-schema:
+        specifier: ^3.22.0
+        version: 3.22.4(zod@3.22.4)
+    optionalDependencies:
+      '@dxos/random':
+        specifier: workspace:*
+        version: link:../../common/random
+    devDependencies:
+      '@dxos/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@mediapipe/tasks-text':
+        specifier: ^0.10.7
+        version: 0.10.8
+      '@types/html-to-text':
+        specifier: ^9.0.0
+        version: 9.0.3
+      '@types/imap':
+        specifier: ^0.8.35
+        version: 0.8.39
+      '@types/imap-simple':
+        specifier: ^4.2.5
+        version: 4.2.8
+      '@types/js-yaml':
+        specifier: ^4.0.5
+        version: 4.0.5
+      '@types/lodash.defaultsdeep':
+        specifier: ^4.6.6
+        version: 4.6.7
+      '@types/lodash.startcase':
+        specifier: ^4.4.9
+        version: 4.4.9
+      '@types/mailparser':
+        specifier: ^3.4.0
+        version: 3.4.3
+      '@types/server-destroy':
+        specifier: ^1.0.3
+        version: 1.0.3
+      '@types/split2':
+        specifier: ^3.2.1
+        version: 3.2.1
+      '@types/textract':
+        specifier: ^2.4.5
+        version: 2.4.5
+      fast-check:
+        specifier: ^3.15.1
+        version: 3.15.1
+      ts-node:
+        specifier: 10.9.1
+        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
+
   packages/experimental/chess-app:
     dependencies:
       '@dxos/echo-schema':
@@ -7240,224 +7552,6 @@ importers:
       postcss:
         specifier: ^8.4.21
         version: 8.4.24
-
-  packages/experimental/labs-functions:
-    dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
-      '@dxos/async':
-        specifier: workspace:*
-        version: link:../../common/async
-      '@dxos/chess-app':
-        specifier: workspace:*
-        version: link:../chess-app
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
-      '@dxos/config':
-        specifier: workspace:*
-        version: link:../../sdk/config
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
-      '@dxos/echo-generator':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-generator
-      '@dxos/echo-schema':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-schema
-      '@dxos/functions':
-        specifier: workspace:*
-        version: link:../../core/functions
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
-      '@dxos/node-std':
-        specifier: workspace:*
-        version: link:../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../common/util
-      '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
-      '@langchain/community':
-        specifier: ^0.0.43
-        version: 0.0.43(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@24.0.0)
-      '@langchain/core':
-        specifier: ^0.1.51
-        version: 0.1.62(openai@4.26.1)
-      '@langchain/mistralai':
-        specifier: ^0.0.16
-        version: 0.0.16
-      '@langchain/openai':
-        specifier: ^0.0.23
-        version: 0.0.23
-      '@modelfusion/mathjs-tool':
-        specifier: ^0.1.1
-        version: 0.1.1(modelfusion@0.137.0)(zod@3.22.4)
-      '@octokit/rest':
-        specifier: ^19.0.5
-        version: 19.0.5
-      amadeus:
-        specifier: ^8.0.0
-        version: 8.1.0
-      assert:
-        specifier: ^2.0.0
-        version: 2.0.0
-      chess.js:
-        specifier: ^1.0.0-beta.8
-        version: 1.0.0-beta.8
-      cross-fetch:
-        specifier: ^3.1.5
-        version: 3.1.5
-      csv-parse:
-        specifier: ^5.3.6
-        version: 5.5.2
-      date-fns:
-        specifier: ^3.3.1
-        version: 3.3.1
-      discord.js:
-        specifier: ^14.14.1
-        version: 14.14.1
-      effect:
-        specifier: 2.4.9
-        version: 2.4.9
-      email-addresses:
-        specifier: ^5.0.0
-        version: 5.0.0
-      faiss-node:
-        specifier: ^0.5.1
-        version: 0.5.1
-      fast-xml-parser:
-        specifier: ^4.3.2
-        version: 4.3.2
-      google-auth-library:
-        specifier: ^8.9.0
-        version: 8.9.0
-      googleapis:
-        specifier: ^126.0.1
-        version: 126.0.1
-      html-to-text:
-        specifier: ^9.0.4
-        version: 9.0.5
-      imap:
-        specifier: ^0.8.19
-        version: 0.8.19
-      imap-simple:
-        specifier: ^5.1.0
-        version: 5.1.0
-      js-yaml:
-        specifier: ^4.1.0
-        version: 4.1.0
-      langchain:
-        specifier: ^0.1.12
-        version: 0.1.13(discord.js@14.14.1)(faiss-node@0.5.1)(fast-xml-parser@4.3.2)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@24.0.0)
-      lodash.defaultsdeep:
-        specifier: ^4.6.1
-        version: 4.6.1
-      lodash.get:
-        specifier: ^4.4.2
-        version: 4.4.2
-      lodash.startcase:
-        specifier: ^4.4.0
-        version: 4.4.0
-      mailparser:
-        specifier: ^3.6.4
-        version: 3.6.5
-      modelfusion:
-        specifier: ^0.137.0
-        version: 0.137.0
-      node-fetch:
-        specifier: ^2.6.0
-        version: 2.6.7
-      server-destroy:
-        specifier: ^1.0.1
-        version: 1.0.1
-      split2:
-        specifier: ^4.1.0
-        version: 4.1.0
-      textract:
-        specifier: ^2.5.0
-        version: 2.5.0
-      ts-jest:
-        specifier: ^28.0.0
-        version: 28.0.8(esbuild@0.19.6)(jest@28.1.3)(typescript@5.2.2)
-      zod:
-        specifier: ^3.22.4
-        version: 3.22.4
-      zod-to-json-schema:
-        specifier: ^3.22.0
-        version: 3.22.0(zod@3.22.4)
-    optionalDependencies:
-      '@dxos/random':
-        specifier: workspace:*
-        version: link:../../common/random
-    devDependencies:
-      '@dxos/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@mediapipe/tasks-text':
-        specifier: ^0.10.7
-        version: 0.10.8
-      '@types/html-to-text':
-        specifier: ^9.0.0
-        version: 9.0.3
-      '@types/imap':
-        specifier: ^0.8.35
-        version: 0.8.39
-      '@types/imap-simple':
-        specifier: ^4.2.5
-        version: 4.2.8
-      '@types/js-yaml':
-        specifier: ^4.0.5
-        version: 4.0.5
-      '@types/lodash.defaultsdeep':
-        specifier: ^4.6.6
-        version: 4.6.7
-      '@types/lodash.startcase':
-        specifier: ^4.4.9
-        version: 4.4.9
-      '@types/mailparser':
-        specifier: ^3.4.0
-        version: 3.4.3
-      '@types/server-destroy':
-        specifier: ^1.0.3
-        version: 1.0.3
-      '@types/split2':
-        specifier: ^3.2.1
-        version: 3.2.1
-      '@types/textract':
-        specifier: ^2.4.5
-        version: 2.4.5
-      fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
-      ts-node:
-        specifier: 10.9.1
-        version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.4.0)(@types/node@18.11.9)(typescript@5.2.2)
 
   packages/experimental/metagraph:
     dependencies:
@@ -9734,8 +9828,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: 0.64.7
-        version: 0.64.7(effect@2.4.9)(fast-check@3.15.1)
+        specifier: ^0.64.20
+        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9761,8 +9855,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       effect:
-        specifier: 2.4.9
-        version: 2.4.9
+        specifier: ^2.4.19
+        version: 2.4.19
     devDependencies:
       '@dxos/echo-schema':
         specifier: workspace:*
@@ -13937,7 +14031,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-    dev: false
 
   /@babel/template@7.20.7:
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
@@ -14905,13 +14998,13 @@ packages:
       lodash.pick: 4.4.0
     dev: false
 
-  /@effect/schema@0.64.7(effect@2.4.9)(fast-check@3.15.1):
-    resolution: {integrity: sha512-iTfA7M+sjeoApwJfaalybbR25w/TW2GCerqdftxlwwNco3uOCOzB6nalmRaN4NinjSpcgg15nkDtugvAOQqrOA==}
+  /@effect/schema@0.64.20(effect@2.4.19)(fast-check@3.15.1):
+    resolution: {integrity: sha512-oSphgsP9j7yHy31RxTQ0txWq76u1F/H1Hqw+GVcpjnK4n/fuZo7MNYU/qpG+TLJWj4+yUku5I3Rr0Vr7gVoMeQ==}
     peerDependencies:
-      effect: ^2.4.9
+      effect: ^2.4.18
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.4.9
+      effect: 2.4.19
       fast-check: 3.15.1
     dev: false
 
@@ -17351,7 +17444,7 @@ packages:
       nopt: 5.0.0
       npmlog: 5.0.1
       rimraf: 3.0.2
-      semver: 7.5.4
+      semver: 7.6.2
       tar: 6.1.11
     transitivePeerDependencies:
       - encoding
@@ -19977,7 +20070,7 @@ packages:
   /@radix-ui/number@1.0.1:
     resolution: {integrity: sha512-T5gIdVO2mmPW3NNhjNgEP3cqMXjXL9UbO0BzWcXfvdBs+BohbQxvd/K5hSVKmn9/lbTdsQVKbUcP5WLCwvUbBg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: false
 
   /@radix-ui/primitive@1.0.0:
@@ -20036,7 +20129,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -20143,7 +20236,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -20229,7 +20322,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.0
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-context': 1.0.0(react@18.2.0)
@@ -20306,7 +20399,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.0
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.0(react-dom@18.2.0)(react@18.2.0)
@@ -20322,7 +20415,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.0
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
@@ -20345,7 +20438,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -20370,7 +20463,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -20395,7 +20488,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -20420,7 +20513,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-context': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20467,7 +20560,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       react: 18.2.0
     dev: false
 
@@ -20480,7 +20573,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@types/react': 18.0.21
       react: 18.2.0
     dev: false
@@ -20491,7 +20584,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
@@ -20505,7 +20598,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
@@ -20526,7 +20619,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20549,7 +20642,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20597,7 +20690,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20704,7 +20797,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.0
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       '@radix-ui/react-context': 1.0.0(react@18.2.0)
@@ -20767,7 +20860,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@floating-ui/react-dom': 0.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-arrow': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
@@ -20820,7 +20913,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@floating-ui/react-dom': 0.7.2(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-arrow': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
@@ -20850,7 +20943,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@floating-ui/react-dom': 2.0.0(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-arrow': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20880,7 +20973,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@floating-ui/react-dom': 2.0.0(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-arrow': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -20903,7 +20996,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.0(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -20915,7 +21008,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -20934,7 +21027,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -20955,7 +21048,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
@@ -21003,7 +21096,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-slot': 1.0.0(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -21124,7 +21217,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -21240,7 +21333,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/number': 1.0.1
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-collection': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -21263,7 +21356,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       react: 18.2.0
     dev: false
@@ -21273,7 +21366,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.0(react@18.2.0)
       react: 18.2.0
 
@@ -21286,7 +21379,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -21495,7 +21588,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
       react: 18.2.0
     dev: false
@@ -21505,7 +21598,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-use-callback-ref': 1.0.0(react@18.2.0)
       react: 18.2.0
     dev: false
@@ -21519,7 +21612,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -21534,7 +21627,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@types/react': 18.0.21
       react: 18.2.0
@@ -21589,7 +21682,7 @@ packages:
     peerDependencies:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/rect': 1.0.0
       react: 18.2.0
     dev: false
@@ -21639,7 +21732,7 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
       react-dom: ^16.8 || ^17.0 || ^18.0
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.2(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -21648,7 +21741,7 @@ packages:
   /@radix-ui/rect@1.0.0:
     resolution: {integrity: sha512-d0O68AYy/9oeEy1DdC07bz1/ZXX+DqCskRd3i4JzLSTXwefzaepQrKjXC7aNM8lTHjFLDO0pDgaEiQ7jEk+HVg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: false
 
   /@radix-ui/rect@1.0.1:
@@ -26273,7 +26366,7 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       globby: 11.1.0
       is-glob: 4.0.3
-      semver: 7.5.4
+      semver: 7.6.2
       tsutils: 3.21.0(typescript@5.2.2)
       typescript: 5.2.2
     transitivePeerDependencies:
@@ -27408,7 +27501,7 @@ packages:
     resolution: {integrity: sha512-cBekfs/rqT0kqqrnHbZ5fj6BJX0XRj6+2RevvVM9mn/0dKBuIuVArrDokhPnt7hfi3oWNqk4462XVsFeVC7x/A==}
     dependencies:
       bluebird: 3.7.2
-      qs: 6.11.0
+      qs: 6.11.2
     dev: false
 
   /ansi-align@3.0.1:
@@ -28058,7 +28151,7 @@ packages:
   /babel-plugin-macros@2.8.0:
     resolution: {integrity: sha512-SEP5kJpfGYqYKpBrj5XU3ahw5p5GOHJ0U5ssOSQ/WBVdwkD2Dzlce95exQTs3jOVWPPKLBN2rlEWkCK7dSmLvg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       cosmiconfig: 6.0.0
       resolve: 1.22.8
     dev: true
@@ -28067,7 +28160,7 @@ packages:
     resolution: {integrity: sha512-Cg7TFGpIr01vOQNODXOOaGz2NpCU5gl8x1qJFbb6hbZxR7XrcE2vtbAsTAbJ7/xwJtUuJEw8K8Zr/AE0LHlesg==}
     engines: {node: '>=10', npm: '>=6'}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       cosmiconfig: 7.1.0
       resolve: 1.22.8
 
@@ -29001,7 +29094,7 @@ packages:
     engines: {node: '>=0.8'}
     hasBin: true
     dependencies:
-      commander: 12.0.0
+      commander: 12.1.0
     dev: false
 
   /cfb@1.2.2:
@@ -29549,7 +29642,7 @@ packages:
     engines: {node: '>=0.8'}
     hasBin: true
     dependencies:
-      commander: 12.0.0
+      commander: 12.1.0
       concat-stream: 2.0.0
       voc: 1.2.0
     dev: false
@@ -29667,6 +29760,12 @@ packages:
   /commander@12.0.0:
     resolution: {integrity: sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==}
     engines: {node: '>=18'}
+    dev: true
+
+  /commander@12.1.0:
+    resolution: {integrity: sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA==}
+    engines: {node: '>=18'}
+    dev: false
 
   /commander@2.17.1:
     resolution: {integrity: sha512-wPMUt6FnH2yzG95SA6mzjQOEKUU3aLaDEmzs1ti+1E9h+CsrZghRlqEM/EJ4KscsQVG8uNN4uVreUeT8+drlgg==}
@@ -31466,8 +31565,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.4.9:
-    resolution: {integrity: sha512-hRTy37jVylIYOC4k/VKfgmGkIMEOjR8MOurLzr1J0AD7ufagbcoO7voygZkT2B1STXfBXEsKNWj8yDAzUcPpAA==}
+  /effect@2.4.19:
+    resolution: {integrity: sha512-z/rn878Po3n522g/AYUDHD1SsZaZdvRxlTCLQ8xl8H6xA82nBwwooD1mdn/73Uywmp7d84oay3w3528r0Uyd0w==}
     dev: false
 
   /ejs@3.1.10:
@@ -34426,7 +34525,7 @@ packages:
     dependencies:
       babyparse: 0.2.1
       codepage: 1.15.0
-      commander: 12.0.0
+      commander: 12.1.0
       ssf: 0.8.2
     dev: false
 
@@ -36195,7 +36294,7 @@ packages:
     deprecated: The underlying libraries have been unified.  See < https://cdn.sheetjs.com/j/ >.
     hasBin: true
     dependencies:
-      commander: 12.0.0
+      commander: 12.1.0
       concat-stream: 2.0.0
       harb: 0.0.7
       xlsjs: 0.7.6
@@ -37048,7 +37147,7 @@ packages:
       jest-util: 29.5.0
       natural-compare: 1.4.0
       pretty-format: 29.7.0
-      semver: 7.5.4
+      semver: 7.6.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -37215,6 +37314,10 @@ packages:
     resolution: {integrity: sha512-KUXdbctm1uHVL8BYhnyHkgp3zDX5KW8ZhAKVFEfUbU2P8Alpzjb+48hHvjOdQIyPshoblhzsuqOwEEAbtHVirA==}
     dev: false
 
+  /js-chess-engine@1.0.2:
+    resolution: {integrity: sha512-oOFuP3/+Ef7SAWcL+8tDAQNcPFuyul6XI/2NypRblqchI4UbYkWNNxVi//XEQW8L242Jk21ljLhllSyRGEFlGg==}
+    dev: false
+
   /js-cookie@3.0.5:
     resolution: {integrity: sha512-cEiJEAEoIbWfCZYKWhVwFuvPX1gETRYPw6LlaTKoxD3s2AkXzkCjnp6h0V77ozyqj0jakteJ4YqDJT830+lVGw==}
     engines: {node: '>=14'}
@@ -37313,7 +37416,7 @@ packages:
       cssom: 0.4.4
       cssstyle: 2.3.0
       data-urls: 2.0.0
-      decimal.js: 10.4.2
+      decimal.js: 10.4.3
       domexception: 2.0.1
       escodegen: 2.1.0
       form-data: 3.0.1
@@ -37486,7 +37589,7 @@ packages:
       jws: 3.2.2
       lodash: 4.17.21
       ms: 2.1.3
-      semver: 7.5.4
+      semver: 7.6.2
     dev: false
 
   /jsprim@1.4.2:
@@ -37815,7 +37918,7 @@ packages:
       fast-xml-parser: 4.3.2
       google-auth-library: 8.9.0
       html-to-text: 9.0.5
-      js-tiktoken: 1.0.7
+      js-tiktoken: 1.0.10
       js-yaml: 4.1.0
       jsdom: 24.0.0
       jsonpointer: 5.0.1
@@ -38754,7 +38857,7 @@ packages:
     engines: {node: '>= 12'}
     hasBin: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       complex.js: 2.1.1
       decimal.js: 10.4.2
       escape-latex: 1.2.0
@@ -41205,7 +41308,7 @@ packages:
       got: 12.6.1
       registry-auth-token: 5.0.2
       registry-url: 6.0.1
-      semver: 7.5.4
+      semver: 7.6.2
     dev: true
 
   /pako@0.2.9:
@@ -41671,7 +41774,7 @@ packages:
     resolution: {integrity: sha512-Sz2Lkdxz6F2Pgnpi9U5Ng/WdWAUZxmHrNPoVlm3aAemxoy2Qy7LGjQg4uf8qKelDAUW94F4np3iH2YPf2qefcQ==}
     engines: {node: '>=10'}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: true
 
   /popper.js@1.16.1:
@@ -43244,7 +43347,7 @@ packages:
   /redux@4.2.0:
     resolution: {integrity: sha512-oSBmcKKIuIR4ME29/AeNUnl5L+hvBq7OaJWzaptTQJAntaPvxIJqfnjbaEiCzzaIz+XmVILfqAM3Ob0aXLPfjA==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: false
 
   /reflect.getprototypeof@1.0.4:
@@ -43284,12 +43387,12 @@ packages:
   /regenerator-transform@0.15.0:
     resolution: {integrity: sha512-LsrGtPmbYg19bcPHwdtmXwbW+TqNvtY4riE3P83foeHRroMbH6/2ddFBfab3t7kbzc7v7p4wbkIecHImqt0QNg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
 
   /regenerator-transform@0.15.2:
     resolution: {integrity: sha512-hfMp2BoF0qOk3uc5V20ALGDS2ddjQaLrdl7xrGXvAIow7qeWRM2VA2HuCHkUKk9slq3VwEwLNK3DFBqDfPGYtg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: true
 
   /regex-not@1.0.2:
@@ -43961,7 +44064,7 @@ packages:
   /rtl-css-js@1.16.1:
     resolution: {integrity: sha512-lRQgou1mu19e+Ya0LsTvKrVJ5TYUbqCVPAiImX3UfLTenarvPUl1QFdvu5Z3PYmHT9RCcwIfbjRQBntExyj3Zg==}
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
     dev: false
 
   /run-applescript@7.0.0:
@@ -44239,7 +44342,6 @@ packages:
     resolution: {integrity: sha512-FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==}
     engines: {node: '>=10'}
     hasBin: true
-    dev: true
 
   /send@0.18.0:
     resolution: {integrity: sha512-qqWzuOjSFOuqPjFe4NOsMLafToQQwBSOEpS+FwEt3A2V3vKubTquT3vmLTQpFgMXp8AlFWFuP1qKaJZOtPpVXg==}
@@ -44935,15 +45037,9 @@ packages:
     dependencies:
       extend-shallow: 3.0.2
 
-  /split2@4.1.0:
-    resolution: {integrity: sha512-VBiJxFkxiXRlUIeyMQi8s4hgvKCSjtknJv/LVYbrgALPwf5zSKmEwV9Lst25AkvMDnvxODugjdl6KZgwKM1WYQ==}
-    engines: {node: '>= 10.x'}
-    dev: false
-
   /split2@4.2.0:
     resolution: {integrity: sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg==}
     engines: {node: '>= 10.x'}
-    dev: true
 
   /split@1.0.1:
     resolution: {integrity: sha512-mTyOoPbrivtXnwnIxZRFYRrPNtEFKlpB2fvjSnCQUiAA6qAZzqwna5envK4uk6OIeP17CsdF3rSBGYVBsU0Tkg==}
@@ -49280,7 +49376,7 @@ packages:
     dependencies:
       cfb: 0.11.1
       codepage: 1.15.0
-      commander: 12.0.0
+      commander: 12.1.0
       exit-on-epipe: 1.0.1
       ssf: 0.8.2
     dev: false
@@ -49316,7 +49412,7 @@ packages:
       adler-32: 1.3.1
       cfb: 1.2.2
       codepage: 1.3.8
-      commander: 12.0.0
+      commander: 12.1.0
       crc-32: 1.2.2
       jszip: 2.4.0
       ssf: 0.8.2
@@ -49662,14 +49758,6 @@ packages:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
     dev: true
-
-  /zod-to-json-schema@3.22.0(zod@3.22.4):
-    resolution: {integrity: sha512-XQr8EwxPMzJGhoR+d/nRFWdi15VaZ+R5Uhssm+Xx5yS30xCpuutfKRm4rerE0SK9j2dWB5Z3FvDD0w8WMVGzkA==}
-    peerDependencies:
-      zod: ^3.22.4
-    dependencies:
-      zod: 3.22.4
-    dev: false
 
   /zod-to-json-schema@3.22.3(zod@3.22.4):
     resolution: {integrity: sha512-9isG8SqRe07p+Aio2ruBZmLm2Q6Sq4EqmXOiNpDxp+7f0LV6Q/LX65fs5Nn+FV/CzfF3NLBoksXbS2jNYIfpKw==}

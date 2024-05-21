@@ -2,8 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "required": [
-    "functions",
-    "triggers"
+    "functions"
   ],
   "properties": {
     "functions": {
@@ -12,7 +11,7 @@
         "type": "object",
         "required": [
           "id",
-          "name",
+          "path",
           "handler"
         ],
         "properties": {
@@ -21,7 +20,7 @@
             "description": "a string",
             "title": "string"
           },
-          "name": {
+          "path": {
             "type": "string",
             "description": "a string",
             "title": "string"
@@ -53,6 +52,15 @@
             "description": "Function ID/URI.",
             "title": "string"
           },
+          "meta": {
+            "type": "object",
+            "required": [],
+            "properties": {},
+            "additionalProperties": {
+              "$id": "/schemas/any",
+              "title": "any"
+            }
+          },
           "timer": {
             "type": "object",
             "required": [
@@ -70,9 +78,14 @@
           "webhook": {
             "type": "object",
             "required": [
-              "port"
+              "method"
             ],
             "properties": {
+              "method": {
+                "type": "string",
+                "description": "a string",
+                "title": "string"
+              },
               "port": {
                 "type": "number",
                 "description": "a number",
