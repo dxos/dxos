@@ -40,11 +40,33 @@
 - Receives a set of Game objects representing the current game state, plus static metadata about the AI (e.g., skill level).
 - Updates the game state.
 
+```yml
+rule:
+  function: 'example.com/chess'
+  trigger:
+    subscription:
+      filter:
+      - type: braneframe/Game
+  meta:
+    level: 2
+```
+
 ### Email Function
 
 - Triggered by a message from a Web socket endpoint.
 - Receives a message object that contains the the associated email account and a set of messages.
 - Synchronizes messages with objects in the current ECHO space.
+
+```yml
+rule:
+  function: 'example.com/email'
+  trigger:
+    subscription:
+      filter:
+      - type: braneframe/Message
+  meta:
+    account: hello@dxos.network
+```
 
 ### GPT Function
 
@@ -56,3 +78,39 @@
   - Creates a draft response in a specified field of an email object.
   - Constructs a FAQ based on questions from a set of emails.
 
+```yml
+rule:
+  function: 'example.com/gpt'
+  trigger:
+    subscription:
+      filter:
+      - type: braneframe/Message
+   meta:
+     prompt:
+       template: 'translate the message below into ${language}:\n${content}'
+       input:
+       - name: 'language'
+         value: 'japanaese' // Const
+       - name: 'content'
+         value: 'object.content' // Property of Message object
+```
+
+Generate a chess hint that is output to the current message thread?
+
+```yml
+rule:
+  function: 'example.com/gpt'
+  trigger:
+    subscription:
+      filter:
+      - type: braneframe/Game
+  meta:
+    prompt:
+      template: 'suggest the next move form a chess game with history: ${history}'
+      input:
+      - name: 'history'
+        value: 'object.pgn' // Property of Game object
+  output:
+    type: braneframe/Message
+    field: content    
+```
