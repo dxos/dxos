@@ -26,8 +26,6 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
     return;
   }
 
-  //
-
   // TODO(burdon): The handler is called before the mutation is processed?
   await sleep(500);
 

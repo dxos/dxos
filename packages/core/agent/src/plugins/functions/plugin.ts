@@ -36,17 +36,17 @@ export class FunctionsPlugin extends Plugin {
     const app = express();
     app.use(express.json());
 
-    app.post('/:runtime/:path', async (req, res) => {
-      const { runtime, path } = req.params;
+    app.post('/:runtime/:route', async (req, res) => {
+      const { runtime, route } = req.params;
       const dispatcher = this._dispatchers.get(runtime);
-      if (!runtime || !path || !dispatcher) {
+      if (!runtime || !route || !dispatcher) {
         res.statusCode = 404;
         res.end();
         return;
       }
 
       try {
-        const result = await dispatcher.invoke({ path, event: req.body, runtime });
+        const result = await dispatcher.invoke({ route, event: req.body, runtime });
         res.statusCode = result.status;
         res.end(result.response);
       } catch (err: any) {

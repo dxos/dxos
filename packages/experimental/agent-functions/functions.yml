@@ -6,103 +6,89 @@
 ##
 
 functions:
-  - id: 'dxos.org/function/hello'
-    path: '/hello'
+
+  - uri: 'dxos.org/function/hello'
+    route: '/hello'
     handler: 'hello'
     description: 'Hello World!'
 
-  - id: 'dxos.org/function/calendar'
-    path: '/calendar'
+  - uri: 'dxos.org/function/calendar'
+    route: '/calendar'
     handler: 'calendar'
     description: 'Calendar Sync.'
 
-  - id: 'dxos.org/function/chess'
-    path: '/chess'
+  - uri: 'dxos.org/function/chess'
+    route: '/chess'
     handler: 'chess'
     description: 'Chess.'
 
-  - id: 'dxos.org/function/email'
-    path: '/email'
+  - uri: 'dxos.org/function/email'
+    route: '/email'
     handler: 'email'
     description: 'Email Sync.'
 
-  - id: 'dxos.org/function/email-extractor'
-    path: '/email-extractor'
+  - uri: 'dxos.org/function/email-extractor'
+    route: '/email-extractor'
     handler: 'email-extractor'
     description: 'Email Extractor.'
 
-  - id: 'dxos.org/function/email-worker'
-    path: '/email-worker'
+  - uri: 'dxos.org/function/email-worker'
+    route: '/email-worker'
     handler: 'email-worker'
     description: 'Email Sync with Cloudflare Worker.'
 
-  - id: 'dxos.org/function/embedding'
-    path: '/embedding'
+  - uri: 'dxos.org/function/embedding'
+    route: '/embedding'
     handler: 'embedding'
     description: 'Text embedding.'
 
-  - id: 'dxos.org/function/gpt'
-    path: '/gpt'
+  - uri: 'dxos.org/function/gpt'
+    route: '/gpt'
     handler: 'gpt'
     description: 'GPT Chat.'
 
-  - id: 'dxos.org/function/github'
-    path: '/github'
+  - uri: 'dxos.org/function/github'
+    route: '/github'
     handler: 'github'
     description: 'Github Sync.'
 
 triggers:
+
   - function: 'dxos.org/function/hello'
     meta:
       sender: 'DXOS'
-    webhook:
-      method: GET
-
-#  - function: 'dxos.org/function/calendar'
-#    timer:
-#      cron: '*/30 * * * * *'
-#    subscription:
-#      filter:
-#      - type: 'braneframe.Calendar'
-
-#  - function: 'dxos.org/function/gpt'
-#    subscription:
-#      filter:
-#      - type: 'braneframe.Message'
-
-  - function: 'dxos.org/function/chess'
-    meta:
-      level: 2
-    subscription:
-      filter:
-      - type: 'dxos.experimental.chess.Game'
+    spec:
+      type: 'webhook'
+      method: 'GET'
 
   - function: 'dxos.org/function/email-worker'
     meta:
-      account: hello@dxos.network
-    websocket:
+      account: 'hello@dxos.network'
+    spec:
+      type: 'websocket'
       url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
       init:
         type: 'sync'
 
-#  - function: 'dxos.org/function/email'
-#    timer:
-#      cron: '*/30 * * * * *'
-#    subscription:
-#      filter:
-#      - type: 'braneframe.Mailbox'
+  - function: 'dxos.org/function/chess'
+    meta:
+      level: 2
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'dxos.org/type/Chess'
 
-#  - function: 'dxos.org/function/email-extractor'
-#    subscription:
-#      filter:
-#      - type: 'braneframe.Message'
-#        props:
-#          type: 'email'
-#      options:
-#        delay: 5
+  - function: 'dxos.org/function/gpt'
+    meta:
+      prompt: 'faq'
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'braneframe.Message'
 
 #  - function: 'dxos.org/function/embedding'
-#    subscription:
+#    spec:
+#      type: 'subscription'
 #      filter:
 #      - type: 'braneframe.Document'
 #      - type: 'braneframe.File'
@@ -110,7 +96,34 @@ triggers:
 #        deep: true
 #        delay: 5
 
+#  - function: 'dxos.org/function/calendar'
+#    spec:
+#      type: 'timer'
+#      cron: '*/30 * * * * *'
+#
+#  - function: 'dxos.org/function/calendar'
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'braneframe.Calendar'
+#
+#  - function: 'dxos.org/function/email'
+#    spec:
+#      type: 'timer'
+#      cron: '*/30 * * * * *'
+#
+#  - function: 'dxos.org/function/email-extractor'
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'braneframe.Message'
+#        props:
+#          type: 'email'
+#      options:
+#        delay: 5
+#
 #  - function: 'dxos.org/function/github'
-#    subscription:
+#    spec:
+#      type: 'subscription'
 #      filter:
 #      - type: 'example.com/schema/project'

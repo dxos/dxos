@@ -17,6 +17,7 @@
       }
     },
     "lint": {},
+    "prebuild": {},
     "test": {
       "options": {
         "environments": [
