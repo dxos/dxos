@@ -10,7 +10,6 @@ import {
   DEFAULT_INTERNAL_CHANNEL,
   PROXY_CONNECTION_TIMEOUT,
 } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type ServiceBundle, createBundledRpcServer } from '@dxos/rpc';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
@@ -116,13 +115,13 @@ export class IFrameClientServicesHost implements ClientServicesProvider {
   }
 
   async open() {
-    await this._host.open(new Context());
+    await this._host.open();
     await this._shellManager.open();
   }
 
   async close() {
     await this._shellManager.close();
     await this._iframeManager.close();
-    await this._host.close(new Context());
+    await this._host.close();
   }
 }

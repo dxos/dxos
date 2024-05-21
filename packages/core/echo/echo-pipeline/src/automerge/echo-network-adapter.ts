@@ -6,9 +6,14 @@ import { Trigger, synchronized } from '@dxos/async';
 import { type Message, NetworkAdapter, type PeerId, type PeerMetadata } from '@dxos/automerge/automerge-repo';
 import { LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+
+export type EchoNetworkAdapterParams = {
+  getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
+};
 
 /**
  * Manages a set of {@link EchoReplicator} instances.
@@ -21,6 +26,10 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private readonly _connections = new Map<PeerId, ConnectionEntry>();
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
+
+  constructor(private readonly _params: EchoNetworkAdapterParams) {
+    super();
+  }
 
   override connect(peerId: PeerId, peerMetadata?: PeerMetadata | undefined): void {
     this.peerId = peerId;
@@ -51,6 +60,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     invariant(this._lifecycleState === LifecycleState.CLOSED);
     this._lifecycleState = LifecycleState.OPEN;
 
+    log('emit ready');
     this.emit('ready', {
       network: this,
     });
@@ -74,20 +84,26 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async addReplicator(replicator: EchoReplicator) {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
 
+    this._replicators.add(replicator);
     await replicator.connect({
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
+      getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
     });
   }
 
   @synchronized
   async removeReplicator(replicator: EchoReplicator) {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this._replicators.has(replicator));
+    ('');
     await replicator.disconnect();
+    this._replicators.delete(replicator);
   }
 
   async shouldAdvertize(peerId: PeerId, params: ShouldAdvertizeParams): Promise<boolean> {
@@ -100,6 +116,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   private _onConnectionOpen(connection: ReplicatorConnection) {
+    log('Connection opened', { peerId: connection.peerId });
     invariant(!this._connections.has(connection.peerId as PeerId));
     const reader = connection.readable.getReader();
     const writer = connection.writable.getWriter();
@@ -124,6 +141,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
       }
     });
 
+    log('emit peer-candidate', { peerId: connection.peerId });
     this.emit('peer-candidate', {
       peerId: connection.peerId as PeerId,
       peerMetadata: {
@@ -134,6 +152,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   private _onConnectionClosed(connection: ReplicatorConnection) {
+    log('Connection closed', { peerId: connection.peerId });
     const entry = this._connections.get(connection.peerId as PeerId);
     invariant(entry);
 

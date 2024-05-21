@@ -117,7 +117,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  isObjectDeleted(): boolean {
+  isDeleted(): boolean {
     return false;
   }
 

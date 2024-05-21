@@ -17,7 +17,7 @@ describe('Halo', () => {
   test('creates a identity', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client.destroy());
     await client.initialize();
 
@@ -31,7 +31,7 @@ describe('Halo', () => {
   test('creates an identity with a custom device profile', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client.destroy());
     await client.initialize();
 
@@ -46,7 +46,7 @@ describe('Halo', () => {
   test('updates profile', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client.destroy());
     await client.initialize();
 
@@ -60,7 +60,7 @@ describe('Halo', () => {
   test('device invitations', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client1.destroy());
     await client1.initialize();
 
@@ -70,7 +70,7 @@ describe('Halo', () => {
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client2.destroy());
     await client2.initialize();
 
@@ -105,7 +105,7 @@ describe('Halo', () => {
   test('device invitation with custom guest device profile', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client1.destroy());
     await client1.initialize();
 
@@ -114,7 +114,7 @@ describe('Halo', () => {
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client2.destroy());
     await client2.initialize();
     // TODO(nf): how to test halo.join() more directly?
@@ -149,7 +149,7 @@ describe('Halo', () => {
   test('identity profile update is visible to other devices', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client1.destroy());
     await client1.initialize();
 
@@ -158,7 +158,7 @@ describe('Halo', () => {
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client2.destroy());
     await client2.initialize();
 
@@ -182,7 +182,7 @@ describe('Halo', () => {
   test('device profile update is visible to other devices', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client1.destroy());
     await client1.initialize();
 
@@ -191,7 +191,7 @@ describe('Halo', () => {
 
     expect(await client1.halo.devices.get()).to.have.lengthOf(1);
 
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client2.destroy());
     await client2.initialize();
 
