@@ -326,41 +326,48 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
-          <Main.Content bounce classNames='grid overflow-hidden'>
-            <Deck.Root>
-              {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
-                .filter(Boolean)
-                .map((id, index, main) => {
-                  const node = resolveNodeFromSlug(graph, id);
-                  const part = ['main', index, main.length] satisfies PartIdentifier;
-                  const attendableAttrs = useAttendable(id);
-                  return (
-                    <Deck.Plank key={id} {...attendableAttrs} scrollIntoViewOnMount={id === scrollIntoView}>
-                      {id === NAV_ID ? (
-                        <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
-                      ) : node ? (
-                        <>
-                          <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />
-                          <Surface
-                            role='article'
-                            data={{
-                              ...(node.path
-                                ? { subject: node.node.data, path: node.path }
-                                : { object: node.node.data }),
-                              part,
-                              popoverAnchorId,
-                            }}
-                            limit={1}
-                            fallback={PlankLoading}
-                          />
-                        </>
-                      ) : (
-                        <PlankLoading />
-                      )}
-                    </Deck.Plank>
-                  );
-                })}
-            </Deck.Root>
+          <Main.Content bounce classNames='grid'>
+            <div role='none' className='relative'>
+              <Deck.Root classNames='absolute inset-0'>
+                {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
+                  .filter(Boolean)
+                  .map((id, index, main) => {
+                    const node = resolveNodeFromSlug(graph, id);
+                    const part = ['main', index, main.length] satisfies PartIdentifier;
+                    const attendableAttrs = useAttendable(id);
+                    return (
+                      <Deck.Plank key={id} {...attendableAttrs} scrollIntoViewOnMount={id === scrollIntoView}>
+                        {id === NAV_ID ? (
+                          <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
+                        ) : node ? (
+                          <>
+                            <NodePlankHeading
+                              node={node.node}
+                              slug={id}
+                              part={part}
+                              popoverAnchorId={popoverAnchorId}
+                            />
+                            <Surface
+                              role='article'
+                              data={{
+                                ...(node.path
+                                  ? { subject: node.node.data, path: node.path }
+                                  : { object: node.node.data }),
+                                part,
+                                popoverAnchorId,
+                              }}
+                              limit={1}
+                              fallback={PlankLoading}
+                            />
+                          </>
+                        ) : (
+                          <PlankLoading />
+                        )}
+                      </Deck.Plank>
+                    );
+                  })}
+              </Deck.Root>
+            </div>
           </Main.Content>
         ) : (
           <Main.Content>

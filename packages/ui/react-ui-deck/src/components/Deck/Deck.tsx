@@ -80,7 +80,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
 
     useEffect(() => {
       if (scrollIntoViewOnMount) {
-        articleElement.current?.scrollIntoView({ inline: 'start' });
+        articleElement.current?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
       }
     }, [scrollIntoViewOnMount]);
 
