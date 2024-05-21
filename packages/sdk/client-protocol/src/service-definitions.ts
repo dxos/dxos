@@ -3,7 +3,6 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
 import { schema } from '@dxos/protocols';
 import type { FunctionRegistryService } from '@dxos/protocols/proto/dxos/agent/functions';
 import type {
@@ -52,16 +51,16 @@ export type ClientServices = {
  */
 export interface ClientServicesProvider {
   /**
-   * The connection to the services provider was termintaed.
-   *
+   * The connection to the services provider was terminated.
    * This should fire if the services disconnect unexpectedly or during a client reset.
    */
   closed: Event<Error | undefined>;
   descriptors: ServiceBundle<ClientServices>;
   services: Partial<ClientServices>;
 
-  open(ctx: Context): Promise<void>;
-  close(ctx: Context): Promise<void>;
+  // TODO(burdon): Should take context from parent?
+  open(): Promise<void>;
+  close(): Promise<void>;
 }
 
 /**

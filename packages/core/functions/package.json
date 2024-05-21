@@ -16,8 +16,12 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "schema",
     "src"
   ],
+  "scripts": {
+    "gen-schema": "ts-node ./tools/schema.ts"
+  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
@@ -28,13 +32,18 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.64.20",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
+    "effect": "^2.4.19",
     "express": "^4.19.2",
-    "get-port-please": "^3.1.1"
+    "get-port-please": "^3.1.1",
+    "ws": "^8.14.2"
   },
   "devDependencies": {
-    "@types/express": "^4.17.17"
+    "@dxos/agent": "workspace:*",
+    "@types/express": "^4.17.17",
+    "@types/ws": "^7.4.0"
   },
   "publishConfig": {
     "access": "public"

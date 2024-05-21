@@ -13,16 +13,18 @@ import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
 import { BaseCommand } from '../../base-command';
 
 // TODO(burdon): List stats.
-// TODO(burdon): List triggers.
 export const printFunctions = (functions: FunctionDef[], flags = {}) => {
-  ux.table(
+  ux.table<FunctionDef>(
     functions,
     {
       id: {
         header: 'id',
       },
-      name: {
-        header: 'name',
+      path: {
+        header: 'path',
+      },
+      handler: {
+        header: 'handler',
       },
       description: {
         header: 'description',

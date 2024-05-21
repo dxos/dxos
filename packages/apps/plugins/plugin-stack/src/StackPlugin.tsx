@@ -15,7 +15,7 @@ import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { Filter } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { StackMain, StackSettings, AddSectionDialog, dataHasAddSectionDialogProps } from './components';
 import meta, { STACK_PLUGIN } from './meta';
@@ -146,7 +146,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof StackType ? (
-                <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+                <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
                   <StackMain stack={data.active} separation={settings.values.separation} />
                 </Main.Content>
               ) : null;

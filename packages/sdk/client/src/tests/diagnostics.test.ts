@@ -31,7 +31,7 @@ describe.skip('DiagnosticsCollector', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const client = new Client({ config: testBuilder.config, services: testBuilder.createLocal() });
+    const client = new Client({ config: testBuilder.config, services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 

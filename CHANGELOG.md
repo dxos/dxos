@@ -1014,7 +1014,7 @@
 * balancer should wait on framer to send chunk ([#4460](https://github.com/dxos/dxos/issues/4460)) ([22971a3](https://github.com/dxos/dxos/commit/22971a3b40c66b546e6c517bf16a187e2d174552))
 * Clean-up todos ([#4481](https://github.com/dxos/dxos/issues/4481)) ([d5b74b2](https://github.com/dxos/dxos/commit/d5b74b25c1fb265564c61e9bf76218845737ccd5))
 * **cli:** Implement UX changes from Jess's feedback ([#4508](https://github.com/dxos/dxos/issues/4508)) ([0c081e6](https://github.com/dxos/dxos/commit/0c081e6bceb8e0f9125053af9da814cbedabae93))
-* Delete unused code in labs-functions ([#4453](https://github.com/dxos/dxos/issues/4453)) ([85c02fd](https://github.com/dxos/dxos/commit/85c02fd13002fa83f3c702ec9e65153a2bc856e5))
+* Delete unused code in agent-functions ([#4453](https://github.com/dxos/dxos/issues/4453)) ([85c02fd](https://github.com/dxos/dxos/commit/85c02fd13002fa83f3c702ec9e65153a2bc856e5))
 * diagnostics timeout ([#4474](https://github.com/dxos/dxos/issues/4474)) ([6b9536c](https://github.com/dxos/dxos/commit/6b9536cda3eb07fc572c75e6748cf6324f6c7617))
 * **plugin-grid:** default to copy ([#4502](https://github.com/dxos/dxos/issues/4502)) ([97c2b9e](https://github.com/dxos/dxos/commit/97c2b9ef64eaf0951b1269fb18016debf3d77554))
 * **plugin-space:** Revert: set an index when a Space or SpaceObject is created ([#4476](https://github.com/dxos/dxos/issues/4476)) ([44bdbf7](https://github.com/dxos/dxos/commit/44bdbf79936b1c3c60d9d6422d551f7e23b5d23c))

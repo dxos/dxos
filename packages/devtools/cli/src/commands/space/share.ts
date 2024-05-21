@@ -19,25 +19,15 @@ export default class Share extends BaseCommand<typeof Share> {
   static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
   static override flags = {
     ...BaseCommand.flags,
-    // TODO(burdon): Move to base class.
-    timeout: Flags.integer({
-      description: 'Timeout in milliseconds.',
-      default: 5_000,
+    multiple: Flags.boolean({
+      description: 'Multiple use.',
     }),
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
       default: 86400,
     }),
-    multiple: Flags.boolean({
-      description: 'Multiple use.',
-    }),
     persistent: Flags.boolean({
       description: 'Invitation should resume if client restarts',
-      default: true,
-    }),
-    // TODO(nf): --no- doesn't work.
-    'no-persistent': Flags.boolean({
-      description: "Don't resume invitation if client restarts",
       default: true,
     }),
     open: Flags.boolean({
@@ -52,7 +42,6 @@ export default class Share extends BaseCommand<typeof Share> {
     }),
     'no-wait': Flags.boolean({
       description: "Don't wait for a peer to connect before exiting CLI",
-      default: true,
     }),
   };
 
@@ -77,10 +66,9 @@ export default class Share extends BaseCommand<typeof Share> {
           onConnecting: async () => {
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
-
             if (authMethod !== Invitation.AuthMethod.NONE) {
-              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
               copy(invitation.authCode!);
+              this.log(chalk`\n{red Secret}: ${observable.get().authCode} (copied to clipboard)\n`);
             }
 
             if (this.flags.open) {

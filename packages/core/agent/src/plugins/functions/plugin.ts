@@ -29,25 +29,24 @@ export class FunctionsPlugin extends Plugin {
   private readonly _dispatchers: Map<string, FunctionDispatcher> = new Map();
 
   override async onOpen() {
+    /**
+     * Function front-end proxy server; dispatches to backend (e.g., dev-server).
+     */
+    // TODO(burdon): Move to hono.
     const app = express();
     app.use(express.json());
 
-    app.post('/:runtime/:name', async (req, res) => {
-      const { runtime, name } = req.params;
+    app.post('/:runtime/:path', async (req, res) => {
+      const { runtime, path } = req.params;
       const dispatcher = this._dispatchers.get(runtime);
-      if (!runtime || !name || !dispatcher) {
+      if (!runtime || !path || !dispatcher) {
         res.statusCode = 404;
         res.end();
         return;
       }
 
       try {
-        const result = await dispatcher.invoke({
-          function: name,
-          event: req.body,
-          runtime,
-        });
-
+        const result = await dispatcher.invoke({ path, event: req.body, runtime });
         res.statusCode = result.status;
         res.end(result.response);
       } catch (err: any) {
@@ -57,8 +56,8 @@ export class FunctionsPlugin extends Plugin {
       }
     });
 
-    this._config.config = { ...DEFAULT_CONFIG, ...this._config.config };
-    const port = this._config.config!.port;
+    this.config.config = { ...DEFAULT_CONFIG, ...this.config.config };
+    const port = this.config.config!.port;
     const server = app.listen(port, () => {
       log.info('Functions plugin', { port });
     });

@@ -149,7 +149,7 @@ describe('Spaces/invitations', () => {
 
 const createInitializedClients = (count: number): Promise<Client[]> => {
   const testBuilder = new TestBuilder();
-  const clients = range(count).map(() => new Client({ services: testBuilder.createLocal() }));
+  const clients = range(count).map(() => new Client({ services: testBuilder.createLocalClientServices() }));
   return Promise.all(
     clients.map(async (c, index) => {
       await c.initialize();

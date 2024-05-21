@@ -362,13 +362,14 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    await this._services.open(this._ctx);
+    await this._services.open();
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
     });
     await this._echoClient.open(this._ctx);
+
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
@@ -378,6 +379,7 @@ export class Client {
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
+
     const shellManager =
       this._services instanceof IFrameClientServicesProxy || this._services instanceof IFrameClientServicesHost
         ? this._services._shellManager
@@ -472,7 +474,7 @@ export class Client {
     await this._statusStream?.close();
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
-    await this._services?.close(this._ctx);
+    await this._services?.close();
     log('closed');
   }
 
