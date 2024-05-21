@@ -129,10 +129,7 @@ export class Query<T extends {} = any> {
   private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
   private _subscribers: number = 0;
 
-  /**
-   * @internal
-   */
-  _creationStack: StackTrace;
+  private readonly _diagnostic: QueryDiagnostic;
 
   constructor(
     private readonly _queryContext: QueryContext,
@@ -156,7 +153,12 @@ export class Query<T extends {} = any> {
       this._sources.delete(source);
     });
 
-    this._creationStack = new StackTrace();
+    this._diagnostic = {
+      isActive: this._isActive,
+      filter: JSON.stringify(this._filter),
+      creationStack: new StackTrace(),
+    };
+    QUERIES.add(this._diagnostic);
 
     log('construct', { filter: this._filter.toProto() });
   }
@@ -294,7 +296,7 @@ export class Query<T extends {} = any> {
       for (const source of this._sources) {
         this._subscribeToSourceUpdates(this._runningCtx, source);
       }
-      QUERIES.add(this);
+      this._diagnostic.isActive = true;
     }
   }
 
@@ -303,7 +305,7 @@ export class Query<T extends {} = any> {
       void this._runningCtx.dispose()?.catch();
       this._queryContext.stop();
       this._runningCtx = null;
-      // ACTIVE_QUERIES.delete(this);
+      this._diagnostic.isActive = false;
     }
   }
 
@@ -329,7 +331,14 @@ export class Query<T extends {} = any> {
   }
 }
 
-const QUERIES = new Set<Query>();
+// NOTE: Make sure this doesn't keep references to the queries so that they can be garbage collected.
+type QueryDiagnostic = {
+  isActive: boolean;
+  filter: string;
+  creationStack: StackTrace;
+};
+
+const QUERIES = new Set<QueryDiagnostic>();
 
 trace.diagnostic({
   id: 'client-queries',
@@ -337,9 +346,9 @@ trace.diagnostic({
   fetch: () => {
     return Array.from(QUERIES).map((query) => {
       return {
-        isActive: query._isActive,
-        filter: JSON.stringify(query?.filter),
-        creationStack: query?._creationStack.getStack(),
+        isActive: query.isActive,
+        filter: query.filter,
+        creationStack: query.creationStack.getStack(),
       };
     });
   },
