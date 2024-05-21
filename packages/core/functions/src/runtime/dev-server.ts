@@ -9,14 +9,15 @@ import { join } from 'node:path';
 
 import { Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type FunctionRegistry } from '../functions';
 import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
-import { type FunctionDef, type FunctionManifest } from '../types';
+import { type FunctionDef } from '../types';
 
 export type DevServerOptions = {
-  manifest: FunctionManifest;
   baseDir: string;
   port?: number;
   reload?: boolean;
@@ -27,6 +28,8 @@ export type DevServerOptions = {
  * Functions dev server provides a local HTTP server for testing functions.
  */
 export class DevServer {
+  private _ctx = createContext();
+
   // Function handlers indexed by name (URL path).
   private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
@@ -41,8 +44,14 @@ export class DevServer {
   // prettier-ignore
   constructor(
     private readonly _client: Client,
+    private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
-  ) {}
+  ) {
+    this._functionsRegistry.onFunctionsRegistered.on(async ({ newFunctions }) => {
+      newFunctions.forEach((def) => this._load(def));
+      await this._safeUpdateRegistration();
+    });
+  }
 
   get stats() {
     return {
@@ -63,19 +72,10 @@ export class DevServer {
     return Object.values(this._handlers);
   }
 
-  async initialize() {
-    for (const def of this._options.manifest.functions) {
-      try {
-        await this._load(def);
-      } catch (err) {
-        log.error('parsing function (check manifest)', err);
-      }
-    }
-  }
-
   async start() {
     invariant(!this._server);
     log.info('starting...');
+    this._ctx = createContext();
 
     // TODO(burdon): Move to hono.
     const app = express();
@@ -107,12 +107,14 @@ export class DevServer {
       // Register functions.
       const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint,
-        functions: this.functions.map(({ def: { id, path } }) => ({ id, path })),
       });
 
       log.info('registered', { endpoint });
       this._proxy = endpoint;
       this._functionServiceRegistration = registrationId;
+
+      // Open after registration, so that it can be updated with the list of function definitions.
+      await this._functionsRegistry.open(this._ctx);
     } catch (err: any) {
       await this.stop();
       throw new Error('FunctionRegistryService not available (check plugin is configured).');
@@ -156,7 +158,7 @@ export class DevServer {
    * Load function.
    */
   private async _load(def: FunctionDef, force = false) {
-    const { id, path, handler } = def;
+    const { id, route, handler } = def;
     const filePath = join(this._options.baseDir, handler);
     log.info('loading', { id, force });
 
@@ -175,7 +177,19 @@ export class DevServer {
       throw new Error(`Handler must export default function: ${id}`);
     }
 
-    this._handlers[path] = { def, handler: module.default };
+    this._handlers[route] = { def, handler: module.default };
+  }
+
+  private async _safeUpdateRegistration(): Promise<void> {
+    invariant(this._functionServiceRegistration);
+    try {
+      await this._client.services.services.FunctionRegistryService!.updateRegistration({
+        registrationId: this._functionServiceRegistration,
+        functions: this.functions.map(({ def: { id, route } }) => ({ id, route })),
+      });
+    } catch (e) {
+      log.catch(e);
+    }
   }
 
   /**
@@ -214,3 +228,5 @@ export class DevServer {
     return statusCode;
   }
 }
+
+const createContext = () => new Context({ name: 'DevServer' });
