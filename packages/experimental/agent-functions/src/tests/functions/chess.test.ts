@@ -13,14 +13,7 @@ import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import {
-  DevServer,
-  type FunctionManifest,
-  FunctionRegistry,
-  FunctionTriggerType,
-  Scheduler,
-  TriggerRegistry,
-} from '@dxos/functions';
+import { DevServer, type FunctionManifest, FunctionRegistry, Scheduler, TriggerRegistry } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
 const FUNCTIONS_PORT = 8757;
@@ -84,7 +77,7 @@ describe('Chess', () => {
         {
           function: 'dxos.org/function/chess',
           spec: {
-            type: FunctionTriggerType.SUBSCRIPTION,
+            type: 'subscription',
             filter: [
               {
                 type: 'dxos.org/type/Chess',

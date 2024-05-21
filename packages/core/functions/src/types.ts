@@ -13,39 +13,10 @@ const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(A
  * type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-// TODO(burdon): Is this better than a string literal?
-export enum FunctionTriggerType {
-  SUBSCRIPTION = 'subscription',
-  TIMER = 'timer',
-  WEBHOOK = 'webhook',
-  WEBSOCKET = 'websocket',
-}
-
-const TimerTriggerSchema = S.struct({
-  type: S.literal(FunctionTriggerType.TIMER),
-  cron: S.string,
-});
-export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
-
-const WebhookTriggerSchema = S.mutable(
-  S.struct({
-    type: S.literal(FunctionTriggerType.WEBHOOK),
-    method: S.string,
-    // Assigned port.
-    port: S.optional(S.number),
-  }),
-);
-export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
-
-const WebsocketTriggerSchema = S.struct({
-  type: S.literal(FunctionTriggerType.WEBSOCKET),
-  url: S.string,
-  init: S.optional(S.record(S.string, S.any)),
-});
-export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
+export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websocket';
 
 const SubscriptionTriggerSchema = S.struct({
-  type: S.literal(FunctionTriggerType.SUBSCRIPTION),
+  type: S.literal('subscription'),
   // TODO(burdon): Define query DSL.
   filter: S.array(
     S.struct({
@@ -63,6 +34,29 @@ const SubscriptionTriggerSchema = S.struct({
   ),
 });
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
+
+const TimerTriggerSchema = S.struct({
+  type: S.literal('timer'),
+  cron: S.string,
+});
+export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
+
+const WebhookTriggerSchema = S.mutable(
+  S.struct({
+    type: S.literal('webhook'),
+    method: S.string,
+    // Assigned port.
+    port: S.optional(S.number),
+  }),
+);
+export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
+
+const WebsocketTriggerSchema = S.struct({
+  type: S.literal('websocket'),
+  url: S.string,
+  init: S.optional(S.record(S.string, S.any)),
+});
+export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 const TriggerSpecSchema = S.union(
   TimerTriggerSchema,

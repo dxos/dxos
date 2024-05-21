@@ -17,7 +17,7 @@ import { FunctionRegistry } from '../registry';
 import { DevServer, Scheduler } from '../runtime';
 import { createFunctionRuntime, createInitializedClients, TestType } from '../testing';
 import { TriggerRegistry } from '../trigger';
-import { FunctionDef, FunctionTrigger, FunctionTriggerType } from '../types';
+import { FunctionDef, FunctionTrigger } from '../types';
 
 describe('functions e2e', () => {
   let testBuilder: TestBuilder;
@@ -46,7 +46,7 @@ describe('functions e2e', () => {
         function: uri,
         meta: triggerMeta,
         spec: {
-          type: FunctionTriggerType.SUBSCRIPTION,
+          type: 'subscription',
           filter: [{ type: TestType.typename }],
         },
       }),

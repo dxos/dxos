@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
-import { type FunctionManifest, FunctionTrigger, FunctionTriggerType, type TriggerSpec } from '../types';
+import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
 
 type ResponseCode = number;
 
@@ -20,6 +20,7 @@ export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
 export type TriggerContext = { space: Space };
 
+// TODO(burdon): Make object?
 export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   ctx: Context,
   context: TriggerContext,
@@ -31,10 +32,10 @@ export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
 export type TriggerHandlerMap = { [type in FunctionTriggerType]: TriggerFactory<any> };
 
 const triggerHandlers: TriggerHandlerMap = {
-  [FunctionTriggerType.SUBSCRIPTION]: createSubscriptionTrigger,
-  [FunctionTriggerType.TIMER]: createTimerTrigger,
-  [FunctionTriggerType.WEBHOOK]: createWebhookTrigger,
-  [FunctionTriggerType.WEBSOCKET]: createWebsocketTrigger,
+  subscription: createSubscriptionTrigger,
+  timer: createTimerTrigger,
+  webhook: createWebhookTrigger,
+  websocket: createWebsocketTrigger,
 };
 
 export type TriggerEvent = {
