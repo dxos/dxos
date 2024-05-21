@@ -7,7 +7,7 @@ import { type Chat } from 'openai/resources';
 
 import { type DocumentType, TextV0Type } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { AST, getTypename, create } from '@dxos/echo-schema';
+import { AST, getSchemaTypename, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -67,7 +67,7 @@ export class GptAnalyzer {
       if (result.message.content) {
         const data = JSON.parse(result.message.content);
         for (const obj of data) {
-          const schema = schemas.find((schema) => schema.typename === getTypename(obj));
+          const schema = schemas.find((schema) => schema.typename === getSchemaTypename(obj));
           if (!schema) {
             log.warn('invalid object', { obj });
             continue;

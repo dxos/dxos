@@ -33,7 +33,7 @@ describe('Halo', () => {
     testBuilder.level = createTestLevel();
 
     {
-      const client = new Client({ config, services: testBuilder.createLocal() });
+      const client = new Client({ config, services: testBuilder.createLocalClientServices() });
       afterTest(() => client.destroy());
       await client.initialize();
 
@@ -44,7 +44,7 @@ describe('Halo', () => {
     }
 
     {
-      const client = new Client({ config, services: testBuilder.createLocal() });
+      const client = new Client({ config, services: testBuilder.createLocalClientServices() });
       afterTest(() => client.destroy());
       await client.initialize();
 

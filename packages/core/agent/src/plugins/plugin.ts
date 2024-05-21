@@ -20,7 +20,7 @@ export const getPluginConfig = (config: Config, id: string): Runtime.Agent.Plugi
 export type PluginContext = {
   client: Client;
   clientServices: ClientServicesProvider;
-  plugins: Plugin[];
+  plugins?: Plugin[];
 };
 
 export abstract class Plugin {
@@ -33,9 +33,8 @@ export abstract class Plugin {
   public readonly statusUpdate = new Event();
 
   protected readonly _ctx = new Context();
-
-  protected _config!: Runtime.Agent.Plugin;
   private _pluginCtx?: PluginContext;
+  private _config!: Runtime.Agent.Plugin;
 
   get config(): Runtime.Agent.Plugin {
     return this._config;
@@ -50,10 +49,6 @@ export abstract class Plugin {
     return (this.context.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
-  setConfig(config: Runtime.Agent.Plugin) {
-    this._config = config;
-  }
-
   // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     log(`initializing: ${this.id}`);
@@ -62,7 +57,7 @@ export abstract class Plugin {
     // TODO(burdon): Require config.
     const config = getPluginConfig(this._pluginCtx.client.config, this.id);
     invariant(config, `Plugin not configured: ${this.id}`);
-    this.setConfig(config);
+    this._config = config;
   }
 
   async open() {

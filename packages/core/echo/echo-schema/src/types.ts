@@ -25,7 +25,10 @@ export interface Identifiable {
  */
 export type Ref<T> = T | undefined;
 
+// TODO(burdon): Name?
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
+
+export const foreignKey = (source: string, id?: string): ForeignKey => ({ source, id });
 
 /**
  * Reference to an object in a foreign database.

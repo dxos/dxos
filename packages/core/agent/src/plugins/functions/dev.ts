@@ -3,6 +3,7 @@
 //
 
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 
 import { log } from '@dxos/log';
 import {
@@ -46,13 +47,14 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
 
   async invoke(invocation: FunctionInvocation): Promise<FunctionInvocationResult> {
     const registration = this._registrations.findLast((registration) =>
-      registration.request.functions?.some(({ name }) => invocation.function === name),
+      registration.request.functions?.some(({ path }) => '/' + invocation.path === path),
     );
     if (!registration) {
-      throw new Error(`Function not found: ${invocation.function} `);
+      throw new Error(`Function not found: ${invocation.path} `);
     }
 
-    const result = await fetch(`${registration.request.endpoint}/${invocation.function}`, {
+    const url = path.join(registration.request.endpoint, invocation.path);
+    const result = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(invocation.event),
       headers: {

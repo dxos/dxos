@@ -15,6 +15,7 @@ import {
   mx,
   surfaceElevation,
   attentionSurface,
+  bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
 import { Outliner } from './Outliner';
@@ -27,7 +28,7 @@ const OutlinerMain: FC<{ tree: TreeType }> = ({ tree }) => {
 
   return (
     // TODO(burdon): Factor out style (same for markdown, stack plugin).
-    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div role='none' className={mx('plb-4 min-bs-[calc(100dvh-var(--topbar-size))] flex flex-col')}>
           <Outliner.Root

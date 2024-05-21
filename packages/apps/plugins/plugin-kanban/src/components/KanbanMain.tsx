@@ -8,7 +8,7 @@ import { type KanbanType, KanbanColumnType, KanbanItemType, TextV0Type } from '@
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import { topbarBlockPaddingStart, fixedInsetFlexLayout, bottombarBlockPaddingEnd } from '@dxos/react-ui-theme';
 
 import { KanbanBoard } from './KanbanBoard';
 import { type KanbanModel } from '../types';
@@ -29,7 +29,7 @@ const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
   };
 
   return (
-    <Main.Content classNames={[fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <KanbanBoard model={model} />
     </Main.Content>
   );

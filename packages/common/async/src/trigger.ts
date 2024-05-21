@@ -82,8 +82,8 @@ export class Trigger<T = void> {
       this._resolve = resolve;
       this._reject = reject;
     });
-    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
 
+    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
     return this;
   }
 

@@ -16,14 +16,23 @@ import { ComplexMap } from '@dxos/util';
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot } from './types';
+import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot, type FindResult } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
  */
 const INDEX_UPDATE_BATCH_SIZE = 100;
 
-const INDEX_COOLDOWN_TIME = 300;
+/**
+ * Minimum time between indexing runs.
+ */
+const INDEX_COOLDOWN_TIME = 100;
+
+/**
+ * Time budget for indexing run.
+ * Does not cover creating new indexes.
+ */
+const INDEX_TIME_BUDGET = 300;
 
 export type IndexerParams = {
   db: LevelDB;
@@ -138,7 +147,7 @@ export class Indexer extends Resource {
   }
 
   @synchronized
-  async execQuery(filter: IndexQuery): Promise<{ id: string; rank: number }[]> {
+  async execQuery(filter: IndexQuery): Promise<FindResult[]> {
     if (this._lifecycleState !== LifecycleState.OPEN || this._indexConfig?.enabled !== true) {
       throw new Error('Indexer is not initialized or not enabled');
     }
@@ -213,14 +222,16 @@ export class Indexer extends Resource {
     }
     const idToHeads = await this._metadataStore.getDirtyDocuments();
 
-    log('dirty objects to index', { count: idToHeads.size });
+    log.info('dirty objects to index', { count: idToHeads.size });
 
     if (idToHeads.size === 0 || this._ctx.disposed) {
       return;
     }
 
+    const startTime = Date.now();
     const documentsUpdated: ObjectSnapshot[] = [];
     const saveIndexChanges = async () => {
+      log.info('Saving index changes', { count: documentsUpdated.length, timeSinceStart: Date.now() - startTime });
       await this._saveIndexes();
       const batch = this._db.batch();
       this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.heads])), batch);
@@ -238,11 +249,20 @@ export class Indexer extends Resource {
         await saveIndexChanges();
         documentsUpdated.length = 0;
       }
+      if (Date.now() - startTime > INDEX_TIME_BUDGET) {
+        if (documentsUpdated.length > 0) {
+          await saveIndexChanges();
+        }
+        log.info('Indexing time budget exceeded', { time: Date.now() - startTime });
+        this._run.schedule();
+        break;
+      }
     }
     await saveIndexChanges();
     if (updates.some(Boolean)) {
       this.updated.emit();
     }
+    log.info('Indexing finished', { time: Date.now() - startTime });
   }
 
   @trace.span({ showInBrowserTimeline: true })
