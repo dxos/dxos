@@ -33,7 +33,7 @@ describe('Halo', () => {
     const testBuilder = new TestBuilder(config);
 
     {
-      const client = new Client({ config, services: testBuilder.createLocal() });
+      const client = new Client({ config, services: testBuilder.createLocalClientServices() });
       afterTest(() => client.destroy());
       await client.initialize();
 
@@ -67,7 +67,7 @@ describe('Halo', () => {
   test('query credentials', async () => {
     const testBuilder = new TestBuilder();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     afterTest(() => client.destroy());
     await client.initialize();
 

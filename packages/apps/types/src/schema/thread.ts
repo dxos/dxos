@@ -83,7 +83,7 @@ export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', ver
 // TODO(burdon): Reconcile with Thread?
 export class MailboxType extends TypedObject({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.mutable(S.array(ref(MessageType))),
+  messages: S.optional(S.mutable(S.array(ref(MessageType)))),
 }) {}
 
 export class EventType extends TypedObject({ typename: 'braneframe.Event', version: '0.1.0' })({

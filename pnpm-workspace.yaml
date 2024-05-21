@@ -2,7 +2,7 @@ packages:
   - docs
   - packages/**/*
   - tools/**/*
-  - '!packages/experimental/labs-functions/functions/**'
+  - '!packages/experimental/agent-functions/functions/**'
   - '!packages/experimental/kai-functions/functions/**'
   - '!packages/experimental/kai-types'
   - '!packages/experimental/kai'

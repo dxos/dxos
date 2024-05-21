@@ -7,7 +7,14 @@ import React, { type FC, useMemo } from 'react';
 import { type Action, useGraph } from '@braneframe/plugin-graph';
 import { Surface } from '@dxos/app-framework';
 import { Button, Main, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { baseSurface, descriptionText, mx, textBlockWidth, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  descriptionText,
+  mx,
+  textBlockWidth,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 
 import { FILES_PLUGIN } from '../meta';
 import { type LocalFile, type LocalEntity, LocalFilesAction } from '../types';
@@ -44,7 +51,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const action = node?.node(`${LocalFilesAction.RECONNECT}:${node.id}`) as Action | undefined;
 
   return (
-    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart]}>
+    <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className={mx(textBlockWidth, 'pli-2')}>
         <div role='none' className='flex flex-col min-bs-[calc(100dvh-var(--topbar-size))] pb-8'>
           <div role='none' className='min-bs-screen is-full flex items-center justify-center p-8'>

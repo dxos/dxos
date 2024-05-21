@@ -24,7 +24,7 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
     return Reflect.set(target, prop, value, receiver);
   }
 
-  isObjectDeleted(): boolean {
+  isDeleted(): boolean {
     return false;
   }
 

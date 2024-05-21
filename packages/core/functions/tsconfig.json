@@ -37,6 +37,9 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../agent"
+    },
+    {
       "path": "../echo/echo-schema"
     }
   ]
