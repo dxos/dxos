@@ -1,15 +1,14 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
-import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedBorder, fixedInsetFlexLayout, mx, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import { MessageState, type MailboxType, type MessageType } from '@braneframe/types';
+import { fixedBorder, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { type ActionType, MessageList } from './MessageList';
+import { MessageList, type ActionType } from './MessageList';
 import { MasterDetail } from '../MasterDetail';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
@@ -34,7 +33,7 @@ export type MailboxProps = {
   options?: MailboxOptions;
 };
 
-const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
+export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<MessageType>();
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
@@ -74,14 +73,10 @@ const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   };
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
-      <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-        <MasterDetail detail={selected && <div className='text-sm'>{selected.blocks[0]?.content?.content}</div>}>
-          <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
-        </MasterDetail>
-      </div>
-    </Main.Content>
+    <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
+      <MasterDetail detail={selected && <div className='text-sm'>{selected.blocks[0]?.content?.content}</div>}>
+        <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
+      </MasterDetail>
+    </div>
   );
 };
-
-export default Mailbox;

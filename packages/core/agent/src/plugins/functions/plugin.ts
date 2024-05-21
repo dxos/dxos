@@ -30,7 +30,7 @@ export class FunctionsPlugin extends Plugin {
 
   override async onOpen() {
     /**
-     * Function front-end server; dispatches to backend (e.g., dev-server).
+     * Function front-end proxy server; dispatches to backend (e.g., dev-server).
      */
     // TODO(burdon): Move to hono.
     const app = express();
