@@ -47,8 +47,8 @@ rule:
     subscription:
       filter:
       - type: braneframe/Game
-   meta:
-     level: 2
+  meta:
+    level: 2
 ```
 
 ### Email Function
@@ -64,8 +64,8 @@ rule:
     subscription:
       filter:
       - type: braneframe/Message
-   meta:
-     account: hello@dxos.network
+  meta:
+    account: hello@dxos.network
 ```
 
 ### GPT Function
@@ -92,7 +92,7 @@ rule:
        - name: 'language'
          value: 'japanaese' // Const
        - name: 'content'
-         value: 'object.content' // content property of Message object
+         value: 'object.content' // Property of Message object
 ```
 
 Generate a chess hint that is output to the current message thread?
@@ -104,13 +104,13 @@ rule:
     subscription:
       filter:
       - type: braneframe/Game
-   meta:
-     prompt:
-       template: 'suggest the next move form a chess game with history: ${history}'
-       input:
-       - name: 'history'
-         value: 'object.pgn' // pgn property of Game object
-   output:
-     type: braneframe/Message
-     field: content    
+  meta:
+    prompt:
+      template: 'suggest the next move form a chess game with history: ${history}'
+      input:
+      - name: 'history'
+        value: 'object.pgn' // Property of Game object
+  output:
+    type: braneframe/Message
+    field: content    
 ```
