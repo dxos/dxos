@@ -16,8 +16,8 @@
         "injectGlobals": true
       }
     },
-    "prebuild": {},
     "lint": {},
+    "prebuild": {},
     "test": {
       "options": {
         "environments": [
