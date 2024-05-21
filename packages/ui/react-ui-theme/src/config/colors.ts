@@ -218,8 +218,8 @@ export const semanticColors = {
     dark: physicalColors.neutral['100'],
   },
   description: {
-    light: physicalColors.neutral['300'],
-    dark: physicalColors.neutral['500'],
+    light: physicalColors.neutral['500'],
+    dark: physicalColors.neutral['400'],
   },
   baseGlass: {
     light: `${physicalColors.neutral['12']}e0`,
