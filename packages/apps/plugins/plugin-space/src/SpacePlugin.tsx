@@ -688,10 +688,6 @@ export const SpacePlugin = ({
                           },
                         },
                       },
-                      {
-                        action: NavigationAction.CLOSE,
-                        data: { activeParts: { main: [object.id] } },
-                      },
                     ],
                   ],
                 };

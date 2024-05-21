@@ -23,6 +23,7 @@ export default [
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
         'undo close label': 'Dismiss',
+        'open comments label': 'Open comments',
       },
     },
   },
