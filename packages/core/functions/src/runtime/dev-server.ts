@@ -159,9 +159,9 @@ export class DevServer {
    * Load function.
    */
   private async _load(def: FunctionDef, force = false) {
-    const { id, route, handler } = def;
+    const { uri, route, handler } = def;
     const filePath = join(this._options.baseDir, handler);
-    log.info('loading', { id, force });
+    log.info('loading', { uri, force });
 
     // Remove from cache.
     if (force) {
@@ -172,10 +172,11 @@ export class DevServer {
         });
     }
 
+    // TODO(burdon): Import types.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const module = require(filePath);
     if (typeof module.default !== 'function') {
-      throw new Error(`Handler must export default function: ${id}`);
+      throw new Error(`Handler must export default function: ${uri}`);
     }
 
     this._handlers[route] = { def, handler: module.default };
