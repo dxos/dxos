@@ -5,7 +5,13 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
+import {
+  LayoutAction,
+  parseFileManagerPlugin,
+  useResolvePlugin,
+  useIntentResolver,
+  parseNavigationPlugin,
+} from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
@@ -52,6 +58,8 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
@@ -104,10 +112,10 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <div role='none' className='contents group/editor'>
+    <div role='none' className='contents group/editor' {...(isAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator'
+          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
           state={formattingState}
           onAction={handleAction}
         >
@@ -139,7 +147,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
             focusRing,
             textBlockWidth,
             editorFillLayoutRoot,
-            'group-focus-within/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator focus-visible:ring-inset',
+            'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
