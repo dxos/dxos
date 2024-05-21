@@ -25,6 +25,7 @@
   "dependencies": {
     "@braneframe/plugin-client": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
+    "@braneframe/plugin-status-bar": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
     "@dxos/client-services": "workspace:*",

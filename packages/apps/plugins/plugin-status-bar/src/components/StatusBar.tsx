@@ -41,17 +41,20 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 
 export default StatusBarButton;
 
-type StatusBarItemProps = ThemedClassName<{ children: ReactNode }>;
+type StatusBarItemProps = ThemedClassName<{ children: ReactNode }> & React.HTMLAttributes<HTMLDivElement>;
 
-const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(({ classNames, children }, forwardedRef) => (
-  <div
-    role='menuitem'
-    className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)}
-    ref={forwardedRef}
-  >
-    {children}
-  </div>
-));
+const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
+  ({ classNames, children, ...props }, forwardedRef) => (
+    <div
+      role='menuitem'
+      className={mx('flex items-center gap-2 p-1 px-2 rounded-sm select-none', classNames)}
+      ref={forwardedRef}
+      {...props}
+    >
+      {children}
+    </div>
+  ),
+);
 type StatusBarContainerProps = ThemedClassName<{ children: ReactNode }>;
 
 // TODO(zan): tabable group with tabster
