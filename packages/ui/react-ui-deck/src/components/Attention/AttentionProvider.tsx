@@ -83,7 +83,10 @@ const AttentionProvider = ({
         (el) => `[id="${el.getAttribute('aria-controls')}"]`,
       ),
     ].join(',');
-    setAttended(new Set(getAttendables(selector, event.target)));
+    const nextAttended = new Set(getAttendables(selector, event.target));
+    const [prev, next] = [Array.from(attended), Array.from(nextAttended)];
+    // Only update state if the result is different.
+    (prev.length !== next.length || !!prev.find((id, index) => next[index] !== id)) && setAttended(nextAttended);
   };
   return (
     <AttentionContextProvider attended={attended}>
