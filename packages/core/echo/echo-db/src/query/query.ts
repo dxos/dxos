@@ -179,6 +179,13 @@ export class Query<T extends {} = any> {
     return this._objectCache!;
   }
 
+  /**
+   * @internal
+   */
+  get _isActive(): boolean {
+    return this._runningCtx != null;
+  }
+
   async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
     const filter = this._filter;
     const runTasks = [...this._sources.values()].map(async (s) => {
@@ -287,7 +294,7 @@ export class Query<T extends {} = any> {
       for (const source of this._sources) {
         this._subscribeToSourceUpdates(this._runningCtx, source);
       }
-      ACTIVE_QUERIES.add(this);
+      QUERIES.add(this);
     }
   }
 
@@ -296,7 +303,7 @@ export class Query<T extends {} = any> {
       void this._runningCtx.dispose()?.catch();
       this._queryContext.stop();
       this._runningCtx = null;
-      ACTIVE_QUERIES.delete(this);
+      // ACTIVE_QUERIES.delete(this);
     }
   }
 
@@ -322,14 +329,15 @@ export class Query<T extends {} = any> {
   }
 }
 
-const ACTIVE_QUERIES = new Set<Query>();
+const QUERIES = new Set<Query>();
 
 trace.diagnostic({
   id: 'client-queries',
   name: 'Queries (Client)',
   fetch: () => {
-    return Array.from(ACTIVE_QUERIES).map((query) => {
+    return Array.from(QUERIES).map((query) => {
       return {
+        isActive: query._isActive,
         filter: JSON.stringify(query?.filter),
         creationStack: query?._creationStack.getStack(),
       };
