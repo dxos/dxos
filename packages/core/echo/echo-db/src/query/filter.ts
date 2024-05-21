@@ -230,12 +230,10 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
         return false;
       }
     } else {
-      if (!type) {
+      if (!type && filter.type.itemId !== 'Expando') {
         return false;
-      }
-
-      // TODO(burdon): Comment.
-      if (!compareType(filter.type, type, core.database?.spaceKey)) {
+      } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
+        // Compare if types are equal.
         return false;
       }
     }

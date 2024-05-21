@@ -64,7 +64,7 @@ describe('Index queries', () => {
           if (
             result.resolution?.source === 'index' &&
             ((getEchoObjectAnnotation(type)?.typename === 'Expando' &&
-              getAutomergeObjectCore(result.object!).getType().itemId === 'Expando') ||
+              getAutomergeObjectCore(result.object!).getType() === undefined) ||
               result.object instanceof (type as any))
           ) {
             unsub();

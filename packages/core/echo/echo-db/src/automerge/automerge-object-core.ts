@@ -13,13 +13,7 @@ import {
   type SpaceDoc,
   Reference,
 } from '@dxos/echo-protocol';
-import {
-  type EchoReactiveObject,
-  isReactiveObject,
-  type ObjectMeta,
-  Expando,
-  getEchoObjectAnnotation,
-} from '@dxos/echo-schema';
+import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -446,11 +440,10 @@ export class AutomergeObjectCore {
     });
   }
 
-  getType(): Reference {
+  getType(): Reference | undefined {
     const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
     if (!value) {
-      // Note: If no type is set, we assume it's an Expando object.
-      return Reference.fromLegacyTypename(getEchoObjectAnnotation(Expando)!.typename);
+      return undefined;
     }
 
     invariant(value instanceof Reference);

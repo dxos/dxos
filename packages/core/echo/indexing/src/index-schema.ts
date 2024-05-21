@@ -60,7 +60,7 @@ export class IndexSchema extends Resource implements Index {
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
-        .filter(([key]) => !filter.typenames.includes(key) === false)
+        .filter(([key]) => !filter.typenames.includes(key ?? 'Expando') === false)
         .flatMap(([, value]) => Array.from(value))
         .map((id) => ({ id, rank: 0 }));
     }
