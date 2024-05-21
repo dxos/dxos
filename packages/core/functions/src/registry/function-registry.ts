@@ -33,6 +33,7 @@ export class FunctionRegistry extends Resource {
    * The method loads function definitions from the manifest into the space.
    * We first load all the definitions from the space to deduplicate by functionId.
    */
+  // TODO(burdon): This should not be space specific (they are static for the agent).
   public async register(space: Space, manifest: FunctionManifest): Promise<void> {
     if (!manifest.functions?.length) {
       return;

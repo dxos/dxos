@@ -47,13 +47,14 @@ export default class Dev extends BaseCommand<typeof Dev> {
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
+      // Local files.
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
 
       // Local dev server.
-      const functionRegistry = new FunctionRegistry(client);
-      const server = new DevServer(client, functionRegistry, {
+      const registry = new FunctionRegistry(client);
+      const server = new DevServer(client, registry, {
         baseDir: directory,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
@@ -63,8 +64,13 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       // TODO(burdon): Move to agent's FunctionsPlugin.
       const triggerRegistry = new TriggerRegistry(client);
-      const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: server.proxy! });
+      const scheduler = new Scheduler(registry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
+
+      // TODO(burdon): Register for all spaces; add import command.
+      const space = client.spaces.default;
+      await registry.register(space, manifest);
+      await scheduler.register(space, manifest);
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       const run = new Trigger();
@@ -74,8 +80,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
         run.wake();
       });
 
-      // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
+        // TODO(burdon): Get list of functions from plugin API endpoint.
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
           'Functions:\n' +
