@@ -35,6 +35,6 @@ All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 
 * To try composer see [Quick Start](./quick-start.md)
 * For day-to-day instructions see [User Guide](./user-guide/)
-* For information on privacy, the DXOS protocols, etc. see [Concepts and Details](./concepts-and-details.md)
+* For information on privacy, the DXOS protocols, etc. see [Key Concepts](./key-concepts.md)
 * To learn about or write your first plugin see [SDK/Composer Plugins](../guide/composer-plugins/)
 * To learn about full extensibility see the [SDK](../guide/) itself
