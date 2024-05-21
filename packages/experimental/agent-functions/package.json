@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/labs-functions",
+  "name": "@dxos/agent-functions",
   "version": "0.5.2",
   "private": true,
   "description": "Experimental functions.",

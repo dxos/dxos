@@ -1,17 +1,17 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "labs-functions",
+  "name": "agent-functions",
   "tags": [
     "scope:experimental"
   ],
-  "sourceRoot": "packages/experimental/labs-functions/src",
+  "sourceRoot": "packages/experimental/agent-functions/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/experimental/labs-functions/src/index.ts"
+          "packages/experimental/agent-functions/src/index.ts"
         ]
       }
     },
