@@ -2,25 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
-
 import { TestSchemaType } from '@dxos/echo-generator';
-import { type EchoReactiveObject, type ForeignKey, getMeta } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, type ForeignKey, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { registerTypes } from '../../util';
 
 type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['response']['data'];
 
 export const handler = subscriptionHandler(async ({ event, context }) => {
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-  const { space, objects } = event;
+  const { space, objects } = event.data;
   invariant(space);
   registerTypes(space);
 
+  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   for (const project of objects ?? []) {
     if (!project.repo || !project.repo.includes('github.com') || getMeta(project).keys.length !== 0) {
       return;

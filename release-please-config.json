@@ -584,6 +584,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/agent-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
@@ -600,11 +605,6 @@
         {
           "type": "json",
           "path": "packages/experimental/gem-spore/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/labs-functions/package.json",
           "jsonpath": "$.version"
         },
         {

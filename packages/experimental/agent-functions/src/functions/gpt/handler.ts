@@ -2,23 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'node:path';
-
-import { ThreadType, MessageType } from '@braneframe/types';
+import { MessageType, ThreadType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-
-import { RequestProcessor } from './processor';
-import { createResolvers } from './resolvers';
+import { join } from 'node:path';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey, registerTypes } from '../../util';
 
+import { RequestProcessor } from './processor';
+import { createResolvers } from './resolvers';
+
 export const handler = subscriptionHandler(async ({ event, context }) => {
   const { client, dataDir } = context;
-  const { space, objects } = event;
+  const { space, objects } = event.data;
   invariant(space);
   registerTypes(space);
   if (!objects) {

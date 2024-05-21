@@ -4,7 +4,7 @@
 
 import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, foreignKey, getTypename } from '@dxos/echo-schema';
+import { create, foreignKey } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,15 +25,15 @@ export type EmailMessage = {
 
 const SOURCE_ID = 'hub.dxos.network/mailbox';
 
-export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }> = async ({
-  event,
-  context,
-  response,
-}) => {
+export const handler: FunctionHandler<
+  { spaceKey: string; data: { messages: EmailMessage[] } },
+  { account: string }
+> = async ({ event, context, response }) => {
   const {
-    spaceKey,
+    meta: { account = 'hello@dxos.network' },
     data: { messages },
-  } = event;
+    spaceKey,
+  } = event.data;
   log.info('messages', { spaceKey, messages: messages.length });
 
   // TODO(burdon): Generic sync API.
@@ -51,7 +51,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   }
 
   // Create mailbox if doesn't exist.
-  const { account } = context.data ?? { account: 'hello@dxos.network' };
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
   let mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
   if (!mailbox) {
@@ -103,8 +102,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
       // TODO(burdon): ??= breaks the array?
       // (mailbox.messages ??= []).push(object);
       mailbox.messages?.push(object);
-
-      log.info('inserted', { type: getTypename(message), id: message.id });
     }
   }
 
