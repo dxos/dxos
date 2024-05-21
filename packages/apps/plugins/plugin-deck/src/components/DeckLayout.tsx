@@ -31,8 +31,8 @@ import {
   Status,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { Deck, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
-import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
+import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
@@ -291,7 +291,7 @@ export const DeckLayout = ({
           {complementarySlug === NAV_ID ? (
             <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
-            <>
+            <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
                 node={complementaryNode.node}
                 slug={complementarySlug!}
@@ -309,7 +309,7 @@ export const DeckLayout = ({
                 }}
                 limit={1}
               />
-            </>
+            </div>
           ) : null}
         </Main.ComplementarySidebar>
 
@@ -318,7 +318,7 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
-          <Main.Content bounce classNames='grid'>
+          <Main.Content bounce classNames='grid overflow-hidden'>
             <Deck.Root>
               {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
                 .filter(Boolean)
