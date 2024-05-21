@@ -4,18 +4,18 @@
 
 import { asyncTimeout, Event, TimeoutError } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
 import { getAutomergeObjectCore } from '../automerge';
 import { prohibitSignalActions } from '../guarded-scope';
-import { StackTrace } from '@dxos/debug';
-import { trace } from '@dxos/tracing';
 
 // TODO(burdon): Multi-sort option.
 export type Sort<T extends EchoReactiveObject<any>> = (a: T, b: T) => -1 | 0 | 1;
