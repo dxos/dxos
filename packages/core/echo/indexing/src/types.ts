@@ -14,10 +14,9 @@ import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 // TODO(burdon): Reconcile with proto def.
 export type IndexQuery = {
   /**
-   * null means all Expando objects.
    * empty array means all objects (no filter).
    */
-  typenames: (string | null)[];
+  typenames: string[];
 
   // TODO(burdon): Hack to exclude.
   inverted?: boolean;

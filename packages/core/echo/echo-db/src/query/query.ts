@@ -4,11 +4,13 @@
 
 import { asyncTimeout, Event, TimeoutError } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
@@ -127,6 +129,8 @@ export class Query<T extends {} = any> {
   private _objectCache: EchoReactiveObject<T>[] | undefined = undefined;
   private _subscribers: number = 0;
 
+  private readonly _diagnostic: QueryDiagnostic;
+
   constructor(
     private readonly _queryContext: QueryContext,
     filter: Filter,
@@ -149,6 +153,13 @@ export class Query<T extends {} = any> {
       this._sources.delete(source);
     });
 
+    this._diagnostic = {
+      isActive: this._isActive,
+      filter: JSON.stringify(this._filter),
+      creationStack: new StackTrace(),
+    };
+    QUERIES.add(this._diagnostic);
+
     log('construct', { filter: this._filter.toProto() });
   }
 
@@ -168,6 +179,13 @@ export class Query<T extends {} = any> {
     this._signal.notifyRead();
     this._ensureCachePresent();
     return this._objectCache!;
+  }
+
+  /**
+   * @internal
+   */
+  get _isActive(): boolean {
+    return this._runningCtx != null;
   }
 
   async run(timeout: { timeout: number } = { timeout: 1000 }): Promise<OneShotQueryResult<T>> {
@@ -279,6 +297,7 @@ export class Query<T extends {} = any> {
       for (const source of this._sources) {
         this._subscribeToSourceUpdates(this._runningCtx, source);
       }
+      this._diagnostic.isActive = true;
     }
   }
 
@@ -287,6 +306,7 @@ export class Query<T extends {} = any> {
       void this._runningCtx.dispose()?.catch();
       this._queryContext.stop();
       this._runningCtx = null;
+      this._diagnostic.isActive = false;
     }
   }
 
@@ -311,3 +331,26 @@ export class Query<T extends {} = any> {
     }
   }
 }
+
+// NOTE: Make sure this doesn't keep references to the queries so that they can be garbage collected.
+type QueryDiagnostic = {
+  isActive: boolean;
+  filter: string;
+  creationStack: StackTrace;
+};
+
+const QUERIES = new Set<QueryDiagnostic>();
+
+trace.diagnostic({
+  id: 'client-queries',
+  name: 'Queries (Client)',
+  fetch: () => {
+    return Array.from(QUERIES).map((query) => {
+      return {
+        isActive: query.isActive,
+        filter: query.filter,
+        creationStack: query.creationStack.getStack(),
+      };
+    });
+  },
+});
