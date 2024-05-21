@@ -4,7 +4,7 @@
 
 // TODO(burdon): Request/Response.
 export type FunctionInvocation = {
-  path: string;
+  route: string;
 
   /**
    * Runtime name.

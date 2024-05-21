@@ -56,9 +56,9 @@ export const createCompletionTextGenerator = (
 };
 
 let id = 0;
-export const functionOptions = (functionId?: string): FunctionOptions => ({
+export const functionOptions = (uri?: string): FunctionOptions => ({
   // logging: 'detailed-json',
-  functionId: functionId ?? `test-${id++}`,
+  functionId: uri ?? `test-${id++}`,
   observers: [
     {
       onFunctionEvent: ({ functionId, functionType, callId, eventType }) => {

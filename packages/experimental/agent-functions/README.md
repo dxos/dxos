@@ -136,7 +136,7 @@ NOTE: Check/delete the socket file to troubleshoot.
 
 ```yml
 subscription: {
-  type: 'dxos.experimental.chess.Game'
+  type: 'dxos.org/type/Chess'
 }
 ```
 
