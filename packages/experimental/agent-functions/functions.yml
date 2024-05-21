@@ -53,6 +53,8 @@ functions:
 
 triggers:
   - function: 'dxos.org/function/hello'
+    meta:
+      sender: 'DXOS'
     webhook:
       method: GET
 
@@ -69,14 +71,14 @@ triggers:
 #      - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/chess'
-    context:
+    meta:
       level: 2
     subscription:
       filter:
       - type: 'dxos.experimental.chess.Game'
 
   - function: 'dxos.org/function/email-worker'
-    context:
+    meta:
       account: hello@dxos.network
     websocket:
       url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'

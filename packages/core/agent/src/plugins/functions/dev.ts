@@ -54,7 +54,6 @@ export class DevFunctionDispatcher implements FunctionDispatcher, FunctionRegist
     }
 
     const url = path.join(registration.request.endpoint, invocation.path);
-    log.info('#######', { url });
     const result = await fetch(url, {
       method: 'POST',
       body: JSON.stringify(invocation.event),
