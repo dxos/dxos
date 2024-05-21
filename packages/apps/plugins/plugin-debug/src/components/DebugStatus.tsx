@@ -6,13 +6,13 @@ import { Circle, ChartBar, Lightning, LightningSlash } from '@phosphor-icons/rea
 import React, { useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
+import { StatusBar } from '@braneframe/plugin-status-bar';
 import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin, firstMainId } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button as NativeButton, type ButtonProps } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 const styles = {
@@ -24,10 +24,6 @@ const styles = {
 // TODO(burdon): Move out of debug plugin.
 // TODO(burdon): Make pluggable (move indicators to relevant plugins).
 // TODO(burdon): Vault heartbeat indicator (global scope)?
-
-const Button = (props: ButtonProps) => (
-  <NativeButton {...props} density='fine' variant='ghost' classNames='px-2 py-0' />
-);
 
 /**
  * Ensure light doesn't flicker immediately after start.
@@ -99,15 +95,15 @@ const ErrorIndicator = () => {
 
   if (errorRef.current) {
     return (
-      <Button title={errorRef.current.message} onClick={handleReset}>
+      <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
         <Circle weight='fill' className={mx(styles.error, getSize(3))} />
-      </Button>
+      </StatusBar.Button>
     );
   } else {
     return (
-      <Button title='No errors.'>
+      <StatusBar.Button title='No errors.'>
         <Circle weight='fill' className={getSize(3)} />
-      </Button>
+      </StatusBar.Button>
     );
   }
 };
@@ -124,15 +120,15 @@ const SwarmIndicator = () => {
 
   if (state === 0) {
     return (
-      <Button title='Connected to swarm.'>
+      <StatusBar.Button title='Connected to swarm.'>
         <Lightning className={getSize(4)} />
-      </Button>
+      </StatusBar.Button>
     );
   } else {
     return (
-      <Button title='Disconnected from swarm.'>
+      <StatusBar.Button title='Disconnected from swarm.'>
         <LightningSlash className={mx(styles.warning, getSize(4))} />
-      </Button>
+      </StatusBar.Button>
     );
   }
 };
@@ -169,22 +165,22 @@ const SavingIndicator = () => {
   switch (state) {
     case 2:
       return (
-        <Button title='Edit not saved.'>
+        <StatusBar.Button title='Edit not saved.'>
           <Circle weight='fill' className={mx(styles.warning, getSize(3))} />
-        </Button>
+        </StatusBar.Button>
       );
     case 1:
       return (
-        <Button title='Saving...'>
+        <StatusBar.Button title='Saving...'>
           <Circle weight='fill' className={mx(styles.success, getSize(3))} />
-        </Button>
+        </StatusBar.Button>
       );
     case 0:
     default:
       return (
-        <Button title='Modified indicator.'>
+        <StatusBar.Button title='Modified indicator.'>
           <Circle weight='fill' className={getSize(3)} />
-        </Button>
+        </StatusBar.Button>
       );
   }
 };
@@ -195,9 +191,9 @@ const PerformanceIndicator = () => {
 
   return (
     <>
-      <Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
+      <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
         <ChartBar />
-      </Button>
+      </StatusBar.Button>
       <div
         className={mx(
           'z-20 absolute transition-[right] bottom-[40px] w-[450px]',
@@ -215,15 +211,10 @@ const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, Swarm
 
 export const DebugStatus = () => {
   return (
-    <div
-      className={mx(
-        'flex items-center bg-white dark:bg-neutral-900 text-neutral-400 dark:text-neutral-600',
-        'border-t border-l border-neutral-300 dark:border-neutral-700',
-      )}
-    >
+    <>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}
-    </div>
+    </>
   );
 };
