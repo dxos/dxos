@@ -23,7 +23,6 @@ type PanelKey = 'ts' | 'performance' | 'spans' | 'queries' | 'database' | 'memor
 type PanelMap = Record<PanelKey, boolean | undefined>;
 const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'database', 'memory'];
 
-// TODO(burdon): Factor out (for Composer).
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   const [live, setLive] = useState(true);
@@ -31,7 +30,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   useEffect(() => {
     if (live && onRefresh) {
-      const interval = setInterval(onRefresh, 1000);
+      const interval = setInterval(onRefresh, 5_000);
       return () => clearInterval(interval);
     }
   }, [live, onRefresh]);

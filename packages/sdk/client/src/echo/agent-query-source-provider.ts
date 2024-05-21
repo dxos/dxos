@@ -16,6 +16,8 @@ import { type EchoObject as EchoObjectProto } from '@dxos/protocols/proto/dxos/e
 import { type QueryRequest, type QueryResponse } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 
+const ERR_CLOSING = new Error();
+
 export class AgentQuerySourceProvider implements QuerySourceProvider {
   private readonly _responsePromises = new Map<
     string,
@@ -36,25 +38,25 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 
   async close() {
     this._unsubscribe?.();
-    this._responsePromises.forEach((promise) => promise.reject(new Error('Close.')));
+    this._responsePromises.forEach((promise) => promise.reject(ERR_CLOSING));
     this._responsePromises.clear();
   }
 
+  // TODO(burdon): Make async?
+  // TODO(burdon): Define return type.
   private _sendRequest(filter: FilterProto) {
-    const request: QueryRequest = {
-      filter,
-      queryId: PublicKey.random().toHex(),
-    };
+    const request: QueryRequest = { queryId: PublicKey.random().toHex(), filter };
     this._space
       .postMessage(QUERY_CHANNEL, {
         '@type': 'dxos.agent.query.QueryRequest',
         ...request,
       })
       .catch((error) => log.catch(error));
+
     let cancelRequest: () => void;
     return {
       response: new Promise<QueryResponse>((resolve, reject) => {
-        invariant(request.queryId, 'QueryId is undefined.');
+        invariant(request.queryId);
         this._responsePromises.set(request.queryId, { resolve, reject });
         cancelRequest = () => {
           reject(new Error('Request cancelled.'));
@@ -90,9 +92,10 @@ export class AgentQuerySourceProvider implements QuerySourceProvider {
 }
 
 export class AgentQuerySource implements QuerySource {
-  public changed = new Event<void>();
+  private _results?: QueryResult[];
   private _cancelPreviousRequest?: () => void = undefined;
-  private _results?: QueryResult[] = [];
+
+  public readonly changed = new Event<void>();
 
   constructor(
     private readonly _params: {
@@ -120,9 +123,11 @@ export class AgentQuerySource implements QuerySource {
     if (this._cancelPreviousRequest) {
       this._cancelPreviousRequest();
     }
+
+    // TODO(burdon): Make async.
+    const startTime = Date.now();
     const { response, cancelRequest } = this._params.sendRequest(filter.toProto());
     this._cancelPreviousRequest = cancelRequest;
-    const startTime = Date.now();
     response
       .then((response) => {
         this._results =
@@ -141,9 +146,10 @@ export class AgentQuerySource implements QuerySource {
               },
             };
           }) ?? [];
+
         this.changed.emit();
       })
-      .catch((error) => error.message === 'Close.' || log.catch(error));
+      .catch((error) => error === ERR_CLOSING || log.catch(error));
   }
 
   close(): void {

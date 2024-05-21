@@ -7,7 +7,12 @@ import React, { useState } from 'react';
 import { type CalendarType, EventType } from '@braneframe/types';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 
 import { EventList } from './EventtList';
 import { MasterDetail } from '../MasterDetail';
@@ -34,7 +39,7 @@ const EventsMain = ({ calendar }: EventsMainProps) => {
   objects.sort(byDate());
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>

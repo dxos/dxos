@@ -177,6 +177,10 @@ export const MainLayout = ({
           </div>
         )}
 
+        <div role='none' className='fixed block-end-0 inset-inline-0'>
+          <Surface role='status-bar' limit={1} />
+        </div>
+
         {/* Global popovers. */}
         <Popover.Portal>
           <Popover.Content

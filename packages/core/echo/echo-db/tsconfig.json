@@ -7,7 +7,6 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],

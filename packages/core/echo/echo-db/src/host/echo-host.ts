@@ -4,7 +4,7 @@
 
 import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { AutomergeHost, DataServiceImpl, type EchoReplicator } from '@dxos/echo-pipeline';
+import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -40,6 +40,9 @@ export class EchoHost extends Resource {
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
 
+  // TODO(dmaretskyi): Extract from this class.
+  private readonly _meshEchoReplicator: MeshEchoReplicator;
+
   constructor({ kv, storage }: EchoHostParams) {
     super();
 
@@ -66,6 +69,8 @@ export class EchoHost extends Resource {
     });
 
     this._dataService = new DataServiceImpl(this._automergeHost);
+
+    this._meshEchoReplicator = new MeshEchoReplicator();
   }
 
   get queryService(): QueryService {
@@ -84,9 +89,11 @@ export class EchoHost extends Resource {
     await this._automergeHost.open();
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
+    await this._automergeHost.addReplicator(this._meshEchoReplicator);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    await this._automergeHost.removeReplicator(this._meshEchoReplicator);
     await this._queryService.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
@@ -138,22 +145,29 @@ export class EchoHost extends Resource {
 
   /**
    * Authorize remote device to access space.
+   * @deprecated MESH-based replication is being moved out from EchoHost.
    */
-  // TODO(dmaretskyi): Rethink replication/auth API.
+  // TODO(dmaretskyi): Extract from this class.
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
-    this._automergeHost.authorizeDevice(spaceKey, deviceKey);
+    this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
   }
 
   /**
    * This doc will be replicated from remote peers.
+   * @deprecated This API will be replaced by a more robust one.
+   *
+   * See: https://github.com/dxos/dxos/issues/6745
    */
   // TODO(dmaretskyi): Rethink replication/auth API.
   replicateDocument(docUrl: string) {
     this._automergeHost._requestedDocs.add(docUrl);
   }
 
-  // TODO(dmaretskyi): Rethink replication/auth API.
+  /**
+   * @deprecated MESH-based replication is being moved out from EchoHost.
+   */
+  // TODO(dmaretskyi): Extract from this class.
   createReplicationExtension(): TeleportExtension {
-    return this._automergeHost.createExtension();
+    return this._meshEchoReplicator.createExtension();
   }
 }

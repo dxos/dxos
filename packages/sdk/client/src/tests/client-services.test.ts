@@ -26,7 +26,7 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const servicesProvider = testBuilder.createLocal();
+    const servicesProvider = testBuilder.createLocalClientServices();
     await servicesProvider.open();
     afterTest(() => servicesProvider.close());
 
