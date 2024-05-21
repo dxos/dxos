@@ -159,16 +159,6 @@ export const MainLayout = ({
           />
         </div>
 
-        {/* Status info. */}
-        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
-        <div
-          role='none'
-          aria-label={t('status label')}
-          className='fixed bottom-0 right-0 h-[32px] flex justify-end z-[1]'
-        >
-          <Surface role='status' limit={1} />
-        </div>
-
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}
         {showHintsFooter && (
@@ -177,6 +167,7 @@ export const MainLayout = ({
           </div>
         )}
 
+        {/* Status info. */}
         <div role='none' className='fixed block-end-0 inset-inline-0'>
           <Surface role='status-bar' limit={1} />
         </div>

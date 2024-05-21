@@ -7,3 +7,4 @@ import { StatusBarPlugin } from './StatusBarPlugin';
 export default StatusBarPlugin;
 
 export * from './StatusBarPlugin';
+export * from './components';
