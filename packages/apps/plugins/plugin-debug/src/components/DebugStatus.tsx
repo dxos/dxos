@@ -95,15 +95,15 @@ const ErrorIndicator = () => {
 
   if (errorRef.current) {
     return (
-      <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
+      <StatusBar.Item title={errorRef.current.message} onClick={handleReset}>
         <Circle weight='fill' className={mx(styles.error, getSize(3))} />
-      </StatusBar.Button>
+      </StatusBar.Item>
     );
   } else {
     return (
-      <StatusBar.Button title='No errors.'>
+      <StatusBar.Item title='No errors.'>
         <Circle weight='fill' className={getSize(3)} />
-      </StatusBar.Button>
+      </StatusBar.Item>
     );
   }
 };
@@ -120,15 +120,15 @@ const SwarmIndicator = () => {
 
   if (state === 0) {
     return (
-      <StatusBar.Button title='Connected to swarm.'>
+      <StatusBar.Item title='Connected to swarm.'>
         <Lightning className={getSize(4)} />
-      </StatusBar.Button>
+      </StatusBar.Item>
     );
   } else {
     return (
-      <StatusBar.Button title='Disconnected from swarm.'>
+      <StatusBar.Item title='Disconnected from swarm.'>
         <LightningSlash className={mx(styles.warning, getSize(4))} />
-      </StatusBar.Button>
+      </StatusBar.Item>
     );
   }
 };
@@ -165,22 +165,22 @@ const SavingIndicator = () => {
   switch (state) {
     case 2:
       return (
-        <StatusBar.Button title='Edit not saved.'>
+        <StatusBar.Item title='Edit not saved.'>
           <Circle weight='fill' className={mx(styles.warning, getSize(3))} />
-        </StatusBar.Button>
+        </StatusBar.Item>
       );
     case 1:
       return (
-        <StatusBar.Button title='Saving...'>
+        <StatusBar.Item title='Saving...'>
           <Circle weight='fill' className={mx(styles.success, getSize(3))} />
-        </StatusBar.Button>
+        </StatusBar.Item>
       );
     case 0:
     default:
       return (
-        <StatusBar.Button title='Modified indicator.'>
+        <StatusBar.Item title='Modified indicator.'>
           <Circle weight='fill' className={getSize(3)} />
-        </StatusBar.Button>
+        </StatusBar.Item>
       );
   }
 };

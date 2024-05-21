@@ -15,6 +15,7 @@ import { StatusBar } from './StatusBar';
 export const StatusBarImpl = () => {
   const [open, setOpen] = useState(false);
 
+  // TODO(wittjosiah): Factor out feedback and discord buttons.
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <StatusBar.Container>
