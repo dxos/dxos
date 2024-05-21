@@ -6636,6 +6636,9 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@oclif/test':
         specifier: ^3.2.15
         version: 3.2.15
