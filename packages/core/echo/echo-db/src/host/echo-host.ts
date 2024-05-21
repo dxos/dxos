@@ -145,16 +145,18 @@ export class EchoHost extends Resource {
 
   /**
    * Authorize remote device to access space.
-   * @deprecated
+   * @deprecated MESH-based replication is being moved out from EchoHost.
    */
-  // TODO(dmaretskyi): Rethink replication/auth API.
+  // TODO(dmaretskyi): Extract from this class.
   authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey) {
     this._meshEchoReplicator.authorizeDevice(spaceKey, deviceKey);
   }
 
   /**
    * This doc will be replicated from remote peers.
-   * @deprecated
+   * @deprecated This API will be replaced by a more robust one.
+   *
+   * See: https://github.com/dxos/dxos/issues/6745
    */
   // TODO(dmaretskyi): Rethink replication/auth API.
   replicateDocument(docUrl: string) {
@@ -162,9 +164,9 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * @deprecated
+   * @deprecated MESH-based replication is being moved out from EchoHost.
    */
-  // TODO(dmaretskyi): Rethink replication/auth API.
+  // TODO(dmaretskyi): Extract from this class.
   createReplicationExtension(): TeleportExtension {
     return this._meshEchoReplicator.createExtension();
   }
