@@ -88,8 +88,6 @@ export class MeshEchoReplicator implements EchoReplicator {
 
           const authorizedDevices = this._authorizedDevices.get(spaceKey);
 
-          // TODO(mykola): Hack, stop abusing `peerMetadata` field.
-          // const deviceKeyHex = (peerMetadata as any)?.dxos_deviceKey;
           if (!connection.remoteDeviceKey) {
             log('device key not found for share policy check', {
               peerId: connection.peerId,
@@ -97,7 +95,6 @@ export class MeshEchoReplicator implements EchoReplicator {
             });
             return false;
           }
-          // const deviceKey = PublicKey.from(deviceKeyHex);
 
           const isAuthorized = authorizedDevices?.has(connection.remoteDeviceKey) ?? false;
           log('share policy check', {
