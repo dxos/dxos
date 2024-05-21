@@ -8,6 +8,7 @@ import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
+import { Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
@@ -50,6 +51,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
       const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
 
+      // Local dev server.
       const server = new DevServer(client, {
         manifest,
         baseDir: directory,
@@ -60,18 +62,19 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await server.initialize();
       await server.start();
 
-      // TODO(burdon): Move to plugin (make independent of runtime).
+      // TODO(burdon): Move to agent's FunctionsPlugin.
       const scheduler = new Scheduler(client, manifest, { endpoint: server.proxy! });
       await scheduler.start();
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
+      const run = new Trigger();
       process.on('SIGINT', async () => {
         await scheduler.stop();
         await server.stop();
-        process.exit();
+        // process.exit();
+        run.wake();
       });
 
-      // TODO(burdon): Command to print table.
       // TODO(burdon): Get from server API.
       if (this.flags.verbose) {
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
@@ -84,7 +87,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
       }
 
       // Wait until exit (via SIGINT).
-      await new Promise(() => {});
+      await run.wait();
+      // await new Promise(() => {});
     });
   }
 }
