@@ -16,17 +16,21 @@ message FunctionsConfig {
 
 message Function {
   string id = 1;
-  string path = 2;
+  string route = 2;
 }
 
 message RegisterRequest {
   string endpoint = 1;
-  repeated Function functions = 2;
 }
 
 message RegisterResponse {
   string registration_id = 1;
   string endpoint = 2;
+}
+
+message UpdateRegistrationRequest {
+  string registration_id = 1;
+  repeated Function functions = 2;
 }
 
 message UnregisterRequest {
@@ -35,5 +39,6 @@ message UnregisterRequest {
 
 service FunctionRegistryService {
   rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc UpdateRegistration(UpdateRegistrationRequest) returns (google.protobuf.Empty) {}
   rpc Unregister(UnregisterRequest) returns (google.protobuf.Empty) {}
 }
