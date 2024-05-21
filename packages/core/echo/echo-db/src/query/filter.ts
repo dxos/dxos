@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { DynamicEchoSchema, requireTypeReference } from '@dxos/echo-schema';
+import { DynamicEchoSchema, requireTypeReference, ExpandoTypename } from '@dxos/echo-schema';
 import { getSchema, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
@@ -230,7 +230,7 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
         return false;
       }
     } else {
-      if (!type && filter.type.itemId !== 'Expando') {
+      if (!type && filter.type.itemId !== ExpandoTypename) {
         return false;
       } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
         // Compare if types are equal.

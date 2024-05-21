@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
-import { create, type S, Expando, getEchoObjectAnnotation } from '@dxos/echo-schema';
+import { create, type S, Expando, getEchoObjectAnnotation, ExpandoTypename } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -63,7 +63,7 @@ describe('Index queries', () => {
         for (const result of query.results) {
           if (
             result.resolution?.source === 'index' &&
-            ((getEchoObjectAnnotation(type)?.typename === 'Expando' &&
+            ((getEchoObjectAnnotation(type)?.typename === ExpandoTypename &&
               getAutomergeObjectCore(result.object!).getType() === undefined) ||
               result.object instanceof (type as any))
           ) {
