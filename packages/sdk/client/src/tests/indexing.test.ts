@@ -249,7 +249,7 @@ describe('Index queries', () => {
   test('query Expando objects', async () => {
     const builder = new TestBuilder();
     afterTest(async () => await builder.destroy());
-    const client = await initClient(builder.createLocal());
+    const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
 
