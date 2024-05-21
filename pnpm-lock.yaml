@@ -5689,6 +5689,9 @@ importers:
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
@@ -5759,6 +5762,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log

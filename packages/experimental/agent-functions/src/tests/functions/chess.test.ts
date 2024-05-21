@@ -11,7 +11,14 @@ import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
+import {
+  DevServer,
+  type FunctionManifest,
+  FunctionRegistry,
+  FunctionTriggerType,
+  Scheduler,
+  TriggerRegistry,
+} from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
 const FUNCTIONS_PORT = 8757;
@@ -48,15 +55,16 @@ describe('Chess', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'dxos.org/function/chess',
-          path: 'chess',
+          functionId: 'dxos.org/function/chess',
+          route: 'chess',
           handler: 'chess',
         },
       ],
       triggers: [
         {
           function: 'dxos.org/function/chess',
-          subscription: {
+          spec: {
+            type: FunctionTriggerType.ECHO,
             filter: [
               {
                 type: 'dxos.experimental.chess.Game',
@@ -67,20 +75,22 @@ describe('Chess', () => {
       ],
     };
 
-    const server = new DevServer(client, {
-      manifest,
+    const functionRegistry = new FunctionRegistry(client);
+    const server = new DevServer(client, functionRegistry, {
       baseDir: join(__dirname, '../../functions'),
     });
 
-    await server.initialize();
-    await server.start();
-    afterTest(() => server.stop());
-
-    const scheduler = new Scheduler(client, manifest, {
+    const triggerRegistry = new TriggerRegistry(client);
+    const scheduler = new Scheduler(functionRegistry, triggerRegistry, {
       endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
     });
+
+    await server.start();
     await scheduler.start();
-    afterTest(() => scheduler.stop());
+    afterTest(async () => {
+      await scheduler?.stop();
+      await server?.stop();
+    });
 
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -97,6 +107,7 @@ describe('Chess', () => {
       done.wake();
     });
 
+    // TODO(burdon): ???
     afterTest(cleanup);
 
     await doMove(game, 'w');

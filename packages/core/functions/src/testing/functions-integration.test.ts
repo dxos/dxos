@@ -12,12 +12,10 @@ import { performInvitation, TestBuilder } from '@dxos/client/testing';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test } from '@dxos/test';
 
-import { DevServer } from './dev-server';
-import { Scheduler } from './scheduler';
-import { FunctionRegistry } from '../functions';
-import { createFunctionRuntime, createInitializedClients } from '../testing/setup';
-import { setTestCallHandler } from '../testing/test/handler';
-import { TestType } from '../testing/types';
+import { setTestCallHandler } from './test/handler';
+import { FunctionRegistry } from '../registry';
+import { DevServer, Scheduler } from '../runtime';
+import { createFunctionRuntime, createInitializedClients, TestType } from '../testing';
 import { TriggerRegistry } from '../trigger';
 import { FunctionDef, FunctionTrigger, FunctionTriggerType } from '../types';
 
@@ -30,7 +28,8 @@ describe('functions e2e', () => {
     await testBuilder.destroy();
   });
 
-  test('a functions gets triggered in response to another peer object creations', async () => {
+  test('a function gets triggered in response to another peer object creations', async () => {
+    // TODO(burdon): Create builder pattern.
     const functionRuntime = await createFunctionRuntime(testBuilder);
     const devServer = await startDevServer(functionRuntime);
     const scheduler = await startScheduler(functionRuntime, devServer);
@@ -72,18 +71,18 @@ describe('functions e2e', () => {
     await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
   };
 
-  const startScheduler = async (functionRuntime: Client, devServer: DevServer) => {
-    const functionRegistry = new FunctionRegistry(functionRuntime);
-    const triggerRegistry = new TriggerRegistry(functionRuntime);
+  const startScheduler = async (client: Client, devServer: DevServer) => {
+    const functionRegistry = new FunctionRegistry(client);
+    const triggerRegistry = new TriggerRegistry(client);
     const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: devServer.endpoint });
     await scheduler.start();
     testBuilder.ctx.onDispose(() => scheduler.stop());
     return scheduler;
   };
 
-  const startDevServer = async (functionRuntime: Client) => {
-    const functionRegistry = new FunctionRegistry(functionRuntime);
-    const server = new DevServer(functionRuntime, functionRegistry, {
+  const startDevServer = async (client: Client) => {
+    const functionRegistry = new FunctionRegistry(client);
+    const server = new DevServer(client, functionRegistry, {
       baseDir: path.join(__dirname, '../testing'),
     });
     await server.start();

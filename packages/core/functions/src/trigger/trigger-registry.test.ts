@@ -2,24 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import chai, { expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
-import { type Space } from 'packages/sdk/client/src/echo';
-
 import { sleep, Trigger, waitForCondition } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
+import chai, { expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+
+import { createInitializedClients, TestType, triggerWebhook } from '../testing';
+import { type FunctionManifest, FunctionTrigger, FunctionTriggerType } from '../types';
 
 import { TriggerRegistry } from './trigger-registry';
-import { createInitializedClients } from '../testing/setup';
-import { TestType } from '../testing/types';
-import { triggerWebhook } from '../testing/util';
-import { type FunctionManifest, FunctionTrigger, FunctionTriggerType } from '../types';
 
 const testManifest: FunctionManifest = {
   triggers: [

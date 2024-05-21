@@ -14,6 +14,7 @@ export type PanelProps = {
   info?: JSX.Element;
   padding?: boolean;
   open?: boolean;
+  className?: string;
   onToggle?: (id: string, open: boolean) => void;
 };
 
@@ -26,6 +27,7 @@ export const Panel = ({
   info,
   padding = true,
   open = true,
+  className,
   onToggle,
   children,
 }: PropsWithChildren<PanelProps>) => {
@@ -51,6 +53,7 @@ export const Panel = ({
             'bg-white dark:bg-neutral-900 text-black dark:text-neutral-300',
             open ? 'border-t border-neutral-200 dark:border-neutral-800' : 'max-h-0',
             padding && 'px-2',
+            className,
           )}
         >
           {children}

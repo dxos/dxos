@@ -7,20 +7,9 @@ import React from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
-import { type QueryInfo } from '../../../hooks';
+import { type QueryInfo, removeEmpty } from '../../../hooks';
 import { type CustomPanelProps, Panel } from '../Panel';
 import { Duration } from '../util';
-
-export const maybeTruncateKey = (str: string) => (str.length > 32 ? str.slice(0, 8) : str);
-
-// TODO(burdon): Move to util.
-export const removeEmpty = (obj: any): any => {
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
-      .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
-  );
-};
 
 // TODO(burdon): Sort by time? Filter inactive?
 export const QueriesPanel = ({ queries, ...props }: CustomPanelProps<{ queries: QueryInfo[] }>) => {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { S, AST, TypedObject } from '@dxos/echo-schema';
+import { AST, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerSpec.
@@ -10,11 +10,12 @@ import { S, AST, TypedObject } from '@dxos/echo-schema';
  * type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
+// TODO(burdon): Is this better than a string literal?
 export enum FunctionTriggerType {
   TIMER = 'timer',
   WEBHOOK = 'webhook',
   WEBSOCKET = 'websocket',
-  ECHO = 'echo',
+  ECHO = 'echo', // TODO(burdon): Rename subscription.
 }
 
 const TimerTriggerSchema = S.struct({
@@ -75,6 +76,7 @@ export class FunctionDef extends TypedObject({
   typename: 'dxos.functions.FunctionDef',
   version: '0.1.0',
 })({
+  // TODO(burdon): Change to id.
   functionId: S.string,
   description: S.optional(S.string),
   route: S.string,
