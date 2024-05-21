@@ -87,7 +87,7 @@ describe('Chess', () => {
             type: FunctionTriggerType.SUBSCRIPTION,
             filter: [
               {
-                type: 'dxos.experimental.chess.Game',
+                type: 'dxos.org/type/Chess',
               },
             ],
           },
@@ -121,9 +121,12 @@ describe('Chess', () => {
 });
 
 const doMove = async (game: GameType, turn: string) => {
+  // TODO(burdon): Error if import is removed.
+  //  Uncaught Error: invariant violation: Recursive call to doc.change
+  const { Chess } = await import('chess.js');
+
   const done = new Trigger();
 
-  const { Chess } = await import('chess.js');
   const chess = new Chess();
   chess.loadPgn(game.pgn ?? '');
   if (chess.isGameOver() || chess.history().length > 50) {
@@ -136,7 +139,7 @@ const doMove = async (game: GameType, turn: string) => {
       const move = moves[Math.floor(Math.random() * moves.length)];
       chess.move(move);
       game.pgn = chess.pgn();
-      console.log(`move: ${chess.history().length}\n` + chess.ascii());
+      console.log(`Move: ${chess.history().length}\n` + chess.ascii());
     }
   }
 

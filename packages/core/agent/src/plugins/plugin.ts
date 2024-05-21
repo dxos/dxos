@@ -49,12 +49,10 @@ export abstract class Plugin {
     return (this.context.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
-  // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
     log('initializing', { id: this.id });
     this._pluginCtx = pluginCtx;
 
-    // TODO(burdon): Require config.
     const config = getPluginConfig(this._pluginCtx.client.config, this.id);
     invariant(config, `Plugin not configured: ${this.id}`);
     this._config = config;

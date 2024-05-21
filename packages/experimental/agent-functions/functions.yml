@@ -75,7 +75,7 @@ triggers:
       level: 2
     subscription:
       filter:
-      - type: 'dxos.experimental.chess.Game'
+      - type: 'dxos.org/type/Chess'
 
   - function: 'dxos.org/function/email-worker'
     meta:
