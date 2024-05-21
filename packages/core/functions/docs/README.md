@@ -19,7 +19,7 @@ triggers:
   - function: chess
     # spaceKey: f1ed03
     subscription:
-      type: dxos.experimental.chess.Game
+      type: dxos.org/type/Chess
 
 ```
 

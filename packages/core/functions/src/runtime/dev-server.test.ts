@@ -5,12 +5,14 @@
 import { expect } from 'chai';
 import path from 'path';
 
-import { FunctionsPlugin } from '@dxos/agent';
-import { Client, Config } from '@dxos/client';
+import { waitForCondition } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { describe, openAndClose, test } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
+import { FunctionRegistry } from '../registry';
+import { createFunctionRuntime } from '../testing';
 import { type FunctionManifest } from '../types';
 
 describe('dev server', () => {
@@ -18,35 +20,10 @@ describe('dev server', () => {
   let testBuilder: TestBuilder;
   before(async () => {
     testBuilder = new TestBuilder();
-    const config = new Config({
-      runtime: {
-        agent: {
-          plugins: [
-            {
-              id: 'dxos.org/agent/plugin/functions',
-              config: {
-                port: 8080,
-              },
-            },
-          ],
-        },
-      },
-    });
-
-    const services = testBuilder.createLocalClientServices();
-    client = new Client({ config, services });
-
-    await client.initialize();
-    await client.halo.createIdentity();
-    testBuilder.ctx.onDispose(() => client.destroy());
-
-    // TODO(burdon): Better way to configure plugin? (Rationalize chess.test).
-    const functionsPlugin = new FunctionsPlugin();
-    await functionsPlugin.initialize({ client, clientServices: services });
-    await openAndClose(functionsPlugin);
-
+    client = await createFunctionRuntime(testBuilder);
     expect(client.services.services.FunctionRegistryService).to.exist;
   });
+
   after(async () => {
     await testBuilder.destroy();
   });
@@ -55,24 +32,27 @@ describe('dev server', () => {
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'example.com/function/test',
-          path: 'test',
+          uri: 'example.com/function/test',
+          route: 'test',
           handler: 'test',
         },
       ],
     };
 
-    const server = new DevServer(client, {
-      manifest,
+    const registry = new FunctionRegistry(client);
+    const server = new DevServer(client, registry, {
       baseDir: path.join(__dirname, '../testing'),
     });
-    await server.initialize();
+    const space = await client.spaces.create();
+    await registry.register(space, manifest);
     await server.start();
 
     // TODO(burdon): Doesn't shut down cleanly.
     //  Error: invariant violation [this._client.services.services.FunctionRegistryService]
     testBuilder.ctx.onDispose(() => server.stop());
     expect(server).to.exist;
+
+    await waitForCondition({ condition: () => server.functions.length > 0 });
 
     await server.invoke('test', {});
     expect(server.stats.seq).to.eq(1);

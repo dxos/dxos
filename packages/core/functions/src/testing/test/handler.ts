@@ -4,6 +4,12 @@
 
 import { type FunctionHandler } from '../../handler';
 
-export const handler: FunctionHandler<any> = async ({ response }) => {
-  return response.status(200);
+let callHandler: FunctionHandler<any> = async ({ response }) => response.status(200);
+
+export const setTestCallHandler = (handler: FunctionHandler<any>) => {
+  callHandler = handler;
+};
+
+export const handler: FunctionHandler<any> = async (args) => {
+  return callHandler(args);
 };
