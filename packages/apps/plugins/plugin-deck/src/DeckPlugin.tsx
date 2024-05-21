@@ -393,29 +393,32 @@ export const DeckPlugin = ({
               batch(() => {
                 // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
                 if (intent.data && isActiveParts(location.active)) {
-                  location.active = Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
-                    const partMembers = new Set<string>();
-                    (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                      partMembers.add(id),
-                    );
-                    (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
-                    acc[part] = Array.from(partMembers);
-                    return acc;
-                  }, location.active);
+                  location.active = Object.entries(intent.data.activeParts).reduce(
+                    (acc: ActiveParts, [part, ids]) => {
+                      const partMembers = new Set<string>();
+                      (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                        partMembers.add(id),
+                      );
+                      (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
+                      acc[part] = Array.from(partMembers);
+                      return acc;
+                    },
+                    { ...location.active },
+                  );
                 }
               });
-
-              // TODO(thure): What needs doing for cleaning up?
+              return { data: true };
             }
 
             case NavigationAction.ADJUST: {
-              return batch(() => {
+              batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
                   // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
+              return { data: true };
             }
           }
         },

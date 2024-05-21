@@ -113,7 +113,15 @@ const NodePlankHeading = ({
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? { action: NavigationAction.CLOSE, data: { [part[0]]: slug } }
+              ? {
+                  action: NavigationAction.CLOSE,
+                  data: {
+                    activeParts: {
+                      complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                      [part[0]]: slug,
+                    },
+                  },
+                }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
