@@ -59,22 +59,13 @@ describe('Redis', () => {
   });
 
   test('pass web-stream through Redis', async () => {
-    const [alicePort, bobPort] = await createLinkedRedisPorts();
-
-    const streamAlice = new ReadableStream({
-      start: (controller) => {
-        const unsub = alicePort.subscribe((chunk) => {
-          controller.enqueue(chunk);
-        });
-        afterTest(() => unsub?.());
-      },
-    });
+    const { readStream: streamAlice, writeStream: streamBob } = await createLinkedReadWriteStreams();
 
     const reader = streamAlice.getReader();
     const receivedChunk = reader.read();
 
     const data = Buffer.from('hello');
-    await bobPort.send(data);
+    await streamBob.getWriter().write(data);
     expect((await receivedChunk).value).to.deep.eq(data);
   });
 
@@ -105,6 +96,7 @@ describe('Redis', () => {
     await using bob = await builder.createPeer();
     await alice.host.addReplicator(aliceReplicator);
     await bob.host.addReplicator(bobReplicator);
+    debugger;
 
     await using db1 = await alice.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
@@ -138,11 +130,10 @@ const createLinkedReadWriteStreams = async () => {
   const queue = 'stream-queue' + PublicKey.random().toHex();
   const readClient = await setupRedisClient();
   const writeClient = await setupRedisClient();
+  let unsubscribed = false;
 
   const readStream = new ReadableStream({
     start: (controller) => {
-      let unsubscribed = false;
-      afterTest(() => (unsubscribed = true));
       queueMicrotask(async () => {
         try {
           // eslint-disable-next-line no-unmodified-loop-condition
@@ -161,9 +152,13 @@ const createLinkedReadWriteStreams = async () => {
         }
       });
     },
+    cancel: () => {
+      unsubscribed = true;
+    },
   });
 
   const writeStream = new WritableStream({
+    start: () => {},
     write: async (chunk) => {
       await writeClient.rpush(queue, chunk);
     },
