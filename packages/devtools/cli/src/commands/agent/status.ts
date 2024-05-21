@@ -7,7 +7,7 @@ import { Flags } from '@oclif/core';
 import type { Client } from '@dxos/client';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Status extends BaseCommand<typeof Status> {
   static override enableJsonFlag = true;

@@ -23,13 +23,13 @@
   ],
   "references": [
     {
-      "path": "../../apps/templates/bare-template"
-    },
-    {
       "path": "../../apps/templates/hello-template"
     },
     {
       "path": "../../apps/templates/tasks-template"
+    },
+    {
+      "path": "../../apps/types"
     },
     {
       "path": "../../common/async"
@@ -87,9 +87,6 @@
     },
     {
       "path": "../../sdk/observability"
-    },
-    {
-      "path": "../cli-composer"
     }
   ],
   "ts-node": {

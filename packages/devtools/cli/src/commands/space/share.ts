@@ -11,7 +11,7 @@ import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {

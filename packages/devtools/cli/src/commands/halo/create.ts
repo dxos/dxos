@@ -7,7 +7,7 @@ import { Args, Flags } from '@oclif/core';
 import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;

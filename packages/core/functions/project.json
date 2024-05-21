@@ -17,6 +17,12 @@
       }
     },
     "lint": {},
+    "postbuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "gen-schema"
+      }
+    },
     "prebuild": {},
     "test": {
       "options": {

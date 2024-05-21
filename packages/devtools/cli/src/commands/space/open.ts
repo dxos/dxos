@@ -6,7 +6,7 @@ import { Args } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Open extends BaseCommand<typeof Open> {
   static override description = 'Open space.';

@@ -10,7 +10,7 @@ import { spawn } from 'node:child_process';
 import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {

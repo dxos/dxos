@@ -7,7 +7,7 @@ import chalk from 'chalk';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { waitForSpace } from '../../util';
 
 export default class Create extends BaseCommand<typeof Create> {

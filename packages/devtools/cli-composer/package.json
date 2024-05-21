@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/cli",
+  "name": "@dxos/cli-composer",
   "version": "0.5.2",
-  "description": "DXOS CLI",
+  "description": "DXOS Composer CLI",
   "keywords": [
     "dxos",
     "cli",
@@ -12,6 +12,7 @@
   "license": "MIT",
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
+  "type": "module",
   "types": "dist/src/index.d.ts",
   "bin": {
     "dx": "./bin/dx"
@@ -30,9 +31,9 @@
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
-    "@dxos/bare-template": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -53,10 +54,7 @@
     "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
     "@oclif/core": "^3.26.6",
-    "@oclif/plugin-autocomplete": "^3.0.18",
     "@oclif/plugin-help": "^6.0.22",
-    "@oclif/plugin-plugins": "^5.1.2",
-    "@oclif/plugin-update": "^4.2.13",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -83,7 +81,6 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@dxos/cli-composer": "workspace:*",
     "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
@@ -114,38 +111,9 @@
     "bin": "dx",
     "dirname": "dx",
     "commands": "./dist/src/commands",
-    "hooks": {
-      "command_not_found": "./dist/src/hooks/command-not-found"
-    },
-    "plugins": [
-      "@oclif/plugin-autocomplete",
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins",
-      "@oclif/plugin-update"
-    ],
-    "devPlugins": [
-      "@dxos/cli-composer"
-    ],
-    "helpClass": "./dist/src/help",
-    "topicSeparator": " ",
     "topics": {
-      "agent": {
-        "description": "Manage agents."
-      },
-      "debug": {
-        "description": "Debugging commands."
-      },
-      "device": {
-        "description": "Manage devices."
-      },
-      "function": {
-        "description": "Manage functions and triggers."
-      },
-      "halo": {
-        "description": "Manage identity and devices."
-      },
-      "space": {
-        "description": "Manage ECHO Spaces."
+      "composer": {
+        "description": "Composer CLI"
       }
     }
   }

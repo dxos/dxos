@@ -9,7 +9,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { mapSpaces, printSpaces } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {

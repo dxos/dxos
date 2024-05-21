@@ -20,7 +20,7 @@ import {
   TriggerRegistry,
 } from '@dxos/functions';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;

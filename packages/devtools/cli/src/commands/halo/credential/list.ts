@@ -7,7 +7,7 @@ import { Flags, ux } from '@oclif/core';
 import { sleep, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../../base-command';
+import { BaseCommand } from '../../../base';
 import { printCredentials, mapCredentials } from '../../../util';
 
 export default class List extends BaseCommand<typeof List> {

@@ -10,7 +10,7 @@ import { type Client } from '@dxos/client';
 import { type Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand<typeof Join> {

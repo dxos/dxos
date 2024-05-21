@@ -6,7 +6,7 @@ import { Args, ux } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { mapMembers, printMembers } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {

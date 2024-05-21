@@ -5,7 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Stop extends BaseCommand<typeof Stop> {
   static override enableJsonFlag = true;
