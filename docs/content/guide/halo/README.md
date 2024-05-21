@@ -1,6 +1,6 @@
 ---
 dir:
-  text: HALO
+  text: HALO Identity
   order: 4
 order: 1
 ---

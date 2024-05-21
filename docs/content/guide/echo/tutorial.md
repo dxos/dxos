@@ -173,7 +173,7 @@ We need an empty counter that we can increment.
 Grab an `Expando`:
 
 ```tsx file=./tutorial-snippets/counter-2.tsx#L6
-import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 ```
 
 Above the `return` statement, add the following effect:
@@ -182,7 +182,7 @@ Above the `return` statement, add the following effect:
 
   useEffect(() => {
     if (space && !counter) {
-      const counter = new Expando({ type: 'counter', values: [] });
+      const counter = create(Expando, { type: 'counter', values: [] });
       space.db.add(counter);
     }
   }, [space, counter]);
@@ -220,9 +220,9 @@ Let's add a button to update the count of the counter.
 At this point, your `Counter` component should look like this, with a `<button>` added for incrementing the count:
 
 ```tsx{21-28} file=./tutorial-snippets/counter-2.tsx#L5-
-import React, { useEffect } from 'react';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import React, { useEffect } from 'react';
 
 export const Counter = () => {
   useIdentity();
@@ -231,7 +231,7 @@ export const Counter = () => {
 
   useEffect(() => {
     if (space && !counter) {
-      const counter = new Expando({ type: 'counter', values: [] });
+      const counter = create(Expando, { type: 'counter', values: [] });
       space.db.add(counter);
     }
   }, [space, counter]);

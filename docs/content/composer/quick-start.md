@@ -11,7 +11,7 @@ Composer is not yet ready for production. There are bugs, and breaking changes m
 All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
 
-<a href="https://composer.dxos.org" class="button" target="_blank">Start Composer</a>
+<a href="https://composer.space" class="button" target="_blank">Open Composer</a>
 
 ## Creating
 

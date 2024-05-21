@@ -1,6 +1,6 @@
 ---
 dir:
-  text: ECHO
+  text: ECHO Database
   order: 4
 order: 0
 ---

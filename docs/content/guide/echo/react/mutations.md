@@ -14,11 +14,11 @@ When an object comes out of an [ECHO](../) query, it is tracked by framework and
 In the example below, clicking a task sets `completed = true`.
 
 ```tsx{17,26,27} file=./snippets/mutations.tsx#L5-
-import React from 'react';
-import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
 import { Expando, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 
 export const App = () => {
   useIdentity();
@@ -39,7 +39,7 @@ export const App = () => {
       <button
         name="add"
         onClick={() => {
-          const task = new Expando({ title: 'buy milk' });
+          const task = create(Expando, { title: 'buy milk' });
           space?.db.add(task);
         }}
       >

@@ -62,7 +62,7 @@ Type: <code>Reference</code>
 
 
 ### [spaceKeys]()
-Type: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)[]</code>
+Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)[]</code>
 
 
 

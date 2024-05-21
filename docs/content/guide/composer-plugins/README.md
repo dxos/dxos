@@ -1,7 +1,7 @@
 ---
 dir:
   text: Composer Plugins
-  order: 2
+  order: 7
 ---
 
 # Quick Start

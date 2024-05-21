@@ -62,7 +62,7 @@ Use `@dxos/react-client` for `react` hooks to access and manipulate data in ECHO
 npm install --save @dxos/react-client
 ```
 
-Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
+Create a [`ClientProvider`](/api/@dxos/react-client/functions#clientprovider-options) to wrap your application. This allows nested components to use the hooks.
 
 ```tsx file=./snippets-react/create-client-react.tsx#L5-
 import React from 'react';
@@ -120,10 +120,7 @@ npm install --save vite-plugin-top-level-await vite-plugin-wasm
 
 Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
 
-<!-- TODO: Turn this into a snippet -->
-
-```ts
-// vite.config.ts
+```ts file=./snippets/vite-config.ts
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -157,6 +154,7 @@ If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node ve
 Then, use your favorite package manager such as `yarn`, `npm` or `pnpm`:
 
 ```bash
+cd <app-name>
 npm install
 npm run serve
 ```
