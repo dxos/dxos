@@ -11,8 +11,8 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "info@dxos.org",
-  "main": "dist/src/index.js",
   "type": "module",
+  "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
     "dx": "./bin/dx"

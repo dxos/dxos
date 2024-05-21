@@ -21,7 +21,8 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   const handleSelectPreset = (preset: Preset) => {
     chain.title = preset.title;
-    chain.prompts.filter(nonNullable).forEach((p) => space.db.remove(p));
+    // TODO(burdon): API issue.
+    chain.prompts.filter(nonNullable).forEach((prompt) => space.db.remove(prompt));
     chain.prompts = [preset.prompt()];
   };
 

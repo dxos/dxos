@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { type ChainInput, ChainInputSchema, ChainInputType, type ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -58,7 +58,7 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = prompt.source?.content ?? '';
+  const text = prompt.source ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -87,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(create(ChainInput, { name }));
+        prompt.inputs.push(create(ChainInputSchema, { name }));
       }
     });
 
@@ -109,9 +109,12 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 
   const { parentRef } = useTextEditor(
     () => ({
-      doc: prompt.source?.content,
+      doc: prompt.source,
       extensions: [
-        createDataExtensions({ id: prompt.id, text: prompt.source && createDocAccessor(prompt.source, ['content']) }),
+        createDataExtensions({
+          id: prompt.id,
+          text: prompt.source ? createDocAccessor(prompt, ['source']) : undefined,
+        }),
         createBasicExtensions({
           bracketMatching: false,
           lineWrapping: true,

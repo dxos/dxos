@@ -4,7 +4,7 @@
 
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { type RunnableLike, type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { type Runnable, type RunnableLike, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
@@ -155,10 +155,10 @@ export class RequestProcessor {
       return input;
     };
 
-    const promptTemplate = await loadObjectReferences(prompt, (p) => p.source);
+    const template = await loadObjectReferences(prompt, (p) => p.source);
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(promptTemplate!.content),
+      PromptTemplate.fromTemplate(template),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),

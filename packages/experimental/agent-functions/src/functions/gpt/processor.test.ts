@@ -4,15 +4,7 @@
 
 import { expect } from 'chai';
 
-import {
-  ChainInput,
-  ChainInputType,
-  ChainPromptType,
-  ChainType,
-  MessageType,
-  TextV0Type,
-  ThreadType,
-} from '@braneframe/types';
+import { ChainInputType, ChainPromptType, ChainType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -24,7 +16,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestProcessor } from './processor';
 import { type ChainResources, type ChainVariant, createChainResources } from '../../chain';
-import { getConfig, getKey } from '../../util';
+import { getConfig, getKey, str } from '../../util';
 
 // TODO(burdon): Factor out.
 class TestProcessorBuilder {
@@ -100,16 +92,22 @@ describe('RequestProcessor', () => {
           prompts: [
             create(ChainPromptType, {
               command: 'translate',
-              source: create(TextV0Type, {
-                content: ['Translate the following into {language}:', '---', '{input}'].join('\n'),
-              }),
+              source: str(
+                //
+                'Translate the following into {language}:',
+                '---',
+                '{input}',
+              ),
               inputs: [
-                create(ChainInput, {
-                  name: 'language',
+                {
                   type: ChainInputType.VALUE,
+                  name: 'language',
                   value: 'japanese',
-                }),
-                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
+                },
+                {
+                  type: ChainInputType.PASS_THROUGH,
+                  name: 'input',
+                },
               ],
             }),
           ],
@@ -152,33 +150,33 @@ describe('RequestProcessor', () => {
           prompts: [
             create(ChainPromptType, {
               command: 'extract',
-              source: create(TextV0Type, {
-                content: [
-                  'List all people and companies mentioned in the content section below.',
-                  '',
-                  'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
-                  'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
-                  '',
-                  '{company}',
-                  '{contact}',
-                  '---',
-                  'Content:',
-                  '{input}',
-                ].join('\n'),
-              }),
+              source: str(
+                'List all people and companies mentioned in the content section below.',
+                '',
+                'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
+                'Your entire response should be a map where the key is the type and the value is a single array of JSON objects conforming to the following types:',
+                '',
+                '{company}',
+                '{contact}',
+                '---',
+                'Content:',
+                '{input}',
+              ),
               inputs: [
-                //
-                create(ChainInput, { name: 'input', type: ChainInputType.PASS_THROUGH }),
-                create(ChainInput, {
+                {
+                  type: ChainInputType.PASS_THROUGH,
+                  name: 'input',
+                },
+                {
+                  type: ChainInputType.SCHEMA,
                   name: 'company',
-                  type: ChainInputType.SCHEMA,
                   value: 'example.com/schema/organization',
-                }),
-                create(ChainInput, {
-                  name: 'contact',
+                },
+                {
                   type: ChainInputType.SCHEMA,
+                  name: 'contact',
                   value: 'example.com/schema/contact',
-                }),
+                },
               ],
             }),
           ],

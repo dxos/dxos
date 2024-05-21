@@ -6,6 +6,8 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
+// TODO(burdon): Flatten types.
+
 export enum MessageState {
   NONE = 0,
   ARCHIVED = 1,
@@ -33,6 +35,7 @@ const _RecipientSchema = S.mutable(
     contact: S.optional(ref(ContactType)),
   }),
 );
+
 export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
@@ -40,6 +43,7 @@ const _BlockSchema = S.struct({
   content: S.optional(ref(TextV0Type)),
   object: S.optional(ref(Expando)),
 });
+
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({

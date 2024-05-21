@@ -1,0 +1,13 @@
+{
+  "braneframe.Chain": [
+    {
+      "title": "Test",
+      "prompts": [
+        {
+          "comment": "test",
+          "source": "This is a prompt."
+        }
+      ]
+    }
+  ]
+}

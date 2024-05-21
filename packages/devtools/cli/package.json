@@ -39,6 +39,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/hello-template": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -83,6 +84,7 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/cli-composer": "workspace:*",
     "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",
