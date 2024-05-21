@@ -64,6 +64,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
 
       onmessage: async (event) => {
         try {
+          log.info('message');
           const data = JSON.parse(new TextDecoder().decode(event.data as Uint8Array));
           await callback({ data });
         } catch (err) {
