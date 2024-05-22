@@ -21,8 +21,8 @@ export const isValidProxyTarget = (value: any): value is object => {
 };
 
 /**
- *
  * @param target Object or array. Passing in array will enable array methods.
+ * @param handler ReactiveHandler instance.
  */
 export const createReactiveProxy = <T extends {}>(target: T, handler: ReactiveHandler<T>): ReactiveObject<T> => {
   const existingProxy = handler._proxyMap.get(target);

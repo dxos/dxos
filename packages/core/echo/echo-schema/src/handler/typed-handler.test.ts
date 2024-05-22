@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { describe, test } from '@dxos/test';
 
-import { create } from './create';
+import { create } from './object';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {

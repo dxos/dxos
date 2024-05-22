@@ -26,15 +26,7 @@
         "tsConfig": "packages/devtools/cli-composer/tsconfig.json"
       }
     },
-    "lint": {},
-    "test": {
-      "options": {
-        "checkLeaks": false,
-        "ciEnvironments": [
-          "nodejs"
-        ]
-      }
-    }
+    "lint": {}
   },
   "implicitDependencies": [
     "esbuild",

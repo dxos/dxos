@@ -71,8 +71,8 @@ describe('function registry', () => {
       definitions.forEach((def) => space.db.add(def));
 
       const functionRegistered = new Trigger<FunctionDef[]>();
-      registry.onFunctionsRegistered.on((fn) => {
-        functionRegistered.wake(fn.newFunctions);
+      registry.registered.on((fn) => {
+        functionRegistered.wake(fn.added);
       });
       void registry.open(ctx);
       const functions = await functionRegistered.wait();
@@ -86,9 +86,9 @@ describe('function registry', () => {
       const space = await client.spaces.create();
 
       const functionRegistered = new Trigger<FunctionDef>();
-      registry.onFunctionsRegistered.on((fn) => {
-        expect(fn.newFunctions.length).to.eq(1);
-        functionRegistered.wake(fn.newFunctions[0]);
+      registry.registered.on((fn) => {
+        expect(fn.added.length).to.eq(1);
+        functionRegistered.wake(fn.added[0]);
       });
       await registry.open(ctx);
       await registry.register(space, testManifest.functions);

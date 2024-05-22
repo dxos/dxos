@@ -2,10 +2,24 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, S, TypedObject } from '@dxos/echo-schema';
+import { AST, type ObjectMeta, S, TypedObject } from '@dxos/echo-schema';
 
+// TODO(burdon): Reconcile with echo-schema and cli-composer.
+export const ECHO_ATTR_META = '@meta';
+
+export const splitMeta = <T>(object: T & { [ECHO_ATTR_META]?: ObjectMeta }): { object: T; meta?: ObjectMeta } => {
+  const meta = object[ECHO_ATTR_META];
+  delete object[ECHO_ATTR_META];
+  return { meta, object };
+};
+
+/**
+ * The raw object should not include the ECHO id, but may include metadata.
+ */
 // TODO(burdon): Factor out.
-const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(AST.omit(schema.ast, ['id']));
+const RawObject = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'> & { [ECHO_ATTR_META]?: ObjectMeta }> => {
+  return S.make(AST.omit(schema.ast, ['id']));
+};
 
 /**
  * Type discriminator for TriggerSpec.
@@ -99,8 +113,8 @@ export class FunctionTrigger extends TypedObject({
  * Function manifest file.
  */
 export const FunctionManifestSchema = S.struct({
-  functions: S.optional(S.mutable(S.array(omitEchoId(FunctionDef)))),
-  triggers: S.optional(S.mutable(S.array(omitEchoId(FunctionTrigger)))),
+  functions: S.optional(S.mutable(S.array(RawObject(FunctionDef)))),
+  triggers: S.optional(S.mutable(S.array(RawObject(FunctionTrigger)))),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;

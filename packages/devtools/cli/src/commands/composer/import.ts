@@ -6,7 +6,7 @@ import { Args, Flags } from '@oclif/core';
 import * as fs from 'fs-extra';
 
 import { type Client } from '@dxos/client';
-import { create, type Space } from '@dxos/client/echo';
+import { create, type ObjectMeta, type Space } from '@dxos/client/echo';
 import { getEchoObjectAnnotation, S } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -20,7 +20,8 @@ import { BaseCommand } from '../../base';
 const SCHEMA = [FunctionDef, FunctionTrigger];
 
 // TODO(burdon): Reconcile with @dxos/echo-schema.
-const TYPE_ATTR = '@type';
+const ATTR_TYPE = '@type';
+const ATTR_META = '@meta';
 
 /**
  * The import command allow importing ECHO objects from a JSON file.
@@ -31,12 +32,11 @@ const TYPE_ATTR = '@type';
  */
 export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import ECHO objects.';
+  static override args = { file: Args.string() };
   static override flags = {
     ...BaseCommand.flags,
     space: Flags.string({ multiple: true }),
   };
-
-  static override args = { file: Args.string() };
 
   async run() {
     return await this.execWithClient(async (client) => {
@@ -118,7 +118,7 @@ export default class Import extends BaseCommand<typeof Import> {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
-      const typename = data[TYPE_ATTR];
+      const typename = data[ATTR_TYPE];
       if (typename) {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
@@ -126,16 +126,22 @@ export default class Import extends BaseCommand<typeof Import> {
           this.log(`- Creating: ${typename}`);
         }
 
+        let meta: ObjectMeta | undefined;
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
-          object[key] = this.parseObject(schemaMap, value);
+          if (key === ATTR_META) {
+            meta = value;
+          } else {
+            object[key] = this.parseObject(schemaMap, value);
+          }
+
           return object;
         }, {});
 
-        // if (this.flags.verbose) {
-        //   this.log(JSON.stringify(object, undefined, 2));
-        // }
+        if (this.flags.verbose) {
+          this.log(JSON.stringify({ object, meta }, undefined, 2));
+        }
 
-        return create(type, object);
+        return create(type, object, meta);
       }
     }
 

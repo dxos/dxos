@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getTargetMeta } from './handler-meta';
+import { getTargetMeta } from './object';
 import { type ReactiveHandler } from '../proxy';
 import type { ObjectMeta } from '../types';
 

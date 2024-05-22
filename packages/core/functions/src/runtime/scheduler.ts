@@ -31,8 +31,8 @@ export class Scheduler {
     public readonly triggers: TriggerRegistry,
     private readonly _options: SchedulerOptions = {},
   ) {
-    this.functions.onFunctionsRegistered.on(async ({ space, newFunctions }) => {
-      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), newFunctions);
+    this.functions.registered.on(async ({ space, added }) => {
+      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), added);
     });
     this.triggers.registered.on(async ({ space, triggers }) => {
       await this._safeActivateTriggers(space, triggers, this.functions.getFunctions(space));
@@ -82,6 +82,7 @@ export class Scheduler {
         data: { ...args, spaceKey: space.key },
       });
     });
+
     log('activated trigger', { space: space.key, trigger: fnTrigger });
   }
 

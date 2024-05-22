@@ -4,9 +4,9 @@
 
 import { Trigger } from '@dxos/async';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { Filter, type QueryResult, type EchoDatabaseImpl } from '@dxos/echo-db';
+import { type EchoDatabaseImpl, Filter, type QueryResult } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
-import { type ReactiveObject, S, TypedObject, create } from '@dxos/echo-schema';
+import { create, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -33,7 +33,7 @@ export class EchoReplicant {
     this._db = rootUrl
       ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
       : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
-    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+    this._db.graph.runtimeSchemaRegistry.register(Text);
 
     log.trace('dxos.echo-replicant.open', { spaceKey });
     return {

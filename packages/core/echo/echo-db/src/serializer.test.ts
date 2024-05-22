@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import type { SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, create, getSchema } from '@dxos/echo-schema';
+import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
@@ -13,7 +13,7 @@ import { AutomergeContext } from './automerge';
 import { EchoDatabaseImpl } from './database';
 import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
-import { Serializer, type SerializedSpace } from './serializer';
+import { type SerializedSpace, Serializer } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
 
 describe('Serializer', () => {
@@ -149,7 +149,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Contact);
+      graph.runtimeSchemaRegistry.register(Contact);
       const contact = create(Contact, { name });
       db.add(contact);
       await db.flush();
@@ -161,7 +161,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Contact);
+      graph.runtimeSchemaRegistry.register(Contact);
 
       await new Serializer().import(db, data);
       expect(db.objects).to.have.length(1);

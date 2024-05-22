@@ -1,6 +1,14 @@
 [
   {
     "@type": "dxos.org/type/FunctionTrigger",
+    "@meta": {
+      "keys": [
+        {
+          "source": "dxos.org",
+          "id": "dxos.org/function/email-worker"
+        }
+      ]
+    },
     "function": "dxos.org/function/email-worker",
     "meta": {
       "account": "hello@dxos.network"
@@ -15,6 +23,14 @@
   },
   {
     "@type": "dxos.org/type/FunctionTrigger",
+    "@meta": {
+      "keys": [
+        {
+          "source": "dxos.org",
+          "id": "dxos.org/function/gpt"
+        }
+      ]
+    },
     "function": "dxos.org/function/gpt",
     "meta": {
       "prompt": {

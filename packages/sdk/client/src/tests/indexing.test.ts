@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
-import { create, type S, Expando, getEchoObjectAnnotation, ExpandoTypename } from '@dxos/echo-schema';
+import { create, Expando, ExpandoTypename, getEchoObjectAnnotation, type S } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -24,7 +24,7 @@ describe('Index queries', () => {
     const client = new Client({ services });
     await client.initialize();
     for (const schema of [ContactType, DocumentType, TextV0Type]) {
-      client.experimental.graph.runtimeSchemaRegistry.registerSchema(schema);
+      client.experimental.graph.runtimeSchemaRegistry.register(schema);
     }
     return client;
   };

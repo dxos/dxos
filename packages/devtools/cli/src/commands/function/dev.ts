@@ -78,11 +78,10 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       // Load manifest.
       if (manifest && existsSync(manifest)) {
+        this.log(`Loading manifest: ${manifest}`);
         const { functions, triggers } = load(await readFile(manifest, 'utf8')) as FunctionManifest;
         const update = async (space: Space) => {
-          await functionRegistry.register(space, functions);
-          await triggerRegistry.register(space, { functions, triggers });
-          // await scheduler.register(space, { functions, triggers }); // TODO(burdon): Remove.
+          await scheduler.register(space, { functions, triggers });
         };
 
         client.addSchema(FunctionTrigger);

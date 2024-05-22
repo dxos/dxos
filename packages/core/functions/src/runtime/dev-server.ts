@@ -41,16 +41,15 @@ export class DevServer {
 
   public readonly update = new Event<number>();
 
-  // prettier-ignore
   constructor(
     private readonly _client: Client,
     private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
   ) {
-    this._functionsRegistry.onFunctionsRegistered.on(async ({ newFunctions }) => {
-      newFunctions.forEach((def) => this._load(def));
+    this._functionsRegistry.registered.on(async ({ added }) => {
+      added.forEach((def) => this._load(def));
       await this._safeUpdateRegistration();
-      log('new functions loaded', { newFunctions });
+      log('new functions loaded', { added });
     });
   }
 

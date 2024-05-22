@@ -4,15 +4,24 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, type Space } from '@dxos/client/echo';
+import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
+import { foreignKeyEquals } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
-import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
+import {
+  ECHO_ATTR_META,
+  type FunctionManifest,
+  FunctionTrigger,
+  type FunctionTriggerType,
+  splitMeta,
+  type TriggerSpec,
+} from '../types';
+import { diff, intersection } from '../util';
 
 type ResponseCode = number;
 
@@ -96,14 +105,20 @@ export class TriggerRegistry extends Resource {
     if (!manifest.triggers?.length) {
       return;
     }
-    if (!space.db.graph.runtimeSchemaRegistry.isSchemaRegistered(FunctionTrigger)) {
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
+    if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
+      space.db.graph.runtimeSchemaRegistry.register(FunctionTrigger);
     }
 
-    const reactiveObjects = manifest.triggers.map((template: Omit<FunctionTrigger, 'id'>) =>
-      create(FunctionTrigger, { ...template }),
-    );
-    reactiveObjects.forEach((obj) => space.db.add(obj));
+    const { objects: registered } = await space.db.query(Filter.schema(FunctionTrigger)).run();
+    const { added } = diff(registered, manifest.triggers, (a, b) => {
+      // TODO(burdon): Factor out.
+      return intersection(getMeta(a)?.keys ?? [], b[ECHO_ATTR_META]?.keys ?? [], foreignKeyEquals).length > 0;
+    });
+
+    added.forEach((trigger) => {
+      const { meta, object } = splitMeta(trigger);
+      space.db.add(create(FunctionTrigger, object, meta));
+    });
   }
 
   protected override async _open(): Promise<void> {

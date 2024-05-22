@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { type DynamicEchoSchema, create } from '@dxos/echo-schema';
+import { create, type DynamicEchoSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
-import { useSpaces, type Hypergraph } from '@dxos/react-client/echo';
+import { type Hypergraph, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -32,8 +32,8 @@ const Story = () => {
 
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
-    if (!graph.runtimeSchemaRegistry.isSchemaRegistered(TableType)) {
-      graph.runtimeSchemaRegistry.registerSchema(TableType);
+    if (!graph.runtimeSchemaRegistry.hasSchema(TableType)) {
+      graph.runtimeSchemaRegistry.register(TableType);
     }
 
     setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
