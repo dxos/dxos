@@ -11,7 +11,7 @@ import { defineHiddenProperty } from '../utils';
 
 const symbolTargetMeta = Symbol.for('@dxos/meta');
 
-const ObjectMetaSchema = S.struct({
+export const ObjectMetaSchema = S.struct({
   keys: S.mutable(
     S.array(
       S.partial(

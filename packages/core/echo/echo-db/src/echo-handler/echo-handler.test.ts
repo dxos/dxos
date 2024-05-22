@@ -19,6 +19,7 @@ import {
   ref,
   type EchoReactiveObject,
   TypedObject,
+  foreignKey,
 } from '@dxos/echo-schema';
 import { TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
 import {
@@ -436,6 +437,35 @@ describe('Reactive Object with ECHO database', () => {
       const key = { source: 'github.com', id: '123' };
       getMeta(obj).keys.push(key);
       expect(getMeta(obj).keys).to.deep.eq([key]);
+    });
+
+    test('object with meta pushed to array', async () => {
+      class NestedType extends TypedObject({ ...TEST_SCHEMA_TYPE, typename: TEST_SCHEMA_TYPE.typename + '2' })({
+        field: S.number,
+      }) {}
+      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({
+        objects: S.mutable(S.array(ref(NestedType))),
+      }) {}
+
+      const key = foreignKey('test', '123');
+      const { db, graph } = await builder.createDatabase();
+      graph.runtimeSchemaRegistry.registerSchema(TestType, NestedType);
+      const obj = db.add(create(TestType, { objects: [] }));
+      const objectWithMeta = create(NestedType, { field: 42 }, { keys: [key] });
+      obj.objects.push(objectWithMeta);
+
+      expect(getMeta(obj.objects[0]!).keys).to.deep.eq([key]);
+    });
+
+    test('push key to object created with', async () => {
+      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({
+        field: S.number,
+      }) {}
+      const { db, graph } = await builder.createDatabase();
+      graph.runtimeSchemaRegistry.registerSchema(TestType);
+      const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('test1')] }));
+      getMeta(obj).keys.push(foreignKey('test2'));
+      expect(getMeta(obj).keys.length).to.eq(2);
     });
 
     test('meta persistence', async () => {
