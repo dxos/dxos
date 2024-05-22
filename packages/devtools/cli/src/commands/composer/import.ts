@@ -5,6 +5,7 @@
 import { Args, Flags } from '@oclif/core';
 import * as fs from 'fs-extra';
 
+import { type Client } from '@dxos/client';
 import { create, type Space } from '@dxos/client/echo';
 import { getEchoObjectAnnotation, S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -14,8 +15,13 @@ import { BaseCommand } from '../../base';
 // TODO(burdon): Move to @dxos/cli-composer.
 //  https://oclif.io/docs/command_discovery_strategies
 
+/**
+ * ```bash
+ * dx composer import ./testing/data/space.json --space 043a42f1 --dry-run
+ * ```
+ */
 export default class Import extends BaseCommand<typeof Import> {
-  static override description = 'Composer commands';
+  static override description = 'Import ECHO objects.';
   static override flags = {
     ...BaseCommand.flags,
     space: Flags.string({ multiple: true }),
@@ -25,24 +31,9 @@ export default class Import extends BaseCommand<typeof Import> {
 
   async run() {
     return await this.execWithClient(async (client) => {
-      // Load schema.
-      const types = await import('@braneframe/types');
-      const schemaMap = new Map<string, S.Schema.Any>();
-      for (const schema of Object.values(types)) {
-        if (S.isSchema(schema)) {
-          // TODO(burdon): Factor out.
-          const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
-          if (typename) {
-            if (this.flags.verbose) {
-              this.log(`Adding schema: ${typename}`);
-            }
+      const schemaMap = await this.addTypes(client);
 
-            client.addSchema(schema as any);
-            schemaMap.set(typename, schema);
-          }
-        }
-      }
-
+      // Parse data.
       const objects = JSON.parse(String(fs.readFileSync(this.args.file!))) as any[];
 
       // Load objects.
@@ -50,11 +41,11 @@ export default class Import extends BaseCommand<typeof Import> {
         this.log(`Importing: ${space.key.truncate()}`);
         for (const object of objects) {
           const obj = this.parseObject(schemaMap, object);
-          if (this.flags.dryrun || this.flags.verbose) {
+          if (this.flags['dry-run'] || this.flags.verbose) {
             this.log(JSON.stringify(obj, undefined, 2));
           }
 
-          if (!this.flags.dryrun) {
+          if (!this.flags['dry-run']) {
             space.db.add(obj);
           }
         }
@@ -70,6 +61,30 @@ export default class Import extends BaseCommand<typeof Import> {
         }
       }
     });
+  }
+
+  /**
+   * build typename
+   */
+  // TODO(burdon): Factor out.
+  async addTypes(client: Client) {
+    const schemaMap = new Map<string, S.Schema.Any>();
+    const types = await import('@braneframe/types');
+    for (const schema of Object.values(types)) {
+      if (S.isSchema(schema)) {
+        const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
+        if (typename) {
+          if (this.flags.verbose) {
+            this.log(`Adding schema: ${typename}`);
+          }
+
+          client.addSchema(schema as any);
+          schemaMap.set(typename, schema);
+        }
+      }
+    }
+
+    return schemaMap;
   }
 
   /**
