@@ -12,7 +12,7 @@ import { ChainInput, ChainPromptType, ChainType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ChainArticle, ChainMain } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
@@ -78,10 +78,10 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
                     previousObjects = query.objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       query.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.

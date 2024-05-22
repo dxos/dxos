@@ -235,7 +235,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                     previousObjects = objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       objects.forEach((object) => {
                         graph.addNodes({
                           id: fullyQualifiedId(object),
@@ -293,18 +293,19 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
 
-                const attention = navigationPlugin?.provides.attention?.attended ?? new Set([data.subject.id]);
-                const attendableAttrs = useAttendable(data.subject.id);
+                const attention =
+                  navigationPlugin?.provides.attention?.attended ?? new Set([fullyQualifiedId(data.subject)]);
+                const attendableAttrs = useAttendable(fullyQualifiedId(data.subject));
 
                 return (
                   <div role='none' className='contents group/attention' {...attendableAttrs}>
-                    {role === 'complementary' && <CommentsHeading attendableId={data.subject.id} />}
+                    {role === 'complementary' && <CommentsHeading attendableId={fullyQualifiedId(data.subject)} />}
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads ?? []}
                           detached={detached ?? []}
-                          currentId={attention.has(data.subject.id) ? state.current : undefined}
+                          currentId={attention.has(fullyQualifiedId(data.subject)) ? state.current : undefined}
                           context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {

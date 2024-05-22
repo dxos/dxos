@@ -12,7 +12,7 @@ import { ScriptType, TextV0Type } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter, createDocAccessor } from '@dxos/react-client/echo';
+import { Filter, createDocAccessor, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -89,10 +89,10 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                     previousObjects = query.objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       query.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.

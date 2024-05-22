@@ -12,7 +12,7 @@ import { type PluginDefinition, resolvePlugin, parseIntentPlugin } from '@dxos/a
 import { EventSubscriptions } from '@dxos/async';
 import { GameType } from '@dxos/chess-app';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { ChessMain } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
@@ -77,10 +77,10 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                     previousObjects = query.objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       query.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.

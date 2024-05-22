@@ -116,7 +116,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
                     const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
                     previousObjects = query.objects;
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       query.objects.forEach((object) => {
                         graph.addNodes({
                           id: fullyQualifiedId(object),

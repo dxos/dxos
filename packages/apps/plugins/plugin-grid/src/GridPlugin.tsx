@@ -11,7 +11,7 @@ import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/pl
 import { GridItemType, GridType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { GridMain } from './components';
 import meta, { GRID_PLUGIN } from './meta';
@@ -89,10 +89,10 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                     previousObjects = query.objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(object.id));
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       query.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.

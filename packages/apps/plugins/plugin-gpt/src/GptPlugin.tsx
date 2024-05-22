@@ -22,7 +22,7 @@ import {
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { Filter, SpaceState, getSpace } from '@dxos/react-client/echo';
+import { Filter, SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -76,10 +76,12 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
                     previousObjects = query.objects;
 
                     batch(() => {
-                      removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
+                      removedObjects.forEach((object) =>
+                        graph.removeNode(`${GptAction.ANALYZE}/${fullyQualifiedId(object)}`, true),
+                      );
                       query.objects.forEach((object) =>
                         graph.addNodes({
-                          id: `${GptAction.ANALYZE}/${object.id}`,
+                          id: `${GptAction.ANALYZE}/${fullyQualifiedId(object)}`,
                           data: () =>
                             dispatch([
                               {
