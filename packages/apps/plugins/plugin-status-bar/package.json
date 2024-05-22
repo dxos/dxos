@@ -33,6 +33,7 @@
     "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
     "@radix-ui/react-slot": "^1.0.1",
+    "effect": "^2.4.19",
     "leaflet": "^1.9.3",
     "react-leaflet": "^4.2.0",
     "react-resize-detector": "^7.1.2"
@@ -59,7 +60,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@phosphor-icons/react": "^2.0.5",
-    "effect": "^2.4.18",
+    "effect": "^2.4.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -715,10 +715,6 @@ export const SpacePlugin = ({
                           },
                         },
                       },
-                      {
-                        action: NavigationAction.CLOSE,
-                        data: { activeParts: { main: [fullyQualifiedId(object)] } },
-                      },
                     ],
                   ],
                 };

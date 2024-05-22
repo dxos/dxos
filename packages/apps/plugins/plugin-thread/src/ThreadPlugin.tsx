@@ -37,6 +37,7 @@ import {
   fullyQualifiedId,
 } from '@dxos/react-client/echo';
 import { ScrollArea } from '@dxos/react-ui';
+import { useAttendable } from '@dxos/react-ui-deck';
 import { comments, listener } from '@dxos/react-ui-editor';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { nonNullable } from '@dxos/util';
@@ -92,7 +93,24 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       queryUnsubscribe = threadsQuery.subscribe();
       unsubscribe = isDeckModel
         ? effect(() => {
-            // TODO(thure); Open comments in a way that doesn’t cause an infinite loop.
+            const firstAttendedNodeWithComments = (
+              Array.from(navigationPlugin?.provides.attention?.attended ?? new Set<string>()) as string[]
+            )
+              .map((id) => graphPlugin?.provides.graph.findNode(id))
+              .filter(
+                (maybeNode) =>
+                  maybeNode && maybeNode?.data instanceof DocumentType && (maybeNode.data.comments?.length ?? 0) > 0,
+              )[0];
+            if (firstAttendedNodeWithComments) {
+              void intentPlugin?.provides.intent.dispatch({
+                action: NavigationAction.OPEN,
+                data: {
+                  activeParts: {
+                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                  },
+                },
+              });
+            }
           })
         : effect(() => {
             const active = firstMainId(navigationPlugin?.provides.location.active);
@@ -109,7 +127,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 activeNode?.data instanceof DocumentType &&
                 (activeNode.data.comments?.length ?? 0) > 0
               ) {
-                // TODO(thure): `OPEN` instead of `SET_LAYOUT`.
                 void intentPlugin?.provides.intent.dispatch({
                   action: LayoutAction.SET_LAYOUT,
                   data: {
@@ -275,25 +292,27 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   ?.filter(({ cursor }) => !cursor)
                   .map(({ thread }) => thread?.id)
                   .filter(nonNullable);
+
+                const attention = navigationPlugin?.provides.attention?.attended ?? new Set([data.subject.id]);
+                const attendableAttrs = useAttendable(data.subject.id);
+
                 return (
-                  <>
+                  <div role='none' className='contents group/attention' {...attendableAttrs}>
                     {role === 'complementary' && <CommentsHeading attendableId={data.subject.id} />}
                     <ScrollArea.Root classNames='row-span-2'>
                       <ScrollArea.Viewport>
                         <CommentsContainer
                           threads={threads ?? []}
                           detached={detached ?? []}
-                          currentId={state.current}
+                          currentId={attention.has(data.subject.id) ? state.current : undefined}
                           context={{ object: firstMainId(location?.active) }}
                           autoFocusCurrentTextbox={state.focus}
                           onThreadAttend={(thread: ThreadType) => {
                             if (state.current !== thread.id) {
                               state.current = thread.id;
                               void dispatch?.({
-                                action: LayoutAction.FOCUS,
-                                data: {
-                                  object: thread.id,
-                                },
+                                action: LayoutAction.SCROLL_INTO_VIEW,
+                                data: { id: thread.id },
                               });
                             }
                           }}
@@ -311,7 +330,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         </ScrollArea.Scrollbar>
                       </ScrollArea.Viewport>
                     </ScrollArea.Root>
-                  </>
+                  </div>
                 );
               } else if (data.subject instanceof ThreadType) {
                 return (
@@ -421,7 +440,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                         action: NavigationAction.OPEN,
                         data: {
                           activeParts: {
-                            main: [`${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`],
+                            complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
                           },
                         },
                       }

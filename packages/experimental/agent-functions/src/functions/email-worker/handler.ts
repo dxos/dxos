@@ -34,7 +34,7 @@ export const handler: FunctionHandler<
     data: { messages },
     spaceKey,
   } = event.data;
-  log.info('messages', { spaceKey, messages: messages.length });
+  log.info('messages', { space: PublicKey.from(spaceKey), messages: messages.length });
 
   // TODO(burdon): Generic sync API.
   const space = context.client.spaces.get(PublicKey.from(spaceKey));

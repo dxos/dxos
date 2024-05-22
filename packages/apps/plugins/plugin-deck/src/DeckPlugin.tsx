@@ -3,7 +3,7 @@
 //
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
+import { batch, effect } from '@preact/signals-core';
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -28,6 +28,7 @@ import {
   isAdjustTransaction,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -149,6 +150,14 @@ export const DeckPlugin = ({
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
+
+      effect(() => {
+        const id = Array.from(attention.attended ?? [])[0];
+        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
+        if (path) {
+          Keyboard.singleton.setCurrentContext(path.join('/'));
+        }
+      });
     },
     unload: async () => {
       layout.close();
@@ -268,6 +277,11 @@ export const DeckPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
+            case LayoutAction.SCROLL_INTO_VIEW: {
+              layout.values.scrollIntoView = intent.data?.id ?? undefined;
+              return undefined;
+            }
+
             case IntentAction.SHOW_UNDO: {
               // TODO(wittjosiah): Support undoing further back than the last action.
               if (currentUndoId) {
@@ -295,25 +309,28 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
               batch(() => {
                 if (intent.data) {
                   location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce(
                           (acc: ActiveParts, [part, ids]) => {
-                            const partMembers = new Set<string>();
-                            (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                              partMembers.add(id),
-                            );
-                            (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
-                            acc[part] = Array.from(partMembers).filter(Boolean);
+                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
+                            if (part === 'main') {
+                              const partMembers = new Set<string>();
+                              const prev = new Set(
+                                Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
+                              );
+                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
+                              //   the current `main` part newly opened slugs are added.
+                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
+                              Array.from(prev).forEach((id) => partMembers.add(id));
+                              acc[part] = Array.from(partMembers).filter(Boolean);
+                            } else {
+                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
+                              //   that position.
+                              acc[part] = Array.isArray(ids) ? ids[0] : ids;
+                            }
                             return acc;
                           },
                           { ...location.active },
@@ -330,12 +347,19 @@ export const DeckPlugin = ({
                               : []),
                           ],
                         };
+                  if (
+                    isActiveParts(location.active) &&
+                    location.active.complementary &&
+                    matchMedia('(min-width: 1024px)').matches
+                  ) {
+                    layout.values.complementarySidebarOpen = true;
+                  }
                 }
               });
 
-              const openedIds: string[] = Array.from(
-                intent.data
-                  ? Object.values(intent.data).reduce((acc, ids) => {
+              const openIds: string[] = Array.from(
+                location.active
+                  ? Object.values(location.active).reduce((acc, ids) => {
                       Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
                       return acc;
                     }, new Set<string>())
@@ -344,11 +368,11 @@ export const DeckPlugin = ({
 
               return {
                 data: {
-                  ids: openedIds,
+                  ids: openIds,
                 },
                 intents: [
                   observability
-                    ? openedIds.map((id) => ({
+                    ? openIds.map((id) => ({
                         // TODO(thure): Can this handle Deck’s multifariousness?
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
@@ -366,39 +390,35 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
-              return batch(() => {
+              batch(() => {
                 // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
                 if (intent.data && isActiveParts(location.active)) {
-                  location.active = Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
-                    const partMembers = new Set<string>();
-                    (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                      partMembers.add(id),
-                    );
-                    (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
-                    acc[part] = Array.from(partMembers);
-                    return acc;
-                  }, location.active);
+                  location.active = Object.entries(intent.data.activeParts).reduce(
+                    (acc: ActiveParts, [part, ids]) => {
+                      const partMembers = new Set<string>();
+                      (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                        partMembers.add(id),
+                      );
+                      (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
+                      acc[part] = Array.from(partMembers);
+                      return acc;
+                    },
+                    { ...location.active },
+                  );
                 }
               });
-
-              // TODO(thure): What needs doing for cleaning up?
+              return { data: true };
             }
 
             case NavigationAction.ADJUST: {
-              return batch(() => {
+              batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
                   // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
+              return { data: true };
             }
           }
         },

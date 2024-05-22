@@ -35,7 +35,7 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: E
     if (isIdActive(navigationPlugin?.provides.location.active, objectId)) {
       await intentPlugin?.provides.intent.dispatch({
         action: NavigationAction.CLOSE,
-        data: { activeParts: { main: objectId, sidebar: objectId, complementary: objectId } },
+        data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
       });
     }
 

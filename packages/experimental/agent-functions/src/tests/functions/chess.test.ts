@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
+import { Chess } from 'chess.js';
 import { join } from 'path';
 
 import { FunctionsPlugin } from '@dxos/agent';
@@ -11,7 +13,7 @@ import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { DevServer, type FunctionManifest, Scheduler } from '@dxos/functions';
+import { DevServer, type FunctionManifest, FunctionRegistry, Scheduler, TriggerRegistry } from '@dxos/functions';
 import { afterTest, openAndClose, test } from '@dxos/test';
 
 const FUNCTIONS_PORT = 8757;
@@ -37,29 +39,48 @@ describe('Chess', () => {
 
     const services = testBuilder.createLocalClientServices();
     const client = new Client({ config, services });
-
     await client.initialize();
+    await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
     afterTest(() => client.destroy());
 
     const functionsPlugin = new FunctionsPlugin();
     await functionsPlugin.initialize({ client, clientServices: services });
     await openAndClose(functionsPlugin);
 
+    const functionRegistry = new FunctionRegistry(client);
+    const server = new DevServer(client, functionRegistry, {
+      baseDir: join(__dirname, '../../functions'),
+    });
+
+    const triggerRegistry = new TriggerRegistry(client);
+    const scheduler = new Scheduler(functionRegistry, triggerRegistry, {
+      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
+    });
+
+    await server.start();
+    await scheduler.start();
+    afterTest(async () => {
+      await scheduler?.stop();
+      await server?.stop();
+    });
+
     const manifest: FunctionManifest = {
       functions: [
         {
-          id: 'dxos.org/function/chess',
-          path: 'chess',
+          uri: 'dxos.org/function/chess',
+          route: 'chess',
           handler: 'chess',
         },
       ],
       triggers: [
         {
           function: 'dxos.org/function/chess',
-          subscription: {
+          spec: {
+            type: 'subscription',
             filter: [
               {
-                type: 'dxos.experimental.chess.Game',
+                type: 'dxos.org/type/Chess',
               },
             ],
           },
@@ -67,28 +88,14 @@ describe('Chess', () => {
       ],
     };
 
-    const server = new DevServer(client, {
-      manifest,
-      baseDir: join(__dirname, '../../functions'),
-    });
-
-    await server.initialize();
-    await server.start();
-    afterTest(() => server.stop());
-
-    const scheduler = new Scheduler(client, manifest, {
-      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
-    });
-    await scheduler.start();
-    afterTest(() => scheduler.stop());
-
-    await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
-
     // Create data.
     client.addSchema(GameType);
-    const game = client.spaces.default.db.add(create(GameType, {}));
+    const space = client.spaces.default;
+    const game = space.db.add(create(GameType, {}));
     await client.spaces.default.db.flush();
+
+    // Create trigger.
+    await triggerRegistry.register(space, manifest);
 
     // Trigger.
     const done = new Trigger();
@@ -96,18 +103,23 @@ describe('Chess', () => {
       await doMove(game, 'b');
       done.wake();
     });
-
     afterTest(cleanup);
 
     await doMove(game, 'w');
     await done.wait();
-  });
+    const chess = new Chess();
+    chess.loadPgn(game.pgn!);
+    expect(chess.moveNumber()).to.eq(2);
+  }); // TODO(burdon): Hangs after passing.
 });
 
 const doMove = async (game: GameType, turn: string) => {
+  // TODO(burdon): Error if import is removed.
+  //  Uncaught Error: invariant violation: Recursive call to doc.change
+  const { Chess } = await import('chess.js');
+
   const done = new Trigger();
 
-  const { Chess } = await import('chess.js');
   const chess = new Chess();
   chess.loadPgn(game.pgn ?? '');
   if (chess.isGameOver() || chess.history().length > 50) {
@@ -120,7 +132,7 @@ const doMove = async (game: GameType, turn: string) => {
       const move = moves[Math.floor(Math.random() * moves.length)];
       chess.move(move);
       game.pgn = chess.pgn();
-      console.log(`move: ${chess.history().length}\n` + chess.ascii());
+      console.log(`Move: ${chess.history().length}\n` + chess.ascii());
     }
   }
 
