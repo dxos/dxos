@@ -4,16 +4,16 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
   parseGraphPlugin,
   parseIntentPlugin,
   resolvePlugin,
-  useIntent,
   LayoutAction,
   NavigationAction,
+  type IntentResult,
   Toast as ToastSchema,
   type IntentPluginProvides,
   type Plugin,
@@ -53,6 +53,7 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
+  let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
   const settings = new LocalStorageStore<DeckSettingsProps>(DECK_PLUGIN, {
     showFooter: false,
@@ -158,8 +159,32 @@ export const DeckPlugin = ({
           Keyboard.singleton.setCurrentContext(path.join('/'));
         }
       });
+
+      handleNavigation = async () => {
+        const activeParts = uriToActive(window.location.pathname);
+        if (activeParts) {
+          return intentPlugin?.provides.intent.dispatch({
+            // TODO(thure): handle popstate
+            action: NavigationAction.OPEN,
+            data: { activeParts },
+          });
+        }
+      };
+
+      await handleNavigation();
+
+      // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
+      //   active parts
+      effect(() => {
+        const selectedPath = activeToUri(location.active);
+        console.log('[history pushstate]', selectedPath, location.active);
+        history.pushState(null, '', `${selectedPath}${window.location.search}`);
+      });
+
+      window.addEventListener('popstate', handleNavigation);
     },
     unload: async () => {
+      window.removeEventListener('popstate', handleNavigation);
       layout.close();
     },
     provides: {
@@ -205,37 +230,6 @@ export const DeckPlugin = ({
         );
       },
       root: () => {
-        const { dispatch } = useIntent();
-
-        // Update selection based on browser navigation.
-        useEffect(() => {
-          const handleNavigation = async () => {
-            await dispatch({
-              plugin: DECK_PLUGIN,
-              action: NavigationAction.OPEN,
-              data: { id: uriToActive(window.location.pathname) },
-            });
-          };
-
-          if (!location.active && window.location.pathname.length > 1) {
-            void handleNavigation();
-          }
-
-          window.addEventListener('popstate', handleNavigation);
-          return () => {
-            window.removeEventListener('popstate', handleNavigation);
-          };
-        }, []);
-
-        // Update URL when selection changes.
-        useEffect(() => {
-          const selectedPath = activeToUri(location.active);
-          if (window.location.pathname !== selectedPath) {
-            // TODO(wittjosiah): Better support for search params?
-            history.pushState(null, '', `${selectedPath}${window.location.search}`);
-          }
-        }, [location.active]);
-
         return (
           <Mosaic.Root>
             <DeckLayout
@@ -405,6 +399,16 @@ export const DeckPlugin = ({
                     },
                     { ...location.active },
                   );
+                }
+              });
+              return { data: true };
+            }
+
+            // TODO(wittjosiah): Factor out.
+            case NavigationAction.SET: {
+              batch(() => {
+                if (isActiveParts(intent.data?.activeParts)) {
+                  location.active = intent.data!.activeParts;
                 }
               });
               return { data: true };
