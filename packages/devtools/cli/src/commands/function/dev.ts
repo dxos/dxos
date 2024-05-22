@@ -5,6 +5,7 @@
 import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import { load } from 'js-yaml';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
@@ -56,39 +57,42 @@ export default class Dev extends BaseCommand<typeof Dev> {
       );
 
       // Local files.
-      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
-      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-      const directory = this.flags.baseDir ?? join(dirname(file), 'src/functions');
+      const manifest = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
+      const baseDir = this.flags.baseDir ?? join(dirname(manifest), 'src/functions');
 
-      // Local dev server.
+      // Start Dev server.
       const registry = new FunctionRegistry(client);
       const server = new DevServer(client, registry, {
-        baseDir: directory,
+        baseDir,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
       });
 
       await server.start();
 
+      // Start scheduler.
       // TODO(burdon): Move to agent's FunctionsPlugin.
       const triggerRegistry = new TriggerRegistry(client);
       const scheduler = new Scheduler(registry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
 
-      const update = async (space: Space) => {
-        // TODO(burdon): Registry should not be space-specific.
-        await registry.register(space, manifest);
-        await scheduler.register(space, manifest);
-      };
+      // Load manifest.
+      if (manifest && existsSync(manifest)) {
+        const { functions, triggers } = load(await readFile(manifest, 'utf8')) as FunctionManifest;
+        const update = async (space: Space) => {
+          await registry.register(space, functions);
+          await scheduler.register(space, { functions, triggers });
+        };
 
-      client.addSchema(FunctionTrigger);
-      if (this.flags.space) {
-        const space = await this.getSpace(client, this.flags.space);
-        await update(space);
-      } else {
-        // TODO(burdon): Option to subscribe for new spaces.
-        for (const space of await this.getSpaces(client, true)) {
+        client.addSchema(FunctionTrigger);
+        if (this.flags.space) {
+          const space = await this.getSpace(client, this.flags.space);
           await update(space);
+        } else {
+          // TODO(burdon): Option to subscribe for new spaces.
+          for (const space of await this.getSpaces(client, true)) {
+            await update(space);
+          }
         }
       }
 

@@ -44,7 +44,7 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      await registry.register(space, testManifest);
+      await registry.register(space, testManifest.functions);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
       expect(definitions[0].uri).to.eq(testManifest.functions?.[0]?.uri);
@@ -55,7 +55,7 @@ describe('function registry', () => {
       const registry = createRegistry(client);
       const space = await client.spaces.create();
       const existing = space.db.add(create(FunctionDef, { ...testManifest.functions![0] }));
-      await registry.register(space, testManifest);
+      await registry.register(space, testManifest.functions);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
       expect(definitions[0].uri).to.eq(existing.uri);
@@ -91,7 +91,7 @@ describe('function registry', () => {
         functionRegistered.wake(fn.newFunctions[0]);
       });
       await registry.open(ctx);
-      await registry.register(space, testManifest);
+      await registry.register(space, testManifest.functions);
       const registered = await functionRegistered.wait();
       expect(registered.uri).to.eq(testManifest.functions![0].uri);
     });

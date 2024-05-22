@@ -19,9 +19,12 @@ import { BaseCommand } from '../../base';
 
 const SCHEMA = [FunctionDef, FunctionTrigger];
 
-const TYPE_ATTR = '@typename';
+// TODO(burdon): Reconcile with @dxos/echo-schema.
+const TYPE_ATTR = '@type';
 
 /**
+ * The import command allow importing ECHO objects from a JSON file.
+ *
  * ```bash
  * dx composer import ./testing/data/space.json --space 043a42f1 --dry-run
  * ```
@@ -75,6 +78,7 @@ export default class Import extends BaseCommand<typeof Import> {
   // TODO(burdon): Factor out.
   async addTypes(client: Client) {
     const schemaMap = new Map<string, S.Schema<any>>();
+    // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     const types = await import('@braneframe/types');
     if (this.flags.verbose) {
       this.log('Adding schema');

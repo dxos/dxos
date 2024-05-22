@@ -34,8 +34,8 @@ export class FunctionRegistry extends Resource {
    * We first load all the definitions from the space to deduplicate by functionId.
    */
   // TODO(burdon): This should not be space specific (they are static for the agent).
-  public async register(space: Space, manifest: FunctionManifest): Promise<void> {
-    if (!manifest.functions?.length) {
+  public async register(space: Space, functions: FunctionManifest['functions']): Promise<void> {
+    if (!functions?.length) {
       return;
     }
     if (!space.db.graph.runtimeSchemaRegistry.isSchemaRegistered(FunctionDef)) {
@@ -43,7 +43,7 @@ export class FunctionRegistry extends Resource {
     }
 
     const { objects: existingDefinitions } = await space.db.query(Filter.schema(FunctionDef)).run();
-    const newDefinitions = getNewDefinitions(manifest.functions, existingDefinitions);
+    const newDefinitions = getNewDefinitions(functions, existingDefinitions);
     const reactiveObjects = newDefinitions.map((template) => create(FunctionDef, { ...template }));
     reactiveObjects.forEach((obj) => space.db.add(obj));
   }
@@ -68,9 +68,11 @@ export class FunctionRegistry extends Resource {
             this.onFunctionsRegistered.emit({ space, newFunctions });
           }
         });
+
         this._ctx.onDispose(functionsSubscription);
       }
     });
+
     this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
   }
 

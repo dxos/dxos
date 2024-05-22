@@ -53,7 +53,7 @@ export class Scheduler {
   }
 
   public async register(space: Space, manifest: FunctionManifest) {
-    await this.functions.register(space, manifest);
+    await this.functions.register(space, manifest.functions);
     await this.triggers.register(space, manifest);
   }
 

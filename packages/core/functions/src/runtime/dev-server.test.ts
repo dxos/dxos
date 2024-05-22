@@ -44,7 +44,7 @@ describe('dev server', () => {
       baseDir: path.join(__dirname, '../testing'),
     });
     const space = await client.spaces.create();
-    await registry.register(space, manifest);
+    await registry.register(space, manifest.functions);
     await server.start();
 
     // TODO(burdon): Doesn't shut down cleanly.
