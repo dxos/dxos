@@ -86,10 +86,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       queryUnsubscribe = threadsQuery.subscribe();
       unsubscribe = isDeckModel
         ? effect(() => {
-            const firstAttendedNodeWithComments = Array.from(
-              navigationPlugin?.provides.attention?.attended ?? new Set(),
+            const firstAttendedNodeWithComments = (
+              Array.from(navigationPlugin?.provides.attention?.attended ?? new Set<string>()) as string[]
             )
-              .map((id: string) => graphPlugin?.provides.graph.findNode(id))
+              .map((id) => graphPlugin?.provides.graph.findNode(id))
               .filter(
                 (maybeNode) =>
                   maybeNode && maybeNode?.data instanceof DocumentType && (maybeNode.data.comments?.length ?? 0) > 0,
