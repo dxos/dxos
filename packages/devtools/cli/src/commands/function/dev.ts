@@ -82,11 +82,11 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       client.addSchema(FunctionTrigger);
       if (this.flags.space) {
-        const space = await this.getSpace(client);
+        const space = await this.getSpace(client, this.flags.space);
         await update(space);
       } else {
-        // TODO(burdon): Option to listen for new spaces.
-        for (const space of client.spaces.get()) {
+        // TODO(burdon): Option to subscribe for new spaces.
+        for (const space of await this.getSpaces(client, true)) {
           await update(space);
         }
       }
