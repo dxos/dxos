@@ -262,10 +262,7 @@ describe('Reactive Object with ECHO database', () => {
   test('data symbol', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.runtimeSchemaRegistry.register(TypedObjectSchema);
-    const objects = [
-      db.add(create(TypedObjectSchema, { ...TEST_OBJECT })),
-      db.add(create(TestSchemaClass, { ...TEST_OBJECT })),
-    ];
+    const objects = [db.add(create(TypedObjectSchema, TEST_OBJECT)), db.add(create(TestSchemaClass, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({

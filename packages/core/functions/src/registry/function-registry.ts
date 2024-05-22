@@ -46,7 +46,7 @@ export class FunctionRegistry extends Resource {
 
     const { objects: registered } = await space.db.query(Filter.schema(FunctionDef)).run();
     const { added } = diff(registered, functions, (a, b) => a.uri === b.uri);
-    added.forEach((template) => space.db.add(create(FunctionDef, { ...template })));
+    added.forEach((template) => space.db.add(create(FunctionDef, template)));
   }
 
   protected override async _open(): Promise<void> {

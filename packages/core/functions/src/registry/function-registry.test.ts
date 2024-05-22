@@ -54,7 +54,7 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      const existing = space.db.add(create(FunctionDef, { ...testManifest.functions![0] }));
+      const existing = space.db.add(create(FunctionDef, testManifest.functions![0]));
       await registry.register(space, testManifest.functions);
       const { objects: definitions } = await space.db.query(Filter.schema(FunctionDef)).run();
       expect(definitions.length).to.eq(1);
@@ -67,7 +67,7 @@ describe('function registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      const definitions = range(3, () => create(FunctionDef, { ...testManifest.functions![0] }));
+      const definitions = range(3, () => create(FunctionDef, testManifest.functions![0]));
       definitions.forEach((def) => space.db.add(def));
 
       const functionRegistered = new Trigger<FunctionDef[]>();
