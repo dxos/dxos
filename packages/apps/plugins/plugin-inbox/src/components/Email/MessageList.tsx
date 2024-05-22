@@ -62,6 +62,8 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   const date = message.date ? new Date(message.date) : new Date();
   const from = message.from?.name ?? message.from?.email;
   const subject = message.subject ?? message.blocks[0].content?.content;
+  const now = new Date();
+
   return (
     <DensityProvider density='fine'>
       <div
@@ -100,7 +102,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
               </div>
             )}
             <div className={mx('shrink-0 whitespace-nowrap p-2 text-sm', onAction && 'group-hover:hidden')}>
-              {formatDate(new Date(), date)}
+              {formatDate(now, date)}
             </div>
           </div>
 
@@ -117,11 +119,9 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
                 <React.Fragment key={index}>
                   <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
                     <div className='text-sm'>{block.content?.content}</div>
-                    <div className='text-xs text-right'>{formatDate(new Date(), new Date(block.timestamp))}</div>
+                    <div className=' text-right text-xs'>{formatDate(now, new Date(block.timestamp))}</div>
                   </div>
-                  {index !== message.blocks.length - 1 && (
-                    <div className={mx('border-t fixedBorder h-none')} role='none' />
-                  )}
+                  {index !== message.blocks.length - 1 && <div role='none' className={mx('border-t fixedBorder')} />}
                 </React.Fragment>
               ))}
             </div>

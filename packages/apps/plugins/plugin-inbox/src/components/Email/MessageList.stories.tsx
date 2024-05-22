@@ -14,15 +14,15 @@ import { createInbox } from '../../testing';
 const Story = () => {
   const [inbox] = useState(() => createInbox(100));
 
-  const onSelect = (arg: any) => {
+  const handleSelect = (arg: any) => {
     console.log('onSelect', arg);
   };
 
-  const onAction = (arg: any) => {
+  const handleAction = (arg: any) => {
     console.log('onArchive', arg);
   };
 
-  return <MessageList messages={inbox.messages.filter(nonNullable)} onSelect={onSelect} onAction={onAction} />;
+  return <MessageList messages={inbox.messages.filter(nonNullable)} onSelect={handleSelect} onAction={handleAction} />;
 };
 
 export default {
