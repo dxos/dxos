@@ -12,12 +12,11 @@
 
 We build [Composer](https://composer.space): an extensible app platform where developers can extend their intelligence. Open-source. Multiplayer. Local-first. Private.
 
-The DXOS SDK takes care of peer-to-peer collaboration for local-first apps.
+The DXOS SDK takes care of peer-to-peer collaboration for local-first apps without central sync servers.
 
+Learn more about the [the mission](https://docs.dxos.org/guide/why).
 
-Learn more about the [the mission](https://docs.dxos.org/guide/why)
-
-## Demo
+## SDK Demo
 
 Shown below are two sessions of an application using ECHO to replicate state peer-to-peer in real-time.
 
