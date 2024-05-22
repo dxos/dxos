@@ -1,9 +1,4 @@
 import * as A from '@dxos/automerge/automerge';
-import * as amWasm from '@dxos/automerge/automerge-wasm';
-
-// function getCurrentMemorySize() {
-//   return (amWasm as any).__wbindgen_memory().buffer.byteLength;
-// }
 
 function preloadMemory(size: number) {
   const buffer = new Uint8Array(size);
@@ -15,14 +10,12 @@ function preloadMemory(size: number) {
 const EXPECTED_WASM_MEMORY_SIZE = 1_000_000_000; // 1 GB
 
 export function warmupWasm() {
-  // console.log('Memory before warmup', getCurrentMemorySize());
   console.log('Warming up by', EXPECTED_WASM_MEMORY_SIZE, 'bytes...');
 
   const start = Date.now();
   preloadMemory(EXPECTED_WASM_MEMORY_SIZE);
   const end = Date.now();
 
-  // console.log('Memory after warmup', getCurrentMemorySize());
   console.log('Wasm warmup time', end - start);
 }
 
