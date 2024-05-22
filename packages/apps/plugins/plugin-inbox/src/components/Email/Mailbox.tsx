@@ -5,11 +5,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 import { MessageState, type MailboxType, type MessageType } from '@braneframe/types';
-import { fixedBorder, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MessageList, type ActionType } from './MessageList';
-import { MasterDetail } from '../MasterDetail';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 
@@ -18,9 +16,7 @@ const byDate =
   ({ date: a = '' }: MessageType, { date: b = '' }: MessageType) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export type MailboxOptions = {
-  readTimout?: number;
-};
+export type MailboxOptions = { readTimout?: number };
 
 // TODO(burdon): Extract contacts/orgs.
 // TODO(burdon): Split message body into parts and allow trim (e.g., remove forwarded part). Message as light stack?
@@ -28,10 +24,7 @@ export type MailboxOptions = {
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxProps = {
-  mailbox: MailboxType;
-  options?: MailboxOptions;
-};
+export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<MessageType>();
@@ -43,9 +36,8 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
         selected.read = true;
       }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
     }
-    return () => {
-      clearTimeout(tRef.current);
-    };
+
+    return () => clearTimeout(tRef.current);
   }, [selected]);
 
   const messages = [...(mailbox.messages ?? [])]
@@ -72,11 +64,6 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     }
   };
 
-  return (
-    <div className={mx('flex grow overflow-hidden border-t', fixedBorder)}>
-      <MasterDetail detail={selected && <div className='text-sm'>{selected.blocks[0]?.content?.content}</div>}>
-        <MessageList messages={messages} selected={selected?.id} onSelect={setSelected} onAction={handleAction} />
-      </MasterDetail>
-    </div>
-  );
+  // TODO(zan): Restore selection state.
+  return <MessageList messages={messages} onAction={handleAction} />;
 };
