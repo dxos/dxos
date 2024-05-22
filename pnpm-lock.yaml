@@ -6893,8 +6893,6 @@ importers:
         specifier: ^5.2.2
         version: 5.4.5
 
-  packages/devtools/cli/testing/app: {}
-
   packages/devtools/devtools:
     dependencies:
       '@braneframe/types':
