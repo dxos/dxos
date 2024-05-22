@@ -69,7 +69,7 @@ export class EchoReplicant {
       for (let i = 0; i < insertions; i++) {
         const length = doc.content?.length;
         accessor.handle.change((doc) => {
-          A.splice(doc, [...accessor.path], 0, size <= length ? 0 : mutationsSize, randomText(mutationsSize));
+          A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
         });
       }
 

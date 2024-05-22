@@ -51,10 +51,13 @@ type EchoTestResult = {
 export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
   defaultSpec(): EchoTestSpec {
     return {
-      platform: 'nodejs',
+      platform: 'chromium',
 
+      // 50, 200, 500, 1000, 2000
       numberOfObjects: 300,
       objectSize: 2000,
+
+      // 100, 200, 400, 1000, 1500, 2000
       numberOfInsertions: 2000,
       insertionSize: 10,
       queryResolution: 'index',
