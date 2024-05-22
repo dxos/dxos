@@ -86,7 +86,24 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       queryUnsubscribe = threadsQuery.subscribe();
       unsubscribe = isDeckModel
         ? effect(() => {
-            // TODO(thure); Open comments in a way that doesn’t cause an infinite loop.
+            const firstAttendedNodeWithComments = Array.from(
+              navigationPlugin?.provides.attention?.attended ?? new Set(),
+            )
+              .map((id: string) => graphPlugin?.provides.graph.findNode(id))
+              .filter(
+                (maybeNode) =>
+                  maybeNode && maybeNode?.data instanceof DocumentType && (maybeNode.data.comments?.length ?? 0) > 0,
+              )[0];
+            if (firstAttendedNodeWithComments) {
+              void intentPlugin?.provides.intent.dispatch({
+                action: NavigationAction.OPEN,
+                data: {
+                  activeParts: {
+                    complementary: `${firstAttendedNodeWithComments.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                  },
+                },
+              });
+            }
           })
         : effect(() => {
             const active = firstMainId(navigationPlugin?.provides.location.active);
@@ -103,7 +120,6 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                 activeNode?.data instanceof DocumentType &&
                 (activeNode.data.comments?.length ?? 0) > 0
               ) {
-                // TODO(thure): `OPEN` instead of `SET_LAYOUT`.
                 void intentPlugin?.provides.intent.dispatch({
                   action: LayoutAction.SET_LAYOUT,
                   data: {
