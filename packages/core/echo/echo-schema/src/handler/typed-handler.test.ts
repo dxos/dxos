@@ -8,6 +8,8 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { create } from './object';
+import { getMeta } from '../getter';
+import { foreignKey } from '../types';
 
 describe('complex schema validations', () => {
   const setValue = (target: any, prop: string, value: any) => {
@@ -19,6 +21,13 @@ describe('complex schema validations', () => {
 
     const object = create(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
+  });
+
+  test('meta', () => {
+    const source = 'test';
+    const schema = S.struct({ field: S.number });
+    const object = create(schema, { field: 42 }, { keys: [foreignKey(source)] });
+    expect(getMeta(object).keys).to.deep.eq([foreignKey(source)]);
   });
 
   test('object', () => {

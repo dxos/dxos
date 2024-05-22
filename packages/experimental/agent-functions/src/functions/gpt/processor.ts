@@ -38,15 +38,31 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
+export type ProcessThreadArgs = {
+  space: Space;
+  message: MessageType;
+  /**
+   * RequestProcessor first looks for an explicit prompt trigger at the beginning of a message:
+   * `/say ...`
+   * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
+   */
+  defaultPrompt?: string;
+  /**
+   * When a thread is provided we show "Processing" status on it while a response is being generated.
+   * In addition, `thread.context` can be used for extracting additional prompt inputs.
+   */
+  thread?: ThreadType;
+};
+
 export class RequestProcessor {
   constructor(
     private readonly _resources: ChainResources,
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread(space: Space, thread: ThreadType, message: MessageType): Promise<BlockType[] | undefined> {
+  async processThread({ space, thread, message, defaultPrompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
-    const { start, stop } = createStatusNotifier(space, thread.id);
+    const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
         .map((block) => block.content?.content)
@@ -55,11 +71,10 @@ export class RequestProcessor {
 
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      if (match) {
+      const [prompt, content] = match ? match.slice(1) : [defaultPrompt, text];
+      if (prompt) {
         start();
 
-        const prompt = match[1];
-        const content = match[2];
         const context = await createContext(space, message, thread);
 
         log.info('processing', { prompt, content });
@@ -271,5 +286,9 @@ export class RequestProcessor {
       log.error('resolver error', { resolver: name, error });
       return undefined;
     }
+  }
+
+  private _createStatusNotifier(space: Space, thread: ThreadType | undefined) {
+    return thread ? createStatusNotifier(space, thread.id) : { start: () => {}, stop: () => {} };
   }
 }

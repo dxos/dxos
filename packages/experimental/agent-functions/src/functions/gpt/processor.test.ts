@@ -128,7 +128,7 @@ describe('RequestProcessor', () => {
       });
 
       const processor = new RequestProcessor(resources);
-      const blocks = await processor.processThread(space, thread, message);
+      const blocks = await processor.processThread({ space, thread, message });
       expect(blocks).to.have.length(1);
     }
   });
@@ -204,7 +204,7 @@ describe('RequestProcessor', () => {
       });
 
       const processor = new RequestProcessor(resources);
-      const blocks = await processor.processThread(space, thread, message);
+      const blocks = await processor.processThread({ space, thread, message });
       expect(blocks).to.have.length(5);
     }
   });

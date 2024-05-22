@@ -16,12 +16,12 @@ export type RequestContext = {
 export const createContext = async (
   space: Space,
   message: MessageType,
-  thread: ThreadType,
+  thread: ThreadType | undefined,
 ): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
   if (message.context?.object) {
     object = await space.db.automerge.loadObjectById(message.context?.object);
-  } else if (thread.context?.object) {
+  } else if (thread?.context?.object) {
     object = await space.db.automerge.loadObjectById(thread.context?.object);
   }
 

@@ -4,6 +4,7 @@
 
 import path from 'node:path';
 
+import { Mutex } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
@@ -25,6 +26,8 @@ export type SchedulerOptions = {
  */
 export class Scheduler {
   private _ctx = createContext();
+
+  private readonly _callMutex = new Mutex();
 
   constructor(
     public readonly functions: FunctionRegistry,
@@ -77,9 +80,11 @@ export class Scheduler {
     }
 
     await this.triggers.activate({ space }, fnTrigger, async (args) => {
-      return this._execFunction(definition, {
-        meta: fnTrigger.meta,
-        data: { ...args, spaceKey: space.key },
+      return this._callMutex.executeSynchronized(() => {
+        return this._execFunction(definition, fnTrigger, {
+          meta: fnTrigger.meta,
+          data: { ...args, spaceKey: space.key },
+        });
       });
     });
 
@@ -88,6 +93,7 @@ export class Scheduler {
 
   private async _execFunction<TData, TMeta>(
     def: FunctionDef,
+    trigger: FunctionTrigger,
     { data, meta }: { data: TData; meta?: TMeta },
   ): Promise<number> {
     let status = 0;
@@ -99,7 +105,7 @@ export class Scheduler {
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const url = path.join(endpoint, def.route);
-        log.info('exec', { function: def.uri, url });
+        log.info('exec', { function: def.uri, url, triggerType: trigger.spec.type });
         const response = await fetch(url, {
           method: 'POST',
           headers: {

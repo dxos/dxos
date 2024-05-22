@@ -3,7 +3,7 @@
 //
 
 import { TextV0Type } from '@braneframe/types';
-import { debounce, DeferredTask } from '@dxos/async';
+import { debounce, UpdateScheduler } from '@dxos/async';
 import { type Context } from '@dxos/context';
 import { createSubscription, Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -18,26 +18,33 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
   callback: TriggerCallback,
 ) => {
   const objectIds = new Set<string>();
-  const task = new DeferredTask(ctx, async () => {
-    if (objectIds.size > 0) {
-      await callback({ objects: Array.from(objectIds) });
-      objectIds.clear();
-    }
-  });
+  const task = new UpdateScheduler(
+    ctx,
+    async () => {
+      if (objectIds.size > 0) {
+        const objects = Array.from(objectIds);
+        objectIds.clear();
+        await callback({ objects });
+      }
+    },
+    { maxFrequency: 4 },
+  );
 
   // TODO(burdon): Don't fire initially?
   // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
   const subscriptions: (() => void)[] = [];
   const subscription = createSubscription(({ added, updated }) => {
-    log.info('updated', { added: added.length, updated: updated.length });
+    const sizeBefore = objectIds.size;
     for (const object of added) {
       objectIds.add(object.id);
     }
     for (const object of updated) {
       objectIds.add(object.id);
     }
-
-    task.schedule();
+    if (objectIds.size > sizeBefore) {
+      log.info('updated', { added: added.length, updated: updated.length });
+      task.trigger();
+    }
   });
 
   subscriptions.push(() => subscription.unsubscribe());
