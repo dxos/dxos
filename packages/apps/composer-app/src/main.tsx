@@ -64,6 +64,9 @@ import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
+import { warmupWasm } from '@dxos/client';
+
+warmupWasm();
 
 const main = async () => {
   registerSignalRuntime();

@@ -27,3 +27,4 @@ export {
 
 export { Client, type ClientOptions } from './client';
 export { DXOS_VERSION } from './version';
+export * from './worker/am-hacks';

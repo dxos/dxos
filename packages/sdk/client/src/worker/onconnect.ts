@@ -10,6 +10,9 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 
 import { mountDevtoolsHooks } from '../devtools';
 import { LOCK_KEY } from '../lock-key';
+import { warmupWasm } from './am-hacks';
+
+warmupWasm();
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
