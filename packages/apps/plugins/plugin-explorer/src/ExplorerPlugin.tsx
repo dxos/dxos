@@ -11,9 +11,9 @@ import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/pl
 import { ViewType } from '@braneframe/types';
 import { parseIntentPlugin, resolvePlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Filter, create, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ExplorerMain } from './components';
+import { ExplorerArticle, ExplorerMain } from './components';
 import meta, { EXPLORER_PLUGIN } from './meta';
 import translations from './translations';
 import { ExplorerAction, type ExplorerPluginProvides } from './types';
@@ -109,6 +109,8 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof ViewType ? <ExplorerMain view={data.active} /> : null;
+            case 'article':
+              return data.object instanceof ViewType ? <ExplorerArticle view={data.object} /> : null;
             default:
               return null;
           }
@@ -118,7 +120,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ExplorerAction.CREATE: {
-              return { data: new ViewType() };
+              return { data: create(ViewType, { title: '', type: '' }) };
             }
           }
         },

@@ -14,7 +14,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { MapMain, MapSection } from './components';
+import { MapArticle, MapMain, MapSection } from './components';
 import meta, { MAP_PLUGIN } from './meta';
 import translations from './translations';
 import { MapAction, type MapPluginProvides } from './types';
@@ -129,6 +129,9 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
             }
             case 'section': {
               return data.object instanceof MapType ? <MapSection map={data.object} /> : null;
+            }
+            case 'article': {
+              return data.object instanceof MapType ? <MapArticle map={data.object} /> : null;
             }
           }
 
