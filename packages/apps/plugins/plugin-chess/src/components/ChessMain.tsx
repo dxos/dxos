@@ -17,7 +17,9 @@ import { Chess } from './Chess';
 const ChessMain: React.FC<React.ComponentProps<typeof Chess>> = (props) => {
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-      <Chess {...props} />
+      <div role='none' className='is-full bs-full max-bs-[640px] max-is-[640px] mli-auto'>
+        <Chess {...props} />
+      </div>
     </Main.Content>
   );
 };

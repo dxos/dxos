@@ -12,7 +12,7 @@ import { MapControl } from './MapControl';
 // TODO(burdon): Query stack for objects with location.
 const MapArticle: FC<{ map: MapType }> = ({ map }) => {
   return (
-    <MapContainer className='is-full overflow-auto row-span-2'>
+    <MapContainer className='row-span-2 overflow-auto'>
       <MapControl />
     </MapContainer>
   );
