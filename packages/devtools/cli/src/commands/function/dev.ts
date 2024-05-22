@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { Trigger } from '@dxos/async';
-import { DX_DATA, getProfilePath } from '@dxos/client-protocol';
+import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
   DevServer,
@@ -39,6 +39,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
     manifest: Flags.string({ description: 'Functions manifest file.' }),
     baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     reload: Flags.boolean({ description: 'Reload functions on change.' }),
+    space: Flags.string({ description: 'Space key.' }),
   };
 
   async run(): Promise<any> {
@@ -74,11 +75,21 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const scheduler = new Scheduler(registry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
 
-      // TODO(burdon): Register for all spaces; add import command.
+      const update = async (space: Space) => {
+        await registry.register(space, manifest);
+        await scheduler.register(space, manifest);
+      };
+
       client.addSchema(FunctionTrigger);
-      const space = client.spaces.default;
-      await registry.register(space, manifest);
-      await scheduler.register(space, manifest);
+      if (this.flags.space) {
+        const space = await this.getSpace(client);
+        await update(space);
+      } else {
+        // TODO(burdon): Option to listen for new spaces.
+        for (const space of client.spaces.get()) {
+          await update(space);
+        }
+      }
 
       this.log(`DevServer running: ${chalk.blue(server.endpoint)} (ctrl-c to exit)`);
       const run = new Trigger();
