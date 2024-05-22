@@ -93,6 +93,14 @@ export const NavTreeContainer = ({
     !isLg && closeNavigationSidebar();
   };
 
+  // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
+  const handleToggle: NavTreeContextType['onToggle'] = ({ node }) => {
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    if (defaultAction && 'invoke' in defaultAction) {
+      void defaultAction.invoke();
+    }
+  };
+
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
     const overNode = overItem && getTreeNode(root, paths.get(Path.last(trimPlaceholder(overItem.path))));
@@ -222,6 +230,7 @@ export const NavTreeContainer = ({
             attended={attended}
             type={NODE_TYPE}
             onSelect={handleSelect}
+            onToggle={handleToggle}
             isOver={isOver}
             onOver={handleOver}
             onDrop={handleDrop}

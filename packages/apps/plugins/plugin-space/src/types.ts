@@ -36,11 +36,16 @@ export enum SpaceAction {
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
   SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
+
+  /**
+   * @deprecated Temporary action to help with composer performance.
+   */
+  // TODO(wittjosiah): Replace with `OPEN`?
+  ENABLE = `${SPACE_ACTION}/enable`,
 }
 
 export type ObjectViewerProps = {
   lastSeen: number;
-  spaceKey: PublicKey;
 };
 
 export type ObjectId = string;
@@ -50,6 +55,7 @@ export type PluginState = {
    * Which objects are currently being viewed by which peers.
    */
   viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+
   /**
    * Which peers are currently viewing which objects.
    */
@@ -59,6 +65,14 @@ export type PluginState = {
    * Object that was linked to directly but not found and is being awaited.
    */
   awaiting: string | undefined;
+
+  /**
+   * Spaces which have been touched by the user and should have queries run against them.
+   *
+   * @deprecated Temporary action to help with composer performance.
+   */
+  // TODO(wittjosiah): Move state into space?
+  enabled: PublicKey[];
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

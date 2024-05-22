@@ -59,6 +59,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-space"
+    },
+    {
       "path": "../plugin-stack"
     }
   ]
