@@ -129,7 +129,8 @@ const getPropertyType = (
   propertyName: string,
   getTargetPropertyFn: (propertyName: string) => any,
 ): AST.AST | null => {
-  if (AST.isAnyKeyword(ast)) {
+  const anyOrObject = unwrapAst(ast, (candidate) => AST.isAnyKeyword(candidate) || AST.isObjectKeyword(candidate));
+  if (anyOrObject != null) {
     return ast;
   }
   const typeAst = unwrapAst(ast, (t) => {
@@ -162,6 +163,17 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
   return discriminatorPropCandidates;
 };
 
+/**
+ * Used to check that rootAst is for a type matching the provided predicate.
+ * That's not always straightforward because types of optionality and recursive types.
+ * const Task = S.struct({
+ *   ...,
+ *   previous?: S.optional(S.suspend(() => Task)),
+ * });
+ * Here the AST for `previous` field is going to be Union(Suspend(Type), Undefined).
+ * AST.isTypeLiteral(field) will return false, but unwrapAst(field, (ast) => AST.isTypeLiteral(ast))
+ * will return true.
+ */
 const unwrapAst = (rootAst: AST.AST, predicate?: (ast: AST.AST) => boolean): AST.AST | null => {
   let ast: AST.AST | undefined = rootAst;
   while (ast != null) {
