@@ -4,7 +4,7 @@
 
 import * as A from '@dxos/automerge/automerge';
 
-const preloadMemory = (size: number) => {
+const preheatMemory = (size: number) => {
   const buffer = new Uint8Array(size);
   try {
     A.load(buffer); // Will throw because buffer is not a valid Automerge document but the buffer will still be loaded into WASM memory.
@@ -18,7 +18,7 @@ export const warmupWasm = () => {
   console.log('Warming up by', EXPECTED_WASM_MEMORY_SIZE, 'bytes...');
 
   const start = Date.now();
-  preloadMemory(EXPECTED_WASM_MEMORY_SIZE);
+  preheatMemory(EXPECTED_WASM_MEMORY_SIZE);
   const end = Date.now();
 
   // eslint-disable-next-line no-console
