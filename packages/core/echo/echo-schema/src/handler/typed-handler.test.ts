@@ -21,7 +21,7 @@ describe('complex schema validations', () => {
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
-  test.only('object', () => {
+  test('object', () => {
     const schema = S.struct({ field: S.optional(S.object) });
 
     const object = create(schema, { field: { nested: { value: 100 } } });
