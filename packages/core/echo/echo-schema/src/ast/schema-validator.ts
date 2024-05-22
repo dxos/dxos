@@ -96,6 +96,7 @@ const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbo
     const elementType = tupleAst.elements[elementIndex].type;
     return S.make(elementType).annotations(elementType.annotations);
   }
+
   const restType = tupleAst.rest;
   return S.make(restType[0]).annotations(restType[0].annotations);
 };

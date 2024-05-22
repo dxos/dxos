@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import get from 'lodash.get';
 
-import { test, describe } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { SchemaValidator } from './schema-validator';
 

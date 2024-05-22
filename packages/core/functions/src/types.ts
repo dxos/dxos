@@ -90,8 +90,8 @@ export class FunctionTrigger extends TypedObject({
   version: '0.1.0',
 })({
   function: S.string.pipe(S.description('Function URI.')),
-  // Context passed to a function.
-  meta: S.optional(S.record(S.string, S.any)),
+  // Context is merged into the event data passed to the function.
+  meta: S.optional(S.object),
   spec: TriggerSpecSchema,
 }) {}
 
