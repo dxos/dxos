@@ -19,7 +19,7 @@ const ExplorerArticle = ({ view }: { view: ViewType }) => {
   }
 
   return (
-    <div role='none' className='is-full row-span-2'>
+    <div role='none' className='is-full row-span-2 overflow-auto'>
       <Graph space={space} match={match} />
     </div>
   );
