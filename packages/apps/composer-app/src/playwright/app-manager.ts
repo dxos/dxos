@@ -240,6 +240,15 @@ export class AppManager {
 
     await this.page.getByTestId('resetDialog').waitFor();
   }
+
+  //
+  // Error Boundary
+  //
+
+  async reset() {
+    await this.page.getByTestId('resetDialog.reset').click();
+    await this.page.getByTestId('resetDialog.confirmReset').click();
+  }
 }
 
 // TODO(wittjosiah): Factor out.
