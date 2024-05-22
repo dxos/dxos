@@ -72,7 +72,7 @@ export default class Import extends BaseCommand<typeof Import> {
    */
   // TODO(burdon): Factor out.
   async addTypes(client: Client) {
-    const schemaMap = new Map<string, S.Schema.Any>();
+    const schemaMap = new Map<string, S.Schema<any>>();
     const types = await import('@braneframe/types');
     if (this.flags.verbose) {
       this.log('Adding schema');
@@ -108,7 +108,7 @@ export default class Import extends BaseCommand<typeof Import> {
    * Parse object.
    */
   // TODO(burdon): Factor out.
-  parseObject(schemaMap: Map<string, S.Schema.Any>, data: Record<string, any>): any {
+  parseObject(schemaMap: Map<string, S.Schema<any>>, data: Record<string, any>): any {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
@@ -129,7 +129,7 @@ export default class Import extends BaseCommand<typeof Import> {
         //   this.log(JSON.stringify(object, undefined, 2));
         // }
 
-        return create(type as any, object);
+        return create(type, object);
       }
     }
 

@@ -74,6 +74,7 @@ export class SchemaValidator {
     if (arrayAst != null) {
       return getArrayElementSchema(arrayAst, prop);
     }
+
     const propertyType = getPropertyType(schema.ast, prop.toString(), (prop) => target[prop]);
     invariant(propertyType, `invalid property: ${prop.toString()}`);
     return S.make(propertyType);
@@ -144,6 +145,7 @@ const getPropertyType = (
   if (AST.isTypeLiteral(typeAst) && typeAst.indexSignatures.length > 0) {
     return unwrapAst(typeAst.indexSignatures[0].type);
   }
+
   return null;
 };
 
