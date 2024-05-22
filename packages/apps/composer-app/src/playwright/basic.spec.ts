@@ -40,18 +40,25 @@ test.describe('Basic tests', () => {
     });
   });
 
-  test('error boundary is rendered on invalid storage version', async ({ browserName }) => {
+  test('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to crash firefox in CI.
     if (browserName === 'firefox') {
       test.skip();
     }
 
-    await host.openSettings();
-    await host.toggleExperimenalPlugins();
-    await host.enablePlugin('dxos.org/plugin/debug');
+    await host.createSpace();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(2);
+    });
+
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
     expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
+
+    await host.reset();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(1);
+    });
   });
 
   test('reset device', async ({ browserName }) => {
