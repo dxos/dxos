@@ -44,4 +44,4 @@ export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/servi
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 
-export { getSpace, isSpace } from './util';
+export { getSpace, isSpace, fullyQualifiedId } from './util';

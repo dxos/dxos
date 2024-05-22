@@ -4,6 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -11,6 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
@@ -120,6 +122,12 @@ export class Hypergraph {
         }
       }
     }
+
+    OBJECTS.add({
+      id: ref.itemId,
+      spaceKey: spaceKey.toHex(),
+      loadedStack: new StackTrace(),
+    });
 
     log('trap', { spaceKey, itemId: ref.itemId });
     entry(this._resolveEvents, spaceKey)
@@ -342,3 +350,26 @@ class SpaceQuerySource implements QuerySource {
     return true;
   }
 }
+
+// NOTE: Make sure this doesn't keep references to the queries so that they can be garbage collected.
+type ObjectDiagnostic = {
+  id: string;
+  spaceKey: string;
+  loadedStack: StackTrace;
+};
+
+const OBJECTS = new Set<ObjectDiagnostic>();
+
+trace.diagnostic({
+  id: 'referenced-objects',
+  name: 'Referenced Objects (Client)',
+  fetch: () => {
+    return Array.from(OBJECTS).map((object) => {
+      return {
+        id: object.id,
+        spaceKey: object.spaceKey,
+        creationStack: object.loadedStack.getStack(),
+      };
+    });
+  },
+});
