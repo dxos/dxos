@@ -89,7 +89,6 @@ class ProxyHandlerSlot<T extends object> implements ProxyHandler<T> {
         enumerable: false,
         value: function (this: ProxyHandlerSlot<any>, ...args: any[]) {
           // log.info('trap', { trap, args });
-
           if (!this.handler || !this.handler[trap]) {
             return (Reflect[trap] as Function)(...args);
           }

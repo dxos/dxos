@@ -20,6 +20,7 @@ export type EchoObjectAnnotation = {
   typename: string;
   version: string;
 };
+
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   pipe(
     AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),

@@ -1,13 +1,13 @@
-{
-  "braneframe.Chain": [
-    {
-      "title": "Test",
-      "prompts": [
-        {
-          "comment": "test",
-          "source": "This is a prompt."
-        }
-      ]
-    }
-  ]
-}
+[
+  {
+    "@ref": "dxos.org/type/Chain",
+    "title": "Test",
+    "prompts": [
+      {
+        "@ref": "dxos.org/type/ChainPrompt",
+        "command": "test",
+        "source": "This is a prompt."
+      }
+    ]
+  }
+]

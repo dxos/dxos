@@ -6,7 +6,8 @@ import { Args, Flags } from '@oclif/core';
 import * as fs from 'fs-extra';
 
 import { create, type Space } from '@dxos/client/echo';
-import { getTypename, S } from '@dxos/echo-schema';
+import { getEchoObjectAnnotation, S } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
 
@@ -29,25 +30,32 @@ export default class Import extends BaseCommand<typeof Import> {
       const schemaMap = new Map<string, S.Schema.Any>();
       for (const schema of Object.values(types)) {
         if (S.isSchema(schema)) {
-          client.addSchema(schema as any);
-          schemaMap.set(getTypename(schema)!, schema);
+          // TODO(burdon): Factor out.
+          const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
+          if (typename) {
+            if (this.flags.verbose) {
+              this.log(`Adding schema: ${typename}`);
+            }
+
+            client.addSchema(schema as any);
+            schemaMap.set(typename, schema);
+          }
         }
       }
 
-      const data = JSON.parse(String(fs.readFileSync(this.args.file!)));
+      const objects = JSON.parse(String(fs.readFileSync(this.args.file!))) as any[];
 
+      // Load objects.
       const load = async (space: Space) => {
         this.log(`Importing: ${space.key.truncate()}`);
-        for (const [type, objects] of Object.entries(data)) {
-          for (const object of objects as any[]) {
-            const schema = schemaMap.get(type);
-            if (!schema) {
-              this.error(`Schema not found: ${type}`);
-            } else {
-              console.log(create(schema as any, object));
-            }
+        for (const object of objects) {
+          const obj = this.parseObject(schemaMap, object);
+          if (this.flags.dryrun || this.flags.verbose) {
+            this.log(JSON.stringify(obj, undefined, 2));
+          }
 
-            // client.addSchema();
+          if (!this.flags.dryrun) {
+            space.db.add(obj);
           }
         }
       };
@@ -62,5 +70,33 @@ export default class Import extends BaseCommand<typeof Import> {
         }
       }
     });
+  }
+
+  /**
+   * Parse object.
+   */
+  // TODO(burdon): Factor out.
+  parseObject(schemaMap: Map<string, S.Schema.Any>, data: Record<string, any>): any {
+    if (Array.isArray(data)) {
+      return data.map((item) => this.parseObject(schemaMap, item));
+    } else if (typeof data === 'object') {
+      const typename = data['@ref'];
+      if (typename) {
+        const type = schemaMap.get(typename);
+        invariant(type, `Schema not found: ${typename}`);
+        if (this.flags.verbose) {
+          this.log(`creating: ${typename}`);
+        }
+
+        const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
+          object[key] = this.parseObject(schemaMap, value);
+          return object;
+        }, {});
+
+        return create(type as any, object);
+      }
+    }
+
+    return data;
   }
 }

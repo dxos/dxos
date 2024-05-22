@@ -27,12 +27,12 @@ export const ChainInputSchema = S.mutable(
 export type ChainInput = S.Schema.Type<typeof ChainInputSchema>;
 
 export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/ChainPrompt', version: '0.1.0' })({
-  command: S.string,
+  command: S.string, // TODO(burdon): Optional.
   source: S.string,
-  inputs: S.mutable(S.array(ChainInputSchema)),
+  inputs: S.optional(S.mutable(S.array(ChainInputSchema))),
 }) {}
 
 export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
   title: S.optional(S.string),
-  prompts: S.mutable(S.array(ref(ChainPromptType))),
+  prompts: S.optional(S.mutable(S.array(ref(ChainPromptType)))),
 }) {}
