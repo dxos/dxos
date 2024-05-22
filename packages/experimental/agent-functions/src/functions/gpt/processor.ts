@@ -38,13 +38,25 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
+export type ProcessThreadArgs = {
+  space: Space;
+  /**
+   * RequestProcessor first looks for an explicit prompt trigger at the beginning of a message:
+   * `/say ...`
+   * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
+   */
+  defaultPrompt?: string;
+  thread: ThreadType;
+  message: MessageType;
+};
+
 export class RequestProcessor {
   constructor(
     private readonly _resources: ChainResources,
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread(space: Space, thread: ThreadType, message: MessageType): Promise<BlockType[] | undefined> {
+  async processThread({ space, thread, message, defaultPrompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
     const { start, stop } = createStatusNotifier(space, thread.id);
     try {
@@ -55,11 +67,10 @@ export class RequestProcessor {
 
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      if (match) {
+      const [prompt, content] = match ? match.slice(1) : [defaultPrompt, text];
+      if (prompt) {
         start();
 
-        const prompt = match[1];
-        const content = match[2];
         const context = await createContext(space, message, thread);
 
         log.info('processing', { prompt, content });

@@ -17,9 +17,9 @@ import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey, registerTypes } from '../../util';
 
 // TODO(burdon): Create test.
-export const handler = subscriptionHandler(async ({ event, context }) => {
+export const handler = subscriptionHandler<{ prompt?: string }>(async ({ event, context }) => {
   const { client, dataDir } = context;
-  const { space, objects } = event.data;
+  const { space, objects, meta } = event.data;
   invariant(space);
   registerTypes(space);
   if (!objects) {
@@ -34,16 +34,15 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
   const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();
   await loadObjectReferences(objects, (thread) => thread.messages ?? []);
   const activeThreads = objects.reduce((activeThreads, message) => {
-    const thread = threads.find((thread) => thread.messages.some((m) => m?.id === message.id));
+    const thread = threads.find((thread: ThreadType) => thread.messages[thread.messages.length - 1]?.id === message.id);
     if (thread) {
       activeThreads.add(thread);
     }
-
     return activeThreads;
   }, new Set<ThreadType>());
 
   // Process threads.
-  if (activeThreads) {
+  if (activeThreads.size > 0) {
     const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(client.config, 'openai.com/api_key'),
@@ -59,7 +58,12 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
         const message = thread.messages[thread.messages.length - 1];
         // Check the message wasn't created by the AI.
         if (message && getMeta(message).keys.length === 0) {
-          const blocks = await processor.processThread(space, thread, message);
+          const blocks = await processor.processThread({
+            space,
+            thread,
+            message,
+            defaultPrompt: meta.prompt,
+          });
           if (blocks?.length) {
             const newMessage = create(
               MessageType,
