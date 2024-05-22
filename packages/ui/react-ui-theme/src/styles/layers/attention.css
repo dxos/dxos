@@ -26,12 +26,12 @@
     --surface-separator: theme(colors.neutral.750);
   }
 
-  .attention-current[aria-current] {
+  .group\/attention:not(:focus-within) .attention-current[aria-current] {
     --surface-bg: white;
     --surface-separator: theme(colors.neutral.75);
   }
 
-  .dark .attention-current[aria-current] {
+  .dark .group\/attention:not(:focus-within) .attention-current[aria-current] {
     --surface-bg: theme(colors.neutral.900);
     --surface-separator: theme(colors.neutral.750);
   }

@@ -22,7 +22,7 @@ export const Simple = {
   args: {},
   render: () => {
     return (
-      <Deck.Root>
+      <Deck.Root classNames='fixed inset-0 z-0'>
         <Deck.Plank classNames='bg-cyan-500'>1</Deck.Plank>
         <Deck.Plank classNames='bg-teal-500'>2</Deck.Plank>
         <Deck.Plank classNames='bg-emerald-500'>3</Deck.Plank>

@@ -7,7 +7,7 @@ import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type DocumentType } from '@braneframe/types';
-import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
+import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
 import { type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
@@ -48,8 +48,8 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
       renderLinkButton: dispatch
         ? onRenderLink((id: string) => {
             void dispatch({
-              action: NavigationAction.OPEN,
-              data: { activeParts: { main: [id] } },
+              action: LayoutAction.SCROLL_INTO_VIEW,
+              data: { id },
             });
           })
         : undefined,
