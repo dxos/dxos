@@ -19,6 +19,8 @@ import { BaseCommand } from '../../base';
 
 const SCHEMA = [FunctionDef, FunctionTrigger];
 
+const TYPE_ATTR = '@typename';
+
 /**
  * ```bash
  * dx composer import ./testing/data/space.json --space 043a42f1 --dry-run
@@ -112,7 +114,7 @@ export default class Import extends BaseCommand<typeof Import> {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
-      const typename = data['@ref'];
+      const typename = data[TYPE_ATTR];
       if (typename) {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
