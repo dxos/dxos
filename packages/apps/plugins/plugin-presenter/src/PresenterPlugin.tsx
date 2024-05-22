@@ -11,7 +11,7 @@ import { StackType, DocumentType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { PresenterMain, MarkdownSlideMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
@@ -55,11 +55,11 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
 
                   batch(() => {
                     removedObjects.forEach((object) => {
-                      graph.removeNode(`${TOGGLE_PRESENTATION}/${object.id}`, true);
+                      graph.removeNode(`${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`, true);
                     });
                     query.objects.forEach((object) => {
                       graph.addNodes({
-                        id: `${TOGGLE_PRESENTATION}/${object.id}`,
+                        id: `${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`,
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
                         data: () =>
@@ -75,7 +75,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                             windows: 'shift+alt+p',
                           },
                         },
-                        edges: [[object.id, 'inbound']],
+                        edges: [[fullyQualifiedId(object), 'inbound']],
                       });
                     });
                   });
