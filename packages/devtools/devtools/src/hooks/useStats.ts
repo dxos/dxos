@@ -111,7 +111,7 @@ export const useStats = (): [Stats, () => void] => {
       }
       memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
 
-      log.info('collected stats', { elapsed: performance.now() - begin });
+      log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {
         setStats((stats) =>
           Object.assign({}, stats, {
@@ -143,7 +143,7 @@ export const useStats = (): [Stats, () => void] => {
           return res.info as QueryInfo;
         });
 
-      log.info('collected stats', { elapsed: performance.now() - begin });
+      log('collected stats', { elapsed: performance.now() - begin });
       if (isMounted()) {
         setStats((stats) =>
           Object.assign({}, stats, {

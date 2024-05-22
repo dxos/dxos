@@ -9,7 +9,7 @@ import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpace, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -65,18 +65,21 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   }
 
   const spaceState = spacePlugin.provides.space;
-  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
   const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
-    .map((member) => ({
-      ...member,
-      match: currentObjectViewers.has(member.identity.identityKey),
-      // Infinity if not seen before on this document, to ensure that all online members are included.
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
-    }))
-    .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
+    .map((member) => {
+      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
+      // If the member was not seen within the activity duration, they are not considered active on the object.
+      const match = moment - lastSeen < ACTIVITY_DURATION;
+      return {
+        ...member,
+        match,
+        lastSeen,
+      };
+    })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
