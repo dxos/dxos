@@ -48,7 +48,7 @@
         "properties": {
           "function": {
             "type": "string",
-            "description": "Function ID/URI.",
+            "description": "Function URI.",
             "title": "string"
           },
           "meta": {

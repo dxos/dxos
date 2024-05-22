@@ -8,12 +8,16 @@ import * as fs from 'fs-extra';
 import { type Client } from '@dxos/client';
 import { create, type Space } from '@dxos/client/echo';
 import { getEchoObjectAnnotation, S } from '@dxos/echo-schema';
+import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { nonNullable } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
 
 // TODO(burdon): Move to @dxos/cli-composer.
 //  https://oclif.io/docs/command_discovery_strategies
+
+const SCHEMA = [FunctionDef, FunctionTrigger];
 
 /**
  * ```bash
@@ -38,7 +42,7 @@ export default class Import extends BaseCommand<typeof Import> {
 
       // Load objects.
       const load = async (space: Space) => {
-        this.log(`Importing: ${space.key.truncate()}`);
+        this.log(`Space: ${space.key.truncate()}`);
         for (const object of objects) {
           const obj = this.parseObject(schemaMap, object);
           if (this.flags['dry-run'] || this.flags.verbose) {
@@ -70,18 +74,31 @@ export default class Import extends BaseCommand<typeof Import> {
   async addTypes(client: Client) {
     const schemaMap = new Map<string, S.Schema.Any>();
     const types = await import('@braneframe/types');
-    for (const schema of Object.values(types)) {
-      if (S.isSchema(schema)) {
-        const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
-        if (typename) {
-          if (this.flags.verbose) {
-            this.log(`Adding schema: ${typename}`);
-          }
+    if (this.flags.verbose) {
+      this.log('Adding schema');
+    }
 
-          client.addSchema(schema as any);
-          schemaMap.set(typename, schema);
+    const schemata = [...SCHEMA, ...Object.values(types)]
+      .map((schema) => {
+        if (S.isSchema(schema)) {
+          const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
+          if (typename) {
+            return [typename, schema];
+          }
         }
+
+        return null;
+      })
+      .filter<[string, any]>(nonNullable<any>)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+
+    for (const [typename, schema] of schemata) {
+      if (this.flags.verbose) {
+        this.log(`- ${typename}`);
       }
+
+      client.addSchema(schema as any);
+      schemaMap.set(typename, schema);
     }
 
     return schemaMap;
@@ -100,13 +117,17 @@ export default class Import extends BaseCommand<typeof Import> {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
         if (this.flags.verbose) {
-          this.log(`creating: ${typename}`);
+          this.log(`- Creating: ${typename}`);
         }
 
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
           object[key] = this.parseObject(schemaMap, value);
           return object;
         }, {});
+
+        // if (this.flags.verbose) {
+        //   this.log(JSON.stringify(object, undefined, 2));
+        // }
 
         return create(type as any, object);
       }

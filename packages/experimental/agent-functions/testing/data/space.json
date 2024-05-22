@@ -9,5 +9,30 @@
         "source": "This is a prompt."
       }
     ]
+  },
+  {
+    "@ref": "dxos.org/type/FunctionTrigger",
+    "function": "dxos.org/function/gpt",
+    "meta": {
+      "prompt": {
+        "@ref": "dxos.org/type/Chain",
+        "title": "Test",
+        "prompts": [
+          {
+            "@ref": "dxos.org/type/ChainPrompt",
+            "command": "test",
+            "source": "This is a prompt."
+          }
+        ]
+      }
+    },
+    "spec": {
+      "type": "subscription",
+      "filter": [
+        {
+          "type": "dxos.org/type/Message"
+        }
+      ]
+    }
   }
 ]

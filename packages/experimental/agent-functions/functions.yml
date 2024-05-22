@@ -84,7 +84,7 @@ triggers:
     spec:
       type: 'subscription'
       filter:
-      - type: 'braneframe.Message'
+      - type: 'dxos.org/type/Message'
 
 #  - function: 'dxos.org/function/embedding'
 #    spec:
@@ -116,7 +116,7 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'braneframe.Message'
+#      - type: 'dxos.org/type/Message'
 #        props:
 #          type: 'email'
 #      options:

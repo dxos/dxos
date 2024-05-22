@@ -33,12 +33,14 @@ const SubscriptionTriggerSchema = S.struct({
     }),
   ),
 });
+
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
 const TimerTriggerSchema = S.struct({
   type: S.literal('timer'),
   cron: S.string,
 });
+
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
 const WebhookTriggerSchema = S.mutable(
@@ -49,6 +51,7 @@ const WebhookTriggerSchema = S.mutable(
     port: S.optional(S.number),
   }),
 );
+
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
 const WebsocketTriggerSchema = S.struct({
@@ -56,6 +59,7 @@ const WebsocketTriggerSchema = S.struct({
   url: S.string,
   init: S.optional(S.record(S.string, S.any)),
 });
+
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 const TriggerSpecSchema = S.union(
@@ -64,6 +68,7 @@ const TriggerSpecSchema = S.union(
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
 );
+
 export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
 /**
@@ -84,7 +89,7 @@ export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
-  function: S.string.pipe(S.description('Function ID/URI.')),
+  function: S.string.pipe(S.description('Function URI.')),
   // Context passed to a function.
   meta: S.optional(S.record(S.string, S.any)),
   spec: TriggerSpecSchema,
