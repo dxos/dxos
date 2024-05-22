@@ -5,7 +5,7 @@ next: ./tutorial
 
 # Quick Start
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
+DXOS is the developer platform for **collaborative**, **local-first**, **privacy-preserving** software.
 This guide shows how to use [ECHO](./echo/) for peer-to-peer sync and [HALO](./halo/) for decentralized identity.
 
 DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./echo/typescript) and a [`react` API](./echo/react).
