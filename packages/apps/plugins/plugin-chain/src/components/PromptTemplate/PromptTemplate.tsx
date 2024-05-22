@@ -87,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(create(ChainInputSchema, { name }));
+        prompt.inputs?.push(create(ChainInputSchema, { name }));
       }
     });
 
@@ -156,12 +156,12 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           <div ref={parentRef} className={attentionSurface} />
         </Section>
 
-        {prompt.inputs?.length > 0 && (
+        {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {prompt.inputs.filter(nonNullable).map((input) => (
+                  {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
                       <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>
