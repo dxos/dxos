@@ -23,7 +23,6 @@
         "script": "gen-schema"
       }
     },
-    "prebuild": {},
     "test": {
       "options": {
         "environments": [
