@@ -163,8 +163,6 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
       }
     };
 
-    console.log('[subscribe?]', !!observable);
-
     const subscription = observable?.subscribe(update, (err: Error) => {
       dispatch({ status: Invitation.State.ERROR, error: err, haltedAt: state.status });
     });
