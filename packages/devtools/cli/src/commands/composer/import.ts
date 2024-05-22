@@ -7,7 +7,7 @@ import * as fs from 'fs-extra';
 
 import { type Client } from '@dxos/client';
 import { create, type ObjectMeta, type Space } from '@dxos/client/echo';
-import { getEchoObjectAnnotation, S } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, ECHO_ATTR_TYPE, getEchoObjectAnnotation, S } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
@@ -18,10 +18,6 @@ import { BaseCommand } from '../../base';
 //  https://oclif.io/docs/command_discovery_strategies
 
 const SCHEMA = [FunctionDef, FunctionTrigger];
-
-// TODO(burdon): Reconcile with @dxos/echo-schema.
-const ATTR_TYPE = '@type';
-const ATTR_META = '@meta';
 
 /**
  * The import command allow importing ECHO objects from a JSON file.
@@ -118,7 +114,7 @@ export default class Import extends BaseCommand<typeof Import> {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
-      const typename = data[ATTR_TYPE];
+      const typename = data[ECHO_ATTR_TYPE];
       if (typename) {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
@@ -128,7 +124,7 @@ export default class Import extends BaseCommand<typeof Import> {
 
         let meta: ObjectMeta | undefined;
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
-          if (key === ATTR_META) {
+          if (key === ECHO_ATTR_META) {
             meta = value;
           } else {
             object[key] = this.parseObject(schemaMap, value);

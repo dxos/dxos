@@ -11,13 +11,13 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create, splitMeta } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { TriggerRegistry } from './trigger-registry';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
-import { type FunctionManifest, FunctionTrigger, splitMeta } from '../types';
+import { type FunctionManifest, FunctionTrigger } from '../types';
 
 const manifest: FunctionManifest = {
   triggers: [

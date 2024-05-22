@@ -2,24 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, type ObjectMeta, S, TypedObject } from '@dxos/echo-schema';
-
-// TODO(burdon): Reconcile with echo-schema and cli-composer.
-export const ECHO_ATTR_META = '@meta';
-
-export const splitMeta = <T>(object: T & { [ECHO_ATTR_META]?: ObjectMeta }): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
-  return { meta, object };
-};
-
-/**
- * The raw object should not include the ECHO id, but may include metadata.
- */
-// TODO(burdon): Factor out.
-const RawObject = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'> & { [ECHO_ATTR_META]?: ObjectMeta }> => {
-  return S.make(AST.omit(schema.ast, ['id']));
-};
+import { RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerSpec.

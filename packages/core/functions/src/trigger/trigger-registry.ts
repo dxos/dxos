@@ -6,21 +6,14 @@ import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { foreignKeyEquals } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexMap } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
-import {
-  ECHO_ATTR_META,
-  type FunctionManifest,
-  FunctionTrigger,
-  type FunctionTriggerType,
-  splitMeta,
-  type TriggerSpec,
-} from '../types';
+import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
 import { diff, intersection } from '../util';
 
 type ResponseCode = number;
