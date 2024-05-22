@@ -29,6 +29,7 @@ export type Ref<T> = T | undefined;
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const foreignKey = (source: string, id?: string): ForeignKey => ({ source, id });
+export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
 
 /**
  * Reference to an object in a foreign database.

@@ -4,8 +4,8 @@
 
 import { expect } from 'chai';
 
-import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Expando, create, type EchoReactiveObject } from '@dxos/echo-schema';
+import { asyncTimeout, sleep, Trigger } from '@dxos/async';
+import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -217,7 +217,7 @@ test.skip('query with model filters', async () => {
 describe('Queries with types', () => {
   test('query by typename receives updates', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.register(Contact);
     const peer = await testBuilder.createPeer();
     const contact = peer.db.add(create(Contact, {}));
     const name = 'Rich Ivanov';
@@ -248,7 +248,7 @@ describe('Queries with types', () => {
 
   test('`instanceof` operator works', async () => {
     const testBuilder = new TestBuilder();
-    testBuilder.graph.runtimeSchemaRegistry.registerSchema(Contact);
+    testBuilder.graph.runtimeSchemaRegistry.register(Contact);
     const peer = await testBuilder.createPeer();
     const name = 'Rich Ivanov';
     const contact = create(Contact, { name });

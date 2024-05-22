@@ -301,7 +301,7 @@ describe('Database', () => {
   });
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
+    graph.runtimeSchemaRegistry.register(Task, Contact, Container, Todo);
     return { db, graph };
   };
 

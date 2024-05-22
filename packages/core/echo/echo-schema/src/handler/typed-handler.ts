@@ -9,9 +9,9 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './handler-meta';
+import { getTargetMeta } from './object';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { ReactiveArray, type ReactiveHandler, createReactiveProxy, isValidProxyTarget, symbolIsProxy } from '../proxy';
+import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -36,6 +36,9 @@ type ProxyTarget = {
   [symbolSchema]: S.Schema<any>;
 } & ({ [key: keyof any]: any } | any[]);
 
+/**
+ * Typed in-memory reactive store (with Schema).
+ */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   public static instance = new TypedReactiveHandler();
 
@@ -178,6 +181,7 @@ export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
   if (!isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
+
   SchemaValidator.validateSchema(schema);
   const _ = S.asserts(schema)(target);
   makeArraysReactive(target);
