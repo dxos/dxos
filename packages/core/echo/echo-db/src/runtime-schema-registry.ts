@@ -24,7 +24,7 @@ export class RuntimeSchemaRegistry {
     return this._schemaMap.get(typename);
   }
 
-  register(...schemaList: S.Schema<any>[]) {
+  registerSchema(...schemaList: S.Schema<any>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._schemaMap.has(typename)) {

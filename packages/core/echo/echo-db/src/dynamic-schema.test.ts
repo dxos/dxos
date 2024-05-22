@@ -97,7 +97,7 @@ describe('DynamicSchema', () => {
 
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.register(ClassWithSchemaField);
+    graph.runtimeSchemaRegistry.registerSchema(ClassWithSchemaField);
     return { db };
   };
 });

@@ -419,7 +419,7 @@ describe('AutomergeDb', () => {
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
       const testPeer = await testBuilder.createPeer();
       const object = create(TestSchema, { nested: [create(Nested, { value: 42 })] });
-      testPeer.db.graph.runtimeSchemaRegistry.register(TestSchema, Nested);
+      testPeer.db.graph.runtimeSchemaRegistry.registerSchema(TestSchema, Nested);
       testPeer.db.add(object);
 
       const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
