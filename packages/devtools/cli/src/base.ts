@@ -11,33 +11,33 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { type Daemon, PhoenixDaemon, SystemDaemon, LaunchctlRunner, SystemctlRunner } from '@dxos/agent';
+import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import {
-  getProfilePath,
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
   ENV_DX_CONFIG,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
+  getProfilePath,
 } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
-  type Observability,
   getObservabilityState,
   initializeNodeObservability,
+  type Observability,
   showObservabilityBanner,
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
-import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
+import { PublisherRpcPeer, selectSpace, SupervisorRpcPeer, TunnelRpcPeer, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
 
@@ -133,7 +133,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
     // Use stdout for user-facing interaction, and potentially JSON formatted output.
-    // TODO: unify output/logging with oclif
+    // TODO(burdon): unify output/logging with oclif.
     'json-log': Flags.boolean({
       description: 'When running in foreground, log JSON format',
     }),
@@ -146,9 +146,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   private _clientConfig?: Config;
   private _client?: Client;
-  protected _startTime: Date;
   private _failing = false;
 
+  protected _startTime: Date;
   protected _observability?: Observability;
 
   protected flags!: Flags<T>;
