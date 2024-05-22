@@ -31,7 +31,7 @@ export const create: {
   } else if (obj && (objOrSchema as any) === Expando) {
     return _create<T>({ ...obj } as T, meta, undefined, true);
   } else {
-    // TODO(burdon): Breaks if cloned.
+    // TODO(burdon): Breaks if cloned?
     return _create<T>(objOrSchema as T, meta);
   }
 };

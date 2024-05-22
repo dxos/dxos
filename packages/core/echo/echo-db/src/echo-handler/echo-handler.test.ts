@@ -13,13 +13,13 @@ import {
   echoObject,
   type EchoReactiveObject,
   Expando,
+  foreignKey,
   getMeta,
   getSchema,
   getTypeReference,
   isDeleted,
   ref,
   TypedObject,
-  foreignKey,
 } from '@dxos/echo-schema';
 import {
   TEST_OBJECT,
@@ -446,7 +446,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const key = foreignKey('test', '123');
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TestType, NestedType);
+      graph.runtimeSchemaRegistry.register(TestType, NestedType);
       const obj = db.add(create(TestType, { objects: [] }));
       const objectWithMeta = create(NestedType, { field: 42 }, { keys: [key] });
       obj.objects.push(objectWithMeta);
@@ -459,7 +459,7 @@ describe('Reactive Object with ECHO database', () => {
         field: S.number,
       }) {}
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TestType);
+      graph.runtimeSchemaRegistry.register(TestType);
       const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('test1')] }));
       getMeta(obj).keys.push(foreignKey('test2'));
       expect(getMeta(obj).keys.length).to.eq(2);
