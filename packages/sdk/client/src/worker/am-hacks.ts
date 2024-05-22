@@ -1,23 +1,29 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as A from '@dxos/automerge/automerge';
 
-function preloadMemory(size: number) {
+const preloadMemory = (size: number) => {
   const buffer = new Uint8Array(size);
   try {
     A.load(buffer); // Will throw because buffer is not a valid Automerge document but the buffer will still be loaded into WASM memory.
   } catch {}
-}
+};
 
 const EXPECTED_WASM_MEMORY_SIZE = 1_000_000_000; // 1 GB
 
-export function warmupWasm() {
+export const warmupWasm = () => {
+  // eslint-disable-next-line no-console
   console.log('Warming up by', EXPECTED_WASM_MEMORY_SIZE, 'bytes...');
 
   const start = Date.now();
   preloadMemory(EXPECTED_WASM_MEMORY_SIZE);
   const end = Date.now();
 
+  // eslint-disable-next-line no-console
   console.log('Wasm warmup time', end - start);
-}
+};
 
 /*
 
@@ -35,7 +41,7 @@ I've targeted around 20MB increase in WASM memory as that seems to be the relati
 
 function warmup(bytes) {
   const sizeBefore = temp1[5].buffer.byteLength; // temp1[5] is WebAssembly.Memory instance used by automerge.
-    
+
   const doc = am.from({ x: '10'.repeat(bytes / 128) })
   am.free(doc);
 
@@ -44,7 +50,6 @@ function warmup(bytes) {
   console.log({ sizeBefore, newSize, diff: newSize - sizeBefore, coef: (newSize - sizeBefore) / bytes })
 }
 
-
-Profiles before and after show positive results: without "pre-growing" creating 100 ECHO objects takes 6.6 seconds with the majority of profiler samples being GC inside WASM stacks. If I "pre-grow" the memory, using the above method, before running the test - the time drops to 800 milliseconds with no GC runs visible. 
+Profiles before and after show positive results: without "pre-growing" creating 100 ECHO objects takes 6.6 seconds with the majority of profiler samples being GC inside WASM stacks. If I "pre-grow" the memory, using the above method, before running the test - the time drops to 800 milliseconds with no GC runs visible.
 
 */

@@ -10,11 +10,11 @@ import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
+import { warmupWasm } from '@dxos/client';
 import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
-import { warmupWasm } from '@dxos/client';
 
 import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
