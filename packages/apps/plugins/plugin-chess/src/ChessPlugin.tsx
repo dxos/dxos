@@ -14,7 +14,7 @@ import { GameType } from '@dxos/chess-app';
 import { create } from '@dxos/echo-schema';
 import { Filter } from '@dxos/react-client/echo';
 
-import { ChessMain } from './components';
+import { ChessMain, ChessArticle } from './components';
 import meta, { CHESS_PLUGIN } from './meta';
 import translations from './translations';
 import { ChessAction, type ChessPluginProvides, isObject } from './types';
@@ -104,6 +104,8 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
           switch (role) {
             case 'main':
               return isObject(data.active) ? <ChessMain game={data.active} /> : null;
+            case 'article':
+              return isObject(data.object) ? <ChessArticle game={data.object} /> : null;
             default:
               return null;
           }
