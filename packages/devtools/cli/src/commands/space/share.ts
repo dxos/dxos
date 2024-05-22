@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Args, Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
@@ -11,12 +11,12 @@ import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base';
+import { BaseCommand, SPACE_KEY } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override args = SPACE_KEY;
   static override flags = {
     ...BaseCommand.flags,
     multiple: Flags.boolean({

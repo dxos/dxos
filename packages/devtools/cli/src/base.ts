@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
+import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -59,6 +59,12 @@ const exists = async (...args: string[]): Promise<boolean> => {
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+//
+// Common flags.
+//
+
+export const SPACE_KEY = { key: Args.string({ description: 'Space key head in hex.' }) };
 
 /**
  * Custom base command.

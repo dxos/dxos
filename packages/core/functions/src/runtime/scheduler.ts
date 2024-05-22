@@ -52,6 +52,7 @@ export class Scheduler {
     await this.triggers.close();
   }
 
+  // TODO(burdon): Remove and update registries directly.
   public async register(space: Space, manifest: FunctionManifest) {
     await this.functions.register(space, manifest.functions);
     await this.triggers.register(space, manifest);

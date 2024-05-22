@@ -2,17 +2,17 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, ux } from '@oclif/core';
+import { ux } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base';
+import { BaseCommand, SPACE_KEY } from '../../base';
 import { mapMembers, printMembers } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
   static override description = 'List space members.';
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override args = SPACE_KEY;
   static override flags = {
     ...BaseCommand.flags,
     ...ux.table.flags(),

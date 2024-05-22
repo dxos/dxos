@@ -61,8 +61,8 @@ export default class Dev extends BaseCommand<typeof Dev> {
       const baseDir = this.flags.baseDir ?? join(dirname(manifest), 'src/functions');
 
       // Start Dev server.
-      const registry = new FunctionRegistry(client);
-      const server = new DevServer(client, registry, {
+      const functionRegistry = new FunctionRegistry(client);
+      const server = new DevServer(client, functionRegistry, {
         baseDir,
         reload: this.flags.reload,
         dataDir: getProfilePath(DX_DATA, this.flags.profile),
@@ -73,15 +73,16 @@ export default class Dev extends BaseCommand<typeof Dev> {
       // Start scheduler.
       // TODO(burdon): Move to agent's FunctionsPlugin.
       const triggerRegistry = new TriggerRegistry(client);
-      const scheduler = new Scheduler(registry, triggerRegistry, { endpoint: server.proxy! });
+      const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: server.proxy! });
       await scheduler.start();
 
       // Load manifest.
       if (manifest && existsSync(manifest)) {
         const { functions, triggers } = load(await readFile(manifest, 'utf8')) as FunctionManifest;
         const update = async (space: Space) => {
-          await registry.register(space, functions);
-          await scheduler.register(space, { functions, triggers });
+          await functionRegistry.register(space, functions);
+          await triggerRegistry.register(space, { functions, triggers });
+          // await scheduler.register(space, { functions, triggers }); // TODO(burdon): Remove.
         };
 
         client.addSchema(FunctionTrigger);
