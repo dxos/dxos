@@ -76,6 +76,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       await scheduler.start();
 
       const update = async (space: Space) => {
+        // TODO(burdon): Registry should not be space-specific.
         await registry.register(space, manifest);
         await scheduler.register(space, manifest);
       };
