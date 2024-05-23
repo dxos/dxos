@@ -79,6 +79,7 @@ const _initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
 
 /**
  * Get metadata from object.
+ * @internal
  */
 export const getTargetMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
