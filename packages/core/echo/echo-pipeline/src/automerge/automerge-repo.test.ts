@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
+import { type Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { createTestLevel } from '@dxos/kv-store/testing';
