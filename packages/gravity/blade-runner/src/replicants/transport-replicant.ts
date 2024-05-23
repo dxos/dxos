@@ -10,7 +10,7 @@ import { type TransportKind } from '@dxos/network-manager';
 import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
 import { type TestSwarmConnection } from '@dxos/network-manager/testing';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../plan';
+import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 //
 // Copyright 2023 DXOS.org

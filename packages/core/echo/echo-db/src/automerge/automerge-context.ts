@@ -6,6 +6,7 @@ import { next as automerge } from '@dxos/automerge/automerge';
 import { type Message, NetworkAdapter, type PeerId, Repo, cbor } from '@dxos/automerge/automerge-repo';
 import { type Stream } from '@dxos/codec-protobuf';
 import { exposeModule } from '@dxos/debug';
+import { type ObjectStructure } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,6 +58,29 @@ export class AutomergeContext {
       // log.warn('Running ECHO without a service connection is deprecated. No data will be persisted.');
       this._repo = new Repo({ network: [] });
     }
+
+    trace.diagnostic({
+      id: 'working-set',
+      name: 'Objects in the working set',
+      fetch: () =>
+        Object.entries(this._repo.handles).flatMap(([docId, handle]) => {
+          const doc = handle.docSync();
+          if (!doc) {
+            return [];
+          }
+
+          const spaceKey = doc.access.spaceKey;
+
+          return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
+            return {
+              id: objectId,
+              docId,
+              spaceKey,
+              type: object.system.type?.itemId,
+            };
+          });
+        }),
+    });
   }
 
   get repo(): Repo {

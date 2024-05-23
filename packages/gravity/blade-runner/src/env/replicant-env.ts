@@ -9,10 +9,10 @@ import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { initDiagnostics } from './diagnostics';
+import { type ReplicantEnv } from './interface';
 import { ReplicantRpcServer } from './replicant-rpc-server';
-import { REDIS_PORT, createRedisRpcPort } from './util';
-import { type ReplicantEnv } from '../interface';
-import { type ReplicantParams } from '../spec';
+import { type ReplicantParams } from '../plan';
+import { REDIS_PORT, createRedisRpcPort } from '../redis';
 
 export { type RedisOptions };
 
