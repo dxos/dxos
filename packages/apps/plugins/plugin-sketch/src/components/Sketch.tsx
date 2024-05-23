@@ -33,8 +33,6 @@ export type SketchComponentProps = {
 const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
   const { themeMode } = useThemeContext();
 
-  console.log('::::', readonly);
-
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
