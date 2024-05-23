@@ -15,8 +15,7 @@ export const flushPadding = 'pli-0 plb-0';
 export const textPadding = 'pli-2 plb-0.5';
 export const headPadding = 'pli-2 plb-1';
 
-export const gridCellFocusRing =
-  'focus-within:z-[11] focus-within:outline outline-2 outline-primary-500 dark:outline-primary-400';
+export const gridCellFocusRing = 'focus-within:outline outline-2 outline-primary-500 dark:outline-primary-400';
 
 //
 // table
