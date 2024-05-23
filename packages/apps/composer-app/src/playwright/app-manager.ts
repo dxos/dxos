@@ -45,7 +45,7 @@ export class AppManager {
     // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
     // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
     // TODO(wittjosiah): Sometimes seems to take a long time to hit this in CI. Can we disable PWA in CI?
-    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).waitFor({ timeout: 15_000 });
+    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).waitFor({ timeout: 30_000 });
     await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).getByTestId('toast.close').click();
     await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
 
