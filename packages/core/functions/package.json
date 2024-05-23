@@ -20,8 +20,7 @@
     "src"
   ],
   "scripts": {
-    "gen-schema": "ts-node ./tools/schema.ts",
-    "prebuild": "pnpm gen-schema"
+    "gen-schema": "ts-node ./tools/schema.ts"
   },
   "dependencies": {
     "@braneframe/types": "workspace:*",

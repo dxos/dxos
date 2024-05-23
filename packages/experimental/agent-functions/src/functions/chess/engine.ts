@@ -35,4 +35,10 @@ export class Engine {
     this._state.load(this._ai.exportFEN());
     return true;
   }
+
+  print() {
+    const title = `Move ${this.state.moveNumber()}`;
+    // eslint-disable-next-line no-console
+    console.log(`\n${title.padStart(15 + title.length / 2)}\n` + this.state.ascii() + '\n');
+  }
 }

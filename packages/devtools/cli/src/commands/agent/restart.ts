@@ -4,7 +4,7 @@
 
 import { Flags } from '@oclif/core';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Restart extends BaseCommand<typeof Restart> {
   static override enableJsonFlag = true;

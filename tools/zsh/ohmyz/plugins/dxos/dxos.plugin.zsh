@@ -4,6 +4,7 @@
 # Oh My Zsh plugin.
 #
 
+# TODO(burdon): Replace with zoxide
 # https://github.com/dmaretskyi/monorepo-cd
 eval "$(monorepo-cd --init m)"
 

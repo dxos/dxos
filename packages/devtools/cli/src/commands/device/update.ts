@@ -8,7 +8,7 @@ import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { IdentityWaitTimeoutError } from '../../errors';
 import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 

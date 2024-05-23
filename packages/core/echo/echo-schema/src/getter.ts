@@ -8,7 +8,7 @@ import { Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { getEchoObjectAnnotation } from './annotations';
-import { isReactiveObject, getProxyHandlerSlot } from './proxy';
+import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { type ObjectMeta } from './types';
 
 /**

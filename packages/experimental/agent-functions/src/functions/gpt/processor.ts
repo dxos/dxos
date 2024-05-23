@@ -4,7 +4,7 @@
 
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { PromptTemplate } from '@langchain/core/prompts';
-import { type RunnableLike, type Runnable, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
+import { type Runnable, type RunnableLike, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
 import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
 import { formatDocumentsAsString } from 'langchain/util/document';
 import get from 'lodash.get';
@@ -33,9 +33,28 @@ import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
 
 export type SequenceOptions = {
-  prompt?: string;
+  prompt?: ChainPromptType;
+  command?: string;
   noVectorStore?: boolean;
   noTrainingData?: boolean;
+};
+
+export type ProcessThreadArgs = {
+  space: Space;
+
+  /**
+   * When a thread is provided we show "Processing" status on it while a response is being generated.
+   * In addition, `thread.context` can be used for extracting additional prompt inputs.
+   */
+  thread?: ThreadType;
+  message: MessageType;
+
+  /**
+   * RequestProcessor first looks for an explicit prompt trigger at the beginning of a message:
+   * `/say ...`
+   * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
+   */
+  defaultPrompt?: ChainPromptType;
 };
 
 export class RequestProcessor {
@@ -44,26 +63,25 @@ export class RequestProcessor {
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread(space: Space, thread: ThreadType, message: MessageType): Promise<BlockType[] | undefined> {
+  async processThread({ space, thread, message, defaultPrompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
-    const { start, stop } = createStatusNotifier(space, thread.id);
+    const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
         .map((block) => block.content?.content)
         .filter(Boolean)
         .join('\n');
 
+      // TODO(burdon): Use given prompt or interpret from /command in text.
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      if (match) {
+      const [command, content] = match ? match.slice(1) : [];
+      if (defaultPrompt || command) {
         start();
-
-        const prompt = match[1];
-        const content = match[2];
         const context = await createContext(space, message, thread);
 
-        log.info('processing', { prompt, content });
-        const sequence = await this.createSequence(space, context, { prompt });
+        log.info('processing', { command, content });
+        const sequence = await this.createSequence(space, context, { prompt: defaultPrompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
           const result = parseMessage(response);
@@ -100,13 +118,20 @@ export class RequestProcessor {
       options,
     });
 
-    // Find suitable prompt.
-    const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
-    const allPrompts = (await loadObjectReferences(chains, (c) => c.prompts)).flatMap((p) => p);
-    for (const prompt of allPrompts) {
-      if (prompt.command === options.prompt) {
-        return await this.createSequenceFromPrompt(space, prompt, context);
+    // Find prompt matching command.
+    if (options.command) {
+      const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
+      const allPrompts = (await loadObjectReferences(chains, (chain) => chain.prompts)).flatMap((prompt) => prompt);
+      for (const prompt of allPrompts) {
+        if (prompt.command === options.command) {
+          return await this.createSequenceFromPrompt(space, prompt, context);
+        }
       }
+    }
+
+    // Use the given prompt as a fallback.
+    if (options.prompt) {
+      return await this.createSequenceFromPrompt(space, options.prompt, context);
     }
 
     return undefined;
@@ -121,7 +146,7 @@ export class RequestProcessor {
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-    for (const input of await loadObjectReferences(prompt, (p) => p.inputs)) {
+    for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
       inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
@@ -155,10 +180,10 @@ export class RequestProcessor {
       return input;
     };
 
-    const promptTemplate = await loadObjectReferences(prompt, (p) => p.source);
+    const template = await loadObjectReferences(prompt, (p) => p.template);
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(promptTemplate!.content),
+      PromptTemplate.fromTemplate(template),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
@@ -271,5 +296,9 @@ export class RequestProcessor {
       log.error('resolver error', { resolver: name, error });
       return undefined;
     }
+  }
+
+  private _createStatusNotifier(space: Space, thread: ThreadType | undefined) {
+    return thread ? createStatusNotifier(space, thread.id) : { start: () => {}, stop: () => {} };
   }
 }

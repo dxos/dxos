@@ -22,7 +22,7 @@ const code = [
   'export default () => {',
   '  const spaces = useSpaces();',
   '  const space = spaces[1]',
-  "  const objects = useQuery(space, Filter.typename('example.com/schema/contact'));",
+  "  const objects = useQuery(space, Filter.typename('example.com/type/contact'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');

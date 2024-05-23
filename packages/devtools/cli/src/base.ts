@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
+import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
@@ -11,33 +11,33 @@ import { dirname, join } from 'node:path';
 import readline from 'node:readline';
 import pkgUp from 'pkg-up';
 
-import { type Daemon, PhoenixDaemon, SystemDaemon, LaunchctlRunner, SystemctlRunner } from '@dxos/agent';
+import { type Daemon, LaunchctlRunner, PhoenixDaemon, SystemctlRunner, SystemDaemon } from '@dxos/agent';
 import { Client, Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { fromAgent } from '@dxos/client/services';
 import {
-  getProfilePath,
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
   ENV_DX_CONFIG,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
+  getProfilePath,
 } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
-  type Observability,
   getObservabilityState,
   initializeNodeObservability,
+  type Observability,
   showObservabilityBanner,
 } from '@dxos/observability';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
-import { PublisherRpcPeer, SupervisorRpcPeer, TunnelRpcPeer, selectSpace, waitForSpace } from './util';
+import { matchKeys, PublisherRpcPeer, selectSpace, SupervisorRpcPeer, TunnelRpcPeer, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
 
@@ -59,6 +59,17 @@ const exists = async (...args: string[]): Promise<boolean> => {
 
 export type Flags<T extends typeof Command> = Interfaces.InferredFlags<(typeof BaseCommand)['baseFlags'] & T['flags']>;
 export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
+
+//
+// Common flags.
+//
+
+/**
+ * @deprecated Change to flag.
+ */
+export const ARG_SPACE_KEYS = { key: Args.string({ description: 'Space key(s) head in hex.' }) };
+// TODO(burdon): Change to --space?
+export const FLAG_SPACE_KEYS = { key: Flags.string({ multiple: true, description: 'Space key(s) head in hex.' }) };
 
 /**
  * Custom base command.
@@ -133,7 +144,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
     // Use stdout for user-facing interaction, and potentially JSON formatted output.
-    // TODO: unify output/logging with oclif
+    // TODO(burdon): unify output/logging with oclif.
     'json-log': Flags.boolean({
       description: 'When running in foreground, log JSON format',
     }),
@@ -146,9 +157,9 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
   private _clientConfig?: Config;
   private _client?: Client;
-  protected _startTime: Date;
   private _failing = false;
 
+  protected _startTime: Date;
   protected _observability?: Observability;
 
   protected flags!: Flags<T>;
@@ -454,8 +465,11 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get spaces and optionally wait until ready.
    */
-  async getSpaces(client: Client, wait = true): Promise<Space[]> {
-    const spaces = client.spaces.get();
+  async getSpaces(
+    client: Client,
+    { spaceKeys, wait = true }: { spaceKeys?: string[]; wait?: boolean } = {},
+  ): Promise<Space[]> {
+    const spaces = client.spaces.get().filter((space) => !spaceKeys?.length || matchKeys(space.key, spaceKeys));
     if (wait && !this.flags['no-wait']) {
       await Promise.all(
         spaces.map(async (space) => {
@@ -473,7 +487,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
-    const spaces = await this.getSpaces(client, wait);
+    const spaces = await this.getSpaces(client, { wait });
     if (!key) {
       key = await selectSpace(spaces);
     }
@@ -491,14 +505,42 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   /**
+   * Execute callback with the given space(s).
+   */
+  // TODO(burdon): Convert most commands to work with this.
+  async execWithSpace<T>(
+    callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
+    options: { spaceKeys?: string[]; all?: boolean } = {},
+  ): Promise<T[] | undefined> {
+    const client = await this.getClient();
+
+    const spaces =
+      options.spaceKeys?.length || options.all
+        ? await this.getSpaces(client, { spaceKeys: options.spaceKeys })
+        : [await this.getSpace(client)];
+
+    const values: T[] = [];
+    for (const space of spaces) {
+      this.log(`Space: ${space.key.truncate()}`);
+      const value = await callback({ client, space });
+      if (value) {
+        values.push(value);
+      }
+    }
+
+    await client.destroy();
+    return values;
+  }
+
+  /**
    * Convenience function to wrap command passing in client object.
    */
   async execWithClient<T>(
     callback: (client: Client) => Promise<T | undefined>,
-    checkHalo = false,
+    options: { halo?: boolean } = {},
   ): Promise<T | undefined> {
     const client = await this.getClient();
-    if (checkHalo && !client.halo.identity.get()) {
+    if (options.halo && !client.halo.identity.get()) {
       this.warn('HALO not initialized; run `dx halo create --help`');
       process.exit(1);
     }
