@@ -390,7 +390,12 @@ export const DeckLayout = ({
                     const part = ['main', index, main.length] satisfies PartIdentifier;
                     const attendableAttrs = useAttendable(id);
                     return (
-                      <Deck.Plank key={id} {...attendableAttrs} scrollIntoViewOnMount={id === scrollIntoView}>
+                      <Deck.Plank
+                        key={id}
+                        {...attendableAttrs}
+                        scrollIntoViewOnMount={id === scrollIntoView}
+                        suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
+                      >
                         {id === NAV_ID ? (
                           <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
                         ) : node ? (

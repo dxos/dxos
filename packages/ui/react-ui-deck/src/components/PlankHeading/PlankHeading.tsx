@@ -170,7 +170,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }}>
+          <Tooltip.Content style={{ zIndex: 70 }} side='left'>
             {triggerLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>
