@@ -14,7 +14,7 @@ export const MoveSchema = S.mutable(
   ),
 );
 
-export class GameType extends TypedObject({ typename: 'dxos.experimental.chess.Game', version: '0.1.0' })(
+export class GameType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
   {
     playerWhite: S.string,
     playerBlack: S.string,

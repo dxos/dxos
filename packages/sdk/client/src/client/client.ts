@@ -7,13 +7,13 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   clientServiceBundle,
-  DEFAULT_CLIENT_CHANNEL,
-  Properties,
-  STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
+  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
+  Properties,
+  STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
@@ -222,7 +222,7 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.isSchemaRegistered(s));
+    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(s));
     if (notRegistered.length > 0) {
       this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }

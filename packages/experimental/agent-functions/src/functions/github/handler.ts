@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
+
 import { TestSchemaType } from '@dxos/echo-generator';
 import { create, type EchoReactiveObject, type ForeignKey, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Octokit, type RestEndpointMethodTypes } from '@octokit/rest';
 
 import { registerTypes } from '../../util';
 
@@ -84,17 +85,23 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
           return;
         }
 
-        const contact = create(contactSchema, {
-          name: user.name,
-          email: user.email,
-          opg: project.org,
-        });
-        getMeta(contact).keys.push(foreignKey);
+        const contact = create(
+          contactSchema,
+          {
+            name: user.name,
+            email: user.email,
+            opg: project.org,
+          },
+          {
+            keys: [foreignKey],
+          },
+        );
+
         space.db.add(contact);
       }),
     );
 
-    getMeta(project).keys.push({ source: 'github.com' });
+    getMeta(project).keys.push({ source: 'github.com', id: 'test' });
 
     // TODO(burdon): Make automatic.
     await space.db.flush();

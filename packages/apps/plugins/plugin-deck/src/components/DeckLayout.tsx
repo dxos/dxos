@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment } from 'react';
 
 import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
@@ -15,9 +15,11 @@ import {
   type PartIdentifier,
   type Attention,
   NavigationAction,
+  LayoutAction,
   useIntent,
   activeIds as getActiveIds,
   SLUG_PATH_SEPARATOR,
+  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import {
   Button,
@@ -29,8 +31,8 @@ import {
   Status,
   toLocalizedString,
 } from '@dxos/react-ui';
-import { Deck, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
-import { fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
+import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
@@ -103,19 +105,52 @@ const NodePlankHeading = ({
       </ActionRoot>
       <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
       <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         part={part}
         increment={part[0] === 'main'}
-        pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
+        // pin={part[0] === 'sidebar' ? 'end' : part[0] === 'complementary' ? 'start' : 'both'}
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? { action: NavigationAction.CLOSE, data: { [part[0]]: slug } }
+              ? {
+                  action: NavigationAction.CLOSE,
+                  data: {
+                    activeParts: {
+                      complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                      [part[0]]: slug,
+                    },
+                  },
+                }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
         close
-      />
+      >
+        {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
+        {!!node.data?.comments && !slug.endsWith('comments') && (
+          <Button
+            variant='ghost'
+            classNames='p-1'
+            onClick={() =>
+              dispatch([
+                {
+                  action: NavigationAction.OPEN,
+                  data: {
+                    activeParts: {
+                      complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                    },
+                  },
+                },
+                { action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } },
+              ])
+            }
+          >
+            <span className='sr-only'>{t('open comments label')}</span>
+            <Chat />
+          </Button>
+        )}
+      </PlankHeading.Controls>
     </PlankHeading.Root>
   );
 };
@@ -152,6 +187,7 @@ export const DeckLayout = ({
     popoverOpen,
     popoverContent,
     popoverAnchorId,
+    scrollIntoView,
   } = context;
   const { t } = useTranslation(DECK_PLUGIN);
   const { graph } = useGraph();
@@ -167,6 +203,7 @@ export const DeckLayout = ({
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
+  const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
 
   const navigationData = {
@@ -254,15 +291,17 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
+                fallback={PlankLoading}
+                placeholder={<PlankLoading />}
               />
             </>
           ) : null}
         </Main.NavigationSidebar>
-        <Main.ComplementarySidebar>
+        <Main.ComplementarySidebar {...complementaryAttrs}>
           {complementarySlug === NAV_ID ? (
             <Surface role='navigation' data={{ part: complementaryPart, ...navigationData }} limit={1} />
           ) : complementaryNode ? (
-            <>
+            <div role='none' className={mx(deckGrid, 'grid-cols-1 bs-full')}>
               <NodePlankHeading
                 node={complementaryNode.node}
                 slug={complementarySlug!}
@@ -279,8 +318,10 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
+                fallback={PlankLoading}
+                placeholder={<PlankLoading />}
               />
-            </>
+            </div>
           ) : null}
         </Main.ComplementarySidebar>
 
@@ -289,49 +330,60 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
-          <Deck.Root>
-            {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
-              .filter(Boolean)
-              .map((id, index, main) => {
-                const node = resolveNodeFromSlug(graph, id);
-                const part = ['main', index, main.length] satisfies PartIdentifier;
-                const attendableAttrs = useAttendable(id);
-                return (
-                  <Deck.Plank key={id} {...attendableAttrs}>
-                    {id === NAV_ID ? (
-                      <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
-                    ) : node ? (
-                      <>
-                        <NodePlankHeading node={node.node} slug={id} part={part} popoverAnchorId={popoverAnchorId} />
-                        <Surface
-                          role='article'
-                          data={{
-                            ...(node.path ? { subject: node.node.data, path: node.path } : { object: node.node.data }),
-                            part,
-                            popoverAnchorId,
-                          }}
-                          limit={1}
-                          fallback={PlankLoading}
-                        />
-                      </>
-                    ) : (
-                      <PlankLoading />
-                    )}
-                  </Deck.Plank>
-                );
-              })}
-          </Deck.Root>
+          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
+            <div role='none' className='relative'>
+              <Deck.Root classNames='absolute inset-0'>
+                {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
+                  .filter(Boolean)
+                  .map((id, index, main) => {
+                    const node = resolveNodeFromSlug(graph, id);
+                    const part = ['main', index, main.length] satisfies PartIdentifier;
+                    const attendableAttrs = useAttendable(id);
+                    return (
+                      <Deck.Plank key={id} {...attendableAttrs} scrollIntoViewOnMount={id === scrollIntoView}>
+                        {id === NAV_ID ? (
+                          <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
+                        ) : node ? (
+                          <>
+                            <NodePlankHeading
+                              node={node.node}
+                              slug={id}
+                              part={part}
+                              popoverAnchorId={popoverAnchorId}
+                            />
+                            <Surface
+                              role='article'
+                              data={{
+                                ...(node.path
+                                  ? { subject: node.node.data, path: node.path }
+                                  : { object: node.node.data }),
+                                part,
+                                popoverAnchorId,
+                              }}
+                              limit={1}
+                              fallback={PlankLoading}
+                              placeholder={<PlankLoading />}
+                            />
+                          </>
+                        ) : (
+                          <PlankLoading />
+                        )}
+                      </Deck.Plank>
+                    );
+                  })}
+              </Deck.Root>
+            </div>
+          </Main.Content>
         ) : (
           <Main.Content>
             <ContentEmpty />
           </Main.Content>
         )}
 
-        {/* Status info. */}
-        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
-        <div role='none' aria-label={t('status label')} className='fixed bottom-0 right-0 z-[1]'>
-          <Surface role='status' limit={1} />
-        </div>
+        {/* Note: This is not Main.Content */}
+        <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
+          <Surface role='status-bar' limit={1} />
+        </Main.Content>
 
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}

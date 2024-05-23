@@ -2,27 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
+import { AST, S, TypedObject } from '@dxos/echo-schema';
 
-const TimerTriggerSchema = S.struct({
-  cron: S.string,
-});
+// TODO(burdon): Factor out.
+const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(AST.omit(schema.ast, ['id']));
 
-const WebhookTriggerSchema = S.mutable(
-  S.struct({
-    method: S.string,
-    // Assigned port.
-    port: S.optional(S.number),
-  }),
-);
-
-const WebsocketTriggerSchema = S.struct({
-  url: S.string,
-  init: S.optional(S.record(S.string, S.any)),
-});
+/**
+ * Type discriminator for TriggerSpec.
+ * Every spec has a type field of type FunctionTriggerType that we can use to understand which
+ * type we're working with.
+ * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
+ */
+export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websocket';
 
 const SubscriptionTriggerSchema = S.struct({
-  spaceKey: S.optional(S.string),
+  type: S.literal('subscription'),
   // TODO(burdon): Define query DSL.
   filter: S.array(
     S.struct({
@@ -39,49 +33,69 @@ const SubscriptionTriggerSchema = S.struct({
     }),
   ),
 });
-
-const FunctionTriggerSchema = S.struct({
-  function: S.string.pipe(S.description('Function ID/URI.')),
-
-  // Context passed to function.
-  meta: S.optional(S.record(S.string, S.any)),
-
-  // Triggers.
-  timer: S.optional(TimerTriggerSchema),
-  webhook: S.optional(WebhookTriggerSchema),
-  websocket: S.optional(WebsocketTriggerSchema),
-  subscription: S.optional(SubscriptionTriggerSchema),
-});
-
-export type FunctionTrigger = S.Schema.Type<typeof FunctionTriggerSchema>;
-
-export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
-export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
-export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
+
+const TimerTriggerSchema = S.struct({
+  type: S.literal('timer'),
+  cron: S.string,
+});
+export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
+
+const WebhookTriggerSchema = S.mutable(
+  S.struct({
+    type: S.literal('webhook'),
+    method: S.string,
+    // Assigned port.
+    port: S.optional(S.number),
+  }),
+);
+export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
+
+const WebsocketTriggerSchema = S.struct({
+  type: S.literal('websocket'),
+  url: S.string,
+  init: S.optional(S.record(S.string, S.any)),
+});
+export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
+
+const TriggerSpecSchema = S.union(
+  TimerTriggerSchema,
+  WebhookTriggerSchema,
+  WebsocketTriggerSchema,
+  SubscriptionTriggerSchema,
+);
+export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
 /**
  * Function definition.
  */
-// TODO(burdon): Name vs. path?
-const FunctionDefSchema = S.struct({
-  id: S.string,
-  // name: S.string,
+export class FunctionDef extends TypedObject({
+  typename: 'dxos.org/type/FunctionDef',
+  version: '0.1.0',
+})({
+  uri: S.string,
   description: S.optional(S.string),
-  // TODO(burdon): Rename route?
-  path: S.string,
+  route: S.string,
   // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,
-});
+}) {}
 
-export type FunctionDef = S.Schema.Type<typeof FunctionDefSchema>;
+export class FunctionTrigger extends TypedObject({
+  typename: 'dxos.org/type/FunctionTrigger',
+  version: '0.1.0',
+})({
+  function: S.string.pipe(S.description('Function ID/URI.')),
+  // Context passed to a function.
+  meta: S.optional(S.record(S.string, S.any)),
+  spec: TriggerSpecSchema,
+}) {}
 
 /**
  * Function manifest file.
  */
 export const FunctionManifestSchema = S.struct({
-  functions: S.mutable(S.array(FunctionDefSchema)),
-  triggers: S.optional(S.mutable(S.array(FunctionTriggerSchema))),
+  functions: S.optional(S.mutable(S.array(omitEchoId(FunctionDef)))),
+  triggers: S.optional(S.mutable(S.array(omitEchoId(FunctionTrigger)))),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;

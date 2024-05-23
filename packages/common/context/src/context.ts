@@ -136,7 +136,7 @@ export class Context {
     this._disposeCallbacks.length = 0;
 
     if (this._name) {
-      log.info('disposing', { context: this._name, count: callbacks.length });
+      log('disposing', { context: this._name, count: callbacks.length });
     }
 
     let i = 0;
@@ -156,7 +156,7 @@ export class Context {
 
     resolveDispose(clean);
     if (this._name) {
-      log.info('disposed', { context: this._name });
+      log('disposed', { context: this._name });
     }
 
     return clean;

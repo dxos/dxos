@@ -486,7 +486,7 @@ export const comments = (options: CommentsOptions = {}): Extension => {
 // Utils.
 //
 
-export const focusComment = (view: EditorView, id: string, center = true) => {
+export const scrollThreadIntoView = (view: EditorView, id: string, center = true) => {
   const comment = view.state.field(commentsState).comments.find((range) => range.comment.id === id);
   if (!comment?.comment.cursor) {
     return;

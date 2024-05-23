@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import {
   NavigationAction,
+  LayoutAction,
   Surface,
   useIntent,
   type PartIdentifier,
@@ -67,6 +68,8 @@ export const NavTreeContainer = ({
       return;
     }
 
+    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
+
     await dispatch({
       action: NavigationAction.OPEN,
       data: {
@@ -88,6 +91,14 @@ export const NavTreeContainer = ({
       void defaultAction.invoke();
     }
     !isLg && closeNavigationSidebar();
+  };
+
+  // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
+  const handleToggle: NavTreeContextType['onToggle'] = ({ node }) => {
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    if (defaultAction && 'invoke' in defaultAction) {
+      void defaultAction.invoke();
+    }
   };
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
@@ -212,13 +223,14 @@ export const NavTreeContainer = ({
         className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
       >
         <Surface role='search-input' limit={1} />
-        <div role='none' className='overflow-y-auto p-0.5'>
+        <div role='none' className='!overflow-y-auto p-0.5'>
           <NavTree
             node={root}
             current={currentPaths}
             attended={attended}
             type={NODE_TYPE}
             onSelect={handleSelect}
+            onToggle={handleToggle}
             isOver={isOver}
             onOver={handleOver}
             onDrop={handleDrop}

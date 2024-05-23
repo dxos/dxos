@@ -18,7 +18,6 @@ import {
   resolvePlugin,
   parseIntentPlugin,
   parseNavigationPlugin,
-  parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
   activeIds,
@@ -32,7 +31,14 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, getSpace, type PropertiesProps, isSpace, isEchoObject } from '@dxos/react-client/echo';
+import {
+  type Space,
+  getSpace,
+  type PropertiesProps,
+  isSpace,
+  isEchoObject,
+  fullyQualifiedId,
+} from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -63,9 +69,13 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
+import { SHARED, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
+const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
+
+export const parseSpacePlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
 
 export type SpacePluginOptions = {
   /**
@@ -99,6 +109,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
+    enabled: [],
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -118,15 +129,13 @@ export const SpacePlugin = ({
       });
 
       const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
       const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (!clientPlugin || !navigationPlugin || !intentPlugin || !graphPlugin) {
+      if (!clientPlugin || !navigationPlugin || !intentPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      const graph = graphPlugin.provides.graph;
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
@@ -145,6 +154,21 @@ export const SpacePlugin = ({
           dispatch,
         });
       }
+
+      // Enable spaces.
+      state.enabled.push(client.spaces.default.key);
+      subscriptions.add(
+        effect(() => {
+          Array.from(activeIds(location.active)).forEach((part) => {
+            const [key] = part.split(':');
+            const spaceKey = PublicKey.safeFrom(key);
+            const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
+            if (spaceKey && index === -1) {
+              state.enabled.push(spaceKey);
+            }
+          });
+        }),
+      );
 
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
@@ -178,12 +202,12 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
               Array.from(activeIds(location.active)).forEach((id) => {
-                const space = getActiveSpace(graph, id);
+                const [spaceKey] = id.split(':');
+                const space = client.spaces.get(PublicKey.from(spaceKey));
                 if (space) {
                   void space
                     .postMessage('viewing', {
                       identityKey: identity.identityKey.toHex(),
-                      spaceKey: space.key.toHex(),
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
@@ -202,41 +226,41 @@ export const SpacePlugin = ({
 
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
-        client.spaces.subscribe((spaces) => {
+        effect(() => {
           spaceSubscriptions.clear();
-          spaces.forEach((space) => {
-            spaceSubscriptions.add(
-              space.listen('viewing', (message) => {
-                const { added, removed } = message.payload;
-                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
-                if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  added.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      if (!(objectId in state.viewersByObject)) {
-                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+          client.spaces
+            .get()
+            .filter((space) => !!state.enabled.find((key) => key.equals(space.key)))
+            .forEach((space) => {
+              spaceSubscriptions.add(
+                space.listen('viewing', (message) => {
+                  const { added, removed } = message.payload;
+                  const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+                  if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+                    added.forEach((id) => {
+                      if (typeof id === 'string') {
+                        if (!(id in state.viewersByObject)) {
+                          state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                        }
+                        state.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
+                        if (!state.viewersByIdentity.has(identityKey)) {
+                          state.viewersByIdentity.set(identityKey, new Set());
+                        }
+                        state.viewersByIdentity.get(identityKey)!.add(id);
                       }
-                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
-                      if (!state.viewersByIdentity.has(identityKey)) {
-                        state.viewersByIdentity.set(identityKey, new Set());
+                    });
+                    removed.forEach((id) => {
+                      if (typeof id === 'string') {
+                        state.viewersByObject[id]?.delete(identityKey);
+                        state.viewersByIdentity.get(identityKey)?.delete(id);
+                        // It’s okay for these to be empty sets/maps, reduces churn.
                       }
-                      state.viewersByIdentity.get(identityKey)!.add(objectId);
-                    }
-                  });
-                  removed.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      state.viewersByObject[objectId]?.delete(identityKey);
-                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
-                      // It’s okay for these to be empty sets/maps, reduces churn.
-                    }
-                  });
-                }
-              }),
-            );
-          });
-        }).unsubscribe,
+                    });
+                  }
+                }),
+              );
+            });
+        }),
       );
     },
     unload: async () => {
@@ -273,7 +297,7 @@ export const SpacePlugin = ({
                 <SpaceMain space={primary} role={role} />
               ) : primary instanceof FolderType ? (
                 <FolderMain folder={primary} />
-              ) : typeof primary === 'string' && primary.length === 64 ? (
+              ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
@@ -476,6 +500,7 @@ export const SpacePlugin = ({
                 updateGraphWithSpace({
                   graph,
                   space,
+                  enabled: !!state.enabled.find((key) => key.equals(space.key)),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
                   dispatch,
@@ -521,6 +546,7 @@ export const SpacePlugin = ({
               const folder = create(FolderType, { objects: [] });
               setSpaceProperty(space, FolderType.typename, folder);
               await space.waitUntilReady();
+              state.enabled.push(space.key);
 
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
@@ -535,6 +561,7 @@ export const SpacePlugin = ({
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
+                  state.enabled.push(space.key);
                   const spaceHex = space.key.toHex();
                   return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
                 }
@@ -653,7 +680,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
 
               const space = intent.data?.target;
@@ -664,7 +691,7 @@ export const SpacePlugin = ({
                 } else {
                   space.db.add(object);
                 }
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
               break;
             }
@@ -680,17 +707,13 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
                             folder: intent.data?.folder?.data,
                           },
                         },
-                      },
-                      {
-                        action: NavigationAction.CLOSE,
-                        data: { activeParts: { main: [object.id] } },
                       },
                     ],
                   ],
@@ -710,7 +733,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RenameObjectPopover',
                           subject: object,
                         },
@@ -739,6 +762,15 @@ export const SpacePlugin = ({
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
               return { data: true };
+            }
+
+            case SpaceAction.ENABLE: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                state.enabled.push(space.key);
+                return { data: true };
+              }
+              break;
             }
           }
         },
