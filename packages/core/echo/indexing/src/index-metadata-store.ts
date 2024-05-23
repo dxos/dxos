@@ -11,9 +11,9 @@ import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { schema, type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
+import { joinTables } from '@dxos/util';
 
 import { type IdToHeads } from './types';
-import { joinTables } from '@dxos/util';
 
 export type IndexMetadataStoreParams = {
   db: SublevelDB;

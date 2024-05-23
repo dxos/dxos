@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 import { describe, test } from 'vitest';
+
 import { joinTables } from './join-tables';
 
 describe('joinTables', () => {

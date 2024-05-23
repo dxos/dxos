@@ -46,14 +46,14 @@ export const objectPointerCodec = {
       return { spaceKey: undefined, documentId, objectId };
     }
   },
-  getVersion(id: ObjectPointerEncoded): ObjectPointerVersion {
+  getVersion: (id: ObjectPointerEncoded): ObjectPointerVersion => {
     if (id.startsWith(V1_PREFIX)) {
       return ObjectPointerVersion.V1;
     } else {
       return ObjectPointerVersion.V0;
     }
   },
-  convertV1ToV0(id: ObjectPointerEncoded): ObjectPointerEncoded {
+  convertV1ToV0: (id: ObjectPointerEncoded): ObjectPointerEncoded => {
     const { documentId, objectId } = objectPointerCodec.decode(id);
     return objectPointerCodec.encode({ documentId, objectId, spaceKey: undefined });
   },

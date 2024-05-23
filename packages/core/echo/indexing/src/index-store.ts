@@ -7,10 +7,10 @@ import isEqual from 'lodash.isequal';
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB } from '@dxos/kv-store';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './index-constructors';
 import { type Index } from './types';
-import { trace } from '@dxos/tracing';
 
 const CODEC_VERSION = 2;
 

@@ -3,6 +3,10 @@
  * @param leftColumn The column to join on in the first table.
  * @param rightColumn The column to join on in the second table.
  */
+//
+// Copyright 2024 DXOS.org
+//
+
 export const joinTables = (
   leftColumn: string,
   rightColumn: string,
