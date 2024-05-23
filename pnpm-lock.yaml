@@ -1862,6 +1862,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client

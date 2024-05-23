@@ -157,7 +157,7 @@ export class DevServer {
   /**
    * Load function.
    */
-  private async _load(def: FunctionDef, force = false) {
+  private async _load(def: FunctionDef, force?: boolean | undefined) {
     const { uri, route, handler } = def;
     const filePath = join(this._options.baseDir, handler);
     log.info('loading', { uri, force });
