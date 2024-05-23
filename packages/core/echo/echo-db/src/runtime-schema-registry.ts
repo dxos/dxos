@@ -6,33 +6,34 @@ import type * as S from '@effect/schema/Schema';
 
 import { requireTypeReference, StoredEchoSchema } from '@dxos/echo-schema';
 
+const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
+
 export class RuntimeSchemaRegistry {
-  private readonly _schemaDefinitions = new Map<string, S.Schema<any>>();
+  private readonly _schemaMap = new Map<string, S.Schema<any>>();
 
   constructor() {
-    this._schemaDefinitions.set(StoredEchoSchema.typename, StoredEchoSchema);
+    this._schemaMap.set(StoredEchoSchema.typename, StoredEchoSchema);
+  }
+
+  hasSchema<T>(schema: S.Schema<T>): boolean {
+    const typename = getTypenameOrThrow(schema);
+    return this._schemaMap.has(typename);
+  }
+
+  getSchema(typename: string): S.Schema<any> | undefined {
+    return this._schemaMap.get(typename);
   }
 
   registerSchema(...schemaList: S.Schema<any>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
-      if (this._schemaDefinitions.has(typename)) {
-        throw new Error(`Schema was already registered or identifier is not unique: ${typename}`);
+      if (this._schemaMap.has(typename)) {
+        throw new Error(`Schema was already registered: ${typename}`);
       }
-      this._schemaDefinitions.set(typename, schema);
+
+      this._schemaMap.set(typename, schema);
     });
 
     return this;
   }
-
-  isSchemaRegistered<T>(schema: S.Schema<T>): boolean {
-    const typename = getTypenameOrThrow(schema);
-    return this._schemaDefinitions.has(typename);
-  }
-
-  getSchema(typename: string): S.Schema<any> | undefined {
-    return this._schemaDefinitions.get(typename);
-  }
 }
-
-const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;

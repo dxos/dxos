@@ -96,7 +96,7 @@ export class TriggerRegistry extends Resource {
     if (!manifest.triggers?.length) {
       return;
     }
-    if (!space.db.graph.runtimeSchemaRegistry.isSchemaRegistered(FunctionTrigger)) {
+    if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 

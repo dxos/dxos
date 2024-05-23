@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getAutomergeObjectCore, createEchoObject, getTypeRef } from '@dxos/client/echo';
-import { create, Expando, getMeta, type ReactiveObject } from '@dxos/echo-schema';
+import { createEchoObject, getAutomergeObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
+import { create, Expando, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
 
@@ -66,6 +66,7 @@ const deserializeEchoObject = (parsed: any): Expando => {
       if (isSerializedEchoObject(value)) {
         return [key, deserializeEchoObject(value)];
       }
+
       return [key, value];
     });
 
@@ -74,10 +75,9 @@ const deserializeEchoObject = (parsed: any): Expando => {
     create(Expando, Object.fromEntries(entries)),
   );
 
-  // TODO(burdon): Should be immutable?
-  getMeta(deserializedObject).keys = meta?.keys ?? getMeta(deserializedObject).keys;
   const core = getAutomergeObjectCore(deserializedObject);
   core.id = id;
+  getMeta(core).keys.push(...(meta?.keys ?? []));
   const typeRef = getTypeRef(type);
   if (typeRef) {
     core.setType(typeRef);
