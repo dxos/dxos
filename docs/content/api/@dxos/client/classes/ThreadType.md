@@ -1,5 +1,5 @@
 # Class `ThreadType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:54](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/data.ts#L54)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:54](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/data.ts#L54)</sub>
 
 
 

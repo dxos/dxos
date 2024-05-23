@@ -3,20 +3,45 @@
 #
 # Run with `lychee --offline .` to only check local links.
 #
+# The output will show the broken links,
+# check .lychee.report.md to see what files those links are in.
+#
+#
+#
+#     #############################
+#
+#     NOTE: If there's an error in this config
+#           *the config will be silently ignored.*
+#
+#     #############################
+#
+#
+#
+# See here for more info on the options:
+# https://github.com/lycheeverse/lychee/blob/13f4339710d76831d9daf961584d796cee4847d2/lychee-bin/src/options.rs#L162
+
 
 # Based on this lychee.example.toml:
 # https://github.com/lycheeverse/lychee/blob/0a54079d01ba9a4ff9850d8e46d3ba64743d2c8d/lychee.example.toml
 #
 # From lychee-0.15.1
 
+
+# NOTE: The `base` option is currently set to `./docs/content/.vuepress/public`
+# in order to check doc links to images stored there.
+#
+# The means we'll want to override it when checking the rest of the repo.
+#
+# See this issue for details of how `base` works: https://github.com/lycheeverse/lychee/issues/1265
+
 #############################  Display  #############################
 
 # Verbose program output
 # Accepts log level: "error", "warn", "info", "debug", "trace"
-verbose = "info"
+verbose = "error"
 
 # Don't show interactive progress bar while checking links.
-no_progress = false
+no_progress = true
 
 # Path to summary output file.
 output = ".lychee.report.md"
@@ -25,7 +50,7 @@ output = ".lychee.report.md"
 
 # Enable link caching. This can be helpful to avoid checking the same links on
 # multiple runs.
-cache = true
+cache = false
 
 # Discard all cached requests older than this duration.
 max_cache_age = "2d"
@@ -86,7 +111,7 @@ headers = []
 remap = []
 
 # Base URL or website root directory to check relative URLs.
-base = "https://example.com"
+base = "./docs/content/.vuepress/public"
 
 # HTTP basic auth support. This will be the username and password passed to the
 # authorization HTTP header. See
@@ -114,9 +139,7 @@ exclude = [".proto"]
 exclude_path = []
 
 # URLs to check (supports regex). Has preference over all excludes.
-#
-# NOTE: This can also be an array, the default example was ['gist\.github\.com.*']
-include = true
+include = []
 
 # Exclude all private IPs from checking.
 # Equivalent to setting `exclude_private`, `exclude_link_local`, and
