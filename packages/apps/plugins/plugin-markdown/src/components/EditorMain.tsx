@@ -60,10 +60,12 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
+  const idParts = id.split(':');
+  const docId = idParts[idParts.length - 1];
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  useComments(editorView, id, comments);
+  useComments(editorView, docId, comments);
   useTest(editorView);
 
   // Focus comment.
@@ -139,7 +141,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
       >
         <TextEditor
           {...props}
-          id={id}
+          id={docId}
           extensions={extensions}
           autoFocus
           moveToEndOfLine
@@ -153,7 +155,6 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           dataTestId='composer.markdownRoot'
           ref={editorRefCallback}
         />
-        a
       </div>
     </div>
   );
