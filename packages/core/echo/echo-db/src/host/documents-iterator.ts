@@ -7,6 +7,7 @@ import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ObjectPointerVersion, objectPointerCodec } from '@dxos/protocols';
 
@@ -32,16 +33,24 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
           await handle.whenReady();
         }
 
+        let doc: A.Doc<SpaceDoc> = handle.docSync();
+        invariant(doc);
+
+        const currentHeads = A.getHeads(doc);
+
         // Checkout the requested version of the document.
-        const begin = Date.now();
-        const doc: A.Doc<SpaceDoc> = A.view(handle.docSync(), heads);
-        const end = Date.now();
-        if (end - begin > LOG_VIEW_OPERATION_THRESHOLD) {
-          log.info('Checking out document version is taking too long', {
-            duration: end - begin,
-            requestedHeads: heads,
-            originalHeads: A.getHeads(handle.docSync()!),
-          });
+        if (!A.equals(currentHeads, heads)) {
+          const begin = Date.now();
+          // `view` can take a long time even if the document is already at the right version.
+          doc = A.view(doc, heads);
+          const end = Date.now();
+          if (end - begin > LOG_VIEW_OPERATION_THRESHOLD) {
+            log.info('Checking out document version is taking too long', {
+              duration: end - begin,
+              requestedHeads: heads,
+              originalHeads: currentHeads,
+            });
+          }
         }
 
         if (!doc.objects?.[objectId]) {
