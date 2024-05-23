@@ -117,7 +117,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
             {subject}
           </div>
 
-          {(expanded || true) && (
+          {expanded && (
             <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator border-description'>
               {message.blocks.map((block, index) => (
                 <React.Fragment key={index}>
