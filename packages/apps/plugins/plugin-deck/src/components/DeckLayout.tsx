@@ -330,7 +330,7 @@ export const DeckLayout = ({
 
         {/* Main content surface. */}
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
-          <Main.Content bounce classNames='grid'>
+          <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
               <Deck.Root classNames='absolute inset-0'>
                 {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
@@ -380,11 +380,10 @@ export const DeckLayout = ({
           </Main.Content>
         )}
 
-        {/* Status info. */}
-        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
-        <div role='none' aria-label={t('status label')} className='fixed bottom-0 right-0 z-[1]'>
-          <Surface role='status' limit={1} />
-        </div>
+        {/* Note: This is not Main.Content */}
+        <Main.Content role='none' classNames={['fixed inset-inline-0 block-end-0 z-[2]']}>
+          <Surface role='status-bar' limit={1} />
+        </Main.Content>
 
         {/* Help hints. */}
         {/* TODO(burdon): Make surface roles/names fully-qualified. */}
