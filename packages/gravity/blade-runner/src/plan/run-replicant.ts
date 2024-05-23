@@ -5,11 +5,10 @@
 import { LogLevel, createFileProcessor, log } from '@dxos/log';
 import { isNode } from '@dxos/util';
 
-import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from './env';
-import { WebSocketConnector } from './env/websocket-connector';
-import { DEFAULT_WEBSOCKET_ADDRESS } from './env/websocket-redis-proxy';
 import { type RunParams } from './run-process';
 import { type ReplicantParams } from './spec';
+import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from '../env';
+import { DEFAULT_WEBSOCKET_ADDRESS, WebSocketConnector } from '../redis';
 
 /**
  * Entry point for process running in agent mode.

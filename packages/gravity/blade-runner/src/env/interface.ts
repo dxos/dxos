@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type ReplicantParams, type ReplicantRuntimeParams } from './spec';
+import { type ReplicantBrain, type ReplicantClass, type ReplicantParams, type ReplicantRuntimeParams } from '../plan';
 
+// TODO(mykola): R with `spec.ts`
 export interface CommonTestEnv {
   syncBarrier(key: string, amount: number): Promise<void>;
   syncData<T>(key: string, amount: number, data?: T): Promise<T[]>;
@@ -15,23 +16,6 @@ export interface ReplicantEnv extends CommonTestEnv {
 
 export interface SchedulerEnv extends CommonTestEnv {
   spawn<T>(replicantClass: ReplicantClass<T>, runtime: ReplicantRuntimeParams): Promise<ReplicantBrain<T>>;
-}
-
-/**
- * Replicant class.
- */
-export type ReplicantClass<T> = { new (replicantEnv: ReplicantEnv): T };
-
-/**
- * RPC handle to a replicant that is running in a separate process or browser.
- */
-export interface ReplicantBrain<T> {
-  /**
-   * Field that holds the RPC handle to the replicant.
-   */
-  brain: RpcHandle<T>;
-  params: ReplicantParams;
-  kill(signal?: NodeJS.Signals | number): void;
 }
 
 /**
