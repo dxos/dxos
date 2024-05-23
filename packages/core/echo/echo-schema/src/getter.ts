@@ -54,11 +54,7 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
 };
 
 // TODO(burdon): Replace most uses with getTypename (and rename itemId property).
-<<<<<<< HEAD
-export const getType = <T extends {}>(obj: T): Reference | undefined => {
-=======
 export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => {
->>>>>>> origin/main
   if (obj == null) {
     return undefined;
   }
