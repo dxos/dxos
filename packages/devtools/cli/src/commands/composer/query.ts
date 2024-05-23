@@ -24,11 +24,11 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
     return await this.execWithSpace(
       async ({ space }) => {
         let filter: Filter | undefined;
-        let printer: ObjectPrinter | undefined;
+        let printer: ObjectPrinter<any> | undefined;
         switch (this.flags.type) {
           case MessageType.typename: {
             filter = Filter.schema(MessageType);
-            printer = <MessageType>(data: MessageType) => {
+            printer = (data: MessageType) => {
               // TODO(burdon): Print messages.
               return JSON.stringify({ from: data.from.email, content: data.blocks.length });
             };
@@ -51,7 +51,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
   }
 }
 
-type ObjectPrinter = <T = {}>(data: T) => string;
+type ObjectPrinter<T = {}> = (data: T) => string;
 
 const printObjects = (objects: any[], printer: ObjectPrinter = (data) => JSON.stringify(data)) => {
   ux.table(objects, {
