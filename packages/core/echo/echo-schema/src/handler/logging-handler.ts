@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getTargetMeta } from './handler-meta';
+import { type Reference } from '@dxos/echo-protocol';
+
+import { getTargetMeta } from './object';
 import { type ReactiveHandler } from '../proxy';
 import type { ObjectMeta } from '../types';
 
@@ -29,6 +31,10 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
   }
 
   getSchema() {
+    return undefined;
+  }
+
+  getTypeReference(): Reference | undefined {
     return undefined;
   }
 

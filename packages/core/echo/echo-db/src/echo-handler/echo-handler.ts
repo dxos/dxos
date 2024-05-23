@@ -6,7 +6,13 @@ import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { encodeReference, Reference } from '@dxos/echo-protocol';
-import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema, defineHiddenProperty } from '@dxos/echo-schema';
+import {
+  SchemaValidator,
+  DynamicEchoSchema,
+  StoredEchoSchema,
+  defineHiddenProperty,
+  ObjectMetaSchema,
+} from '@dxos/echo-schema';
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
@@ -284,6 +290,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getSchema(target: ProxyTarget): S.Schema<any> | undefined {
+    if (target[symbolNamespace] === META_NAMESPACE) {
+      return ObjectMetaSchema;
+    }
     // TODO: make reactive
     if (!target[symbolInternals].core.database) {
       return undefined;
@@ -302,6 +311,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+  }
+
+  getTypeReference(target: ProxyTarget): Reference | undefined {
+    return target[symbolNamespace] === DATA_NAMESPACE ? target[symbolInternals].core.getType() : undefined;
   }
 
   isDeleted(target: any): boolean {
