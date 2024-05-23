@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type ObjectStructure } from '@dxos/echo-protocol';
-import { ExpandoTypename } from '@dxos/echo-schema';
+import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
@@ -61,7 +61,7 @@ export class IndexSchema extends Resource implements Index {
     // TODO(burdon): Handle inversion.
     if (filter.inverted) {
       return Array.from(this._index.entries())
-        .filter(([key]) => !filter.typenames.includes(key ?? ExpandoTypename) === false)
+        .filter(([key]) => !filter.typenames.includes(key ?? EXPANDO_TYPENAME) === false)
         .flatMap(([, value]) => Array.from(value))
         .map((id) => ({ id, rank: 0 }));
     }
@@ -74,7 +74,7 @@ export class IndexSchema extends Resource implements Index {
 
     const results: FindResult[] = [];
     for (const typename of filter.typenames) {
-      if (typename === ExpandoTypename) {
+      if (typename === EXPANDO_TYPENAME) {
         results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
       } else {
         results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
