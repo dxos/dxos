@@ -26,6 +26,7 @@ export default [
         'open comments label': 'Open comments',
         'error fallback message': 'Unable to open this item',
         'plank heading fallback label': 'Untitled',
+        'actions menu label': 'Options',
       },
     },
   },

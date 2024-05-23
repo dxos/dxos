@@ -154,7 +154,9 @@ const NodePlankHeading = ({
         )}
       </ActionRoot>
       <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
-      {node && <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />}
+      {node && part[0] !== 'complementary' && (
+        <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      )}
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         part={part}
