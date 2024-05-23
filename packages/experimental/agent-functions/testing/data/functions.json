@@ -28,13 +28,13 @@
         "keys": [
           {
             "source": "dxos.org",
-            "id": "dxos.org/function/gpt"
+            "id": "dxos.org/function/gpt/rag"
           }
         ]
       },
       "function": "dxos.org/function/gpt",
       "meta": {
-        "prompt": "rag"
+        "prompt": "translate the following message into japanese."
       },
       "spec": {
         "type": "subscription",

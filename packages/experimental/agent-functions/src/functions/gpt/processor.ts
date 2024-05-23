@@ -40,17 +40,21 @@ export type SequenceOptions = {
 
 export type ProcessThreadArgs = {
   space: Space;
+
   /**
    * When a thread is provided we show "Processing" status on it while a response is being generated.
    * In addition, `thread.context` can be used for extracting additional prompt inputs.
    */
   thread?: ThreadType;
+
   message: MessageType;
+
   /**
    * RequestProcessor first looks for an explicit prompt trigger at the beginning of a message:
    * `/say ...`
    * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
    */
+  // TODO(burdon): Change to object?
   defaultPrompt?: string;
 };
 
