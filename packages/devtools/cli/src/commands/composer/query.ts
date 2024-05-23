@@ -28,7 +28,10 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
         switch (this.flags.type) {
           case MessageType.typename: {
             filter = Filter.schema(MessageType);
-            printer = <MessageType>(data: MessageType) => JSON.stringify({ from: data.from.email });
+            printer = <MessageType>(data: MessageType) => {
+              // TODO(burdon): Print messages.
+              return JSON.stringify({ from: data.from.email, content: data.blocks.length });
+            };
             break;
           }
 
@@ -37,7 +40,10 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
         }
 
         const { objects } = await space.db.query(filter).run();
-        printObjects(objects, printer);
+        if (!this.flags.json) {
+          printObjects(objects, printer);
+        }
+
         return { objects };
       },
       { spaceKeys: this.flags.key },
