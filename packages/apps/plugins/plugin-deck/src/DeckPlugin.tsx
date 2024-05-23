@@ -177,7 +177,7 @@ export const DeckPlugin = ({
       //   active parts
       effect(() => {
         const selectedPath = activeToUri(location.active);
-        console.log('[history pushstate]', selectedPath, location.active);
+        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
         history.pushState(null, '', `${selectedPath}${window.location.search}`);
       });
 
