@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import jestExpect from 'expect';
 import { describe, test } from 'mocha';
 
-import { getProxyHandlerSlot } from '@dxos/echo-schema';
+import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
 import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { beforeAll, afterAll } from '@dxos/test';
@@ -132,6 +132,11 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         obj.objectArray?.push({ field: 'bar' });
         expect(() => obj.objectArray?.splice(1, 0, { field: 1 } as any)).to.throw();
         expect(() => (obj.objectArray![1].field = 1 as any)).to.throw();
+      });
+
+      test('getTypeReference', async () => {
+        const obj = await createObject({ number: 42 });
+        expect(getType(obj)).to.deep.eq(getTypeReference(getSchema(obj)));
       });
 
       test('can assign arrays with objects', async () => {

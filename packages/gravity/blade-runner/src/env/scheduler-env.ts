@@ -8,19 +8,22 @@ import path from 'node:path';
 import { Trigger } from '@dxos/async';
 import { log } from '@dxos/log';
 
+import { type SchedulerEnv, type RpcHandle } from './interface';
 import { ReplicantRpcHandle, open, close } from './replicant-rpc-handle';
-import { REDIS_PORT, createRedisRpcPort } from './util';
-import { WebSocketRedisProxy } from './websocket-redis-proxy';
-import { type ReplicantBrain, type SchedulerEnv, type RpcHandle, type ReplicantClass } from '../interface';
-import { type ProcessHandle, runBrowser, runNode } from '../run-process';
 import {
+  type ReplicantBrain,
+  type ReplicantClass,
   type ReplicantRuntimeParams,
   type ReplicantParams,
   type GlobalOptions,
   type TestParams,
   AGENT_LOG_FILE,
   type ReplicantsSummary,
-} from '../spec';
+  type ProcessHandle,
+  runBrowser,
+  runNode,
+} from '../plan';
+import { REDIS_PORT, createRedisRpcPort, WebSocketRedisProxy } from '../redis';
 
 // TODO(mykola): Unify with ReplicatorEnv.
 export class SchedulerEnvImpl<S> implements SchedulerEnv {
