@@ -1,57 +1,49 @@
-[
-  {
-    "@type": "dxos.org/type/FunctionTrigger",
-    "@meta": {
-      "keys": [
-        {
-          "source": "dxos.org",
-          "id": "dxos.org/function/email-worker"
-        }
-      ]
-    },
-    "function": "dxos.org/function/email-worker",
-    "meta": {
-      "account": "hello@dxos.network"
-    },
-    "spec": {
-      "type": "websocket",
-      "url": "https://hub.dxos.network/api/mailbox/hello@dxos.network",
-      "init": {
-        "type": "sync"
-      }
-    }
-  },
-  {
-    "@type": "dxos.org/type/FunctionTrigger",
-    "@meta": {
-      "keys": [
-        {
-          "source": "dxos.org",
-          "id": "dxos.org/function/gpt"
-        }
-      ]
-    },
-    "function": "dxos.org/function/gpt",
-    "meta": {
-      "prompt": {
-        "@type": "dxos.org/type/Chain",
-        "title": "Test",
-        "prompts": [
+{
+  "objects": [
+    {
+      "@type": "dxos.org/type/FunctionTrigger",
+      "@meta": {
+        "keys": [
           {
-            "@type": "dxos.org/type/ChainPrompt",
-            "command": "test",
-            "source": "This is a prompt."
+            "source": "dxos.org",
+            "id": "dxos.org/function/email-worker"
+          }
+        ]
+      },
+      "function": "dxos.org/function/email-worker",
+      "meta": {
+        "account": "hello@dxos.network"
+      },
+      "spec": {
+        "type": "websocket",
+        "url": "https://hub.dxos.network/api/mailbox/hello@dxos.network",
+        "init": {
+          "type": "sync"
+        }
+      }
+    },
+    {
+      "@type": "dxos.org/type/FunctionTrigger",
+      "@meta": {
+        "keys": [
+          {
+            "source": "dxos.org",
+            "id": "dxos.org/function/gpt"
+          }
+        ]
+      },
+      "function": "dxos.org/function/gpt",
+      "meta": {
+        "prompt": "faq"
+      },
+      "spec": {
+        "type": "subscription",
+        "filter": [
+          {
+            "type": "dxos.org/type/Message"
           }
         ]
       }
-    },
-    "spec": {
-      "type": "subscription",
-      "filter": [
-        {
-          "type": "dxos.org/type/Message"
-        }
-      ]
     }
-  }
-]
+  ]
+}

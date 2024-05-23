@@ -52,7 +52,6 @@ functions:
     handler: 'github'
     description: 'Github Sync.'
 
-# TODO(burdon): Set meta keys for idempotence.
 triggers:
 
   - function: 'dxos.org/function/hello'

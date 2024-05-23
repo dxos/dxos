@@ -19,6 +19,10 @@ import { BaseCommand } from '../../base';
 
 const SCHEMA = [FunctionDef, FunctionTrigger];
 
+type DataFile = {
+  objects: Record<string, any>[];
+};
+
 /**
  * The import command allow importing ECHO objects from a JSON file.
  *
@@ -39,7 +43,7 @@ export default class Import extends BaseCommand<typeof Import> {
       const schemaMap = await this.addTypes(client);
 
       // Parse data.
-      const objects = JSON.parse(String(fs.readFileSync(this.args.file!))) as any[];
+      const { objects } = JSON.parse(String(fs.readFileSync(this.args.file!))) as DataFile;
 
       // Load objects.
       const load = async (space: Space) => {
@@ -51,7 +55,7 @@ export default class Import extends BaseCommand<typeof Import> {
           }
 
           if (!this.flags['dry-run']) {
-            // TODO(burdon): Merge FK.
+            // TODO(burdon): Merge based on FKs (need to query by FK).
             space.db.add(obj);
           }
         }
@@ -113,7 +117,7 @@ export default class Import extends BaseCommand<typeof Import> {
    * Parse object.
    */
   // TODO(burdon): Factor out.
-  parseObject(schemaMap: Map<string, S.Schema<any>>, data: Record<string, any>): any {
+  parseObject(schemaMap: Map<string, S.Schema<any>>, data: any): any {
     if (Array.isArray(data)) {
       return data.map((item) => this.parseObject(schemaMap, item));
     } else if (typeof data === 'object') {
@@ -128,7 +132,7 @@ export default class Import extends BaseCommand<typeof Import> {
         let meta: ObjectMeta | undefined;
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
           if (key === ECHO_ATTR_META) {
-            meta = value;
+            meta = value as ObjectMeta;
           } else {
             object[key] = this.parseObject(schemaMap, value);
           }
