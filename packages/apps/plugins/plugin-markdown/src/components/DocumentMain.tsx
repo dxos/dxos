@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import React, { useMemo } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
-import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
+import { createDocAccessor, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { createDataExtensions, localStorageStateStoreAdapter, state } from '@dxos/react-ui-editor';
 
@@ -52,7 +52,7 @@ const DocumentMain = ({ document: doc, extensions: _extensions = [], ...props }:
 
   return (
     <EditorMain
-      id={doc.id}
+      id={fullyQualifiedId(doc)}
       doc={doc.content.content}
       scrollTo={scrollTo}
       selection={selection}

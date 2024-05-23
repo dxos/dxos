@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef, useCallback, useEffect, useRef, useState } from 'react';
@@ -40,12 +41,13 @@ type DeckPlankUnit = 'rem' | 'px';
 type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
   unit?: DeckPlankUnit;
   scrollIntoViewOnMount?: boolean;
+  suppressAutofocus?: boolean;
 };
 
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
-  ({ unit = 'rem', classNames, style, children, scrollIntoViewOnMount, ...props }, forwardedRef) => {
+  ({ unit = 'rem', classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [isSm] = useMediaQuery('sm', { ssr: false });
 
@@ -53,6 +55,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
     const [resizing, setResizing] = useState<null | DeckPlankResizing>(null);
     const articleElement = useRef<HTMLDivElement | null>(null);
     const ref = useComposedRefs(articleElement, forwardedRef);
+    const { findFirstFocusable } = useFocusFinders();
 
     const handlePointerUp = useCallback(({ isPrimary }: PointerEvent) => isPrimary && setResizing(null), []);
     const handlePointerMove = useCallback(
@@ -81,6 +84,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
     useEffect(() => {
       if (scrollIntoViewOnMount) {
         articleElement.current?.scrollIntoView({ inline: 'center', behavior: 'smooth' });
+        !suppressAutofocus && articleElement.current && findFirstFocusable(articleElement.current)?.focus();
       }
     }, [scrollIntoViewOnMount]);
 
