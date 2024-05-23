@@ -61,15 +61,6 @@ triggers:
       type: 'webhook'
       method: 'GET'
 
-  - function: 'dxos.org/function/email-worker'
-    meta:
-      account: 'hello@dxos.network'
-    spec:
-      type: 'websocket'
-      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
-      init:
-        type: 'sync'
-
   - function: 'dxos.org/function/chess'
     meta:
       level: 2
@@ -78,13 +69,22 @@ triggers:
       filter:
       - type: 'dxos.org/type/Chess'
 
-  - function: 'dxos.org/function/gpt'
-    meta:
-      prompt: 'faq'
-    spec:
-      type: 'subscription'
-      filter:
-      - type: 'braneframe.Message'
+#  - function: 'dxos.org/function/email-worker'
+#    meta:
+#      account: 'hello@dxos.network'
+#    spec:
+#      type: 'websocket'
+#      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
+#      init:
+#        type: 'sync'
+
+#  - function: 'dxos.org/function/gpt'
+#    meta:
+#      prompt: 'faq'
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'dxos.org/type/Message'
 
 #  - function: 'dxos.org/function/embedding'
 #    spec:
@@ -116,7 +116,7 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'braneframe.Message'
+#      - type: 'dxos.org/type/Message'
 #        props:
 #          type: 'email'
 #      options:
@@ -126,4 +126,4 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'example.com/schema/project'
+#      - type: 'example.com/type/project'

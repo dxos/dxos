@@ -2,10 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { AST, S, TypedObject } from '@dxos/echo-schema';
-
-// TODO(burdon): Factor out.
-const omitEchoId = <T>(schema: S.Schema<T>): S.Schema<Omit<T, 'id'>> => S.make(AST.omit(schema.ast, ['id']));
+import { RawObject, S, TypedObject } from '@dxos/echo-schema';
 
 /**
  * Type discriminator for TriggerSpec.
@@ -17,7 +14,7 @@ export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websoc
 
 const SubscriptionTriggerSchema = S.struct({
   type: S.literal('subscription'),
-  // TODO(burdon): Define query DSL.
+  // TODO(burdon): Define query DSL (from ECHO).
   filter: S.array(
     S.struct({
       type: S.string,
@@ -33,12 +30,14 @@ const SubscriptionTriggerSchema = S.struct({
     }),
   ),
 });
+
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
 const TimerTriggerSchema = S.struct({
   type: S.literal('timer'),
   cron: S.string,
 });
+
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
 const WebhookTriggerSchema = S.mutable(
@@ -49,6 +48,7 @@ const WebhookTriggerSchema = S.mutable(
     port: S.optional(S.number),
   }),
 );
+
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
 const WebsocketTriggerSchema = S.struct({
@@ -56,6 +56,7 @@ const WebsocketTriggerSchema = S.struct({
   url: S.string,
   init: S.optional(S.record(S.string, S.any)),
 });
+
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
 const TriggerSpecSchema = S.union(
@@ -64,6 +65,7 @@ const TriggerSpecSchema = S.union(
   WebsocketTriggerSchema,
   SubscriptionTriggerSchema,
 );
+
 export type TriggerSpec = TimerTrigger | WebhookTrigger | WebsocketTrigger | SubscriptionTrigger;
 
 /**
@@ -84,9 +86,9 @@ export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
-  function: S.string.pipe(S.description('Function ID/URI.')),
-  // Context passed to a function.
-  meta: S.optional(S.record(S.string, S.any)),
+  function: S.string.pipe(S.description('Function URI.')),
+  // Context is merged into the event data passed to the function.
+  meta: S.optional(S.object),
   spec: TriggerSpecSchema,
 }) {}
 
@@ -94,8 +96,8 @@ export class FunctionTrigger extends TypedObject({
  * Function manifest file.
  */
 export const FunctionManifestSchema = S.struct({
-  functions: S.optional(S.mutable(S.array(omitEchoId(FunctionDef)))),
-  triggers: S.optional(S.mutable(S.array(omitEchoId(FunctionTrigger)))),
+  functions: S.optional(S.mutable(S.array(RawObject(FunctionDef)))),
+  triggers: S.optional(S.mutable(S.array(RawObject(FunctionTrigger)))),
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;

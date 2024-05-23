@@ -21,15 +21,14 @@ export const Chain: FC<{ chain: ChainType }> = ({ chain }) => {
 
   const handleSelectPreset = (preset: Preset) => {
     chain.title = preset.title;
-    chain.prompts.filter(nonNullable).forEach((p) => space.db.remove(p));
+    // TODO(burdon): API issue.
+    chain.prompts?.filter(nonNullable).forEach((prompt) => space.db.remove(prompt));
     chain.prompts = [preset.prompt()];
   };
 
   return (
     <div className='flex flex-col my-2 gap-4'>
-      {chain.prompts.filter(nonNullable).map((prompt, i) => (
-        <PromptTemplate key={i} prompt={prompt} />
-      ))}
+      {chain.prompts?.filter(nonNullable).map((prompt, i) => <PromptTemplate key={i} prompt={prompt} />)}
       <Presets presets={presets} onSelect={handleSelectPreset} />
     </div>
   );

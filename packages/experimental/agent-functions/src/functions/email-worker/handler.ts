@@ -25,10 +25,13 @@ export type EmailMessage = {
 
 const SOURCE_ID = 'hub.dxos.network/mailbox';
 
-export const handler: FunctionHandler<
-  { spaceKey: string; data: { messages: EmailMessage[] } },
-  { account: string }
-> = async ({ event, context, response }) => {
+type Meta = { account?: string };
+
+export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }, Meta> = async ({
+  event,
+  context,
+  response,
+}) => {
   const {
     meta: { account = 'hello@dxos.network' },
     data: { messages },

@@ -226,6 +226,7 @@ export class Client {
     if (notRegistered.length > 0) {
       this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }
+
     return this;
   }
 

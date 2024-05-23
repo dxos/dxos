@@ -19,26 +19,27 @@ import { afterTest, openAndClose, test } from '@dxos/test';
 const FUNCTIONS_PORT = 8757;
 
 describe('Chess', () => {
-  test.only('chess function', async () => {
-    const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
-    const config = new Config({
-      runtime: {
-        agent: {
-          plugins: [
-            {
-              id: 'dxos.org/agent/plugin/functions',
-              config: {
-                port: FUNCTIONS_PORT,
+  test('chess function', async () => {
+    const testBuilder = new TestBuilder(
+      new Config({
+        runtime: {
+          agent: {
+            plugins: [
+              {
+                id: 'dxos.org/agent/plugin/functions',
+                config: {
+                  port: FUNCTIONS_PORT,
+                },
               },
-            },
-          ],
+            ],
+          },
         },
-      },
-    });
-
+      }),
+    );
     const services = testBuilder.createLocalClientServices();
-    const client = new Client({ config, services });
+    afterTest(() => testBuilder.destroy());
+
+    const client = new Client({ config: testBuilder.config, services });
     await client.initialize();
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
@@ -105,6 +106,7 @@ describe('Chess', () => {
     });
     afterTest(cleanup);
 
+    // First move.
     await doMove(game, 'w');
     await done.wait();
     const chess = new Chess();
