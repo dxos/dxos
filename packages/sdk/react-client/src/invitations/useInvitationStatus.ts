@@ -131,6 +131,7 @@ export const useInvitationStatus = (observable?: CancellableInvitationObservable
   useEffect(() => {
     const update = (invitation: Invitation) => {
       switch (invitation.state) {
+        case Invitation.State.INIT:
         case Invitation.State.CONNECTED:
         case Invitation.State.READY_FOR_AUTHENTICATION:
         case Invitation.State.AUTHENTICATING: {
