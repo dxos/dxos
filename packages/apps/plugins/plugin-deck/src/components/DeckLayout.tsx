@@ -3,7 +3,7 @@
 //
 
 import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
-import React, { Fragment } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
 import {
@@ -97,11 +97,17 @@ const PlankError = ({
   node?: Node;
   error?: Error;
 }) => {
-  return (
+  const [timedOut, setTimedOut] = useState(false);
+  useEffect(() => {
+    setTimeout(() => setTimedOut(true), 5e3);
+  }, []);
+  return timedOut ? (
     <>
       <NodePlankHeading node={node} part={part} slug={slug} />
       <PlankContentError error={error} />
     </>
+  ) : (
+    <PlankLoading />
   );
 };
 
