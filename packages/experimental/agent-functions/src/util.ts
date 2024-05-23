@@ -8,16 +8,16 @@ import path from 'node:path';
 import * as process from 'node:process';
 
 import {
+  ContactType,
+  DocumentType,
   EventType,
   FileType,
   MailboxType,
   MessageType,
-  StackType,
-  ThreadType,
-  DocumentType,
   SectionType,
-  ContactType,
+  StackType,
   TextV0Type,
+  ThreadType,
 } from '@braneframe/types';
 import { GameType } from '@dxos/chess-app/types';
 import { type Space } from '@dxos/client/echo';
@@ -89,7 +89,7 @@ export const registerTypes = (space: Space | undefined) => {
   ];
 
   for (const type of schemaList) {
-    if (!registry.isSchemaRegistered(type)) {
+    if (!registry.hasSchema(type)) {
       registry.registerSchema(type);
     }
   }

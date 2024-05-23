@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, type EchoReactiveObject, create, TypedObject, ref } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';

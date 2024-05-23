@@ -68,11 +68,10 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
                 blocks,
               },
               {
-                keys: [foreignKey('openai.com')],
+                keys: [foreignKey('openai.com', '_')],
               },
             );
 
-            // getMeta(newMessage).keys.push({ source: 'openai.com' }); // TODO(burdon): Get from chain resources.
             thread.messages.push(newMessage);
           }
         }

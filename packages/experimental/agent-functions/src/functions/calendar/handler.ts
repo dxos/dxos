@@ -9,8 +9,7 @@ import process from 'node:process';
 
 import { EventType, type RecipientType } from '@braneframe/types';
 import { Filter } from '@dxos/echo-db';
-import { type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -81,16 +80,23 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
       log.info('event data', { summary, attendees });
       // TODO(burdon): Upsert.
       if (!existing) {
-        const newEvent = create(EventType, {
-          title: summary || '',
-          owner: { name: creator?.displayName, email: creator?.email },
-          startDate: start?.date?.toString() ?? '',
-          links: [],
-          attendees:
-            attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ?? [],
-        });
-        getMeta(newEvent).keys = [{ source: sourceId, id }];
-        space.db.add(newEvent);
+        space.db.add(
+          create(
+            EventType,
+            {
+              title: summary || '',
+              owner: { name: creator?.displayName, email: creator?.email },
+              startDate: start?.date?.toString() ?? '',
+              links: [],
+              attendees:
+                attendees?.map(({ email, displayName }) => ({ email: email!, name: displayName }) as RecipientType) ??
+                [],
+            },
+            {
+              keys: [{ source: sourceId, id }],
+            },
+          ),
+        );
       }
     }
   }

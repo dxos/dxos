@@ -6,7 +6,9 @@ import type * as S from '@effect/schema/Schema';
 
 import { type ObjectMeta } from '../types';
 
-// TODO(burdon): Comment.
+/**
+ * Reactive object proxy.
+ */
 export interface ReactiveHandler<T extends {}> extends ProxyHandler<T> {
   /**
    * Target to Proxy mapping.
