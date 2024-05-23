@@ -18,7 +18,7 @@ import { afterTest, test } from '@dxos/test';
 import { Client } from '../client';
 import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
 
-describe.only('Index queries', () => {
+describe('Index queries', () => {
   const createObjects = () => ({
     contacts: [
       create(ContactType, {
