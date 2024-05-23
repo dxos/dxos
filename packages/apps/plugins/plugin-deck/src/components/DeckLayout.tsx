@@ -32,7 +32,7 @@ import {
   toLocalizedString,
 } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
-import { fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
+import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
 import { Fallback } from './Fallback';
@@ -69,6 +69,42 @@ const PlankLoading = () => {
   );
 };
 
+const PlankContentError = ({ error }: { error?: Error }) => {
+  const { t } = useTranslation(DECK_PLUGIN);
+  return (
+    <div role='none' className='grid place-items-center row-span-2'>
+      <p
+        role='alert'
+        className={mx(
+          descriptionText,
+          'place-self-center border border-dashed border-neutral-400/50 rounded-lg text-center p-8 font-normal text-lg',
+        )}
+      >
+        {error ? error.toString() : t('error fallback message')}
+      </p>
+    </div>
+  );
+};
+
+const PlankError = ({
+  part,
+  slug,
+  node,
+  error,
+}: {
+  part: PartIdentifier;
+  slug: string;
+  node?: Node;
+  error?: Error;
+}) => {
+  return (
+    <>
+      <NodePlankHeading node={node} part={part} slug={slug} />
+      <PlankContentError error={error} />
+    </>
+  );
+};
+
 const complementaryPart = ['complementary', 0, 1] satisfies PartIdentifier;
 const sidebarPart = ['sidebar', 0, 1] satisfies PartIdentifier;
 
@@ -78,33 +114,41 @@ const NodePlankHeading = ({
   slug,
   popoverAnchorId,
 }: {
-  node: Node;
+  node?: Node;
   part: PartIdentifier;
   slug: string;
   popoverAnchorId?: string;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
-  const Icon = node.properties?.icon ?? Placeholder;
-  const label = toLocalizedString(node.properties?.label ?? '', t);
+  const Icon = node?.properties?.icon ?? Placeholder;
+  const label = toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const { dispatch } = useIntent();
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
+  const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
     <PlankHeading.Root>
       <ActionRoot>
-        <PlankHeading.ActionsMenu
-          actions={node.actions()}
-          onAction={(action) =>
-            typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
-          }
-        >
-          <PlankHeading.Button attendableId={node.id}>
+        {node ? (
+          <PlankHeading.ActionsMenu
+            triggerLabel={t('actions menu label')}
+            actions={node.actions()}
+            onAction={(action) =>
+              typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
+            }
+          >
+            <PlankHeading.Button attendableId={node.id}>
+              <span className='sr-only'>{label}</span>
+              <Icon {...plankHeadingIconProps} />
+            </PlankHeading.Button>
+          </PlankHeading.ActionsMenu>
+        ) : (
+          <PlankHeading.Button>
             <span className='sr-only'>{label}</span>
             <Icon {...plankHeadingIconProps} />
           </PlankHeading.Button>
-        </PlankHeading.ActionsMenu>
+        )}
       </ActionRoot>
       <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
-      <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
+      {node && <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />}
       {/* NOTE(thure): Pinning & unpinning are temporarily disabled */}
       <PlankHeading.Controls
         part={part}
@@ -128,7 +172,7 @@ const NodePlankHeading = ({
         close
       >
         {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
-        {!!node.data?.comments && !slug.endsWith('comments') && (
+        {node && !!node.data?.comments && !slug?.endsWith('comments') && (
           <Button
             variant='ghost'
             classNames='p-1'
@@ -291,7 +335,7 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
-                fallback={PlankLoading}
+                fallback={PlankContentError}
                 placeholder={<PlankLoading />}
               />
             </>
@@ -318,7 +362,7 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
-                fallback={PlankLoading}
+                fallback={PlankContentError}
                 placeholder={<PlankLoading />}
               />
             </div>
@@ -361,12 +405,12 @@ export const DeckLayout = ({
                                 popoverAnchorId,
                               }}
                               limit={1}
-                              fallback={PlankLoading}
+                              fallback={PlankContentError}
                               placeholder={<PlankLoading />}
                             />
                           </>
                         ) : (
-                          <PlankLoading />
+                          <PlankError part={part} slug={id} />
                         )}
                       </Deck.Plank>
                     );

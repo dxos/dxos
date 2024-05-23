@@ -24,6 +24,8 @@ export default [
         'undo action alt': 'Undo previous action',
         'undo close label': 'Dismiss',
         'open comments label': 'Open comments',
+        'error fallback message': 'Unable to open this item',
+        'plank heading fallback label': 'Untitled',
       },
     },
   },

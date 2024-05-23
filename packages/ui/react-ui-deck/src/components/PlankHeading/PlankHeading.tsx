@@ -90,7 +90,7 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
 );
 
 type PlankHeadingActionsMenuProps = PropsWithChildren<{
-  triggerLabel?: string;
+  triggerLabel: string;
   actions?: PlankHeadingAction[];
   onAction?: (action: PlankHeadingAction) => void;
 }>;
