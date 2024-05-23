@@ -101,6 +101,7 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
+  SET = `${NAVIGATION_ACTION}/set`,
   ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
 }
@@ -117,6 +118,10 @@ export namespace NavigationAction {
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */
   export type Close = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * The active parts to directly set, to be used when working with URLs or restoring a specific state.
+   */
+  export type Set = IntentData<{ activeParts: ActiveParts }>;
   /**
    * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
    */

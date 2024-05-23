@@ -291,6 +291,8 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
+                fallback={PlankLoading}
+                placeholder={<PlankLoading />}
               />
             </>
           ) : null}
@@ -316,6 +318,8 @@ export const DeckLayout = ({
                   popoverAnchorId,
                 }}
                 limit={1}
+                fallback={PlankLoading}
+                placeholder={<PlankLoading />}
               />
             </div>
           ) : null}
@@ -358,6 +362,7 @@ export const DeckLayout = ({
                               }}
                               limit={1}
                               fallback={PlankLoading}
+                              placeholder={<PlankLoading />}
                             />
                           </>
                         ) : (
