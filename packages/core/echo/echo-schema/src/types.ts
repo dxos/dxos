@@ -17,12 +17,12 @@ export const ECHO_ATTR_META = '@meta';
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
 
-export const ForeignKeySchema = S.struct({
+const _ForeignKeySchema = S.struct({
   source: S.string,
   id: S.string,
 });
-
-export type ForeignKey = S.Schema.Type<typeof ForeignKeySchema>;
+export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
 export const ObjectMetaSchema = S.struct({
   keys: S.mutable(S.array(ForeignKeySchema)),
@@ -42,7 +42,6 @@ export const RawObject = <T>(schema: S.Schema<T>): S.Schema<ExcludeId<T> & WithM
 /**
  * Has `id`.
  */
-// TODO(burdon): Rename BaseObject?
 export interface Identifiable {
   readonly id: string;
 }
@@ -58,6 +57,7 @@ export type Ref<T> = T | undefined;
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
+// TODO: rename to just EchoObject?
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
