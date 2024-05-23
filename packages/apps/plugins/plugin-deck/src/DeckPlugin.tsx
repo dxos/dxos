@@ -305,7 +305,7 @@ export const DeckPlugin = ({
             case NavigationAction.OPEN: {
               batch(() => {
                 if (intent.data) {
-                  location.active =
+                  const nextActiveParts =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce(
                           (acc: ActiveParts, [part, ids]) => {
@@ -342,12 +342,13 @@ export const DeckPlugin = ({
                           ],
                         };
                   if (
-                    isActiveParts(location.active) &&
-                    location.active.complementary &&
+                    !(isActiveParts(location.active) && location.active.complementary) &&
+                    nextActiveParts.complementary &&
                     matchMedia('(min-width: 1024px)').matches
                   ) {
                     layout.values.complementarySidebarOpen = true;
                   }
+                  location.active = nextActiveParts;
                 }
               });
 

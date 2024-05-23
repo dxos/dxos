@@ -20,6 +20,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "^9.19.0",
     "@radix-ui/primitive": "^1.0.0",
     "@radix-ui/react-compose-refs": "^1.0.0",
     "@radix-ui/react-context": "^1.0.0",

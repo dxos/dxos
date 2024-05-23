@@ -4,7 +4,7 @@
 
 import React, { Component, type FC, type PropsWithChildren } from 'react';
 
-type Props = PropsWithChildren<{ data?: any; fallback: FC<{ error: Error; reset: () => void }> }>;
+type Props = PropsWithChildren<{ data?: any; fallback: FC<{ data?: any; error: Error; reset: () => void }> }>;
 type State = { error: Error | undefined };
 
 /**
@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override render() {
     if (this.state.error) {
-      return <this.props.fallback error={this.state.error} reset={this.resetError} />;
+      return <this.props.fallback data={this.props.data} error={this.state.error} reset={this.resetError} />;
     }
 
     return this.props.children;
