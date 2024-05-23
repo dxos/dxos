@@ -7,6 +7,7 @@ import isEqual from 'lodash.isequal';
 import { invariant } from '@dxos/invariant';
 import { type SublevelDB } from '@dxos/kv-store';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './index-constructors';
 import { type Index } from './types';
@@ -28,6 +29,18 @@ export class IndexStore {
   private readonly _db: SublevelDB;
   constructor({ db }: IndexStoreParams) {
     this._db = db;
+
+    trace.diagnostic({
+      id: 'indexes',
+      name: 'Indexes',
+      fetch: async () => {
+        const indexes = await this._db.iterator<string, IndexData>(encodings).all();
+        return indexes.map(([identifier, { index, ...rest }]) => ({
+          identifier,
+          ...rest,
+        }));
+      },
+    });
   }
 
   async save(index: Index) {

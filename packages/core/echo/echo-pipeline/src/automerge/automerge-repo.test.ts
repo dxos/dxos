@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { change, clone, from, getBackend, getHeads } from '@dxos/automerge/automerge';
+import { type Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -57,5 +57,14 @@ describe('AutomergeRepo', () => {
       expect(changes.length).to.equal(1);
       expect(changes[0]).to.be.null;
     }
+  });
+
+  test('heads equality', () => {
+    const a: Heads = getHeads(from({ foo: 'bar' }));
+    const b: Heads = getHeads(from({ foo: 'bar' }));
+    const c: Heads = [...a];
+
+    expect(equals(a, b)).to.be.false;
+    expect(equals(a, c)).to.be.true;
   });
 });
