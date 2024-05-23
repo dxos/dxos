@@ -10,7 +10,7 @@ import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type ConfigProto } from '@dxos/config';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Diagnostics extends BaseCommand<typeof Diagnostics> {
   static override enableJsonFlag = true;

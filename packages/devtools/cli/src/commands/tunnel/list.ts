@@ -2,12 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { BaseCommand } from '../../base-command';
-import { type TunnelRpcPeer, printTunnels } from '../../util';
+import { BaseCommand } from '../../base';
+import { printTunnels, type TunnelRpcPeer } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class List extends BaseCommand<typeof List> {
-  static override enableJsonFlag = true;
-  static override description = 'List tunnels.';
+  static {
+    this.state = 'deprecated';
+    this.enableJsonFlag = true;
+    this.description = 'List tunnels.';
+  }
 
   async run(): Promise<any> {
     return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {

@@ -2,23 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
+import { Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
-import { BaseCommand } from '../../base-command';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 // TODO(burdon): Testing plugin (vs. debug)?
 // TODO(burdon): Disable unless NODE_ENV=development?
 export default class Generate extends BaseCommand<typeof Generate> {
   static override enableJsonFlag = true;
   static override description = 'Generate test data.';
-
-  // TODO(burdon): Uniformly provide as arg/flag?
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
     interval: Flags.integer({

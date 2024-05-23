@@ -6,7 +6,7 @@ import { ux } from '@oclif/core';
 
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { maybeTruncateKey } from './types';
+import { maybeTruncateKey } from './keys';
 
 export const mapCredentials = (credentials: Credential[], truncateKeys = false) => {
   return credentials.map((credential) => ({

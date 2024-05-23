@@ -9,13 +9,13 @@ import { cwd } from 'process';
 
 import { exec } from '@dxos/process';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export const APP_TEMPLATES = ['hello', 'bare', 'tasks'];
 
 // TODO(zhenyasav): factor this out into @dxos/fs or something (along with 'exists' from plate?)
-const isDirEmpty = async (dirpath: string) => {
-  const dirIter = await fs.opendir(dirpath);
+const isDirEmpty = async (baseDir: string) => {
+  const dirIter = await fs.opendir(baseDir);
   const { done } = await dirIter[Symbol.asyncIterator]().next();
   if (!done) {
     await dirIter.close();
@@ -23,9 +23,12 @@ const isDirEmpty = async (dirpath: string) => {
   return !!done;
 };
 
+/**
+ * @deprecated
+ */
 export default class Create extends BaseCommand<typeof Create> {
-  static override description = 'Manage applications.';
-
+  static override state = 'deprecated';
+  static override description = 'Manage applications (deprecated).';
   static override args = {
     name: Args.string({ required: true, description: 'App name.' }),
   };

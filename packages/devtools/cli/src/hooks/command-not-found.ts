@@ -12,7 +12,9 @@ const hook: Hook<'command_not_found'> = async (params) => {
   const { id } = params;
   console.log(chalk`{red Error}: Invalid command: ${id}`);
   if (process.env.NODE_ENV === 'development') {
-    console.log(chalk`{yellow Hint}: Commands will fail silently if they fail to build (e.g., check ESM issues).`);
+    console.log(
+      chalk`{yellow Hint}: Commands will fail silently if they fail to build (e.g., check ESM issues). Run again with \`DEBUG=*\``,
+    );
   }
 };
 

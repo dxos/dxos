@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { describe, test } from '@dxos/test';
 import { ChatOpenAI } from '@langchain/openai';
 import { expect } from 'chai';
-import { getConfig, getKey, loadJson } from '../../util';
+
+import { describe, test } from '@dxos/test';
 
 import { type Entity, type SchemaMap } from './schema';
+import { getConfig, getKey, loadJson } from '../../util';
 
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('ChatModel', () => {

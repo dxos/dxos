@@ -52,7 +52,7 @@ export type WatchDogParams = {
 };
 
 export class WatchDog {
-  private _lock?: FileHandle;
+  private _lock?: FileHandle; // TODO(burdon): Not used?
   private _child?: ChildProcessWithoutNullStreams;
   private _restarts = 0;
 

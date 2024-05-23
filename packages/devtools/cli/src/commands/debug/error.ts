@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { FriendlyError } from '../../errors';
 
 export default class Error extends BaseCommand<typeof Error> {

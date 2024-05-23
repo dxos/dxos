@@ -6,13 +6,13 @@ import '@dxosTheme';
 
 import React, { useState } from 'react';
 
-import { ChainPromptType, ChainType, TextV0Type } from '@braneframe/types';
+import { ChainPromptType, ChainType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
 
-const source = [
+const template = [
   '# Comment',
   '',
   'You are a machine that is an expert chess player.',
@@ -25,19 +25,16 @@ const source = [
 ].join('\n');
 
 const Story = () => {
-  // TODO(burdon): How to test reactivity?
   const [chain] = useState(
     create(ChainType, {
-      prompts: [
-        create(ChainPromptType, { command: 'test', source: create(TextV0Type, { content: source }), inputs: [] }),
-      ],
+      prompts: [create(ChainPromptType, { command: 'test', template, inputs: [] })],
     }),
   );
 
   return (
     <div className='flex justify-center'>
       <div className='flex w-full max-w-[800px] overflow-hidden overflow-y-scroll py-4'>
-        <PromptTemplate prompt={chain.prompts[0]!} />
+        <PromptTemplate prompt={chain.prompts![0]!} />
       </div>
     </div>
   );

@@ -549,6 +549,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/cli-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/devtools/package.json",
           "jsonpath": "$.version"
         },
