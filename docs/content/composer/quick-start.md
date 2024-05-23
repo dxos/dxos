@@ -1,35 +1,17 @@
 ---
 order: 1
+headerDepth: 0
 ---
 
 # Quick Start
-
-Composer can be used in the browser or installed on your computer.
-
-<div class="quick-start-tiles">
-  <div class="tile">
-    <HopeIcon icon="browser large" />
-    <h3>Browser</h3>
-    <p>Your data will be contained within the current browser profile.</p>
-    <p>You may save or load your data to and from local disk at any time.</p>
-    <p>Composer can be used offline once it loads at least once.</p>
-    <a href="https://composer.dxos.org" class="button" target="_blank">Start Composer</a>
-  </div>
-  <div class="tile">
-    <HopeIcon icon="download large" />
-    <h3>Install</h3>
-    <p>Your data will be stored on disk by default.</p>
-    <p>Enjoy global system shortcuts to bring up composer instantly.</p>
-    <p><em>Coming soon</em></p>
-    <a class="button disabled">Install Composer</a>
-  </div>
-</div>
 
 ::: warning Technology Preview
 Composer is not yet ready for production. There are bugs, and breaking changes may occur. Migration guides will be provided for version updates in the [release notes](https://github.com/dxos/dxos/releases).
 
 All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
+
+<a href="https://composer.space" class="button" target="_blank">Open Composer</a>
 
 ## Creating
 
@@ -39,7 +21,7 @@ The contents of your personal space will be visible only to you.
 
 ## Sharing
 
-Composer is organized into [spaces](spaces.md) for grouping and sharing content.
+Composer is organized into [spaces](./user-guide/spaces.md) for grouping and sharing content.
 
 Click the <HopeIcon icon="plus" /> next to <span class="composer-pink">`Shared Spaces`</span> in the sidebar to create a new space.
 
@@ -67,7 +49,7 @@ While it's possible to sync data between devices this way, it's also possible th
 
 The solution requires that at least one device is always available on the network for every space.
 
-The DXOS [`Agent`](/docs/composer/agent/overview) is a component anyone can run on their computer to ensure that their spaces are always available to other devices, even when they are offline.
+The DXOS [`Agent`](../guide/tooling/cli/agent.md) is a component anyone can run on their computer to ensure that their spaces are always available to other devices, even when they are offline.
 
 The DXOS Agent is also available in a [hosted version]() which offers better uptime and backup features.
 
