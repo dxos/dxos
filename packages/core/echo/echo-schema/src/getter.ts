@@ -54,10 +54,20 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
 };
 
 // TODO(burdon): Replace most uses with getTypename (and rename itemId property).
-export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
+export const getType = <T extends {}>(obj: T): Reference | undefined => {
+  if (obj == null) {
+    return undefined;
+  }
 
-export const getTypename = <T extends {}>(obj: T | undefined): string | undefined =>
-  getTypeReference(getSchema(obj))?.itemId;
+  if (isReactiveObject(obj)) {
+    const proxyHandlerSlot = getProxyHandlerSlot(obj);
+    return proxyHandlerSlot.handler?.getTypeReference(obj);
+  }
+
+  return undefined;
+};
+
+export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.itemId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
