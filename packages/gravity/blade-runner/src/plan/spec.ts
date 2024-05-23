@@ -2,9 +2,26 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type SchedulerEnv } from './interface';
+import { type RpcHandle, type ReplicantEnv, type SchedulerEnv } from '../env';
 
 export const AGENT_LOG_FILE = 'agent.log';
+
+/**
+ * Replicant class.
+ */
+export type ReplicantClass<T> = { new (replicantEnv: ReplicantEnv): T };
+
+/**
+ * RPC handle to a replicant that is running in a separate process or browser.
+ */
+export interface ReplicantBrain<T> {
+  /**
+   * Field that holds the RPC handle to the replicant.
+   */
+  brain: RpcHandle<T>;
+  params: ReplicantParams;
+  kill(signal?: NodeJS.Signals | number): void;
+}
 
 export type GlobalOptions = {
   repeatAnalysis?: string;

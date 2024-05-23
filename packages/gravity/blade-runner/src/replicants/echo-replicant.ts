@@ -3,8 +3,9 @@
 //
 
 import { Trigger } from '@dxos/async';
+import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { type EchoDatabaseImpl, Filter, type QueryResult } from '@dxos/echo-db';
+import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { create, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -12,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../plan';
+import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
   content: S.string,
@@ -33,7 +34,7 @@ export class EchoReplicant {
     this._db = rootUrl
       ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
       : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
-    this._db.graph.runtimeSchemaRegistry.register(Text);
+    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
 
     log.trace('dxos.echo-replicant.open', { spaceKey });
     return {
@@ -49,10 +50,12 @@ export class EchoReplicant {
 
   async createDocuments({
     amount,
+    size,
     insertions,
     mutationsSize,
   }: {
     amount: number;
+    size: number;
     insertions: number;
     mutationsSize: number;
   }) {
@@ -62,12 +65,16 @@ export class EchoReplicant {
     for (let i = 0; i < amount; i++) {
       const doc = create(Text, { content: '' }) satisfies ReactiveObject<Text>;
       this._db!.add(doc);
+      const accessor = createDocAccessor(doc, ['content']);
       for (let i = 0; i < insertions; i++) {
-        const content = doc.content.toString() + randomText(mutationsSize);
-        doc.content = content;
+        const length = doc.content?.length;
+        accessor.handle.change((doc) => {
+          A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
+        });
       }
+
       if (i % 100 === 0) {
-        log.trace('dxos.echo-replicant.create.iteration', { i });
+        log.info('create iteration', { i });
       }
     }
 
@@ -78,6 +85,7 @@ export class EchoReplicant {
       log.trace('dxos.echo-replicant.flush', {
         duration: performance.measure('flush', 'flush:begin', 'flush:end').duration,
       });
+      log.info('flush done.', { duration: performance.measure('flush', 'flush:begin', 'flush:end').duration });
     }
 
     performance.mark('create:end');
