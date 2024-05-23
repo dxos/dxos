@@ -26,8 +26,8 @@ describe('complex schema validations', () => {
   test('meta', () => {
     const source = 'test';
     const schema = S.struct({ field: S.number });
-    const object = create(schema, { field: 42 }, { keys: [foreignKey(source)] });
-    expect(getMeta(object).keys).to.deep.eq([foreignKey(source)]);
+    const object = create(schema, { field: 42 }, { keys: [foreignKey(source, '123')] });
+    expect(getMeta(object).keys).to.deep.eq([foreignKey(source, '123')]);
   });
 
   test('object', () => {

@@ -77,13 +77,12 @@ describe('Database', () => {
 
     const obj = create(Expando, {});
     expectObjects(getMeta(obj).keys, []);
-    getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
-    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
+    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
     await db.flush();
-
-    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
   });
 
   test('creating objects', async () => {
@@ -110,7 +109,7 @@ describe('Database', () => {
 
     {
       const container = create(Container, { records: [{ type: RecordType.WORK }] });
-      await database.add(container);
+      database.add(container);
     }
 
     {
@@ -301,7 +300,7 @@ describe('Database', () => {
   });
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.register(Task, Contact, Container, Todo);
+    graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
     return { db, graph };
   };
 

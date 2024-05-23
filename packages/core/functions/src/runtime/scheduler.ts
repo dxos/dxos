@@ -9,8 +9,8 @@ import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
+import { type FunctionRegistry } from '../function';
 import { type FunctionEventMeta } from '../handler';
-import { type FunctionRegistry } from '../registry';
 import { type TriggerRegistry } from '../trigger';
 import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 

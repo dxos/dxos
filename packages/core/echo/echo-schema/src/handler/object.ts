@@ -8,12 +8,11 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
-import { type ExcludeId, ObjectMetaSchema, type ObjectMetaType } from './types';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { getEchoObjectAnnotation } from '../annotations';
 import { Expando } from '../expando';
 import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
-import { type ObjectMeta, type ReactiveObject } from '../types';
+import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 import { defineHiddenProperty } from '../utils';
 
 /**
@@ -80,8 +79,9 @@ const _initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
 
 /**
  * Get metadata from object.
+ * @internal
  */
-export const getTargetMeta = (object: any): ObjectMetaType => {
+export const getTargetMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
   invariant(metadata, 'Metadata not found.');
   return metadata;

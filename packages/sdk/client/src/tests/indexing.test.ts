@@ -24,7 +24,7 @@ describe('Index queries', () => {
     const client = new Client({ services });
     await client.initialize();
     for (const schema of [ContactType, DocumentType, TextV0Type]) {
-      client.experimental.graph.runtimeSchemaRegistry.register(schema);
+      client.experimental.graph.runtimeSchemaRegistry.registerSchema(schema);
     }
     return client;
   };

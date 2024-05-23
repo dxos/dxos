@@ -4,9 +4,8 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
+import { create, Filter, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { ECHO_ATTR_META, type ForeignKey, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,7 +13,6 @@ import { ComplexMap } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
-import { diff, intersection } from '../util';
 
 type ResponseCode = number;
 
@@ -22,7 +20,7 @@ export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
 export type TriggerContext = { space: Space };
 
-// TODO(burdon): Change to object.
+// TODO(burdon): Make object?
 export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   ctx: Context,
   context: TriggerContext,
@@ -99,33 +97,17 @@ export class TriggerRegistry extends Resource {
       return;
     }
     if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
-      space.db.graph.runtimeSchemaRegistry.register(FunctionTrigger);
+      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
-    const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-    const { added, removed } = diff(existing, manifest.triggers, (a, b) => {
-      // Create FK to enable syncing if none are set.
-      // TODO(burdon): Warn if not unique.
-      const keys = b[ECHO_ATTR_META]?.keys ?? [
-        {
-          source: 'manifest',
-          id: [b.function, b.spec.type].join('-'),
-        } satisfies ForeignKey,
-      ];
-
-      return intersection(getMeta(a)?.keys ?? [], keys, foreignKeyEquals).length > 0;
-    });
-
-    added.forEach((trigger) => {
-      const { meta, object } = splitMeta(trigger);
-      space.db.add(create(FunctionTrigger, object, meta));
-    });
-    // TODO(burdon): Update existing triggers.
-    removed.forEach((trigger) => space.db.remove(trigger));
+    const reactiveObjects = manifest.triggers.map((template: Omit<FunctionTrigger, 'id'>) =>
+      create(FunctionTrigger, { ...template }),
+    );
+    reactiveObjects.forEach((obj) => space.db.add(obj));
   }
 
   protected override async _open(): Promise<void> {
-    const spacesSubscription = this._client.spaces.subscribe(async (spaces) => {
+    const spaceListSubscription = this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         if (this._triggersBySpaceKey.has(space.key)) {
           continue;
@@ -137,18 +119,16 @@ export class TriggerRegistry extends Resource {
         if (this._ctx.disposed) {
           break;
         }
+        const functionsSubscription = space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
+          await this._handleRemovedTriggers(space, triggers.objects, registered);
+          this._handleNewTriggers(space, triggers.objects, registered);
+        });
 
-        // Subscribe to updates.
-        this._ctx.onDispose(
-          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
-            await this._handleRemovedTriggers(space, triggers.objects, registered);
-            this._handleNewTriggers(space, triggers.objects, registered);
-          }),
-        );
+        this._ctx.onDispose(functionsSubscription);
       }
     });
 
-    this._ctx.onDispose(() => spacesSubscription.unsubscribe());
+    this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
   }
 
   protected override async _close(_: Context): Promise<void> {

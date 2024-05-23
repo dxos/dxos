@@ -11,7 +11,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { describe, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
-import { FunctionRegistry } from '../registry';
+import { FunctionRegistry } from '../function';
 import { createFunctionRuntime } from '../testing';
 import { type FunctionManifest } from '../types';
 

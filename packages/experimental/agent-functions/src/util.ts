@@ -90,7 +90,7 @@ export const registerTypes = (space: Space | undefined) => {
 
   for (const type of schemaList) {
     if (!registry.hasSchema(type)) {
-      registry.register(type);
+      registry.registerSchema(type);
     }
   }
 };
