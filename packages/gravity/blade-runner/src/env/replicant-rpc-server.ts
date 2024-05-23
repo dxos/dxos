@@ -5,7 +5,7 @@
 import { Resource } from '@dxos/context';
 import { RpcPeer, type RpcPort } from '@dxos/rpc';
 
-import { rpcCodec } from './util';
+import { rpcCodec } from '../redis';
 
 export type ReplicantRpcServerParams = {
   /**

@@ -9,10 +9,10 @@ import { asyncTimeout } from '@dxos/async';
 import { PublicKey } from '@dxos/keys';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { ReplicantEnvImpl } from './replicant-env';
 import { WebSocketConnector } from './websocket-connector';
 import { WebSocketRedisProxy } from './websocket-redis-proxy';
-import { type ReplicantParams } from '../spec';
+import { ReplicantEnvImpl } from '../env';
+import { type ReplicantParams } from '../plan';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.
@@ -62,11 +62,10 @@ describe.skip('AgentEnv with WebSocketConnector', () => {
     const envs = agents.map(
       () =>
         new ReplicantEnvImpl(
-          {},
           {
             agents,
             testId,
-          } as unknown as ReplicantParams<any>,
+          } as unknown as ReplicantParams,
           { Connector: WebSocketConnector, address: 'ws://localhost:8080' } as RedisOptions,
         ),
     );
