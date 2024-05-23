@@ -21,7 +21,7 @@ import {
   TriggerRegistry,
 } from '@dxos/functions';
 
-import { BaseCommand } from '../../base';
+import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
@@ -36,11 +36,11 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
   static override flags = {
     ...BaseCommand.flags,
+    ...FLAG_SPACE_KEYS,
     require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
     manifest: Flags.string({ description: 'Functions manifest file.' }),
     baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
     reload: Flags.boolean({ description: 'Reload functions on change.' }),
-    space: Flags.string({ description: 'Space key.' }),
   };
 
   async run(): Promise<any> {
@@ -85,14 +85,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
         };
 
         client.addSchema(FunctionTrigger);
-        if (this.flags.space) {
-          const space = await this.getSpace(client, this.flags.space);
+        // TODO(burdon): Option to subscribe for new spaces.
+        for (const space of await this.getSpaces(client, { spaceKeys: this.flags.key, wait: true })) {
           await update(space);
-        } else {
-          // TODO(burdon): Option to subscribe for new spaces.
-          for (const space of await this.getSpaces(client, true)) {
-            await update(space);
-          }
         }
       }
 

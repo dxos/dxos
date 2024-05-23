@@ -24,12 +24,14 @@
   ],
   "scripts": {
     "bin": "./bin/dx",
+    "manifest": "oclif manifest",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -84,7 +86,6 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/cli-composer": "workspace:*",
     "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",

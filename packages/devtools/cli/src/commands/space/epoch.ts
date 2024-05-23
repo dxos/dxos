@@ -4,12 +4,12 @@
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 export default class Epoch extends BaseCommand<typeof Epoch> {
   static override enableJsonFlag = true;
   static override description = 'Create new epoch.';
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
     const { key } = this.args;

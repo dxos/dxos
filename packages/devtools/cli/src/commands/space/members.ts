@@ -6,13 +6,13 @@ import { ux } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 import { mapMembers, printMembers } from '../../util';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
   static override description = 'List space members.';
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
     ...ux.table.flags(),

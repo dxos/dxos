@@ -11,12 +11,12 @@ import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
     multiple: Flags.boolean({

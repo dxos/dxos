@@ -37,7 +37,7 @@ import {
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { ClientInitializationError, FriendlyError, PublisherConnectionError } from './errors';
-import { PublisherRpcPeer, selectSpace, SupervisorRpcPeer, TunnelRpcPeer, waitForSpace } from './util';
+import { matchKeys, PublisherRpcPeer, selectSpace, SupervisorRpcPeer, TunnelRpcPeer, waitForSpace } from './util';
 
 const STDIN_TIMEOUT = 100;
 
@@ -64,7 +64,12 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 // Common flags.
 //
 
-export const SPACE_KEY = { key: Args.string({ description: 'Space key head in hex.' }) };
+/**
+ * @deprecated Change to flag.
+ */
+export const ARG_SPACE_KEYS = { key: Args.string({ description: 'Space key(s) head in hex.' }) };
+// TODO(burdon): Change to --space?
+export const FLAG_SPACE_KEYS = { key: Flags.string({ multiple: true, description: 'Space key(s) head in hex.' }) };
 
 /**
  * Custom base command.
@@ -460,8 +465,11 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get spaces and optionally wait until ready.
    */
-  async getSpaces(client: Client, wait = true): Promise<Space[]> {
-    const spaces = client.spaces.get();
+  async getSpaces(
+    client: Client,
+    { spaceKeys, wait = true }: { spaceKeys?: string[]; wait?: boolean } = {},
+  ): Promise<Space[]> {
+    const spaces = client.spaces.get().filter((space) => !spaceKeys?.length || matchKeys(space.key, spaceKeys));
     if (wait && !this.flags['no-wait']) {
       await Promise.all(
         spaces.map(async (space) => {
@@ -479,7 +487,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
-    const spaces = await this.getSpaces(client, wait);
+    const spaces = await this.getSpaces(client, { wait });
     if (!key) {
       key = await selectSpace(spaces);
     }
@@ -497,14 +505,42 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   /**
+   * Execute callback with the given space(s).
+   */
+  // TODO(burdon): Convert most commands to work with this.
+  async execWithSpace<T>(
+    callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
+    options: { spaceKeys?: string[]; all?: boolean } = {},
+  ): Promise<T[] | undefined> {
+    const client = await this.getClient();
+
+    const spaces =
+      options.spaceKeys?.length || options.all
+        ? await this.getSpaces(client, { spaceKeys: options.spaceKeys })
+        : [await this.getSpace(client)];
+
+    const values: T[] = [];
+    for (const space of spaces) {
+      this.log(`Space: ${space.key.truncate()}`);
+      const value = await callback({ client, space });
+      if (value) {
+        values.push(value);
+      }
+    }
+
+    await client.destroy();
+    return values;
+  }
+
+  /**
    * Convenience function to wrap command passing in client object.
    */
   async execWithClient<T>(
     callback: (client: Client) => Promise<T | undefined>,
-    checkHalo = false,
+    options: { halo?: boolean } = {},
   ): Promise<T | undefined> {
     const client = await this.getClient();
-    if (checkHalo && !client.halo.identity.get()) {
+    if (options.halo && !client.halo.identity.get()) {
       this.warn('HALO not initialized; run `dx halo create --help`');
       process.exit(1);
     }

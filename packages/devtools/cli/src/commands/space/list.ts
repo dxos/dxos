@@ -30,7 +30,7 @@ export default class List extends BaseCommand<typeof List> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      const spaces = await this.getSpaces(client, true);
+      const spaces = await this.getSpaces(client, { wait: true });
       if (this.flags.json) {
         return mapSpaces(spaces);
       } else {
