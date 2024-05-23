@@ -34,7 +34,7 @@
       },
       "function": "dxos.org/function/gpt",
       "meta": {
-        "prompt": "faq"
+        "prompt": "rag"
       },
       "spec": {
         "type": "subscription",

@@ -32,7 +32,7 @@ export class FunctionRegistry extends Resource {
   }
 
   /**
-   * The method loads function definitions from the manifest into the space.
+   * Loads function definitions from the manifest into the space.
    * We first load all the definitions from the space to deduplicate by functionId.
    */
   public async register(space: Space, functions: FunctionManifest['functions']): Promise<void> {
@@ -44,6 +44,7 @@ export class FunctionRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
     }
 
+    // Sync definitions.
     const { objects: existing } = await space.db.query(Filter.schema(FunctionDef)).run();
     const { added, removed } = diff(existing, functions, (a, b) => a.uri === b.uri);
     added.forEach((def) => space.db.add(create(FunctionDef, def)));
