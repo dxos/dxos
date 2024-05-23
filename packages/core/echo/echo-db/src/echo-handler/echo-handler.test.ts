@@ -16,6 +16,7 @@ import {
   foreignKey,
   getMeta,
   getSchema,
+  getType,
   getTypeReference,
   isDeleted,
   ref,
@@ -460,6 +461,14 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
       getMeta(obj).keys.push(foreignKey('example.com', '456'));
       expect(getMeta(obj).keys.length).to.eq(2);
+    });
+
+    test('can get type reference of unregistered schema', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(create({ field: 1 }));
+      const typeReference = getTypeReference(TestSchema)!;
+      getAutomergeObjectCore(obj).setType(typeReference);
+      expect(getType(obj)).to.deep.eq(typeReference);
     });
 
     test('meta persistence', async () => {
