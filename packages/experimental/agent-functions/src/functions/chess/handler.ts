@@ -4,9 +4,9 @@
 
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { registerTypes } from '../../util';
 
 import { Engine } from './engine';
+import { registerTypes } from '../../util';
 
 export const handler = subscriptionHandler<{ level?: number }>(async ({ event }) => {
   const {
@@ -27,8 +27,9 @@ export const handler = subscriptionHandler<{ level?: number }>(async ({ event })
         engine.move();
         game.pgn = engine.state.pgn();
 
+        const title = `Move ${engine.state.moveNumber()}`;
         // eslint-disable-next-line no-console
-        console.log(`History: ${engine.state.pgn().length}\n` + engine.state.ascii());
+        console.log(`\n${title.padStart(15 + title.length / 2)}\n` + engine.state.ascii() + '\n');
       }
     }
   }
