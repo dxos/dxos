@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { ReplicantRegistry } from '../plan';
+import { ReplicantRegistry } from '../env';
 
 export class DumbReplicant {
   constructor() {
