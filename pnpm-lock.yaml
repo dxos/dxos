@@ -6494,6 +6494,9 @@ importers:
 
   packages/devtools/cli:
     dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/agent':
         specifier: workspace:*
         version: link:../../core/agent
@@ -6651,9 +6654,6 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/cli-composer':
         specifier: workspace:*
         version: link:../cli-composer
