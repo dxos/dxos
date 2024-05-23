@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "cli-composer",
+  "tags": [
+    "scope:devtools"
+  ],
+  "sourceRoot": "packages/devtools/cli-composer/src",
+  "projectType": "application",
+  "targets": {
+    "bin": {
+      "dependsOn": [
+        "build"
+      ],
+      "executor": "nx:run-script",
+      "options": {
+        "script": "bin"
+      }
+    },
+    "build": {
+      "options": {
+        "main": "packages/devtools/cli-composer/src/index.ts",
+        "outputPath": "packages/devtools/cli-composer/dist",
+        "transformers": [
+          "@dxos/log-hook/transformer"
+        ],
+        "tsConfig": "packages/devtools/cli-composer/tsconfig.json"
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
+}

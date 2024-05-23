@@ -7,7 +7,7 @@ import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
-import { type ReactiveObject, S, TypedObject, create } from '@dxos/echo-schema';
+import { create, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

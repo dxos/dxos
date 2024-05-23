@@ -4,12 +4,13 @@
 
 import path from 'node:path';
 
+import { Mutex } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
+import { type FunctionRegistry } from '../function';
 import { type FunctionEventMeta } from '../handler';
-import { type FunctionRegistry } from '../registry';
 import { type TriggerRegistry } from '../trigger';
 import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
@@ -26,13 +27,15 @@ export type SchedulerOptions = {
 export class Scheduler {
   private _ctx = createContext();
 
+  private readonly _callMutex = new Mutex();
+
   constructor(
     public readonly functions: FunctionRegistry,
     public readonly triggers: TriggerRegistry,
     private readonly _options: SchedulerOptions = {},
   ) {
-    this.functions.onFunctionsRegistered.on(async ({ space, newFunctions }) => {
-      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), newFunctions);
+    this.functions.registered.on(async ({ space, added }) => {
+      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), added);
     });
     this.triggers.registered.on(async ({ space, triggers }) => {
       await this._safeActivateTriggers(space, triggers, this.functions.getFunctions(space));
@@ -52,8 +55,9 @@ export class Scheduler {
     await this.triggers.close();
   }
 
+  // TODO(burdon): Remove and update registries directly.
   public async register(space: Space, manifest: FunctionManifest) {
-    await this.functions.register(space, manifest);
+    await this.functions.register(space, manifest.functions);
     await this.triggers.register(space, manifest);
   }
 
@@ -76,16 +80,20 @@ export class Scheduler {
     }
 
     await this.triggers.activate({ space }, fnTrigger, async (args) => {
-      return this._execFunction(definition, {
-        meta: fnTrigger.meta,
-        data: { ...args, spaceKey: space.key },
+      return this._callMutex.executeSynchronized(() => {
+        return this._execFunction(definition, fnTrigger, {
+          meta: fnTrigger.meta,
+          data: { ...args, spaceKey: space.key },
+        });
       });
     });
+
     log('activated trigger', { space: space.key, trigger: fnTrigger });
   }
 
   private async _execFunction<TData, TMeta>(
     def: FunctionDef,
+    trigger: FunctionTrigger,
     { data, meta }: { data: TData; meta?: TMeta },
   ): Promise<number> {
     let status = 0;
@@ -97,7 +105,7 @@ export class Scheduler {
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
         const url = path.join(endpoint, def.route);
-        log.info('exec', { function: def.uri, url });
+        log.info('exec', { function: def.uri, url, triggerType: trigger.spec.type });
         const response = await fetch(url, {
           method: 'POST',
           headers: {

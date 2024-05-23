@@ -4,8 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, type Space } from '@dxos/client/echo';
+import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
+import { ECHO_ATTR_META, foreignKey, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -13,6 +14,7 @@ import { ComplexMap } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
+import { diff, intersection } from '../util';
 
 type ResponseCode = number;
 
@@ -100,10 +102,21 @@ export class TriggerRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
-    const reactiveObjects = manifest.triggers.map((template: Omit<FunctionTrigger, 'id'>) =>
-      create(FunctionTrigger, { ...template }),
-    );
-    reactiveObjects.forEach((obj) => space.db.add(obj));
+    // Sync triggers.
+    const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
+    const { added, removed } = diff(existing, manifest.triggers, (a, b) => {
+      // Create FK to enable syncing if none are set.
+      // TODO(burdon): Warn if not unique.
+      const keys = b[ECHO_ATTR_META]?.keys ?? [foreignKey('manifest', [b.function, b.spec.type].join('-'))];
+      return intersection(getMeta(a)?.keys ?? [], keys, foreignKeyEquals).length > 0;
+    });
+
+    added.forEach((trigger) => {
+      const { meta, object } = splitMeta(trigger);
+      space.db.add(create(FunctionTrigger, object, meta));
+    });
+    // TODO(burdon): Update existing triggers.
+    removed.forEach((trigger) => space.db.remove(trigger));
   }
 
   protected override async _open(): Promise<void> {

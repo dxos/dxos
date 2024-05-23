@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import { Config } from '@dxos/config';
 import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): List stats.
 export const printFunctions = (functions: FunctionDef[], flags = {}) => {

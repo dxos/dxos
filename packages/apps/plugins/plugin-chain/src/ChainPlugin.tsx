@@ -8,8 +8,8 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ChainInput, ChainPromptType, ChainType } from '@braneframe/types';
-import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
+import { ChainPromptType, ChainType } from '@braneframe/types';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
@@ -33,7 +33,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [ChainType, ChainInput, ChainPromptType],
+        schema: [ChainType, ChainPromptType],
       },
       graph: {
         builder: (plugins, graph) => {

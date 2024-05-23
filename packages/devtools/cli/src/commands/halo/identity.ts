@@ -6,7 +6,7 @@ import chalk from 'chalk';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Identity extends BaseCommand<typeof Identity> {
   static override enableJsonFlag = true;

@@ -9,7 +9,7 @@ import { asyncTimeout } from '@dxos/async';
 import { type Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './types';
+import { maybeTruncateKey } from './keys';
 import { SpaceTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
 

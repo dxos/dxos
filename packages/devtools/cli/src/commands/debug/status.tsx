@@ -8,7 +8,7 @@ import React from 'react';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { App } from '../../components';
 
 // TODO(burdon): Experimental (make JIT to remove react dependency).

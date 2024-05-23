@@ -139,9 +139,9 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               return data.object instanceof SketchType ? (
                 <SketchComponent
                   sketch={data.object}
+                  autoZoom={role === 'section'}
                   readonly={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'bs-96'}
-                  autoZoom
                 />
               ) : null;
             default:

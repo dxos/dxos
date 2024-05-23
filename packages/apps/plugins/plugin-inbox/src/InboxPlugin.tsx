@@ -8,13 +8,13 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { MailboxType, AddressBookType, CalendarType } from '@braneframe/types';
-import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { AddressBookType, CalendarType, MailboxType } from '@braneframe/types';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain, MailboxMain, MailboxArticle } from './components';
+import { ContactsMain, EventsMain, MailboxArticle, MailboxMain } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { InboxAction, type InboxPluginProvides } from './types';
@@ -104,6 +104,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
               .filter((space) => !!enabled.find((key) => key.equals(space.key)))
               .forEach((space) => {
                 // Add all documents to the graph.
+                // TODO(burdon): Factor out common action.
                 const mailboxQuery = space.db.query(Filter.schema(MailboxType));
                 const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
                 const calendarQuery = space.db.query(Filter.schema(CalendarType));
@@ -130,13 +131,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                     previousCalendars = calendarQuery.objects;
 
                     batch(() => {
-                      removedMailboxes.forEach((object) => graph.removeNode(object.id));
-                      removedAddressBooks.forEach((object) => graph.removeNode(object.id));
-                      removedCalendars.forEach((object) => graph.removeNode(object.id));
+                      removedMailboxes.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      removedAddressBooks.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      removedCalendars.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
 
                       mailboxQuery.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
@@ -150,7 +151,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                       });
                       addressBookQuery.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
@@ -164,7 +165,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                       });
                       calendarQuery.objects.forEach((object) => {
                         graph.addNodes({
-                          id: object.id,
+                          id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.

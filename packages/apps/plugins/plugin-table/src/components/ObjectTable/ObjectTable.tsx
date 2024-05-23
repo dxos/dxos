@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC, useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
-import { type DynamicEchoSchema, S, create, TypedObject } from '@dxos/echo-schema';
+import { create, type DynamicEchoSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
-import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
 import { arrayMove } from '@dxos/util';
 
@@ -17,7 +17,7 @@ import { getSchema } from '../../schema';
 import { TableSettings } from '../TableSettings';
 
 const makeStarterTableSchema = () => {
-  return TypedObject({ typename: `example.com/schema/${PublicKey.random().truncate()}`, version: '0.1.0' })({
+  return TypedObject({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' })({
     title: S.optional(S.string),
   });
 };
