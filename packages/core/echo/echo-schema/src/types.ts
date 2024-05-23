@@ -58,7 +58,7 @@ export type Ref<T> = T | undefined;
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
-// TODO: rename to just EchoObject?
+// TODO(burdon): Rename to just EchoObject?
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });

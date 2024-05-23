@@ -26,7 +26,7 @@ Options:
   - proto3_optional = true
 
 ### [delegationCredentialId]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Present on Type.DELEGATED invitations.
 
@@ -42,7 +42,7 @@ Options:
   - proto3_optional = true
 
 ### [identityKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Guest's identity.
 
@@ -90,7 +90,7 @@ Options:
   - proto3_optional = true
 
 ### [spaceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Space to join (only present if kind is SPACE).
 
@@ -103,7 +103,7 @@ Type: <code>[State](/api/@dxos/client/enums#State)</code>
 Local state.
 
 ### [swarmKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Swarm rendezvous (random).
 
