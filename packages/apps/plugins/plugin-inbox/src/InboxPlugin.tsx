@@ -103,7 +103,6 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
               .get()
               .filter((space) => !!enabled.find((key) => key.equals(space.key)))
               .forEach((space) => {
-                console.log('###', space.key.toHex());
                 // Add all documents to the graph.
                 // TODO(burdon): Factor out common action.
                 const mailboxQuery = space.db.query(Filter.schema(MailboxType));

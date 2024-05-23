@@ -5,7 +5,7 @@
 import { ux } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
-import { getSchema, getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 
 import { BaseCommand, SPACE_KEY } from '../../base';
 
@@ -36,13 +36,7 @@ const printObjects = (objects: any[]) => {
     },
     type: {
       header: 'type',
-      // TODO(burdon): Mostly undefined.
       get: (row) => getTypename(row),
-    },
-    schema: {
-      header: 'schema',
-      // TODO(burdon): Mostly undefined.
-      get: (row) => getSchema(row),
     },
   });
 };
