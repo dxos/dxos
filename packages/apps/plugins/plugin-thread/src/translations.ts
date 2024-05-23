@@ -22,6 +22,9 @@ export default [
         'thread deleted label': 'You deleted a thread.',
         'comments heading': 'Comments',
         'chat heading': 'Chat',
+        'no comments title': 'No comments (yet)',
+        'no comments message':
+          'To start a comment thread, select a range of text in a document and click the <commentIcon></commentIcon> Create comment button in the toolbar.',
       },
     },
   },

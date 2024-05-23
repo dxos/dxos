@@ -172,6 +172,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                                 getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
                               );
                             },
+                            managesAutofocus: true,
                             icon: (props: IconProps) => <TextAa {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',

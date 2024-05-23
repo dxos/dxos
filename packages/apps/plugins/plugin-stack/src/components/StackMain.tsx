@@ -17,7 +17,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery, Filter } from '@dxos/react-client/echo';
+import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, ButtonGroup } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -45,7 +45,12 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     .filter(({ object }) => object)
     .map(({ id, object }) => {
       const rest = metadataPlugin?.provides.metadata.resolver(getType(object!)?.itemId ?? 'never');
-      return { id, object: object as SectionType, ...rest };
+      return {
+        id,
+        object: object!,
+        attendableId: fullyQualifiedId(object!),
+        ...rest,
+      };
     });
   const space = getSpace(stack);
   const [folder] = useQuery(space, Filter.schema(FolderType));
