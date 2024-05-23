@@ -104,7 +104,6 @@ export class TriggerRegistry extends Resource {
 
     const { objects: registered } = await space.db.query(Filter.schema(FunctionTrigger)).run();
     const { added } = diff(registered, manifest.triggers, (a, b) => {
-      // TODO(burdon): Factor out.
       return intersection(getMeta(a)?.keys ?? [], b[ECHO_ATTR_META]?.keys ?? [], foreignKeyEquals).length > 0;
     });
 
