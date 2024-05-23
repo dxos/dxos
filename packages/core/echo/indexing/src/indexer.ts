@@ -155,6 +155,7 @@ export class Indexer extends Resource {
     return arraysOfIds.reduce((acc, ids) => acc.concat(ids), []);
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   async reindex(idToHeads: IdToHeads) {
     const batch = this._db.batch();
     this._metadataStore.markDirty(idToHeads, batch);

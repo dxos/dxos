@@ -10,6 +10,7 @@ import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
 import { IndexConstructors } from './index-constructors';
 import { type Index } from './types';
+import { trace } from '@dxos/tracing';
 
 const CODEC_VERSION = 2;
 
@@ -28,6 +29,18 @@ export class IndexStore {
   private readonly _db: SublevelDB;
   constructor({ db }: IndexStoreParams) {
     this._db = db;
+
+    trace.diagnostic({
+      id: 'indexes',
+      name: 'Indexes',
+      fetch: async () => {
+        const indexes = await this._db.iterator<string, IndexData>(encodings).all();
+        return indexes.map(([identifier, { index, ...rest }]) => ({
+          identifier,
+          ...rest,
+        }));
+      },
+    });
   }
 
   async save(index: Index) {
