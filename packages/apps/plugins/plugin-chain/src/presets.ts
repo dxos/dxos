@@ -24,7 +24,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'say',
-        source: str(
+        template: str(
           // prettier-ignore
           'Translate the following into {language}:',
           '',
@@ -51,7 +51,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'hint',
-        source: str(
+        template: str(
           // prettier-ignore
           'You are a machine that is an expert chess player.',
           '',
@@ -63,6 +63,7 @@ export const presets = [
           {
             type: ChainInputType.CONTEXT,
             name: 'history',
+            // TODO(burdon): Get from Deck?
             value: 'object.pgn',
           },
         ],
@@ -74,7 +75,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'draw',
-        source: str(
+        template: str(
           // prettier-ignore
           'Create a simplified mermaid graph representing the text below.',
           'Do not explain anything.',
@@ -97,7 +98,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'list',
-        source: str(
+        template: str(
           // prettier-ignore
           'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
           'Your entire response should be a single array of JSON objects.',
@@ -114,7 +115,7 @@ export const presets = [
           {
             type: ChainInputType.SCHEMA,
             name: 'schema',
-            value: 'example.com/schema/project',
+            value: 'example.com/type/project',
           },
           {
             type: ChainInputType.PASS_THROUGH,
@@ -129,7 +130,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'rag',
-        source: str(
+        template: str(
           // prettier-ignore
           "Very briefly answer the question based only on the following context and say if you don't know the answer.",
           // 'answer the question using the following context as well as your training data:',
@@ -158,7 +159,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'lookup',
-        source: str(
+        template: str(
           // prettier-ignore
           'Lookup and very briefly summarize the following topic in one or two sentences:',
           '',
@@ -181,7 +182,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'extract',
-        source: str(
+        template: str(
           // prettier-ignore
           'List all people and companies mentioned in the text below.',
           '',
@@ -199,12 +200,12 @@ export const presets = [
           {
             type: ChainInputType.SCHEMA,
             name: 'contact',
-            value: 'example.com/schema/contact',
+            value: 'example.com/type/contact',
           },
           {
             type: ChainInputType.SCHEMA,
             name: 'company',
-            value: 'example.com/schema/organization',
+            value: 'example.com/type/organization',
           },
           {
             type: ChainInputType.CONTEXT,
@@ -220,7 +221,7 @@ export const presets = [
     prompt: () =>
       create(ChainPromptType, {
         command: 'summarize',
-        source: str(
+        template: str(
           // prettier-ignore
           'Summarize what the team is working on and format it as a markdown table without any explanation.',
           '',

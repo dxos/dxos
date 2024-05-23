@@ -76,6 +76,8 @@ export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', ver
   title: S.optional(S.string),
   messages: S.mutable(S.array(ref(MessageType))),
   // TODO(burdon): Reconcile with Message.Context.
+  // TODO(burdon): Partial?
+  // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
   context: S.optional(
     S.struct({
       space: S.optional(S.string),

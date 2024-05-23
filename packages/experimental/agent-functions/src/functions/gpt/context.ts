@@ -7,10 +7,11 @@ import { type Space } from '@dxos/client/echo';
 import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
 import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 
+// TODO(burdon): Evolve.
 export type RequestContext = {
+  schema?: Map<string, DynamicEchoSchema>;
   object?: EchoReactiveObject<any>;
   text?: string;
-  schema?: Map<string, DynamicEchoSchema>;
 };
 
 export const createContext = async (
@@ -19,12 +20,15 @@ export const createContext = async (
   thread: ThreadType | undefined,
 ): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
+
+  // Get context from message.
   if (message.context?.object) {
     object = await space.db.automerge.loadObjectById(message.context?.object);
   } else if (thread?.context?.object) {
     object = await space.db.automerge.loadObjectById(thread.context?.object);
   }
 
+  // Get text from comment.
   let text: string | undefined;
   if (object instanceof DocumentType) {
     await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((c) => c.thread));

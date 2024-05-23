@@ -126,4 +126,4 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'example.com/schema/project'
+#      - type: 'example.com/type/project'

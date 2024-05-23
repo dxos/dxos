@@ -14,7 +14,7 @@ export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websoc
 
 const SubscriptionTriggerSchema = S.struct({
   type: S.literal('subscription'),
-  // TODO(burdon): Define query DSL.
+  // TODO(burdon): Define query DSL (from ECHO).
   filter: S.array(
     S.struct({
       type: S.string,

@@ -34,7 +34,10 @@
       },
       "function": "dxos.org/function/gpt",
       "meta": {
-        "prompt": "translate the following message into japanese."
+        "@type": "dxos.org/type/ChainPrompt",
+        "prompt": {
+          "template": "translate the following message into japanese."
+        }
       },
       "spec": {
         "type": "subscription",

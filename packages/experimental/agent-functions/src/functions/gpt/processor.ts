@@ -33,7 +33,8 @@ import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
 
 export type SequenceOptions = {
-  prompt?: string;
+  prompt?: ChainPromptType;
+  command?: string;
   noVectorStore?: boolean;
   noTrainingData?: boolean;
 };
@@ -46,7 +47,6 @@ export type ProcessThreadArgs = {
    * In addition, `thread.context` can be used for extracting additional prompt inputs.
    */
   thread?: ThreadType;
-
   message: MessageType;
 
   /**
@@ -54,8 +54,7 @@ export type ProcessThreadArgs = {
    * `/say ...`
    * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
    */
-  // TODO(burdon): Change to object?
-  defaultPrompt?: string;
+  defaultPrompt?: ChainPromptType;
 };
 
 export class RequestProcessor {
@@ -73,16 +72,16 @@ export class RequestProcessor {
         .filter(Boolean)
         .join('\n');
 
+      // TODO(burdon): Use given prompt or interpret from /command in text.
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      const [prompt, content] = match ? match.slice(1) : [defaultPrompt, text];
-      if (prompt) {
+      const [command, content] = match ? match.slice(1) : [];
+      if (defaultPrompt || command) {
         start();
-
         const context = await createContext(space, message, thread);
 
-        log.info('processing', { prompt, content });
-        const sequence = await this.createSequence(space, context, { prompt });
+        log.info('processing', { command, content });
+        const sequence = await this.createSequence(space, context, { prompt: defaultPrompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
           const result = parseMessage(response);
@@ -119,13 +118,20 @@ export class RequestProcessor {
       options,
     });
 
-    // Find suitable prompt.
-    const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
-    const allPrompts = (await loadObjectReferences(chains, (c) => c.prompts)).flatMap((p) => p);
-    for (const prompt of allPrompts) {
-      if (prompt.command === options.prompt) {
-        return await this.createSequenceFromPrompt(space, prompt, context);
+    // Find prompt matching command.
+    if (options.command) {
+      const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
+      const allPrompts = (await loadObjectReferences(chains, (chain) => chain.prompts)).flatMap((prompt) => prompt);
+      for (const prompt of allPrompts) {
+        if (prompt.command === options.command) {
+          return await this.createSequenceFromPrompt(space, prompt, context);
+        }
       }
+    }
+
+    // Use the given prompt as a fallback.
+    if (options.prompt) {
+      return await this.createSequenceFromPrompt(space, options.prompt, context);
     }
 
     return undefined;
@@ -140,7 +146,7 @@ export class RequestProcessor {
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-    for (const input of await loadObjectReferences(prompt, (p) => p.inputs)) {
+    for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
       inputs[input.name] = await this.getTemplateInput(space, input, context);
     }
 
@@ -174,7 +180,7 @@ export class RequestProcessor {
       return input;
     };
 
-    const template = await loadObjectReferences(prompt, (p) => p.source);
+    const template = await loadObjectReferences(prompt, (p) => p.template);
     return RunnableSequence.from([
       inputs,
       PromptTemplate.fromTemplate(template),

@@ -92,7 +92,7 @@ describe('RequestProcessor', () => {
           prompts: [
             create(ChainPromptType, {
               command: 'translate',
-              source: str(
+              template: str(
                 //
                 'Translate the following into {language}:',
                 '---',
@@ -150,7 +150,7 @@ describe('RequestProcessor', () => {
           prompts: [
             create(ChainPromptType, {
               command: 'extract',
-              source: str(
+              template: str(
                 'List all people and companies mentioned in the content section below.',
                 '',
                 'You are a machine that only replies with valid, iterable RFC8259 compliant JSON in your responses.',
@@ -170,12 +170,12 @@ describe('RequestProcessor', () => {
                 {
                   type: ChainInputType.SCHEMA,
                   name: 'company',
-                  value: 'example.com/schema/organization',
+                  value: 'example.com/type/organization',
                 },
                 {
                   type: ChainInputType.SCHEMA,
                   name: 'contact',
-                  value: 'example.com/schema/contact',
+                  value: 'example.com/type/contact',
                 },
               ],
             }),

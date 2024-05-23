@@ -58,7 +58,7 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = prompt.source ?? '';
+  const text = prompt.template ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -109,11 +109,11 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 
   const { parentRef } = useTextEditor(
     () => ({
-      doc: prompt.source,
+      doc: prompt.template,
       extensions: [
         createDataExtensions({
           id: prompt.id,
-          text: prompt.source ? createDocAccessor(prompt, ['source']) : undefined,
+          text: prompt.template ? createDocAccessor(prompt, ['template']) : undefined,
         }),
         createBasicExtensions({
           bracketMatching: false,

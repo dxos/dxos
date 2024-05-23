@@ -12,7 +12,7 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { PromptTemplate } from './PromptTemplate';
 
-const source = [
+const template = [
   '# Comment',
   '',
   'You are a machine that is an expert chess player.',
@@ -27,7 +27,7 @@ const source = [
 const Story = () => {
   const [chain] = useState(
     create(ChainType, {
-      prompts: [create(ChainPromptType, { command: 'test', source, inputs: [] })],
+      prompts: [create(ChainPromptType, { command: 'test', template, inputs: [] })],
     }),
   );
 
