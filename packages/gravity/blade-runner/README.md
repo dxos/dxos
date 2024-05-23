@@ -1,7 +1,7 @@
 
 # @dxos/blade-runner
 
-KUBE Testing.
+Blade Runner.
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ KUBE Testing.
 
 ```bash
 brew install redis
-redis-server
+redis-server --port 6379
 ```
 
 ## Simple Usage
