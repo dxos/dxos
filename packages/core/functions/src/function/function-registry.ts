@@ -44,9 +44,11 @@ export class FunctionRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.register(FunctionDef);
     }
 
-    const { objects: registered } = await space.db.query(Filter.schema(FunctionDef)).run();
-    const { added } = diff(registered, functions, (a, b) => a.uri === b.uri);
-    added.forEach((template) => space.db.add(create(FunctionDef, template)));
+    const { objects: existing } = await space.db.query(Filter.schema(FunctionDef)).run();
+    const { added, removed } = diff(existing, functions, (a, b) => a.uri === b.uri);
+    added.forEach((def) => space.db.add(create(FunctionDef, def)));
+    // TODO(burdon): Update existing templates.
+    removed.forEach((def) => space.db.remove(def));
   }
 
   protected override async _open(): Promise<void> {
@@ -67,6 +69,7 @@ export class FunctionRegistry extends Resource {
         this._ctx.onDispose(
           space.db.query(Filter.schema(FunctionDef)).subscribe(({ objects }) => {
             const { added } = diff(registered, objects, (a, b) => a.uri === b.uri);
+            // TODO(burdon): Update and remove.
             if (added.length > 0) {
               registered.push(...added);
               this.registered.emit({ space, added });
