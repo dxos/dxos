@@ -6,11 +6,13 @@ import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import { type Reference } from '@dxos/echo-protocol';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
 import { getTargetMeta } from './object';
 import { SchemaValidator, symbolSchema } from '../ast';
+import { getTypeReference } from '../getter';
 import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 import { defineHiddenProperty } from '../utils';
@@ -126,6 +128,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   getSchema(target: any) {
     return target[symbolSchema];
+  }
+
+  getTypeReference(target: any): Reference | undefined {
+    return getTypeReference(target[symbolSchema]);
   }
 
   getMeta(target: any): ObjectMeta {
