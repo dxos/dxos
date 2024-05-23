@@ -51,9 +51,12 @@ export default class Import extends BaseCommand<typeof Import> {
           }
 
           if (!this.flags['dry-run']) {
+            // TODO(burdon): Merge FK.
             space.db.add(obj);
           }
         }
+
+        await space.db.flush();
       };
 
       if (!this.flags.space) {

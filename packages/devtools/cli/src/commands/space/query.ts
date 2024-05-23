@@ -2,7 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ux } from '@oclif/core';
+
 import { type Client } from '@dxos/client';
+import { getSchema, getTypename } from '@dxos/echo-schema';
 
 import { BaseCommand, SPACE_KEY } from '../../base';
 
@@ -18,20 +21,28 @@ export default class Query extends BaseCommand<typeof Query> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, this.args.key);
       const { objects } = await space.db.query().run();
-      if (this.flags.json) {
-        if (this.flags.verbose) {
-          return { objects };
-        } else {
-          return { objects: objects.length };
-        }
-      } else {
-        this.log('Objects:', objects.length);
-        if (this.flags.verbose) {
-          for (const object of objects) {
-            this.log(`- ${object.id}`);
-          }
-        }
-      }
+      this.log('Objects:', objects.length);
+      printObjects(objects);
+      return { objects };
     });
   }
 }
+
+const printObjects = (objects: any[]) => {
+  ux.table(objects, {
+    id: {
+      header: 'id',
+      get: (row) => row.id.slice(0, 8),
+    },
+    type: {
+      header: 'type',
+      // TODO(burdon): Mostly undefined.
+      get: (row) => getTypename(row),
+    },
+    schema: {
+      header: 'schema',
+      // TODO(burdon): Mostly undefined.
+      get: (row) => getSchema(row),
+    },
+  });
+};

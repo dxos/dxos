@@ -8,7 +8,7 @@ import { Reference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { getEchoObjectAnnotation } from './annotations';
-import { isReactiveObject, getProxyHandlerSlot } from './proxy';
+import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { type ObjectMeta } from './types';
 
 /**
@@ -54,10 +54,9 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
 };
 
 // TODO(burdon): Replace most uses with getTypename (and rename itemId property).
-export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => getTypeReference(getSchema(obj));
+export const getType = <T extends {}>(obj: T): Reference | undefined => getTypeReference(getSchema(obj));
 
-export const getTypename = <T extends {}>(obj: T | undefined): string | undefined =>
-  getTypeReference(getSchema(obj))?.itemId;
+export const getTypename = <T extends {}>(obj: T): string | undefined => getTypeReference(getSchema(obj))?.itemId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);

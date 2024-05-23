@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, ChartBar, Lightning, LightningSlash } from '@phosphor-icons/react';
+import { ChartBar, Circle, Lightning, LightningSlash } from '@phosphor-icons/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
 import { StatusBar } from '@braneframe/plugin-status-bar';
-import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin, firstMainId } from '@dxos/app-framework';
+import { firstMainId, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
 import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
@@ -196,7 +196,7 @@ const PerformanceIndicator = () => {
       </StatusBar.Button>
       <div
         className={mx(
-          'z-20 absolute transition-[right] bottom-[40px] w-[450px]',
+          'z-20 absolute transition-[right] bottom-[24px] w-[450px]',
           'border-l border-y border-neutral-300 dark:border-neutral-700',
           visible ? 'right-0' : 'right-[-450px]',
         )}

@@ -78,7 +78,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
 
       // Load manifest.
       if (manifest && existsSync(manifest)) {
-        this.log(`Loading manifest: ${manifest}`);
+        this.log(`Loading manifest: ${chalk.blue(manifest)}`);
         const { functions, triggers } = load(await readFile(manifest, 'utf8')) as FunctionManifest;
         const update = async (space: Space) => {
           await scheduler.register(space, { functions, triggers });
