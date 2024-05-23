@@ -10,7 +10,7 @@ export const data = Symbol.for('dxos.echo.data');
 
 export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
 
-// TODO(burdon): Use consistently.
+// TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
@@ -30,29 +30,14 @@ export const ObjectMetaSchema = S.struct({
 
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
 
-/**
- * Utility to split meta property from raw object.
- */
-export const splitMeta = <T>(object: T & { [ECHO_ATTR_META]?: ObjectMeta }): { object: T; meta?: ObjectMeta } => {
-  const meta = object[ECHO_ATTR_META];
-  delete object[ECHO_ATTR_META];
-  return { meta, object };
-};
+type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 
 /**
  * The raw object should not include the ECHO id, but may include metadata.
  */
-export const RawObject = <T>(schema: S.Schema<T>): S.Schema<ExcludeId<T> & { [ECHO_ATTR_META]?: ObjectMeta }> => {
+export const RawObject = <T>(schema: S.Schema<T>): S.Schema<ExcludeId<T> & WithMeta> => {
   return S.make(AST.omit(schema.ast, ['id']));
 };
-
-/**
- * Reactive object marker interface (does not change the shape of the object.)
- * Accessing properties triggers signal semantics.
- */
-export type ReactiveObject<T> = { [K in keyof T]: T[K] };
-
-export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 /**
  * Has `id`.
@@ -67,5 +52,22 @@ export interface Identifiable {
  */
 export type Ref<T> = T | undefined;
 
+/**
+ * Reactive object marker interface (does not change the shape of the object.)
+ * Accessing properties triggers signal semantics.
+ */
+export type ReactiveObject<T> = { [K in keyof T]: T[K] };
+
+export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
+
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+/**
+ * Utility to split meta property from raw object.
+ */
+export const splitMeta = <T>(object: T & WithMeta): { object: T; meta?: ObjectMeta } => {
+  const meta = object[ECHO_ATTR_META];
+  delete object[ECHO_ATTR_META];
+  return { meta, object };
+};
