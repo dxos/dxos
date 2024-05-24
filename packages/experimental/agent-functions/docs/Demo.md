@@ -3,6 +3,7 @@
 - TODO(burdon): Set-up custom domain with CF Access for demo (demo.composer.spaces).
 - TODO(burdon): Clear bash history and seed commands.
 - TODO(burdon): ENV for no-agent.
+- TODO(burdon): Remove need for functions plugin config.
 
 # Terminals
 
@@ -23,6 +24,7 @@ pnpm nx serve composer-app
 
 ```bash
 sudo killall node
+
 dx agent stop && dx reset --force && dx halo create "DXOS Agent" --no-agent && dx halo identity --no-agent
 dx space create --no-agent
 ```
@@ -37,7 +39,22 @@ dx agent start -f
 
 ### 3). Start Functions Dev Server
 
+NOTE: Configure profile:
+
 ```bash
+vi ~/.config/dx/profile/default.yml
+```
+```yaml
+  agent:
+    plugins:
+      - id: dxos.org/agent/plugin/dashboard
+      - id: dxos.org/agent/plugin/functions
+        config:
+          manifest: /Users/burdon/Code/dxos/dxos/packages/experimental/agent-functions/functions.yml
+```
+
+```bash
+cd ~/packages/experimental/agent-functions/functions.yml
 LOG_FILTER="info" dx function dev -r ts-node/register --verbose --reload
 ```
 

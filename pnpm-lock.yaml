@@ -6664,9 +6664,6 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@dxos/cli-composer':
-        specifier: workspace:*
-        version: link:../cli-composer
       '@oclif/test':
         specifier: ^3.2.15
         version: 3.2.15
