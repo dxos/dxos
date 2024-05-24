@@ -48,6 +48,11 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         return null;
       }
 
+      // Skip messages older than one hour.
+      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1000) {
+        return null;
+      }
+
       // Check the message wasn't already processed / sent by the AI.
       if (getMeta(message).keys.find((key) => key.source === AI_SOURCE)) {
         return null;
