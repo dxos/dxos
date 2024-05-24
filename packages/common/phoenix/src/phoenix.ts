@@ -53,6 +53,10 @@ export class Phoenix {
       }
     });
 
+    watchDog.on('error', (err) => {
+      log.error('Monitor error', { err });
+    });
+
     await waitForPidFileBeingFilledWithInfo(params.pidFile);
 
     watchDog.disconnect();
