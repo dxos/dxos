@@ -21,11 +21,10 @@ export const createContext = async (
 ): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
 
-  // Get context from message.
-  if (message.context?.object) {
-    object = await space.db.automerge.loadObjectById(message.context?.object);
-  } else if (thread?.context?.object) {
-    object = await space.db.automerge.loadObjectById(thread.context?.object);
+  const contextObjectId = message.context?.object ?? thread?.context?.object;
+  if (contextObjectId) {
+    const idParts = contextObjectId.split(':');
+    object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
   }
 
   // Get text from comment.
