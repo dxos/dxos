@@ -5,23 +5,22 @@
 import { expect } from 'chai';
 import { Redis, type RedisOptions } from 'ioredis';
 
-import { type Message, cbor, type PeerId } from '@dxos/automerge/automerge-repo';
+import { type Message, type PeerId } from '@dxos/automerge/automerge-repo';
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols';
 import { RpcPeer } from '@dxos/rpc';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
-import { REDIS_PORT, createRedisRpcPort } from './util';
+import { REDIS_PORT, createRedisReadableStream, createRedisRpcPort, createRedisWritableStream } from './util';
 
 /**
  * NOTE(mykola): This test is disabled because it requires a running Redis server.
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe.skip('Redis', () => {
+describe('Redis', () => {
   test('two redis client can exchange messages', async () => {
     const client = await setupRedisClient();
     const server = await setupRedisClient();
@@ -61,8 +60,9 @@ describe.skip('Redis', () => {
 
   test('pass web-stream through Redis', async () => {
     const { readStream: streamAlice, writeStream: streamBob } = await createLinkedReadWriteStreams();
-
     const reader = streamAlice.getReader();
+    afterTest(() => reader.releaseLock());
+    afterTest(() => reader.cancel());
     const receivedMessage = reader.read();
 
     const data = { info: 'hello', data: new Uint8Array([1, 2, 3]) };
@@ -73,10 +73,13 @@ describe.skip('Redis', () => {
   test('echo connection', async () => {
     const [aliceConnection, bobConnection] = await createLinkedTestEchoConnections();
 
-    const checkConnection = async (
-      reader: ReadableStreamDefaultReader<Message>,
-      writer: WritableStreamDefaultWriter<Message>,
-    ) => {
+    const checkConnection = async (readable: ReadableStream<Message>, writable: WritableStream<Message>) => {
+      const reader = readable.getReader();
+      const writer = writable.getWriter();
+      afterTest(() => reader.releaseLock());
+      afterTest(() => reader.cancel());
+      afterTest(() => writer.releaseLock());
+      afterTest(() => writer.abort());
       const receivedMessage = reader.read();
 
       const data = {
@@ -90,16 +93,16 @@ describe.skip('Redis', () => {
     };
 
     {
-      await checkConnection(aliceConnection.readable.getReader(), bobConnection.writable.getWriter());
+      await checkConnection(aliceConnection.readable, bobConnection.writable);
     }
     {
-      await checkConnection(bobConnection.readable.getReader(), aliceConnection.writable.getWriter());
+      await checkConnection(bobConnection.readable, aliceConnection.writable);
     }
   });
 
   test('echo replication through Redis', async () => {
-    const builder = new EchoTestBuilder();
-    await openAndClose(builder);
+    const builder = await new EchoTestBuilder().open();
+    afterTest(() => builder.close());
     const [spaceKey] = PublicKey.randomSequence();
     const dataAssertion = createDataAssertion();
 
@@ -162,43 +165,8 @@ const createLinkedReadWriteStreams = async () => {
   const queue = 'stream-queue' + PublicKey.random().toHex();
   const readClient = await setupRedisClient();
   const writeClient = await setupRedisClient();
-  let unsubscribed = false;
-  afterTest(() => {
-    unsubscribed = true;
-  });
-
-  const readStream = new ReadableStream({
-    start: (controller) => {
-      queueMicrotask(async () => {
-        try {
-          // eslint-disable-next-line no-unmodified-loop-condition
-          while (!unsubscribed) {
-            const message = await readClient.blpopBuffer(queue, 0);
-
-            if (!message) {
-              continue;
-            }
-            controller.enqueue(cbor.decode(message[1]));
-          }
-        } catch (err) {
-          if (!unsubscribed) {
-            log.catch(err);
-          }
-        }
-      });
-    },
-    cancel: () => {
-      unsubscribed = true;
-    },
-  });
-
-  const writeStream = new WritableStream({
-    start: () => {},
-    write: async (chunk) => {
-      await writeClient.rpush(queue, cbor.encode(chunk));
-    },
-  });
-
+  const readStream = createRedisReadableStream({ client: readClient, queue });
+  const writeStream = createRedisWritableStream({ client: writeClient, queue });
   return { readStream, writeStream };
 };
 
