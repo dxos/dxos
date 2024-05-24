@@ -86,15 +86,15 @@ triggers:
 #      filter:
 #      - type: 'dxos.org/type/Message'
 
-#  - function: 'dxos.org/function/embedding'
-#    spec:
-#      type: 'subscription'
-#      filter:
-#      - type: 'braneframe.Document'
-#      - type: 'braneframe.File'
-#      options:
-#        deep: true
-#        delay: 5
+  - function: 'dxos.org/function/embedding'
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'braneframe.Document'
+      - type: 'braneframe.File'
+      options:
+        deep: true
+        delay: 5
 
 #  - function: 'dxos.org/function/calendar'
 #    spec:
