@@ -10,6 +10,7 @@ import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } f
 // TODO(burdon): Evolve.
 export type RequestContext = {
   schema?: Map<string, DynamicEchoSchema>;
+  // TODO(burdon): What does this represent?
   object?: EchoReactiveObject<any>;
   text?: string;
 };
@@ -21,8 +22,10 @@ export const createContext = async (
 ): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
 
+  // TODO(burdon): ???
   const contextObjectId = message.context?.object ?? thread?.context?.object;
   if (contextObjectId) {
+    // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
     object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
   }
@@ -30,7 +33,7 @@ export const createContext = async (
   // Get text from comment.
   let text: string | undefined;
   if (object instanceof DocumentType) {
-    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((c) => c.thread));
+    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((comment) => comment.thread));
     const comment = object.comments?.find((comment) => comment.thread === thread);
     if (comment) {
       text = getReferencedText(object, comment);
