@@ -3,33 +3,40 @@
 //
 
 import '@dxosTheme';
+
 import React, { useState } from 'react';
 
+import { log } from '@dxos/log';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
+import { withTheme } from '@dxos/storybook-utils';
 import { nonNullable } from '@dxos/util';
 
-import { MessageList } from './MessageList';
+import { MessageList, type MessageListProps } from './MessageList';
 import { createInbox } from '../../testing';
 
 const Story = () => {
   const [inbox] = useState(() => createInbox(100));
+  const [selected, setSelected] = useState<string>();
 
-  const handleSelect = (arg: any) => {
-    console.log('onSelect', arg);
+  const handleAction: MessageListProps['onAction'] = (message) => {
+    log.info('onArchive', { message });
   };
 
-  const handleAction = (arg: any) => {
-    console.log('onArchive', arg);
-  };
-
-  return <MessageList messages={inbox.messages.filter(nonNullable)} onSelect={handleSelect} onAction={handleAction} />;
+  return (
+    <MessageList
+      messages={inbox.messages.filter(nonNullable)}
+      selected={selected}
+      onSelect={setSelected}
+      onAction={handleAction}
+    />
+  );
 };
 
 export default {
   title: 'plugin-inbox/MessageList',
   component: MessageList,
   render: Story,
-  decorators: [FullscreenDecorator()],
+  decorators: [withTheme, FullscreenDecorator()],
 };
 
 export const Default = {};

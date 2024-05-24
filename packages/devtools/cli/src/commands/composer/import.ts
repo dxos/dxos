@@ -23,49 +23,37 @@ type DataFile = {
  */
 export default class Import extends ComposerBaseCommand<typeof Import> {
   static override description = 'Import ECHO objects.';
-  static override args = {
-    file: Args.string(),
-  };
-
   static override flags = {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
   };
 
+  static override args = {
+    file: Args.string({ required: true }),
+  };
+
   async run() {
-    return await this.execWithClient(async (client) => {
-      const schemaMap = await this.addTypes(client);
+    // Parse data.
+    const { objects } = JSON.parse(String(fs.readFileSync(this.args.file!))) as DataFile;
 
-      // Parse data.
-      const { objects } = JSON.parse(String(fs.readFileSync(this.args.file!))) as DataFile;
-
-      // Load objects.
-      const load = async (space: Space) => {
-        this.log(`Space: ${space.key.truncate()}`);
-        for (const object of objects) {
-          const obj = this.parseObject(schemaMap, object);
-          if (this.flags['dry-run'] || this.flags.verbose) {
-            this.log(JSON.stringify(obj, undefined, 2));
-          }
-
-          if (!this.flags['dry-run']) {
-            // TODO(burdon): Merge based on FKs (need to query by FK).
-            space.db.add(obj);
-          }
+    // Load objects.
+    const load = async (space: Space) => {
+      this.log(`Space: ${space.key.truncate()}`);
+      for (const object of objects) {
+        const obj = this.parseObject(this.schemaMap, object);
+        if (this.flags['dry-run'] || this.flags.verbose) {
+          this.log(JSON.stringify(obj, undefined, 2));
         }
 
-        await space.db.flush();
-      };
-
-      if (!this.flags.key) {
-        const space = await this.getSpace(client);
-        await load(space);
-      } else {
-        for (const key of this.flags.key) {
-          const space = await this.getSpace(client, key);
-          await load(space);
+        if (!this.flags['dry-run']) {
+          // TODO(burdon): Merge based on FKs (need to query by FK).
+          space.db.add(obj);
         }
       }
-    });
+
+      await space.db.flush();
+    };
+
+    return await this.execWithSpace(async ({ space }) => await load(space), { spaceKeys: this.flags.key });
   }
 }

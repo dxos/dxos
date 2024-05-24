@@ -34,8 +34,8 @@
       },
       "function": "dxos.org/function/gpt",
       "meta": {
-        "@type": "dxos.org/type/ChainPrompt",
         "prompt": {
+          "@type": "dxos.org/type/ChainPrompt",
           "template": "translate the following message into japanese."
         }
       },

@@ -513,6 +513,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     options: { spaceKeys?: string[]; all?: boolean } = {},
   ): Promise<T[] | undefined> {
     const client = await this.getClient();
+    await this.onClientInit(client);
 
     const spaces =
       options.spaceKeys?.length || options.all
@@ -545,10 +546,16 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       process.exit(1);
     }
 
+    await this.onClientInit(client);
     const value = await callback(client);
     await client.destroy();
     return value;
   }
+
+  /**
+   * Hook for client initialization.
+   */
+  protected async onClientInit(client: Client) {}
 
   /**
    * Convenience function to wrap starting the agent.

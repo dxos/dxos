@@ -11,7 +11,8 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/functions/src/index.ts"
+          "packages/core/functions/src/index.ts",
+          "packages/core/functions/src/types.ts"
         ],
         "injectGlobals": true
       }
