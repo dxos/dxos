@@ -13,7 +13,7 @@ import {
   type MetadataStore,
   type Space,
 } from '@dxos/echo-pipeline';
-import { ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -37,10 +37,10 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, assignDeep } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**

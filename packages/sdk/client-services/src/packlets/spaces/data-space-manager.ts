@@ -3,6 +3,8 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { type Doc } from '@dxos/automerge/automerge';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, Context } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -19,6 +21,7 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -33,16 +36,13 @@ import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/in
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
+import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace, findPropertiesObject } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-import { trace } from '@dxos/tracing';
-import { AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { SpaceDoc } from '@dxos/echo-protocol';
-import { Doc } from '@dxos/automerge/automerge';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
