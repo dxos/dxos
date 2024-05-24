@@ -18,7 +18,7 @@ type EchoTestSpec = {
   /**
    * Size of each object in bytes.
    */
-  objectSize: number;
+  objectSizeLimit: number;
   /**
    * Number of insertions per object.
    */
@@ -53,13 +53,11 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return {
       platform: 'chromium',
 
-      // 50, 200, 500, 1000, 2000
-      numberOfObjects: 300,
-      objectSize: 2000,
+      numberOfObjects: 1,
+      objectSizeLimit: 10_000,
 
-      // 100, 200, 400, 1000, 1500, 2000
-      numberOfInsertions: 2000,
-      insertionSize: 10,
+      numberOfInsertions: 100_000,
+      insertionSize: 1,
       queryResolution: 'index',
     };
   }
@@ -80,7 +78,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       performance.mark('create:begin');
       await replicant.brain.createDocuments({
         amount: params.spec.numberOfObjects,
-        size: params.spec.objectSize,
+        size: params.spec.objectSizeLimit,
         insertions: params.spec.numberOfInsertions,
         mutationsSize: params.spec.insertionSize,
       });

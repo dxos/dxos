@@ -66,11 +66,14 @@ export class EchoReplicant {
       const doc = create(Text, { content: '' }) satisfies ReactiveObject<Text>;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
-      for (let i = 0; i < insertions; i++) {
+      for (let j = 0; j < insertions; j++) {
         const length = doc.content?.length;
         accessor.handle.change((doc) => {
           A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
         });
+        if (j % 1000 === 0) {
+          log.info('mutation iteration', { objectIdx: i, mutationIdx: j });
+        }
       }
 
       if (i % 100 === 0) {
