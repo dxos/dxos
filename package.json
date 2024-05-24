@@ -150,7 +150,8 @@
   "pnpm": {
     "overrides": {
       "ipfs-utils": "9.0.14",
-      "nan": "2.19.0"
+      "nan": "2.19.0",
+      "@automerge/automerge-wasm": "npm:@dxos/automerge-wasm@^0.17.1"
     },
     "patchedDependencies": {
       "@nx/js@17.3.2": "patches/@nx__js@17.3.2.patch",
