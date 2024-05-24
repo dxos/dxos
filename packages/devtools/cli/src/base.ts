@@ -454,7 +454,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
         }
 
         await this._client.initialize();
-        await this._client.spaces.isReady.wait();
       } catch (err: any) {
         // TODO(burdon): Hack.
         if (err.message.includes('401')) {
@@ -479,6 +478,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       wait = true,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
+    await client.spaces.isReady.wait();
     const spaces = client.spaces
       .get()
       .filter(
@@ -503,6 +503,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+    await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
     if (!key) {
       if (spaces.length === 1) {

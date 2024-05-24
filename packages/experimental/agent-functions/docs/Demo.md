@@ -2,6 +2,7 @@
 
 - TODO(burdon): Set-up custom domain with CF Access for demo (demo.composer.spaces).
 - TODO(burdon): Clear bash history and seed commands.
+- TODO(burdon): ENV for no-agent.
 
 # Terminals
 
@@ -21,7 +22,9 @@ pnpm nx serve composer-app
 ### 1). Stop and Reset Agent
 
 ```bash
-dx reset --force && dx halo create "DXOS Agent" --no-agent && dx space create --no-agent
+sudo killall node
+dx agent stop && dx reset --force && dx halo create "DXOS Agent" --no-agent && dx halo identity --no-agent
+dx space create --no-agent
 ```
 
 ### 2). Start Agent
