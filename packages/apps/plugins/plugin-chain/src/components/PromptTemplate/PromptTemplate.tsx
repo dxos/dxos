@@ -57,8 +57,8 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = prompt.template ?? '';
   useEffect(() => {
+    const text = prompt.template ?? '';
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
     }
@@ -95,7 +95,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
     for (const input of values) {
       prompt.inputs.splice(prompt.inputs.indexOf(input), 1);
     }
-  }, [text]);
+  }, [prompt.template]);
 };
 
 type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean };
