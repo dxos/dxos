@@ -39,7 +39,7 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
-export type ProcessThreadArgs = {
+export type RequestProcessorProps = {
   space: Space;
 
   /**
@@ -64,7 +64,7 @@ export class RequestProcessor {
   ) {}
 
   // TODO(burdon): Generalize so that we can process outside of a thread.
-  async processThread({ space, thread, message, prompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
+  async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
