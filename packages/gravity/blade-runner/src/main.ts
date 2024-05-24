@@ -17,17 +17,14 @@ import {
   TransportTestPlan,
   SignalTestPlan,
   QueryTestPlan,
-  // AutomergeTestPlan,
+  ReplicationTestPlan,
 } from './spec';
-
-// eslint-disable-next-line unused-imports/no-unused-vars
-const DXOS_REPO = process.env.DXOS_REPO;
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
   query: () => new QueryTestPlan(),
-  // automerge: () => new AutomergeTestPlan(),
+  replication: () => new ReplicationTestPlan(),
   storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };

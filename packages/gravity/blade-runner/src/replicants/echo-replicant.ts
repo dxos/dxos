@@ -29,7 +29,7 @@ export class EchoReplicant {
   private _testPeer?: EchoTestPeer = undefined;
   private _db?: EchoDatabaseImpl = undefined;
 
-  private readonly _connections: TestReplicatorConnection[] = [];
+  private readonly _connections = new Map<string, TestReplicatorConnection>();
   private _replicator?: TestReplicator = undefined;
 
   constructor(private readonly env: ReplicantEnv) {}
@@ -82,19 +82,22 @@ export class EchoReplicant {
     performance.mark('create:begin');
 
     invariant(this._db, 'Database not initialized.');
-    for (let i = 0; i < amount; i++) {
+    for (let objIdx = 0; objIdx < amount; objIdx++) {
       const doc = create(Text, { content: '' }) satisfies ReactiveObject<Text>;
       this._db!.add(doc);
       const accessor = createDocAccessor(doc, ['content']);
-      for (let i = 0; i < insertions; i++) {
+      for (let mutationIdx = 0; mutationIdx < insertions; mutationIdx++) {
         const length = doc.content?.length;
         accessor.handle.change((doc) => {
           A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
         });
+        if (mutationIdx % 1000 === 0) {
+          log.info('insertion iteration', { objIdx, mutationIdx });
+        }
       }
 
-      if (i % 100 === 0) {
-        log.info('create iteration', { i });
+      if (objIdx % 100 === 0) {
+        log.info('create iteration', { objIdx });
       }
     }
 
@@ -162,23 +165,31 @@ export class EchoReplicant {
   /**
    * Initialize stack for ECHO replication.
    */
-  async initializeReplicator() {
+  async initializeNetwork() {
+    log.trace('dxos.echo-replicant.initializeNetwork');
     this._replicator = new TestReplicator({
       onConnect: async () => {},
       onDisconnect: async () => {
-        this._connections.forEach((connection) => {
-          invariant(this._replicator?.context, 'Replicator not connected.');
+        invariant(this._replicator?.context, 'Replicator not connected.');
+        for (const connection of this._connections.values()) {
           this._replicator.context.onConnectionClosed(connection);
-        });
+        }
       },
     });
     await this._testPeer?.host.addReplicator(this._replicator);
+    invariant(this._replicator?.context, 'Replicator not connected.');
+    return { peerId: this._replicator.context.peerId };
+  }
+
+  async peerId() {
+    invariant(this._replicator?.context, 'Replicator not connected.');
+    return this._replicator.context.peerId;
   }
 
   /**
    * It will create a connection, and advertize everything to the other peer.
    */
-  async createConnection({
+  async connect({
     otherPeerId,
     readQueue,
     writeQueue,
@@ -187,6 +198,7 @@ export class EchoReplicant {
     readQueue: string;
     writeQueue: string;
   }) {
+    log.trace('dxos.echo-replicant.connect', { otherPeerId, readQueue, writeQueue });
     invariant(this._replicator?.context, 'Replicator not connected.');
 
     const readRedis = new Redis(DEFAULT_REDIS_OPTIONS);
@@ -200,8 +212,18 @@ export class EchoReplicant {
       createRedisReadableStream({ client: readRedis, queue: readQueue }),
       createRedisWritableStream({ client: writeRedis, queue: writeQueue }),
     );
-    this._connections.push(connection);
+    this._connections.set(otherPeerId, connection);
     this._replicator.context.onConnectionOpen(connection);
+  }
+
+  async disconnect({ otherPeerId }: { otherPeerId: string }) {
+    log.trace('dxos.echo-replicant.disconnect', { otherPeerId });
+    invariant(this._replicator?.context, 'Replicator not connected.');
+    const connection = this._connections.get(otherPeerId);
+    invariant(connection, 'Connection not found.');
+
+    this._replicator.context.onConnectionClosed(connection);
+    this._connections.delete(otherPeerId);
   }
 }
 
