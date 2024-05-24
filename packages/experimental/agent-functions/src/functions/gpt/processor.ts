@@ -54,7 +54,7 @@ export type ProcessThreadArgs = {
    * `/say ...`
    * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
    */
-  defaultPrompt?: ChainPromptType;
+  prompt?: ChainPromptType;
 };
 
 export class RequestProcessor {
@@ -63,7 +63,8 @@ export class RequestProcessor {
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread({ space, thread, message, defaultPrompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
+  // TODO(burdon): Generalize so that we can process outside of a thread.
+  async processThread({ space, thread, message, prompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
@@ -72,16 +73,15 @@ export class RequestProcessor {
         .filter(Boolean)
         .join('\n');
 
-      // TODO(burdon): Use given prompt or interpret from /command in text.
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
       const [command, content] = match ? match.slice(1) : [];
-      if (defaultPrompt || command) {
+      if (prompt || command) {
         start();
         const context = await createContext(space, message, thread);
 
         log.info('processing', { command, content });
-        const sequence = await this.createSequence(space, context, { prompt: defaultPrompt, command });
+        const sequence = await this.createSequence(space, context, { prompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
           const result = parseMessage(response);
@@ -92,7 +92,8 @@ export class RequestProcessor {
         }
       }
     } catch (err) {
-      log.error('processing message', err);
+      // Process as error so that we don't keep processing.
+      log.error('processing failed', err);
       blocks = [
         {
           timestamp: new Date().toISOString(),
@@ -121,6 +122,7 @@ export class RequestProcessor {
     // Find prompt matching command.
     if (options.command) {
       const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
+      // TODO(burdon): API Issue: Why is loadObjectReferences required?
       const allPrompts = (await loadObjectReferences(chains, (chain) => chain.prompts)).flatMap((prompt) => prompt);
       for (const prompt of allPrompts) {
         if (prompt.command === options.command) {
@@ -216,7 +218,7 @@ export class RequestProcessor {
       //
       case ChainInputType.RETRIEVER: {
         const retriever = this._resources.store.vectorStore.asRetriever({});
-        return retriever.pipe(formatDocumentsAsString); // TODO(burdon): ???
+        return retriever.pipe(formatDocumentsAsString);
       }
 
       //
@@ -248,6 +250,7 @@ export class RequestProcessor {
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
+          // TODO(burdon): Update.
           const fields = todo() as any[]; // schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }

@@ -91,7 +91,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
           space,
           thread,
           message,
-          defaultPrompt: meta.prompt,
+          prompt: meta.prompt,
         });
 
         if (blocks?.length) {
