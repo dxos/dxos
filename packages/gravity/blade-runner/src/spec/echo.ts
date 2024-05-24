@@ -54,7 +54,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       platform: 'chromium',
 
       numberOfObjects: 1,
-      objectSizeLimit: 10_000,
+      objectSizeLimit: 100_000,
 
       numberOfInsertions: 100_000,
       insertionSize: 1,
