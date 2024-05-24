@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Brain, type IconProps } from '@phosphor-icons/react';
+import { Brain, WebhooksLogo, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -12,9 +12,10 @@ import { ChainPromptType, ChainType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
+import { FunctionTrigger } from '@dxos/functions/types';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ChainArticle, ChainMain } from './components';
+import { ChainMain, TriggerArticle } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
 import { ChainAction, type ChainPluginProvides } from './types';
@@ -29,11 +30,15 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
             icon: (props: IconProps) => <Brain {...props} />,
           },
+          [FunctionTrigger.typename]: {
+            placeholder: ['trigger placeholder', { ns: CHAIN_PLUGIN }],
+            icon: (props: IconProps) => <WebhooksLogo {...props} />,
+          },
         },
       },
       translations,
       echo: {
-        schema: [ChainType, ChainPromptType],
+        schema: [ChainType, ChainPromptType, FunctionTrigger],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -69,24 +74,47 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
               .filter((space) => !!enabled.find((key) => key.equals(space.key)))
               .forEach((space) => {
                 // Add all chains to the graph.
-                const query = space.db.query(Filter.schema(ChainType));
-                subscriptions.add(query.subscribe());
+                const promptQuery = space.db.query(Filter.schema(ChainType));
+                subscriptions.add(promptQuery.subscribe());
                 let previousObjects: ChainType[] = [];
                 subscriptions.add(
                   effect(() => {
-                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                    previousObjects = query.objects;
+                    const removedObjects = previousObjects.filter((object) => !promptQuery.objects.includes(object));
+                    previousObjects = promptQuery.objects;
 
                     batch(() => {
                       removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
-                      query.objects.forEach((object) => {
+                      promptQuery.objects.forEach((object) => {
                         graph.addNodes({
                           id: fullyQualifiedId(object),
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
                             label: object.title || ['object title placeholder', { ns: CHAIN_PLUGIN }],
-                            icon: (props: IconProps) => <Brain {...props} />,
+                            icon: (props: IconProps) => <WebhooksLogo {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
+                      });
+                    });
+                  }),
+                );
+
+                const functionTriggerQuery = space.db.query(Filter.schema(FunctionTrigger));
+                subscriptions.add(functionTriggerQuery.subscribe());
+                subscriptions.add(
+                  effect(() => {
+                    batch(() => {
+                      functionTriggerQuery.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: object.id.substring(12) || ['object title placeholder', { ns: CHAIN_PLUGIN }],
+                            icon: (props: IconProps) => <WebhooksLogo {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
                             persistenceKey: space?.key.toHex(),
@@ -125,7 +153,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
             case 'main':
               return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
             case 'article':
-              return data.object instanceof ChainType ? <ChainArticle chain={data.object} /> : null;
+              return data.object instanceof FunctionTrigger ? <TriggerArticle trigger={data.object} /> : null;
           }
 
           return null;
@@ -136,7 +164,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (intent.action) {
             case ChainAction.CREATE: {
               return {
-                data: create(ChainType, { prompts: [] }),
+                data: create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '' } }),
               };
             }
           }
@@ -145,3 +173,4 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
     },
   };
 };
+#ffeeaa;

@@ -99,11 +99,9 @@ const usePromptInputs = (prompt: ChainPromptType) => {
   }, [text]);
 };
 
-type PromptTemplateProps = {
-  prompt: ChainPromptType;
-};
+type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean };
 
-export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
+export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
@@ -129,28 +127,30 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
         promptExtension,
       ],
     }),
-    [themeMode, prompt],
+    [themeMode, prompt, prompt.template],
   );
   usePromptInputs(prompt);
 
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-        <Section title='Prompt'>
-          <div className='flex items-center pl-4'>
-            <span className='text-neutral-500'>/</span>
-            <Input.Root>
-              <Input.TextInput
-                placeholder={t('command placeholder')}
-                classNames={mx('is-full bg-transparent m-2')}
-                value={prompt.command ?? ''}
-                onChange={(event) => {
-                  prompt.command = event.target.value.replace(/\W/g, '');
-                }}
-              />
-            </Input.Root>
-          </div>
-        </Section>
+        {commandEditable && (
+          <Section title='Prompt'>
+            <div className='flex items-center pl-4'>
+              <span className='text-neutral-500'>/</span>
+              <Input.Root>
+                <Input.TextInput
+                  placeholder={t('command placeholder')}
+                  classNames={mx('is-full bg-transparent m-2')}
+                  value={prompt.command ?? ''}
+                  onChange={(event) => {
+                    prompt.command = event.target.value.replace(/\w/g, '');
+                  }}
+                />
+              </Input.Root>
+            </div>
+          </Section>
+        )}
 
         <Section title='Template'>
           <div ref={parentRef} className={attentionSurface} />
