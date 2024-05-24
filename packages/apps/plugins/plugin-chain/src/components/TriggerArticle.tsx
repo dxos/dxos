@@ -5,12 +5,13 @@
 import React, { type FC } from 'react';
 
 import { type FunctionTrigger } from '@dxos/functions/types';
-import { useSpace } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { TriggerEditor } from './TriggerEditor';
 
 const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
-  const space = useSpace();
+  const space = getSpace(trigger);
+
   if (!space) {
     return null;
   }

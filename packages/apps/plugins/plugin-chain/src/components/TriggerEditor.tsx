@@ -18,7 +18,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 
   const linkedFunction = useMemo(() => {
     return functions.find((fn) => fn.uri === trigger.function);
-  }, [trigger]);
+  }, [trigger.function, functions]);
 
   const handleSelectFunction = (value: string) => {
     const foundFunction = functions.find((fn) => fn.uri === value);
