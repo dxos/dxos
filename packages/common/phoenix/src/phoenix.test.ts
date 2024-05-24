@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import waitForExpect from 'wait-for-expect';
 
 import { Trigger } from '@dxos/async';
+import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Phoenix } from './phoenix';
