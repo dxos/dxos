@@ -12,7 +12,7 @@ import { create } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 
 import { Scheduler, type SchedulerOptions } from './scheduler';
-import { FunctionRegistry } from '../registry';
+import { FunctionRegistry } from '../function';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { TriggerRegistry } from '../trigger';
 import { type FunctionManifest } from '../types';

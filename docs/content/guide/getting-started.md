@@ -1,15 +1,14 @@
 ---
-order: 2
-title: Quick Start
+order: 3
 next: ./tutorial
 ---
 
-# Quick Start Guide
+# Quick Start
 
-DXOS is the developer platform for **collaborative**, **offline-first**, **privacy-preserving** software.
-This guide shows how to use [ECHO](./platform/) for state consensus and [HALO](./platform/halo) for decentralized identity.
+DXOS is the developer platform for **collaborative**, **local-first**, **privacy-preserving** software.
+This guide shows how to use [ECHO](./echo/) for peer-to-peer sync and [HALO](./halo/) for decentralized identity.
 
-DXOS works in any Node.js or Browser environment. There is a [TypeScript API](typescript) and a [`react` API](react).
+DXOS works in any Node.js or Browser environment. There is a [TypeScript API](./echo/typescript) and a [`react` API](./echo/react).
 
 ::: note In this guide
 
@@ -32,7 +31,7 @@ npm install --save @dxos/client
 
 Create and initialize a [`Client`](/api/@dxos/client/classes/Client):
 
-```ts file=./typescript/snippets/create-client.ts#L5-
+```ts file=./snippets-typescript/create-client.ts#L5-
 import { Client } from '@dxos/client';
 
 // create a client
@@ -47,13 +46,13 @@ const main = async () => {
 main();
 ```
 
-An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](config).
+An [Options](/api/@dxos/client/types/ClientOptions) object can be passed to `Client()`. See [configuration examples](echo/typescript/config.md).
 
-[Spaces](./platform/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
+[Spaces](./echo/#spaces) are the main units of data storage and sharing (like `collections` in other databases).
 
-To begin manipulating data, use `client.spaces.default`, or [join or create a space](./typescript/spaces).
+To begin manipulating data, use `client.spaces.default`, or [join or create a space](./echo/typescript/README.md).
 
-See below for `react` usage, otherwise see the [TypeScript Guide](./typescript/queries).
+See below for `react` usage, otherwise see the [TypeScript Guide](./echo/typescript/queries.md).
 
 ## Usage with React
 
@@ -63,9 +62,9 @@ Use `@dxos/react-client` for `react` hooks to access and manipulate data in ECHO
 npm install --save @dxos/react-client
 ```
 
-Create a `ClientProvider` to wrap your application. This allows nested components to use the hooks.
+Create a [`ClientProvider`](/api/@dxos/react-client/functions#clientprovider-options) to wrap your application. This allows nested components to use the hooks.
 
-```tsx file=./react/snippets/create-client-react.tsx#L5-
+```tsx file=./snippets-react/create-client-react.tsx#L5-
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ClientProvider } from '@dxos/react-client';
@@ -100,7 +99,7 @@ createRoot(document.body).render(<App />);
 
 The [`SharedWorker`](https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker) allows resources to be shared between tabs and windows. Put the following in a file called `shared-worker.ts` in the same directory as your `App` component above:
 
-```tsx file=./react/snippets/shared-worker.ts#L5-
+```tsx file=./snippets-react/shared-worker.ts#L5-
 onconnect = async (event) => {
   const { onconnect } = await import('@dxos/react-client/worker');
   await onconnect(event);
@@ -109,7 +108,7 @@ onconnect = async (event) => {
 
 Components will automatically re-render when the data changes. Change the data by mutating it as any regular JavaScript object.
 
-For a step-by-step walkthrough, see the [react tutorial](./tutorial).
+For a step-by-step walkthrough, see the [react tutorial](./echo/tutorial.md).
 
 ## Usage in a browser
 
@@ -121,10 +120,7 @@ npm install --save vite-plugin-top-level-await vite-plugin-wasm
 
 Add `topLevelAwait` and `wasm` to your `vite.config.ts`:
 
-<!-- TODO: Turn this into a snippet -->
-
-```ts
-// vite.config.ts
+```ts file=./snippets/vite-config.ts
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import topLevelAwait from 'vite-plugin-top-level-await';
@@ -158,6 +154,7 @@ If you encounter an error with `EINVALIDPACKAGENAME` it's likely the npm/node ve
 Then, use your favorite package manager such as `yarn`, `npm` or `pnpm`:
 
 ```bash
+cd <app-name>
 npm install
 npm run serve
 ```
@@ -173,7 +170,7 @@ This will start the development server and print a URL to the console. Opening t
 * State is being reactively shared between all instances of the app running on the same device. If more peers join the space, all of them will see updates reactively.
 * Data is stored **locally**, in-browser, in [OPFS](https://fs.spec.whatwg.org/#origin-private-file-system) or [IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API). **This enables privacy and gives end-users control over their data**.
 * Remote peers exchange data directly, **peer-to-peer** over secure [WebRTC](https://webrtc.org/) connections.
-* User identity (public/private keys) are established securely and maintained by [HALO](./platform/halo) for the whole device (browser profile), without a password.
+* User identity (public/private keys) are established securely and maintained by [HALO](./halo/) for the whole device (browser profile), without a password.
 * Everything works offline.
 * Real-time collaboration is possible when online.
 * There are **no servers** that store any data.
@@ -197,10 +194,10 @@ For example, with [Netlify](https://netlify.com):
 
 ## Next steps
 
-* Step-by-step [React tutorial](./tutorial.md)
-* ECHO with [React](./react/)
-* ECHO with [TypeScript](./typescript/)
-* ECHO with [strongly typed objects](./typescript/queries#typed-queries)
+* Step-by-step [React tutorial](./echo/tutorial.md)
+* ECHO with [React](./echo/react/)
+* ECHO with [TypeScript](./echo/typescript/)
+* ECHO with [strongly typed objects](./echo/typescript/queries.md#typed-queries)
 
 We hope you'll find the technology useful, and we welcome your ideas and contributions:
 

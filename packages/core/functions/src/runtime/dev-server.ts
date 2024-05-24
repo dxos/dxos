@@ -13,8 +13,8 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
+import { type FunctionRegistry } from '../function';
 import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
-import { type FunctionRegistry } from '../registry';
 import { type FunctionDef } from '../types';
 
 export type DevServerOptions = {
@@ -41,16 +41,15 @@ export class DevServer {
 
   public readonly update = new Event<number>();
 
-  // prettier-ignore
   constructor(
     private readonly _client: Client,
     private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
   ) {
-    this._functionsRegistry.onFunctionsRegistered.on(async ({ newFunctions }) => {
-      newFunctions.forEach((def) => this._load(def));
+    this._functionsRegistry.registered.on(async ({ added }) => {
+      added.forEach((def) => this._load(def));
       await this._safeUpdateRegistration();
-      log('new functions loaded', { newFunctions });
+      log('new functions loaded', { added });
     });
   }
 
@@ -158,7 +157,7 @@ export class DevServer {
   /**
    * Load function.
    */
-  private async _load(def: FunctionDef, force = false) {
+  private async _load(def: FunctionDef, force?: boolean | undefined) {
     const { uri, route, handler } = def;
     const filePath = join(this._options.baseDir, handler);
     log.info('loading', { uri, force });

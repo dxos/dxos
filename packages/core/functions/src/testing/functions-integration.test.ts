@@ -13,7 +13,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { describe, test } from '@dxos/test';
 
 import { setTestCallHandler } from './test/handler';
-import { FunctionRegistry } from '../registry';
+import { FunctionRegistry } from '../function';
 import { DevServer, Scheduler } from '../runtime';
 import { createFunctionRuntime, createInitializedClients, TestType } from '../testing';
 import { TriggerRegistry } from '../trigger';

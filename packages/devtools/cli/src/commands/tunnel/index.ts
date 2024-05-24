@@ -8,15 +8,21 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
-import { BaseCommand } from '../../base-command';
-import { type TunnelRpcPeer, printTunnels } from '../../util';
+import { BaseCommand } from '../../base';
+import { printTunnels, type TunnelRpcPeer } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class Tunnel extends BaseCommand<typeof Tunnel> {
-  static override enableJsonFlag = true;
-  static override description = 'Enable or disable tunnel.';
-  static override args = {
-    command: Args.string({ description: 'Start.', values: ['start', 'stop'], required: true }),
-  };
+  static {
+    this.state = 'deprecated';
+    this.enableJsonFlag = true;
+    this.description = 'Enable or disable tunnel (deprecated).';
+    this.args = {
+      command: Args.string({ description: 'Start.', values: ['start', 'stop'], required: true }),
+    };
+  }
 
   static override flags = {
     ...BaseCommand.flags,

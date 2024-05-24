@@ -37,10 +37,10 @@ import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
+// TODO(burdon): Reconcile with ClientContextProps.
 /**
  * This options object configures the DXOS Client.
  */
-// TODO(burdon): Reconcile with ClientContextProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
@@ -226,6 +226,7 @@ export class Client {
     if (notRegistered.length > 0) {
       this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
     }
+
     return this;
   }
 

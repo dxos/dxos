@@ -4,22 +4,28 @@
 
 import { join } from 'node:path';
 
-import { MessageType, ThreadType } from '@braneframe/types';
+import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
 import { sleep } from '@dxos/async';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta } from '@dxos/echo-schema';
+import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
 import { type ChainVariant, createChainResources } from '../../chain';
 import { getKey, registerTypes } from '../../util';
 
+const AI_SOURCE = 'dxos.org/service/ai';
+
+type Meta = { prompt?: ChainPromptType };
+
 // TODO(burdon): Create test.
-export const handler = subscriptionHandler(async ({ event, context }) => {
+export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;
-  const { space, objects } = event.data;
+  const { space, objects, meta } = event.data;
   invariant(space);
   registerTypes(space);
   if (!objects) {
@@ -32,18 +38,44 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();
-  await loadObjectReferences(objects, (thread) => thread.messages ?? []);
-  const activeThreads = objects.reduce((activeThreads, message) => {
-    const thread = threads.find((thread) => thread.messages.some((m) => m?.id === message.id));
-    if (thread) {
-      activeThreads.add(thread);
-    }
+  await loadObjectReferences(threads, (thread: ThreadType) => thread.messages ?? []);
 
-    return activeThreads;
-  }, new Set<ThreadType>());
+  // Filter messages to process.
+  const messages = objects
+    .map((message) => {
+      if (!(message instanceof MessageType)) {
+        log.warn('unexpected object type', { type: getTypename(message) });
+        return null;
+      }
 
-  // Process threads.
-  if (activeThreads) {
+      // Check the message wasn't already processed / sent by the AI.
+      if (getMeta(message).keys.find((key) => key.source === AI_SOURCE)) {
+        return null;
+      }
+
+      // Skip messages that don't belong to an active thread.
+      const thread = threads.find((thread: ThreadType) => thread.messages.some((msg) => msg?.id === message.id));
+      if (!thread) {
+        return [message, undefined] as [MessageType, ThreadType | undefined];
+      }
+
+      // Only react to the last message in the thread.
+      if (thread.messages[thread.messages.length - 1]?.id !== message.id) {
+        return null;
+      }
+
+      return [message, thread] as [MessageType, ThreadType | undefined];
+    })
+    .filter(nonNullable);
+
+  log.info('processing', {
+    objects: objects.length,
+    threads: messages.filter(([_, thread]) => thread != null).length,
+    messages: messages.length,
+  });
+
+  // Process messages.
+  if (messages.length > 0) {
     const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(client.config, 'openai.com/api_key'),
@@ -54,25 +86,33 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
     const processor = new RequestProcessor(resources, resolvers);
 
     await Promise.all(
-      Array.from(activeThreads).map(async (thread) => {
-        // Get last message.
-        const message = thread.messages[thread.messages.length - 1];
-        // Check the message wasn't created by the AI.
-        if (message && getMeta(message).keys.length === 0) {
-          const blocks = await processor.processThread(space, thread, message);
-          if (blocks?.length) {
-            const newMessage = create(
+      Array.from(messages).map(async ([message, thread]) => {
+        const blocks = await processor.processThread({
+          space,
+          thread,
+          message,
+          defaultPrompt: meta.prompt,
+        });
+
+        if (blocks?.length) {
+          const metaKey = foreignKey(AI_SOURCE, Date.now().toString());
+          if (thread) {
+            const response = create(
               MessageType,
               {
                 from: { identityKey: resources.identityKey },
                 blocks,
               },
               {
-                keys: [foreignKey('openai.com', '_')],
+                keys: [metaKey],
               },
             );
 
-            thread.messages.push(newMessage);
+            thread.messages.push(response);
+          } else {
+            // TODO(burdon): Mark the message as "processed".
+            getMeta(message).keys.push(metaKey);
+            message.blocks.push(...blocks);
           }
         }
       }),

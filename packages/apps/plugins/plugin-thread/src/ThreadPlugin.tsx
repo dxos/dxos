@@ -49,6 +49,7 @@ import {
   CommentsHeading,
   ChatContainer,
   ChatHeading,
+  ThreadArticle,
 } from './components';
 import meta, { THREAD_ITEM, THREAD_PLUGIN } from './meta';
 import translations from './translations';
@@ -275,6 +276,10 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case 'article':
             case 'complementary': {
+              if (data.object instanceof ThreadType) {
+                return <ThreadArticle thread={data.object} />;
+              }
+
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
 

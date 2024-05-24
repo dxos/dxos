@@ -11,7 +11,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter } from '@dxos/echo-db';
-import { create } from '@dxos/echo-schema';
+import { create, splitMeta } from '@dxos/echo-schema';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
@@ -19,9 +19,17 @@ import { TriggerRegistry } from './trigger-registry';
 import { createInitializedClients, TestType, triggerWebhook } from '../testing';
 import { type FunctionManifest, FunctionTrigger } from '../types';
 
-const testManifest: FunctionManifest = {
+const manifest: FunctionManifest = {
   triggers: [
     {
+      '@meta': {
+        keys: [
+          {
+            source: 'example.com',
+            id: 'trigger-1',
+          },
+        ],
+      },
       function: 'example.com/function/webhook-test',
       spec: {
         type: 'webhook',
@@ -29,10 +37,22 @@ const testManifest: FunctionManifest = {
       },
     },
     {
+      '@meta': {
+        keys: [
+          {
+            source: 'example.com',
+            id: 'trigger-2',
+          },
+        ],
+      },
       function: 'example.com/function/subscription-test',
       spec: {
         type: 'subscription',
-        filter: [{ type: TestType.typename }],
+        filter: [
+          {
+            type: TestType.typename,
+          },
+        ],
       },
     },
   ],
@@ -57,11 +77,12 @@ describe('trigger registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       const { objects } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      expect(objects.length).to.eq(testManifest.triggers?.length);
-      const expected = testManifest.triggers?.map((t) => t.function).sort();
-      expect(objects.map((o: FunctionTrigger) => o.function).sort()).to.deep.eq(expected);
+      expect(objects.length).to.eq(manifest.triggers?.length);
+
+      const expected = manifest.triggers?.map((trigger) => trigger.function).sort();
+      expect(objects.map((object: FunctionTrigger) => object.function).sort()).to.deep.eq(expected);
     });
   });
 
@@ -70,13 +91,13 @@ describe('trigger registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const space = await client.spaces.create();
       const registry = createRegistry(client);
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       await registry.open(ctx);
-      await waitHasInactiveTriggers(registry, space);
+      await waitForInactiveTriggers(registry, space);
 
       const callbackInvoked = new Trigger();
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const webhookTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === 'webhook')!;
+      const webhookTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'webhook')!;
       await registry.activate({ space }, webhookTrigger, async () => {
         callbackInvoked.wake();
         return 200;
@@ -90,15 +111,16 @@ describe('trigger registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const space = await client.spaces.create();
       const registry = createRegistry(client);
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       await registry.open(ctx);
-      await waitHasInactiveTriggers(registry, space);
+      await waitForInactiveTriggers(registry, space);
 
       const inactiveTrigger = registry.getInactiveTriggers(space)[0];
       await registry.activate({ space }, inactiveTrigger, async () => 200);
 
       const updatedInactiveList = registry.getInactiveTriggers(space);
-      expect(updatedInactiveList.find((t: FunctionTrigger) => t.function === inactiveTrigger.function)).to.be.undefined;
+      expect(updatedInactiveList.find((trigger: FunctionTrigger) => trigger.function === inactiveTrigger.function)).to
+        .be.undefined;
     });
   });
 
@@ -107,12 +129,12 @@ describe('trigger registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const space = await client.spaces.create();
       const registry = createRegistry(client);
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       await registry.open(ctx);
-      await waitHasInactiveTriggers(registry, space);
+      await waitForInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === 'subscription')!;
+      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
       let count = 0;
       await registry.activate({ space }, echoTrigger, async () => {
         count++;
@@ -124,7 +146,6 @@ describe('trigger registry', () => {
       expect(count).to.eq(1);
 
       space.db.remove(echoTrigger);
-
       space.db.add(create(TestType, { title: '2' }));
       await sleep(20);
       expect(count).to.eq(1);
@@ -134,12 +155,12 @@ describe('trigger registry', () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const space = await client.spaces.create();
       const registry = createRegistry(client);
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       await registry.open(ctx);
-      await waitHasInactiveTriggers(registry, space);
+      await waitForInactiveTriggers(registry, space);
 
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-      const echoTrigger = allTriggers.find((t: FunctionTrigger) => t.spec.type === 'subscription')!;
+      const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
       let count = 0;
       await registry.activate({ space }, echoTrigger, async () => {
         count++;
@@ -155,19 +176,20 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test('event fired when all registered when opened', async () => {
+    test.only('event fired when all registered when opened', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
-      const triggers = createTriggersInSpace(client.spaces.default, 3);
+      const triggers = createTriggers(client.spaces.default, 3);
 
       const triggersRegistered = new Trigger<FunctionTrigger[]>();
       registry.registered.on((fn) => {
         expect(fn.space.key.toHex()).to.eq(client.spaces.default.key.toHex());
         triggersRegistered.wake(fn.triggers);
       });
+
       void registry.open(ctx);
       const functions = await triggersRegistered.wait();
-      const expected = triggers.map((obj) => obj.id).sort();
+      const expected = triggers.map((object) => object.id).sort();
       expect(functions.map((fn) => fn.id).sort()).to.deep.eq(expected);
     });
 
@@ -182,16 +204,16 @@ describe('trigger registry', () => {
         triggerRegistered.wake(fn.triggers[0]);
       });
       await registry.open(ctx);
-      await registry.register(space, { triggers: testManifest?.triggers?.slice(0, 1) });
+      await registry.register(space, { triggers: manifest?.triggers?.slice(0, 1) });
       const registered = await triggerRegistered.wait();
-      expect(registered.function).to.eq(testManifest.triggers![0].function);
+      expect(registered.function).to.eq(manifest.triggers![0].function);
     });
 
     test('event fired when a new trigger is removed', async () => {
       const client = (await createInitializedClients(testBuilder))[0];
       const registry = createRegistry(client);
       const space = await client.spaces.create();
-      const triggers = createTriggersInSpace(space, 3);
+      const triggers = createTriggers(space, 3);
 
       const triggerLoaded = new Trigger();
       registry.registered.on((fn) => triggerLoaded.wake());
@@ -201,7 +223,7 @@ describe('trigger registry', () => {
         expect(fn.triggers.length).to.eq(1);
         triggerRemoved.wake(fn.triggers[0]);
       });
-      await registry.register(space, testManifest);
+      await registry.register(space, manifest);
       await registry.open(ctx);
       await triggerLoaded.wait();
 
@@ -211,19 +233,23 @@ describe('trigger registry', () => {
     });
   });
 
-  const waitHasInactiveTriggers = async (registry: TriggerRegistry, space: Space) => {
-    await waitForCondition({ condition: () => registry.getInactiveTriggers(space).length > 0 });
-  };
-
   const createRegistry = (client: Client) => {
     const registry = new TriggerRegistry(client);
     ctx.onDispose(() => registry.close());
     return registry;
   };
 
-  const createTriggersInSpace = (space: Space, count: number) => {
-    const triggers = range(count, () => create(FunctionTrigger, { ...testManifest.triggers![0] }));
-    triggers.forEach((def) => space.db.add(def));
+  const createTriggers = (space: Space, count: number) => {
+    const triggers = range(count, () => {
+      const { meta, object } = splitMeta(manifest.triggers![0]);
+      return create(FunctionTrigger, object, meta);
+    });
+
+    triggers.forEach((trigger) => space.db.add(trigger));
     return triggers;
+  };
+
+  const waitForInactiveTriggers = async (registry: TriggerRegistry, space: Space) => {
+    await waitForCondition({ condition: () => registry.getInactiveTriggers(space).length > 0 });
   };
 });

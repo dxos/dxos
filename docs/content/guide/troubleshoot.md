@@ -1,22 +1,23 @@
 ---
-order: 100
+order: 12
 ---
 
 # Troubleshooting
 
 ### Resetting Storage
 
-You may occasionally need to reset the storage state behind [`HALO`](./platform/halo.md) in case of problems.
+You may occasionally need to reset the storage state behind [`HALO`](./halo/) in case of problems.
 
 ::: warning
-This procedure clears all storage for all apps using ECHO and HALO on the machine.
+If you haven't shared your identity with other devices than that identity will be lost.
+
+If you have data stored locally for this domain that hasn't been synced that data will be lost.
 :::
 
-* navigate a browser to `halo.dxos.org` (or wherever the [vault](./glossary.md#vault) was configured to be - by default it's `halo.dxos.org`)
-* open developer tools in the browser
-* go to the `Application` tab developer tools, and locate the Storage node.
-* click `Clear site data`
-* go back to your app and reload, the storage should be re-created
+* Open the DXOS [developer tools](./tooling/)
+* Go to the 'Storage' tab
+* Click 'Reset Storage' in the top right
+* Go back to your app and reload
 
 ### Ad Blockers
 

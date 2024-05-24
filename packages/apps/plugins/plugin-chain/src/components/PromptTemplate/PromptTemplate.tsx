@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { type ChainInput, ChainInputSchema, ChainInputType, type ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -58,7 +58,7 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = prompt.source?.content ?? '';
+  const text = prompt.template ?? '';
   useEffect(() => {
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
@@ -87,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs.push(create(ChainInput, { name }));
+        prompt.inputs?.push(create(ChainInputSchema, { name }));
       }
     });
 
@@ -109,9 +109,12 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
 
   const { parentRef } = useTextEditor(
     () => ({
-      doc: prompt.source?.content,
+      doc: prompt.template,
       extensions: [
-        createDataExtensions({ id: prompt.id, text: prompt.source && createDocAccessor(prompt.source, ['content']) }),
+        createDataExtensions({
+          id: prompt.id,
+          text: prompt.template ? createDocAccessor(prompt, ['template']) : undefined,
+        }),
         createBasicExtensions({
           bracketMatching: false,
           lineWrapping: true,
@@ -153,12 +156,12 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
           <div ref={parentRef} className={attentionSurface} />
         </Section>
 
-        {prompt.inputs?.length > 0 && (
+        {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
               <table className='table-fixed border-collapse'>
                 <tbody>
-                  {prompt.inputs.filter(nonNullable).map((input) => (
+                  {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
                       <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
                       <td className='px-3 py-1.5 w-[160px]'>

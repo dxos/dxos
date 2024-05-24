@@ -4,10 +4,14 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { BaseCommand } from '../../base-command';
-import { type PublisherRpcPeer, printModules } from '../../util';
+import { BaseCommand } from '../../base';
+import { printModules, type PublisherRpcPeer } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class List extends BaseCommand<typeof List> {
+  static override state = 'deprecated';
   static override enableJsonFlag = true;
   static override description = 'List apps.';
 
