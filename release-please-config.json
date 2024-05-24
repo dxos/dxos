@@ -24,16 +24,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/composer-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/halo-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
