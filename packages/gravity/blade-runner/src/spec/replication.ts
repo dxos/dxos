@@ -2,25 +2,45 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type TransportKind } from '@dxos/network-manager';
+import { type TestParams, type TestPlan } from '../plan';
 
-import { type TestParams, type SchedulerEnvImpl, type TestPlan } from '../plan';
-
+/**
+ * +-----------------------+
+ * |  Replicant "server"   |
+ * |                       |   1 "server" replicant
+ * |  Creates space and    |
+ * |  shares with others   |
+ * +-----------------------+
+ *             ^
+ *             |
+ * +-----------+-----------+
+ * |  Replicant "client"   +-+
+ * |                       | |
+ * |  Replicates space     | +-+   N "client" replicants
+ * |  from "server"        | | |
+ * +-+---------------------+ | |
+ *   +-+---------------------+ |
+ *     +-----------------------+
+ */
 export type ReplicationTestSpec = {
-  replicants: number;
-  swarmsPerReplicant: number;
-  duration: number;
-  transport: TransportKind;
+  /**
+   * Number of "client" replicants.
+   */
+  clientReplicants: number;
 
-  targetSwarmTimeout: number;
-  fullSwarmTimeout: number;
-  feedsPerSwarm: number;
-  feedAppendInterval: number;
-  feedMessageSize: number;
-  feedLoadDuration?: number;
-  feedMessageCount?: number;
-  repeatInterval: number;
-  signalArguments: string[];
+  /**
+   * Number of objects in the space.
+   */
+  numberOfObjects: number;
+  /**
+   * Size of each object in bytes.
+   */
+  objectSizeLimit: number;
+  /**
+   * Number of insertions per object.
+   */
+  numberOfInsertions: number;
+  insertionSize: number;
 };
 
 export class ReplicationTestPlan implements TestPlan<ReplicationTestPlan> {

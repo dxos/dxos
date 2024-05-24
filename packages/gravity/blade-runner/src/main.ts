@@ -13,10 +13,10 @@ import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplic
 import { type RunParams } from './plan/run-process';
 import {
   EmptyTestPlan,
-  EchoTestPlan,
   StorageTestPlan,
   TransportTestPlan,
   SignalTestPlan,
+  QueryTestPlan,
   // AutomergeTestPlan,
 } from './spec';
 
@@ -26,7 +26,7 @@ const DXOS_REPO = process.env.DXOS_REPO;
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
-  echo: () => new EchoTestPlan(),
+  query: () => new QueryTestPlan(),
   // automerge: () => new AutomergeTestPlan(),
   storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),

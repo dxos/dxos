@@ -7,18 +7,19 @@ import { type QueryResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ReplicantsSummary, type Platform, type SchedulerEnv, type TestParams, type TestPlan } from '../plan';
+import { type SchedulerEnv } from '../env';
+import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
-type EchoTestSpec = {
+type QueryTestSpec = {
   platform: Platform;
 
   numberOfObjects: number;
 
   /**
-   * Size of each object in bytes.
+   * Size limit of each object in bytes.
    */
-  objectSize: number;
+  objectSizeLimit: number;
   /**
    * Number of insertions per object.
    */
@@ -48,14 +49,14 @@ type EchoTestResult = {
   diskQueryTime: number;
 };
 
-export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
-  defaultSpec(): EchoTestSpec {
+export class QueryTestPlan implements TestPlan<QueryTestSpec, EchoTestResult> {
+  defaultSpec(): QueryTestSpec {
     return {
       platform: 'chromium',
 
       // 50, 200, 500, 1000, 2000
       numberOfObjects: 300,
-      objectSize: 2000,
+      objectSizeLimit: 2000,
 
       // 100, 200, 400, 1000, 1500, 2000
       numberOfInsertions: 2000,
@@ -64,7 +65,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     };
   }
 
-  async run(env: SchedulerEnv, params: TestParams<EchoTestSpec>) {
+  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>) {
     const results = {} as EchoTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
@@ -80,7 +81,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       performance.mark('create:begin');
       await replicant.brain.createDocuments({
         amount: params.spec.numberOfObjects,
-        size: params.spec.objectSize,
+        size: params.spec.objectSizeLimit,
         insertions: params.spec.numberOfInsertions,
         mutationsSize: params.spec.insertionSize,
       });
@@ -126,5 +127,5 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return results;
   }
 
-  async analyze(params: TestParams<EchoTestSpec>, summary: ReplicantsSummary, result: EchoTestResult): Promise<any> {}
+  async analyze(params: TestParams<QueryTestSpec>, summary: ReplicantsSummary, result: EchoTestResult): Promise<any> {}
 }

@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import Redis from 'ioredis';
+
 import { Trigger } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { Context } from '@dxos/context';
 import { Filter, type QueryResult, type EchoDatabaseImpl, createDocAccessor } from '@dxos/echo-db';
-import { EchoTestPeer } from '@dxos/echo-db/testing';
+import { EchoTestPeer, TestReplicator, TestReplicatorConnection } from '@dxos/echo-db/testing';
 import { create, type ReactiveObject, S, TypedObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -14,14 +17,20 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
+import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
   content: S.string,
 }) {}
 
 export class EchoReplicant {
+  private readonly _ctx = new Context();
+
   private _testPeer?: EchoTestPeer = undefined;
   private _db?: EchoDatabaseImpl = undefined;
+
+  private readonly _connections: TestReplicatorConnection[] = [];
+  private _replicator?: TestReplicator = undefined;
 
   constructor(private readonly env: ReplicantEnv) {}
 
@@ -44,7 +53,7 @@ export class EchoReplicant {
   }
 
   async close(): Promise<void> {
-    await this._db!.close();
+    void this._ctx.dispose();
     await this._testPeer!.close();
   }
 
@@ -137,6 +146,51 @@ export class EchoReplicant {
       queryResolution,
       duration: performance.measure('query', 'query:begin', 'query:end').duration,
     });
+  }
+
+  /**
+   * Initialize stack for ECHO replication.
+   */
+  async initializeReplicator() {
+    this._replicator = new TestReplicator({
+      onConnect: async () => {},
+      onDisconnect: async () => {
+        this._connections.forEach((connection) => {
+          invariant(this._replicator?.context, 'Replicator not connected.');
+          this._replicator.context.onConnectionClosed(connection);
+        });
+      },
+    });
+    await this._testPeer?.host.addReplicator(this._replicator);
+  }
+
+  /**
+   * It will create a connection, and advertize everything to the other peer.
+   */
+  async createConnection({
+    otherPeerId,
+    readQueue,
+    writeQueue,
+  }: {
+    otherPeerId: string;
+    readQueue: string;
+    writeQueue: string;
+  }) {
+    invariant(this._replicator?.context, 'Replicator not connected.');
+
+    const readRedis = new Redis(DEFAULT_REDIS_OPTIONS);
+    const writeRedis = new Redis(DEFAULT_REDIS_OPTIONS);
+    this._ctx.onDispose(() => {
+      readRedis.disconnect();
+      writeRedis.disconnect();
+    });
+    const connection = new TestReplicatorConnection(
+      otherPeerId,
+      createRedisReadableStream({ client: readRedis, queue: readQueue }),
+      createRedisWritableStream({ client: writeRedis, queue: writeQueue }),
+    );
+    this._connections.push(connection);
+    this._replicator.context.onConnectionOpen(connection);
   }
 }
 
