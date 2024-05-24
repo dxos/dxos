@@ -1,6 +1,6 @@
 {
   "name": "@dxos/rpc",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A lightweight, transport-agnostic RPC implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
