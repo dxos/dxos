@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, Archive, Trash } from '@phosphor-icons/react';
-import React, { useState, type MouseEvent } from 'react';
+import { Archive, ArrowClockwise, Circle, Trash } from '@phosphor-icons/react';
+import React, { type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { fixedBorder, getSize, ghostHover, mx, baseSurface } from '@dxos/react-ui-theme';
+import { baseSurface, fixedBorder, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -18,7 +18,7 @@ export type ActionType = 'archive' | 'delete' | 'unread';
 export type MessageListProps = {
   messages?: MessageType[];
   selected?: string;
-  onSelect?: (message: MessageType) => void;
+  onSelect?: (id: string) => void;
   onAction?: (message: MessageType, action: ActionType) => void;
 };
 
@@ -34,7 +34,7 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
           key={message.id}
           message={message}
           selected={message.id === selected}
-          onSelect={onSelect ? () => onSelect(message) : undefined}
+          onSelect={onSelect ? () => onSelect(message.id) : undefined}
           onAction={onAction ? (action) => onAction(message, action) : undefined}
         />
       ))}
@@ -51,7 +51,6 @@ export type MessageItemProps = {
 
 export const MessageItem = ({ message, selected, onSelect, onAction }: MessageItemProps) => {
   const [expanded, setExpanded] = useState(false);
-
   const { t } = useTranslation(INBOX_PLUGIN);
 
   const handleAction = (event: MouseEvent<HTMLButtonElement>, action: ActionType) => {
@@ -67,19 +66,24 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('p-2 group flex border', fixedBorder, ghostHover, selected && styles.selected)}
+        className={mx('group flex p-2 gap-1 border', fixedBorder, ghostHover, selected && styles.selected)}
         onClick={() => onSelect?.()}
       >
-        {/* <div>
-          <Button variant='ghost' onClick={() => onSelect?.()}>
-            <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
-          </Button>
-        </div> */}
+        <div className='flex flex-col'>
+          <div className='flex h-8'>
+            <Button variant='ghost' onClick={() => onSelect?.()}>
+              <Circle
+                className={mx(getSize(4), selected && 'text-primary-500')}
+                weight={selected ? 'duotone' : 'regular'}
+              />
+            </Button>
+          </div>
+        </div>
 
         <div className='flex flex-col is-full overflow-hidden'>
           <div
-            className={mx('flex text-sm font-semibold justify-between fg-description pb-1 cursor-pointer')}
-            onClick={() => setExpanded((e) => !e)}
+            className={mx('flex h-8 items-center justify-between text-sm font-semibold fg-description cursor-pointer')}
+            onClick={() => setExpanded((expanded) => !expanded)}
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
@@ -108,18 +112,18 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
           <div
             className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'text-neutral-500')}
-            onClick={() => setExpanded((e) => !e)}
+            onClick={() => setExpanded((event) => !event)}
           >
             {subject}
           </div>
 
           {expanded && (
-            <div className='flex flex-col gap-2 pbs-2 mt-2 border-bs-2 separator-separator border-description'>
+            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator border-description'>
               {message.blocks.map((block, index) => (
                 <React.Fragment key={index}>
                   <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
-                    <div className='text-sm'>{block.content?.content}</div>
-                    <div className=' text-right text-xs'>{formatDate(now, new Date(block.timestamp))}</div>
+                    <div>{block.content?.content}</div>
+                    <div className='px-2 text-right text-sm'>{formatDate(now, new Date(block.timestamp))}</div>
                   </div>
                   {index !== message.blocks.length - 1 && <div role='none' className={mx('border-t fixedBorder')} />}
                 </React.Fragment>

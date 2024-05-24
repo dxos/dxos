@@ -47,6 +47,9 @@ export const useClient = () => {
   return client;
 };
 
+/**
+ * Properties for the ClientProvider.
+ */
 export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> & {
   children?: ReactNode;
 

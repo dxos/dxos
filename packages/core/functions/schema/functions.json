@@ -48,17 +48,11 @@
         "properties": {
           "function": {
             "type": "string",
-            "description": "Function ID/URI.",
+            "description": "Function URI.",
             "title": "string"
           },
           "meta": {
-            "type": "object",
-            "required": [],
-            "properties": {},
-            "additionalProperties": {
-              "$id": "/schemas/any",
-              "title": "any"
-            }
+            "$ref": "#/$defs/object"
           },
           "spec": {
             "anyOf": [
@@ -193,5 +187,20 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$defs": {
+    "object": {
+      "$id": "/schemas/object",
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "array"
+        }
+      ],
+      "description": "an object in the TypeScript meaning, i.e. the `object` type",
+      "title": "object"
+    }
+  }
 }

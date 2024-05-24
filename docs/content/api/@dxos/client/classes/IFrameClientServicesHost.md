@@ -1,11 +1,11 @@
 # Class `IFrameClientServicesHost`
-<sub>Declared in [packages/sdk/client/src/services/iframe-service-host.ts:36](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L36)</sub>
+<sub>Declared in [packages/sdk/client/src/services/iframe-service-host.ts:36](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L36)</sub>
 
 
 Proxy to host client service via iframe.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L48)
+### [constructor(options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L48)
 
 
 
@@ -19,26 +19,26 @@ Arguments:
 
 
 ## Properties
-### [closed](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L37)
+### [closed](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L37)
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
 The connection to the services provider was termintaed.
 
 This should fire if the services disconnect unexpectedly or during a client reset.
 
-### [descriptors](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L110)
+### [descriptors](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L110)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [services](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L114)
+### [services](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L114)
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L123)
+### [close()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L123)
 
 
 
@@ -50,7 +50,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/iframe-service-host.ts#L118)
+### [open()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/iframe-service-host.ts#L118)
 
 
 

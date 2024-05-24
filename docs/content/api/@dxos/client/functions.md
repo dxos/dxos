@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/devtools/devtools.ts#L50)
+### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/devtools/devtools.ts#L50)
 
 
 
@@ -14,7 +14,7 @@ Arguments:
 `options`: <code>[MountOptions](/api/@dxos/client/types/MountOptions)</code>
 
 
-### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/devtools/devtools.ts#L169)
+### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/devtools/devtools.ts#L169)
 
 
 
@@ -145,7 +145,7 @@ Arguments:
 `obj`: <code>undefined | T</code>
 
 
-### [getSpace(object)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/echo/util.ts#L12)
+### [getSpace(object)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/echo/util.ts#L12)
 
 
 
@@ -221,7 +221,7 @@ Arguments:
 `value`: <code>unknown</code>
 
 
-### [isSpace(object)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/echo/util.ts#L25)
+### [isSpace(object)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/echo/util.ts#L25)
 
 
 
@@ -247,7 +247,81 @@ Arguments:
 `pos`: <code>number</code>
 
 
-### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/client-services-factory.tsx#L21)
+### [Defaults(\[basePath\])]()
+
+
+JSON config.
+
+Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
+
+Arguments: 
+
+`basePath`: <code>string</code>
+
+
+### [Dynamics()]()
+
+
+Provided dynamically by server.
+
+Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
+
+Arguments: none
+
+
+
+
+### [Envs(\[basePath\])]()
+
+
+ENV variable (key/value) map.
+
+Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
+
+Arguments: 
+
+`basePath`: <code>string</code>
+
+
+### [Local()]()
+
+
+Development config.
+
+Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
+
+Arguments: none
+
+
+
+
+### [Remote(target, \[authenticationToken\])]()
+
+
+
+
+Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</code>
+
+Arguments: 
+
+`target`: <code>undefined | string</code>
+
+`authenticationToken`: <code>string</code>
+
+
+### [Storage()]()
+
+
+Load config from storage.
+
+Returns: <code>Promise&lt;Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;&gt;</code>
+
+Arguments: none
+
+
+
+
+### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/client-services-factory.tsx#L21)
 
 
 Create services from config.
@@ -256,7 +330,7 @@ Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/client/interfaces/
 
 Arguments: 
 
-`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 `createWorker`: <code>function</code>
 
@@ -265,7 +339,7 @@ Arguments:
 `signalTelemetryEnabled`: <code>boolean</code>
 
 
-### [fromAgent(options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/agent.ts#L31)
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent.ts#L31)
 
 
 Connects to locally running CLI daemon.
@@ -277,7 +351,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/client/types/FromAgentOptions)</code>
 
 
-### [fromHost(config, \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/local-client-services.ts#L24)
+### [fromHost(config, \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/local-client-services.ts#L24)
 
 
 Creates stand-alone services without rpc.
@@ -286,7 +360,7 @@ Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/client/interfaces/
 
 Arguments: 
 
-`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 `params`: <code>ClientServicesHostParams</code>
 
@@ -295,7 +369,7 @@ Arguments:
 `signalTelemetryEnabled`: <code>boolean</code>
 
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/utils.ts#L21)
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/utils.ts#L21)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -304,12 +378,12 @@ Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/client/interfaces/
 
 Arguments: 
 
-`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url, \[authenticationToken\])](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/socket.ts#L14)
+### [fromSocket(url, \[authenticationToken\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/socket.ts#L14)
 
 
 Access to remote client via a socket.
@@ -323,7 +397,7 @@ Arguments:
 `authenticationToken`: <code>string</code>
 
 
-### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/worker-client-services.ts#L24)
+### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/worker-client-services.ts#L24)
 
 
 Creates services provider connected via worker.
@@ -332,12 +406,12 @@ Returns: <code>Promise&lt;[WorkerClientServices](/api/@dxos/client/classes/Worke
 
 Arguments: 
 
-`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+`config`: <code>[Config](/api/@dxos/client/classes/Config)</code>
 
 `options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
 
 
-### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/services/agent.ts#L21)
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent.ts#L21)
 
 
 
@@ -351,18 +425,18 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/test-builder.ts#L190)
+### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/test-builder.ts#L190)
 
 
 
 
-Returns: <code>Promise&lt;[PublicKey](/api/@dxos/react-client/classes/PublicKey)&gt;</code>
+Returns: <code>Promise&lt;[PublicKey](/api/@dxos/client/classes/PublicKey)&gt;</code>
 
 Arguments: 
 
-`options`: <code>[Client](/api/@dxos/react-client/classes/Client)[]</code>
+`options`: <code>[Client](/api/@dxos/client/classes/Client)[]</code>
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 ### [performInvitation(options)]()
@@ -377,7 +451,7 @@ Arguments:
 `options`: <code>PerformInvitationParams</code>
 
 
-### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/test-builder.ts#L182)
+### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/test-builder.ts#L182)
 
 
 
@@ -391,7 +465,7 @@ Arguments:
 `db2`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [testSpaceAutomerge(createDb, checkDb)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/test-builder.ts#L172)
+### [testSpaceAutomerge(createDb, checkDb)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/test-builder.ts#L172)
 
 
 
@@ -405,7 +479,7 @@ Arguments:
 `checkDb`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/utils.ts#L16)
+### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/utils.ts#L16)
 
 
 
@@ -414,9 +488,9 @@ Returns: <code>Promise&lt;[Space](/api/@dxos/client/interfaces/Space)&gt;</code>
 
 Arguments: 
 
-`client`: <code>[Client](/api/@dxos/react-client/classes/Client)</code>
+`client`: <code>[Client](/api/@dxos/client/classes/Client)</code>
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 `options`: <code>Options</code>
 

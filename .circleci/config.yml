@@ -239,7 +239,7 @@ jobs:
       - image: 'lycheeverse/lychee:0.14.3'
     steps:
       - checkout
-      - run: lychee --offline ./docs/content/composer
+      - run: lychee --offline ./docs/content/composer ./docs/content/guide
 
 workflows:
   default:

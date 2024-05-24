@@ -11,13 +11,19 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/core/functions/src/index.ts"
+          "packages/core/functions/src/index.ts",
+          "packages/core/functions/src/types.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "prebuild": {},
+    "postbuild": {
+      "executor": "nx:run-script",
+      "options": {
+        "script": "gen-schema"
+      }
+    },
     "test": {
       "options": {
         "environments": [

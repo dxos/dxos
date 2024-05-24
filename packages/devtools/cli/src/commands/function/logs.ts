@@ -4,7 +4,7 @@
 
 import { Args } from '@oclif/core';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 /**
  * @deprecated

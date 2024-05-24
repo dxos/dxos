@@ -10,7 +10,7 @@ import { type Client } from '@dxos/client';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;

@@ -1,8 +1,8 @@
 ---
-order: 30
+order: 8
 ---
 
-# Example Applications
+# Example Gallery
 
 ## Composer
 

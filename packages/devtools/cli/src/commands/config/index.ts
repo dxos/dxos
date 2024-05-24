@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Config extends BaseCommand<typeof Config> {
   static override enableJsonFlag = true;

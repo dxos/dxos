@@ -11,7 +11,7 @@ import { TestBuilder } from '@dxos/client/testing';
 import { describe, test } from '@dxos/test';
 
 import { DevServer } from './dev-server';
-import { FunctionRegistry } from '../registry';
+import { FunctionRegistry } from '../function';
 import { createFunctionRuntime } from '../testing';
 import { type FunctionManifest } from '../types';
 
@@ -44,7 +44,7 @@ describe('dev server', () => {
       baseDir: path.join(__dirname, '../testing'),
     });
     const space = await client.spaces.create();
-    await registry.register(space, manifest);
+    await registry.register(space, manifest.functions);
     await server.start();
 
     // TODO(burdon): Doesn't shut down cleanly.

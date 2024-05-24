@@ -10,7 +10,7 @@ import { range } from '@dxos/util';
 import { TestType } from './types';
 import { FunctionDef, FunctionTrigger } from '../types';
 
-// TODO(burdon): Create TestBuilder.
+// TODO(burdon): Create new or extend existing TestBuilder.
 
 export const createInitializedClients = async (testBuilder: TestBuilder, count: number = 1, config?: Config) => {
   const clients = range(count).map(() => new Client({ config, services: testBuilder.createLocalClientServices() }));

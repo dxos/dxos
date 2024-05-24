@@ -6,7 +6,7 @@ import { Args } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): Move to logging.
 export default class Metrics extends BaseCommand<typeof Metrics> {

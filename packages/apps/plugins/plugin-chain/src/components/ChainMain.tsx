@@ -8,10 +8,10 @@ import { type ChainType } from '@braneframe/types';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
-  topbarBlockPaddingStart,
   bottombarBlockPaddingEnd,
-  textBlockWidth,
   mx,
+  textBlockWidth,
+  topbarBlockPaddingStart,
 } from '@dxos/react-ui-theme';
 
 import { Chain } from './Chain';

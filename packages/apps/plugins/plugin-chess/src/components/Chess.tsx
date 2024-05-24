@@ -24,7 +24,6 @@ export const Chess = ({ game }: { game: GameType }) => {
   const handleUpdate = (move: ChessMove) => {
     invariant(model);
     if (model.chess.move(move)) {
-      // TODO(burdon): Add move (requires array of scalars).
       game!.pgn = model.chess.pgn();
       setModel({ ...model });
     }
