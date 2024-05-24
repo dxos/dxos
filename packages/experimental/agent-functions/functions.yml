@@ -78,13 +78,11 @@ triggers:
 #      init:
 #        type: 'sync'
 
-#  - function: 'dxos.org/function/gpt'
-#    meta:
-#      prompt: 'faq'
-#    spec:
-#      type: 'subscription'
-#      filter:
-#      - type: 'dxos.org/type/Message'
+  - function: 'dxos.org/function/gpt'
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/embedding'
     spec:
@@ -116,7 +114,7 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'dxos.org/type/Message'
+#      - type: 'braneframe.Message'
 #        props:
 #          type: 'email'
 #      options:
