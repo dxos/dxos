@@ -923,6 +923,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../../core/functions
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant

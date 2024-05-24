@@ -4,8 +4,8 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { type Space, create } from '@dxos/react-client/echo';
+import { FunctionDef, type FunctionTrigger, type FunctionTriggerType, TriggerSpec } from '@dxos/functions/types';
+import { create } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
 
 import { Section } from './PromptTemplate';
@@ -17,101 +17,151 @@ const functions: FunctionDef[] = [
     handler: 'email-worker',
     description: 'Email Sync with Cloudflare Worker',
   }),
-];
 
-const triggers: FunctionTrigger[] = [
-  create(FunctionTrigger, {
-    function: 'dxos.org/function/email-worker',
-    meta: { account: 'hello@dxos.network' },
-    spec: {
-      type: 'websocket',
-      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network',
-      init: { type: 'sync' },
-    },
+  create(FunctionDef, {
+    uri: 'dxos.org/function/gpt',
+    route: '/gpt',
+    handler: 'gpt',
+    description: 'GPT Chat',
   }),
 ];
 
-export const TriggerEditor = ({ space }: { space: Space | undefined }) => {
-  const [selectedFunction, setFunction] = useState<string>();
+const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
+
+export const TriggerEditor = () => {
+  const [trigger, setTrigger] = useState<Partial<FunctionTrigger>>({});
+
+  const linkedFunction = useMemo(() => {
+    return functions.find((fn) => fn.uri === trigger.function);
+  }, [trigger]);
 
   const handleSelectFunction = (value: string) => {
-    setFunction(value);
-  };
+    const foundFunction = functions.find((fn) => fn.uri === value);
 
-  const availableTriggers = useMemo(
-    () => triggers.filter(({ function: fn }) => fn === selectedFunction),
-    [selectedFunction],
-  );
-
-  const [selectedTrigger, setTrigger] = useState<FunctionTrigger>();
-
-  const handleSelectTrigger = (value: string) => {
-    const foundTrigger = triggers.find((t) => t.id === value);
-    if (foundTrigger) {
-      setTrigger(foundTrigger);
+    if (foundFunction) {
+      setTrigger({ ...trigger, function: foundFunction.uri });
     }
   };
 
-  if (!space) {
-    return null;
-  }
+  const handleSelectTriggerType = (triggerType: string) => {
+    let spec: TriggerSpec;
+
+    switch (triggerType as FunctionTriggerType) {
+      case 'subscription': {
+        spec = { type: 'subscription', filter: [] };
+        break;
+      }
+      case 'timer': {
+        spec = { type: 'timer', cron: '0 0 * * *' };
+        break;
+      }
+      case 'webhook': {
+        spec = { type: 'webhook', method: 'GET' };
+        break;
+      }
+      case 'websocket': {
+        spec = { type: 'websocket', url: '' };
+        break;
+      }
+    }
+
+    if (spec) {
+      setTrigger({ ...trigger, spec });
+    }
+  };
 
   return (
     <div className='flex flex-col my-2 gap-4'>
       <DensityProvider density='fine'>
-        <Section title='Functions'>
-          <div role='none' className='p-2'>
-            <Select.Root value={selectedFunction} onValueChange={handleSelectFunction}>
-              <Select.TriggerButton placeholder={'Select function'} />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {functions.map(({ id, uri, description }) => (
-                      <Select.Option key={id} value={uri}>
-                        {description}
-                      </Select.Option>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-          </div>
-        </Section>
-        {selectedFunction && (
-          <Section title='Select a trigger'>
-            <div role='none' className='flex flex-col align-start gap-2 p-2'>
-              <Select.Root value={selectedTrigger?.id} onValueChange={handleSelectTrigger}>
-                <Select.TriggerButton placeholder={'Select trigger'} />
+        <Section title='Trigger Setup'>
+          <div role='none' className='p-2 flex flex-col gap-2'>
+            <div className='none flex flex-row gap-2'>
+              <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
+                <Select.TriggerButton placeholder={'Select function'} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {availableTriggers.map(({ id, spec }) => (
-                        <Select.Option key={id} value={id}>
-                          {spec.type}
+                      {functions.map(({ id, uri }) => (
+                        <Select.Option key={id} value={uri}>
+                          {uri}
                         </Select.Option>
                       ))}
                     </Select.Viewport>
                   </Select.Content>
                 </Select.Portal>
               </Select.Root>
-              {selectedTrigger && <TriggerMeta trigger={selectedTrigger} />}
+
+              <div role='none' className='flex flex-col align-start gap-2 p-2'>
+                <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
+                  <Select.TriggerButton placeholder={'Select trigger'} />
+                  <Select.Portal>
+                    <Select.Content>
+                      <Select.Viewport>
+                        {triggerTypes.map((t) => (
+                          <Select.Option key={t} value={t}>
+                            {t}
+                          </Select.Option>
+                        ))}
+                      </Select.Viewport>
+                    </Select.Content>
+                  </Select.Portal>
+                </Select.Root>
+              </div>
             </div>
-          </Section>
-        )}
+
+            {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
+          </div>
+        </Section>
+        <Section title='parameters'>
+          <div className='p-2'>
+            {trigger.spec && (
+              <TriggerSpec spec={trigger.spec} setSpec={(spec) => setTrigger((t) => ({ ...t, spec }))} />
+            )}
+          </div>
+        </Section>
       </DensityProvider>
     </div>
   );
 };
 
-const TriggerMeta = ({ trigger }: { trigger: FunctionTrigger }) => {
-  switch (trigger.spec.type) {
+const TriggerSpec = ({ spec, setSpec }: { spec: TriggerSpec; setSpec: (spec: TriggerSpec) => void }) => {
+  switch (spec.type) {
+    case 'subscription':
+      return (
+        <div className='flex flex-col gap-2'>
+          <Input.Root>
+            <Input.Label>Filter</Input.Label>
+            <p>TODO: Schema Filter Here</p>
+          </Input.Root>
+        </div>
+      );
+
+    case 'timer':
+      return (
+        <div className='flex flex-col gap-2'>
+          <Input.Root>
+            <Input.Label>Cron</Input.Label>
+            <Input.TextInput value={spec.cron} onChange={(e) => setSpec({ ...spec, cron: e.target.value })} />
+          </Input.Root>
+        </div>
+      );
+
+    case 'webhook':
+      return (
+        <div className='flex flex-col gap-2'>
+          <Input.Root>
+            <Input.Label>Method</Input.Label>
+            <Input.TextInput value={spec.method} onChange={(e) => setSpec({ ...spec, method: e.target.value })} />
+          </Input.Root>
+        </div>
+      );
+
     case 'websocket':
-      // TODO(Zan): Wire these fields up.
       return (
         <div className='flex flex-col gap-2'>
           <Input.Root>
             <Input.Label>URL</Input.Label>
-            <Input.TextInput value={trigger.spec.url} />
+            <Input.TextInput value={spec.url} onChange={(e) => setSpec({ ...spec, url: e.target.value })} />
           </Input.Root>
         </div>
       );
