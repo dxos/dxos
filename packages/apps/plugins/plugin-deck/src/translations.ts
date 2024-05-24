@@ -27,6 +27,8 @@ export default [
         'error fallback message': 'Unable to open this item',
         'plank heading fallback label': 'Untitled',
         'actions menu label': 'Options',
+        'settings deck label': 'Enable Deck',
+        'reload required message': 'Reload required.',
       },
     },
   },

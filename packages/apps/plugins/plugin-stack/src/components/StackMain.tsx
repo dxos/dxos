@@ -121,10 +121,10 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
       }
     : undefined;
 
-  const handleNavigate = async (id: string) => {
+  const handleNavigate = async (object: MosaicDataItem) => {
     await dispatch({
       action: NavigationAction.OPEN,
-      data: { activeParts: { main: [id] } },
+      data: { activeParts: { main: [fullyQualifiedId(object)] } },
     });
   };
 
