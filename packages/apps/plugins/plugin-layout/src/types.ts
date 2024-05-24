@@ -15,6 +15,7 @@ import type {
 export type LayoutSettingsProps = {
   showFooter: boolean;
   enableNativeRedirect: boolean;
+  deck: boolean;
 };
 
 export type LayoutPluginProvides = SurfaceProvides &

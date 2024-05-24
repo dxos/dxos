@@ -15,6 +15,7 @@ import type {
 export type DeckSettingsProps = {
   showFooter: boolean;
   enableNativeRedirect: boolean;
+  deck: boolean;
 };
 
 export type DeckPluginProvides = SurfaceProvides &
