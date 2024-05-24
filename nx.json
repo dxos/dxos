@@ -71,6 +71,9 @@
           "env": "DX_HOST"
         },
         {
+          "env": "DX_PWA"
+        },
+        {
           "env": "NODE_ENV"
         },
         {

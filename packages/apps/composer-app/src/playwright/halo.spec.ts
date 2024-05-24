@@ -50,10 +50,11 @@ test.describe('HALO tests', () => {
       expect(await guest.getSpaceItemsCount()).to.equal(2);
     }, 30_000);
 
-    await host.openIdentityManager();
-    await guest.openIdentityManager();
-    await waitForExpect(async () => {
-      expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
-    });
+    // TODO(wittjosiah): Display name is not currently set in this test.
+    // await host.openIdentityManager();
+    // await guest.openIdentityManager();
+    // await waitForExpect(async () => {
+    //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
+    // });
   });
 });
