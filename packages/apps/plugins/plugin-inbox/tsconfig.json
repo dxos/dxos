@@ -29,6 +29,9 @@
       "path": "../../../common/display-name"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
