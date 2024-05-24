@@ -10,7 +10,6 @@ import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } f
 // TODO(burdon): Evolve.
 export type RequestContext = {
   schema?: Map<string, DynamicEchoSchema>;
-  // TODO(burdon): What does this represent?
   object?: EchoReactiveObject<any>;
   text?: string;
 };
@@ -28,6 +27,8 @@ export const createContext = async (
     // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
     object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
+  } else {
+    object = message;
   }
 
   // Get text from comment.

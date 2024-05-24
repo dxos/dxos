@@ -5,7 +5,6 @@
 import { join } from 'node:path';
 
 import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
-import { sleep } from '@dxos/async';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -33,7 +32,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   }
 
   // TODO(burdon): The handler is called before the mutation is processed?
-  await sleep(500);
+  // await sleep(500);
 
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?

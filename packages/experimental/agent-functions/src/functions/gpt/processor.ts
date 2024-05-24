@@ -84,7 +84,7 @@ export class RequestProcessor {
         start();
         const context = await createContext(space, message, thread);
 
-        log.info('processing', { command, content });
+        log.info('processing', { command, content, context });
         const sequence = await this.createSequence(space, context, { prompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
@@ -272,9 +272,16 @@ export class RequestProcessor {
       case ChainInputType.CONTEXT: {
         return () => {
           if (value) {
-            return value ? get(context, value) : undefined;
+            const obj = get(context, value);
+            // TODO(burdon): Hack in case returning a TextV0Type object.
+            if (obj?.content) {
+              return obj.content;
+            }
+
+            return obj;
           }
 
+          // TODO(burdon): Default?
           return context.text;
         };
       }
