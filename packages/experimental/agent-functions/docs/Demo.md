@@ -60,9 +60,14 @@ LOG_FILTER="info" dx function dev -r ts-node/register --verbose --reload
 
 ### 4). Invite Space
 
+NOTE: Migrate Space?
+
 ```bash
 dx space share --open --host http://localhost:5173
 ```
+
+- Create Chess Game
+- Test Chess Function
 
 ## Testing Function
 
