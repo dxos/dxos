@@ -20,6 +20,7 @@ import {
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
+  ENV_DX_AGENT,
   ENV_DX_CONFIG,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
@@ -126,6 +127,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     'no-agent': Flags.boolean({
       description: 'Run command without using an agent.',
       default: false,
+      env: ENV_DX_AGENT,
     }),
 
     'no-start-agent': Flags.boolean({

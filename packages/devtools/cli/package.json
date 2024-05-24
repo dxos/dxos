@@ -86,7 +86,6 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@dxos/cli-composer": "workspace:*",
     "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
@@ -125,9 +124,6 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins",
       "@oclif/plugin-update"
-    ],
-    "devPlugins": [
-      "@dxos/cli-composer"
     ],
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",
