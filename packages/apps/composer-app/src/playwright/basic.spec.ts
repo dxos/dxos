@@ -6,8 +6,15 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { log } from '@dxos/log';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
+
+if (process.env.DX_PWA !== 'false') {
+  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
+  process.exit(1);
+}
 
 test.describe('Basic tests', () => {
   let host: AppManager;
@@ -62,11 +69,6 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
-    // TODO(wittjosiah): Chromium playwright is having issues with shell rpc.
-    if (browserName === 'chromium') {
-      test.skip();
-    }
-
     test.setTimeout(60_000);
 
     await host.createSpace();
@@ -76,8 +78,11 @@ test.describe('Basic tests', () => {
 
     await host.openIdentityManager();
     await host.shell.resetDevice();
+    // Wait for reset to complete and attempt to reload.
+    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
+    await host.page.goto(host.initialUrl);
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(1);
-    }, 15_000);
+    });
   });
 });
