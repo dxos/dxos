@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.5.3](https://github.com/dxos/dxos/compare/v0.5.2...v0.5.3) (2024-05-24)
+
+
+### Features
+
+* Add ability to query Expando ([#6736](https://github.com/dxos/dxos/issues/6736)) ([3c6700b](https://github.com/dxos/dxos/commit/3c6700be0cf6f09243b9c9c50bbffda2d5d1617e))
+* Add space key to index metadata ([#6786](https://github.com/dxos/dxos/issues/6786)) ([2c59258](https://github.com/dxos/dxos/commit/2c59258e50ff5f7b6dada0e64b68e7ffe893b16c))
+* Composer CLI extension. ([#6755](https://github.com/dxos/dxos/issues/6755)) ([79e0565](https://github.com/dxos/dxos/commit/79e0565ecd80e060232f829e337bd2622a6afbab))
+* **composer:** Reflow `Inbox` for demo ([#6753](https://github.com/dxos/dxos/issues/6753)) ([6e12b97](https://github.com/dxos/dxos/commit/6e12b97bd2c3c4eb0b3b2ae16747d66e0f3c924f))
+* **composer:** Status bar ([#6638](https://github.com/dxos/dxos/issues/6638)) ([3456876](https://github.com/dxos/dxos/commit/3456876b829c06bc63c3e6745c2173a4518c628f))
+* Deck increment ([#6720](https://github.com/dxos/dxos/issues/6720)) ([ac5e73c](https://github.com/dxos/dxos/commit/ac5e73c5eb8f8f4d5a6e10fd3fec98861b90b106))
+* **devtools:** autorefresh on stats panel ([#6716](https://github.com/dxos/dxos/issues/6716)) ([5a4243f](https://github.com/dxos/dxos/commit/5a4243f90388415e1b24696aa1caee3eced571d4))
+* Diagostics delivery system ([#6731](https://github.com/dxos/dxos/issues/6731)) ([8ffbbae](https://github.com/dxos/dxos/commit/8ffbbae29b97b2f86319f76634592ecc93a59165))
+* Email sync demo ([#6727](https://github.com/dxos/dxos/issues/6727)) ([c3feabc](https://github.com/dxos/dxos/commit/c3feabc90e2383d0ca851ea532073a4a6e14c7d9))
+* Function scheduler ([#6721](https://github.com/dxos/dxos/issues/6721)) ([f752aaa](https://github.com/dxos/dxos/commit/f752aaa2492da850ab9f2149e7cfcf6d4bd06b4b))
+* **functions:** functions and triggers are ECHO objects ([#6751](https://github.com/dxos/dxos/issues/6751)) ([0d1a10f](https://github.com/dxos/dxos/commit/0d1a10fce626ac740d71e7764b0f57aa7d4c12e2))
+* **halo:** updateMemberRole API ([#6714](https://github.com/dxos/dxos/issues/6714)) ([3b535c7](https://github.com/dxos/dxos/commit/3b535c7582925e23e7436e0aed4c7162df1c8667))
+* **plugin-threads:** Open comments in c11y sidebar when attention changes ([#6754](https://github.com/dxos/dxos/issues/6754)) ([4e877aa](https://github.com/dxos/dxos/commit/4e877aae0434fdc80d0f22b87fb001432a6f6042))
+* restart function websocket connection if closed by server. ([#6738](https://github.com/dxos/dxos/issues/6738)) ([13216f2](https://github.com/dxos/dxos/commit/13216f25a53c2120c2d7dfd02171f2d5a91ccd95))
+* Support indexed queries with `Filter.or` ([#6732](https://github.com/dxos/dxos/issues/6732)) ([e76d664](https://github.com/dxos/dxos/commit/e76d6641589af6fed930a65fbb6064dab4c29052))
+
+
+### Bug Fixes
+
+* Budget indexing time ([#6748](https://github.com/dxos/dxos/issues/6748)) ([b41a319](https://github.com/dxos/dxos/commit/b41a31957f5c3454896bdb03904a2092a9241ada))
+* **composer:** Status bar dark mode colors ([#6752](https://github.com/dxos/dxos/issues/6752)) ([bc67fdb](https://github.com/dxos/dxos/commit/bc67fdbbc4e9cf57209a93af8af40aa95bb2eaea))
+* Deck polish and other improvements & fixes ([#6803](https://github.com/dxos/dxos/issues/6803)) ([83788ff](https://github.com/dxos/dxos/commit/83788ff506dd32b6fad7a5f1288d794b4a8827b1))
+* devtools perf panels ([#6707](https://github.com/dxos/dxos/issues/6707)) ([3d65399](https://github.com/dxos/dxos/commit/3d65399645dcc7f3b3d7e0f7fbd049ef46bd29ca))
+* **echo:** allow accessing type reference if schema wasn't registered ([#6787](https://github.com/dxos/dxos/issues/6787)) ([61bbff4](https://github.com/dxos/dxos/commit/61bbff40cb9d547c855d75d4f883a41a2a434520))
+* Fix Testbench device invitations ([#6788](https://github.com/dxos/dxos/issues/6788)) ([1b80faf](https://github.com/dxos/dxos/commit/1b80fafb1ec691e25809d1a2a090f404e733882e))
+* Fragment imported space; Improve import speed ([#6808](https://github.com/dxos/dxos/issues/6808)) ([2ad0afc](https://github.com/dxos/dxos/commit/2ad0afcaf1abca170b74827a11d5b6a6fd174707))
+* InvitationCode updates on time ([#6768](https://github.com/dxos/dxos/issues/6768)) ([cb47aab](https://github.com/dxos/dxos/commit/cb47aaba95afcf210843abfdd282db17654487b8))
+* **plugin-deck:** Placeholders and navigation ([#6784](https://github.com/dxos/dxos/issues/6784)) ([7cd4303](https://github.com/dxos/dxos/commit/7cd430307f0df5e6a1c257c2cbc6946ddecadf98))
+* **status-bar:** Remove placeholder online status ([#6741](https://github.com/dxos/dxos/issues/6741)) ([6f2dfea](https://github.com/dxos/dxos/commit/6f2dfea8c98ba3e2c5efb9452f601c48768e7364))
+* **tables:** Selected cell overlaps sticky header / footer ([#6802](https://github.com/dxos/dxos/issues/6802)) ([23e8f03](https://github.com/dxos/dxos/commit/23e8f0398760b1e02b114348c6589638420e38d6))
+
 ## [0.5.2](https://github.com/dxos/dxos/compare/v0.5.1...v0.5.2) (2024-05-17)
 
 

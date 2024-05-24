@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
