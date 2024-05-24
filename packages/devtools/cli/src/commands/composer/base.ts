@@ -18,6 +18,17 @@ const SCHEMA = [FunctionDef, FunctionTrigger];
 // TODO(burdon): Move to @dxos/cli-composer.
 //  https://oclif.io/docs/command_discovery_strategies
 export abstract class ComposerBaseCommand<T extends typeof Command = any> extends BaseCommand<T> {
+  protected _schemaMap?: Map<string, S.Schema<any>>;
+
+  get schemaMap() {
+    invariant(this._schemaMap, 'Schema map not initialized.');
+    return this._schemaMap;
+  }
+
+  protected override async onClientInit(client: Client) {
+    this._schemaMap = await this.addTypes(client);
+  }
+
   /**
    * build typename
    */

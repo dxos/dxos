@@ -4,6 +4,5 @@
 
 // TODO(burdon): Factor out.
 export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-  columnWidth: 'max-w-[400px]',
+  selected: '!bg-white dark:!bg-neutral-900',
 };

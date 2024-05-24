@@ -1,7 +1,7 @@
 {
   "name": "@dxos/functions",
   "version": "0.5.2",
-  "description": "Functions SDK and runtime.",
+  "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -10,10 +10,24 @@
     ".": {
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node/index.cjs",
-      "default": "./dist/lib/node/index.cjs"
+      "default": "./dist/lib/node/index.cjs",
+      "types": "./dist/types/src/index.d.ts"
+    },
+    "./types": {
+      "browser": "./dist/lib/browser/types.mjs",
+      "node": "./dist/lib/node/types.cjs",
+      "default": "./dist/lib/node/types.cjs",
+      "types": "./dist/types/src/types.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "types": [
+        "dist/types/src/types.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "schema",
