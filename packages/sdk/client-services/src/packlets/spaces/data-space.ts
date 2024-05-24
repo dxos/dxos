@@ -4,12 +4,16 @@
 
 import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
-import { cancelWithContext, Context, ContextDisposedError } from '@dxos/context';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-db';
-import { type MetadataStore, type Space, createMappedFeedWriter } from '@dxos/echo-pipeline';
-import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import {
+  AutomergeDocumentLoaderImpl,
+  createMappedFeedWriter,
+  type MetadataStore,
+  type Space,
+} from '@dxos/echo-pipeline';
+import { ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -17,15 +21,15 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { SpaceState, type Space as SpaceProto, CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
+import { CreateEpochRequest, SpaceState, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   AdmittedFeed,
-  type ProfileDocument,
+  SpaceMember,
   type Credential,
   type Epoch,
+  type ProfileDocument,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
@@ -33,10 +37,10 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, assignDeep } from '@dxos/util';
 
+import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
-import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
@@ -454,7 +458,7 @@ export class DataSpace {
 
           // Find properties object.
           const objects = Object.entries((rootHandle.docSync() as SpaceDoc).objects!);
-          const properties = objects.find(([_, value]) => value.system.type?.itemId === TYPE_PROPERTIES);
+          const properties = findPropertiesObject(rootHandle.docSync() as SpaceDoc);
           const otherObjects = objects.filter(([key]) => key !== properties?.[0]);
           invariant(properties, 'Properties not found');
 
@@ -531,3 +535,16 @@ export class DataSpace {
     this.stateUpdate.emit();
   }
 }
+
+/**
+ * Assumes properties are at root.
+ */
+export const findPropertiesObject = (spaceDoc: SpaceDoc): [string, ObjectStructure] | undefined => {
+  for (const id in spaceDoc.objects ?? {}) {
+    const obj = spaceDoc.objects![id];
+    if (obj.system.type?.itemId === TYPE_PROPERTIES) {
+      return [id, obj];
+    }
+  }
+  return undefined;
+};

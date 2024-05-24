@@ -24,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -35,10 +35,14 @@ import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace } from './data-space';
+import { DataSpace, findPropertiesObject } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
+import { trace } from '@dxos/tracing';
+import { AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { SpaceDoc } from '@dxos/echo-protocol';
+import { Doc } from '@dxos/automerge/automerge';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -103,6 +107,31 @@ export class DataSpaceManager {
     } = params ?? {};
     this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
     this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
+
+    trace.diagnostic({
+      id: 'spaces',
+      name: 'Spaces',
+      fetch: async () => {
+        return Array.from(this._spaces.values()).map((space) => {
+          const rootUrl = space.automergeSpaceState.rootUrl;
+          const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
+          const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
+
+          const properties = rootDoc && findPropertiesObject(rootDoc);
+
+          return {
+            key: space.key.toHex(),
+            state: SpaceState[space.state],
+            name: properties?.[1].data.name ?? null,
+            inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
+            linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
+            credentials: space.inner.spaceState.credentials.length,
+            members: space.inner.spaceState.members.size,
+            rootUrl,
+          };
+        });
+      },
+    });
   }
 
   // TODO(burdon): Remove.
@@ -113,7 +142,7 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     log('open');
-    log.trace('dxos.echo.data-space-manager.open', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
@@ -134,7 +163,7 @@ export class DataSpaceManager {
       }
     }
 
-    log.trace('dxos.echo.data-space-manager.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
   @synchronized
