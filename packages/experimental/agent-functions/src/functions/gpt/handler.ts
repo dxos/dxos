@@ -53,7 +53,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         return null;
       }
 
-      // Skip messages that don't belong to an active thread.
+      // Separate messages that don't belong to an active thread.
       const thread = threads.find((thread: ThreadType) => thread.messages.some((msg) => msg?.id === message.id));
       if (!thread) {
         return [message, undefined] as [MessageType, ThreadType | undefined];
@@ -87,7 +87,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {
-        const blocks = await processor.processThread({
+        const { success, blocks } = await processor.processThread({
           space,
           thread,
           message,
@@ -109,7 +109,8 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
             );
 
             thread.messages.push(response);
-          } else {
+          } else if (success) {
+            // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".
             getMeta(message).keys.push(metaKey);
             message.blocks.push(...blocks);
