@@ -32,7 +32,6 @@ import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
-import { isEchoObject } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
@@ -545,16 +544,9 @@ export interface ItemsUpdatedEvent {
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
-  if (isEchoObject(core.rootProxy)) {
-    // NOTE: We need to store properties in the root document since space-list initialization
-    //  expects it to be loaded as space become available.
-    if (core.getType()?.itemId === TYPE_PROPERTIES) {
-      return false;
-    }
-    return true;
-  } else {
-    return false;
-  }
+  // NOTE: We need to store properties in the root document since space-list initialization
+  //  expects it to be loaded as space become available.
+  return core.getType()?.itemId !== TYPE_PROPERTIES;
 };
 
 /**

@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import isEqual from 'lodash.isequal';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space } from '@dxos/client-protocol';
+import { Properties, type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter, type Query } from '@dxos/echo-db';
 import { create, Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
@@ -19,7 +19,7 @@ import { Client } from '../client';
 import { ContactType, DocumentType, TestBuilder, TextV0Type } from '../testing';
 
 describe('Index queries', () => {
-  const getObjects = () => ({
+  const createObjects = () => ({
     contacts: [
       create(ContactType, {
         name: 'Alice',
@@ -116,9 +116,10 @@ describe('Index queries', () => {
     afterTest(() => client.destroy());
 
     const space = await client.spaces.create();
-    await addObjects(space, getObjects().contacts);
 
-    await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+    const { contacts } = createObjects();
+    await addObjects(space, contacts);
+    await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
   });
 
   test('indexes persists between client restarts', async () => {
@@ -131,14 +132,16 @@ describe('Index queries', () => {
       await builder.destroy();
     });
 
+    const { contacts } = createObjects();
+
     {
       const client = await initClient(builder.createLocalClientServices());
       await client.halo.createIdentity();
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addObjects(space, getObjects().contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await addObjects(space, contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -150,7 +153,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
     }
   });
 
@@ -162,6 +165,7 @@ describe('Index queries', () => {
       await builder.destroy();
     });
 
+    const { contacts } = createObjects();
     let spaceKey: PublicKey;
     {
       const client = await initClient(builder.createLocalClientServices());
@@ -169,8 +173,8 @@ describe('Index queries', () => {
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addObjects(space, getObjects().contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await addObjects(space, contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -185,7 +189,7 @@ describe('Index queries', () => {
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
     }
   });
 
@@ -197,6 +201,7 @@ describe('Index queries', () => {
       await builder.destroy();
     });
 
+    const { contacts } = createObjects();
     let spaceKey: PublicKey;
     {
       const client = await initClient(builder.createLocalClientServices());
@@ -205,8 +210,8 @@ describe('Index queries', () => {
       const space = await client.spaces.create();
       spaceKey = space.key;
 
-      await addObjects(space, getObjects().contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await addObjects(space, contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
 
       await client.destroy();
     }
@@ -223,7 +228,7 @@ describe('Index queries', () => {
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 
       await client.services.services.QueryService?.reindex();
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
     }
   });
 
@@ -233,23 +238,24 @@ describe('Index queries', () => {
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
+    const { contacts, documents } = createObjects();
 
     {
-      await addObjects(space, getObjects().contacts);
-      await matchObjects(space.db.query(Filter.schema(ContactType)), getObjects().contacts);
+      await addObjects(space, contacts);
+      await matchObjects(space.db.query(Filter.schema(ContactType)), contacts);
     }
 
     // TODO(burdon): Do we support text matching?
     {
       const query = space.db.query(Filter.schema(DocumentType));
-      await addObjects(space, getObjects().documents);
-      await matchObjects(query, getObjects().documents);
+      await addObjects(space, documents);
+      await matchObjects(query, documents);
       expect((await query.run()).objects.length).to.equal(2);
     }
 
     {
       const query = space.db.query(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType)));
-      await matchObjects(query, [...getObjects().contacts, ...getObjects().documents]);
+      await matchObjects(query, [...contacts, ...documents]);
       expect((await query.run()).objects.length).to.equal(5);
     }
   });
@@ -260,14 +266,19 @@ describe('Index queries', () => {
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
+    const { contacts, documents } = createObjects();
 
-    const [contact] = await addObjects(space, getObjects().contacts);
-    const [document] = await addObjects(space, getObjects().documents);
+    const contactsInDatabase = await addObjects(space, contacts);
+    const documentsInDatabase = await addObjects(space, documents);
+    const expectedIds = [...contactsInDatabase, ...documentsInDatabase].map(({ id }) => id);
 
     {
-      const query = space.db.query(Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType))));
+      const query = space.db.query(
+        Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType), Filter.schema(Properties))),
+      );
       const ids = (await query.run()).objects.map(({ id }) => id);
-      expect(ids.every((id) => contact.id !== id && document.id !== id)).to.be.true;
+      expect(ids.every((id) => expectedIds.every((expectedId) => expectedId !== id))).to.be.true;
+      expect(expectedIds.every((expectedId) => ids.every((id) => expectedId !== id))).to.be.true;
     }
   });
 
@@ -277,14 +288,15 @@ describe('Index queries', () => {
     const client = await initClient(builder.createLocalClientServices());
     await client.halo.createIdentity();
     const space = await client.spaces.create();
+    const { expandos } = createObjects();
 
-    await addObjects(space, getObjects().expandos);
+    await addObjects(space, expandos);
     const query = space.db.query(Filter.schema(Expando));
-    await matchObjects(query, getObjects().expandos);
+    await matchObjects(query, expandos);
   });
 });
 
-const objectContains = (container: Object, content: Object): Boolean => {
+const objectContains = (container: any, content: any): Boolean => {
   log('objectContains', {
     container,
     content,
