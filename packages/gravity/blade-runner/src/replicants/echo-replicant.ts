@@ -34,27 +34,38 @@ export class EchoReplicant {
 
   constructor(private readonly env: ReplicantEnv) {}
 
-  async open({
-    spaceKey = PublicKey.random().toHex(),
-    rootUrl,
-  }: { spaceKey?: string; path?: string; rootUrl?: AutomergeUrl } = {}) {
+  async open() {
+    log.trace('dxos.echo-replicant.open');
     this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
     await this._testPeer.open();
-    this._db = rootUrl
-      ? await this._testPeer.openDatabase(PublicKey.fromHex(spaceKey), rootUrl)
-      : await this._testPeer.createDatabase(PublicKey.fromHex(spaceKey));
+  }
+
+  async close(): Promise<void> {
+    log.trace('dxos.echo-replicant.close');
+    void this._ctx.dispose();
+    await this._testPeer!.close();
+  }
+
+  async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
+    this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
     this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
 
-    log.trace('dxos.echo-replicant.open', { spaceKey });
+    log.trace('dxos.echo-replicant.createDatabase', { spaceKey });
+    return {
+      spaceKey: this._db.spaceKey.toHex(),
+      rootUrl: this._db.rootUrl!,
+    };
+  }
+
+  async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
+    this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
+    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+
+    log.trace('dxos.echo-replicant.openDatabase', { spaceKey });
     return {
       spaceKey: this._db.spaceKey.toHex(),
       rootUrl: this._db.rootUrl,
     };
-  }
-
-  async close(): Promise<void> {
-    void this._ctx.dispose();
-    await this._testPeer!.close();
   }
 
   async createDocuments({

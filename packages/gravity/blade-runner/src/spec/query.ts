@@ -32,7 +32,7 @@ type QueryTestSpec = {
   queryResolution: Exclude<QueryResult<any>['resolution'], undefined>['source'];
 };
 
-type EchoTestResult = {
+type QueryTestResult = {
   /**
    * Time to create all objects in [ms].
    */
@@ -49,13 +49,13 @@ type EchoTestResult = {
   diskQueryTime: number;
 };
 
-export class QueryTestPlan implements TestPlan<QueryTestSpec, EchoTestResult> {
+export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
   defaultSpec(): QueryTestSpec {
     return {
       platform: 'chromium',
 
       // 50, 200, 500, 1000, 2000
-      numberOfObjects: 300,
+      numberOfObjects: 1,
       objectSizeLimit: 2000,
 
       // 100, 200, 400, 1000, 1500, 2000
@@ -66,13 +66,13 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, EchoTestResult> {
   }
 
   async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>) {
-    const results = {} as EchoTestResult;
+    const results = {} as QueryTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
-    const spaceKey = PublicKey.random().toHex();
 
     const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
-    const { rootUrl } = await replicant.brain.open({ spaceKey });
+    await replicant.brain.open();
+    const { spaceKey, rootUrl } = await replicant.brain.createDatabase();
 
     //
     // Create objects.
@@ -111,7 +111,8 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, EchoTestResult> {
     //
     {
       const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
-      await replicant.brain.open({ spaceKey, path: userDataDir, rootUrl: rootUrl as AutomergeUrl });
+      await replicant.brain.open();
+      await replicant.brain.openDatabase({ spaceKey, rootUrl: rootUrl as AutomergeUrl });
 
       performance.mark('diskQuery:begin');
       await replicant.brain.queryDocuments({
@@ -127,5 +128,5 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, EchoTestResult> {
     return results;
   }
 
-  async analyze(params: TestParams<QueryTestSpec>, summary: ReplicantsSummary, result: EchoTestResult): Promise<any> {}
+  async analyze(params: TestParams<QueryTestSpec>, summary: ReplicantsSummary, result: QueryTestResult): Promise<any> {}
 }
