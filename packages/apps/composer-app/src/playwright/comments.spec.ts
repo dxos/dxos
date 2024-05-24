@@ -51,11 +51,11 @@ test.describe('Comments tests', () => {
     });
 
     const editedText = 'Edited';
+    await message.fill('');
     await message.fill(editedText);
-    const newText = messageText + editedText;
-    const editedMessage = Thread.getMessage(thread, newText).getByRole('textbox');
+    const editedMessage = Thread.getMessage(thread, editedText).getByRole('textbox');
     await waitForExpect(async () => {
-      expect((await editedMessage.innerText()).trim()).to.equal(newText);
+      expect((await editedMessage.innerText()).trim()).to.equal(editedText);
     });
   });
 
