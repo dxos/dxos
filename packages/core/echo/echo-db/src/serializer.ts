@@ -100,7 +100,7 @@ export class Serializer {
 
     const data = {
       objects: loadedObjects.filter(nonNullable).map((object) => {
-        return this.exportObject(object as any);
+        return this._exportObject(object as any);
       }),
 
       version: Serializer.version,
@@ -135,11 +135,12 @@ export class Serializer {
         continue;
       }
 
-      await this.importObject(database, object);
+      this._importObject(database, object);
     }
+    await database.flush();
   }
 
-  exportObject(object: EchoReactiveObject<any>): SerializedObject {
+  private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
     const core = getAutomergeObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
@@ -158,7 +159,7 @@ export class Serializer {
     });
   }
 
-  async importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObject) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
@@ -174,8 +175,6 @@ export class Serializer {
     }
 
     database.automerge.addCore(core);
-    // TODO(dmaretskyi): It is very slow to call flush after every object.
-    await database.flush();
   }
 }
 
