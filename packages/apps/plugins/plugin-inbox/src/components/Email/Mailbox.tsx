@@ -4,10 +4,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { MessageState, type MailboxType, type MessageType } from '@braneframe/types';
+import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
 import { nonNullable } from '@dxos/util';
 
-import { MessageList, type ActionType } from './MessageList';
+import { type ActionType, MessageList } from './MessageList';
 
 const DEFAULT_READ_TIMEOUT = 3_000;
 
@@ -27,13 +27,16 @@ export type MailboxOptions = { readTimout?: number };
 export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
-  const [selected, setSelected] = useState<MessageType>();
+  const [selected, setSelected] = useState<string>();
   const tRef = useRef<ReturnType<typeof setTimeout>>();
   useEffect(() => {
     clearTimeout(tRef.current);
     if (selected) {
       tRef.current = setTimeout(() => {
-        selected.read = true;
+        const object = mailbox?.messages?.filter(nonNullable).find((message) => message.id === selected);
+        if (object) {
+          object.read = true;
+        }
       }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
     }
 
@@ -64,6 +67,5 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     }
   };
 
-  // TODO(zan): Restore selection state.
-  return <MessageList messages={messages} onAction={handleAction} />;
+  return <MessageList messages={messages} selected={selected} onSelect={setSelected} onAction={handleAction} />;
 };

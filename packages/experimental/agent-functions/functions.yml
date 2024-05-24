@@ -52,7 +52,6 @@ functions:
     handler: 'github'
     description: 'Github Sync.'
 
-# TODO(burdon): Set meta keys for idempotence.
 triggers:
 
   - function: 'dxos.org/function/hello'
@@ -87,15 +86,15 @@ triggers:
 #      filter:
 #      - type: 'dxos.org/type/Message'
 
-#  - function: 'dxos.org/function/embedding'
-#    spec:
-#      type: 'subscription'
-#      filter:
-#      - type: 'braneframe.Document'
-#      - type: 'braneframe.File'
-#      options:
-#        deep: true
-#        delay: 5
+  - function: 'dxos.org/function/embedding'
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'braneframe.Document'
+      - type: 'braneframe.File'
+      options:
+        deep: true
+        delay: 5
 
 #  - function: 'dxos.org/function/calendar'
 #    spec:
@@ -127,4 +126,4 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'example.com/schema/project'
+#      - type: 'example.com/type/project'

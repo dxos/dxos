@@ -6,6 +6,10 @@ import { AST } from '@effect/schema';
 import * as S from '@effect/schema/Schema';
 import type { Simplify } from 'effect/Types';
 
+import { type Comparator, intersection } from '@dxos/util';
+
+import { getMeta } from './getter';
+
 export const data = Symbol.for('dxos.echo.data');
 
 export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
@@ -17,12 +21,12 @@ export const ECHO_ATTR_META = '@meta';
 
 export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
 
-export const ForeignKeySchema = S.struct({
+const _ForeignKeySchema = S.struct({
   source: S.string,
   id: S.string,
 });
-
-export type ForeignKey = S.Schema.Type<typeof ForeignKeySchema>;
+export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
+export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
 export const ObjectMetaSchema = S.struct({
   keys: S.mutable(S.array(ForeignKeySchema)),
@@ -58,10 +62,14 @@ export type Ref<T> = T | undefined;
  */
 export type ReactiveObject<T> = { [K in keyof T]: T[K] };
 
+// TODO(burdon): Rename to just EchoObject?
 export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 /**
  * Utility to split meta property from raw object.

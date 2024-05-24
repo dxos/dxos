@@ -17,12 +17,6 @@ import {
 import { EventList } from './EventtList';
 import { MasterDetail } from '../MasterDetail';
 
-// TODO(burdon): Factor out.
-export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-  columnWidth: 'max-w-[400px]',
-};
-
 const byDate =
   (direction = -1) =>
   ({ startDate: a }: EventType, { startDate: b }: EventType) =>

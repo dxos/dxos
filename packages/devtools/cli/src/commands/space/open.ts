@@ -4,11 +4,11 @@
 
 import { type Client } from '@dxos/client';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 export default class Open extends BaseCommand<typeof Open> {
   static override description = 'Open space.';
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
     const { key } = this.args;

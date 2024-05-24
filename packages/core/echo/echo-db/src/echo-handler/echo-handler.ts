@@ -313,6 +313,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
+  getTypeReference(target: ProxyTarget): Reference | undefined {
+    return target[symbolNamespace] === DATA_NAMESPACE ? target[symbolInternals].core.getType() : undefined;
+  }
+
   isDeleted(target: any): boolean {
     return target[symbolInternals].core.isDeleted();
   }

@@ -6,6 +6,7 @@ import React from 'react';
 
 // Lazily load components for content surfaces.
 export const ThreadMain = React.lazy(() => import('./ThreadMain'));
+export const ThreadArticle = React.lazy(() => import('./ThreadArticle'));
 
 // TODO(wittjosiah): Suspense boundary for sidebar?
 export * from './ThreadSettings';

@@ -4,12 +4,13 @@
 
 import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { create, Filter, type Space } from '@dxos/client/echo';
+import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
+import { ECHO_ATTR_META, foreignKey, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, diff, intersection } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
@@ -100,13 +101,24 @@ export class TriggerRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
-    const reactiveObjects = manifest.triggers.map((template: Omit<FunctionTrigger, 'id'>) =>
-      create(FunctionTrigger, { ...template }),
-    );
-    reactiveObjects.forEach((obj) => space.db.add(obj));
+    // Sync triggers.
+    const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
+    const { added } = diff(existing, manifest.triggers, (a, b) => {
+      // Create FK to enable syncing if none are set.
+      // TODO(burdon): Warn if not unique.
+      const keys = b[ECHO_ATTR_META]?.keys ?? [foreignKey('manifest', [b.function, b.spec.type].join('-'))];
+      return intersection(getMeta(a)?.keys ?? [], keys, foreignKeyEquals).length > 0;
+    });
+
+    // TODO(burdon): Update existing.
+    added.forEach((trigger) => {
+      const { meta, object } = splitMeta(trigger);
+      space.db.add(create(FunctionTrigger, object, meta));
+    });
   }
 
   protected override async _open(): Promise<void> {
+    log.info('open...');
     const spaceListSubscription = this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         if (this._triggersBySpaceKey.has(space.key)) {
@@ -119,12 +131,15 @@ export class TriggerRegistry extends Resource {
         if (this._ctx.disposed) {
           break;
         }
-        const functionsSubscription = space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
-          await this._handleRemovedTriggers(space, triggers.objects, registered);
-          this._handleNewTriggers(space, triggers.objects, registered);
-        });
 
-        this._ctx.onDispose(functionsSubscription);
+        // Subscribe to updates.
+        this._ctx.onDispose(
+          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
+            log.info('update', { space: space.key, triggers: triggers.objects.length });
+            await this._handleRemovedTriggers(space, triggers.objects, registered);
+            this._handleNewTriggers(space, triggers.objects, registered);
+          }),
+        );
       }
     });
 
@@ -132,6 +147,7 @@ export class TriggerRegistry extends Resource {
   }
 
   protected override async _close(_: Context): Promise<void> {
+    log.info('close...');
     this._triggersBySpaceKey.clear();
   }
 
@@ -143,7 +159,10 @@ export class TriggerRegistry extends Resource {
     if (newTriggers.length > 0) {
       const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
-      log('registered new triggers', () => ({ spaceKey: space.key, functions: newTriggers.map((t) => t.function) }));
+      log.info('added', () => ({
+        spaceKey: space.key,
+        triggers: newTriggers.map((trigger) => trigger.function),
+      }));
       this.registered.emit({ space, triggers: newTriggers });
     }
   }
@@ -158,6 +177,13 @@ export class TriggerRegistry extends Resource {
       const wasRemoved =
         allTriggers.find((trigger: FunctionTrigger) => trigger.id === registered[i].trigger.id) == null;
       if (wasRemoved) {
+        // TODO(burdon): Emit event?
+        if (removed.length) {
+          log.info('removed', () => ({
+            spaceKey: space.key,
+            triggers: removed.map((trigger) => trigger.function),
+          }));
+        }
         const unregistered = registered.splice(i, 1)[0];
         await unregistered.activationCtx?.dispose();
         removed.push(unregistered.trigger);

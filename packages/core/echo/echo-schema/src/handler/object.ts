@@ -28,30 +28,36 @@ export const create: {
   if (obj && (objOrSchema as any) !== Expando) {
     return _create<T>({ ...obj } as T, meta, objOrSchema as S.Schema<T>);
   } else if (obj && (objOrSchema as any) === Expando) {
-    return _create<T>({ ...obj } as T, meta, undefined, true);
+    return _create<T>({ ...obj } as T, meta, undefined, { expando: true });
   } else {
     // TODO(burdon): Breaks if cloned?
     return _create<T>(objOrSchema as T, meta);
   }
 };
 
-const _create = <T extends {}>(obj: T, meta?: ObjectMeta, schema?: S.Schema<T>, expando = false): ReactiveObject<T> => {
+const _create = <T extends {}>(
+  obj: T,
+  meta?: ObjectMeta,
+  schema?: S.Schema<T>,
+  options?: { expando?: boolean },
+): ReactiveObject<T> => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
 
   if (schema) {
-    if (getEchoObjectAnnotation(schema)) {
-      _setId(obj);
+    const shouldGenerateId = options?.expando || getEchoObjectAnnotation(schema);
+    if (shouldGenerateId) {
+      setId(obj);
     }
-    _initMeta(obj, meta);
+    initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
     return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
   } else {
-    if (expando) {
-      _setId(obj);
+    if (options?.expando) {
+      setId(obj);
     }
-    _initMeta(obj, meta);
+    initMeta(obj, meta);
     return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
   }
 };
@@ -62,7 +68,7 @@ const _generateId = () => PublicKey.random().toHex();
 /**
  * Set ID on ECHO objects (Schema and Expando).
  */
-const _setId = <T extends {}>(obj: ExcludeId<T>) => {
+const setId = <T extends {}>(obj: ExcludeId<T>) => {
   invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
   (obj as any).id = _generateId();
 };
@@ -72,7 +78,7 @@ const symbolMeta = Symbol.for('@dxos/meta');
 /**
  * Set metadata on object.
  */
-const _initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
+const initMeta = <T>(obj: T, meta: ObjectMeta = { keys: [] }) => {
   prepareTypedTarget(meta, ObjectMetaSchema);
   defineHiddenProperty(obj, symbolMeta, createReactiveProxy(meta, TypedReactiveHandler.instance as any));
 };

@@ -10,7 +10,7 @@ Type: <code>string</code>
 Used to route differnt payload types to correct listeners.
 
 ### [messageId]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Peer tracks what had been sent by message id.
 
@@ -20,7 +20,7 @@ Type: <code>any</code>
 
 
 ### [peerId]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 

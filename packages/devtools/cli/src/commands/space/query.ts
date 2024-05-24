@@ -5,17 +5,15 @@
 import { ux } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
-import { getSchema, getTypename } from '@dxos/echo-schema';
+import { getTypename } from '@dxos/echo-schema';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
 
-  // TODO(burdon): Implement basic predicates.
-  // TODO(burdon): Standardize and factor out selector.
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
@@ -36,13 +34,7 @@ const printObjects = (objects: any[]) => {
     },
     type: {
       header: 'type',
-      // TODO(burdon): Mostly undefined.
       get: (row) => getTypename(row),
-    },
-    schema: {
-      header: 'schema',
-      // TODO(burdon): Mostly undefined.
-      get: (row) => getSchema(row),
     },
   });
 };

@@ -16,7 +16,7 @@ const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
 
   return (
     <Container>
-      <Slide content={content} />;
+      <Slide content={content} />
     </Container>
   );
 };

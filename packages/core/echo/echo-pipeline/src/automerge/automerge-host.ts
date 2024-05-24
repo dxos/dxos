@@ -20,7 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SublevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { idCodec } from '@dxos/protocols';
+import { objectPointerCodec } from '@dxos/protocols';
 import {
   type FlushRequest,
   type HostInfo,
@@ -168,10 +168,14 @@ export class AutomergeHost {
       return;
     }
 
+    const spaceKey = getSpaceKeyFromDoc(doc) ?? undefined;
+
     const lastAvailableHash = getHeads(doc);
 
     const objectIds = Object.keys(doc.objects ?? {});
-    const encodedIds = objectIds.map((objectId) => idCodec.encode({ documentId: handle.documentId, objectId }));
+    const encodedIds = objectIds.map((objectId) =>
+      objectPointerCodec.encode({ documentId: handle.documentId, objectId, spaceKey }),
+    );
     const idToLastHash = new Map(encodedIds.map((id) => [id, lastAvailableHash]));
     this._indexMetadataStore.markDirty(idToLastHash, batch);
   }

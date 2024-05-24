@@ -9,14 +9,14 @@ import { type Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
-import { BaseCommand, SPACE_KEY } from '../../base';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 // TODO(burdon): Testing plugin (vs. debug)?
 // TODO(burdon): Disable unless NODE_ENV=development?
 export default class Generate extends BaseCommand<typeof Generate> {
   static override enableJsonFlag = true;
   static override description = 'Generate test data.';
-  static override args = SPACE_KEY;
+  static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
     interval: Flags.integer({

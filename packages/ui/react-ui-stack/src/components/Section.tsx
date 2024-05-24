@@ -96,6 +96,7 @@ export type StackSectionItem = MosaicDataItem & {
   icon?: FC<IconProps>;
   placeholder?: string | [string, Parameters<TFunction>[1]];
   label?: ((data: any) => string | undefined) | Label;
+  attendableId?: string;
   isResizable?: boolean;
 };
 
@@ -107,6 +108,7 @@ export type SectionProps = PropsWithChildren<
   {
     // Data props.
     id: string;
+    attendableId: string;
     title: string;
     separation: boolean;
     icon?: FC<IconProps>;
@@ -131,6 +133,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
   (
     {
       id,
+      attendableId,
       title,
       icon: Icon = DotsNine,
       size = 'intrinsic',
@@ -158,7 +161,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
     const sectionContentGroup = useFocusableGroup({});
 
     const collapsed = !!collapsedSections?.[id];
-    const attendableProps = useAttendable(id);
+    const attendableProps = useAttendable(attendableId);
 
     return (
       <CollapsiblePrimitive.Root
@@ -379,6 +382,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         ref={forwardedRef}
         title={title}
         id={transformedItem.id}
+        attendableId={transformedItem.attendableId ?? transformedItem.id}
         size={transformedItem.size}
         icon={transformedItem.icon}
         separation={separation}

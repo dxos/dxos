@@ -110,6 +110,10 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return undefined;
   }
 
+  getTypeReference() {
+    return undefined;
+  }
+
   getMeta(target: any): ObjectMeta {
     return getTargetMeta(target);
   }
