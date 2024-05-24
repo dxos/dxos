@@ -78,11 +78,11 @@ triggers:
 #      init:
 #        type: 'sync'
 
-  - function: 'dxos.org/function/gpt'
-    spec:
-      type: 'subscription'
-      filter:
-      - type: 'braneframe.Message'
+#  - function: 'dxos.org/function/gpt'
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/embedding'
     spec:
