@@ -62,8 +62,6 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
             this.log('Updating: ', getTypename(obj));
           }
           if (this.flags['dry-run']) {
-            this.log(JSON.stringify(obj, undefined, 2));
-          } else {
             // TODO(burdon): API Issue (is this safe)?
             Object.assign(object, obj);
           }
