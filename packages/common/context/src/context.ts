@@ -9,7 +9,7 @@ import { safeInstanceof } from '@dxos/util';
 
 import { ContextDisposedError } from './context-disposed-error';
 
-export type ContextErrorHandler = (error: Error) => void;
+export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
 export type DisposeCallback = () => any | Promise<any>;
 
@@ -24,6 +24,17 @@ export type CreateContextParams = {
  * Maximum number of dispose callbacks before we start logging warnings.
  */
 const MAX_SAFE_DISPOSE_CALLBACKS = 300;
+
+const DEFAULT_ERROR_HANDLER: ContextErrorHandler = (error, ctx) => {
+  if (error instanceof ContextDisposedError) {
+    return;
+  }
+
+  void ctx.dispose();
+
+  // Will generate an unhandled rejection.
+  throw error;
+};
 
 @safeInstanceof('Context')
 export class Context {
@@ -47,16 +58,7 @@ export class Context {
     name, // TODO(burdon): Automate?
     parent,
     attributes = {},
-    onError = (error) => {
-      if (error instanceof ContextDisposedError) {
-        return;
-      }
-
-      void this.dispose();
-
-      // Will generate an unhandled rejection.
-      throw error;
-    },
+    onError = DEFAULT_ERROR_HANDLER,
   }: CreateContextParams = {}) {
     this._name = name;
     this._parent = parent;
@@ -175,7 +177,7 @@ export class Context {
     }
 
     try {
-      this._onError(error);
+      this._onError(error, this);
     } catch (err) {
       // Generate an unhandled rejection and stop the error propagation.
       void Promise.reject(err);
@@ -190,7 +192,7 @@ export class Context {
           this.raise(error);
         } else {
           try {
-            await onError(error);
+            await onError(error, this);
           } catch {
             this.raise(error);
           }
@@ -221,4 +223,6 @@ export class Context {
   toString() {
     return `Context(${this._isDisposed ? 'disposed' : 'active'})`;
   }
+
+  private _defaultErrorHandler(error: Error) {}
 }
