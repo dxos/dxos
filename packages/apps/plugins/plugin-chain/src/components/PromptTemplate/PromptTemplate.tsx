@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { type ChainInput, ChainInputSchema, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { ChainInput, ChainInputSchema, ChainInputType, type ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -87,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs?.push(create(ChainInputSchema, { name }));
+        prompt.inputs?.push({ name });
       }
     });
 
@@ -111,7 +111,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
       extensions: [
         createDataExtensions({
           id: prompt.id,
-          text: prompt.template ? createDocAccessor(prompt, ['template']) : undefined,
+          text: prompt.template !== undefined ? createDocAccessor(prompt, ['template']) : undefined,
         }),
         createBasicExtensions({
           bracketMatching: false,
@@ -127,7 +127,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
         promptExtension,
       ],
     }),
-    [themeMode, prompt, prompt.template],
+    [themeMode, prompt],
   );
   usePromptInputs(prompt);
 
@@ -159,12 +159,15 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
         {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
             <div className='flex flex-col divide-y'>
+              {/* TODO(Zan): Improve layout with grid */}
               <table className='table-fixed border-collapse'>
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
-                      <td className='px-3 py-1.5 w-[160px]'>
+                      <td className='px-3 py-1.5 w-[20px] font-mono text-sm'>
+                        <code>{input.name}</code>
+                      </td>
+                      <td className='px-3 py-1.5 w-[200px]'>
                         <Input.Root>
                           <Select.Root
                             value={String(input.type)}

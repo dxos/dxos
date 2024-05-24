@@ -6,30 +6,16 @@ import React, { useEffect, useMemo } from 'react';
 
 import { ChainPromptType } from '@braneframe/types';
 import { FunctionDef, type FunctionTrigger, type FunctionTriggerType, TriggerSpec } from '@dxos/functions/types';
-import { create } from '@dxos/react-client/echo';
+import { Filter, type Space, create, useQuery } from '@dxos/react-client/echo';
 import { Input, Select } from '@dxos/react-ui';
 
 import { PromptTemplate, Section } from './PromptTemplate';
 
-const functions: FunctionDef[] = [
-  create(FunctionDef, {
-    uri: 'dxos.org/function/email-worker',
-    route: '/email-worker',
-    handler: 'email-worker',
-    description: 'Email Sync with Cloudflare Worker',
-  }),
-
-  create(FunctionDef, {
-    uri: 'dxos.org/function/gpt',
-    route: '/gpt',
-    handler: 'gpt',
-    description: 'GPT Chat',
-  }),
-];
-
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
-export const TriggerEditor = ({ trigger }: { trigger: FunctionTrigger }) => {
+export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
+  const functions = useQuery(space, Filter.schema(FunctionDef));
+
   const linkedFunction = useMemo(() => {
     return functions.find((fn) => fn.uri === trigger.function);
   }, [trigger]);
@@ -62,14 +48,11 @@ export const TriggerEditor = ({ trigger }: { trigger: FunctionTrigger }) => {
     }
   };
 
-  useEffect(() => {
-    console.log(JSON.stringify(trigger));
-  }, [JSON.stringify(trigger)]);
-
   // Initialize prompt for GPT function.
   useEffect(() => {
     if (trigger.function === 'dxos.org/function/gpt') {
-      const prompt = create(ChainPromptType, { template: 'Say hello in German.', inputs: [] });
+      // TODO(Zan): Change the default prompt.
+      const prompt = create(ChainPromptType, { template: 'Say hello in German. {input-1}', inputs: [] });
       trigger.meta = { ...trigger.meta, prompt };
     }
   }, [trigger.function]);
@@ -78,7 +61,7 @@ export const TriggerEditor = ({ trigger }: { trigger: FunctionTrigger }) => {
     <div className='flex flex-col my-2 gap-4'>
       <Section title='Trigger Setup'>
         <div role='none' className='flex flex-col gap-2 p-2'>
-          <div className='none flex flex-row gap-2'>
+          <div role='none' className='flex flex-row items-center gap-2'>
             <Input.Root>
               <Input.Label>Function</Input.Label>
               <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
@@ -97,7 +80,7 @@ export const TriggerEditor = ({ trigger }: { trigger: FunctionTrigger }) => {
               </Select.Root>
             </Input.Root>
 
-            <div role='none' className='flex align-start gap-2 p-2'>
+            <div role='none' className='flex flex-row items-center gap-2'>
               <Input.Root>
                 <Input.Label>Trigger Type</Input.Label>
                 <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
@@ -129,66 +112,52 @@ export const TriggerEditor = ({ trigger }: { trigger: FunctionTrigger }) => {
   );
 };
 
+const TriggerSpecSubscription = ({ spec }: { spec: TriggerSpec }) => (
+  <div className='flex flex-col gap-2'>
+    <Input.Root>
+      <Input.Label>Filter</Input.Label>
+      <p>TODO: Schema Filter Here</p>
+    </Input.Root>
+  </div>
+);
+
+const TriggerSpecTimer = ({ spec }: { spec: TriggerSpec }) => (
+  <div className='flex flex-row items-center gap-2'>
+    <Input.Root>
+      <Input.Label>Cron</Input.Label>
+      <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
+    </Input.Root>
+  </div>
+);
+
+const TriggerSpecWebhook = ({ spec }: { spec: TriggerSpec }) => (
+  <div className='flex flex-row items-center gap-2'>
+    <Input.Root>
+      <Input.Label>Method</Input.Label>
+      <Input.TextInput value={spec.method} onChange={(event) => (spec.method = event.target.value)} />
+    </Input.Root>
+  </div>
+);
+
+const TriggerSpecWebsocket = ({ spec }: { spec: TriggerSpec }) => (
+  <div className='flex flex-row items-center gap-2'>
+    <Input.Root>
+      <Input.Label>URL</Input.Label>
+      <Input.TextInput value={spec.url} onChange={(event) => (spec.url = event.target.value)} />
+    </Input.Root>
+  </div>
+);
+
+const triggerSpecComponents: { [key in FunctionTriggerType]: React.FC<{ spec: TriggerSpec }> } = {
+  subscription: TriggerSpecSubscription,
+  timer: TriggerSpecTimer,
+  webhook: TriggerSpecWebhook,
+  websocket: TriggerSpecWebsocket,
+};
+
 const TriggerSpec = ({ spec }: { spec: TriggerSpec }) => {
-  switch (spec.type) {
-    case 'subscription':
-      return (
-        <div className='flex flex-col gap-2'>
-          <Input.Root>
-            <Input.Label>Filter</Input.Label>
-            <p>TODO: Schema Filter Here</p>
-          </Input.Root>
-        </div>
-      );
-
-    case 'timer':
-      return (
-        <div className='flex flex-col gap-2'>
-          <Input.Root>
-            <Input.Label>Cron</Input.Label>
-            <Input.TextInput
-              value={spec.cron}
-              onChange={(event) => {
-                spec.cron = event.target.value;
-              }}
-            />
-          </Input.Root>
-        </div>
-      );
-
-    case 'webhook':
-      return (
-        <div className='flex flex-col gap-2'>
-          <Input.Root>
-            <Input.Label>Method</Input.Label>
-            <Input.TextInput
-              value={spec.method}
-              onChange={(event) => {
-                spec.method = event.target.value;
-              }}
-            />
-          </Input.Root>
-        </div>
-      );
-
-    case 'websocket':
-      return (
-        <div className='flex flex-col gap-2'>
-          <Input.Root>
-            <Input.Label>URL</Input.Label>
-            <Input.TextInput
-              value={spec.url}
-              onChange={(event) => {
-                spec.url = event.target.value;
-              }}
-            />
-          </Input.Root>
-        </div>
-      );
-
-    default:
-      return null;
-  }
+  const Component = triggerSpecComponents[spec.type];
+  return Component ? <Component spec={spec} /> : null;
 };
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {

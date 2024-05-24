@@ -33,7 +33,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/echo-signals": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",

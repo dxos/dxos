@@ -2,28 +2,64 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
-import { registerSignalRuntime } from '@dxos/echo-signals';
-import { FunctionTrigger } from '@dxos/functions/types';
+import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
+import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { TriggerEditor } from './TriggerEditor';
 
-registerSignalRuntime();
+const functions: Omit<FunctionDef, 'id'>[] = [
+  {
+    uri: 'dxos.org/function/email-worker',
+    route: '/email-worker',
+    handler: 'email-worker',
+    description: 'Email Sync with Cloudflare Worker',
+  },
+  {
+    uri: 'dxos.org/function/gpt',
+    route: '/gpt',
+    handler: 'gpt',
+    description: 'GPT Chat',
+  },
+];
+
+const useFunctionTrigger = (space: Space) => {
+  const [trigger, setTrigger] = useState<FunctionTrigger>();
+
+  useEffect(() => {
+    const trigger = space.db.add(create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '0 0 * * *' } }));
+    setTrigger(trigger);
+  }, [space, setTrigger]);
+
+  return trigger;
+};
 
 const TriggerEditorStory = () => {
-  const trigger = useMemo(() => {
-    return create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '' } });
-  }, []);
+  const client = useClient();
+  const space = client.spaces.default;
+  const trigger = useFunctionTrigger(space);
+
+  useEffect(() => {
+    for (const fn of functions) {
+      space.db.add(create(FunctionDef, { ...fn }));
+    }
+  }, [space]);
+
+  if (!trigger) {
+    return null;
+  }
 
   return (
     <DensityProvider density='fine'>
       <div role='none' className='is-full pli-8'>
-        <TriggerEditor trigger={trigger} />
+        <TriggerEditor space={space} trigger={trigger} />
       </div>
     </DensityProvider>
   );
@@ -31,8 +67,16 @@ const TriggerEditorStory = () => {
 
 export default {
   title: 'plugin-chain/TriggerEditor',
-  // TODO(Zan): Client Repeater can register schemas
-  render: () => <ClientRepeater component={TriggerEditorStory} createIdentity createSpace />,
+
+  render: () => (
+    <ClientRepeater
+      component={TriggerEditorStory}
+      schema={[FunctionTrigger, FunctionDef, ChainPromptType]}
+      registerSignalFactory
+      createIdentity
+      createSpace
+    />
+  ),
   decorators: [withTheme],
 };
 
