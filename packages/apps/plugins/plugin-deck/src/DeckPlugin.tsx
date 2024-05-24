@@ -55,12 +55,13 @@ export const DeckPlugin = ({
   let currentUndoId: string | undefined;
   let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
-  const settings = new LocalStorageStore<DeckSettingsProps>(DECK_PLUGIN, {
+  const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
+    deck: true,
   });
 
-  const layout = new LocalStorageStore<Layout>(DECK_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
 
     sidebarOpen: true,
@@ -146,7 +147,8 @@ export const DeckPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
