@@ -40,26 +40,29 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
 
     // Load objects.
     const load = async (space: Space) => {
+      const results: any[] = [];
       for (const object of objects) {
         const obj = this.parseObject(this.schemaMap, object);
-        if (this.flags['dry-run']) {
-          this.log(JSON.stringify(obj, undefined, 2));
-        }
 
-        if (!this.flags['dry-run']) {
-          // TODO(burdon): Merge based on FKs (need to query by FK).
-          this.log(`- Adding: ${getTypename(obj)}`);
-          const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
-          const { added } = diff(objects, [obj], compareForeignKeys);
-          console.log(objects.length, added.length);
-          added.forEach((obj) => {
-            console.log(':::', obj);
-            // space.db.add(obj);
-          });
-        }
+        // Merge based on FKs (need to query by FK).
+        const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
+        const { added } = diff(objects, [obj], compareForeignKeys);
+        added.forEach((obj) => {
+          if (this.flags.verbose) {
+            this.log('Adding: ', getTypename(obj));
+          }
+          if (this.flags['dry-run']) {
+            this.log(JSON.stringify(obj, undefined, 2));
+          } else {
+            space.db.add(obj);
+          }
+        });
+
+        results.push(...added);
       }
 
       await space.db.flush();
+      return results;
     };
 
     return await this.execWithSpace(async ({ space }) => await load(space), {
