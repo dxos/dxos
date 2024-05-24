@@ -8,3 +8,4 @@ import React from 'react';
 export const ChainMain = React.lazy(() => import('./ChainMain'));
 export const ChainArticle = React.lazy(() => import('./ChainArticle'));
 export const TriggerArticle = React.lazy(() => import('./TriggerArticle'));
+export const TriggerSection = React.lazy(() => import('./TriggerSection'));

@@ -15,7 +15,7 @@ import { create } from '@dxos/echo-schema';
 import { FunctionTrigger } from '@dxos/functions/types';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ChainMain, TriggerArticle } from './components';
+import { ChainArticle, ChainMain, TriggerArticle } from './components';
 import meta, { CHAIN_PLUGIN } from './meta';
 import translations from './translations';
 import { ChainAction, type ChainPluginProvides } from './types';
@@ -106,7 +106,11 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
                 subscriptions.add(functionTriggerQuery.subscribe());
                 subscriptions.add(
                   effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !promptQuery.objects.includes(object));
+                    previousObjects = functionTriggerQuery.objects;
+
                     batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
                       functionTriggerQuery.objects.forEach((object) => {
                         graph.addNodes({
                           id: fullyQualifiedId(object),
@@ -152,8 +156,21 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           switch (role) {
             case 'main':
               return data.active instanceof ChainType ? <ChainMain chain={data.active} /> : null;
-            case 'article':
-              return data.object instanceof FunctionTrigger ? <TriggerArticle trigger={data.object} /> : null;
+            case 'article': {
+              if (data.object instanceof ChainType) {
+                return <ChainArticle chain={data.object} />;
+              }
+              if (data.object instanceof FunctionTrigger) {
+                return <TriggerArticle trigger={data.object} />;
+              }
+              break;
+            }
+
+            case 'section': {
+              if (data.object instanceof FunctionTrigger) {
+                return <TriggerArticle trigger={data.object} />;
+              }
+            }
           }
 
           return null;

@@ -9,17 +9,17 @@ import { useSpace } from '@dxos/react-client/echo';
 
 import { TriggerEditor } from './TriggerEditor';
 
-const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
+const TriggerSection: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
   const space = useSpace();
   if (!space) {
     return null;
   }
 
   return (
-    <div role='none' className={'row-span-2 pli-2'}>
+    <div role='none' className={'pli-2'}>
       <TriggerEditor trigger={trigger} space={space} />
     </div>
   );
 };
 
-export default TriggerArticle;
+export default TriggerSection;
