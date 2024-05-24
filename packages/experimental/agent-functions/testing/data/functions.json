@@ -46,7 +46,7 @@
             {
               "type": 6,
               "name": "content",
-              "value": "object.blocks[0].content.content"
+              "value": "object.blocks[0].content"
             }
           ]
         }
