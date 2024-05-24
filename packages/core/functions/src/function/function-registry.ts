@@ -45,13 +45,13 @@ export class FunctionRegistry extends Resource {
 
     // Sync definitions.
     const { objects: existing } = await space.db.query(Filter.schema(FunctionDef)).run();
-    const { added, removed } = diff(existing, functions, (a, b) => a.uri === b.uri);
-    added.forEach((def) => space.db.add(create(FunctionDef, def)));
+    const { added } = diff(existing, functions, (a, b) => a.uri === b.uri);
     // TODO(burdon): Update existing templates.
-    removed.forEach((def) => space.db.remove(def));
+    added.forEach((def) => space.db.add(create(FunctionDef, def)));
   }
 
   protected override async _open(): Promise<void> {
+    log.info('opening...');
     const spacesSubscription = this._client.spaces.subscribe(async (spaces) => {
       for (const space of spaces) {
         if (this._functionBySpaceKey.has(space.key)) {
@@ -84,6 +84,7 @@ export class FunctionRegistry extends Resource {
   }
 
   protected override async _close(_: Context): Promise<void> {
+    log.info('closing...');
     this._functionBySpaceKey.clear();
   }
 }

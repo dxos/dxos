@@ -3,7 +3,6 @@
 //
 
 import { Args } from '@oclif/core';
-import * as fs from 'fs-extra';
 
 import { Filter, type Space } from '@dxos/client/echo';
 import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
@@ -36,7 +35,7 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
 
   async run() {
     // Parse data.
-    const { objects } = JSON.parse(String(fs.readFileSync(this.args.file!))) as DataFile;
+    const { objects } = this.parseJson<DataFile>(this.args.file);
 
     // Load objects.
     const load = async (space: Space) => {

@@ -113,7 +113,7 @@ export class RequestProcessor {
   ): Promise<RunnableSequence | undefined> {
     log.info('create sequence', {
       context: {
-        object: { id: context.object?.id, schema: context.object?.__typename },
+        object: { space: space.key, id: context.object?.id, schema: context.object?.__typename },
       },
       options,
     });
@@ -146,8 +146,10 @@ export class RequestProcessor {
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-    for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
-      inputs[input.name] = await this.getTemplateInput(space, input, context);
+    if (prompt.inputs?.length) {
+      for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
+        inputs[input.name] = await this.getTemplateInput(space, input, context);
+      }
     }
 
     // TODO(burdon): Test using JSON schema.
@@ -180,10 +182,9 @@ export class RequestProcessor {
       return input;
     };
 
-    const template = await loadObjectReferences(prompt, (p) => p.template);
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(template),
+      PromptTemplate.fromTemplate(prompt.template),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),

@@ -40,6 +40,7 @@ export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
+  // TODO(burdon): Should not be a separate object.
   content: S.optional(ref(TextV0Type)),
   object: S.optional(ref(Expando)),
 });

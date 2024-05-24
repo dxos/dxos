@@ -4,6 +4,7 @@
 
 import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
+import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -640,6 +641,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (rpc) {
         await rpc.close();
       }
+    }
+  }
+
+  parseJson<T>(filename: string): T {
+    try {
+      return JSON.parse(String(fs.readFileSync(filename))) as T;
+    } catch (err) {
+      log.error('error parsing file', { filename, err });
+      throw err;
     }
   }
 }
