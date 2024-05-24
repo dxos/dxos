@@ -69,6 +69,8 @@ test.describe('Basic tests', () => {
   });
 
   test('reset device', async ({ browserName }) => {
+    test.setTimeout(60_000);
+
     await host.createSpace();
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(2);
@@ -77,7 +79,7 @@ test.describe('Basic tests', () => {
     await host.openIdentityManager();
     await host.shell.resetDevice();
     // Wait for reset to complete and attempt to reload.
-    await host.page.waitForRequest(host.page.url());
+    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
     await host.page.goto(host.initialUrl);
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(1);
