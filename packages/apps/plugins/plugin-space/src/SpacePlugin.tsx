@@ -17,6 +17,8 @@ import {
   NavigationAction,
   resolvePlugin,
   parseIntentPlugin,
+  type IntentPluginProvides,
+  type LocationProvides,
   parseNavigationPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
@@ -24,7 +26,7 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -118,6 +120,8 @@ export const SpacePlugin = ({
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
 
   return {
     meta,
@@ -128,8 +132,8 @@ export const SpacePlugin = ({
         type: LocalStorageStore.bool({ allowUndefined: true }),
       });
 
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (!clientPlugin || !navigationPlugin || !intentPlugin) {
         return;
@@ -355,7 +359,16 @@ export const SpacePlugin = ({
               }
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+                <SmallPresenceLive
+                  viewers={state.viewersByObject[data.object.id]}
+                  onCloseClick={() => {
+                    const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
+                    return intentPlugin?.provides.intent.dispatch({
+                      action: NavigationAction.CLOSE,
+                      data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                    });
+                  }}
+                />
               ) : (
                 <SmallPresence count={0} />
               );
@@ -396,7 +409,6 @@ export const SpacePlugin = ({
       },
       graph: {
         builder: (plugins, graph) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
 
@@ -578,7 +590,6 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
-              const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
                 const target = firstMainId(navigationPlugin?.provides.location.active);
@@ -648,8 +659,6 @@ export const SpacePlugin = ({
               const space = intent.data?.space;
               let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
               if (!rootDir) {
-                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
                 const result = await intentPlugin?.provides.intent.dispatch({
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.SELECT_DIRECTORY,
