@@ -183,7 +183,6 @@ export const SpacePlugin = ({
           const migrateSpaceParam = 'migrateSpace';
           if (searchParams.get(migrateSpaceParam) === 'true') {
             await space.waitUntilReady();
-            prepareSpaceForMigration(space);
             await Migrations.migrate(space);
           }
 
