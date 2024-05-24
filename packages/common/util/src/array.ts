@@ -11,7 +11,7 @@ export type DiffResult<A, B = A> = {
 };
 
 /**
- *
+ * Compute diff between two arrays.
  * @param previous
  * @param next
  * @param comparator

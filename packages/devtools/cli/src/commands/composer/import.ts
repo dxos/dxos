@@ -5,7 +5,9 @@
 import { Args } from '@oclif/core';
 import * as fs from 'fs-extra';
 
-import { type Space } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
+import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
+import { diff } from '@dxos/util';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
@@ -38,22 +40,31 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
 
     // Load objects.
     const load = async (space: Space) => {
-      this.log(`Space: ${space.key.truncate()}`);
       for (const object of objects) {
         const obj = this.parseObject(this.schemaMap, object);
-        if (this.flags['dry-run'] || this.flags.verbose) {
+        if (this.flags['dry-run']) {
           this.log(JSON.stringify(obj, undefined, 2));
         }
 
         if (!this.flags['dry-run']) {
           // TODO(burdon): Merge based on FKs (need to query by FK).
-          space.db.add(obj);
+          this.log(`- Adding: ${getTypename(obj)}`);
+          const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
+          const { added } = diff(objects, [obj], compareForeignKeys);
+          console.log(objects.length, added.length);
+          added.forEach((obj) => {
+            console.log(':::', obj);
+            // space.db.add(obj);
+          });
         }
       }
 
       await space.db.flush();
     };
 
-    return await this.execWithSpace(async ({ space }) => await load(space), { spaceKeys: this.flags.key });
+    return await this.execWithSpace(async ({ space }) => await load(space), {
+      spaceKeys: this.flags.key,
+      verbose: true,
+    });
   }
 }

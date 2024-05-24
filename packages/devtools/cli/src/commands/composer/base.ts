@@ -6,14 +6,11 @@ import { type Command } from '@oclif/core';
 
 import type { Client } from '@dxos/client';
 import { create, ECHO_ATTR_META, ECHO_ATTR_TYPE, getEchoObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions';
+import { FUNCTION_SCHEMA } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
-
-// TODO(burdon): From ECHO?
-const SCHEMA = [FunctionDef, FunctionTrigger];
 
 // TODO(burdon): Move to @dxos/cli-composer.
 //  https://oclif.io/docs/command_discovery_strategies
@@ -37,10 +34,10 @@ export abstract class ComposerBaseCommand<T extends typeof Command = any> extend
     // TODO(burdon): Enable dynamic import? (e.g., from npm.)
     const types = await import('@braneframe/types');
     if (this.flags.verbose) {
-      this.log('Adding schema');
+      this.log('Adding schema...');
     }
 
-    const schemata = [...SCHEMA, ...Object.values(types)]
+    const schemata = [...FUNCTION_SCHEMA, ...Object.values(types)]
       .map((schema) => {
         if (S.isSchema(schema)) {
           const { typename } = getEchoObjectAnnotation(schema as any) ?? {};
@@ -55,9 +52,9 @@ export abstract class ComposerBaseCommand<T extends typeof Command = any> extend
       .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
 
     for (const [typename, schema] of schemata) {
-      if (this.flags.verbose) {
-        this.log(`- ${typename}`);
-      }
+      // if (this.flags.verbose) {
+      //   this.log(`- ${typename}`);
+      // }
 
       client.addSchema(schema as any);
       schemaMap.set(typename, schema);
@@ -92,9 +89,9 @@ export abstract class ComposerBaseCommand<T extends typeof Command = any> extend
           return object;
         }, {});
 
-        if (this.flags.verbose) {
-          this.log(JSON.stringify({ object, meta }, undefined, 2));
-        }
+        // if (this.flags.verbose) {
+        //   this.log(JSON.stringify({ object, meta }, undefined, 2));
+        // }
 
         return create(type, object, meta);
       }

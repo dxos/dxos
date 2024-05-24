@@ -10,11 +10,10 @@ import { ECHO_ATTR_META, foreignKey, foreignKeyEquals, splitMeta } from '@dxos/e
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, diff, intersection } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
-import { diff, intersection } from '../util';
 
 type ResponseCode = number;
 

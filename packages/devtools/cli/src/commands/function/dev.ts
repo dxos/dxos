@@ -9,11 +9,12 @@ import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
   DevServer,
+  FUNCTION_SCHEMA,
   type FunctionManifest,
   FunctionRegistry,
   FunctionTrigger,
@@ -50,6 +51,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
+      // TODO(burdon): Standards?
+      client.addSchema(...FUNCTION_SCHEMA);
+
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
@@ -100,14 +104,27 @@ export default class Dev extends BaseCommand<typeof Dev> {
       });
 
       if (this.flags.verbose) {
+        // TODO(burdon): Hack to give time for triggers to be registered.
+        await sleep(1000);
+
         // TODO(burdon): Get list of functions from plugin API endpoint.
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
-          'Functions:\n' +
+          '\nFunctions:\n' +
             server.functions
               .map(({ def: { uri, route } }) => chalk`- ${uri.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),
         );
+        this.log('\nTriggers:');
+        for (const space of await this.getSpaces(client, { spaceKeys: this.flags.key, wait: true })) {
+          const active = scheduler.triggers.getActiveTriggers(space);
+          if (active.length) {
+            this.log(
+              chalk`{green [${space.key.truncate()}]}\n` +
+                active.map((trigger) => chalk`- ${trigger.function.padEnd(40)} {blue ${trigger.spec.type}}`).join('\n'),
+            );
+          }
+        }
       }
 
       // Wait until exit (via SIGINT).

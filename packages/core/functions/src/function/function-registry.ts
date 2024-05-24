@@ -8,10 +8,9 @@ import { create, Filter, type Space } from '@dxos/client/echo';
 import { type Context, Resource } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, diff } from '@dxos/util';
 
 import { FunctionDef, type FunctionManifest } from '../types';
-import { diff } from '../util';
 
 export type FunctionsRegisteredEvent = {
   space: Space;

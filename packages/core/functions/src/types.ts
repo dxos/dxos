@@ -101,3 +101,6 @@ export const FunctionManifestSchema = S.struct({
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
+
+// TODO(burdon): Standards?
+export const FUNCTION_SCHEMA = [FunctionDef, FunctionTrigger];

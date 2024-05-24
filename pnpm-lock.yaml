@@ -5615,6 +5615,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.64.20
         version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)

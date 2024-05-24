@@ -510,7 +510,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
     callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
-    options: { spaceKeys?: string[]; all?: boolean } = {},
+    options: { spaceKeys?: string[]; all?: boolean; verbose?: boolean } = {},
   ): Promise<T[] | undefined> {
     const client = await this.getClient();
     await this.onClientInit(client);
@@ -522,7 +522,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     const values: T[] = [];
     for (const space of spaces) {
-      this.log(`Space: ${space.key.truncate()}`);
+      if (options.verbose) {
+        this.log(`Space: ${space.key.truncate()}`);
+      }
+
       const value = await callback({ client, space });
       if (value) {
         values.push(value);
