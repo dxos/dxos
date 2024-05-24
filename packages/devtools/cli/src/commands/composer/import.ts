@@ -46,7 +46,7 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
 
         // Merge based on FKs (need to query by FK).
         const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
-        const { added } = diff(objects, [obj], compareForeignKeys);
+        const { added, updated } = diff(objects, [obj], compareForeignKeys);
         added.forEach((obj) => {
           if (this.flags.verbose) {
             this.log('Adding: ', getTypename(obj));
@@ -57,8 +57,19 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
             space.db.add(obj);
           }
         });
+        updated.forEach((obj) => {
+          if (this.flags.verbose) {
+            this.log('Updating: ', getTypename(obj));
+          }
+          if (this.flags['dry-run']) {
+            this.log(JSON.stringify(obj, undefined, 2));
+          } else {
+            // TODO(burdon): API Issue (is this safe)?
+            Object.assign(object, obj);
+          }
+        });
 
-        results.push(...added);
+        results.push(...added, ...updated);
       }
 
       await space.db.flush();

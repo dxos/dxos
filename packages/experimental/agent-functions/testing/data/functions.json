@@ -43,7 +43,7 @@
         "type": "subscription",
         "filter": [
           {
-            "type": "dxos.org/type/Message"
+            "type": "braneframe.Message"
           }
         ]
       }

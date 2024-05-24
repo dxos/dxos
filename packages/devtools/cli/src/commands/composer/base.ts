@@ -74,10 +74,6 @@ export abstract class ComposerBaseCommand<T extends typeof Command = any> extend
       if (typename) {
         const type = schemaMap.get(typename);
         invariant(type, `Schema not found: ${typename}`);
-        if (this.flags.verbose) {
-          this.log(`- Creating: ${typename}`);
-        }
-
         let meta: ObjectMeta | undefined;
         const object = Object.entries(data).reduce<Record<string, any>>((object, [key, value]) => {
           if (key === ECHO_ATTR_META) {

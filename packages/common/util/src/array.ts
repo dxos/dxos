@@ -6,7 +6,7 @@ export type Comparator<A, B = A> = (a: A, b: B) => boolean;
 
 export type DiffResult<A, B = A> = {
   added: B[];
-  updated: A[];
+  updated: B[];
   removed: A[];
 };
 
@@ -35,7 +35,7 @@ export const diff = <A, B = A>(
     if (index === -1) {
       result.added.push(object);
     } else {
-      result.updated.push(remaining[index]);
+      result.updated.push(object);
       remaining.splice(index, 1);
     }
   }
