@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { type ChainPromptType } from '@braneframe/types';
-import { type DynamicEchoSchema } from '@dxos/echo-schema';
+import { DocumentType, FileType, MessageType, SketchType, StackType, type ChainPromptType } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
 import {
   FunctionDef,
   type FunctionTrigger,
@@ -19,6 +19,16 @@ import {
 } from '@dxos/functions/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
+import { distinctBy } from '@dxos/util';
+
+type TriggerId = string;
+
+const stateInitialValues = {
+  schemas: [StackType, SketchType, DocumentType, FileType, MessageType] as any[],
+  selectedSchema: {} as Record<TriggerId, any>,
+};
+
+const state = create<typeof stateInitialValues>(stateInitialValues);
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
@@ -29,15 +39,38 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     [trigger.function, functions],
   );
 
-  // Initialize meta.
+  useEffect(() => {
+    void space.db.schemaRegistry
+      .getAll()
+      .then((schemas) => {
+        // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
+        state.schemas = distinctBy([...state.schemas, ...schemas], (s) => s.typename).sort((a, b) =>
+          a.typename < b.typename ? -1 : 1,
+        );
+      })
+      .catch();
+  }, [space]);
+
+  // Keen an enriched version of the schema in memory so we can share it with prompt editor.
+  useEffect(() => {
+    const spec = trigger.spec;
+    if (spec.type === 'subscription') {
+      if (spec.filter && spec.filter.length > 0) {
+        const type = spec.filter[0].type;
+        const foundSchema = state.schemas.find((schema) => schema.typename === type);
+        if (foundSchema) {
+          state.selectedSchema[trigger.id] = foundSchema;
+        }
+      }
+    }
+  }, [JSON.stringify(trigger.spec), state.schemas]);
+
   useEffect(() => {
     if (!trigger.meta) {
       const extension = metaExtensions[trigger.function];
-      if (extension && extension.initialValue) {
-        trigger.meta = extension.initialValue();
-      }
+      extension?.initialValue && (trigger.meta = extension.initialValue());
     }
-  }, [trigger.function]);
+  }, [trigger.function, trigger.meta]);
 
   const handleSelectFunction = (value: string) => {
     const match = functions.find((fn) => fn.uri === value);
@@ -141,26 +174,22 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 // Trigger specs
 //
 
-const TriggerSpecSubscription = ({ space, spec }: TriggerSpecProps<SubscriptionTrigger>) => {
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
-  useEffect(() => {
-    if (space) {
-      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
-    }
-  }, [space]);
+const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>) => {
+  const handleSelectSchema = (typename: string) => {
+    spec.filter = [{ type: typename }];
+  };
 
-  // TODO(burdon): Wire up (single) filter.
   return (
     <>
       <InputRow label='Filter'>
-        <Select.Root>
+        <Select.Root value={spec.filter[0].type} onValueChange={handleSelectSchema}>
           <Select.TriggerButton placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {schemas.map(({ id }) => (
-                  <Select.Option key={id} value={id}>
-                    {id}
+                {state.schemas.map(({ typename }: any) => (
+                  <Select.Option key={typename} value={typename}>
+                    {typename}
                   </Select.Option>
                 ))}
               </Select.Viewport>
@@ -253,20 +282,17 @@ const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
 //
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
-  if (!trigger || !trigger.function || !trigger.meta) {
-    return null;
-  }
+  const meta = useMemo(() => (trigger?.function ? metaExtensions[trigger.function] : undefined), [trigger.function]);
 
-  // TODO(burdon): Isn't triggered when function changes.
-  const { component: Component } = metaExtensions[trigger.function] ?? {};
-  if (Component) {
+  const Component = meta?.component;
+  if (Component && trigger.meta) {
     return <Component meta={trigger.meta as any} />;
   }
 
   return null;
 };
 
-type MetaProps<T> = { meta: T };
+type MetaProps<T> = { meta: T } & { triggerId?: string };
 type MetaExtension<T> = {
   initialValue?: () => T;
   component: FC<MetaProps<T>>;
@@ -286,7 +312,9 @@ const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
   );
 };
 
-const ChainPromptMeta = ({ meta }: MetaProps<{ prompt?: ChainPromptType }>) => {
+const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptType }>) => {
+  const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
+
   return (
     <>
       <InputRow label='Presets'>
@@ -294,7 +322,7 @@ const ChainPromptMeta = ({ meta }: MetaProps<{ prompt?: ChainPromptType }>) => {
       </InputRow>
       {meta.prompt && (
         <InputRow label='Prompt'>
-          <PromptTemplate prompt={meta.prompt} />
+          <PromptTemplate prompt={meta.prompt} schema={schema} />
         </InputRow>
       )}
     </>
@@ -308,6 +336,7 @@ const metaExtensions: Record<string, MetaExtension<any>> = {
   },
 
   'dxos.org/function/gpt': {
+    initialValue: () => ({ prompt: undefined }),
     component: ChainPromptMeta,
   },
 };
