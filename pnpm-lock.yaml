@@ -679,6 +679,9 @@ importers:
       '@dxos/shell':
         specifier: workspace:*
         version: link:../../sdk/shell
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

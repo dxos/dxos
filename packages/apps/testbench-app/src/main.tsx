@@ -19,6 +19,9 @@ import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
+
+TRACE_PROCESSOR.setInstanceTag('app');
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',

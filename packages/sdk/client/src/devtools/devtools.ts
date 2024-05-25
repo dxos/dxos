@@ -11,6 +11,7 @@ import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
 
 import { type Client } from '../client';
+import type { DiagnosticMetadata } from '@dxos/tracing/src/diagnostic';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -40,6 +41,10 @@ export interface DevtoolsHook {
    * Import modules exposed by `exposeModule` from @dxos/debug.
    */
   importModule: (module: string) => unknown;
+
+  listDiagnostics: () => Promise<void>;
+
+  fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
 }
 
 export type MountOptions = {
@@ -49,6 +54,8 @@ export type MountOptions = {
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   let server: RpcPeer;
+
+  let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
     // To debug client from console using 'window.__DXOS__.client'.
@@ -87,6 +94,27 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     reset,
 
     importModule,
+
+    listDiagnostics: async () => {
+      diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      console.table(diagnostics);
+    },
+
+    fetchDiagnostics: async (id, instanceTag) => {
+      const diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
+      if (!diagnostic) {
+        log.error(`Diagnostic ${id} not found.`);
+        return;
+      }
+
+      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+      if (error) {
+        log.error(`Error fetching diagnostic ${id}: ${error}`);
+        return;
+      }
+
+      return data;
+    },
   };
 
   if (client) {

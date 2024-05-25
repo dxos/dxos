@@ -64,8 +64,11 @@ import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 const main = async () => {
+  TRACE_PROCESSOR.setInstanceTag('app');
+
   registerSignalRuntime();
 
   let config = await setupConfig();
