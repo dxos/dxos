@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
+import { type DocumentId, type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
@@ -13,9 +13,12 @@ import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/ind
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
+import { trace } from '@dxos/tracing';
 
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
+import { DatabaseRoot } from './database-root';
+import { todo } from '@dxos/debug';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -39,6 +42,7 @@ export class EchoHost extends Resource {
   private readonly _automergeHost: AutomergeHost;
   private readonly _queryService: QueryServiceImpl;
   private readonly _dataService: DataServiceImpl;
+  private readonly _roots = new Map<DocumentId, DatabaseRoot>();
 
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
@@ -71,6 +75,31 @@ export class EchoHost extends Resource {
     this._dataService = new DataServiceImpl(this._automergeHost);
 
     this._meshEchoReplicator = new MeshEchoReplicator();
+
+    trace.diagnostic({
+      id: 'database-roots',
+      name: 'Database Roots',
+      fetch: async () => {
+        return Array.from(this._roots.values()).map((root) => ({
+          url: root.url,
+          isLoaded: root.isLoaded,
+          spaceKey: root.getSpaceKey(),
+        }));
+      },
+    });
+
+    trace.diagnostic({
+      id: 'database-root-metrics',
+      name: 'Database Roots (with metrics)',
+      fetch: async () => {
+        return Array.from(this._roots.values()).map((root) => ({
+          url: root.url,
+          isLoaded: root.isLoaded,
+          spaceKey: root.getSpaceKey(),
+          ...(root.measureMetrics() ?? {}),
+        }));
+      },
+    });
   }
 
   get queryService(): QueryService {
@@ -85,6 +114,10 @@ export class EchoHost extends Resource {
     return this._automergeHost.repo;
   }
 
+  get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
+    return this._roots;
+  }
+
   protected override async _open(ctx: Context): Promise<void> {
     await this._automergeHost.open();
     await this._indexer.open(ctx);
@@ -97,6 +130,7 @@ export class EchoHost extends Resource {
     await this._queryService.close(ctx);
     await this._indexer.close(ctx);
     await this._automergeHost.close();
+    this._roots.clear();
   }
 
   /**
@@ -116,7 +150,7 @@ export class EchoHost extends Resource {
   /**
    * Create new space root.
    */
-  async createSpaceRoot(spaceKey: PublicKey): Promise<AutomergeUrl> {
+  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     const automergeRoot = this._automergeHost.repo.create();
@@ -126,7 +160,24 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.repo.flush([automergeRoot.documentId]);
 
-    return automergeRoot.url;
+    const root = await this.openSpaceRoot(automergeRoot.url);
+
+    return root;
+  }
+
+  // TODO(dmaretskyi): Change to document id.
+  async openSpaceRoot(automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    const handle = this._automergeHost.repo.find(automergeUrl);
+    invariant(!this._roots.has(handle.documentId), 'Root already exists');
+    const root = new DatabaseRoot(handle);
+    this._roots.set(handle.documentId, root);
+    return root;
+  }
+
+  // TODO(dmaretskyi): Change to document id.
+  async closeSpaceRoot(automergeUrl: AutomergeUrl): Promise<void> {
+    todo();
   }
 
   /**
