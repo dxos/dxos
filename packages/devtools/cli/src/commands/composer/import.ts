@@ -3,9 +3,10 @@
 //
 
 import { Args } from '@oclif/core';
-import * as fs from 'fs-extra';
 
-import { type Space } from '@dxos/client/echo';
+import { Filter, type Space } from '@dxos/client/echo';
+import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
+import { diff } from '@dxos/util';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
@@ -34,26 +35,47 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
 
   async run() {
     // Parse data.
-    const { objects } = JSON.parse(String(fs.readFileSync(this.args.file!))) as DataFile;
+    const { objects } = this.parseJson<DataFile>(this.args.file);
 
     // Load objects.
     const load = async (space: Space) => {
-      this.log(`Space: ${space.key.truncate()}`);
+      const results: any[] = [];
       for (const object of objects) {
         const obj = this.parseObject(this.schemaMap, object);
-        if (this.flags['dry-run'] || this.flags.verbose) {
-          this.log(JSON.stringify(obj, undefined, 2));
-        }
 
-        if (!this.flags['dry-run']) {
-          // TODO(burdon): Merge based on FKs (need to query by FK).
-          space.db.add(obj);
-        }
+        // Merge based on FKs (need to query by FK).
+        const { objects } = await space.db.query(Filter.typename(getTypename(obj)!)).run();
+        const { added, updated } = diff(objects, [obj], compareForeignKeys);
+        added.forEach((obj) => {
+          if (this.flags.verbose) {
+            this.log('Adding: ', getTypename(obj));
+          }
+          if (this.flags['dry-run']) {
+            this.log(JSON.stringify(obj, undefined, 2));
+          } else {
+            space.db.add(obj);
+          }
+        });
+        updated.forEach((obj) => {
+          if (this.flags.verbose) {
+            this.log('Updating: ', getTypename(obj));
+          }
+          if (this.flags['dry-run']) {
+            // TODO(burdon): API Issue (is this safe)?
+            Object.assign(object, obj);
+          }
+        });
+
+        results.push(...added, ...updated);
       }
 
       await space.db.flush();
+      return results;
     };
 
-    return await this.execWithSpace(async ({ space }) => await load(space), { spaceKeys: this.flags.key });
+    return await this.execWithSpace(async ({ space }) => await load(space), {
+      spaceKeys: this.flags.key,
+      verbose: true,
+    });
   }
 }

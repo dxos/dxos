@@ -183,10 +183,10 @@ export const SpacePlugin = ({
             return;
           }
 
-          // TODO: remove after the demo
+          // TODO(y): Remove after the demo.
           const migrateSpaceParam = 'migrateSpace';
           if (searchParams.get(migrateSpaceParam) === 'true') {
-            prepareSpaceForMigration(space);
+            await space.waitUntilReady();
             await Migrations.migrate(space);
           }
 

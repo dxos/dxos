@@ -27,7 +27,7 @@ export type SchedulerOptions = {
 export class Scheduler {
   private _ctx = createContext();
 
-  private readonly _callMutex = new Mutex();
+  private readonly _functionUriToCallMutex = new Map<string, Mutex>();
 
   constructor(
     public readonly functions: FunctionRegistry,
@@ -80,7 +80,12 @@ export class Scheduler {
     }
 
     await this.triggers.activate({ space }, fnTrigger, async (args) => {
-      return this._callMutex.executeSynchronized(() => {
+      const mutex = this._functionUriToCallMutex.get(definition.uri) ?? new Mutex();
+      this._functionUriToCallMutex.set(definition.uri, mutex);
+
+      log.info('function triggered, waiting for mutex', { uri: definition.uri });
+      return mutex.executeSynchronized(() => {
+        log.info('mutex acquired', { uri: definition.uri });
         return this._execFunction(definition, fnTrigger, {
           meta: fnTrigger.meta,
           data: { ...args, spaceKey: space.key },

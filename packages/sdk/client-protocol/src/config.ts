@@ -41,5 +41,6 @@ export const DX_STATE = `${HOME}/.local/state/dx`;
 export const DX_RUNTIME = '/tmp/dx/run';
 
 export const ENV_DX_CONFIG = 'DX_CONFIG';
+export const ENV_DX_NO_AGENT = 'DX_NO_AGENT';
 export const ENV_DX_PROFILE = 'DX_PROFILE';
 export const ENV_DX_PROFILE_DEFAULT = 'default';

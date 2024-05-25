@@ -7,9 +7,9 @@ import React from 'react';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
+  bottombarBlockPaddingEnd,
   fixedInsetFlexLayout,
   topbarBlockPaddingStart,
-  bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
 import { Chess } from './Chess';

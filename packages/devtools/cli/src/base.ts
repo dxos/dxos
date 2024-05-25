@@ -4,6 +4,7 @@
 
 import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
+import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -20,6 +21,7 @@ import {
   DX_DATA,
   DX_RUNTIME,
   ENV_DX_CONFIG,
+  ENV_DX_NO_AGENT,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
   getProfilePath,
@@ -119,17 +121,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       description: 'Target websocket server.',
     }),
 
-    // TODO(burdon): '--no-' prefix is not working.
     // This does not check whether an agent is running or not, and could potentially corrupt data.
     // https://github.com/dxos/dxos/issues/6473
     'no-agent': Flags.boolean({
-      description: 'Run command without using an agent.',
+      description: 'Run command without starting an agent.',
       default: false,
-    }),
-
-    'no-start-agent': Flags.boolean({
-      description: 'Do not automatically start an agent if one is not running.',
-      default: false,
+      env: ENV_DX_NO_AGENT,
     }),
 
     timeout: Flags.integer({
@@ -414,6 +411,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (settings.debug) {
         this.log('timeout waiting for all promises to resolve, forcing exit');
       }
+
       // This is not a condition worth exiting as a failure for.
       process.exit(0);
     }, 1_000);
@@ -421,7 +419,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-start-agent'] && !this.flags['no-agent']) {
+    if (!this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
@@ -453,12 +451,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
         await this._client.initialize();
       } catch (err: any) {
+        // TODO(burdon): Hack.
         if (err.message.includes('401')) {
           throw new ClientInitializationError('error authenticating with remote service', err);
         }
+
         throw new ClientInitializationError('error initializing client', err);
       }
     }
+
     return this._client;
   }
 
@@ -467,9 +468,20 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   async getSpaces(
     client: Client,
-    { spaceKeys, wait = true }: { spaceKeys?: string[]; wait?: boolean } = {},
+    {
+      spaceKeys,
+      includeHalo = false,
+      wait = true,
+    }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
-    const spaces = client.spaces.get().filter((space) => !spaceKeys?.length || matchKeys(space.key, spaceKeys));
+    await client.spaces.isReady.wait();
+    const spaces = client.spaces
+      .get()
+      .filter(
+        (space) =>
+          (includeHalo || space !== client.spaces.default) && (!spaceKeys?.length || matchKeys(space.key, spaceKeys)),
+      );
+
     if (wait && !this.flags['no-wait']) {
       await Promise.all(
         spaces.map(async (space) => {
@@ -487,9 +499,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+    await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
     if (!key) {
-      key = await selectSpace(spaces);
+      if (spaces.length === 1) {
+        key = spaces[0].key.toHex();
+      } else {
+        key = await selectSpace(spaces);
+      }
     }
 
     const space = spaces.find((space) => space.key.toHex().startsWith(key!));
@@ -510,7 +527,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
     callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
-    options: { spaceKeys?: string[]; all?: boolean } = {},
+    options: { spaceKeys?: string[]; all?: boolean; verbose?: boolean } = {},
   ): Promise<T[] | undefined> {
     const client = await this.getClient();
     await this.onClientInit(client);
@@ -522,7 +539,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     const values: T[] = [];
     for (const space of spaces) {
-      this.log(`Space: ${space.key.truncate()}`);
+      if (options.verbose) {
+        this.log(`Space: ${space.key.truncate()}`);
+      }
+
       const value = await callback({ client, space });
       if (value) {
         values.push(value);
@@ -637,6 +657,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (rpc) {
         await rpc.close();
       }
+    }
+  }
+
+  parseJson<T>(filename: string): T {
+    try {
+      return JSON.parse(String(fs.readFileSync(filename))) as T;
+    } catch (err) {
+      log.error('error parsing file', { filename, err });
+      throw err;
     }
   }
 }

@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Archive, ArrowClockwise, Circle, Trash } from '@phosphor-icons/react';
-import React, { type MouseEvent, useState } from 'react';
+import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
+import React, { Fragment, type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { baseSurface, fixedBorder, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -27,7 +28,7 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col overflow-y-auto is-full', baseSurface)}>
+    <div className={mx('flex flex-col is-full py-2 pr-2', baseSurface)}>
       {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
       {messages?.map((message) => (
         <MessageItem
@@ -66,23 +67,21 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('group flex p-2 gap-1 border', fixedBorder, ghostHover, selected && styles.selected)}
+        className={mx('group flex p-2 gap-1 border', focusRing, fixedBorder, ghostHover, selected && styles.selected)}
+        tabIndex={0}
         onClick={() => onSelect?.()}
       >
-        <div className='flex flex-col'>
-          <div className='flex h-8'>
-            <Button variant='ghost' onClick={() => onSelect?.()}>
-              <Circle
-                className={mx(getSize(4), selected && 'text-primary-500')}
-                weight={selected ? 'duotone' : 'regular'}
-              />
-            </Button>
-          </div>
+        <div className='flex w-8 h-8 justify-center items-center'>
+          {selected && (
+            <span {...{ 'data-attention': 'true' }}>
+              <AttentionGlyph presence='none' />
+            </span>
+          )}
         </div>
 
         <div className='flex flex-col is-full overflow-hidden'>
           <div
-            className={mx('flex h-8 items-center justify-between text-sm font-semibold fg-description cursor-pointer')}
+            className={mx('flex h-8 items-center justify-between text-sm fg-description cursor-pointer')}
             onClick={() => setExpanded((expanded) => !expanded)}
           >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
@@ -111,22 +110,22 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </div>
 
           <div
-            className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'text-neutral-500')}
+            className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'fg-description')}
             onClick={() => setExpanded((event) => !event)}
           >
             {subject}
           </div>
 
           {expanded && (
-            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator border-description'>
+            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator'>
               {message.blocks.map((block, index) => (
-                <React.Fragment key={index}>
+                <Fragment key={index}>
                   <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
                     <div>{block.content?.content}</div>
                     <div className='px-2 text-right text-sm'>{formatDate(now, new Date(block.timestamp))}</div>
                   </div>
-                  {index !== message.blocks.length - 1 && <div role='none' className={mx('border-t fixedBorder')} />}
-                </React.Fragment>
+                  {index !== message.blocks.length - 1 && <div role='none' className='border-bs separator-separator' />}
+                </Fragment>
               ))}
             </div>
           )}
