@@ -136,13 +136,11 @@ const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
 };
 
 export const trace = {
-  resource,
+  addLink,
+  diagnostic,
   info,
   mark,
-  span,
   metricsCounter,
-
-  addLink,
-
-  diagnostic,
+  resource,
+  span,
 };
