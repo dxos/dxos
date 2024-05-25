@@ -128,6 +128,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
     }),
     [themeMode, prompt],
   );
+
   usePromptInputs(prompt);
 
   return (
@@ -152,21 +153,21 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
         )}
 
         <Section title='Template'>
-          <div ref={parentRef} className={attentionSurface} />
+          <div ref={parentRef} className={mx(attentionSurface, 'rounded')} />
         </Section>
 
         {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
-            <div className='flex flex-col divide-y'>
+            <div className='flex flex-col'>
               {/* TODO(Zan): Improve layout with grid */}
-              <table className='table-fixed border-collapse'>
+              <table className='w-full table-fixed border-collapse my-2'>
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='px-3 py-1.5 w-[20px] font-mono text-sm'>
-                        <code>{input.name}</code>
+                      <td className='w-[100px] p-1 font-mono text-sm'>
+                        <code className='px-2'>{input.name}</code>
                       </td>
-                      <td className='px-3 py-1.5 w-[200px]'>
+                      <td className='w-[120px] p-1'>
                         <Input.Root>
                           <Select.Root
                             value={String(input.type)}
@@ -189,24 +190,26 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
                           </Select.Root>
                         </Input.Root>
                       </td>
-                      <td className='px-3'>
-                        {input.type &&
+                      <td className='p-1 pr-2'>
+                        {input.type !== undefined &&
                           [
                             ChainInputType.VALUE,
                             ChainInputType.CONTEXT,
                             ChainInputType.RESOLVER,
                             ChainInputType.SCHEMA,
                           ].includes(input.type) && (
-                            <Input.Root>
-                              <Input.TextInput
-                                placeholder={t('command placeholder')}
-                                classNames={mx('is-full bg-transparent m-2')}
-                                value={input.value ?? ''}
-                                onChange={(event) => {
-                                  input.value = event.target.value;
-                                }}
-                              />
-                            </Input.Root>
+                            <div>
+                              <Input.Root>
+                                <Input.TextInput
+                                  placeholder={t('command placeholder')}
+                                  classNames={mx('is-full bg-transparent')}
+                                  value={input.value ?? ''}
+                                  onChange={(event) => {
+                                    input.value = event.target.value;
+                                  }}
+                                />
+                              </Input.Root>
+                            </div>
                           )}
                       </td>
                     </tr>

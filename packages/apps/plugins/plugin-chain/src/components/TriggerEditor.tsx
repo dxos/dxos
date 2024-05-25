@@ -9,16 +9,16 @@ import {
   FunctionDef,
   type FunctionTrigger,
   type FunctionTriggerType,
-  type TriggerSpec,
-  type TimerTrigger,
   type SubscriptionTrigger,
+  type TimerTrigger,
+  type TriggerSpec,
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { Filter, type Space, create, useQuery } from '@dxos/react-client/echo';
-import { Input, Select } from '@dxos/react-ui';
+import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { DensityProvider, Input, Select } from '@dxos/react-ui';
 
-import { PromptTemplate, Section } from './PromptTemplate';
+import { PromptTemplate } from './PromptTemplate';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
@@ -67,95 +67,174 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   }, [trigger.function]);
 
   return (
-    <div className='flex flex-col my-2 gap-4'>
-      <Section title='Trigger Setup'>
-        <div role='none' className='flex flex-col gap-2 p-2'>
-          <div role='none' className='flex flex-row items-center gap-2'>
+    <DensityProvider density='fine'>
+      <div className='flex flex-col my-2'>
+        <table className='w-full table-fixed'>
+          <tbody>
             <Input.Root>
-              <Input.Label>Function</Input.Label>
-              <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
-                <Select.TriggerButton placeholder={'Select function'} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {functions.map(({ id, uri }) => (
-                        <Select.Option key={id} value={uri}>
-                          {uri}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
+              <tr>
+                <td className='px-2 text-right w-[80px]'>
+                  <Input.Label classNames='text-xs'>Function</Input.Label>
+                </td>
+                <td>
+                  <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
+                    <Select.TriggerButton placeholder={'Select function'} />
+                    <Select.Portal>
+                      <Select.Content>
+                        <Select.Viewport>
+                          {functions.map(({ id, uri }) => (
+                            <Select.Option key={id} value={uri}>
+                              {uri}
+                            </Select.Option>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </td>
+              </tr>
             </Input.Root>
-
-            <div role='none' className='flex flex-row items-center gap-2'>
-              <Input.Root>
-                <Input.Label>Trigger Type</Input.Label>
-                <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
-                  <Select.TriggerButton placeholder={'Select trigger'} />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {triggerTypes.map((trigger) => (
-                          <Select.Option key={trigger} value={trigger}>
-                            {trigger}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
-                </Select.Root>
-              </Input.Root>
-            </div>
-          </div>
-
-          {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
-        </div>
-        <div className='p-2 flex flex-col gap-2'>
-          {trigger.spec && <TriggerSpec spec={trigger.spec} />}
-          <TriggerMeta trigger={trigger} />
-        </div>
-      </Section>
-    </div>
+            <tr>
+              <td />
+              <td>
+                <div className='p-2 pb-4'>
+                  {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
+                </div>
+              </td>
+            </tr>
+            <Input.Root>
+              <tr>
+                <td className='px-2 text-right'>
+                  <Input.Label classNames='text-xs'>Type</Input.Label>
+                </td>
+                <td>
+                  <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
+                    <Select.TriggerButton placeholder={'Select trigger'} />
+                    <Select.Portal>
+                      <Select.Content>
+                        <Select.Viewport>
+                          {triggerTypes.map((trigger) => (
+                            <Select.Option key={trigger} value={trigger}>
+                              {trigger}
+                            </Select.Option>
+                          ))}
+                        </Select.Viewport>
+                      </Select.Content>
+                    </Select.Portal>
+                  </Select.Root>
+                </td>
+              </tr>
+            </Input.Root>
+            {trigger.spec && <TriggerSpec spec={trigger.spec} />}
+            <tr>
+              <td className='px-2 text-right align-top pt-3'>
+                <span className='text-xs'>Meta</span>
+              </td>
+              <td className='pt-2'>
+                <TriggerMeta trigger={trigger} />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </DensityProvider>
   );
 };
 
+//
+// Trigger specs
+//
+
+// TODO(burdon): Type selector.
 const TriggerSpecSubscription = ({ spec }: { spec: SubscriptionTrigger }) => (
-  <div className='flex flex-col gap-2'>
+  <>
     <Input.Root>
-      <Input.Label>Filter</Input.Label>
-      <p>TODO: Schema Filter Here</p>
+      <tr>
+        <td className='px-2 text-right'>
+          <Input.Label classNames='text-xs'>Filter</Input.Label>
+        </td>
+        <td>
+          <Select.Root>
+            <Select.TriggerButton placeholder={'Select type'} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport></Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </td>
+      </tr>
     </Input.Root>
-  </div>
+  </>
 );
 
 const TriggerSpecTimer = ({ spec }: { spec: TimerTrigger }) => (
-  <div className='flex flex-row items-center gap-2'>
+  <>
     <Input.Root>
-      <Input.Label>Cron</Input.Label>
-      <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
+      <tr>
+        <td className='px-2 text-right'>
+          <Input.Label classNames='text-xs'>Cron</Input.Label>
+        </td>
+        <td>
+          <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
+        </td>
+      </tr>
     </Input.Root>
-  </div>
+  </>
 );
 
+const methods = ['GET', 'POST'];
+
 const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
-  <div className='flex flex-row items-center gap-2'>
+  <>
     <Input.Root>
-      <Input.Label>Method</Input.Label>
-      <Input.TextInput value={spec.method} onChange={(event) => (spec.method = event.target.value)} />
+      <tr>
+        <td className='px-2 text-right'>
+          <Input.Label classNames='text-xs'>Method</Input.Label>
+        </td>
+        <td>
+          <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
+            <Select.TriggerButton placeholder={'type'} />
+            <Select.Portal>
+              <Select.Content>
+                <Select.Viewport>
+                  {methods.map((method) => (
+                    <Select.Option key={method} value={method}>
+                      {method}
+                    </Select.Option>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+        </td>
+      </tr>
     </Input.Root>
-  </div>
+  </>
 );
 
 const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => (
-  <div className='flex flex-row items-center gap-2'>
+  <>
     <Input.Root>
-      <Input.Label>URL</Input.Label>
-      <Input.TextInput value={spec.url} onChange={(event) => (spec.url = event.target.value)} />
+      <tr>
+        <td className='px-2 text-right'>
+          <Input.Label classNames='text-xs'>URL</Input.Label>
+        </td>
+        <td>
+          <Input.TextInput
+            value={spec.url}
+            onChange={(event) => (spec.url = event.target.value)}
+            placeholder='https://'
+          />
+        </td>
+      </tr>
     </Input.Root>
-  </div>
+  </>
 );
+
+//
+// Meta
+//
 
 const triggerRenderers: {
   [key in FunctionTriggerType]: React.ComponentType<{ spec: any }>;
@@ -167,8 +246,8 @@ const triggerRenderers: {
 };
 
 const TriggerSpec = ({ spec }: { spec: TriggerSpec }) => {
-  const Renderer = triggerRenderers[spec.type];
-  return Renderer ? <Renderer spec={spec} /> : null;
+  const Component = triggerRenderers[spec.type];
+  return Component ? <Component spec={spec} /> : null;
 };
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
@@ -179,17 +258,12 @@ const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
   // TODO(zan): Wire up the meta editor for each function.
   if (trigger.function === 'dxos.org/function/gpt') {
     const meta = trigger.meta as any;
-
     if (meta?.prompt === undefined) {
       return null;
     }
 
-    return (
-      <div>
-        <PromptTemplate prompt={meta.prompt} commandEditable={false} />
-      </div>
-    );
+    return <PromptTemplate prompt={meta.prompt} commandEditable={false} />;
   }
 
-  return <p>Meta for {trigger.function}</p>;
+  return null;
 };
