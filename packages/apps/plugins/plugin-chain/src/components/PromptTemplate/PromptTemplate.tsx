@@ -101,7 +101,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
 
 type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean; schema?: S.Schema<any, any, any> };
 
-export const PromptTemplate = ({ prompt, commandEditable = true, schema }: PromptTemplateProps) => {
+export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
