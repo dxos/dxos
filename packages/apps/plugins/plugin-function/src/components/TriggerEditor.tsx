@@ -175,6 +175,10 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 //
 
 const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>) => {
+  if (!spec.filter) {
+    return null;
+  }
+
   const handleSelectSchema = (typename: string) => {
     spec.filter = [{ type: typename }];
   };
@@ -182,7 +186,10 @@ const TriggerSpecSubscription = ({ spec }: TriggerSpecProps<SubscriptionTrigger>
   return (
     <>
       <InputRow label='Filter'>
-        <Select.Root value={spec.filter[0].type} onValueChange={handleSelectSchema}>
+        <Select.Root
+          value={spec.filter.length > 0 ? spec.filter[0].type : undefined}
+          onValueChange={handleSelectSchema}
+        >
           <Select.TriggerButton placeholder={'Select type'} />
           <Select.Portal>
             <Select.Content>
