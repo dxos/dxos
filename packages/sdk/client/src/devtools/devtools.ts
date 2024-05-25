@@ -101,6 +101,10 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     },
 
     fetchDiagnostics: async (id, instanceTag) => {
+      if (diagnostics.length === 0) {
+        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      }
+
       const diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
       if (!diagnostic) {
         log.error(`Diagnostic ${id} not found.`);

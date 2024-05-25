@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos/util';
-
 import { throwUnhandledError } from '@dxos/util';
+
 import { Context } from './context';
 
 export enum LifecycleState {

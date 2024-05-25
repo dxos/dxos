@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import * as A from '@dxos/automerge/automerge';
 import { log } from '@dxos/log';
 

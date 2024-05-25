@@ -4,6 +4,7 @@
 
 import { type DocumentId, type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { todo } from '@dxos/debug';
 import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
 import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
@@ -15,10 +16,9 @@ import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
 import { trace } from '@dxos/tracing';
 
+import { DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
-import { DatabaseRoot } from './database-root';
-import { todo } from '@dxos/debug';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,

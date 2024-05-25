@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import type { DocHandle } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import type { SpaceDoc } from '@dxos/echo-protocol';
+
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
 
 export class DatabaseRoot {
