@@ -4,9 +4,9 @@
 
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo, useState } from 'react';
 
+import { S, type DynamicEchoSchema } from '@dxos/echo-schema';
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { type ChainPromptType } from '@braneframe/types';
-import { type DynamicEchoSchema } from '@dxos/echo-schema';
+import { DocumentType, FileType, MessageType, SketchType, StackType, type ChainPromptType } from '@braneframe/types';
 import {
   FunctionDef,
   type FunctionTrigger,
@@ -17,8 +17,9 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery, Hypergraph, RuntimeSchemaRegistry } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
+import { distinctBy } from '@dxos/util';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
@@ -138,11 +139,20 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 // Trigger specs
 //
 
+// stack, sketch, document, file, message,
+
 const TriggerSpecSubscription = ({ space, spec }: TriggerSpecProps<SubscriptionTrigger>) => {
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<any>([StackType, SketchType, DocumentType, FileType, MessageType]);
+
   useEffect(() => {
     if (space) {
-      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+      void space.db.schemaRegistry
+        .getAll()
+        .then((schemas) => {
+          // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
+          setSchemas((oldValue: any) => distinctBy([...oldValue, ...schemas], (s) => s.typename));
+        })
+        .catch();
     }
   }, [space]);
 
@@ -155,9 +165,9 @@ const TriggerSpecSubscription = ({ space, spec }: TriggerSpecProps<SubscriptionT
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                {schemas.map(({ id }) => (
-                  <Select.Option key={id} value={id}>
-                    {id}
+                {schemas.map(({ typename }: any) => (
+                  <Select.Option key={typename} value={typename}>
+                    {typename}
                   </Select.Option>
                 ))}
               </Select.Viewport>

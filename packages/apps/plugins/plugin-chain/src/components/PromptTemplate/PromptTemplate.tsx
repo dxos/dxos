@@ -135,7 +135,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
         {commandEditable && (
-          <Section title='Prompt'>
+          <Section title='Command'>
             <div className='flex items-center pl-4'>
               <span className='text-neutral-500'>/</span>
               <Input.Root>
