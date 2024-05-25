@@ -237,7 +237,6 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attention}
               location={location}
-              fullscreen={layout.values.fullscreen}
               showHintsFooter={settings.values.showFooter}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
@@ -421,7 +420,6 @@ export const DeckPlugin = ({
               batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
