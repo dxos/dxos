@@ -1872,6 +1872,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-deck':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-deck
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -5619,6 +5622,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
       '@effect/schema':
         specifier: ^0.64.20
         version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
@@ -6661,9 +6667,6 @@ importers:
         specifier: ^0.9.1
         version: 0.9.1
     devDependencies:
-      '@dxos/cli-composer':
-        specifier: workspace:*
-        version: link:../cli-composer
       '@oclif/test':
         specifier: ^3.2.15
         version: 3.2.15

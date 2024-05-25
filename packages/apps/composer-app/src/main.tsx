@@ -105,7 +105,7 @@ const main = async () => {
   );
   const isSocket = !!(globalThis as any).__args;
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
-  const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
 
   const App = createApp({

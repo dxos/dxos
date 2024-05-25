@@ -21,17 +21,20 @@ export const createContext = async (
 ): Promise<RequestContext> => {
   let object: EchoReactiveObject<any> | undefined;
 
-  // Get context from message.
-  if (message.context?.object) {
-    object = await space.db.automerge.loadObjectById(message.context?.object);
-  } else if (thread?.context?.object) {
-    object = await space.db.automerge.loadObjectById(thread.context?.object);
+  // TODO(burdon): ???
+  const contextObjectId = message.context?.object ?? thread?.context?.object;
+  if (contextObjectId) {
+    // TODO(burdon): Handle composite key?
+    const idParts = contextObjectId.split(':');
+    object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
+  } else {
+    object = message;
   }
 
   // Get text from comment.
   let text: string | undefined;
   if (object instanceof DocumentType) {
-    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((c) => c.thread));
+    await loadObjectReferences(object, (doc) => (doc.comments ?? []).map((comment) => comment.thread));
     const comment = object.comments?.find((comment) => comment.thread === thread);
     if (comment) {
       text = getReferencedText(object, comment);

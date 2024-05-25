@@ -14,6 +14,7 @@ import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
   DevServer,
+  FUNCTION_SCHEMA,
   type FunctionManifest,
   FunctionRegistry,
   FunctionTrigger,
@@ -50,6 +51,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
+      // TODO(burdon): Standards?
+      client.addSchema(...FUNCTION_SCHEMA);
+
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
@@ -103,7 +107,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         // TODO(burdon): Get list of functions from plugin API endpoint.
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
-          'Functions:\n' +
+          '\nFunctions (manifest):\n' +
             server.functions
               .map(({ def: { uri, route } }) => chalk`- ${uri.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),

@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './array';
 export * from './assign';
 export * from './binder';
 export * from './bitfield';
