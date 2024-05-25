@@ -20,7 +20,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event }) => {
   registerTypes(space);
 
   for (const game of objects ?? []) {
-    const engine = new Engine({ pgn: game.pgn, level });
+    const engine = new Engine({ pgn: game.pgn ?? '', level });
 
     // TODO(burdon): Only trigger if has player credential (identity from context).
     const side = 'b';
