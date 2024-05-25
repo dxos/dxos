@@ -89,5 +89,3 @@ cd ~/Code/dxos/w3/packages/hub
 
 ./scripts/send_email
 ```
-
-
