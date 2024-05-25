@@ -29,15 +29,12 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     [trigger.function, functions],
   );
 
-  // Initialize meta.
   useEffect(() => {
     if (!trigger.meta) {
       const extension = metaExtensions[trigger.function];
-      if (extension && extension.initialValue) {
-        trigger.meta = extension.initialValue();
-      }
+      extension?.initialValue && (trigger.meta = extension.initialValue());
     }
-  }, [trigger.function]);
+  }, [trigger.function, trigger.meta]);
 
   const handleSelectFunction = (value: string) => {
     const match = functions.find((fn) => fn.uri === value);
@@ -253,13 +250,10 @@ const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
 //
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
-  if (!trigger || !trigger.function || !trigger.meta) {
-    return null;
-  }
+  const meta = useMemo(() => (trigger?.function ? metaExtensions[trigger.function] : undefined), [trigger.function]);
 
-  // TODO(burdon): Isn't triggered when function changes.
-  const { component: Component } = metaExtensions[trigger.function] ?? {};
-  if (Component) {
+  const Component = meta?.component;
+  if (Component && trigger.meta) {
     return <Component meta={trigger.meta as any} />;
   }
 
@@ -308,6 +302,7 @@ const metaExtensions: Record<string, MetaExtension<any>> = {
   },
 
   'dxos.org/function/gpt': {
+    initialValue: () => ({ prompt: undefined }),
     component: ChainPromptMeta,
   },
 };
