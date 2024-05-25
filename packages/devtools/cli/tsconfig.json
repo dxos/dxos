@@ -93,9 +93,6 @@
     },
     {
       "path": "../../sdk/observability"
-    },
-    {
-      "path": "../cli-composer"
     }
   ],
   "ts-node": {

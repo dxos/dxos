@@ -20,8 +20,8 @@ import {
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
-  ENV_DX_AGENT,
   ENV_DX_CONFIG,
+  ENV_DX_NO_AGENT,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
   getProfilePath,
@@ -121,18 +121,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       description: 'Target websocket server.',
     }),
 
-    // TODO(burdon): '--no-' prefix is not working.
     // This does not check whether an agent is running or not, and could potentially corrupt data.
     // https://github.com/dxos/dxos/issues/6473
     'no-agent': Flags.boolean({
-      description: 'Run command without using an agent.',
+      description: 'Run command without starting an agent.',
       default: false,
-      env: ENV_DX_AGENT,
-    }),
-
-    'no-start-agent': Flags.boolean({
-      description: 'Do not automatically start an agent if one is not running.',
-      default: false,
+      env: ENV_DX_NO_AGENT,
     }),
 
     timeout: Flags.integer({
@@ -425,7 +419,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-start-agent'] && !this.flags['no-agent']) {
+    if (!this.flags['no-agent']) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {

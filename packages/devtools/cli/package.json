@@ -132,16 +132,16 @@
         "description": "Manage agents."
       },
       "debug": {
-        "description": "Debugging commands."
+        "description": "Debugging tools and diagnostics."
       },
       "device": {
-        "description": "Manage devices."
+        "description": "Manage HALO devices."
       },
       "function": {
-        "description": "Manage functions and triggers."
+        "description": "Manage distributed functions and triggers."
       },
       "halo": {
-        "description": "Manage identity and devices."
+        "description": "Manage HALO identity and devices."
       },
       "space": {
         "description": "Manage ECHO Spaces."
