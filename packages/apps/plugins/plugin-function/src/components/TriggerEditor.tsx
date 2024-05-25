@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo, useState } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
 import { type ChainPromptType } from '@braneframe/types';
+import { type DynamicEchoSchema } from '@dxos/echo-schema';
 import {
   FunctionDef,
   type FunctionTrigger,
@@ -89,12 +90,9 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
             <InputRow>
-              <div className='p-2 pb-4'>
+              <div className='px-2'>
                 {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
               </div>
-            </InputRow>
-            <InputRow label='Enabled'>
-              <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
             </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
@@ -113,7 +111,15 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
           </tbody>
-          <tbody>{trigger.spec && <TriggerSpec spec={trigger.spec} />}</tbody>
+          <tbody>
+            {trigger.spec && <TriggerSpec space={space} spec={trigger.spec} />}
+            <InputRow label='Enabled'>
+              {/* TODO(burdon): Hack to make the switch the same height as other controls. */}
+              <div className='flex items-center h-8'>
+                <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
+              </div>
+            </InputRow>
+          </tbody>
           {trigger.function && (
             <tbody>
               <tr>
@@ -135,23 +141,38 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 // Trigger specs
 //
 
-// TODO(burdon): Type selector.
-const TriggerSpecSubscription = ({ spec }: { spec: SubscriptionTrigger }) => (
-  <>
-    <InputRow label='Filter'>
-      <Select.Root>
-        <Select.TriggerButton placeholder={'Select type'} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport></Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
-    </InputRow>
-  </>
-);
+const TriggerSpecSubscription = ({ space, spec }: TriggerSpecProps<SubscriptionTrigger>) => {
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+  useEffect(() => {
+    if (space) {
+      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+    }
+  }, [space]);
 
-const TriggerSpecTimer = ({ spec }: { spec: TimerTrigger }) => (
+  // TODO(burdon): Wire up (single) filter.
+  return (
+    <>
+      <InputRow label='Filter'>
+        <Select.Root>
+          <Select.TriggerButton placeholder={'Select type'} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {schemas.map(({ id }) => (
+                  <Select.Option key={id} value={id}>
+                    {id}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </InputRow>
+    </>
+  );
+};
+
+const TriggerSpecTimer = ({ spec }: TriggerSpecProps<TimerTrigger>) => (
   <>
     <InputRow label='Cron'>
       <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
@@ -161,7 +182,7 @@ const TriggerSpecTimer = ({ spec }: { spec: TimerTrigger }) => (
 
 const methods = ['GET', 'POST'];
 
-const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
+const TriggerSpecWebhook = ({ spec }: TriggerSpecProps<WebhookTrigger>) => (
   <>
     <InputRow label='Method'>
       <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
@@ -182,7 +203,7 @@ const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
   </>
 );
 
-const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => {
+const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
   const handleChangeInit: ChangeEventHandler<HTMLInputElement> = (event) => {
     try {
       spec.init = JSON.parse(event.target.value);
@@ -201,34 +222,20 @@ const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => {
         />
       </InputRow>
       <InputRow label='Init'>
-        <Input.TextInput
-          value={JSON.stringify(spec.init)}
-          onChange={handleChangeInit}
-          placeholder='{ "type": "sync" }'
-        />
+        <Input.TextInput value={JSON.stringify(spec.init)} onChange={handleChangeInit} placeholder='Initial message.' />
       </InputRow>
     </>
   );
 };
 
-// TODO(burdon): Generalize and reuse forms in other plugins (extract to react-ui-form?)
-const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
-  <Input.Root>
-    <tr>
-      <td className='w-[100px] px-2 text-right align-top pt-3'>
-        <Input.Label classNames='text-xs'>{label}</Input.Label>
-      </td>
-      <td className='p-1'>{children}</td>
-    </tr>
-  </Input.Root>
-);
+//
+// Trigger spec.
+//
 
-//
-// Meta
-//
+type TriggerSpecProps<T = TriggerSpec> = { space: Space; spec: T };
 
 const triggerRenderers: {
-  [key in FunctionTriggerType]: React.ComponentType<{ spec: any }>;
+  [key in FunctionTriggerType]: React.FC<TriggerSpecProps<any>>;
 } = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,
@@ -236,10 +243,14 @@ const triggerRenderers: {
   websocket: TriggerSpecWebsocket,
 };
 
-const TriggerSpec = ({ spec }: { spec: TriggerSpec }) => {
+const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
   const Component = triggerRenderers[spec.type];
-  return Component ? <Component spec={spec} /> : null;
+  return Component ? <Component space={space} spec={spec} /> : null;
 };
+
+//
+// Trigger meta.
+//
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
   if (!trigger || !trigger.function || !trigger.meta) {
@@ -254,10 +265,6 @@ const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
 
   return null;
 };
-
-//
-// Meta extensions
-//
 
 type MetaProps<T> = { meta: T };
 type MetaExtension<T> = {
@@ -304,3 +311,19 @@ const metaExtensions: Record<string, MetaExtension<any>> = {
     component: ChainPromptMeta,
   },
 };
+
+//
+// Utils.
+//
+
+// TODO(burdon): Generalize and reuse forms in other plugins (extract to react-ui-form?)
+const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
+  <Input.Root>
+    <tr>
+      <td className='w-[100px] px-2 text-right align-top pt-3'>
+        <Input.Label classNames='text-xs'>{label}</Input.Label>
+      </td>
+      <td className='p-1'>{children}</td>
+    </tr>
+  </Input.Root>
+);
