@@ -122,7 +122,10 @@ export class Context {
     this.#isDisposed = true;
 
     // Set the promise before running the callbacks.
-    const { promise, resolve: resolveDispose } = Promise.withResolvers<boolean>();
+    let resolveDispose!: (value: boolean) => void;
+    const promise = new Promise<boolean>((resolve) => {
+      resolveDispose = resolve;
+    });
     this.#disposePromise = promise;
 
     // Process last first.
