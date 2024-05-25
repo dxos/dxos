@@ -13,6 +13,8 @@ import { mx } from '@dxos/react-ui-theme';
 import { resizeHandle, resizeHandleVertical } from '../../fragments';
 import { translationKey } from '../../translations';
 
+const MIN_WIDTH = [20, 'rem'] as const;
+
 type DeckRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & { asChild?: boolean };
 
 const deckGrid =
@@ -47,6 +49,7 @@ type DeckPlankProps = ThemedClassName<ComponentPropsWithRef<'article'>> & {
 type DeckPlankResizing = Pick<MouseEvent, 'pageX'> & { size: number } & { [Unit in DeckPlankUnit]: number };
 
 const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
+  // TODO(thure): implement units (currently only `rem` is actually supported)
   ({ unit = 'rem', classNames, style, children, scrollIntoViewOnMount, suppressAutofocus, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const [isSm] = useMediaQuery('sm', { ssr: false });
@@ -62,7 +65,7 @@ const DeckPlank = forwardRef<HTMLDivElement, DeckPlankProps>(
       ({ pageX }: PointerEvent) => {
         if (resizing) {
           const delta = pageX - resizing.pageX;
-          setSize(resizing.size + delta / resizing[unit]);
+          setSize(Math.max(MIN_WIDTH[0], resizing.size + delta / resizing[unit]));
         }
       },
       [resizing],

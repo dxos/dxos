@@ -29,6 +29,7 @@ export default [
         'actions menu label': 'Options',
         'settings deck label': 'Enable Deck',
         'reload required message': 'Reload required.',
+        'pending heading': 'Loading…',
       },
     },
   },
