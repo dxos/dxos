@@ -5,7 +5,6 @@
 import { join } from 'node:path';
 
 import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
-import { sleep } from '@dxos/async';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -32,9 +31,6 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
     return;
   }
 
-  // TODO(burdon): The handler is called before the mutation is processed?
-  await sleep(500);
-
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();
@@ -48,12 +44,17 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         return null;
       }
 
+      // Skip messages older than one hour.
+      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1000) {
+        return null;
+      }
+
       // Check the message wasn't already processed / sent by the AI.
       if (getMeta(message).keys.find((key) => key.source === AI_SOURCE)) {
         return null;
       }
 
-      // Skip messages that don't belong to an active thread.
+      // Separate messages that don't belong to an active thread.
       const thread = threads.find((thread: ThreadType) => thread.messages.some((msg) => msg?.id === message.id));
       if (!thread) {
         return [message, undefined] as [MessageType, ThreadType | undefined];
@@ -87,11 +88,11 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {
-        const blocks = await processor.processThread({
+        const { success, blocks } = await processor.processThread({
           space,
           thread,
           message,
-          defaultPrompt: meta.prompt,
+          prompt: meta.prompt,
         });
 
         if (blocks?.length) {
@@ -109,7 +110,8 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
             );
 
             thread.messages.push(response);
-          } else {
+          } else if (success) {
+            // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".
             getMeta(message).keys.push(metaKey);
             message.blocks.push(...blocks);

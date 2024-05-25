@@ -79,22 +79,20 @@ triggers:
 #        type: 'sync'
 
 #  - function: 'dxos.org/function/gpt'
-#    meta:
-#      prompt: 'faq'
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'dxos.org/type/Message'
+#      - type: 'braneframe.Message'
 
-#  - function: 'dxos.org/function/embedding'
-#    spec:
-#      type: 'subscription'
-#      filter:
-#      - type: 'braneframe.Document'
-#      - type: 'braneframe.File'
-#      options:
-#        deep: true
-#        delay: 5
+  - function: 'dxos.org/function/embedding'
+    spec:
+      type: 'subscription'
+      filter:
+      - type: 'braneframe.Document'
+      - type: 'braneframe.File'
+      options:
+        deep: true
+        delay: 5
 
 #  - function: 'dxos.org/function/calendar'
 #    spec:
@@ -116,7 +114,7 @@ triggers:
 #    spec:
 #      type: 'subscription'
 #      filter:
-#      - type: 'dxos.org/type/Message'
+#      - type: 'braneframe.Message'
 #        props:
 #          type: 'email'
 #      options:

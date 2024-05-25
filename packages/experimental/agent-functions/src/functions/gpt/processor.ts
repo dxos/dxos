@@ -39,7 +39,7 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
-export type ProcessThreadArgs = {
+export type RequestProcessorProps = {
   space: Space;
 
   /**
@@ -54,7 +54,12 @@ export type ProcessThreadArgs = {
    * `/say ...`
    * If a message doesn't start with an explicit prompt, the defaultPrompt will be used.
    */
-  defaultPrompt?: ChainPromptType;
+  prompt?: ChainPromptType;
+};
+
+export type ProcessThreadResult = {
+  success: boolean;
+  blocks?: BlockType[];
 };
 
 export class RequestProcessor {
@@ -63,8 +68,8 @@ export class RequestProcessor {
     private readonly _resolvers?: ResolverMap,
   ) {}
 
-  async processThread({ space, thread, message, defaultPrompt }: ProcessThreadArgs): Promise<BlockType[] | undefined> {
-    let blocks: BlockType[] | undefined;
+  // TODO(burdon): Generalize so that we can process outside of a thread.
+  async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<ProcessThreadResult> {
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
@@ -72,38 +77,43 @@ export class RequestProcessor {
         .filter(Boolean)
         .join('\n');
 
-      // TODO(burdon): Use given prompt or interpret from /command in text.
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      const [command, content] = match ? match.slice(1) : [];
-      if (defaultPrompt || command) {
+      const [command, content] = match ? match.slice(1) : [undefined, text];
+      if (prompt || command) {
         start();
         const context = await createContext(space, message, thread);
 
-        log.info('processing', { command, content });
-        const sequence = await this.createSequence(space, context, { prompt: defaultPrompt, command });
+        log.info('processing', { command, content, context });
+        const sequence = await this.createSequence(space, context, { prompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
           const result = parseMessage(response);
 
           const builder = new ResponseBuilder(space, context);
-          blocks = builder.build(result);
+          const blocks = builder.build(result);
+
           log.info('response', { blocks });
+          return { success: true, blocks };
         }
       }
     } catch (err) {
-      log.error('processing message', err);
-      blocks = [
-        {
-          timestamp: new Date().toISOString(),
-          content: create(TextV0Type, { content: 'Error generating response.' }),
-        },
-      ];
+      // Process as error so that we don't keep processing.
+      log.error('processing failed', err);
+      return {
+        success: false,
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: 'Error generating response.' }),
+          },
+        ],
+      };
     } finally {
       stop();
     }
 
-    return blocks;
+    return { success: true };
   }
 
   async createSequence(
@@ -113,7 +123,7 @@ export class RequestProcessor {
   ): Promise<RunnableSequence | undefined> {
     log.info('create sequence', {
       context: {
-        object: { id: context.object?.id, schema: context.object?.__typename },
+        object: { space: space.key, id: context.object?.id, schema: context.object?.__typename },
       },
       options,
     });
@@ -121,6 +131,7 @@ export class RequestProcessor {
     // Find prompt matching command.
     if (options.command) {
       const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
+      // TODO(burdon): API Issue: Why is loadObjectReferences required?
       const allPrompts = (await loadObjectReferences(chains, (chain) => chain.prompts)).flatMap((prompt) => prompt);
       for (const prompt of allPrompts) {
         if (prompt.command === options.command) {
@@ -146,8 +157,10 @@ export class RequestProcessor {
     context: RequestContext,
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
-    for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
-      inputs[input.name] = await this.getTemplateInput(space, input, context);
+    if (prompt.inputs?.length) {
+      for (const input of prompt.inputs) {
+        inputs[input.name] = await this.getTemplateInput(space, input, context);
+      }
     }
 
     // TODO(burdon): Test using JSON schema.
@@ -180,10 +193,9 @@ export class RequestProcessor {
       return input;
     };
 
-    const template = await loadObjectReferences(prompt, (p) => p.template);
     return RunnableSequence.from([
       inputs,
-      PromptTemplate.fromTemplate(template),
+      PromptTemplate.fromTemplate(prompt.template),
       promptLogger,
       this._resources.model.bind(customArgs),
       withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
@@ -215,7 +227,7 @@ export class RequestProcessor {
       //
       case ChainInputType.RETRIEVER: {
         const retriever = this._resources.store.vectorStore.asRetriever({});
-        return retriever.pipe(formatDocumentsAsString); // TODO(burdon): ???
+        return retriever.pipe(formatDocumentsAsString);
       }
 
       //
@@ -247,6 +259,7 @@ export class RequestProcessor {
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.
           const name = schema.typename.split(/[.-/]/).pop();
+          // TODO(burdon): Update.
           const fields = todo() as any[]; // schema.props.filter(({ type }) => type === Schema.PropType.STRING).map(({ id }) => id);
           return () => `${name}: ${fields.join(', ')}`;
         }
@@ -260,9 +273,16 @@ export class RequestProcessor {
       case ChainInputType.CONTEXT: {
         return () => {
           if (value) {
-            return value ? get(context, value) : undefined;
+            const obj = get(context, value);
+            // TODO(burdon): Hack in case returning a TextV0Type object.
+            if (obj?.content) {
+              return obj.content;
+            }
+
+            return obj;
           }
 
+          // TODO(burdon): Default?
           return context.text;
         };
       }
