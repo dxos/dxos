@@ -1,7 +1,7 @@
 {
-  "name": "@braneframe/plugin-chain",
+  "name": "@braneframe/plugin-function",
   "version": "0.5.2",
-  "description": "Prompt chain plugin",
+  "description": "Functions plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-chain": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",
@@ -31,7 +32,6 @@
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
-    "@dxos/chain": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",

@@ -9,14 +9,14 @@ import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { IndexKind, type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexConstructors } from './index-constructors';
 import { type IndexMetadataStore } from './index-metadata-store';
 import { type IndexStore } from './index-store';
-import { type IndexQuery, type Index, type IdToHeads, type ObjectSnapshot, type FindResult } from './types';
+import { type FindResult, type IdToHeads, type Index, type IndexQuery, type ObjectSnapshot } from './types';
 
 /**
  * Amount of documents processed in a batch to save indexes after.
@@ -223,8 +223,7 @@ export class Indexer extends Resource {
     }
     const idToHeads = await this._metadataStore.getDirtyDocuments();
 
-    log.info('dirty objects to index', { count: idToHeads.size });
-
+    log('dirty objects to index', { count: idToHeads.size });
     if (idToHeads.size === 0 || this._ctx.disposed) {
       return;
     }
@@ -232,7 +231,7 @@ export class Indexer extends Resource {
     const startTime = Date.now();
     const documentsUpdated: ObjectSnapshot[] = [];
     const saveIndexChanges = async () => {
-      log.info('Saving index changes', { count: documentsUpdated.length, timeSinceStart: Date.now() - startTime });
+      log('Saving index changes', { count: documentsUpdated.length, timeSinceStart: Date.now() - startTime });
       await this._saveIndexes();
       const batch = this._db.batch();
       this._metadataStore.markClean(new Map(documentsUpdated.map((document) => [document.id, document.heads])), batch);
@@ -254,7 +253,7 @@ export class Indexer extends Resource {
         if (documentsUpdated.length > 0) {
           await saveIndexChanges();
         }
-        log.info('Indexing time budget exceeded', { time: Date.now() - startTime });
+        log('Indexing time budget exceeded', { time: Date.now() - startTime });
         this._run.schedule();
         break;
       }
@@ -263,7 +262,8 @@ export class Indexer extends Resource {
     if (updates.some(Boolean)) {
       this.updated.emit();
     }
-    log.info('Indexing finished', { time: Date.now() - startTime });
+
+    log('Indexing finished', { time: Date.now() - startTime });
   }
 
   @trace.span({ showInBrowserTimeline: true })
