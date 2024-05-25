@@ -71,7 +71,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   return (
     <DensityProvider density='fine'>
       <div className='flex flex-col my-2'>
-        <table className='w-full table-fixed'>
+        <table className='is-full table-fixed'>
           <tbody>
             <InputRow label='Function'>
               <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
@@ -294,7 +294,7 @@ const ChainPromptMeta = ({ meta }: MetaProps<{ prompt?: ChainPromptType }>) => {
       </InputRow>
       {meta.prompt && (
         <InputRow label='Prompt'>
-          <PromptTemplate prompt={meta.prompt} commandEditable={false} />
+          <PromptTemplate prompt={meta.prompt} />
         </InputRow>
       )}
     </>
