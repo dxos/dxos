@@ -17,7 +17,7 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { Filter, type Space, useQuery, Hypergraph, RuntimeSchemaRegistry } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
 import { distinctBy } from '@dxos/util';
 
