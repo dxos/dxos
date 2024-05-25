@@ -9,10 +9,15 @@ import { requireTypeReference, StoredEchoSchema } from '@dxos/echo-schema';
 const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
 
 export class RuntimeSchemaRegistry {
+  // TODO(burdon): Any schema or just EchoSchema?
   private readonly _schemaMap = new Map<string, S.Schema<any>>();
 
   constructor() {
     this._schemaMap.set(StoredEchoSchema.typename, StoredEchoSchema);
+  }
+
+  get schemas() {
+    return Array.from(this._schemaMap.values());
   }
 
   hasSchema<T>(schema: S.Schema<T>): boolean {

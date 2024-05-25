@@ -92,6 +92,7 @@ export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
+  enabled: S.optional(S.boolean),
   function: S.string.pipe(S.description('Function URI.')),
   // Context is merged into the event data passed to the function.
   meta: S.optional(S.object),

@@ -5,11 +5,10 @@
 import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
   MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
 } from '@dxos/app-framework';
 
 import { CHAIN_PLUGIN } from './meta';
@@ -22,7 +21,6 @@ export enum ChainAction {
 
 export type ChainPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
   SchemaProvides &

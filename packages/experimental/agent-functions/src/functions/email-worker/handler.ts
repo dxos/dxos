@@ -25,6 +25,7 @@ export type EmailMessage = {
 
 const SOURCE_ID = 'hub.dxos.network/mailbox';
 
+// TODO(burdon): Effect schema.
 type Meta = { account?: string };
 
 export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }, Meta> = async ({
@@ -33,7 +34,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   response,
 }) => {
   const {
-    meta: { account = 'hello@dxos.network' },
+    meta: { account = 'hello@dxos.network' } = {},
     data: { messages },
     spaceKey,
   } = event.data;

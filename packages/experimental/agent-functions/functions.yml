@@ -12,30 +12,30 @@ functions:
     handler: 'hello'
     description: 'Hello World!'
 
-  - uri: 'dxos.org/function/calendar'
-    route: '/calendar'
-    handler: 'calendar'
-    description: 'Calendar Sync.'
+#  - uri: 'dxos.org/function/calendar'
+#    route: '/calendar'
+#    handler: 'calendar'
+#    description: 'Calendar Sync.'
 
   - uri: 'dxos.org/function/chess'
     route: '/chess'
     handler: 'chess'
     description: 'Chess.'
 
-  - uri: 'dxos.org/function/email'
-    route: '/email'
-    handler: 'email'
-    description: 'Email Sync.'
+#  - uri: 'dxos.org/function/email'
+#    route: '/email'
+#    handler: 'email'
+#    description: 'Email Sync.'
 
-  - uri: 'dxos.org/function/email-extractor'
-    route: '/email-extractor'
-    handler: 'email-extractor'
-    description: 'Email Extractor.'
+#  - uri: 'dxos.org/function/email-extractor'
+#    route: '/email-extractor'
+#    handler: 'email-extractor'
+#    description: 'Email Extractor.'
 
   - uri: 'dxos.org/function/email-worker'
     route: '/email-worker'
     handler: 'email-worker'
-    description: 'Email Sync with Cloudflare Worker.'
+    description: 'Synchronize Mailbox with email server.'
 
   - uri: 'dxos.org/function/embedding'
     route: '/embedding'
@@ -47,10 +47,10 @@ functions:
     handler: 'gpt'
     description: 'GPT Chat.'
 
-  - uri: 'dxos.org/function/github'
-    route: '/github'
-    handler: 'github'
-    description: 'Github Sync.'
+#  - uri: 'dxos.org/function/github'
+#    route: '/github'
+#    handler: 'github'
+#    description: 'Github Sync.'
 
 triggers:
 
@@ -61,13 +61,13 @@ triggers:
       type: 'webhook'
       method: 'GET'
 
-  - function: 'dxos.org/function/chess'
-    meta:
-      level: 2
-    spec:
-      type: 'subscription'
-      filter:
-      - type: 'dxos.org/type/Chess'
+#  - function: 'dxos.org/function/chess'
+#    meta:
+#      level: 2
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'dxos.org/type/Chess'
 
 #  - function: 'dxos.org/function/email-worker'
 #    meta:
@@ -88,8 +88,8 @@ triggers:
     spec:
       type: 'subscription'
       filter:
-      - type: 'braneframe.Document'
       - type: 'braneframe.File'
+#      - type: 'braneframe.Document'
       options:
         deep: true
         delay: 5

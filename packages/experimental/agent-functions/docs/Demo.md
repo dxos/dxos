@@ -47,7 +47,6 @@ vi ~/.config/dx/profile/default.yml
 ```yaml
   agent:
     plugins:
-      - id: dxos.org/agent/plugin/dashboard
       - id: dxos.org/agent/plugin/functions
         config:
           manifest: /Users/burdon/Code/dxos/dxos/packages/experimental/agent-functions/functions.yml

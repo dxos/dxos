@@ -17,7 +17,7 @@ export type Preset = {
   prompt: () => ChainPromptType;
 };
 
-export const presets = [
+export const chainPresets = [
   {
     id: 'dxos.org/prompt/translate',
     title: 'Translate',
