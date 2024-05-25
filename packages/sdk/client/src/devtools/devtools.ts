@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
+import type { DiagnosticMetadata } from '@dxos/tracing';
 
 import { type Client } from '../client';
-import type { DiagnosticMetadata } from '@dxos/tracing/src/diagnostic';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -97,6 +97,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      // eslint-disable-next-line no-console
       console.table(diagnostics);
     },
 

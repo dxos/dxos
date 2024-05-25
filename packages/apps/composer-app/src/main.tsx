@@ -47,6 +47,7 @@ import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defs, SaveConfig } from '@dxos/config';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { log } from '@dxos/log';
@@ -64,7 +65,6 @@ import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');

@@ -14,12 +14,12 @@ import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 TRACE_PROCESSOR.setInstanceTag('app');
 
