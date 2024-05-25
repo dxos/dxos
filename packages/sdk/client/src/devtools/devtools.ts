@@ -8,8 +8,7 @@ import { importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
-import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
-import type { DiagnosticMetadata } from '@dxos/tracing';
+import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
 
 import { type Client } from '../client';
 
