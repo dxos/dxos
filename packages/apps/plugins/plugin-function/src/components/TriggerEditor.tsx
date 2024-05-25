@@ -315,7 +315,7 @@ const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
 };
 
 const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptType }>) => {
-  const _schema = triggerId ? state.selectedSchema[triggerId] : undefined;
+  const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
 
   return (
     <>
@@ -324,7 +324,7 @@ const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptTy
       </InputRow>
       {meta.prompt && (
         <InputRow label='Prompt'>
-          <PromptTemplate prompt={meta.prompt} />
+          <PromptTemplate prompt={meta.prompt} schema={schema} />
         </InputRow>
       )}
     </>
