@@ -237,7 +237,6 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attention}
               location={location}
-              fullscreen={layout.values.fullscreen}
               showHintsFooter={settings.values.showFooter}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
@@ -305,6 +304,7 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
+              console.log('[open]', intent.data);
               batch(() => {
                 if (intent.data) {
                   const nextActiveParts =
@@ -350,6 +350,7 @@ export const DeckPlugin = ({
                   ) {
                     layout.values.complementarySidebarOpen = true;
                   }
+                  console.log('[active parts]', nextActiveParts);
                   location.active = nextActiveParts;
                 }
               });

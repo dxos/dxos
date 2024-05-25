@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Chat, Placeholder, Sidebar as MenuIcon, X } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
@@ -41,7 +41,6 @@ import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
-  fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
@@ -53,6 +52,9 @@ export const NAV_ID = 'NavTree';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
+
+export const firstFullscreenId = (active: Location['active']): string | undefined =>
+  isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
 export const firstComplementaryId = (active: Location['active']): string | undefined =>
   isActiveParts(active)
@@ -226,14 +228,7 @@ const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: 
   }
 };
 
-export const DeckLayout = ({
-  fullscreen,
-  showHintsFooter,
-  toasts,
-  onDismissToast,
-  attention,
-  location,
-}: DeckLayoutProps) => {
+export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention, location }: DeckLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -256,11 +251,15 @@ export const DeckLayout = ({
   const sidebarSlug = firstSidebarId(activeParts);
   const sidebarNode = resolveNodeFromSlug(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
+  const fullScreenSlug = firstFullscreenId(activeParts);
+  const fullScreenNode = resolveNodeFromSlug(graph, fullScreenSlug);
+  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
+  const { dispatch } = useIntent();
 
   const navigationData = {
     popoverAnchorId,
@@ -268,9 +267,17 @@ export const DeckLayout = ({
     attended: attention.attended,
   };
 
-  return fullscreen ? (
+  return fullScreenAvailable ? (
     <div className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} />
+      <Button
+        classNames='fixed inline-end-0 block-start-0 z-[60]'
+        onClick={() =>
+          dispatch({ action: NavigationAction.CLOSE, data: { activeParts: { fullScreen: fullScreenSlug } } })
+        }
+      >
+        <X />
+      </Button>
+      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode }} />
     </div>
   ) : (
     <Popover.Root
