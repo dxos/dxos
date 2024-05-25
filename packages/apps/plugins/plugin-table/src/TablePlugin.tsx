@@ -7,14 +7,14 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { TableType } from '@braneframe/types';
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { TableMain, TableSection, TableSlide } from './components';
+import { TableMain, TableSection, TableSlide, TableArticle } from './components';
 import meta, { TABLE_PLUGIN } from './meta';
 import translations from './translations';
 import { TableAction, type TablePluginProvides, isTable } from './types';
@@ -40,15 +40,16 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+          const unsubscribe = effect(() => {
             subscriptions.clear();
-            spaces.forEach((space) => {
+            client.spaces.get().forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
                   graph,
@@ -63,36 +64,41 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                   dispatch,
                 }),
               );
+            });
 
-              // Add all tables to the graph.
-              const query = space.db.query(Filter.schema(TableType));
-              subscriptions.add(query.subscribe());
-              let previousObjects: TableType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                // Add all tables to the graph.
+                const query = space.db.query(Filter.schema(TableType));
+                subscriptions.add(query.subscribe());
+                let previousObjects: TableType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                    previousObjects = query.objects;
 
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(object.id));
-                    query.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
-                          icon: (props: IconProps) => <Table {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
+                    batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      query.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
+                            icon: (props: IconProps) => <Table {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
                       });
                     });
-                  });
-                }),
-              );
-            });
+                  }),
+                );
+              });
           });
 
           return () => {
@@ -110,6 +116,8 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
               return isTable(data.slide) ? <TableSlide table={data.slide} /> : null;
             case 'section':
               return isTable(data.object) ? <TableSection table={data.object} /> : null;
+            case 'article':
+              return isTable(data.object) ? <TableArticle table={data.object} /> : null;
             default:
               return null;
           }

@@ -6,7 +6,6 @@ import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
 import { type ClientServicesProvider, type Space, type SpaceInternal, Properties } from '@dxos/client-protocol';
-import { Stream } from '@dxos/codec-protobuf';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
@@ -22,9 +21,11 @@ import {
   type CreateEpochRequest,
   type Space as SpaceData,
   type SpaceMember,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { trace } from '@dxos/tracing';
 
@@ -59,7 +60,6 @@ export class SpaceProxy implements Space {
    */
   public readonly _initializationComplete = new Trigger();
 
-  // TODO(burdon): Change to state property.
   @trace.info()
   private _initializing = false;
 
@@ -205,6 +205,7 @@ export class SpaceProxy implements Space {
     const isFirstTimeInitializing = space.state === SpaceState.READY && !(this._initialized || this._initializing);
     const isReopening =
       this._data.state !== SpaceState.READY && space.state === SpaceState.READY && !this._databaseOpen;
+
     log('update', {
       key: space.spaceKey,
       prevState: SpaceState[this._data.state],
@@ -252,13 +253,10 @@ export class SpaceProxy implements Space {
     if (this._initializing || this._initialized) {
       return;
     }
-    log('initializing...');
 
-    // TODO(burdon): Does this need to be set before method completes?
+    log('initializing...', { space: this.key });
     this._initializing = true;
-
     await this._invitationsProxy.open();
-
     await this._initializeDb();
 
     this._initialized = true;
@@ -266,7 +264,7 @@ export class SpaceProxy implements Space {
     this._initializationComplete.wake();
     this._stateUpdate.emit(this._currentState);
     this._data.members && this._membersUpdate.emit(this._data.members);
-    log('initialized');
+    log('initialized', { space: this.key });
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -377,11 +375,22 @@ export class SpaceProxy implements Space {
   }
 
   /**
-   * Creates an interactive invitation.
+   * Creates a delegated or interactive invitation.
    */
   share(options?: Partial<Invitation>) {
     log('create invitation', options);
     return this._invitationsProxy.share({ ...options, spaceKey: this.key });
+  }
+
+  /**
+   * Requests member role update.
+   */
+  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>) {
+    return this._clientServices.services.SpacesService!.updateMemberRole({
+      spaceKey: this.key,
+      memberKey: request.memberKey,
+      newRole: request.newRole,
+    });
   }
 
   /**
@@ -404,42 +413,10 @@ export class SpaceProxy implements Space {
   }
 
   private async _removeMember(memberKey: PublicKey) {
-    if (!this._members.get().find((member) => member.identity.identityKey.equals(memberKey))) {
-      throw new Error(`Member ${memberKey} not found`);
-    }
-
-    const credentials = await Stream.consumeData(
-      this._clientServices.services.SpacesService!.queryCredentials({ spaceKey: this.key, noTail: true }),
-    );
-    const credential = credentials.find(
-      (credential) =>
-        checkCredentialType(credential, 'dxos.halo.credentials.SpaceMember') && credential.subject.id.equals(memberKey),
-    );
-    if (!credential) {
-      throw new Error(`Credential for ${memberKey} not found`);
-    }
-    if (!credential.id) {
-      throw new Error(`Credential for ${memberKey} does not have an id`);
-    }
-
-    const identityQuery = await Stream.first(this._clientServices.services.IdentityService!.queryIdentity());
-    const identityKey = identityQuery?.identity?.identityKey;
-    invariant(identityKey, 'Identity key not found');
-
-    await this._clientServices.services.SpacesService!.writeCredentials({
+    return this._clientServices.services.SpacesService!.updateMemberRole({
       spaceKey: this.key,
-      credentials: [
-        {
-          issuer: identityKey,
-          issuanceDate: new Date(),
-          subject: {
-            id: credential.id,
-            assertion: {
-              '@type': 'dxos.halo.credentials.Revocation',
-            },
-          },
-        },
-      ],
+      memberKey,
+      newRole: HaloSpaceMember.Role.REMOVED,
     });
   }
 }

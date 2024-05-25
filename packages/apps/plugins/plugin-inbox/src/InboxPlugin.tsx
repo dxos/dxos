@@ -1,5 +1,5 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
 import { AddressBook, Calendar, Envelope, type IconProps } from '@phosphor-icons/react';
@@ -7,14 +7,14 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { MailboxType, AddressBookType, CalendarType } from '@braneframe/types';
-import { type PluginDefinition, parseIntentPlugin, resolvePlugin } from '@dxos/app-framework';
+import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { AddressBookType, CalendarType, MailboxType } from '@braneframe/types';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { ContactsMain, EventsMain, Mailbox } from './components';
+import { ContactsMain, EventsMain, MailboxArticle, MailboxMain } from './components';
 import meta, { INBOX_PLUGIN } from './meta';
 import translations from './translations';
 import { InboxAction, type InboxPluginProvides } from './types';
@@ -46,15 +46,16 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+          const unsubscribe = effect(() => {
             subscriptions.clear();
-            spaces.forEach((space) => {
+            client.spaces.get().forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
                   graph,
@@ -96,82 +97,90 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                   dispatch,
                 }),
               );
-
-              // Add all documents to the graph.
-              const mailboxQuery = space.db.query(Filter.schema(MailboxType));
-              const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
-              const calendarQuery = space.db.query(Filter.schema(CalendarType));
-              subscriptions.add(mailboxQuery.subscribe());
-              subscriptions.add(addressBookQuery.subscribe());
-              subscriptions.add(calendarQuery.subscribe());
-              let previousMailboxes: MailboxType[] = [];
-              let previousAddressBooks: AddressBookType[] = [];
-              let previousCalendars: CalendarType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedMailboxes = previousMailboxes.filter((object) => !mailboxQuery.objects.includes(object));
-                  const removedAddressBooks = previousAddressBooks.filter(
-                    (object) => !addressBookQuery.objects.includes(object),
-                  );
-                  const removedCalendars = previousCalendars.filter(
-                    (object) => !calendarQuery.objects.includes(object),
-                  );
-
-                  previousMailboxes = mailboxQuery.objects;
-                  previousAddressBooks = addressBookQuery.objects;
-                  previousCalendars = calendarQuery.objects;
-
-                  batch(() => {
-                    removedMailboxes.forEach((object) => graph.removeNode(object.id));
-                    removedAddressBooks.forEach((object) => graph.removeNode(object.id));
-                    removedCalendars.forEach((object) => graph.removeNode(object.id));
-
-                    mailboxQuery.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: object.title || ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
-                          icon: (props: IconProps) => <Envelope {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
-                      });
-                    });
-                    addressBookQuery.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
-                          icon: (props: IconProps) => <AddressBook {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
-                      });
-                    });
-                    calendarQuery.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
-                          icon: (props: IconProps) => <Calendar {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
-                      });
-                    });
-                  });
-                }),
-              );
             });
+
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                // Add all documents to the graph.
+                // TODO(burdon): Factor out common action.
+                const mailboxQuery = space.db.query(Filter.schema(MailboxType));
+                const addressBookQuery = space.db.query(Filter.schema(AddressBookType));
+                const calendarQuery = space.db.query(Filter.schema(CalendarType));
+                subscriptions.add(mailboxQuery.subscribe());
+                subscriptions.add(addressBookQuery.subscribe());
+                subscriptions.add(calendarQuery.subscribe());
+                let previousMailboxes: MailboxType[] = [];
+                let previousAddressBooks: AddressBookType[] = [];
+                let previousCalendars: CalendarType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedMailboxes = previousMailboxes.filter(
+                      (object) => !mailboxQuery.objects.includes(object),
+                    );
+                    const removedAddressBooks = previousAddressBooks.filter(
+                      (object) => !addressBookQuery.objects.includes(object),
+                    );
+                    const removedCalendars = previousCalendars.filter(
+                      (object) => !calendarQuery.objects.includes(object),
+                    );
+
+                    previousMailboxes = mailboxQuery.objects;
+                    previousAddressBooks = addressBookQuery.objects;
+                    previousCalendars = calendarQuery.objects;
+
+                    batch(() => {
+                      removedMailboxes.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      removedAddressBooks.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      removedCalendars.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+
+                      mailboxQuery.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: object.title || ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
+                            icon: (props: IconProps) => <Envelope {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
+                      });
+                      addressBookQuery.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: ['addressbook title placeholder', { ns: INBOX_PLUGIN }],
+                            icon: (props: IconProps) => <AddressBook {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
+                      });
+                      calendarQuery.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: ['calendar title placeholder', { ns: INBOX_PLUGIN }],
+                            icon: (props: IconProps) => <Calendar {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
+                      });
+                    });
+                  }),
+                );
+              });
           });
 
           return () => {
@@ -185,7 +194,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
           switch (role) {
             case 'main':
               if (data.active instanceof MailboxType) {
-                return <Mailbox mailbox={data.active} />;
+                return <MailboxMain mailbox={data.active} />;
               }
               if (data.active instanceof AddressBookType) {
                 return <ContactsMain contacts={data.active} />;
@@ -194,6 +203,13 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                 return <EventsMain calendar={data.active} />;
               }
               return null;
+            case 'article': {
+              if (data.object instanceof MailboxType) {
+                return <MailboxArticle mailbox={data.object} />;
+              }
+              return null;
+            }
+
             default:
               return null;
           }

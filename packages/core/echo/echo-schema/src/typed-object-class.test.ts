@@ -28,13 +28,13 @@ describe('EchoObject class dsl', () => {
   });
 
   test('static isInstance check', async () => {
-    const obj = create(Organization, { ...DEFAULT_ORG });
+    const obj = create(Organization, DEFAULT_ORG);
     expect(obj instanceof Organization).to.be.true;
     expect({ id: '12345', ...DEFAULT_ORG } instanceof Organization).to.be.false;
   });
 
   test('can get object schema', async () => {
-    const obj = create(Organization, { ...DEFAULT_ORG });
+    const obj = create(Organization, DEFAULT_ORG);
     expect(getSchema(obj)).to.deep.eq(Organization);
   });
 

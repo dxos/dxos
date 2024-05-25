@@ -1,0 +1,64 @@
+{
+  "objects": [
+    {
+      "@type": "dxos.org/type/FunctionTrigger",
+      "@meta": {
+        "keys": [
+          {
+            "source": "dxos.org",
+            "id": "dxos.org/function/email-worker"
+          }
+        ]
+      },
+      "function": "dxos.org/function/email-worker",
+      "meta": {
+        "account": "hello@dxos.network"
+      },
+      "spec": {
+        "type": "websocket",
+        "url": "https://hub.dxos.network/api/mailbox/hello@dxos.network",
+        "init": {
+          "type": "sync"
+        }
+      }
+    },
+    {
+      "@type": "dxos.org/type/FunctionTrigger",
+      "@meta": {
+        "keys": [
+          {
+            "source": "dxos.org",
+            "id": "dxos.org/function/gpt/rag"
+          }
+        ]
+      },
+      "function": "dxos.org/function/gpt",
+      "meta": {
+        "prompt": {
+          "@type": "dxos.org/type/ChainPrompt",
+          "template": "translate the following message into {language}\n---\n{content}",
+          "inputs": [
+            {
+              "type": 0,
+              "name": "language",
+              "value": "japanese"
+            },
+            {
+              "type": 6,
+              "name": "content",
+              "value": "object.blocks[0].content"
+            }
+          ]
+        }
+      },
+      "spec": {
+        "type": "subscription",
+        "filter": [
+          {
+            "type": "braneframe.Message"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -99,7 +99,6 @@ export const SpaceListPanel: FC = () => {
             void handleToggleOpen(context.row.original.key);
           }}
           classNames='flex shrink-0 m-1'
-          variant='primary'
         >
           {context.row.original.isOpen ? 'Close' : 'Open'}
         </Button>

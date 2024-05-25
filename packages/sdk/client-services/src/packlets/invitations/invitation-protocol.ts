@@ -26,6 +26,8 @@ export interface InvitationProtocol {
   // Host
   //
 
+  checkCanInviteNewMembers(): ApiError | undefined;
+
   /**
    * Protocol-specific information to include in the invitation.
    */

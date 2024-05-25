@@ -9,10 +9,9 @@ import { inspect } from 'util';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { create } from './create';
-import { updateCounter, TEST_OBJECT, TestClass, TestSchemaWithClass } from '../testing';
-import { data } from '../types';
-import { type ReactiveObject } from '../types';
+import { create } from './object';
+import { TEST_OBJECT, TestClass, TestSchemaWithClass, updateCounter } from '../testing';
+import { data, type ReactiveObject } from '../types';
 
 registerSignalRuntime();
 
@@ -24,7 +23,6 @@ for (const schema of [undefined, TestSchemaWithClass]) {
   describe(`Non-echo specific proxy properties${schema == null ? '' : ' with schema'}`, () => {
     test('inspect', () => {
       const obj = createObject({ string: 'bar' });
-
       const str = inspect(obj, { colors: false });
       expect(str).to.eq(`${schema == null ? '' : 'Typed '}{ string: 'bar' }`);
     });

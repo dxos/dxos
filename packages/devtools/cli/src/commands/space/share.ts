@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Args, Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
@@ -11,33 +11,23 @@ import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base-command';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
-    // TODO(burdon): Move to base class.
-    timeout: Flags.integer({
-      description: 'Timeout in milliseconds.',
-      default: 5_000,
+    multiple: Flags.boolean({
+      description: 'Multiple use.',
     }),
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
       default: 86400,
     }),
-    multiple: Flags.boolean({
-      description: 'Multiple use.',
-    }),
     persistent: Flags.boolean({
       description: 'Invitation should resume if client restarts',
-      default: true,
-    }),
-    // TODO(nf): --no- doesn't work.
-    'no-persistent': Flags.boolean({
-      description: "Don't resume invitation if client restarts",
       default: true,
     }),
     open: Flags.boolean({
@@ -52,7 +42,6 @@ export default class Share extends BaseCommand<typeof Share> {
     }),
     'no-wait': Flags.boolean({
       description: "Don't wait for a peer to connect before exiting CLI",
-      default: true,
     }),
   };
 
@@ -77,15 +66,16 @@ export default class Share extends BaseCommand<typeof Share> {
           onConnecting: async () => {
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
-
             if (authMethod !== Invitation.AuthMethod.NONE) {
-              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
               copy(invitation.authCode!);
+              this.log(chalk`\n{red Secret}: ${observable.get().authCode} (copied to clipboard)\n`);
             }
 
             if (this.flags.open) {
               const url = new URL(this.flags.host);
               url.searchParams.append('spaceInvitationCode', InvitationEncoder.encode(invitation));
+              // TODO: remove after the demo
+              url.searchParams.append('migrateSpace', 'true');
               spawn('open', [url.toString()]);
             } else {
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);

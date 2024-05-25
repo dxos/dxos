@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ArrowClockwise, Archive, Circle, Trash } from '@phosphor-icons/react';
-import React, { type MouseEvent } from 'react';
+import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
+import React, { Fragment, type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
-import { fixedBorder, getSize, ghostHover, attentionSurface, mx } from '@dxos/react-ui-theme';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { baseSurface, fixedBorder, focusRing, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
 import { styles } from '../styles';
@@ -18,7 +19,7 @@ export type ActionType = 'archive' | 'delete' | 'unread';
 export type MessageListProps = {
   messages?: MessageType[];
   selected?: string;
-  onSelect?: (message: MessageType) => void;
+  onSelect?: (id: string) => void;
   onAction?: (message: MessageType, action: ActionType) => void;
 };
 
@@ -27,19 +28,17 @@ export const MessageList = ({ messages = [], selected, onSelect, onAction }: Mes
   const { t } = useTranslation(INBOX_PLUGIN);
 
   return (
-    <div className={mx('flex flex-col grow overflow-hidden', styles.columnWidth, attentionSurface)}>
-      <div className='flex flex-col overflow-y-auto'>
-        {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
-        {messages?.map((message) => (
-          <MessageItem
-            key={message.id}
-            message={message}
-            selected={message.id === selected}
-            onSelect={onSelect ? () => onSelect(message) : undefined}
-            onAction={onAction ? (action) => onAction(message, action) : undefined}
-          />
-        ))}
-      </div>
+    <div className={mx('flex flex-col is-full py-2 pr-2', baseSurface)}>
+      {!messages?.length && <div className='flex items-center justify-center p-4 font-thin'>{t('no messages')}</div>}
+      {messages?.map((message) => (
+        <MessageItem
+          key={message.id}
+          message={message}
+          selected={message.id === selected}
+          onSelect={onSelect ? () => onSelect(message.id) : undefined}
+          onAction={onAction ? (action) => onAction(message, action) : undefined}
+        />
+      ))}
     </div>
   );
 };
@@ -52,6 +51,7 @@ export type MessageItemProps = {
 };
 
 export const MessageItem = ({ message, selected, onSelect, onAction }: MessageItemProps) => {
+  const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation(INBOX_PLUGIN);
 
   const handleAction = (event: MouseEvent<HTMLButtonElement>, action: ActionType) => {
@@ -62,20 +62,28 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
   const date = message.date ? new Date(message.date) : new Date();
   const from = message.from?.name ?? message.from?.email;
   const subject = message.subject ?? message.blocks[0].content?.content;
+  const now = new Date();
+
   return (
     <DensityProvider density='fine'>
       <div
-        className={mx('group flex cursor-pointer border-b', fixedBorder, ghostHover, selected && styles.selected)}
+        className={mx('group flex p-2 gap-1 border', focusRing, fixedBorder, ghostHover, selected && styles.selected)}
+        tabIndex={0}
         onClick={() => onSelect?.()}
       >
-        <div>
-          <Button variant='ghost' onClick={() => onSelect?.()}>
-            <Circle className={getSize(4)} weight={selected ? 'duotone' : 'regular'} />
-          </Button>
+        <div className='flex w-8 h-8 justify-center items-center'>
+          {selected && (
+            <span {...{ 'data-attention': 'true' }}>
+              <AttentionGlyph presence='none' />
+            </span>
+          )}
         </div>
 
-        <div className='flex flex-col w-full overflow-hidden'>
-          <div className={mx('flex text-sm justify-between text-neutral-500 pb-1', !selected && 'font-thin')}>
+        <div className='flex flex-col is-full overflow-hidden'>
+          <div
+            className={mx('flex h-8 items-center justify-between text-sm fg-description cursor-pointer')}
+            onClick={() => setExpanded((expanded) => !expanded)}
+          >
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
               <div className='hidden group-hover:flex flex shrink-0'>
@@ -96,13 +104,31 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
                 </Button>
               </div>
             )}
-            <div className={mx('shrink-0 whitespace-nowrap p-2', onAction && 'group-hover:hidden')}>
-              {formatDate(new Date(), date)}
+            <div className={mx('shrink-0 whitespace-nowrap p-2 text-sm', onAction && 'group-hover:hidden')}>
+              {formatDate(now, date)}
             </div>
           </div>
-          <div className={mx('mb-1 mr-2 overflow-hidden line-clamp-3', message.read && 'text-neutral-500')}>
+
+          <div
+            className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'fg-description')}
+            onClick={() => setExpanded((event) => !event)}
+          >
             {subject}
           </div>
+
+          {expanded && (
+            <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator'>
+              {message.blocks.map((block, index) => (
+                <Fragment key={index}>
+                  <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
+                    <div>{block.content?.content}</div>
+                    <div className='px-2 text-right text-sm'>{formatDate(now, new Date(block.timestamp))}</div>
+                  </div>
+                  {index !== message.blocks.length - 1 && <div role='none' className='border-bs separator-separator' />}
+                </Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </DensityProvider>

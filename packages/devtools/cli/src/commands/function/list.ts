@@ -10,19 +10,22 @@ import { join } from 'node:path';
 import { Config } from '@dxos/config';
 import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): List stats.
-// TODO(burdon): List triggers.
 export const printFunctions = (functions: FunctionDef[], flags = {}) => {
   ux.table(
-    functions,
+    // TODO(burdon): Cast util.
+    functions as Record<string, any>[],
     {
-      id: {
-        header: 'id',
+      uri: {
+        header: 'uri',
       },
-      name: {
-        header: 'name',
+      path: {
+        header: 'path',
+      },
+      handler: {
+        header: 'handler',
       },
       description: {
         header: 'description',
@@ -46,10 +49,11 @@ export default class List extends BaseCommand<typeof List> {
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
+      // TODO(burdon): ???
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-      const { functions } = manifest;
-      printFunctions(functions);
+      // const { functions } = manifest;
+      // printFunctions(functions);
       return manifest;
     });
   }

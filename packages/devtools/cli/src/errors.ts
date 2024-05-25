@@ -8,9 +8,9 @@ export abstract class FriendlyError extends Error {
   }
 }
 
-export class SpaceWaitTimeoutError extends FriendlyError {
+export class SpaceTimeoutError extends FriendlyError {
   constructor(timeout: number) {
-    super(`Timeout waiting for space to be ready: ${timeout.toLocaleString()}ms`);
+    super(`Timeout waiting for space to load (${timeout.toLocaleString()}ms)`);
   }
 
   override get hint() {

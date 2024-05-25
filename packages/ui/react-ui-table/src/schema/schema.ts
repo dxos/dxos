@@ -7,6 +7,7 @@ import type * as S from '@effect/schema/Schema';
 
 import { type ColumnType } from './types';
 
+// TODO(burdon): Reconcile with react-ui-table.
 export type ClassifiedColumnType = ColumnType | 'display';
 
 // TODO(burdon): Rename getX? and return typed array?

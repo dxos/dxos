@@ -2,17 +2,21 @@
 
 # DXOS
 
-[![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE)
-[![CI](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos)
-![Netlify Status](https://img.shields.io/netlify/847d26d2-ec3b-4f2e-ac3b-caee7fe6e7bc)
-[![codecov](https://img.shields.io/codecov/c/github/dxos/dxos?token=CLO9PHX2PQ)](https://codecov.io/gh/dxos/dxos)
-![Node](https://img.shields.io/node/v/@dxos/client)
+<!-- [![MIT License](https://img.shields.io/npm/l/@dxos/client)](https://github.com/dxos/dxos/blob/main/LICENSE) -->
+<!-- [![CI](https://img.shields.io/circleci/build/gh/dxos/dxos/main?style=flat&token=dfa4d4d2d6b8a794bcb5f5772096beb2006cdfa8)](https://circleci.com/gh/dxos/dxos) -->
+<!-- ![Netlify Status](https://img.shields.io/netlify/847d26d2-ec3b-4f2e-ac3b-caee7fe6e7bc) -->
+<!-- [![codecov](https://img.shields.io/codecov/c/github/dxos/dxos?token=CLO9PHX2PQ)](https://codecov.io/gh/dxos/dxos) -->
+<!-- ![Node](https://img.shields.io/node/v/@dxos/client) -->
 [![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
 [![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
 
-A decentralized alternative to the commercial cloud for privacy preserving software. Learn more about the [the mission](https://docs.dxos.org/guide/why)
+We build [Composer](https://composer.space): an extensible app platform where developers can extend their intelligence. Open-source. Multiplayer. Local-first. Private.
 
-## Demo
+The DXOS SDK takes care of peer-to-peer collaboration for local-first apps without central sync servers.
+
+Learn more about the [the mission](https://docs.dxos.org/guide/why).
+
+## SDK Demo
 
 Shown below are two sessions of an application using ECHO to replicate state peer-to-peer in real-time.
 

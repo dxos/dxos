@@ -5,13 +5,21 @@
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type ObjectStructure } from '@dxos/echo-protocol';
+import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
 
-import { type Index, type IndexStaticProps, type LoadParams, staticImplements, type IndexQuery } from './types';
+import {
+  type Index,
+  type IndexStaticProps,
+  type LoadParams,
+  staticImplements,
+  type IndexQuery,
+  type FindResult,
+} from './types';
 
 @trace.resource()
 @staticImplements<IndexStaticProps>()
@@ -49,27 +57,30 @@ export class IndexSchema extends Resource implements Index {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async find(filter: IndexQuery) {
-    if (filter.typename === null) {
-      // TODO(dmaretskyi): Implement querying for Expando objects.
-      throw new Error('Not implemented');
+  async find(filter: IndexQuery): Promise<FindResult[]> {
+    // TODO(burdon): Handle inversion.
+    if (filter.inverted) {
+      return Array.from(this._index.entries())
+        .filter(([key]) => !filter.typenames.includes(key ?? EXPANDO_TYPENAME) === false)
+        .flatMap(([, value]) => Array.from(value))
+        .map((id) => ({ id, rank: 0 }));
     }
 
-    if (filter.typename === undefined) {
+    if (filter.typenames.length === 0) {
       return Array.from(this._index.values())
         .flatMap((ids) => Array.from(ids))
         .map((id) => ({ id, rank: 0 }));
     }
 
-    // TODO(burdon): Handle inversion.
-    if (filter.inverted) {
-      return Array.from(this._index.entries())
-        .filter(([key]) => key !== filter.typename)
-        .flatMap(([, value]) => Array.from(value))
-        .map((id) => ({ id, rank: 0 }));
+    const results: FindResult[] = [];
+    for (const typename of filter.typenames) {
+      if (typename === EXPANDO_TYPENAME) {
+        results.push(...Array.from(this._index.get(null) ?? []).map((id) => ({ id, rank: 0 })));
+      } else {
+        results.push(...Array.from(this._index.get(typename) ?? []).map((id) => ({ id, rank: 0 })));
+      }
     }
-
-    return Array.from(this._index.get(filter.typename) ?? []).map((id) => ({ id, rank: 0 }));
+    return results.flat();
   }
 
   @trace.span({ showInBrowserTimeline: true })

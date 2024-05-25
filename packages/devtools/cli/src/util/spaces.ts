@@ -9,8 +9,8 @@ import { asyncTimeout } from '@dxos/async';
 import { type Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './types';
-import { SpaceWaitTimeoutError } from '../errors';
+import { maybeTruncateKey } from './keys';
+import { SpaceTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
 
 export const selectSpace = async (spaces: Space[]) => {
@@ -42,7 +42,7 @@ export const waitForSpace = async (
   exceptionHandler?: (err: Error) => void,
 ) => {
   try {
-    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceTimeoutError(timeout));
   } catch (err: any) {
     if (exceptionHandler) {
       exceptionHandler(err);

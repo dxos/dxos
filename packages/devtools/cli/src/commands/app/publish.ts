@@ -7,10 +7,14 @@ import os from 'os';
 
 import { invariant } from '@dxos/invariant';
 
-import { BaseCommand } from '../../base-command';
-import { type PublisherRpcPeer, build, loadConfig, publish } from '../../util';
+import { BaseCommand } from '../../base';
+import { build, loadConfig, publish, type PublisherRpcPeer } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class Publish extends BaseCommand<typeof Publish> {
+  static override state = 'deprecated';
   static override description = 'Publish apps.';
   static override flags = {
     ...BaseCommand.flags,

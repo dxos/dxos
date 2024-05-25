@@ -118,7 +118,10 @@ export default defineConfig({
       // No PWA in dev to make it easier to ensure the latest version is being used.
       // May be mitigated in the future by https://github.com/dxos/dxos/issues/4939.
       // https://vite-pwa-org.netlify.app/guide/unregister-service-worker.html#unregister-service-worker
-      selfDestroying: process.env.DX_ENVIRONMENT === 'development',
+      selfDestroying:
+        process.env.DX_ENVIRONMENT === 'development' ||
+        // No PWA for e2e tests because it slows them down (especially waiting to clear toasts).
+        process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],

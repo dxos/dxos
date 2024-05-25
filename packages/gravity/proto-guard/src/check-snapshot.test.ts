@@ -38,7 +38,7 @@ describe('Tests against old storage', () => {
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
     afterTest(() => builder.destroy());
-    const services = builder.createLocal();
+    const services = builder.createLocalClientServices();
 
     log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const client = new Client({ services });

@@ -107,12 +107,14 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             attributes={{
               node: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
                 let className: string | undefined;
-                const typename = getType(node.data)?.itemId;
-                if (typename) {
-                  className = colorMap.get(typename);
-                  if (!className) {
-                    className = colors[colorMap.size % colors.length];
-                    colorMap.set(typename, className);
+                if (node.data) {
+                  const typename = getType(node.data)?.itemId;
+                  if (typename) {
+                    className = colorMap.get(typename);
+                    if (!className) {
+                      className = colors[colorMap.size % colors.length];
+                      colorMap.set(typename, className);
+                    }
                   }
                 }
 

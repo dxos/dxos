@@ -40,9 +40,10 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@effect/schema": "0.64.7",
+    "@dxos/util": "workspace:*",
+    "@effect/schema": "^0.64.20",
     "@preact/signals-core": "^1.6.0",
-    "effect": "2.4.9",
+    "effect": "^2.4.19",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {},

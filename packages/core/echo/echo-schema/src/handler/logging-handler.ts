@@ -2,14 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getTargetMeta } from './handler-meta';
+import { type Reference } from '@dxos/echo-protocol';
+
+import { getTargetMeta } from './object';
 import { type ReactiveHandler } from '../proxy';
 import type { ObjectMeta } from '../types';
 
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');
 
-  _proxyMap = new WeakMap<object, any>();
+  readonly _proxyMap = new WeakMap<object, any>();
 
   init(target: any): void {
     target[LoggingReactiveHandler.symbolChangeLog] = [];
@@ -24,11 +26,15 @@ export class LoggingReactiveHandler implements ReactiveHandler<any> {
     return Reflect.set(target, prop, value, receiver);
   }
 
-  isObjectDeleted(): boolean {
+  isDeleted(): boolean {
     return false;
   }
 
   getSchema() {
+    return undefined;
+  }
+
+  getTypeReference(): Reference | undefined {
     return undefined;
   }
 

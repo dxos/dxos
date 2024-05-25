@@ -3,7 +3,6 @@
 //
 
 export * from './logging-handler';
+export * from './object';
 export * from './typed-handler';
 export * from './untyped-handler';
-export * from './handler-meta';
-export * from './create';

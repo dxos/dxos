@@ -3,6 +3,7 @@
 //
 
 import { type Message } from '@dxos/automerge/automerge-repo';
+import { type PublicKey } from '@dxos/keys';
 
 export interface EchoReplicator {
   /**
@@ -25,6 +26,8 @@ export interface EchoReplicatorContext {
   onConnectionOpen(connection: ReplicatorConnection): void;
 
   onConnectionClosed(connection: ReplicatorConnection): void;
+
+  getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
 }
 
 export interface ReplicatorConnection {

@@ -1,6 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
+    "src/index.ts",
+    "src/client/index.ts",
     "src/devtools/index.ts",
     "src/echo/index.ts",
     "src/halo/index.ts",

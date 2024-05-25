@@ -40,6 +40,7 @@ import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
+import StatusBarMeta from '@braneframe/plugin-status-bar/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
@@ -100,7 +101,9 @@ const main = async () => {
     !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
-  const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
+  const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
+  const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -130,6 +133,7 @@ const main = async () => {
       NavTreeMeta,
       SettingsMeta,
       HelpMeta,
+      StatusBarMeta,
 
       // Data integrations
       ClientMeta,
@@ -233,9 +237,7 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
-      ...(isSocket
-        ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
-        : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
+      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) } : {}),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
         namespace: appKey,
@@ -243,6 +245,7 @@ const main = async () => {
       }),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
+      ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) } : {}),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
       [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
         containerUrl: '/script-frame/index.html',
@@ -252,17 +255,19 @@ const main = async () => {
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
-          const { create } = await import('@dxos/echo-schema');
           const { DocumentType, TextV0Type } = await import('@braneframe/types');
+          const { create } = await import('@dxos/echo-schema');
+          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const content = create(TextV0Type, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceFolder.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [document.id] } },
+            data: { activeParts: { main: [fullyQualifiedId(document)] } },
           });
         },
       }),
+      [StatusBarMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status-bar')),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
@@ -272,7 +277,8 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ...(isSocket ? [NativeMeta.id] : []),
+      ...(!isSocket && isPwa ? [PwaMeta.id] : []),
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
@@ -284,11 +290,13 @@ const main = async () => {
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
+      StatusBarMeta.id,
       ThemeMeta.id,
       WildcardMeta.id,
     ],
     defaults: [
-      // TODO(burdon): Add DebugMeta if dev build.
+      // prettier-ignore
+      ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
       StackMeta.id,
       ThreadMeta.id,

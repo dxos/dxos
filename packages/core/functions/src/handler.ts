@@ -8,38 +8,61 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
-// TODO(burdon): Context?
-// Lambda-like function definitions.
-// See: https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
-// https://www.npmjs.com/package/aws-lambda
+// TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
 // https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
+// https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/#functions
+// https://www.npmjs.com/package/aws-lambda
 
-// TODO(burdon): No response?
-export interface Response {
-  status(code: number): Response;
-}
+/**
+ * Function handler.
+ */
+export type FunctionHandler<TData = {}, TMeta = {}> = (params: {
+  context: FunctionContext;
+  event: FunctionEvent<TData, TMeta>;
+  response: FunctionResponse;
+}) => Promise<FunctionResponse | void>;
 
-// TODO(burdon): Limit access to individual space?
+/**
+ * Function context.
+ */
 export interface FunctionContext {
+  // TODO(burdon): Limit access to individual space.
   client: Client;
+  // TODO(burdon): Replace with storage service abstraction.
   dataDir?: string;
 }
 
-// TODO(burdon): Model after http request. Ref Lambda/OpenFaaS.
-// https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
-export type FunctionHandler<T extends {}> = (params: {
-  event: T;
-  context: FunctionContext;
-  response: Response;
-}) => Promise<Response | void>;
+/**
+ * Event payload.
+ */
+export type FunctionEvent<TData = {}, TMeta = {}> = {
+  data: FunctionEventMeta<TMeta> & TData;
+};
 
-export type FunctionSubscriptionEvent = {
-  space?: string; // TODO(burdon): Convert to PublicKey.
+/**
+ * Metadata from trigger.
+ */
+export type FunctionEventMeta<TMeta = {}> = {
+  meta: TMeta;
+};
+
+/**
+ * Function response.
+ */
+export interface FunctionResponse {
+  status(code: number): FunctionResponse;
+}
+
+//
+// Subscription utils.
+//
+
+export type RawSubscriptionData = {
+  spaceKey?: string;
   objects?: string[];
 };
 
-// TODO(burdon): ???
-export type FunctionSubscriptionEvent2 = {
+export type SubscriptionData = {
   space?: Space;
   objects?: EchoReactiveObject<any>[];
 };
@@ -54,22 +77,22 @@ export type FunctionSubscriptionEvent2 = {
  *
  * NOTE: Get space key from devtools or `dx space list --json`
  */
-export const subscriptionHandler = (
-  handler: FunctionHandler<FunctionSubscriptionEvent2>,
-): FunctionHandler<FunctionSubscriptionEvent> => {
-  return ({ event, context, ...rest }) => {
+export const subscriptionHandler = <TMeta>(
+  handler: FunctionHandler<SubscriptionData, TMeta>,
+): FunctionHandler<RawSubscriptionData, TMeta> => {
+  return ({ event: { data }, context, ...rest }) => {
     const { client } = context;
-    const space = event.space ? client.spaces.get(PublicKey.from(event.space)) : undefined;
-    const objects =
-      space &&
-      event.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable);
+    const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
+    const objects = space
+      ? data.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
+      : [];
 
-    if (!!event.space && !space) {
-      log.warn('invalid space', { event });
+    if (!!data.spaceKey && !space) {
+      log.warn('invalid space', { data });
     } else {
       log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
     }
 
-    return handler({ event: { space, objects }, context, ...rest });
+    return handler({ event: { data: { ...data, space, objects } }, context, ...rest });
   };
 };
