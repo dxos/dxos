@@ -78,19 +78,21 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
                         data: () => {
-                          console.log('[toggle presentation]', isDeckModel, object);
-                          return dispatch(
-                            isDeckModel
-                              ? {
-                                  action: NavigationAction.OPEN,
-                                  data: { activeParts: { fullScreen: fullyQualifiedId(object) } },
-                                }
-                              : {
-                                  plugin: PRESENTER_PLUGIN,
-                                  action: TOGGLE_PRESENTATION,
-                                  data: { object },
-                                },
-                          );
+                          return dispatch([
+                            {
+                              plugin: PRESENTER_PLUGIN,
+                              action: TOGGLE_PRESENTATION,
+                              data: { object },
+                            },
+                            ...(isDeckModel
+                              ? [
+                                  {
+                                    action: NavigationAction.OPEN,
+                                    data: { activeParts: { fullScreen: fullyQualifiedId(object) } },
+                                  },
+                                ]
+                              : []),
+                          ]);
                         },
                         properties: {
                           label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],

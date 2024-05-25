@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Placeholder, Sidebar as MenuIcon, X } from '@phosphor-icons/react';
+import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
@@ -259,7 +259,6 @@ export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention,
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
-  const { dispatch } = useIntent();
 
   const navigationData = {
     popoverAnchorId,
@@ -268,16 +267,8 @@ export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention,
   };
 
   return fullScreenAvailable ? (
-    <div className={fixedInsetFlexLayout}>
-      <Button
-        classNames='fixed inline-end-0 block-start-0 z-[60]'
-        onClick={() =>
-          dispatch({ action: NavigationAction.CLOSE, data: { activeParts: { fullScreen: fullScreenSlug } } })
-        }
-      >
-        <X />
-      </Button>
-      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode }} />
+    <div role='none' className={fixedInsetFlexLayout}>
+      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
     </div>
   ) : (
     <Popover.Root
