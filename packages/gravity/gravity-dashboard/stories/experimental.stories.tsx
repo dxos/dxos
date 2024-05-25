@@ -210,7 +210,7 @@ class KubeLayout {
               .transition()
               .duration(500)
               .attr('transform', 'translate(0,0)')
-              .attrTween('opacity', () => d3.interpolate(1, 0))
+              .attrTween('opacity', () => d3.interpolate(1, 0) as any)
               .remove(),
         )
 
@@ -284,7 +284,7 @@ class MeshLayout {
                 .selectAll('*')
                 .transition()
                 .duration(1000)
-                .attrTween('opacity', () => d3.interpolate(0, 1)),
+                .attrTween('opacity', () => d3.interpolate(0, 1) as any),
             ),
         (update) => update.call(this._kubeLayout.layout),
         (remove) =>
@@ -293,7 +293,7 @@ class MeshLayout {
           remove
             .transition()
             .duration(1000)
-            .attrTween('opacity', () => d3.interpolate(1, 0))
+            .attrTween('opacity', () => d3.interpolate(1, 0) as any)
             .remove(),
       )
 
