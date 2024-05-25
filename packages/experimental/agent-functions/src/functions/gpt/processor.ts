@@ -69,12 +69,7 @@ export class RequestProcessor {
   ) {}
 
   // TODO(burdon): Generalize so that we can process outside of a thread.
-<<<<<<< HEAD
-  async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<BlockType[] | undefined> {
-    let blocks: BlockType[] | undefined;
-=======
-  async processThread({ space, thread, message, prompt }: ProcessThreadArgs): Promise<ProcessThreadResult> {
->>>>>>> 20290ea25a388eaab22d903fff0b4043e5c04e9f
+  async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<ProcessThreadResult> {
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
@@ -97,6 +92,7 @@ export class RequestProcessor {
 
           const builder = new ResponseBuilder(space, context);
           const blocks = builder.build(result);
+
           log.info('response', { blocks });
           return { success: true, blocks };
         }
