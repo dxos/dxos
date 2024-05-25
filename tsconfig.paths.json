@@ -44,6 +44,12 @@
       "@braneframe/plugin-files/meta": [
         "packages/apps/plugins/plugin-files/src/meta.tsx"
       ],
+      "@braneframe/plugin-function": [
+        "packages/apps/plugins/plugin-function/src/index.ts"
+      ],
+      "@braneframe/plugin-function/meta": [
+        "packages/apps/plugins/plugin-function/src/meta.tsx"
+      ],
       "@braneframe/plugin-github": [
         "packages/apps/plugins/plugin-github/src/index.ts"
       ],

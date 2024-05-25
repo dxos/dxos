@@ -19,10 +19,10 @@ import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import {
-  filterMatch,
   Filter,
-  Query,
+  filterMatch,
   type FilterSource,
+  Query,
   type QueryContext,
   type QueryResult,
   type QuerySource,
@@ -34,7 +34,7 @@ import { RuntimeSchemaRegistry } from './runtime-schema-registry';
  */
 export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
-  // TODO(burdon): Rename.
+  // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _runtimeSchemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
@@ -199,6 +199,7 @@ export class Hypergraph {
     for (const provider of this._querySourceProviders) {
       context.addQuerySource(provider.create());
     }
+
     return context;
   }
 }

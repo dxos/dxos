@@ -14,6 +14,7 @@ import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
+import FunctionMeta from '@braneframe/plugin-function/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GptMeta from '@braneframe/plugin-gpt/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
@@ -57,14 +58,14 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
-import './globals';
-
 import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
+
+import './globals';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
@@ -156,22 +157,24 @@ const main = async () => {
 
       // Presentation
       ChainMeta,
-      StackMeta,
-      PresenterMeta,
-      MarkdownMeta,
-      MermaidMeta,
-      SketchMeta,
-      GridMeta,
+      ChessMeta,
+      ExplorerMeta,
+      FunctionMeta,
       InboxMeta,
+      GridMeta,
       KanbanMeta,
       MapMeta,
+      MarkdownMeta,
+      MermaidMeta,
       OutlinerMeta,
+      PresenterMeta,
       ScriptMeta,
+      SketchMeta,
+      StackMeta,
       TableMeta,
       ThreadMeta,
-      ExplorerMeta,
-      ChessMeta,
       WildcardMeta,
+
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
     ],
@@ -216,6 +219,7 @@ const main = async () => {
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
+      [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),

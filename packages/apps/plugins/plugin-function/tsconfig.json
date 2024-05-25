@@ -35,9 +35,6 @@
       "path": "../../../common/util"
     },
     {
-      "path": "../../../core/chain"
-    },
-    {
       "path": "../../../core/echo/echo-schema"
     },
     {
@@ -63,6 +60,9 @@
     },
     {
       "path": "../../types"
+    },
+    {
+      "path": "../plugin-chain"
     },
     {
       "path": "../plugin-client"
