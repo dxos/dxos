@@ -4,9 +4,9 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { useLayout } from '@braneframe/plugin-layout';
 import { type StackType } from '@braneframe/types';
-import { Surface, useIntent } from '@dxos/app-framework';
+import { Surface, useIntent, useResolvePlugin, parseLayoutPlugin, NavigationAction } from '@dxos/app-framework';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -23,7 +23,8 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.
-  const { fullscreen } = useLayout();
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const fullscreen = layoutPlugin?.provides.layout.fullscreen;
 
   const { running } = useContext(PresenterContext);
 
@@ -36,6 +37,9 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
+      ...(!running
+        ? [{ action: NavigationAction.CLOSE, data: { activeParts: { fullScreen: fullyQualifiedId(stack) } } }]
+        : []),
     ]);
   };
 

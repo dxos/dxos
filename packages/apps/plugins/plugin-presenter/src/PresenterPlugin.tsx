@@ -8,7 +8,16 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { StackType, DocumentType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+  NavigationAction,
+  parseNavigationPlugin,
+  type Plugin,
+  type LocationProvides,
+} from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
@@ -28,9 +37,15 @@ type PresenterState = {
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
+  let isDeckModel = false;
 
   return {
     meta,
+    ready: async (plugins) => {
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
+    },
     provides: {
       translations,
       graph: {
@@ -62,11 +77,23 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                         id: `${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`,
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
-                        data: () =>
-                          dispatch({
-                            plugin: PRESENTER_PLUGIN,
-                            action: TOGGLE_PRESENTATION,
-                          }),
+                        data: () => {
+                          return dispatch([
+                            {
+                              plugin: PRESENTER_PLUGIN,
+                              action: TOGGLE_PRESENTATION,
+                              data: { object },
+                            },
+                            ...(isDeckModel
+                              ? [
+                                  {
+                                    action: NavigationAction.OPEN,
+                                    data: { activeParts: { fullScreen: fullyQualifiedId(object) } },
+                                  },
+                                ]
+                              : []),
+                          ]);
+                        },
                         properties: {
                           label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
                           icon: (props: IconProps) => <Presentation {...props} />,
