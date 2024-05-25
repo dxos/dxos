@@ -9,7 +9,7 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { MapType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
@@ -112,12 +112,10 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
             testId: 'mapPlugin.createSectionSpaceMap',
             label: ['create stack section label', { ns: MAP_PLUGIN }],
             icon: (props: any) => <Compass {...props} />,
-            intent: [
-              {
-                plugin: MAP_PLUGIN,
-                action: MapAction.CREATE,
-              },
-            ],
+            intent: {
+              plugin: MAP_PLUGIN,
+              action: MapAction.CREATE,
+            },
           },
         ],
       },

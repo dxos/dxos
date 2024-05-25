@@ -119,6 +119,9 @@
       "path": "../plugins/plugin-files"
     },
     {
+      "path": "../plugins/plugin-function"
+    },
+    {
       "path": "../plugins/plugin-github"
     },
     {

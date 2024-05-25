@@ -35,7 +35,7 @@ functions:
   - uri: 'dxos.org/function/email-worker'
     route: '/email-worker'
     handler: 'email-worker'
-    description: 'Email Sync with Cloudflare Worker.'
+    description: 'Synchronize Mailbox with email server.'
 
   - uri: 'dxos.org/function/embedding'
     route: '/embedding'
@@ -61,13 +61,13 @@ triggers:
       type: 'webhook'
       method: 'GET'
 
-  - function: 'dxos.org/function/chess'
-    meta:
-      level: 2
-    spec:
-      type: 'subscription'
-      filter:
-      - type: 'dxos.org/type/Chess'
+#  - function: 'dxos.org/function/chess'
+#    meta:
+#      level: 2
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'dxos.org/type/Chess'
 
 #  - function: 'dxos.org/function/email-worker'
 #    meta:

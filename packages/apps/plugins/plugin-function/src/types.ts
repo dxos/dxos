@@ -11,15 +11,15 @@ import type {
   TranslationsProvides,
 } from '@dxos/app-framework';
 
-import { CHAIN_PLUGIN } from './meta';
+import { FUNCTION_PLUGIN } from './meta';
 
-const CHAIN_ACTION = `${CHAIN_PLUGIN}/action`;
+const FUNCTION_ACTION = `${FUNCTION_PLUGIN}/action`;
 
-export enum ChainAction {
-  CREATE = `${CHAIN_ACTION}/create`,
+export enum FunctionAction {
+  CREATE = `${FUNCTION_ACTION}/create`,
 }
 
-export type ChainPluginProvides = SurfaceProvides &
+export type FunctionPluginProvides = SurfaceProvides &
   IntentResolverProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
