@@ -84,6 +84,8 @@ export class EchoHost extends Resource {
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
+          inlineObjects: root.getInlineObjectCount(),
+          linkedObjects: root.getLinkedObjectCount(),
         }));
       },
     });
@@ -96,6 +98,8 @@ export class EchoHost extends Resource {
           url: root.url,
           isLoaded: root.isLoaded,
           spaceKey: root.getSpaceKey(),
+          inlineObjects: root.getInlineObjectCount(),
+          linkedObjects: root.getLinkedObjectCount(),
           ...(root.measureMetrics() ?? {}),
         }));
       },

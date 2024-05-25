@@ -100,6 +100,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
       console.table(diagnostics);
     },
 
+    // TODO(dmaretskyi): Joins across multiple diagnostics.
     fetchDiagnostics: async (id, instanceTag) => {
       if (diagnostics.length === 0) {
         diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();

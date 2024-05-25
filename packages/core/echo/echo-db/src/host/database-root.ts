@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as A from '@dxos/automerge/automerge';
 import type { DocHandle } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import type { SpaceDoc } from '@dxos/echo-protocol';
@@ -20,7 +21,7 @@ export class DatabaseRoot {
   }
 
   getSpaceKey(): string | null {
-    const doc = this._rootHandle.docSync();
+    const doc = this._docSync();
     if (!doc) {
       return null;
     }
@@ -28,11 +29,33 @@ export class DatabaseRoot {
     return getSpaceKeyFromDoc(doc);
   }
 
+  getInlineObjectCount(): number | null {
+    const doc = this._docSync();
+    if (!doc) {
+      return null;
+    }
+
+    return Object.keys(doc.objects ?? {}).length;
+  }
+
+  getLinkedObjectCount(): number | null {
+    const doc = this._docSync();
+    if (!doc) {
+      return null;
+    }
+
+    return Object.keys(doc.links ?? {}).length;
+  }
+
   measureMetrics(): DocMetrics | null {
-    const doc = this._rootHandle.docSync();
+    const doc = this._docSync();
     if (!doc) {
       return null;
     }
     return measureDocMetrics(doc);
+  }
+
+  private _docSync(): A.Doc<SpaceDoc> | null {
+    return this._rootHandle.docSync();
   }
 }
