@@ -153,7 +153,7 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
+      <PlankHeading.Label attendableId={node?.id}>{label}</PlankHeading.Label>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}

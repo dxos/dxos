@@ -189,7 +189,10 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
       <h1
         {...props}
         data-attention={hasAttention.toString()}
-        className={mx('pli-1 min-is-0 shrink truncate font-medium fg-base data-[attention=true]:fg-accent', classNames)}
+        className={mx(
+          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          classNames,
+        )}
         ref={forwardedRef}
       />
     );
