@@ -23,15 +23,24 @@ const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook',
 
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
   const functions = useQuery(space, Filter.schema(FunctionDef));
+  const linkedFunction = useMemo(
+    () => functions.find((fn) => fn.uri === trigger.function),
+    [trigger.function, functions],
+  );
 
-  const linkedFunction = useMemo(() => {
-    return functions.find((fn) => fn.uri === trigger.function);
-  }, [trigger.function, functions]);
+  // Initialize prompt for GPT function.
+  useEffect(() => {
+    if (trigger.function === 'dxos.org/function/gpt') {
+      // TODO(Zan): Change the default prompt (see plugin-chain presets).
+      const prompt = create(ChainPromptType, { template: 'Translate the message into {language}.', inputs: [] });
+      trigger.meta = { ...trigger.meta, prompt };
+    }
+  }, [trigger.function]);
 
   const handleSelectFunction = (value: string) => {
-    const foundFunction = functions.find((fn) => fn.uri === value);
-    if (foundFunction) {
-      trigger.function = foundFunction.uri;
+    const match = functions.find((fn) => fn.uri === value);
+    if (match) {
+      trigger.function = match.uri;
     }
   };
 
@@ -55,15 +64,6 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
       }
     }
   };
-
-  // Initialize prompt for GPT function.
-  useEffect(() => {
-    if (trigger.function === 'dxos.org/function/gpt') {
-      // TODO(Zan): Change the default prompt.
-      const prompt = create(ChainPromptType, { template: 'Say hello in German. {input-1}', inputs: [] });
-      trigger.meta = { ...trigger.meta, prompt };
-    }
-  }, [trigger.function]);
 
   return (
     <DensityProvider density='fine'>
@@ -179,6 +179,7 @@ const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => (
   </>
 );
 
+// TODO(burdon): Generalize and reuse forms in other plugins (extract to react-ui-form?)
 const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
   <Input.Root>
     <tr>

@@ -7,8 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { ChainPromptType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions/types';
-import { useClient } from '@dxos/react-client';
-import { type Space } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/react-client';
+import { useSpace } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -30,29 +30,19 @@ const functions: Omit<FunctionDef, 'id'>[] = [
   },
 ];
 
-const useFunctionTrigger = (space: Space) => {
+// TODO(burdon): Get type form ClientRepeater.
+const TriggerEditorStory = ({ spaceKey }: { spaceKey: PublicKey }) => {
   const [trigger, setTrigger] = useState<FunctionTrigger>();
-
+  const space = useSpace(spaceKey);
   useEffect(() => {
+    if (!space) {
+      return;
+    }
+
     const trigger = space.db.add(create(FunctionTrigger, { function: '', spec: { type: 'timer', cron: '0 0 * * *' } }));
     setTrigger(trigger);
   }, [space, setTrigger]);
-
-  return trigger;
-};
-
-const TriggerEditorStory = () => {
-  const client = useClient();
-  const space = client.spaces.default;
-  const trigger = useFunctionTrigger(space);
-
-  useEffect(() => {
-    for (const fn of functions) {
-      space.db.add(create(FunctionDef, { ...fn }));
-    }
-  }, [space]);
-
-  if (!trigger) {
+  if (!space || !trigger) {
     return null;
   }
 
@@ -66,12 +56,17 @@ const TriggerEditorStory = () => {
 };
 
 export default {
-  title: 'plugin-chain/TriggerEditor',
+  title: 'plugin-function/TriggerEditor',
 
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}
       schema={[FunctionTrigger, FunctionDef, ChainPromptType]}
+      onCreateSpace={(space) => {
+        for (const fn of functions) {
+          space.db.add(create(FunctionDef, fn));
+        }
+      }}
       registerSignalFactory
       createIdentity
       createSpace

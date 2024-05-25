@@ -164,7 +164,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap'>
+                      <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
                         <code className='px-2'>{input.name}</code>
                       </td>
                       <td className='w-[120px] p-1'>
