@@ -94,7 +94,7 @@
     "oclif": "^4.10.11",
     "prettier": "^3.2.4",
     "shx": "^0.3.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",

@@ -34,3 +34,4 @@ export * from './map-values';
 export * from './defer';
 export * from './circular-buffer';
 export * from './join-tables';
+export * from './throw-unhandled-error';

@@ -24,7 +24,7 @@
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
     "types-package-json": "^2.0.39",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

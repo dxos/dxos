@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"
