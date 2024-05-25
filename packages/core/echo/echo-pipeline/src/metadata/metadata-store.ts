@@ -14,11 +14,11 @@ import { DataCorruptionError, STORAGE_VERSION, schema } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import {
   type ControlPipelineSnapshot,
-  EchoMetadata,
+  type EchoMetadata,
   type SpaceMetadata,
   type IdentityRecord,
   type SpaceCache,
-  LargeSpaceMetadata,
+  type LargeSpaceMetadata,
 } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Directory, type File } from '@dxos/random-access-storage';
 import { type Timeframe } from '@dxos/timeframe';
