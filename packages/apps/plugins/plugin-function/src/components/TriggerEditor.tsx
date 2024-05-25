@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { PromptTemplate } from '@braneframe/plugin-chain';
 import { ChainPromptType } from '@braneframe/types';
@@ -70,69 +70,49 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
       <div className='flex flex-col my-2'>
         <table className='w-full table-fixed'>
           <tbody>
-            <Input.Root>
-              <tr>
-                <td className='px-2 text-right w-[80px]'>
-                  <Input.Label classNames='text-xs'>Function</Input.Label>
-                </td>
-                <td>
-                  <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
-                    <Select.TriggerButton placeholder={'Select function'} />
-                    <Select.Portal>
-                      <Select.Content>
-                        <Select.Viewport>
-                          {functions.map(({ id, uri }) => (
-                            <Select.Option key={id} value={uri}>
-                              {uri}
-                            </Select.Option>
-                          ))}
-                        </Select.Viewport>
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select.Root>
-                </td>
-              </tr>
-            </Input.Root>
-            <tr>
-              <td />
-              <td>
-                <div className='p-2 pb-4'>
-                  {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
-                </div>
-              </td>
-            </tr>
-            <Input.Root>
-              <tr>
-                <td className='px-2 text-right'>
-                  <Input.Label classNames='text-xs'>Type</Input.Label>
-                </td>
-                <td>
-                  <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
-                    <Select.TriggerButton placeholder={'Select trigger'} />
-                    <Select.Portal>
-                      <Select.Content>
-                        <Select.Viewport>
-                          {triggerTypes.map((trigger) => (
-                            <Select.Option key={trigger} value={trigger}>
-                              {trigger}
-                            </Select.Option>
-                          ))}
-                        </Select.Viewport>
-                      </Select.Content>
-                    </Select.Portal>
-                  </Select.Root>
-                </td>
-              </tr>
-            </Input.Root>
+            <InputRow label='Function'>
+              <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
+                <Select.TriggerButton placeholder={'Select function'} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {functions.map(({ id, uri }) => (
+                        <Select.Option key={id} value={uri}>
+                          {uri}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </InputRow>
+            <InputRow>
+              <div className='p-2 pb-4'>
+                {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
+              </div>
+            </InputRow>
+            <InputRow label='Type'>
+              <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
+                <Select.TriggerButton placeholder={'Select trigger'} />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {triggerTypes.map((trigger) => (
+                        <Select.Option key={trigger} value={trigger}>
+                          {trigger}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+            </InputRow>
             {trigger.spec && <TriggerSpec spec={trigger.spec} />}
-            <tr>
-              <td className='px-2 text-right align-top pt-3'>
-                <span className='text-xs'>Meta</span>
-              </td>
-              <td className='pt-2'>
+            {trigger.function && (
+              <InputRow label='Meta'>
                 <TriggerMeta trigger={trigger} />
-              </td>
-            </tr>
+              </InputRow>
+            )}
           </tbody>
         </table>
       </div>
@@ -147,38 +127,24 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
 // TODO(burdon): Type selector.
 const TriggerSpecSubscription = ({ spec }: { spec: SubscriptionTrigger }) => (
   <>
-    <Input.Root>
-      <tr>
-        <td className='px-2 text-right'>
-          <Input.Label classNames='text-xs'>Filter</Input.Label>
-        </td>
-        <td>
-          <Select.Root>
-            <Select.TriggerButton placeholder={'Select type'} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport></Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </td>
-      </tr>
-    </Input.Root>
+    <InputRow label='Filter'>
+      <Select.Root>
+        <Select.TriggerButton placeholder={'Select type'} />
+        <Select.Portal>
+          <Select.Content>
+            <Select.Viewport></Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+    </InputRow>
   </>
 );
 
 const TriggerSpecTimer = ({ spec }: { spec: TimerTrigger }) => (
   <>
-    <Input.Root>
-      <tr>
-        <td className='px-2 text-right'>
-          <Input.Label classNames='text-xs'>Cron</Input.Label>
-        </td>
-        <td>
-          <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
-        </td>
-      </tr>
-    </Input.Root>
+    <InputRow label='Cron'>
+      <Input.TextInput value={spec.cron} onChange={(event) => (spec.cron = event.target.value)} />
+    </InputRow>
   </>
 );
 
@@ -186,49 +152,42 @@ const methods = ['GET', 'POST'];
 
 const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
   <>
-    <Input.Root>
-      <tr>
-        <td className='px-2 text-right'>
-          <Input.Label classNames='text-xs'>Method</Input.Label>
-        </td>
-        <td>
-          <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
-            <Select.TriggerButton placeholder={'type'} />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {methods.map((method) => (
-                    <Select.Option key={method} value={method}>
-                      {method}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
-          </Select.Root>
-        </td>
-      </tr>
-    </Input.Root>
+    <InputRow label='Method'>
+      <Select.Root value={spec.method} onValueChange={(value) => (spec.method = value)}>
+        <Select.TriggerButton placeholder={'type'} />
+        <Select.Portal>
+          <Select.Content>
+            <Select.Viewport>
+              {methods.map((method) => (
+                <Select.Option key={method} value={method}>
+                  {method}
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+    </InputRow>
   </>
 );
 
 const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => (
   <>
-    <Input.Root>
-      <tr>
-        <td className='px-2 text-right'>
-          <Input.Label classNames='text-xs'>URL</Input.Label>
-        </td>
-        <td>
-          <Input.TextInput
-            value={spec.url}
-            onChange={(event) => (spec.url = event.target.value)}
-            placeholder='https://'
-          />
-        </td>
-      </tr>
-    </Input.Root>
+    <InputRow label='Endpoint'>
+      <Input.TextInput value={spec.url} onChange={(event) => (spec.url = event.target.value)} placeholder='https://' />
+    </InputRow>
   </>
+);
+
+const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
+  <Input.Root>
+    <tr>
+      <td className='w-[100px] px-2 text-right align-top pt-3'>
+        <Input.Label classNames='text-xs'>{label}</Input.Label>
+      </td>
+      <td className='p-1'>{children}</td>
+    </tr>
+  </Input.Root>
 );
 
 //
