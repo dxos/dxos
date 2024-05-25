@@ -4,6 +4,9 @@
 
 import '@dxosTheme';
 
+import React, { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
 import ChainMeta from '@braneframe/plugin-chain/meta';
 import ChessMeta from '@braneframe/plugin-chess/meta';
 import ClientMeta from '@braneframe/plugin-client/meta';
@@ -55,17 +58,14 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
-import './globals';
-
-import React, { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-
 import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
 import translations from './translations';
+
+import './globals';
 
 const main = async () => {
   TRACE_PROCESSOR.setInstanceTag('app');
