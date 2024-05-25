@@ -17,7 +17,6 @@ import {
   FUNCTION_SCHEMA,
   type FunctionManifest,
   FunctionRegistry,
-  FunctionTrigger,
   Scheduler,
   TriggerRegistry,
 } from '@dxos/functions';
@@ -88,8 +87,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
           await scheduler.register(space, { functions, triggers });
         };
 
-        client.addSchema(FunctionTrigger);
-        // TODO(burdon): Option to subscribe for new spaces.
+        // TODO(burdon): Subscribe for new spaces.
         for (const space of await this.getSpaces(client, { spaceKeys: this.flags.key, wait: true })) {
           await update(space);
         }
@@ -107,7 +105,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
         // TODO(burdon): Get list of functions from plugin API endpoint.
         this.log(`Plugin proxy: ${chalk.blue(server.proxy)}`);
         this.log(
-          '\nFunctions (manifest):\n' +
+          'Functions:\n' +
             server.functions
               .map(({ def: { uri, route } }) => chalk`- ${uri.padEnd(40)} {blue ${join(server.proxy!, route)}}`)
               .join('\n'),

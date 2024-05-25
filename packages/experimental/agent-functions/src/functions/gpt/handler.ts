@@ -37,6 +37,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   await loadObjectReferences(threads, (thread: ThreadType) => thread.messages ?? []);
 
   // Filter messages to process.
+  // TODO(burdon): Generalize to other object types.
   const messages = objects
     .map((message) => {
       if (!(message instanceof MessageType)) {
@@ -45,11 +46,11 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }
 
       // Skip messages older than one hour.
-      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1000) {
+      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1_000) {
         return null;
       }
 
-      // Check the message wasn't already processed / sent by the AI.
+      // Check the message wasn't already processed/created by the AI.
       if (getMeta(message).keys.find((key) => key.source === AI_SOURCE)) {
         return null;
       }
@@ -61,6 +62,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }
 
       // Only react to the last message in the thread.
+      // TODO(burdon): Need better marker.
       if (thread.messages[thread.messages.length - 1]?.id !== message.id) {
         return null;
       }

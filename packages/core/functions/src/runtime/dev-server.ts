@@ -46,6 +46,7 @@ export class DevServer {
     private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
   ) {
+    // TODO(burdon): Add/remove listener in start/stop.
     this._functionsRegistry.registered.on(async ({ added }) => {
       added.forEach((def) => this._load(def));
       await this._safeUpdateRegistration();

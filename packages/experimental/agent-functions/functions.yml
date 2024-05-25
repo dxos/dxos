@@ -55,6 +55,7 @@ functions:
 triggers:
 
   - function: 'dxos.org/function/hello'
+    enabled: true
     meta:
       sender: 'DXOS'
     spec:
@@ -62,6 +63,7 @@ triggers:
       method: 'GET'
 
 #  - function: 'dxos.org/function/chess'
+#    enabled: true
 #    meta:
 #      level: 2
 #    spec:
@@ -70,6 +72,7 @@ triggers:
 #      - type: 'dxos.org/type/Chess'
 
 #  - function: 'dxos.org/function/email-worker'
+#    enabled: true
 #    meta:
 #      account: 'hello@dxos.network'
 #    spec:
@@ -79,38 +82,44 @@ triggers:
 #        type: 'sync'
 
 #  - function: 'dxos.org/function/gpt'
+#    enabled: true
 #    spec:
 #      type: 'subscription'
 #      filter:
 #      - type: 'braneframe.Message'
 
   - function: 'dxos.org/function/embedding'
+    enabled: true
     spec:
       type: 'subscription'
       filter:
-      - type: 'braneframe.File'
-#      - type: 'braneframe.Document'
+      - type: 'dxos.org/type/File'
+      - type: 'braneframe.Document'
       options:
         deep: true
         delay: 5
 
 #  - function: 'dxos.org/function/calendar'
+#    enabled: true
 #    spec:
 #      type: 'timer'
 #      cron: '*/30 * * * * *'
 #
 #  - function: 'dxos.org/function/calendar'
+#    enabled: true
 #    spec:
 #      type: 'subscription'
 #      filter:
 #      - type: 'braneframe.Calendar'
 #
 #  - function: 'dxos.org/function/email'
+#    enabled: true
 #    spec:
 #      type: 'timer'
 #      cron: '*/30 * * * * *'
 #
 #  - function: 'dxos.org/function/email-extractor'
+#    enabled: true
 #    spec:
 #      type: 'subscription'
 #      filter:
@@ -121,6 +130,7 @@ triggers:
 #        delay: 5
 #
 #  - function: 'dxos.org/function/github'
+#    enabled: true
 #    spec:
 #      type: 'subscription'
 #      filter:

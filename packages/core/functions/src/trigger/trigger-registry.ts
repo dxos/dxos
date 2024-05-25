@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { ECHO_ATTR_META, foreignKey, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
+import { ECHO_ATTR_META, foreignKey, foreignKeyEquals } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -103,19 +103,28 @@ export class TriggerRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
+    // Create FK to enable syncing if none are set.
+    const manifestTriggers = manifest.triggers.map((trigger) => {
+      // TODO(burdon): Warn if not unique.
+      let keys = trigger[ECHO_ATTR_META]?.keys;
+      delete trigger[ECHO_ATTR_META];
+      if (!keys?.length) {
+        keys = [foreignKey('manifest', [trigger.function, trigger.spec.type].join(':'))];
+      }
+
+      return create(FunctionTrigger, trigger, { keys });
+    });
+
     // Sync triggers.
     const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-    const { added } = diff(existing, manifest.triggers, (a, b) => {
-      // Create FK to enable syncing if none are set.
-      // TODO(burdon): Warn if not unique.
-      const keys = b[ECHO_ATTR_META]?.keys ?? [foreignKey('manifest', [b.function, b.spec.type].join('-'))];
-      return intersection(getMeta(a)?.keys ?? [], keys, foreignKeyEquals).length > 0;
+    const { added } = diff(existing, manifestTriggers, (a, b) => {
+      return intersection(getMeta(a)?.keys ?? [], getMeta(b)?.keys, foreignKeyEquals).length > 0;
     });
 
     // TODO(burdon): Update existing.
     added.forEach((trigger) => {
-      const { meta, object } = splitMeta(trigger);
-      space.db.add(create(FunctionTrigger, object, meta));
+      space.db.add(trigger);
+      log.info('added', { meta: getMeta(trigger) });
     });
   }
 
