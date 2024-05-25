@@ -31,9 +31,6 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
     return;
   }
 
-  // TODO(burdon): The handler is called before the mutation is processed?
-  // await sleep(500);
-
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
   const { objects: threads } = await space.db.query(Filter.schema(ThreadType)).run();

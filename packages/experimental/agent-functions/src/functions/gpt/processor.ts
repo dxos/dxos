@@ -39,7 +39,7 @@ export type SequenceOptions = {
   noTrainingData?: boolean;
 };
 
-export type ProcessThreadArgs = {
+export type RequestProcessorProps = {
   space: Space;
 
   /**
@@ -69,7 +69,7 @@ export class RequestProcessor {
   ) {}
 
   // TODO(burdon): Generalize so that we can process outside of a thread.
-  async processThread({ space, thread, message, prompt }: ProcessThreadArgs): Promise<ProcessThreadResult> {
+  async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<ProcessThreadResult> {
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
@@ -92,6 +92,7 @@ export class RequestProcessor {
 
           const builder = new ResponseBuilder(space, context);
           const blocks = builder.build(result);
+
           log.info('response', { blocks });
           return { success: true, blocks };
         }
