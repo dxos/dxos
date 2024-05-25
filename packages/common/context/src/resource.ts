@@ -17,6 +17,9 @@ export interface Lifecycle {
   close?(): Promise<any> | any;
 }
 
+// Feature flag to be enabled later.
+const CLOSE_RESOURCE_ON_UNHANDLED_ERROR = false;
+
 /**
  * Base class for resources that need to be opened and closed.
  */
@@ -65,10 +68,12 @@ export abstract class Resource implements Lifecycle {
    * By default, errors are bubbled up to the parent context which is passed to the open method.
    */
   protected async _catch(err: Error): Promise<void> {
-    try {
-      await this.close();
-    } catch (doubleErr: any) {
-      throwUnhandledError(doubleErr);
+    if (CLOSE_RESOURCE_ON_UNHANDLED_ERROR) {
+      try {
+        await this.close();
+      } catch (doubleErr: any) {
+        throwUnhandledError(doubleErr);
+      }
     }
     throw err;
   }
