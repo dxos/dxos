@@ -22,6 +22,8 @@ import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
 
+  const sections = stack.sections.filter(Boolean).filter((section) => !!section?.object);
+
   // TODO(burdon): Should not depend on split screen.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const fullscreen = layoutPlugin?.provides.layout.fullscreen;
@@ -54,11 +56,11 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
     >
       <Layout
         topRight={<StartButton running={running} onClick={(running) => handleSetRunning(running)} />}
-        bottomRight={<PageNumber index={slide} count={stack.sections.length} />}
+        bottomRight={<PageNumber index={slide} count={sections.length} />}
         bottomLeft={
           <Pager
             index={slide}
-            count={stack.sections.length}
+            count={sections.length}
             keys={running}
             onChange={setSlide}
             onExit={() => handleSetRunning(false)}
@@ -66,7 +68,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         }
       >
         {/* TODO(wittjosiah): Better slide placeholder. */}
-        <Surface role='slide' data={{ slide: stack.sections[slide]?.object }} placeholder={<></>} />
+        <Surface role='slide' data={{ slide: sections[slide]?.object }} placeholder={<></>} />
       </Layout>
     </Main.Content>
   );
