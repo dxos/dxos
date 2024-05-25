@@ -40,18 +40,16 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   );
 
   useEffect(() => {
-    if (space) {
-      void space.db.schemaRegistry
-        .getAll()
-        .then((schemas) => {
-          // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
-          state.schemas = distinctBy([...state.schemas, ...schemas], (s) => s.typename).sort((a, b) =>
-            a.typename < b.typename ? -1 : 1,
-          );
-        })
-        .catch();
-    }
-  }, []);
+    void space.db.schemaRegistry
+      .getAll()
+      .then((schemas) => {
+        // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
+        state.schemas = distinctBy([...state.schemas, ...schemas], (s) => s.typename).sort((a, b) =>
+          a.typename < b.typename ? -1 : 1,
+        );
+      })
+      .catch();
+  }, [space]);
 
   // Keen an enriched version of the schema in memory so we can share it with prompt editor.
   useEffect(() => {
