@@ -153,7 +153,7 @@ export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplat
         )}
 
         <Section title='Template'>
-          <div ref={parentRef} className={mx(attentionSurface, 'rounded')} />
+          <div ref={parentRef} className={mx(attentionSurface, 'rounded', 'min-h-[120px]')} />
         </Section>
 
         {(prompt.inputs?.length ?? 0) > 0 && (

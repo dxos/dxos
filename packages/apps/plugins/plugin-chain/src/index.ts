@@ -8,3 +8,4 @@ export default ChainPlugin;
 
 export * from './ChainPlugin';
 export * from './components';
+export * from './presets';

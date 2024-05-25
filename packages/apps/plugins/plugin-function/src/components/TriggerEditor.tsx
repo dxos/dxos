@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
-import { PromptTemplate } from '@braneframe/plugin-chain';
-import { ChainPromptType } from '@braneframe/types';
+import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
+import { type ChainPromptType } from '@braneframe/types';
 import {
   FunctionDef,
   type FunctionTrigger,
@@ -16,7 +16,7 @@ import {
   type WebhookTrigger,
   type WebsocketTrigger,
 } from '@dxos/functions/types';
-import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
@@ -28,12 +28,13 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
     [trigger.function, functions],
   );
 
-  // Initialize prompt for GPT function.
+  // Initialize meta.
   useEffect(() => {
-    if (trigger.function === 'dxos.org/function/gpt') {
-      // TODO(Zan): Change the default prompt (see plugin-chain presets).
-      const prompt = create(ChainPromptType, { template: 'Translate the message into {language}.', inputs: [] });
-      trigger.meta = { ...trigger.meta, prompt };
+    if (!trigger.meta) {
+      const extension = metaExtensions[trigger.function];
+      if (extension && extension.initialValue) {
+        trigger.meta = extension.initialValue();
+      }
     }
   }, [trigger.function]);
 
@@ -59,7 +60,8 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         break;
       }
       case 'websocket': {
-        trigger.spec = { type: 'websocket', url: '' };
+        // TODO(burdon): Currently mail worker specific.
+        trigger.spec = { type: 'websocket', url: '', init: { type: 'sync' } };
         break;
       }
     }
@@ -91,6 +93,9 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
                 {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
               </div>
             </InputRow>
+            <InputRow label='Enabled'>
+              <Input.Switch checked={trigger.enabled} onCheckedChange={(checked) => (trigger.enabled = !!checked)} />
+            </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
                 <Select.TriggerButton placeholder={'Select trigger'} />
@@ -107,13 +112,19 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
                 </Select.Portal>
               </Select.Root>
             </InputRow>
-            {trigger.spec && <TriggerSpec spec={trigger.spec} />}
-            {trigger.function && (
-              <InputRow label='Meta'>
-                <TriggerMeta trigger={trigger} />
-              </InputRow>
-            )}
           </tbody>
+          <tbody>{trigger.spec && <TriggerSpec spec={trigger.spec} />}</tbody>
+          {trigger.function && (
+            <tbody>
+              <tr>
+                <td />
+                <td className='py-2'>
+                  <div className='border-b separator-separator' />
+                </td>
+              </tr>
+              <TriggerMeta trigger={trigger} />
+            </tbody>
+          )}
         </table>
       </div>
     </DensityProvider>
@@ -171,13 +182,34 @@ const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
   </>
 );
 
-const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => (
-  <>
-    <InputRow label='Endpoint'>
-      <Input.TextInput value={spec.url} onChange={(event) => (spec.url = event.target.value)} placeholder='https://' />
-    </InputRow>
-  </>
-);
+const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => {
+  const handleChangeInit: ChangeEventHandler<HTMLInputElement> = (event) => {
+    try {
+      spec.init = JSON.parse(event.target.value);
+    } catch (err) {
+      // Ignore.
+    }
+  };
+
+  return (
+    <>
+      <InputRow label='Endpoint'>
+        <Input.TextInput
+          value={spec.url}
+          onChange={(event) => (spec.url = event.target.value)}
+          placeholder='https://'
+        />
+      </InputRow>
+      <InputRow label='Init'>
+        <Input.TextInput
+          value={JSON.stringify(spec.init)}
+          onChange={handleChangeInit}
+          placeholder='{ "type": "sync" }'
+        />
+      </InputRow>
+    </>
+  );
+};
 
 // TODO(burdon): Generalize and reuse forms in other plugins (extract to react-ui-form?)
 const InputRow = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
@@ -210,19 +242,65 @@ const TriggerSpec = ({ spec }: { spec: TriggerSpec }) => {
 };
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
-  if (!trigger || !trigger.function) {
+  if (!trigger || !trigger.function || !trigger.meta) {
     return null;
   }
 
-  // TODO(zan): Wire up the meta editor for each function.
-  if (trigger.function === 'dxos.org/function/gpt') {
-    const meta = trigger.meta as any;
-    if (meta?.prompt === undefined) {
-      return null;
-    }
-
-    return <PromptTemplate prompt={meta.prompt} commandEditable={false} />;
+  // TODO(burdon): Isn't triggered when function changes.
+  const { component: Component } = metaExtensions[trigger.function] ?? {};
+  if (Component) {
+    return <Component meta={trigger.meta as any} />;
   }
 
   return null;
+};
+
+//
+// Meta extensions
+//
+
+type MetaProps<T> = { meta: T };
+type MetaExtension<T> = {
+  initialValue?: () => T;
+  component: FC<MetaProps<T>>;
+};
+
+const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
+  return (
+    <>
+      <InputRow label='Account'>
+        <Input.TextInput
+          value={meta.account ?? ''}
+          onChange={(event) => (meta.account = event.target.value)}
+          placeholder='https://'
+        />
+      </InputRow>
+    </>
+  );
+};
+
+const ChainPromptMeta = ({ meta }: MetaProps<{ prompt?: ChainPromptType }>) => {
+  return (
+    <>
+      <InputRow label='Presets'>
+        <ChainPresets presets={chainPresets} onSelect={(preset) => (meta.prompt = preset.prompt())} />
+      </InputRow>
+      {meta.prompt && (
+        <InputRow label='Prompt'>
+          <PromptTemplate prompt={meta.prompt} commandEditable={false} />
+        </InputRow>
+      )}
+    </>
+  );
+};
+
+const metaExtensions: Record<string, MetaExtension<any>> = {
+  'dxos.org/function/email-worker': {
+    initialValue: () => ({ account: 'hello@dxos.network' }),
+    component: EmailWorkerMeta,
+  },
+
+  'dxos.org/function/gpt': {
+    component: ChainPromptMeta,
+  },
 };
