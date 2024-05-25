@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema, TimeoutError } from '@dxos/protocols';
-import { type Answer, SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
+import { type Answer, type SwarmMessage } from '@dxos/protocols/proto/dxos/mesh/swarm';
 import { ComplexMap, type MakeOptional } from '@dxos/util';
 
 import { type OfferMessage, type SignalMessage, type SignalMessenger } from './signal-messenger';

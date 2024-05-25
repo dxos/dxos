@@ -195,10 +195,10 @@ export class DataSpaceManager {
 
     log('creating space...', { spaceKey });
 
-    const automergeRootUrl = await this._echoHost.createSpaceRoot(spaceKey);
+    const root = await this._echoHost.createSpaceRoot(spaceKey);
     const space = await this._constructSpace(metadata);
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRootUrl);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
