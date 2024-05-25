@@ -101,13 +101,11 @@ const PlankError = ({
   useEffect(() => {
     setTimeout(() => setTimedOut(true), 5e3);
   }, []);
-  return timedOut ? (
+  return (
     <>
-      <NodePlankHeading node={node} part={part} slug={slug} />
-      <PlankContentError error={error} />
+      <NodePlankHeading node={node} part={part} slug={slug} pending={!timedOut} />
+      {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
-  ) : (
-    <PlankLoading />
   );
 };
 
@@ -119,15 +117,19 @@ const NodePlankHeading = ({
   part,
   slug,
   popoverAnchorId,
+  pending,
 }: {
   node?: Node;
   part: PartIdentifier;
   slug: string;
   popoverAnchorId?: string;
+  pending?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const Icon = node?.properties?.icon ?? Placeholder;
-  const label = toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
+  const label = pending
+    ? t('pending heading')
+    : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const { dispatch } = useIntent();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
@@ -153,7 +155,9 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label attendableId={node?.id}>{label}</PlankHeading.Label>
+      <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
+        {label}
+      </PlankHeading.Label>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}

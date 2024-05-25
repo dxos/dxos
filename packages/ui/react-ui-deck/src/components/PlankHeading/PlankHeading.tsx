@@ -224,7 +224,9 @@ const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { labe
         </Button>
       </Tooltip.Trigger>
       <Tooltip.Portal>
-        <Tooltip.Content side='bottom'>{label}</Tooltip.Content>
+        <Tooltip.Content side='bottom' classNames='z-[70]'>
+          {label}
+        </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>
   );
