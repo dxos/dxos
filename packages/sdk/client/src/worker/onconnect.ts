@@ -7,9 +7,12 @@ import { WorkerRuntime } from '@dxos/client-services';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { mountDevtoolsHooks } from '../devtools';
 import { LOCK_KEY } from '../lock-key';
+
+TRACE_PROCESSOR.setInstanceTag('shared-worker');
 
 let releaseLock: () => void;
 const lockPromise = new Promise<void>((resolve) => (releaseLock = resolve));
