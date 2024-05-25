@@ -151,6 +151,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
 /**
  * Factory for `getAllDocuments` iterator.
  */
+// TODO(dmaretskyi): Get roots from echo-host.
 const createDocumentsIterator = (automergeHost: AutomergeHost) =>
   /**
    * Recursively get all object data blobs from loaded documents from Automerge Repo.

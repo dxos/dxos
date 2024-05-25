@@ -5,7 +5,6 @@
 export * from './assert';
 export * from './error-handler';
 export * from './error-stream';
-export * from './exceptions';
 export * from './fail';
 export * from './inspect';
 export * from './log-method';

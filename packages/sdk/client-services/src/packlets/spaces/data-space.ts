@@ -384,6 +384,10 @@ export class DataSpace {
             doc.access = { spaceKey: this.key.toHex() };
           });
         }
+
+        // TODO(dmaretskyi): Close roots.
+        // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
+        await this._echoHost.openSpaceRoot(handle.url);
       } catch (err) {
         if (err instanceof ContextDisposedError) {
           return;

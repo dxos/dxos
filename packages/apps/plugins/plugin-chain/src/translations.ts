@@ -11,6 +11,7 @@ export default [
         'plugin name': 'Chain',
         'object placeholder': 'New prompt',
         'create object label': 'Create prompt',
+        'create trigger label': 'Create trigger',
         'create stack section label': 'Create prompt',
         'command placeholder': 'Enter slash command...',
         'template placeholder': 'Enter template...',

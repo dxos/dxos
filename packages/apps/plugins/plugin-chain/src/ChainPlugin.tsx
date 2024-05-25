@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Brain, WebhooksLogo, type IconProps } from '@phosphor-icons/react';
+import { Brain, Function, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
@@ -32,7 +32,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
           },
           [FunctionTrigger.typename]: {
             placeholder: ['trigger placeholder', { ns: CHAIN_PLUGIN }],
-            icon: (props: IconProps) => <WebhooksLogo {...props} />,
+            icon: (props: IconProps) => <Function {...props} />,
           },
         },
       },
@@ -69,6 +69,24 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
               );
             });
 
+            // TODO(burdon): Move to separate plugin.
+            client.spaces.get().forEach((space) => {
+              subscriptions.add(
+                updateGraphWithAddObjectAction({
+                  graph,
+                  space,
+                  plugin: CHAIN_PLUGIN,
+                  action: ChainAction.CREATE_FUNCTION,
+                  properties: {
+                    label: ['create trigger label', { ns: CHAIN_PLUGIN }],
+                    icon: (props: IconProps) => <Function {...props} />,
+                    testId: 'chainPlugin.createObject',
+                  },
+                  dispatch,
+                }),
+              );
+            });
+
             client.spaces
               .get()
               .filter((space) => !!enabled.find((key) => key.equals(space.key)))
@@ -91,7 +109,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
                             label: object.title || ['object title placeholder', { ns: CHAIN_PLUGIN }],
-                            icon: (props: IconProps) => <WebhooksLogo {...props} />,
+                            icon: (props: IconProps) => <Function {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
                             persistenceKey: space?.key.toHex(),
@@ -121,7 +139,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
                               'object title placeholder',
                               { ns: CHAIN_PLUGIN },
                             ],
-                            icon: (props: IconProps) => <WebhooksLogo {...props} />,
+                            icon: (props: IconProps) => <Function {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
                             persistenceKey: space?.key.toHex(),
