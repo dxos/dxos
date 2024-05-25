@@ -2,19 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-import { type CID, create as createKubeClient } from 'kubo-rpc-client';
+// import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
-import type { Config } from '@dxos/client';
-import { invariant } from '@dxos/invariant';
-
 import { type Logger, type PackageModule } from './common';
-import { uploadToIPFS } from './ipfs-upload';
+import { importESM, uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';
 
@@ -22,7 +22,6 @@ const getFolderSize = promisify(folderSize);
 
 /**
  * Encodes DXN string to fs path.
- *
  * Example: `example:app/braneframe` => `example/app/braneframe`
  */
 const encodeName = (name: string) => name.replaceAll(':', '/');
@@ -37,7 +36,7 @@ interface PublishOptions {
   pin?: boolean;
 }
 
-export const publish = async ({ verbose, timeout, path, pin, log, config, module }: PublishOptions): Promise<CID> => {
+export const publish = async ({ verbose, timeout, path, pin, log, config, module }: PublishOptions): Promise<any> => {
   invariant(module.name, 'Module name is required to publish.');
   log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;
@@ -48,32 +47,34 @@ export const publish = async ({ verbose, timeout, path, pin, log, config, module
   }
 
   const total = await getFolderSize(publishFolder);
-  const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-  verbose && bar.start(total, 0);
+  const progress = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+  verbose && progress.start(total, 0);
 
   let cid;
   try {
-    const ipfsClient = createIpfsClient(config!, timeout);
+    const ipfsClient = await createIpfsClient(config!, timeout);
     log('Uploading...', { folder: publishFolder, server: ipfsClient.getEndpointConfig().host });
     cid = await uploadToIPFS(ipfsClient, publishFolder, {
-      progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
+      progress: verbose ? (bytes: any) => progress.update(bytes) : undefined,
       pin,
     });
   } catch (err: any) {
     // Avoid leaving user's terminal in a bad state.
-    bar.stop();
+    progress.stop();
     throw new Error(`Publish failed. ${err.message}` + (err.cause ? ` (${err.cause})` : ''));
   }
 
-  verbose && bar.update(total);
-  verbose && bar.stop();
+  verbose && progress.update(total);
+  verbose && progress.stop();
 
   log(`Published module ${chalk.bold(module.name)}. IPFS cid: ${cid.toString()}`);
   return cid;
 };
 
 // TODO(nf): make CLI support dx-env.yml
-export const createIpfsClient = (config: Config, timeout?: string | number) => {
+export const createIpfsClient = async (config: Config, timeout?: string | number) => {
+  const { create } = await importESM('kubo-rpc-client');
+
   const serverAuthSecret = process.env.IPFS_API_SECRET ?? config?.get('runtime.services.ipfs.serverAuthSecret');
   let authorizationHeader;
   if (serverAuthSecret) {
@@ -92,7 +93,8 @@ export const createIpfsClient = (config: Config, timeout?: string | number) => {
 
   const server = config?.get('runtime.services.ipfs.server');
   invariant(server, 'Missing IPFS Server.');
-  return createKubeClient({
+  log('connecting to IPFS server', { server });
+  return create({
     url: server,
     timeout: timeout || '1m',
     ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),

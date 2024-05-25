@@ -4,13 +4,13 @@
 
 import { Flags } from '@oclif/core';
 
+import { FileType } from '@braneframe/types';
+import { type Space } from '@dxos/client-protocol';
+import { create } from '@dxos/echo-schema';
+
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
-
-// import { FileType } from '@braneframe/types';
-// import { type Space } from '@dxos/client-protocol';
-// import { create } from '@dxos/echo-schema';
-// import { createIpfsClient } from '../../util';
+import { createIpfsClient } from '../../util';
 
 /**
  * Upload IPFS file.
@@ -24,19 +24,23 @@ export default class Upload extends ComposerBaseCommand<typeof Upload> {
   };
 
   async run() {
-    console.log('!!!!!');
-    // const ipfsClient = createIpfsClient(this.clientConfig);
-    // const { cid, path } = await ipfsClient.add(this.flags.file, { pin: true });
-    // console.log(cid);
+    const [_, type] = this.flags.file.split('.');
+    const ipfsClient = await createIpfsClient(this.clientConfig);
+    const { cid, path } = await ipfsClient.add(this.flags.file, { pin: true });
+    if (this.flags.verbose) {
+      this.log(`Uploaded to IPFS: ${cid}`);
+    }
 
-    // const upload = async (space: Space) => {
-    //   const obj = create(FileType, { type: 'pdf', title: path, filename: path, cid: cid.toString() });
-    //   space.db.add(obj);
-    // };
+    const upload = async (space: Space) => {
+      const obj = space.db.add(create(FileType, { type, title: path, filename: path, cid: cid.toString() }));
+      if (this.flags.verbose) {
+        this.log(`Created object: ${obj.id}`);
+      }
+    };
 
-    // return await this.execWithSpace(async ({ space }) => await upload(space), {
-    //   spaceKeys: this.flags.key,
-    //   verbose: true,
-    // });
+    return await this.execWithSpace(async ({ space }) => await upload(space), {
+      spaceKeys: this.flags.key,
+      verbose: true,
+    });
   }
 }

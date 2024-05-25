@@ -11,8 +11,11 @@ interface UploadOptions {
   pin?: boolean;
 }
 
+// eslint-disable-next-line no-new-func
+export const importESM = new Function('modulePath', 'return import(modulePath)');
+
 export const uploadToIPFS = async (ipfsClient: KuboRPCClient, path: string, options?: UploadOptions): Promise<CID> => {
-  const { globSource } = await _importESM('kubo-rpc-client');
+  const { globSource } = await importESM('kubo-rpc-client');
   if (!fs.existsSync(path)) {
     throw new Error(`File or directory does not exist: ${path}}`);
   }
@@ -55,6 +58,3 @@ export const uploadToIPFS = async (ipfsClient: KuboRPCClient, path: string, opti
     return addResult.cid;
   }
 };
-
-// eslint-disable-next-line no-new-func
-const _importESM = new Function('modulePath', 'return import(modulePath)');
