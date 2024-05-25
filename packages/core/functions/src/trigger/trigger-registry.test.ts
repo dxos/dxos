@@ -74,7 +74,7 @@ describe('trigger registry', () => {
 
   describe('register', () => {
     test('creates new triggers', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const space = await client.spaces.create();
       await registry.register(space, manifest);
@@ -88,7 +88,7 @@ describe('trigger registry', () => {
 
   describe('activate', () => {
     test('invokes the provided callback', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();
       const registry = createRegistry(client);
       await registry.register(space, manifest);
@@ -108,7 +108,7 @@ describe('trigger registry', () => {
     });
 
     test('removes from inactive list', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();
       const registry = createRegistry(client);
       await registry.register(space, manifest);
@@ -126,7 +126,7 @@ describe('trigger registry', () => {
 
   describe('deactivate', () => {
     test('trigger object deletion deactivates a trigger', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();
       const registry = createRegistry(client);
       await registry.register(space, manifest);
@@ -152,7 +152,7 @@ describe('trigger registry', () => {
     });
 
     test('registry closing deactivates a trigger', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const space = await client.spaces.create();
       const registry = createRegistry(client);
       await registry.register(space, manifest);
@@ -176,8 +176,8 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test.only('event fired when all registered when opened', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+    test('event fired when all registered when opened', async () => {
+      const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const triggers = createTriggers(client.spaces.default, 3);
 
@@ -194,7 +194,7 @@ describe('trigger registry', () => {
     });
 
     test('event fired when a new trigger is added', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const space = await client.spaces.create();
 
@@ -210,7 +210,7 @@ describe('trigger registry', () => {
     });
 
     test('event fired when a new trigger is removed', async () => {
-      const client = (await createInitializedClients(testBuilder))[0];
+      const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
       const space = await client.spaces.create();
       const triggers = createTriggers(space, 3);

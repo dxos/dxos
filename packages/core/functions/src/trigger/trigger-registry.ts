@@ -72,7 +72,8 @@ export class TriggerRegistry extends Resource {
 
   async activate(triggerCtx: TriggerContext, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
     log('activate', { space: triggerCtx.space.key, trigger });
-    const activationCtx = new Context({ name: `trigger_${trigger.function}` });
+
+    const activationCtx = new Context({ name: `FunctionTrigger-${trigger.function}` });
     this._ctx.onDispose(() => activationCtx.dispose());
     const registeredTrigger = this._triggersBySpaceKey
       .get(triggerCtx.space.key)
@@ -97,6 +98,7 @@ export class TriggerRegistry extends Resource {
     if (!manifest.triggers?.length) {
       return;
     }
+
     if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
@@ -144,11 +146,13 @@ export class TriggerRegistry extends Resource {
     });
 
     this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
+    log.info('opened');
   }
 
   protected override async _close(_: Context): Promise<void> {
     log.info('close...');
     this._triggersBySpaceKey.clear();
+    log.info('closed');
   }
 
   private _handleNewTriggers(space: Space, allTriggers: FunctionTrigger[], registered: RegisteredTrigger[]) {
