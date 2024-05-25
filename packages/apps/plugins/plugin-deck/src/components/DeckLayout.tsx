@@ -41,7 +41,6 @@ import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
-  fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
@@ -53,6 +52,9 @@ export const NAV_ID = 'NavTree';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
+
+export const firstFullscreenId = (active: Location['active']): string | undefined =>
+  isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
 export const firstComplementaryId = (active: Location['active']): string | undefined =>
   isActiveParts(active)
@@ -226,14 +228,7 @@ const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: 
   }
 };
 
-export const DeckLayout = ({
-  fullscreen,
-  showHintsFooter,
-  toasts,
-  onDismissToast,
-  attention,
-  location,
-}: DeckLayoutProps) => {
+export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention, location }: DeckLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -256,6 +251,9 @@ export const DeckLayout = ({
   const sidebarSlug = firstSidebarId(activeParts);
   const sidebarNode = resolveNodeFromSlug(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
+  const fullScreenSlug = firstFullscreenId(activeParts);
+  const fullScreenNode = resolveNodeFromSlug(graph, fullScreenSlug);
+  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
@@ -268,9 +266,9 @@ export const DeckLayout = ({
     attended: attention.attended,
   };
 
-  return fullscreen ? (
-    <div className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} />
+  return fullScreenAvailable ? (
+    <div role='none' className={fixedInsetFlexLayout}>
+      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
     </div>
   ) : (
     <Popover.Root

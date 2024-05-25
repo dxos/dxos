@@ -2801,9 +2801,6 @@ importers:
       '@braneframe/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
-      '@braneframe/plugin-layout':
-        specifier: workspace:*
-        version: link:../plugin-layout
       '@braneframe/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
