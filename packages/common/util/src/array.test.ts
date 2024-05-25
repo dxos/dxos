@@ -3,10 +3,9 @@
 //
 
 import { expect } from 'chai';
+import { describe, test } from 'vitest';
 
-import { describe, test } from '@dxos/test';
-
-import { diff, intersection } from './util';
+import { diff, intersection } from './array';
 
 describe('diff', () => {
   test('returns the difference between two sets', () => {

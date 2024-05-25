@@ -11,7 +11,7 @@ import type { ObjectMeta } from '../types';
 export class LoggingReactiveHandler implements ReactiveHandler<any> {
   static symbolChangeLog = Symbol.for('ChangeLog');
 
-  _proxyMap = new WeakMap<object, any>();
+  readonly _proxyMap = new WeakMap<object, any>();
 
   init(target: any): void {
     target[LoggingReactiveHandler.symbolChangeLog] = [];

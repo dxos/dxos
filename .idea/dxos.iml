@@ -11,6 +11,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.swc" />
       <excludeFolder url="file://$MODULE_DIR$/packages/apps/testbench-app/.partykit" />
       <excludeFolder url="file://$MODULE_DIR$/packages/experimental/agent-functions/.swc" />
+      <excludeFolder url="file://$MODULE_DIR$/packages/devtools/cli-composer/.swc" />
       <excludePattern pattern="dist" />
       <excludePattern pattern="gen" />
       <excludePattern pattern="out" />
