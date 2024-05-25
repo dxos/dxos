@@ -6,11 +6,11 @@ import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { ECHO_ATTR_META, foreignKey, foreignKeyEquals } from '@dxos/echo-schema';
+import { compareForeignKeys, ECHO_ATTR_META, foreignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, diff, intersection } from '@dxos/util';
+import { ComplexMap, diff } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
@@ -19,12 +19,10 @@ type ResponseCode = number;
 
 export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
-export type TriggerContext = { space: Space };
-
 // TODO(burdon): Make object?
 export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   ctx: Context,
-  context: TriggerContext,
+  space: Space,
   spec: Spec,
   callback: TriggerCallback,
   options?: Options,
@@ -70,20 +68,18 @@ export class TriggerRegistry extends Resource {
     return this._getTriggers(space, (t) => t.activationCtx == null);
   }
 
-  async activate(triggerCtx: TriggerContext, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
-    log('activate', { space: triggerCtx.space.key, trigger });
+  async activate(space: Space, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
+    log('activate', { space: space.key, trigger });
 
     const activationCtx = new Context({ name: `FunctionTrigger-${trigger.function}` });
     this._ctx.onDispose(() => activationCtx.dispose());
-    const registeredTrigger = this._triggersBySpaceKey
-      .get(triggerCtx.space.key)
-      ?.find((reg) => reg.trigger.id === trigger.id);
+    const registeredTrigger = this._triggersBySpaceKey.get(space.key)?.find((reg) => reg.trigger.id === trigger.id);
     invariant(registeredTrigger, `Trigger is not registered: ${trigger.function}`);
     registeredTrigger.activationCtx = activationCtx;
 
     try {
       const options = this._options?.[trigger.spec.type];
-      await triggerHandlers[trigger.spec.type](activationCtx, triggerCtx, trigger.spec, callback, options);
+      await triggerHandlers[trigger.spec.type](activationCtx, space, trigger.spec, callback, options);
     } catch (err) {
       delete registeredTrigger.activationCtx;
       throw err;
@@ -103,9 +99,8 @@ export class TriggerRegistry extends Resource {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
-    // Create FK to enable syncing if none are set.
+    // Create FK to enable syncing if none are set (NOTE: Possible collision).
     const manifestTriggers = manifest.triggers.map((trigger) => {
-      // TODO(burdon): Warn if not unique.
       let keys = trigger[ECHO_ATTR_META]?.keys;
       delete trigger[ECHO_ATTR_META];
       if (!keys?.length) {
@@ -117,15 +112,17 @@ export class TriggerRegistry extends Resource {
 
     // Sync triggers.
     const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-    const { added } = diff(existing, manifestTriggers, (a, b) => {
-      return intersection(getMeta(a)?.keys ?? [], getMeta(b)?.keys, foreignKeyEquals).length > 0;
-    });
+    const { added } = diff(existing, manifestTriggers, compareForeignKeys);
 
     // TODO(burdon): Update existing.
     added.forEach((trigger) => {
       space.db.add(trigger);
       log.info('added', { meta: getMeta(trigger) });
     });
+
+    if (added.length > 0) {
+      await space.db.flush();
+    }
   }
 
   protected override async _open(): Promise<void> {
@@ -172,7 +169,7 @@ export class TriggerRegistry extends Resource {
     if (newTriggers.length > 0) {
       const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
-      log.info('added', () => ({
+      log.info('updated', () => ({
         spaceKey: space.key,
         triggers: newTriggers.map((trigger) => trigger.function),
       }));

@@ -4,16 +4,17 @@
 
 import { TextV0Type } from '@braneframe/types';
 import { debounce, UpdateScheduler } from '@dxos/async';
+import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription, Filter, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
+import { createSubscription, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import type { SubscriptionTrigger } from '../../types';
-import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = async (
   ctx: Context,
-  triggerCtx: TriggerContext,
+  space: Space,
   spec: SubscriptionTrigger,
   callback: TriggerCallback,
 ) => {
@@ -30,6 +31,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
     { maxFrequency: 4 },
   );
 
+  // TODO(burdon): Factor out diff.
   // TODO(burdon): Don't fire initially?
   // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
   const subscriptions: (() => void)[] = [];
@@ -52,6 +54,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
   // TODO(burdon): Disable trigger if keeps failing.
   const { filter, options: { deep, delay } = {} } = spec;
   const update = ({ objects }: Query) => {
+    log.info('update', { objects });
     subscription.update(objects);
 
     // TODO(burdon): Hack to monitor changes to Document's text object.
@@ -68,11 +71,15 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
     }
   };
 
-  // TODO(burdon): Is Filter.or implemented?
+  // TODO(burdon): OR not working.
   // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
   // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-  const query = triggerCtx.space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
-  subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
+  log.info('subscription', { filter });
+  // const query = triggerCtx.space.db.query(Filter.or(filter.map(({ type, props }) => Filter.typename(type, props))));
+  if (filter) {
+    const query = space.db.query(Filter.typename(filter[0].type, filter[0].props));
+    subscriptions.push(query.subscribe(delay ? debounce(update, delay) : update));
+  }
 
   ctx.onDispose(() => {
     subscriptions.forEach((unsubscribe) => unsubscribe());

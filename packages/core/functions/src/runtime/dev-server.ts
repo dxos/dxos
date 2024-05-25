@@ -189,8 +189,8 @@ export class DevServer {
         registrationId: this._functionServiceRegistration,
         functions: this.functions.map(({ def: { id, route } }) => ({ id, route })),
       });
-    } catch (e) {
-      log.catch(e);
+    } catch (err) {
+      log.catch(err);
     }
   }
 
@@ -212,7 +212,6 @@ export class DevServer {
   private async _invoke(path: string, event: FunctionEvent) {
     const { handler } = this._handlers[path] ?? {};
     invariant(handler, `invalid path: ${path}`);
-
     const context: FunctionContext = {
       client: this._client,
       dataDir: this._options.dataDir,

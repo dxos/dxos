@@ -5,15 +5,16 @@
 import { CronJob } from 'cron';
 
 import { DeferredTask } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import type { TimerTrigger } from '../../types';
-import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
   ctx: Context,
-  triggerContext: TriggerContext,
+  space: Space,
   spec: TimerTrigger,
   callback: TriggerCallback,
 ) => {
@@ -34,7 +35,7 @@ export const createTimerTrigger: TriggerFactory<TimerTrigger> = async (
       last = now;
 
       run++;
-      log.info('tick', { space: triggerContext.space.key.truncate(), count: run, delta });
+      log.info('tick', { space: space.key.truncate(), count: run, delta });
       task.schedule();
     },
   });

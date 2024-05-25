@@ -98,7 +98,7 @@ describe('trigger registry', () => {
       const callbackInvoked = new Trigger();
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
       const webhookTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'webhook')!;
-      await registry.activate({ space }, webhookTrigger, async () => {
+      await registry.activate(space, webhookTrigger, async () => {
         callbackInvoked.wake();
         return 200;
       });
@@ -116,7 +116,7 @@ describe('trigger registry', () => {
       await waitForInactiveTriggers(registry, space);
 
       const inactiveTrigger = registry.getInactiveTriggers(space)[0];
-      await registry.activate({ space }, inactiveTrigger, async () => 200);
+      await registry.activate(space, inactiveTrigger, async () => 200);
 
       const updatedInactiveList = registry.getInactiveTriggers(space);
       expect(updatedInactiveList.find((trigger: FunctionTrigger) => trigger.function === inactiveTrigger.function)).to
@@ -136,7 +136,7 @@ describe('trigger registry', () => {
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
       const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
       let count = 0;
-      await registry.activate({ space }, echoTrigger, async () => {
+      await registry.activate(space, echoTrigger, async () => {
         count++;
         return 200;
       });
@@ -162,7 +162,7 @@ describe('trigger registry', () => {
       const { objects: allTriggers } = await space.db.query(Filter.schema(FunctionTrigger)).run();
       const echoTrigger = allTriggers.find((trigger: FunctionTrigger) => trigger.spec.type === 'subscription')!;
       let count = 0;
-      await registry.activate({ space }, echoTrigger, async () => {
+      await registry.activate(space, echoTrigger, async () => {
         count++;
         return 200;
       });

@@ -79,7 +79,7 @@ export class Scheduler {
       return;
     }
 
-    await this.triggers.activate({ space }, fnTrigger, async (args) => {
+    await this.triggers.activate(space, fnTrigger, async (args) => {
       const mutex = this._functionUriToCallMutex.get(definition.uri) ?? new Mutex();
       this._functionUriToCallMutex.set(definition.uri, mutex);
 

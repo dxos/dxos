@@ -94,6 +94,7 @@ triggers:
       type: 'subscription'
       filter:
       - type: 'dxos.org/type/File'
+        # TODO(burdon): Second is ignored currently.
       - type: 'braneframe.Document'
       options:
         deep: true
