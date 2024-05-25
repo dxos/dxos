@@ -30,6 +30,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "date-fns": "^3.3.1",

@@ -36,7 +36,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private constructor() {}
 
   // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
-  _proxyMap = new WeakMap<object, any>();
+  readonly _proxyMap = new WeakMap<object, any>();
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);

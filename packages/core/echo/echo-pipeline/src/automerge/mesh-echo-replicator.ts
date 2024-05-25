@@ -67,8 +67,7 @@ export class MeshEchoReplicator implements EchoReplicator {
       },
       onRemoteDisconnected: async () => {
         log('onRemoteDisconnected', { peerId: connection.peerId });
-        invariant(this._context);
-        this._context.onConnectionClosed(connection);
+        this._context?.onConnectionClosed(connection);
         await connection.disable();
         this._connectionsPerPeer.delete(connection.peerId);
         this._connections.delete(connection);

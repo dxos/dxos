@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ArrowClockwise } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { Input, useTranslation } from '@dxos/react-ui';
+import { Button, Input, useTranslation } from '@dxos/react-ui';
 
 import { LAYOUT_PLUGIN } from '../meta';
 import { type LayoutSettingsProps } from '../types';
@@ -17,6 +18,15 @@ export const LayoutSettings = ({ settings }: { settings: LayoutSettingsProps }) 
 
   return (
     <>
+      <SettingsValue label={t('settings deck label')}>
+        <Input.Switch checked={settings.deck} onCheckedChange={(checked) => (settings.deck = !!checked)} />
+      </SettingsValue>
+      {settings.deck && (
+        <Button variant='ghost' classNames='p-0 gap-2' onClick={() => window.location.reload()}>
+          <ArrowClockwise />
+          <p className='text-sm font-medium'>{t('reload required message')}</p>
+        </Button>
+      )}
       <SettingsValue label={t('settings show footer label')}>
         <Input.Switch checked={settings.showFooter} onCheckedChange={(checked) => (settings.showFooter = !!checked)} />
       </SettingsValue>

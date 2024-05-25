@@ -36,14 +36,26 @@
       "meta": {
         "prompt": {
           "@type": "dxos.org/type/ChainPrompt",
-          "template": "translate the following message into japanese."
+          "template": "translate the following message into {language}\n---\n{content}",
+          "inputs": [
+            {
+              "type": 0,
+              "name": "language",
+              "value": "japanese"
+            },
+            {
+              "type": 6,
+              "name": "content",
+              "value": "object.blocks[0].content"
+            }
+          ]
         }
       },
       "spec": {
         "type": "subscription",
         "filter": [
           {
-            "type": "dxos.org/type/Message"
+            "type": "braneframe.Message"
           }
         ]
       }

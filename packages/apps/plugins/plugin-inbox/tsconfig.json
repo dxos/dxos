@@ -53,6 +53,9 @@
       "path": "../../../ui/react-ui"
     },
     {
+      "path": "../../../ui/react-ui-deck"
+    },
+    {
       "path": "../../../ui/react-ui-mosaic"
     },
     {

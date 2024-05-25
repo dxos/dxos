@@ -86,7 +86,6 @@
     "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@dxos/cli-composer": "workspace:*",
     "@oclif/test": "^3.2.15",
     "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
@@ -126,9 +125,6 @@
       "@oclif/plugin-plugins",
       "@oclif/plugin-update"
     ],
-    "devPlugins": [
-      "@dxos/cli-composer"
-    ],
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
@@ -136,16 +132,16 @@
         "description": "Manage agents."
       },
       "debug": {
-        "description": "Debugging commands."
+        "description": "Debugging tools and diagnostics."
       },
       "device": {
-        "description": "Manage devices."
+        "description": "Manage HALO devices."
       },
       "function": {
-        "description": "Manage functions and triggers."
+        "description": "Manage distributed functions and triggers."
       },
       "halo": {
-        "description": "Manage identity and devices."
+        "description": "Manage HALO identity and devices."
       },
       "space": {
         "description": "Manage ECHO Spaces."

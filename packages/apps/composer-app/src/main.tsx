@@ -101,7 +101,8 @@ const main = async () => {
     !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
-  const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
+  const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
 
   const App = createApp({
@@ -236,9 +237,7 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
-      ...(isSocket
-        ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
-        : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
+      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) } : {}),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
         namespace: appKey,
@@ -246,6 +245,7 @@ const main = async () => {
       }),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
+      ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) } : {}),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
       [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
         containerUrl: '/script-frame/index.html',
@@ -277,7 +277,8 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ...(isSocket ? [NativeMeta.id] : []),
+      ...(!isSocket && isPwa ? [PwaMeta.id] : []),
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
