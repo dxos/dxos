@@ -5,31 +5,31 @@
 import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
-import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
+import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
 import {
+  activeIds as getActiveIds,
+  type ActiveParts,
+  type Attention,
+  isActiveParts,
+  LayoutAction,
+  type Location,
+  NavigationAction,
+  type PartIdentifier,
+  SLUG_COLLECTION_INDICATOR,
+  SLUG_PATH_SEPARATOR,
   Surface,
   type Toast as ToastSchema,
-  type Location,
-  isActiveParts,
-  type ActiveParts,
-  type PartIdentifier,
-  type Attention,
-  NavigationAction,
-  LayoutAction,
   useIntent,
-  activeIds as getActiveIds,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import {
   Button,
-  Main,
-  Dialog,
-  useTranslation,
   DensityProvider,
+  Dialog,
+  Main,
   Popover,
   Status,
   toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -395,6 +395,7 @@ export const DeckLayout = ({
                       <Deck.Plank
                         key={id}
                         {...attendableAttrs}
+                        classNames='mx-2'
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
                       >
