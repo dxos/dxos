@@ -30,7 +30,7 @@ import {
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider } from '@dxos/react-ui-deck';
+import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { LayoutContext, LayoutSettings, DeckLayout, NAV_ID } from './components';
@@ -194,7 +194,7 @@ export const DeckPlugin = ({
       layout: layout.values,
       location,
       attention,
-      translations,
+      translations: [...translations, ...deckTranslations],
       graph: {
         builder: (_, graph) => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
