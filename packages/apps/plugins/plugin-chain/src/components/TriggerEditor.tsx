@@ -5,7 +5,16 @@
 import React, { useEffect, useMemo } from 'react';
 
 import { ChainPromptType } from '@braneframe/types';
-import { FunctionDef, type FunctionTrigger, type FunctionTriggerType, TriggerSpec } from '@dxos/functions/types';
+import {
+  FunctionDef,
+  type FunctionTrigger,
+  type FunctionTriggerType,
+  type TriggerSpec,
+  type TimerTrigger,
+  type SubscriptionTrigger,
+  type WebhookTrigger,
+  type WebsocketTrigger,
+} from '@dxos/functions/types';
 import { Filter, type Space, create, useQuery } from '@dxos/react-client/echo';
 import { Input, Select } from '@dxos/react-ui';
 
@@ -112,7 +121,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   );
 };
 
-const TriggerSpecSubscription = ({ spec }: { spec: TriggerSpec }) => (
+const TriggerSpecSubscription = ({ spec }: { spec: SubscriptionTrigger }) => (
   <div className='flex flex-col gap-2'>
     <Input.Root>
       <Input.Label>Filter</Input.Label>
@@ -121,7 +130,7 @@ const TriggerSpecSubscription = ({ spec }: { spec: TriggerSpec }) => (
   </div>
 );
 
-const TriggerSpecTimer = ({ spec }: { spec: TriggerSpec }) => (
+const TriggerSpecTimer = ({ spec }: { spec: TimerTrigger }) => (
   <div className='flex flex-row items-center gap-2'>
     <Input.Root>
       <Input.Label>Cron</Input.Label>
@@ -130,7 +139,7 @@ const TriggerSpecTimer = ({ spec }: { spec: TriggerSpec }) => (
   </div>
 );
 
-const TriggerSpecWebhook = ({ spec }: { spec: TriggerSpec }) => (
+const TriggerSpecWebhook = ({ spec }: { spec: WebhookTrigger }) => (
   <div className='flex flex-row items-center gap-2'>
     <Input.Root>
       <Input.Label>Method</Input.Label>
@@ -139,7 +148,7 @@ const TriggerSpecWebhook = ({ spec }: { spec: TriggerSpec }) => (
   </div>
 );
 
-const TriggerSpecWebsocket = ({ spec }: { spec: TriggerSpec }) => (
+const TriggerSpecWebsocket = ({ spec }: { spec: WebsocketTrigger }) => (
   <div className='flex flex-row items-center gap-2'>
     <Input.Root>
       <Input.Label>URL</Input.Label>
@@ -148,7 +157,9 @@ const TriggerSpecWebsocket = ({ spec }: { spec: TriggerSpec }) => (
   </div>
 );
 
-const triggerSpecComponents: { [key in FunctionTriggerType]: React.FC<{ spec: TriggerSpec }> } = {
+const triggerRenderers: {
+  [key in FunctionTriggerType]: React.ComponentType<{ spec: any }>;
+} = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,
   webhook: TriggerSpecWebhook,
@@ -156,8 +167,8 @@ const triggerSpecComponents: { [key in FunctionTriggerType]: React.FC<{ spec: Tr
 };
 
 const TriggerSpec = ({ spec }: { spec: TriggerSpec }) => {
-  const Component = triggerSpecComponents[spec.type];
-  return Component ? <Component spec={spec} /> : null;
+  const Renderer = triggerRenderers[spec.type];
+  return Renderer ? <Renderer spec={spec} /> : null;
 };
 
 const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {

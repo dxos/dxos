@@ -117,7 +117,10 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.id.substring(12) || ['object title placeholder', { ns: CHAIN_PLUGIN }],
+                            label: `trigger-${object.id.substring(0, 8)}` || [
+                              'object title placeholder',
+                              { ns: CHAIN_PLUGIN },
+                            ],
                             icon: (props: IconProps) => <WebhooksLogo {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
