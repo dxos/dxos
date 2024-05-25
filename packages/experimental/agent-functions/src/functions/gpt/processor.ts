@@ -57,6 +57,11 @@ export type RequestProcessorProps = {
   prompt?: ChainPromptType;
 };
 
+export type ProcessThreadResult = {
+  success: boolean;
+  blocks?: BlockType[];
+};
+
 export class RequestProcessor {
   constructor(
     private readonly _resources: ChainResources,
@@ -64,8 +69,12 @@ export class RequestProcessor {
   ) {}
 
   // TODO(burdon): Generalize so that we can process outside of a thread.
+<<<<<<< HEAD
   async processThread({ space, thread, message, prompt }: RequestProcessorProps): Promise<BlockType[] | undefined> {
     let blocks: BlockType[] | undefined;
+=======
+  async processThread({ space, thread, message, prompt }: ProcessThreadArgs): Promise<ProcessThreadResult> {
+>>>>>>> 20290ea25a388eaab22d903fff0b4043e5c04e9f
     const { start, stop } = this._createStatusNotifier(space, thread);
     try {
       const text = message.blocks
@@ -75,36 +84,40 @@ export class RequestProcessor {
 
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
-      const [command, content] = match ? match.slice(1) : [];
+      const [command, content] = match ? match.slice(1) : [undefined, text];
       if (prompt || command) {
         start();
         const context = await createContext(space, message, thread);
 
-        log.info('processing', { command, content });
+        log.info('processing', { command, content, context });
         const sequence = await this.createSequence(space, context, { prompt, command });
         if (sequence) {
           const response = await sequence.invoke(content);
           const result = parseMessage(response);
 
           const builder = new ResponseBuilder(space, context);
-          blocks = builder.build(result);
+          const blocks = builder.build(result);
           log.info('response', { blocks });
+          return { success: true, blocks };
         }
       }
     } catch (err) {
       // Process as error so that we don't keep processing.
       log.error('processing failed', err);
-      blocks = [
-        {
-          timestamp: new Date().toISOString(),
-          content: create(TextV0Type, { content: 'Error generating response.' }),
-        },
-      ];
+      return {
+        success: false,
+        blocks: [
+          {
+            timestamp: new Date().toISOString(),
+            content: create(TextV0Type, { content: 'Error generating response.' }),
+          },
+        ],
+      };
     } finally {
       stop();
     }
 
-    return blocks;
+    return { success: true };
   }
 
   async createSequence(
@@ -149,7 +162,7 @@ export class RequestProcessor {
   ): Promise<RunnableSequence> {
     const inputs: Record<string, any> = {};
     if (prompt.inputs?.length) {
-      for (const input of await loadObjectReferences(prompt, (prompt) => prompt.inputs)) {
+      for (const input of prompt.inputs) {
         inputs[input.name] = await this.getTemplateInput(space, input, context);
       }
     }
@@ -264,9 +277,16 @@ export class RequestProcessor {
       case ChainInputType.CONTEXT: {
         return () => {
           if (value) {
-            return value ? get(context, value) : undefined;
+            const obj = get(context, value);
+            // TODO(burdon): Hack in case returning a TextV0Type object.
+            if (obj?.content) {
+              return obj.content;
+            }
+
+            return obj;
           }
 
+          // TODO(burdon): Default?
           return context.text;
         };
       }

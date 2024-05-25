@@ -20,6 +20,7 @@ import {
   DX_CONFIG,
   DX_DATA,
   DX_RUNTIME,
+  ENV_DX_AGENT,
   ENV_DX_CONFIG,
   ENV_DX_PROFILE,
   ENV_DX_PROFILE_DEFAULT,
@@ -126,6 +127,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     'no-agent': Flags.boolean({
       description: 'Run command without using an agent.',
       default: false,
+      env: ENV_DX_AGENT,
     }),
 
     'no-start-agent': Flags.boolean({
@@ -415,6 +417,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       if (settings.debug) {
         this.log('timeout waiting for all promises to resolve, forcing exit');
       }
+
       // This is not a condition worth exiting as a failure for.
       process.exit(0);
     }, 1_000);
@@ -454,12 +457,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
         await this._client.initialize();
       } catch (err: any) {
+        // TODO(burdon): Hack.
         if (err.message.includes('401')) {
           throw new ClientInitializationError('error authenticating with remote service', err);
         }
+
         throw new ClientInitializationError('error initializing client', err);
       }
     }
+
     return this._client;
   }
 
@@ -468,9 +474,20 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   async getSpaces(
     client: Client,
-    { spaceKeys, wait = true }: { spaceKeys?: string[]; wait?: boolean } = {},
+    {
+      spaceKeys,
+      includeHalo = false,
+      wait = true,
+    }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
-    const spaces = client.spaces.get().filter((space) => !spaceKeys?.length || matchKeys(space.key, spaceKeys));
+    await client.spaces.isReady.wait();
+    const spaces = client.spaces
+      .get()
+      .filter(
+        (space) =>
+          (includeHalo || space !== client.spaces.default) && (!spaceKeys?.length || matchKeys(space.key, spaceKeys)),
+      );
+
     if (wait && !this.flags['no-wait']) {
       await Promise.all(
         spaces.map(async (space) => {
@@ -488,9 +505,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    * Get or select space.
    */
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+    await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
     if (!key) {
-      key = await selectSpace(spaces);
+      if (spaces.length === 1) {
+        key = spaces[0].key.toHex();
+      } else {
+        key = await selectSpace(spaces);
+      }
     }
 
     const space = spaces.find((space) => space.key.toHex().startsWith(key!));

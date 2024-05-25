@@ -3,8 +3,7 @@
 //
 
 import { expect } from 'chai';
-
-import { describe, test } from '@dxos/test';
+import { describe, test } from 'vitest';
 
 import { diff, intersection } from './array';
 

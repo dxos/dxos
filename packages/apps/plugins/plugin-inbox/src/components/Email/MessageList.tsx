@@ -2,11 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Archive, ArrowClockwise, Circle, Trash } from '@phosphor-icons/react';
+import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
 import React, { type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
+import { AttentionGlyph } from '@dxos/react-ui-deck';
 import { baseSurface, fixedBorder, getSize, ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { INBOX_PLUGIN } from '../../meta';
@@ -69,15 +70,14 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
         className={mx('group flex p-2 gap-1 border', fixedBorder, ghostHover, selected && styles.selected)}
         onClick={() => onSelect?.()}
       >
-        <div className='flex flex-col'>
-          <div className='flex h-8'>
-            <Button variant='ghost' onClick={() => onSelect?.()}>
-              <Circle
-                className={mx(getSize(4), selected && 'text-primary-500')}
-                weight={selected ? 'duotone' : 'regular'}
-              />
-            </Button>
-          </div>
+        <div className='flex w-8 h-8 justify-center items-center'>
+          {selected && (
+            <ul>
+              <li {...{ 'data-attention': 'true' }}>
+                <AttentionGlyph presence='none' />
+              </li>
+            </ul>
+          )}
         </div>
 
         <div className='flex flex-col is-full overflow-hidden'>

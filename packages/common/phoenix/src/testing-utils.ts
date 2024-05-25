@@ -4,8 +4,6 @@
 
 import { existsSync, mkdirSync, unlinkSync } from 'node:fs';
 
-import { log } from '@dxos/log';
-
 export const TEST_DIR = '/tmp/dxos/testing/phoenix';
 
 if (!existsSync(TEST_DIR)) {
@@ -13,7 +11,8 @@ if (!existsSync(TEST_DIR)) {
 }
 
 export const neverEndingProcess = () => {
-  log.info('neverEndingProcess started');
+  // eslint-disable-next-line no-console
+  console.log(`neverEndingProcess started ${1}`);
   setTimeout(() => {}, 1_000_000);
 };
 

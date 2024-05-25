@@ -11,12 +11,13 @@ import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
-import { TestBuilder, type TestPeer } from '../testing';
+import { TestBuilder, TestPeer } from '../testing';
 
 describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
@@ -319,6 +320,21 @@ describe('AutomergeDb', () => {
         threw = true;
       }
       expect(threw).to.be.true;
+    });
+
+    describe('getAllObjectIds', () => {
+      test('returns empty array when closed', async () => {
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
+        const peer = new TestPeer(testBuilder, PublicKey.random(), testBuilder.defaultSpaceKey, fakeUrl);
+        const automergeDb = peer.db.automerge;
+        expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
+        void automergeDb.open({ rootUrl: fakeUrl });
+        const barrier = new Trigger();
+        setTimeout(() => barrier.wake());
+        await barrier.wait();
+        expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
+      });
     });
 
     describe('loadObjectReferences', () => {

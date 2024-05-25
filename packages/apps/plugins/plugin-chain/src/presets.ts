@@ -63,7 +63,6 @@ export const presets = [
           {
             type: ChainInputType.CONTEXT,
             name: 'history',
-            // TODO(burdon): Get from Deck?
             value: 'object.pgn',
           },
         ],

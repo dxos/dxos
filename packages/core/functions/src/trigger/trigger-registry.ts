@@ -177,7 +177,6 @@ export class TriggerRegistry extends Resource {
       const wasRemoved =
         allTriggers.find((trigger: FunctionTrigger) => trigger.id === registered[i].trigger.id) == null;
       if (wasRemoved) {
-        // TODO(burdon): Emit event?
         if (removed.length) {
           log.info('removed', () => ({
             spaceKey: space.key,
