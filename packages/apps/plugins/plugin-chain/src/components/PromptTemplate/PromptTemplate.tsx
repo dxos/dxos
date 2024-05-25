@@ -5,6 +5,7 @@
 import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { type S } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -98,9 +99,9 @@ const usePromptInputs = (prompt: ChainPromptType) => {
   }, [prompt.template]);
 };
 
-type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean };
+type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean; schema?: S.Schema<any, any, any> };
 
-export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplateProps) => {
+export const PromptTemplate = ({ prompt, commandEditable = true, schema }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
