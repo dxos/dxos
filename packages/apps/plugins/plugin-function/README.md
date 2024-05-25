@@ -1,6 +1,6 @@
 # @braneframe/plugin-function
 
-Prompt Function.
+Distributed Functions.
 
 ## DXOS Resources
 

@@ -4,6 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
+import { PromptTemplate } from '@braneframe/plugin-chain';
 import { ChainPromptType } from '@braneframe/types';
 import {
   FunctionDef,
@@ -17,8 +18,6 @@ import {
 } from '@dxos/functions/types';
 import { create, Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
-
-import { PromptTemplate } from './PromptTemplate';
 
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 

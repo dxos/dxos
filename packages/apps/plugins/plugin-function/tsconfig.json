@@ -62,6 +62,9 @@
       "path": "../../types"
     },
     {
+      "path": "../plugin-chain"
+    },
+    {
       "path": "../plugin-client"
     },
     {

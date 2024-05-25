@@ -20,7 +20,7 @@ const functions: Omit<FunctionDef, 'id'>[] = [
     uri: 'dxos.org/function/email-worker',
     route: '/email-worker',
     handler: 'email-worker',
-    description: 'Email Sync with Cloudflare Worker',
+    description: 'Email Sync',
   },
   {
     uri: 'dxos.org/function/gpt',

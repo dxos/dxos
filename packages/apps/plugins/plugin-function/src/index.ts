@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-// import { ChainPlugin } from './ChainPlugin';
+import { FunctionPlugin } from './FunctionPlugin';
 
-// export default ChainPlugin;
+export default FunctionPlugin;
 
-// export * from './ChainPlugin';
+export * from './FunctionPlugin';

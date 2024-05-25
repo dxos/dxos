@@ -538,6 +538,9 @@ importers:
       '@braneframe/plugin-files':
         specifier: workspace:*
         version: link:../plugins/plugin-files
+      '@braneframe/plugin-function':
+        specifier: workspace:*
+        version: link:../plugins/plugin-function
       '@braneframe/plugin-github':
         specifier: workspace:*
         version: link:../plugins/plugin-github
@@ -1486,6 +1489,9 @@ importers:
 
   packages/apps/plugins/plugin-function:
     dependencies:
+      '@braneframe/plugin-chain':
+        specifier: workspace:*
+        version: link:../plugin-chain
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

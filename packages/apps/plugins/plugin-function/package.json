@@ -1,7 +1,7 @@
 {
   "name": "@braneframe/plugin-function",
   "version": "0.5.2",
-  "description": "Prompt function plugin",
+  "description": "Functions plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-chain": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
     "@braneframe/types": "workspace:*",

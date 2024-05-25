@@ -11,14 +11,13 @@ import { TriggerEditor } from './TriggerEditor';
 
 const TriggerArticle: FC<{ trigger: FunctionTrigger }> = ({ trigger }) => {
   const space = getSpace(trigger);
-
   if (!space) {
     return null;
   }
 
   return (
-    <div role='none' className={'row-span-2 pli-2'}>
-      <TriggerEditor trigger={trigger} space={space} />
+    <div role='none' className='row-span-2 pli-2'>
+      <TriggerEditor space={space} trigger={trigger} />
     </div>
   );
 };

@@ -7,3 +7,4 @@ import { ChainPlugin } from './ChainPlugin';
 export default ChainPlugin;
 
 export * from './ChainPlugin';
+export * from './components';

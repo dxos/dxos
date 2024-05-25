@@ -21,6 +21,7 @@
     "@braneframe/plugin-deck": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
+    "@braneframe/plugin-function": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-gpt": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
