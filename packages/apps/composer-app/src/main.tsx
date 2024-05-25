@@ -54,6 +54,7 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
 
 import './globals';
@@ -66,6 +67,8 @@ import { steps } from './help';
 import translations from './translations';
 
 const main = async () => {
+  TRACE_PROCESSOR.setInstanceTag('app');
+
   registerSignalRuntime();
 
   let config = await setupConfig();

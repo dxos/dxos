@@ -32,6 +32,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/tracing"
+    },
+    {
       "path": "../../common/util"
     },
     {

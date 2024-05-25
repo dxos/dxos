@@ -68,6 +68,7 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/web-auth": "^0.4.62",
     "isomorphic-fetch": "^3.0.0",
