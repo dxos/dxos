@@ -304,7 +304,6 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
-              console.log('[open]', intent.data);
               batch(() => {
                 if (intent.data) {
                   const nextActiveParts =
@@ -350,7 +349,6 @@ export const DeckPlugin = ({
                   ) {
                     layout.values.complementarySidebarOpen = true;
                   }
-                  console.log('[active parts]', nextActiveParts);
                   location.active = nextActiveParts;
                 }
               });
@@ -422,7 +420,6 @@ export const DeckPlugin = ({
               batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
