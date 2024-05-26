@@ -15,6 +15,7 @@
       <w>collab</w>
       <w>containerd</w>
       <w>crdt</w>
+      <w>crossorigin</w>
       <w>ctors</w>
       <w>delimitered</w>
       <w>demuxer</w>
@@ -90,10 +91,12 @@
       <w>permissionless</w>
       <w>personalizations</w>
       <w>postbuild</w>
+      <w>preconnect</w>
       <w>prefs</w>
       <w>pricings</w>
       <w>protos</w>
       <w>proxied</w>
+      <w>raleway</w>
       <w>rehype</w>
       <w>reopenable</w>
       <w>repurposable</w>
