@@ -46,6 +46,17 @@ export type DeckLayoutProps = {
   onDismissToast: (id: string) => void;
   location: Location;
   attention: Attention;
+  slots?: {
+    wallpaper?: {
+      classNames?: string;
+    };
+    deck?: {
+      classNames?: string;
+    };
+    plank?: {
+      classNames?: string;
+    };
+  };
 };
 
 export const NAV_ID = 'NavTree';
@@ -228,7 +239,14 @@ const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: 
   }
 };
 
-export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention, location }: DeckLayoutProps) => {
+export const DeckLayout = ({
+  showHintsFooter,
+  toasts,
+  onDismissToast,
+  attention,
+  location,
+  slots,
+}: DeckLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -386,7 +404,10 @@ export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention,
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              <Deck.Root classNames='absolute inset-0'>
+              {slots?.wallpaper?.classNames && (
+                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
+              )}
+              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
                 {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
                   .filter(Boolean)
                   .map((id, index, main) => {
@@ -397,7 +418,7 @@ export const DeckLayout = ({ showHintsFooter, toasts, onDismissToast, attention,
                       <Deck.Plank
                         key={id}
                         {...attendableAttrs}
-                        classNames='mx-2'
+                        classNames={slots?.plank?.classNames}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
                       >

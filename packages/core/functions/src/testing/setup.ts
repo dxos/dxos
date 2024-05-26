@@ -10,16 +10,16 @@ import { range } from '@dxos/util';
 import { TestType } from './types';
 import { FunctionDef, FunctionTrigger } from '../types';
 
-// TODO(burdon): Create new or extend existing TestBuilder.
+// TODO(burdon): Extend/wrap TestBuilder.
 
 export const createInitializedClients = async (testBuilder: TestBuilder, count: number = 1, config?: Config) => {
   const clients = range(count).map(() => new Client({ config, services: testBuilder.createLocalClientServices() }));
-  testBuilder.ctx.onDispose(() => Promise.all(clients.map((c) => c.destroy())));
+  testBuilder.ctx.onDispose(() => Promise.all(clients.map((client) => client.destroy())));
   return Promise.all(
     clients.map(async (client, index) => {
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
-      client.addSchema(TestType, FunctionDef, FunctionTrigger);
+      client.addSchema(FunctionDef, FunctionTrigger, TestType);
       return client;
     }),
   );
@@ -34,12 +34,10 @@ export const createFunctionRuntime = async (testBuilder: TestBuilder): Promise<C
     },
   });
 
-  const client = (await createInitializedClients(testBuilder, 1, config))[0];
-
-  // TODO(burdon): Better way to configure plugin? (Rationalize chess.test).
-  const functionsPlugin = new FunctionsPlugin();
-  await functionsPlugin.initialize({ client, clientServices: client.services });
-  await functionsPlugin.open();
-  testBuilder.ctx.onDispose(() => functionsPlugin.close());
+  const [client] = await createInitializedClients(testBuilder, 1, config);
+  const plugin = new FunctionsPlugin();
+  await plugin.initialize({ client, clientServices: client.services });
+  await plugin.open();
+  testBuilder.ctx.onDispose(() => plugin.close());
   return client;
 };

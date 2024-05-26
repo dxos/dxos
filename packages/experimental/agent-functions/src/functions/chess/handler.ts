@@ -11,11 +11,7 @@ import { registerTypes } from '../../util';
 type Meta = { level?: number };
 
 export const handler = subscriptionHandler<Meta>(async ({ event }) => {
-  const {
-    meta: { level = 1 },
-    space,
-    objects,
-  } = event.data;
+  const { meta: { level = 1 } = {}, space, objects } = event.data;
   invariant(space);
   registerTypes(space);
 

@@ -5,15 +5,16 @@
 import { getPort } from 'get-port-please';
 import http from 'node:http';
 
+import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import type { WebhookTrigger } from '../../types';
-import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 export const createWebhookTrigger: TriggerFactory<WebhookTrigger> = async (
   ctx: Context,
-  _: TriggerContext,
+  space: Space,
   spec: WebhookTrigger,
   callback: TriggerCallback,
 ) => {

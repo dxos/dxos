@@ -1516,6 +1516,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../../common/async
+      '@dxos/chess-app':
+        specifier: workspace:*
+        version: link:../../../experimental/chess-app
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema

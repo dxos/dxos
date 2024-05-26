@@ -462,6 +462,7 @@ export class Client {
       return;
     }
 
+    // TODO(burdon): Call flush?
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();

@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type DocumentId, type AutomergeUrl, type Repo } from '@dxos/automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { AutomergeHost, DataServiceImpl, type EchoReplicator, MeshEchoReplicator } from '@dxos/echo-pipeline';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
+import { Indexer, IndexMetadataStore, IndexStore } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -156,7 +156,6 @@ export class EchoHost extends Resource {
    */
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-
     const automergeRoot = this._automergeHost.repo.create();
     automergeRoot.change((doc: any) => {
       doc.access = { spaceKey: spaceKey.toHex() };
@@ -164,16 +163,14 @@ export class EchoHost extends Resource {
 
     await this._automergeHost.repo.flush([automergeRoot.documentId]);
 
-    const root = await this.openSpaceRoot(automergeRoot.url);
-
-    return root;
+    return await this.openSpaceRoot(automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
   async openSpaceRoot(automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
-    invariant(!this._roots.has(handle.documentId), 'Root already exists');
+    invariant(!this._roots.has(handle.documentId), 'Root document already exists.');
     const root = new DatabaseRoot(handle);
     this._roots.set(handle.documentId, root);
     return root;

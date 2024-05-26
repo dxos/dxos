@@ -5,7 +5,8 @@
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { DocumentType, FileType, MessageType, SketchType, StackType, type ChainPromptType } from '@braneframe/types';
+import { type ChainPromptType, DocumentType, FileType, MessageType, SketchType, StackType } from '@braneframe/types';
+import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {
   FunctionDef,
@@ -19,12 +20,20 @@ import {
 } from '@dxos/functions/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
-import { distinctBy } from '@dxos/util';
+import { distinctBy, safeParseInt } from '@dxos/util';
 
 type TriggerId = string;
 
 const stateInitialValues = {
-  schemas: [StackType, SketchType, DocumentType, FileType, MessageType] as any[],
+  schemas: [
+    // TODO(burdon): Get all schema from API.
+    DocumentType,
+    FileType,
+    GameType,
+    MessageType,
+    SketchType,
+    StackType,
+  ] as any[],
   selectedSchema: {} as Record<TriggerId, any>,
 };
 
@@ -33,18 +42,15 @@ const state = create<typeof stateInitialValues>(stateInitialValues);
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
-  const functions = useQuery(space, Filter.schema(FunctionDef));
-  const linkedFunction = useMemo(
-    () => functions.find((fn) => fn.uri === trigger.function),
-    [trigger.function, functions],
-  );
+  const query = useQuery(space, Filter.schema(FunctionDef));
+  const fn = useMemo(() => query.find((fn) => fn.uri === trigger.function), [trigger.function, query]);
 
   useEffect(() => {
     void space.db.schemaRegistry
       .getAll()
       .then((schemas) => {
         // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
-        state.schemas = distinctBy([...state.schemas, ...schemas], (s) => s.typename).sort((a, b) =>
+        state.schemas = distinctBy([...state.schemas, ...schemas], (schema) => schema.typename).sort((a, b) =>
           a.typename < b.typename ? -1 : 1,
         );
       })
@@ -63,17 +69,20 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         }
       }
     }
+    // TODO(burdon): API issue.
   }, [JSON.stringify(trigger.spec), state.schemas]);
 
   useEffect(() => {
     if (!trigger.meta) {
       const extension = metaExtensions[trigger.function];
-      extension?.initialValue && (trigger.meta = extension.initialValue());
+      if (extension?.initialValue) {
+        trigger.meta = extension.initialValue();
+      }
     }
   }, [trigger.function, trigger.meta]);
 
   const handleSelectFunction = (value: string) => {
-    const match = functions.find((fn) => fn.uri === value);
+    const match = query.find((fn) => fn.uri === value);
     if (match) {
       trigger.function = match.uri;
     }
@@ -94,7 +103,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         break;
       }
       case 'websocket': {
-        // TODO(burdon): Currently mail worker specific.
+        // TODO(burdon): The `init` property is currently mail worker specific.
         trigger.spec = { type: 'websocket', url: '', init: { type: 'sync' } };
         break;
       }
@@ -107,12 +116,12 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         <table className='is-full table-fixed'>
           <tbody>
             <InputRow label='Function'>
-              <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
+              <Select.Root value={fn?.uri} onValueChange={handleSelectFunction}>
                 <Select.TriggerButton placeholder={'Select function'} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {functions.map(({ id, uri }) => (
+                      {query.map(({ id, uri }) => (
                         <Select.Option key={id} value={uri}>
                           {uri}
                         </Select.Option>
@@ -123,9 +132,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
             <InputRow>
-              <div className='px-2'>
-                {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
-              </div>
+              <div className='px-2'>{fn && <p className='text-sm fg-description'>{fn.description}</p>}</div>
             </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>
@@ -305,6 +312,23 @@ type MetaExtension<T> = {
   component: FC<MetaProps<T>>;
 };
 
+// TODO(burdon): Possible to build form from function meta schema.
+
+const ChessMeta = ({ meta }: MetaProps<{ level?: number }>) => {
+  return (
+    <>
+      <InputRow label='Level'>
+        <Input.TextInput
+          type='number'
+          value={meta.level ?? 1}
+          onChange={(event) => (meta.level = safeParseInt(event.target.value))}
+          placeholder='AI level.'
+        />
+      </InputRow>
+    </>
+  );
+};
+
 const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
   return (
     <>
@@ -321,7 +345,6 @@ const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
 
 const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptType }>) => {
   const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
-
   return (
     <>
       <InputRow label='Presets'>
@@ -337,6 +360,11 @@ const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptTy
 };
 
 const metaExtensions: Record<string, MetaExtension<any>> = {
+  'dxos.org/function/chess': {
+    initialValue: () => ({ level: 2 }),
+    component: ChessMeta,
+  },
+
   'dxos.org/function/email-worker': {
     initialValue: () => ({ account: 'hello@dxos.network' }),
     component: EmailWorkerMeta,
