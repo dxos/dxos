@@ -82,7 +82,6 @@ export const RevealPlayer = ({ content, onExit }: RevealProps) => {
 
       await deckRef.current.initialize();
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
-        console.log(deckRef.current?.getState());
         onExit?.();
       });
     });
