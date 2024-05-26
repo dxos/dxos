@@ -5,7 +5,13 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { type StackType } from '@braneframe/types';
-import { Surface, useIntent, useResolvePlugin, parseLayoutPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  Surface,
+  useIntentDispatcher,
+  useResolvePlugin,
+  parseLayoutPlugin,
+  NavigationAction,
+} from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -21,17 +27,15 @@ import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
 const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
-
   const sections = stack.sections.filter(Boolean).filter((section) => !!section?.object);
 
   // TODO(burdon): Should not depend on split screen.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const fullscreen = layoutPlugin?.provides.layout.fullscreen;
-
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const handleSetRunning = (running: boolean) => {
     void dispatch([
       {
@@ -39,9 +43,14 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
-      ...(!running
-        ? [{ action: NavigationAction.CLOSE, data: { activeParts: { fullScreen: fullyQualifiedId(stack) } } }]
-        : []),
+      ...(running
+        ? []
+        : [
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: fullyQualifiedId(stack) } },
+            },
+          ]),
     ]);
   };
 
