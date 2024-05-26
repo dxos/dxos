@@ -9,6 +9,8 @@ import get from 'lodash.get';
 import { describe, test } from '@dxos/test';
 
 import { SchemaValidator } from './schema-validator';
+import { create } from '../handler';
+import { TypedObject } from '../typed-object-class';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -126,6 +128,41 @@ describe('schema-validator', () => {
         path: ['field', 'nested'],
         valueToAssign: { any: 'value' },
       });
+    });
+
+    test('record', () => {
+      const schema = S.mutable(
+        S.struct({
+          meta: S.optional(S.mutable(S.record(S.string, S.any))),
+        }),
+      );
+
+      {
+        const object = create(schema, {});
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
+
+      {
+        type Test1 = S.Schema.Type<typeof schema>;
+
+        const object: Test1 = {};
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
+
+      {
+        class Test2 extends TypedObject({
+          typename: 'dxos.org/type/FunctionTrigger',
+          version: '0.1.0',
+        })({
+          meta: S.optional(S.mutable(S.record(S.string, S.any))),
+        }) {}
+
+        const object = create(Test2, {});
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
     });
 
     test('index signatures', () => {

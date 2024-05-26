@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren, useEffect } from 'react';
 
-import { type ChainInput, ChainInputSchema, ChainInputType, type ChainPromptType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
+import { type ChainInput, ChainInputType, type ChainPromptType } from '@braneframe/types';
+import { type S } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
@@ -58,8 +58,8 @@ const inputTypes = [
 const getInputType = (type: string) => inputTypes.find(({ value }) => String(value) === type)?.value;
 
 const usePromptInputs = (prompt: ChainPromptType) => {
-  const text = prompt.template ?? '';
   useEffect(() => {
+    const text = prompt.template ?? '';
     if (!prompt.inputs) {
       prompt.inputs = []; // TODO(burdon): Required?
     }
@@ -87,7 +87,7 @@ const usePromptInputs = (prompt: ChainPromptType) => {
       if (next) {
         next.name = name;
       } else {
-        prompt.inputs?.push(create(ChainInputSchema, { name }));
+        prompt.inputs?.push({ name });
       }
     });
 
@@ -96,14 +96,12 @@ const usePromptInputs = (prompt: ChainPromptType) => {
     for (const input of values) {
       prompt.inputs.splice(prompt.inputs.indexOf(input), 1);
     }
-  }, [text]);
+  }, [prompt.template]);
 };
 
-type PromptTemplateProps = {
-  prompt: ChainPromptType;
-};
+type PromptTemplateProps = { prompt: ChainPromptType; commandEditable?: boolean; schema?: S.Schema<any, any, any> };
 
-export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
+export const PromptTemplate = ({ prompt, commandEditable = true }: PromptTemplateProps) => {
   const { t } = useTranslation(CHAIN_PLUGIN);
   const { themeMode } = useThemeContext();
 
@@ -113,7 +111,7 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
       extensions: [
         createDataExtensions({
           id: prompt.id,
-          text: prompt.template ? createDocAccessor(prompt, ['template']) : undefined,
+          text: prompt.template !== undefined ? createDocAccessor(prompt, ['template']) : undefined,
         }),
         createBasicExtensions({
           bracketMatching: false,
@@ -131,40 +129,46 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
     }),
     [themeMode, prompt],
   );
+
   usePromptInputs(prompt);
 
   return (
     <DensityProvider density='fine'>
       <div className={mx('flex flex-col w-full overflow-hidden gap-4', groupBorder)}>
-        <Section title='Prompt'>
-          <div className='flex items-center pl-4'>
-            <span className='text-neutral-500'>/</span>
-            <Input.Root>
-              <Input.TextInput
-                placeholder={t('command placeholder')}
-                classNames={mx('is-full bg-transparent m-2')}
-                value={prompt.command ?? ''}
-                onChange={(event) => {
-                  prompt.command = event.target.value.replace(/\W/g, '');
-                }}
-              />
-            </Input.Root>
-          </div>
-        </Section>
+        {commandEditable && (
+          <Section title='Command'>
+            <div className='flex items-center pl-4'>
+              <span className='text-neutral-500'>/</span>
+              <Input.Root>
+                <Input.TextInput
+                  placeholder={t('command placeholder')}
+                  classNames={mx('is-full bg-transparent m-2')}
+                  value={prompt.command ?? ''}
+                  onChange={(event) => {
+                    prompt.command = event.target.value.replace(/\w/g, '');
+                  }}
+                />
+              </Input.Root>
+            </div>
+          </Section>
+        )}
 
         <Section title='Template'>
-          <div ref={parentRef} className={attentionSurface} />
+          <div ref={parentRef} className={mx(attentionSurface, 'rounded', 'min-h-[120px]')} />
         </Section>
 
         {(prompt.inputs?.length ?? 0) > 0 && (
           <Section title='Inputs'>
-            <div className='flex flex-col divide-y'>
-              <table className='table-fixed border-collapse'>
+            <div className='flex flex-col'>
+              {/* TODO(Zan): Improve layout with grid */}
+              <table className='w-full table-fixed border-collapse my-2'>
                 <tbody>
                   {prompt.inputs?.filter(nonNullable).map((input) => (
                     <tr key={input.name}>
-                      <td className='px-3 py-1.5 w-[200px] font-mono text-sm'>{input.name}</td>
-                      <td className='px-3 py-1.5 w-[160px]'>
+                      <td className='w-[160px] p-1 font-mono text-sm whitespace-nowrap truncate'>
+                        <code className='px-2'>{input.name}</code>
+                      </td>
+                      <td className='w-[120px] p-1'>
                         <Input.Root>
                           <Select.Root
                             value={String(input.type)}
@@ -187,24 +191,26 @@ export const PromptTemplate = ({ prompt }: PromptTemplateProps) => {
                           </Select.Root>
                         </Input.Root>
                       </td>
-                      <td className='px-3'>
-                        {input.type &&
+                      <td className='p-1 pr-2'>
+                        {input.type !== undefined &&
                           [
                             ChainInputType.VALUE,
                             ChainInputType.CONTEXT,
                             ChainInputType.RESOLVER,
                             ChainInputType.SCHEMA,
                           ].includes(input.type) && (
-                            <Input.Root>
-                              <Input.TextInput
-                                placeholder={t('command placeholder')}
-                                classNames={mx('is-full bg-transparent m-2')}
-                                value={input.value ?? ''}
-                                onChange={(event) => {
-                                  input.value = event.target.value;
-                                }}
-                              />
-                            </Input.Root>
+                            <div>
+                              <Input.Root>
+                                <Input.TextInput
+                                  placeholder={t('command placeholder')}
+                                  classNames={mx('is-full bg-transparent')}
+                                  value={input.value ?? ''}
+                                  onChange={(event) => {
+                                    input.value = event.target.value;
+                                  }}
+                                />
+                              </Input.Root>
+                            </div>
                           )}
                       </td>
                     </tr>

@@ -46,6 +46,7 @@ export class DevServer {
     private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
   ) {
+    // TODO(burdon): Add/remove listener in start/stop.
     this._functionsRegistry.registered.on(async ({ added }) => {
       added.forEach((def) => this._load(def));
       await this._safeUpdateRegistration();
@@ -188,8 +189,8 @@ export class DevServer {
         registrationId: this._functionServiceRegistration,
         functions: this.functions.map(({ def: { id, route } }) => ({ id, route })),
       });
-    } catch (e) {
-      log.catch(e);
+    } catch (err) {
+      log.catch(err);
     }
   }
 
@@ -211,7 +212,6 @@ export class DevServer {
   private async _invoke(path: string, event: FunctionEvent) {
     const { handler } = this._handlers[path] ?? {};
     invariant(handler, `invalid path: ${path}`);
-
     const context: FunctionContext = {
       client: this._client,
       dataDir: this._options.dataDir,

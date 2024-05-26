@@ -544,6 +544,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       }
 
       const value = await callback({ client, space });
+      await space.db.flush();
       if (value) {
         values.push(value);
       }

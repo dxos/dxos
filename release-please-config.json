@@ -69,6 +69,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-function/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },

@@ -1,0 +1,80 @@
+{
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
+  "compilerOptions": {
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "outDir": "dist/types",
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "*.t.ts",
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/random"
+    },
+    {
+      "path": "../../../common/util"
+    },
+    {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
+      "path": "../../../core/functions"
+    },
+    {
+      "path": "../../../experimental/chess-app"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/react-client"
+    },
+    {
+      "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-editor"
+    },
+    {
+      "path": "../../../ui/react-ui-theme"
+    },
+    {
+      "path": "../../../ui/storybook-utils"
+    },
+    {
+      "path": "../../types"
+    },
+    {
+      "path": "../plugin-chain"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
+    }
+  ]
+}

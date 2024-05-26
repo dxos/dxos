@@ -222,9 +222,10 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(s));
-    if (notRegistered.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+    // TODO(burdon): Find?
+    const exists = schemaList.filter((schema) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(schema));
+    if (exists.length > 0) {
+      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...exists);
     }
 
     return this;
@@ -461,6 +462,7 @@ export class Client {
       return;
     }
 
+    // TODO(burdon): Call flush?
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();

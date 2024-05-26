@@ -8,32 +8,32 @@ import React, { type PropsWithChildren } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
-  parseGraphPlugin,
-  parseIntentPlugin,
-  resolvePlugin,
-  LayoutAction,
-  NavigationAction,
-  type IntentResult,
-  Toast as ToastSchema,
-  type IntentPluginProvides,
-  type Plugin,
-  type PluginDefinition,
-  type GraphProvides,
-  type Layout,
-  type Location,
-  type Attention,
   type ActiveParts,
+  type Attention,
+  type GraphProvides,
   IntentAction,
+  type IntentPluginProvides,
+  type IntentResult,
   isActiveParts,
   isAdjustTransaction,
+  type Layout,
+  LayoutAction,
+  type Location,
+  NavigationAction,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  type Plugin,
+  type PluginDefinition,
+  resolvePlugin,
+  Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider } from '@dxos/react-ui-deck';
+import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, LayoutSettings, DeckLayout, NAV_ID } from './components';
+import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
@@ -41,8 +41,23 @@ import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
 const isSocket = !!(globalThis as any).__args;
+
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
+
+// TODO(burdon): Evolve into customizable prefs, but pls leave for demo.
+const customSlots: DeckLayoutProps['slots'] = {
+  wallpaper: {
+    classNames:
+      'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
+  },
+  deck: {
+    classNames: 'px-96 bg-neutral-50 __dark:bg-neutral-950 dark:bg-transparent dark:opacity-95',
+  },
+  plank: {
+    classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
+  },
+};
 
 export const DeckPlugin = ({
   observability,
@@ -57,6 +72,7 @@ export const DeckPlugin = ({
 
   const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
+    customSlots: false,
     enableNativeRedirect: false,
     deck: true,
   });
@@ -147,6 +163,7 @@ export const DeckPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
+        .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
         .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
@@ -194,7 +211,7 @@ export const DeckPlugin = ({
       layout: layout.values,
       location,
       attention,
-      translations,
+      translations: [...translations, ...deckTranslations],
       graph: {
         builder: (_, graph) => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
@@ -237,8 +254,8 @@ export const DeckPlugin = ({
             <DeckLayout
               attention={attention}
               location={location}
-              fullscreen={layout.values.fullscreen}
               showHintsFooter={settings.values.showFooter}
+              slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
                 const index = layout.values.toasts.findIndex((toast) => toast.id === id);
@@ -421,7 +438,6 @@ export const DeckPlugin = ({
               batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });

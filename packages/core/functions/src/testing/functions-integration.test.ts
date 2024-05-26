@@ -44,6 +44,7 @@ describe('functions e2e', () => {
     space.db.add(
       create(FunctionTrigger, {
         function: uri,
+        enabled: true,
         meta: triggerMeta,
         spec: {
           type: 'subscription',

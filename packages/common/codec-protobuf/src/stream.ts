@@ -5,7 +5,7 @@
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type MaybePromise } from '@dxos/util';
+import { throwUnhandledError, type MaybePromise } from '@dxos/util';
 
 type Callbacks<T> = {
   ctx: Context;
@@ -215,7 +215,7 @@ export class Stream<T> {
               this._messageHandler(msg);
             } catch (err: any) {
               // Stop error propagation.
-              throwUnhandledRejection(err);
+              throwUnhandledError(err);
             }
           } else {
             invariant(this._buffer);
@@ -235,7 +235,7 @@ export class Stream<T> {
             this._closeHandler?.(err);
           } catch (err: any) {
             // Stop error propagation.
-            throwUnhandledRejection(err);
+            throwUnhandledError(err);
           }
           void this._ctx.dispose();
         },
@@ -268,7 +268,7 @@ export class Stream<T> {
         onMessage(message);
       } catch (err: any) {
         // Stop error propagation.
-        throwUnhandledRejection(err);
+        throwUnhandledError(err);
       }
     }
 
@@ -322,18 +322,3 @@ export class Stream<T> {
     this._producerCleanup = undefined;
   }
 }
-
-/**
- * Asynchronously produces an unhandled rejection.
- *
- * Will terminate the node process with an error.
- * In browser results in an error message in the console.
- * In mocha tests it fails the currently running test.
- *
- * NOTE: Copied from @dxos/debug to avoid circular dependency.
- */
-const throwUnhandledRejection = (error: Error) => {
-  setTimeout(() => {
-    throw error;
-  });
-};

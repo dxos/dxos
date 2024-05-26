@@ -6,11 +6,11 @@ import { Event } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { create, Filter, getMeta, type Space } from '@dxos/client/echo';
 import { Context, Resource } from '@dxos/context';
-import { ECHO_ATTR_META, foreignKey, foreignKeyEquals, splitMeta } from '@dxos/echo-schema';
+import { compareForeignKeys, ECHO_ATTR_META, foreignKey } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ComplexMap, diff, intersection } from '@dxos/util';
+import { ComplexMap, diff } from '@dxos/util';
 
 import { createSubscriptionTrigger, createTimerTrigger, createWebhookTrigger, createWebsocketTrigger } from './type';
 import { type FunctionManifest, FunctionTrigger, type FunctionTriggerType, type TriggerSpec } from '../types';
@@ -19,12 +19,10 @@ type ResponseCode = number;
 
 export type TriggerCallback = (args: object) => Promise<ResponseCode>;
 
-export type TriggerContext = { space: Space };
-
 // TODO(burdon): Make object?
 export type TriggerFactory<Spec extends TriggerSpec, Options = any> = (
   ctx: Context,
-  context: TriggerContext,
+  space: Space,
   spec: Spec,
   callback: TriggerCallback,
   options?: Options,
@@ -70,19 +68,18 @@ export class TriggerRegistry extends Resource {
     return this._getTriggers(space, (t) => t.activationCtx == null);
   }
 
-  async activate(triggerCtx: TriggerContext, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
-    log('activate', { space: triggerCtx.space.key, trigger });
-    const activationCtx = new Context({ name: `trigger_${trigger.function}` });
+  async activate(space: Space, trigger: FunctionTrigger, callback: TriggerCallback): Promise<void> {
+    log('activate', { space: space.key, trigger });
+
+    const activationCtx = new Context({ name: `FunctionTrigger-${trigger.function}` });
     this._ctx.onDispose(() => activationCtx.dispose());
-    const registeredTrigger = this._triggersBySpaceKey
-      .get(triggerCtx.space.key)
-      ?.find((reg) => reg.trigger.id === trigger.id);
+    const registeredTrigger = this._triggersBySpaceKey.get(space.key)?.find((reg) => reg.trigger.id === trigger.id);
     invariant(registeredTrigger, `Trigger is not registered: ${trigger.function}`);
     registeredTrigger.activationCtx = activationCtx;
 
     try {
       const options = this._options?.[trigger.spec.type];
-      await triggerHandlers[trigger.spec.type](activationCtx, triggerCtx, trigger.spec, callback, options);
+      await triggerHandlers[trigger.spec.type](activationCtx, space, trigger.spec, callback, options);
     } catch (err) {
       delete registeredTrigger.activationCtx;
       throw err;
@@ -97,24 +94,35 @@ export class TriggerRegistry extends Resource {
     if (!manifest.triggers?.length) {
       return;
     }
+
     if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
       space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
     }
 
+    // Create FK to enable syncing if none are set (NOTE: Possible collision).
+    const manifestTriggers = manifest.triggers.map((trigger) => {
+      let keys = trigger[ECHO_ATTR_META]?.keys;
+      delete trigger[ECHO_ATTR_META];
+      if (!keys?.length) {
+        keys = [foreignKey('manifest', [trigger.function, trigger.spec.type].join(':'))];
+      }
+
+      return create(FunctionTrigger, trigger, { keys });
+    });
+
     // Sync triggers.
     const { objects: existing } = await space.db.query(Filter.schema(FunctionTrigger)).run();
-    const { added } = diff(existing, manifest.triggers, (a, b) => {
-      // Create FK to enable syncing if none are set.
-      // TODO(burdon): Warn if not unique.
-      const keys = b[ECHO_ATTR_META]?.keys ?? [foreignKey('manifest', [b.function, b.spec.type].join('-'))];
-      return intersection(getMeta(a)?.keys ?? [], keys, foreignKeyEquals).length > 0;
-    });
+    const { added } = diff(existing, manifestTriggers, compareForeignKeys);
 
     // TODO(burdon): Update existing.
     added.forEach((trigger) => {
-      const { meta, object } = splitMeta(trigger);
-      space.db.add(create(FunctionTrigger, object, meta));
+      space.db.add(trigger);
+      log.info('added', { meta: getMeta(trigger) });
     });
+
+    if (added.length > 0) {
+      await space.db.flush();
+    }
   }
 
   protected override async _open(): Promise<void> {
@@ -134,55 +142,52 @@ export class TriggerRegistry extends Resource {
 
         // Subscribe to updates.
         this._ctx.onDispose(
-          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
-            log.info('update', { space: space.key, triggers: triggers.objects.length });
-            await this._handleRemovedTriggers(space, triggers.objects, registered);
-            this._handleNewTriggers(space, triggers.objects, registered);
+          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async ({ objects: current }) => {
+            log.info('update', { space: space.key, registered: registered.length, current: current.length });
+            await this._handleRemovedTriggers(space, current, registered);
+            this._handleNewTriggers(space, current, registered);
           }),
         );
       }
     });
 
     this._ctx.onDispose(() => spaceListSubscription.unsubscribe());
+    log.info('opened');
   }
 
   protected override async _close(_: Context): Promise<void> {
     log.info('close...');
     this._triggersBySpaceKey.clear();
+    log.info('closed');
   }
 
-  private _handleNewTriggers(space: Space, allTriggers: FunctionTrigger[], registered: RegisteredTrigger[]) {
-    const newTriggers = allTriggers.filter((candidate) => {
-      return registered.find((reg) => reg.trigger.id === candidate.id) == null;
+  private _handleNewTriggers(space: Space, current: FunctionTrigger[], registered: RegisteredTrigger[]) {
+    const added = current.filter((candidate) => {
+      return candidate.enabled && registered.find((reg) => reg.trigger.id === candidate.id) == null;
     });
 
-    if (newTriggers.length > 0) {
-      const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
+    if (added.length > 0) {
+      const newRegisteredTriggers: RegisteredTrigger[] = added.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
       log.info('added', () => ({
         spaceKey: space.key,
-        triggers: newTriggers.map((trigger) => trigger.function),
+        triggers: added.map((trigger) => trigger.function),
       }));
-      this.registered.emit({ space, triggers: newTriggers });
+
+      this.registered.emit({ space, triggers: added });
     }
   }
 
   private async _handleRemovedTriggers(
     space: Space,
-    allTriggers: FunctionTrigger[],
+    current: FunctionTrigger[],
     registered: RegisteredTrigger[],
   ): Promise<void> {
     const removed: FunctionTrigger[] = [];
     for (let i = registered.length - 1; i >= 0; i--) {
       const wasRemoved =
-        allTriggers.find((trigger: FunctionTrigger) => trigger.id === registered[i].trigger.id) == null;
+        current.filter((trigger) => trigger.enabled).find((trigger) => trigger.id === registered[i].trigger.id) == null;
       if (wasRemoved) {
-        if (removed.length) {
-          log.info('removed', () => ({
-            spaceKey: space.key,
-            triggers: removed.map((trigger) => trigger.function),
-          }));
-        }
         const unregistered = registered.splice(i, 1)[0];
         await unregistered.activationCtx?.dispose();
         removed.push(unregistered.trigger);
@@ -190,6 +195,11 @@ export class TriggerRegistry extends Resource {
     }
 
     if (removed.length > 0) {
+      log.info('removed', () => ({
+        spaceKey: space.key,
+        triggers: removed.map((trigger) => trigger.function),
+      }));
+
       this.removed.emit({ space, triggers: removed });
     }
   }

@@ -13,6 +13,7 @@ export const DIAGNOSTICS_TIMEOUT = 10_000;
 export type DiagnosticMetadata = {
   id: string;
   instanceId: string;
+  instanceTag: string | null;
   name: string;
 };
 
@@ -46,6 +47,12 @@ export class DiagnosticsManager {
 
   readonly registry = new Map<string, TraceDiagnosticImpl>();
 
+  private _instanceTag: string | null = null;
+
+  setInstanceTag(tag: string): void {
+    this._instanceTag = tag;
+  }
+
   registerDiagnostic(params: TraceDiagnosticParams<any>): TraceDiagnostic {
     const impl = new TraceDiagnosticImpl(params.id, params.fetch, params.name ?? params.id, () => {
       if (this.registry.get(params.id) === impl) {
@@ -60,6 +67,7 @@ export class DiagnosticsManager {
     return Array.from(this.registry.values()).map((diagnostic) => ({
       id: diagnostic.id,
       instanceId: this.instanceId,
+      instanceTag: this._instanceTag,
       name: diagnostic.name,
     }));
   }

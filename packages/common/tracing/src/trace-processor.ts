@@ -88,6 +88,8 @@ export class TraceProcessor {
 
   readonly logs: LogEntry[] = [];
 
+  private _instanceTag: string | null = null;
+
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
@@ -96,6 +98,11 @@ export class TraceProcessor {
 
     this.diagnosticsChannel.serve(this.diagnostics);
     this.diagnosticsChannel.unref();
+  }
+
+  setInstanceTag(tag: string) {
+    this._instanceTag = tag;
+    this.diagnostics.setInstanceTag(tag);
   }
 
   /**

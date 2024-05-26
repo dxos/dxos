@@ -84,7 +84,6 @@ export class FunctionDef extends TypedObject({
   uri: S.string,
   description: S.optional(S.string),
   route: S.string,
-  // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,
 }) {}
 
@@ -92,9 +91,10 @@ export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
+  enabled: S.optional(S.boolean),
   function: S.string.pipe(S.description('Function URI.')),
-  // Context is merged into the event data passed to the function.
-  meta: S.optional(S.object),
+  // The `meta` property is merged into the event data passed to the function.
+  meta: S.optional(S.mutable(S.record(S.string, S.any))),
   spec: TriggerSpecSchema,
 }) {}
 
