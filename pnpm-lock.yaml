@@ -2785,6 +2785,9 @@ importers:
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
+      marked:
+        specifier: ^12.0.2
+        version: 12.0.2
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
@@ -39228,6 +39231,12 @@ packages:
   /marked@0.6.2:
     resolution: {integrity: sha512-LqxwVH3P/rqKX4EKGz7+c2G9r98WeM/SW34ybhgNGhUQNKtf1GmmSkJ6cDGJ/t6tiyae49qRkpyTw2B9HOrgUA==}
     engines: {node: '>=0.10.0'}
+    hasBin: true
+    dev: false
+
+  /marked@12.0.2:
+    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
+    engines: {node: '>= 18'}
     hasBin: true
     dev: false
 
