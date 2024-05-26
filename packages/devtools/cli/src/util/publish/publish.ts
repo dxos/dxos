@@ -2,9 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { Config } from '@dxos/client';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
@@ -12,6 +9,10 @@ import folderSize from 'get-folder-size';
 // import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 import { promisify } from 'util';
+
+import type { Config } from '@dxos/client';
+import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { type Logger, type PackageModule } from './common';
 import { importESM, uploadToIPFS } from './ipfs-upload';
