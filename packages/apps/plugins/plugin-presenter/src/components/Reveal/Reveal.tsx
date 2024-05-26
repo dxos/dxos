@@ -45,10 +45,11 @@ const styles = `
 
 export type RevealProps = {
   content: string;
+  onExit?: () => void;
 };
 
 // https://revealjs.com/react
-export const RevealPlayer = ({ content }: RevealProps) => {
+export const RevealPlayer = ({ content, onExit }: RevealProps) => {
   const deckDivRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<Reveal.Api | null>(null);
   useEffect(() => {
@@ -66,7 +67,7 @@ export const RevealPlayer = ({ content }: RevealProps) => {
         transition: 'none',
         center: true,
         slideNumber: false,
-        embedded: false,
+        embedded: true,
         // https://revealjs.com/speaker-view
         showNotes: false,
 
@@ -80,6 +81,10 @@ export const RevealPlayer = ({ content }: RevealProps) => {
       });
 
       await deckRef.current.initialize();
+      deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
+        console.log(deckRef.current?.getState());
+        onExit?.();
+      });
     });
 
     return () => {
@@ -95,7 +100,7 @@ export const RevealPlayer = ({ content }: RevealProps) => {
   });
 
   return (
-    <div className='absolute flex inset-0 border-8 border-neutral-800'>
+    <div className='absolute inset-0 h-full'>
       <div ref={deckDivRef} className='reveal'>
         {/* TODO(burdon): Must be in head. */}
         <style>

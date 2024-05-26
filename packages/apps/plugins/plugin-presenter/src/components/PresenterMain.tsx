@@ -5,7 +5,13 @@
 import React, { type FC, useContext, useState } from 'react';
 
 import { type StackType } from '@braneframe/types';
-import { Surface, useIntent, useResolvePlugin, parseLayoutPlugin, NavigationAction } from '@dxos/app-framework';
+import {
+  Surface,
+  useIntentDispatcher,
+  useResolvePlugin,
+  parseLayoutPlugin,
+  NavigationAction,
+} from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
@@ -29,7 +35,7 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const handleSetRunning = (running: boolean) => {
     void dispatch([
       {
@@ -37,9 +43,14 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
-      ...(!running
-        ? [{ action: NavigationAction.CLOSE, data: { activeParts: { fullScreen: fullyQualifiedId(stack) } } }]
-        : []),
+      ...(running
+        ? []
+        : [
+            {
+              action: NavigationAction.CLOSE,
+              data: { activeParts: { fullScreen: fullyQualifiedId(stack) } },
+            },
+          ]),
     ]);
   };
 
