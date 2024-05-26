@@ -21,13 +21,11 @@ import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
 const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const [slide, setSlide] = useState(0);
-
   const sections = stack.sections.filter(Boolean).filter((section) => !!section?.object);
 
   // TODO(burdon): Should not depend on split screen.
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const fullscreen = layoutPlugin?.provides.layout.fullscreen;
-
   const { running } = useContext(PresenterContext);
 
   // TODO(burdon): Currently conflates fullscreen and running.

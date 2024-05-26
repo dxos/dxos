@@ -12,6 +12,37 @@ import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/plugin.js';
 import Notes from 'reveal.js/plugin/notes/notes.js';
 
+const styles = `
+<style type="text/css">
+  .reveal h1 {
+    font-weight: 100;
+    padding-left: 36px;
+    opacity: 0.5;
+  }
+  .reveal h2 {
+    font-weight: 100;
+    padding-top: 60px;
+    padding-left: 40px;
+    font-size: 48px;
+    opacity: 0.3;
+  }
+  .reveal h1, h2, p {
+    font-family: "Raleway", sans-serif;
+    text-align: left;
+    font-weight: 200;
+  }
+  .reveal ul {
+    font-family: "Raleway", sans-serif;
+    display: block;
+    list-style: "- ";
+  }
+  .reveal blockquote p {
+    font-weight: 100;
+    padding: 32px;
+  }
+</style>
+`;
+
 export type RevealProps = {
   content: string;
 };
@@ -76,8 +107,9 @@ export const RevealPlayer = ({ content }: RevealProps) => {
           />
         </style>
         <div className='slides'>
+          <div className='!text-center' />
           <section {...{ 'data-markdown': [] }}>
-            <textarea {...{ 'data-template': true }} defaultValue={content}></textarea>
+            <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>
           </section>
         </div>
       </div>

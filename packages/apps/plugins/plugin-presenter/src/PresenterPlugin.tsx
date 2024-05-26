@@ -22,7 +22,7 @@ import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { PresenterMain, MarkdownSlideMain } from './components';
+import { PresenterMain, MarkdownSlide, RevealMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
 import { PresenterContext, TOGGLE_PRESENTATION, type PresenterPluginProvides } from './types';
@@ -60,7 +60,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Filter.schema(StackType));
+              const query = space.db.query(Filter.or(Filter.schema(StackType), Filter.schema(DocumentType)));
               subscriptions.add(query.subscribe());
               let previousObjects: StackType[] = [];
               subscriptions.add(
@@ -133,12 +133,18 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return data.active instanceof StackType && state.presenting
-                ? { node: <PresenterMain stack={data.active} />, disposition: 'hoist' }
-                : null;
+            case 'main': {
+              if (state.presenting) {
+                if (data.active instanceof StackType) {
+                  return { node: <PresenterMain stack={data.active} />, disposition: 'hoist' };
+                } else if (data.active instanceof DocumentType) {
+                  return { node: <RevealMain document={data.active} />, disposition: 'hoist' };
+                }
+              }
+              return null;
+            }
             case 'slide':
-              return data.slide instanceof DocumentType ? <MarkdownSlideMain document={data.slide} /> : null;
+              return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
           }
 
           return null;
