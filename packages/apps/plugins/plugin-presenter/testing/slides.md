@@ -32,7 +32,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#00224D" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/black/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#00224D" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # ECHO
@@ -47,7 +47,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#5D0E41" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/black/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#5D0E41" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # HALO
@@ -62,7 +62,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#A0153E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/black/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#A0153E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # MESH
@@ -77,7 +77,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#FF204E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/black/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#FF204E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # KUBE
