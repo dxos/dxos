@@ -72,28 +72,28 @@ export class Scheduler {
     await Promise.all(mountTasks).catch(log.catch);
   }
 
-  private async activate(space: Space, functions: FunctionDef[], fnTrigger: FunctionTrigger) {
-    const definition = functions.find((def) => def.uri === fnTrigger.function);
+  private async activate(space: Space, functions: FunctionDef[], trigger: FunctionTrigger) {
+    const definition = functions.find((def) => def.uri === trigger.function);
     if (!definition) {
-      log.info('function is not found for trigger', { fnTrigger });
+      log.info('function is not found for trigger', { trigger });
       return;
     }
 
-    await this.triggers.activate({ space }, fnTrigger, async (args) => {
+    await this.triggers.activate(space, trigger, async (args) => {
       const mutex = this._functionUriToCallMutex.get(definition.uri) ?? new Mutex();
       this._functionUriToCallMutex.set(definition.uri, mutex);
 
       log.info('function triggered, waiting for mutex', { uri: definition.uri });
       return mutex.executeSynchronized(() => {
         log.info('mutex acquired', { uri: definition.uri });
-        return this._execFunction(definition, fnTrigger, {
-          meta: fnTrigger.meta,
+        return this._execFunction(definition, trigger, {
+          meta: trigger.meta ?? {},
           data: { ...args, spaceKey: space.key },
         });
       });
     });
 
-    log('activated trigger', { space: space.key, trigger: fnTrigger });
+    log('activated trigger', { space: space.key, trigger });
   }
 
   private async _execFunction<TData, TMeta>(

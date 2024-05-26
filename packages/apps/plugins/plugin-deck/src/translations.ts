@@ -19,6 +19,7 @@ export default [
         'toggle fullscreen label': 'Toggle fullscreen',
         'settings show footer label': 'Show footer (experimental)',
         'settings native redirect label': 'Enable native url redirect (experimental)',
+        'settings custom slots': 'Theme option (experimental)',
         'undo available label': 'Click to undo previous action.',
         'undo action label': 'Undo',
         'undo action alt': 'Undo previous action',
