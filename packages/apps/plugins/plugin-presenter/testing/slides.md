@@ -1,5 +1,5 @@
 <!-- 
-.slide: data-background="#111"
+.slide: data-background="#151515"
 -->
 
 ![img](https://dxos.org/images/logo/dxos-logotype-white.svg)
@@ -15,6 +15,10 @@ notes:
 - set out to investigate what it would take to build a fully decentralized platform
 
 ---
+<!-- 
+.slide: data-background="#151515"
+-->
+
 > What is an Operating System?
 
 1. Storage
@@ -77,7 +81,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#FF204E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # KUBE

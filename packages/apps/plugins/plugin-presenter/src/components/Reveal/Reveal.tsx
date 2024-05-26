@@ -10,10 +10,12 @@ import 'reveal.js/dist/theme/black.css';
 import React, { useEffect, useRef } from 'react';
 import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/plugin.js';
-import Notes from 'reveal.js/plugin/notes/notes.js';
 
 const styles = `
 <style type="text/css">
+  .reveal .slide-background-content {
+    opacity: 0.5;
+  }
   .reveal h1 {
     font-weight: 100;
     padding-left: 36px;
@@ -67,12 +69,16 @@ export const RevealPlayer = ({ content, onExit }: RevealProps) => {
         transition: 'none',
         center: true,
         slideNumber: false,
-        embedded: true,
+        embedded: false,
         // https://revealjs.com/speaker-view
         showNotes: false,
 
         // https://revealjs.com/markdown
-        plugins: [Markdown, Notes],
+        plugins: [
+          Markdown,
+          // TODO(burdon): Requires server to serve popout window.
+          // Notes
+        ],
 
         // See https://marked.js.org/using_advanced#options
         markdown: {
