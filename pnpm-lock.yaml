@@ -2770,6 +2770,9 @@ importers:
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
@@ -2782,6 +2785,9 @@ importers:
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
+      marked:
+        specifier: ^12.0.2
+        version: 12.0.2
       react-markdown:
         specifier: ^8.0.5
         version: 8.0.7(@types/react@18.0.21)(react@18.2.0)
@@ -2800,6 +2806,9 @@ importers:
       remark-parse-frontmatter:
         specifier: ^1.0.3
         version: 1.0.3
+      reveal.js:
+        specifier: ^5.1.0
+        version: 5.1.0
     devDependencies:
       '@braneframe/plugin-client':
         specifier: workspace:*
@@ -2843,6 +2852,9 @@ importers:
       '@types/react-dom':
         specifier: ^18.0.6
         version: 18.0.6
+      '@types/reveal.js':
+        specifier: ^5.0.3
+        version: 5.0.3
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -26416,6 +26428,10 @@ packages:
     resolution: {integrity: sha512-wWKOClTTiizcZhXnPY4wikVAwmdYHp8q6DmC+EJUzAMsycb7HB32Kh9RN4+0gExjmPmZSAQjgURXIGATPegAvA==}
     dev: false
 
+  /@types/reveal.js@5.0.3:
+    resolution: {integrity: sha512-gwnK8TR38IOBIORWFrV5/z9lRX4iLke2FBqNgRhXxehaWJFkrzVY2TVzfdX/SX94eugt+OI5l++zDBBSfdzruQ==}
+    dev: true
+
   /@types/sass@1.43.1:
     resolution: {integrity: sha512-BPdoIt1lfJ6B7rw35ncdwBZrAssjcwzI5LByIrYs+tpXlj/CAkuVdRsgZDdP4lq5EjyWzwxZCqAoFyHKFwp32g==}
     dependencies:
@@ -39218,6 +39234,12 @@ packages:
     hasBin: true
     dev: false
 
+  /marked@12.0.2:
+    resolution: {integrity: sha512-qXUm7e/YKFoqFPYPa3Ukg9xlI5cyAtGmyEIzMfW//m6kXwCy2Ps9DYf5ioijFKQ8qyuscrHoY04iJGctu2Kg0Q==}
+    engines: {node: '>= 18'}
+    hasBin: true
+    dev: false
+
   /marked@4.3.0:
     resolution: {integrity: sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==}
     engines: {node: '>= 12'}
@@ -44401,6 +44423,11 @@ packages:
   /revalidator@0.3.1:
     resolution: {integrity: sha512-orq+Nw+V5pDpQwGEuN2n1AgJ+0A8WqhFHKt5KgkxfAowUKgO1CWV32IR3TNB4g9/FX3gJt9qBJO8DYlwonnB0Q==}
     engines: {node: '>= 0.8.0'}
+    dev: false
+
+  /reveal.js@5.1.0:
+    resolution: {integrity: sha512-KDt7m0+xwKV6nAZt4CNPVFBf42sTKRQapg0bGGKB5PKO5XvChnMfwlZkybydHiQJ7p5+6LbHKRGrhXODdoNIaA==}
+    engines: {node: '>=18.0.0'}
     dev: false
 
   /rgb2hex@0.2.5:
