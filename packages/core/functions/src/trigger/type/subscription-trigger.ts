@@ -54,12 +54,11 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
   // TODO(burdon): Disable trigger if keeps failing.
   const { filter, options: { deep, delay } = {} } = spec;
   const update = ({ objects }: Query) => {
-    log.info('update', { objects });
+    log.info('update', { objects: objects.length });
     subscription.update(objects);
 
     // TODO(burdon): Hack to monitor changes to Document's text object.
     if (deep) {
-      log.info('update', { objects: objects.length });
       for (const object of objects) {
         const content = object.content;
         if (content instanceof TextV0Type) {

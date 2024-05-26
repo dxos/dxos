@@ -142,10 +142,10 @@ export class TriggerRegistry extends Resource {
 
         // Subscribe to updates.
         this._ctx.onDispose(
-          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async (triggers) => {
-            log.info('update', { space: space.key, triggers: triggers.objects.length });
-            await this._handleRemovedTriggers(space, triggers.objects, registered);
-            this._handleNewTriggers(space, triggers.objects, registered);
+          space.db.query(Filter.schema(FunctionTrigger)).subscribe(async ({ objects: current }) => {
+            log.info('update', { space: space.key, registered: registered.length, current: current.length });
+            await this._handleRemovedTriggers(space, current, registered);
+            this._handleNewTriggers(space, current, registered);
           }),
         );
       }
@@ -161,38 +161,33 @@ export class TriggerRegistry extends Resource {
     log.info('closed');
   }
 
-  private _handleNewTriggers(space: Space, allTriggers: FunctionTrigger[], registered: RegisteredTrigger[]) {
-    const newTriggers = allTriggers.filter((candidate) => {
-      return registered.find((reg) => reg.trigger.id === candidate.id) == null;
+  private _handleNewTriggers(space: Space, current: FunctionTrigger[], registered: RegisteredTrigger[]) {
+    const added = current.filter((candidate) => {
+      return candidate.enabled && registered.find((reg) => reg.trigger.id === candidate.id) == null;
     });
 
-    if (newTriggers.length > 0) {
-      const newRegisteredTriggers: RegisteredTrigger[] = newTriggers.map((trigger) => ({ trigger }));
+    if (added.length > 0) {
+      const newRegisteredTriggers: RegisteredTrigger[] = added.map((trigger) => ({ trigger }));
       registered.push(...newRegisteredTriggers);
-      log.info('updated', () => ({
+      log.info('added', () => ({
         spaceKey: space.key,
-        triggers: newTriggers.map((trigger) => trigger.function),
+        triggers: added.map((trigger) => trigger.function),
       }));
-      this.registered.emit({ space, triggers: newTriggers });
+
+      this.registered.emit({ space, triggers: added });
     }
   }
 
   private async _handleRemovedTriggers(
     space: Space,
-    allTriggers: FunctionTrigger[],
+    current: FunctionTrigger[],
     registered: RegisteredTrigger[],
   ): Promise<void> {
     const removed: FunctionTrigger[] = [];
     for (let i = registered.length - 1; i >= 0; i--) {
       const wasRemoved =
-        allTriggers.find((trigger: FunctionTrigger) => trigger.id === registered[i].trigger.id) == null;
+        current.filter((trigger) => trigger.enabled).find((trigger) => trigger.id === registered[i].trigger.id) == null;
       if (wasRemoved) {
-        if (removed.length) {
-          log.info('removed', () => ({
-            spaceKey: space.key,
-            triggers: removed.map((trigger) => trigger.function),
-          }));
-        }
         const unregistered = registered.splice(i, 1)[0];
         await unregistered.activationCtx?.dispose();
         removed.push(unregistered.trigger);
@@ -200,6 +195,11 @@ export class TriggerRegistry extends Resource {
     }
 
     if (removed.length > 0) {
+      log.info('removed', () => ({
+        spaceKey: space.key,
+        triggers: removed.map((trigger) => trigger.function),
+      }));
+
       this.removed.emit({ space, triggers: removed });
     }
   }
