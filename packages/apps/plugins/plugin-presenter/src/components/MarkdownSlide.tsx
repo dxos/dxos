@@ -8,7 +8,7 @@ import { type DocumentType } from '@braneframe/types';
 
 import { Container, Slide } from './Markdown';
 
-const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
+const MarkdownSlide: FC<{ document: DocumentType }> = ({ document }) => {
   const content = document.content?.content;
   if (!content) {
     return null;
@@ -21,4 +21,4 @@ const MarkdownSlideMain: FC<{ document: DocumentType }> = ({ document }) => {
   );
 };
 
-export default MarkdownSlideMain;
+export default MarkdownSlide;
