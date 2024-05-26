@@ -42,18 +42,15 @@ const state = create<typeof stateInitialValues>(stateInitialValues);
 const triggerTypes: FunctionTriggerType[] = ['subscription', 'timer', 'webhook', 'websocket'];
 
 export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: FunctionTrigger }) => {
-  const functions = useQuery(space, Filter.schema(FunctionDef));
-  const linkedFunction = useMemo(
-    () => functions.find((fn) => fn.uri === trigger.function),
-    [trigger.function, functions],
-  );
+  const query = useQuery(space, Filter.schema(FunctionDef));
+  const fn = useMemo(() => query.find((fn) => fn.uri === trigger.function), [trigger.function, query]);
 
   useEffect(() => {
     void space.db.schemaRegistry
       .getAll()
       .then((schemas) => {
         // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
-        state.schemas = distinctBy([...state.schemas, ...schemas], (s) => s.typename).sort((a, b) =>
+        state.schemas = distinctBy([...state.schemas, ...schemas], (schema) => schema.typename).sort((a, b) =>
           a.typename < b.typename ? -1 : 1,
         );
       })
@@ -72,6 +69,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         }
       }
     }
+    // TODO(burdon): API issue.
   }, [JSON.stringify(trigger.spec), state.schemas]);
 
   useEffect(() => {
@@ -84,7 +82,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   }, [trigger.function, trigger.meta]);
 
   const handleSelectFunction = (value: string) => {
-    const match = functions.find((fn) => fn.uri === value);
+    const match = query.find((fn) => fn.uri === value);
     if (match) {
       trigger.function = match.uri;
     }
@@ -105,7 +103,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         break;
       }
       case 'websocket': {
-        // TODO(burdon): Currently mail worker specific.
+        // TODO(burdon): The `init` property is currently mail worker specific.
         trigger.spec = { type: 'websocket', url: '', init: { type: 'sync' } };
         break;
       }
@@ -118,12 +116,12 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
         <table className='is-full table-fixed'>
           <tbody>
             <InputRow label='Function'>
-              <Select.Root value={linkedFunction?.uri} onValueChange={handleSelectFunction}>
+              <Select.Root value={fn?.uri} onValueChange={handleSelectFunction}>
                 <Select.TriggerButton placeholder={'Select function'} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {functions.map(({ id, uri }) => (
+                      {query.map(({ id, uri }) => (
                         <Select.Option key={id} value={uri}>
                           {uri}
                         </Select.Option>
@@ -134,9 +132,7 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
               </Select.Root>
             </InputRow>
             <InputRow>
-              <div className='px-2'>
-                {linkedFunction && <p className='text-sm fg-description'>{linkedFunction.description}</p>}
-              </div>
+              <div className='px-2'>{fn && <p className='text-sm fg-description'>{fn.description}</p>}</div>
             </InputRow>
             <InputRow label='Type'>
               <Select.Root value={trigger.spec?.type} onValueChange={handleSelectTriggerType}>

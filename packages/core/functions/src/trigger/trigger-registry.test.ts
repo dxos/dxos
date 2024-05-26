@@ -31,6 +31,7 @@ const manifest: FunctionManifest = {
         ],
       },
       function: 'example.com/function/webhook-test',
+      enabled: true,
       spec: {
         type: 'webhook',
         method: 'GET',
@@ -46,6 +47,7 @@ const manifest: FunctionManifest = {
         ],
       },
       function: 'example.com/function/subscription-test',
+      enabled: true,
       spec: {
         type: 'subscription',
         filter: [
@@ -83,6 +85,19 @@ describe('trigger registry', () => {
 
       const expected = manifest.triggers?.map((trigger) => trigger.function).sort();
       expect(objects.map((object: FunctionTrigger) => object.function).sort()).to.deep.eq(expected);
+    });
+
+    test('set meta', () => {
+      const trigger = create(FunctionTrigger, {
+        function: 'example.com/function/webhook-test',
+        spec: {
+          type: 'webhook',
+          method: 'GET',
+        },
+      });
+
+      (trigger.meta ??= {}).test = 100;
+      expect(trigger.meta.test).to.eq(100);
     });
   });
 
@@ -122,6 +137,8 @@ describe('trigger registry', () => {
       expect(updatedInactiveList.find((trigger: FunctionTrigger) => trigger.function === inactiveTrigger.function)).to
         .be.undefined;
     });
+
+    // TODO(burdon): Test enable/disable trigger.
   });
 
   describe('deactivate', () => {
