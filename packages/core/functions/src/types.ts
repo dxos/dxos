@@ -95,7 +95,7 @@ export class FunctionTrigger extends TypedObject({
   enabled: S.optional(S.boolean),
   function: S.string.pipe(S.description('Function URI.')),
   // Context is merged into the event data passed to the function.
-  meta: S.optional(S.object),
+  meta: S.optional(S.record(S.string, S.any)),
   spec: TriggerSpecSchema,
 }) {}
 

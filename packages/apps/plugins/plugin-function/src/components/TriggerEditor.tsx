@@ -79,7 +79,6 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
       const extension = metaExtensions[trigger.function];
       if (extension?.initialValue) {
         trigger.meta = extension.initialValue();
-        console.log('##########', JSON.stringify({ trigger }));
       }
     }
   }, [trigger.function, trigger.meta]);
