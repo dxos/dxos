@@ -24,15 +24,15 @@ pnpm nx serve composer-app
 
 ```bash
 sudo killall node
-
-dx agent stop && dx reset --force && dx halo create "DXOS Agent" --no-agent && dx halo identity --no-agent
-dx space create --no-agent
+dx agent stop && dx reset --force && dx halo create "DXOS Agent" --no-agent && dx halo identity --no-agent && dx agent start -f
 ```
 
-### 2). Start Agent
+### 2). Create a space
+
+NOTE: DO THIS BEFORE STARTING DEV SERVER (to register functions). NEED TO RESTART IF ADDING SPACES.
 
 ```bash
-dx agent start -f
+dx space create --no-agent
 ```
 
 ## Foreground
@@ -58,8 +58,6 @@ LOG_FILTER="info" dx function dev -r ts-node/register --verbose --reload
 ```
 
 ### 4). Invite Space
-
-NOTE: Migrate Space?
 
 ```bash
 dx space share --open --host http://localhost:5173
