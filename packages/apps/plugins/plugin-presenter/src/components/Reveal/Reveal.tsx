@@ -10,6 +10,7 @@ import 'reveal.js/dist/theme/black.css';
 import React, { useEffect, useRef } from 'react';
 import Reveal from 'reveal.js';
 import Markdown from 'reveal.js/plugin/markdown/plugin.js';
+// import Notes from 'reveal.js/plugin/notes/notes.js';
 
 const styles = `
 <style type="text/css">
@@ -69,7 +70,7 @@ export const RevealPlayer = ({ content, onExit }: RevealProps) => {
         transition: 'none',
         center: true,
         slideNumber: false,
-        embedded: false,
+        embedded: true,
         // https://revealjs.com/speaker-view
         showNotes: false,
 

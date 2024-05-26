@@ -81,7 +81,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#FF204E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # KUBE
