@@ -5,7 +5,8 @@
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { DocumentType, FileType, MessageType, SketchType, StackType, type ChainPromptType } from '@braneframe/types';
+import { type ChainPromptType, DocumentType, FileType, MessageType, SketchType, StackType } from '@braneframe/types';
+import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {
   FunctionDef,
@@ -19,12 +20,20 @@ import {
 } from '@dxos/functions/types';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { DensityProvider, Input, Select } from '@dxos/react-ui';
-import { distinctBy } from '@dxos/util';
+import { distinctBy, safeParseInt } from '@dxos/util';
 
 type TriggerId = string;
 
 const stateInitialValues = {
-  schemas: [StackType, SketchType, DocumentType, FileType, MessageType] as any[],
+  schemas: [
+    // TODO(burdon): Get all schema from API.
+    DocumentType,
+    FileType,
+    GameType,
+    MessageType,
+    SketchType,
+    StackType,
+  ] as any[],
   selectedSchema: {} as Record<TriggerId, any>,
 };
 
@@ -68,7 +77,10 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   useEffect(() => {
     if (!trigger.meta) {
       const extension = metaExtensions[trigger.function];
-      extension?.initialValue && (trigger.meta = extension.initialValue());
+      if (extension?.initialValue) {
+        trigger.meta = extension.initialValue();
+        console.log('##########', JSON.stringify({ trigger }));
+      }
     }
   }, [trigger.function, trigger.meta]);
 
@@ -305,6 +317,23 @@ type MetaExtension<T> = {
   component: FC<MetaProps<T>>;
 };
 
+// TODO(burdon): Possible to build form from function meta schema.
+
+const ChessMeta = ({ meta }: MetaProps<{ level?: number }>) => {
+  return (
+    <>
+      <InputRow label='Level'>
+        <Input.TextInput
+          type='number'
+          value={meta.level ?? 1}
+          onChange={(event) => (meta.level = safeParseInt(event.target.value))}
+          placeholder='AI level.'
+        />
+      </InputRow>
+    </>
+  );
+};
+
 const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
   return (
     <>
@@ -321,7 +350,6 @@ const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
 
 const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptType }>) => {
   const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
-
   return (
     <>
       <InputRow label='Presets'>
@@ -337,6 +365,11 @@ const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptTy
 };
 
 const metaExtensions: Record<string, MetaExtension<any>> = {
+  'dxos.org/function/chess': {
+    initialValue: () => ({ level: 2 }),
+    component: ChessMeta,
+  },
+
   'dxos.org/function/email-worker': {
     initialValue: () => ({ account: 'hello@dxos.network' }),
     component: EmailWorkerMeta,

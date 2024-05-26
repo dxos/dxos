@@ -38,6 +38,12 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           />
         </SettingsValue>
       )}
+      <SettingsValue label={t('settings custom slots')}>
+        <Input.Switch
+          checked={settings.customSlots}
+          onCheckedChange={(checked) => (settings.customSlots = !!checked)}
+        />
+      </SettingsValue>
     </>
   );
 };

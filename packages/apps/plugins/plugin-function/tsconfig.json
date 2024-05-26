@@ -41,6 +41,9 @@
       "path": "../../../core/functions"
     },
     {
+      "path": "../../../experimental/chess-app"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
