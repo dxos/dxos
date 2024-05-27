@@ -21,7 +21,7 @@ import { RevealPlayer } from './Reveal';
 // https://fontsource.org/fonts
 // https://fonts.google.com
 const Story = () => {
-  return <RevealPlayer content={CONTENT} />;
+  return <RevealPlayer content={CONTENT} slide={0} />;
 };
 
 export default {

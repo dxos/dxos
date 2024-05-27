@@ -42,7 +42,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#00224D" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#00224D" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # ECHO
@@ -57,7 +57,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#5D0E41" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#5D0E41" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # HALO
@@ -72,7 +72,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#994D1C" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # MESH
@@ -87,7 +87,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#A0153E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#A0153E" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # EDGE
@@ -127,3 +127,8 @@ notes:
 <!-- .element: class="!text-center !p-0" -->
 
 > *Super App*: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
+
+---
+<!--
+.slide: data-background-video="https://dxos.network/DXOS.mp4"
+-->

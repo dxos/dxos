@@ -14,9 +14,6 @@ import Markdown from 'reveal.js/plugin/markdown/plugin.js';
 
 const styles = `
 <style type="text/css">
-  .reveal .slide-background-content {
-    opacity: 0.5;
-  }
   .reveal h1 {
     font-weight: 100;
     padding-left: 36px;
