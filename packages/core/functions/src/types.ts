@@ -87,6 +87,9 @@ export class FunctionDef extends TypedObject({
   handler: S.string,
 }) {}
 
+/**
+ * Function trigger.
+ */
 export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
@@ -94,7 +97,7 @@ export class FunctionTrigger extends TypedObject({
   enabled: S.optional(S.boolean),
   function: S.string.pipe(S.description('Function URI.')),
   // The `meta` property is merged into the event data passed to the function.
-  meta: S.optional(S.mutable(S.record(S.string, S.any))),
+  meta: S.optional(S.mutable(S.any)),
   spec: TriggerSpecSchema,
 }) {}
 
