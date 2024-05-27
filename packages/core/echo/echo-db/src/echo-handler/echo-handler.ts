@@ -5,6 +5,7 @@
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   SchemaValidator,
@@ -17,6 +18,7 @@ import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMe
 import { invariant } from '@dxos/invariant';
 import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
 
+import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
   type ProxyTarget,
@@ -29,8 +31,6 @@ import {
 } from './echo-proxy-target';
 import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
-import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
-import { getBody, getHeader } from './devtools-formatter';
 
 export const PROPERTY_ID = 'id';
 
