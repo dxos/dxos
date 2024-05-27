@@ -16,7 +16,7 @@ export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div className='flex w-full h-screen overflow-hidden'>
+    <div className='flex is-full bs-full overflow-hidden'>
       <div className={'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto bg-gray-100'}>
         <div className='flex flex-col gap-4 divide-y'>
           {sections.map((section) => (
