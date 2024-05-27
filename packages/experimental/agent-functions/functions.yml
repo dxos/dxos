@@ -95,7 +95,7 @@ triggers:
       filter:
       - type: 'dxos.org/type/File'
         # TODO(burdon): Second is ignored currently.
-      - type: 'braneframe.Document'
+#      - type: 'braneframe.Document'
       options:
         deep: true
         delay: 5
