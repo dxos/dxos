@@ -56,9 +56,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-layout"
-    },
-    {
       "path": "../plugin-markdown"
     },
     {

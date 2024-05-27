@@ -8,6 +8,7 @@ import React from 'react';
 export const DebugGlobal = React.lazy(() => import('./DebugGlobal'));
 export const DebugSpace = React.lazy(() => import('./DebugSpace'));
 export const DevtoolsMain = React.lazy(() => import('./DevtoolsMain'));
+export const DevtoolsArticle = React.lazy(() => import('./DevtoolsArticle'));
 
 export * from './DebugSettings';
 export * from './DebugStatus';
