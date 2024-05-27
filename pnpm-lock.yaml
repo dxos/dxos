@@ -7200,11 +7200,11 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  packages/devtools/initializers/create-app-plugin:
+  packages/devtools/initializers/create-bare:
     dependencies:
-      '@dxos/plugin-template':
+      '@dxos/bare-template':
         specifier: workspace:*
-        version: link:../../../apps/templates/plugin-template
+        version: link:../../../apps/templates/bare-template
       minimist:
         specifier: ^1.2.7
         version: 1.2.8
@@ -7216,11 +7216,11 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  packages/devtools/initializers/create-bare:
+  packages/devtools/initializers/create-composer-plugin:
     dependencies:
-      '@dxos/bare-template':
+      '@dxos/plugin-template':
         specifier: workspace:*
-        version: link:../../../apps/templates/bare-template
+        version: link:../../../apps/templates/plugin-template
       minimist:
         specifier: ^1.2.7
         version: 1.2.8
