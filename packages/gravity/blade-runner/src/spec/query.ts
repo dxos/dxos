@@ -7,18 +7,19 @@ import { type QueryResult } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ReplicantsSummary, type Platform, type SchedulerEnv, type TestParams, type TestPlan } from '../plan';
+import { type SchedulerEnv } from '../env';
+import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan } from '../plan';
 import { EchoReplicant } from '../replicants/echo-replicant';
 
-type EchoTestSpec = {
+type QueryTestSpec = {
   platform: Platform;
 
   numberOfObjects: number;
 
   /**
-   * Size of each object in bytes.
+   * Size limit of each object in bytes.
    */
-  objectSize: number;
+  objectSizeLimit: number;
   /**
    * Number of insertions per object.
    */
@@ -31,7 +32,7 @@ type EchoTestSpec = {
   queryResolution: Exclude<QueryResult<any>['resolution'], undefined>['source'];
 };
 
-type EchoTestResult = {
+type QueryTestResult = {
   /**
    * Time to create all objects in [ms].
    */
@@ -48,30 +49,28 @@ type EchoTestResult = {
   diskQueryTime: number;
 };
 
-export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
-  defaultSpec(): EchoTestSpec {
+export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
+  defaultSpec(): QueryTestSpec {
     return {
       platform: 'chromium',
 
-      // 50, 200, 500, 1000, 2000
-      numberOfObjects: 300,
-      objectSize: 2000,
-
-      // 100, 200, 400, 1000, 1500, 2000
-      numberOfInsertions: 2000,
+      numberOfObjects: 100,
+      objectSizeLimit: 2000,
+      numberOfInsertions: 1000,
       insertionSize: 10,
+
       queryResolution: 'index',
     };
   }
 
-  async run(env: SchedulerEnv, params: TestParams<EchoTestSpec>) {
-    const results = {} as EchoTestResult;
+  async run(env: SchedulerEnv, params: TestParams<QueryTestSpec>) {
+    const results = {} as QueryTestResult;
     // TODO(mykola): Maybe factor out?
     const userDataDir = `/tmp/echo-replicant-${PublicKey.random().toHex()}`;
-    const spaceKey = PublicKey.random().toHex();
 
     const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
-    const { rootUrl } = await replicant.brain.open({ spaceKey });
+    await replicant.brain.open();
+    const { spaceKey, rootUrl } = await replicant.brain.createDatabase();
 
     //
     // Create objects.
@@ -80,7 +79,7 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
       performance.mark('create:begin');
       await replicant.brain.createDocuments({
         amount: params.spec.numberOfObjects,
-        size: params.spec.objectSize,
+        size: params.spec.objectSizeLimit,
         insertions: params.spec.numberOfInsertions,
         mutationsSize: params.spec.insertionSize,
       });
@@ -110,7 +109,8 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     //
     {
       const replicant = await env.spawn(EchoReplicant, { platform: params.spec.platform, userDataDir });
-      await replicant.brain.open({ spaceKey, path: userDataDir, rootUrl: rootUrl as AutomergeUrl });
+      await replicant.brain.open();
+      await replicant.brain.openDatabase({ spaceKey, rootUrl: rootUrl as AutomergeUrl });
 
       performance.mark('diskQuery:begin');
       await replicant.brain.queryDocuments({
@@ -126,5 +126,5 @@ export class EchoTestPlan implements TestPlan<EchoTestSpec, EchoTestResult> {
     return results;
   }
 
-  async analyze(params: TestParams<EchoTestSpec>, summary: ReplicantsSummary, result: EchoTestResult): Promise<any> {}
+  async analyze(params: TestParams<QueryTestSpec>, summary: ReplicantsSummary, result: QueryTestResult): Promise<any> {}
 }

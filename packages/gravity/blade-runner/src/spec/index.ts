@@ -3,7 +3,7 @@
 //
 
 export * from './automerge';
-export * from './echo';
+export * from './query';
 export * from './empty';
 export * from './replication';
 export * from './signal';
