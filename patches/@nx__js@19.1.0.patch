@@ -1,0 +1,82 @@
+diff --git a/src/executors/tsc/tsc.impl.js b/src/executors/tsc/tsc.impl.js
+index ebaf0575224dda78fcedaf4be33f6bb9fe98c33d..2cb9247b57c2b28116bbfdc319c0d5b0cacffb1c 100644
+--- a/src/executors/tsc/tsc.impl.js
++++ b/src/executors/tsc/tsc.impl.js
+@@ -1,14 +1,15 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.tscExecutor = exports.createTypeScriptCompilationOptions = exports.determineModuleFormatFromTsConfig = void 0;
++const fs = require("fs");
+ const ts = require("typescript");
+ const copy_assets_handler_1 = require("../../utils/assets/copy-assets-handler");
+ const check_dependencies_1 = require("../../utils/check-dependencies");
+ const compiler_helper_dependency_1 = require("../../utils/compiler-helper-dependency");
+ const inline_1 = require("../../utils/inline");
+-const update_package_json_1 = require("../../utils/package-json/update-package-json");
++// const update_package_json_1 = require("../../utils/package-json/update-package-json");
+ const compile_typescript_files_1 = require("../../utils/typescript/compile-typescript-files");
+-const watch_for_single_file_changes_1 = require("../../utils/watch-for-single-file-changes");
++// const watch_for_single_file_changes_1 = require("../../utils/watch-for-single-file-changes");
+ const lib_1 = require("./lib");
+ const ts_config_1 = require("../../utils/typescript/ts-config");
+ const create_entry_points_1 = require("../../utils/package-json/create-entry-points");
+@@ -49,6 +50,11 @@ async function* tscExecutor(_options, context) {
+     if (tsLibDependency) {
+         dependencies.push(tsLibDependency);
+     }
++    // Clean output path before build.
++    try {
++        fs.readdir(_options.outputPath);
++        fs.rm(_options.outputPath, { recursive: true });
++    } catch {}
+     const assetHandler = new copy_assets_handler_1.CopyAssetsHandler({
+         projectDir: projectRoot,
+         rootDir: context.root,
+@@ -62,30 +68,30 @@ async function* tscExecutor(_options, context) {
+     }
+     const typescriptCompilation = (0, compile_typescript_files_1.compileTypeScriptFiles)(options, tsCompilationOptions, async () => {
+         await assetHandler.processAllAssetsOnce();
+-        (0, update_package_json_1.updatePackageJson)({
+-            ...options,
+-            additionalEntryPoints: (0, create_entry_points_1.createEntryPoints)(options.additionalEntryPoints, context.root),
+-            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+-            // As long as d.ts files match their .js counterparts, we don't need to emit them.
+-            // TSC can match them correctly based on file names.
+-            skipTypings: true,
+-        }, context, target, dependencies);
++        // (0, update_package_json_1.updatePackageJson)({
++        //     ...options,
++        //     additionalEntryPoints: (0, create_entry_points_1.createEntryPoints)(options.additionalEntryPoints, context.root),
++        //     format: [determineModuleFormatFromTsConfig(options.tsConfig)],
++        //     // As long as d.ts files match their .js counterparts, we don't need to emit them.
++        //     // TSC can match them correctly based on file names.
++        //     skipTypings: true,
++        // }, context, target, dependencies);
+         (0, inline_1.postProcessInlinedDependencies)(tsCompilationOptions.outputPath, tsCompilationOptions.projectRoot, inlineProjectGraph);
+     });
+     if (options.watch) {
+         const disposeWatchAssetChanges = await assetHandler.watchAndProcessOnAssetChange();
+-        const disposePackageJsonChanges = await (0, watch_for_single_file_changes_1.watchForSingleFileChanges)(context.projectName, options.projectRoot, 'package.json', () => (0, update_package_json_1.updatePackageJson)({
+-            ...options,
+-            additionalEntryPoints: (0, create_entry_points_1.createEntryPoints)(options.additionalEntryPoints, context.root),
+-            // As long as d.ts files match their .js counterparts, we don't need to emit them.
+-            // TSC can match them correctly based on file names.
+-            skipTypings: true,
+-            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+-        }, context, target, dependencies));
++        // const disposePackageJsonChanges = await (0, watch_for_single_file_changes_1.watchForSingleFileChanges)(context.projectName, options.projectRoot, 'package.json', () => (0, update_package_json_1.updatePackageJson)({
++        //     ...options,
++        //     additionalEntryPoints: (0, create_entry_points_1.createEntryPoints)(options.additionalEntryPoints, context.root),
++        //     // As long as d.ts files match their .js counterparts, we don't need to emit them.
++        //     // TSC can match them correctly based on file names.
++        //     skipTypings: true,
++        //     format: [determineModuleFormatFromTsConfig(options.tsConfig)],
++        // }, context, target, dependencies));
+         const handleTermination = async (exitCode) => {
+             await typescriptCompilation.close();
+             disposeWatchAssetChanges();
+-            disposePackageJsonChanges();
++            // disposePackageJsonChanges();
+             process.exit(exitCode);
+         };
+         process.on('SIGINT', () => handleTermination(128 + 2));

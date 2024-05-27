@@ -15,7 +15,7 @@
     "plate": "plate"
   },
   "dependencies": {
-    "@swc/core": "1.4.0",
+    "@swc/core": "1.5.7",
     "callsite": "^1.0.0",
     "chalk": "^4.1.0",
     "esbuild": "^0.19.6",
