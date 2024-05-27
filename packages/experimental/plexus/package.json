@@ -30,7 +30,7 @@
     "@babel/core": "^7.18.13",
     "@dxos/random": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@swc-node/register": "1.6.8",
+    "@swc-node/register": "1.9.1",
     "@types/d3": "^7.4.2",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/react": "^18.0.21",
