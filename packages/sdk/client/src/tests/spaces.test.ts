@@ -5,32 +5,29 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { Document as DocumentType, types } from '@braneframe/types';
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
-import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Expando, getTextContent, subscribe } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { type EchoSnapshot, type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { describe, test, afterTest } from '@dxos/test';
-import { Timeframe } from '@dxos/timeframe';
+import { StorageType, createStorage } from '@dxos/random-access-storage';
+import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { type SpaceProxy, SpaceState, getSpaceForObject } from '../echo';
-import { TestBuilder, testSpace, waitForSpace } from '../testing';
+import { SpaceState, getSpace } from '../echo';
+import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -40,7 +37,7 @@ describe('Spaces', () => {
       expect(client.spaces.get()).not.to.be.undefined;
     });
     const space = client.spaces.default;
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   }).tag('flaky');
@@ -49,7 +46,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -57,7 +54,7 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
@@ -80,32 +77,29 @@ describe('Spaces', () => {
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
-    await testSpace(space.internal.db);
+    await testSpaceAutomerge(space.db);
 
     expect(space.members.get()).to.be.length(1);
   });
 
   test('creates a space re-opens the client', async () => {
-    const testBuilder = new TestBuilder(new Config({ version: 1 }));
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
     testBuilder.storage = createStorage({ type: StorageType.RAM });
+    testBuilder.level = createTestLevel();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
 
-    let itemId: string;
+    let objectId: string;
     {
       await client.spaces.isReady.wait();
       const space = client.spaces.default;
-      const {
-        updateEvent: {
-          itemsUpdated: [item],
-        },
-      } = await testSpace(space.internal.db);
-      itemId = item.id;
+      ({ objectId } = await testSpaceAutomerge(space.db));
       expect(space.members.get()).to.be.length(1);
+      await space.db.flush();
     }
-
     await client.destroy();
 
     await client.initialize();
@@ -124,8 +118,8 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const item = space.internal.db._itemManager.getItem(itemId)!;
-      expect(item).to.exist;
+      const obj = await space.db.automerge.loadObjectById(objectId)!;
+      expect(obj).to.exist;
     }
 
     await client.destroy();
@@ -134,8 +128,8 @@ describe('Spaces', () => {
   test('post and listen to messages', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     await client1.initialize();
     await client2.initialize();
     await client1.halo.createIdentity({ displayName: 'Peer 1' });
@@ -149,7 +143,7 @@ describe('Spaces', () => {
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
     const [, { invitation: guestInvitation }] = await Promise.all(
-      performInvitation({ host: space1 as SpaceProxy, guest: client2.spaces }),
+      performInvitation({ host: space1, guest: client2.spaces }),
     );
     const space2 = await waitForSpace(client2, guestInvitation!.spaceKey!, { ready: true });
 
@@ -180,10 +174,10 @@ describe('Spaces', () => {
   test.skip('peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
-    const services1 = testBuilder.createLocal();
+    const services1 = testBuilder.createLocalClientServices();
     const client1 = new Client({ services: services1 });
 
-    const services2 = testBuilder.createLocal();
+    const services2 = testBuilder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client1.initialize();
     afterTest(() => client1.destroy());
@@ -202,7 +196,7 @@ describe('Spaces', () => {
     {
       // Create mutations and epoch.
       for (const i of range(amount)) {
-        const expando = new Expando({ id: i.toString(), data: i.toString() });
+        const expando = createEchoObject({ id: i.toString(), data: i.toString() });
         space1.db.add(expando);
       }
       // Wait to process all mutations.
@@ -217,7 +211,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
+    const _dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
@@ -230,12 +224,12 @@ describe('Spaces', () => {
 
     {
       // Create more mutations on first peer.
-      const expando = new Expando({ id: 'another one', data: 'something' });
+      const expando = createEchoObject({ id: 'another one', data: 'something' });
       space1.db.add(expando);
 
       // Wait to process new mutation on second peer.
-      await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
-      expect(feed2.has(amount + 1)).to.be.true;
+      // await dataSpace2!.inner.dataPipeline.waitUntilTimeframe(new Timeframe([[feedKey!, amount + 1]]));
+      // expect(feed2.has(amount + 1)).to.be.true;
     }
   });
 
@@ -243,7 +237,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -252,7 +246,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
     const trigger = new Trigger();
-    space.properties[subscribe](() => {
+    getAutomergeObjectCore(space.properties).updates.on(() => {
       trigger.wake();
     });
 
@@ -266,7 +260,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -274,138 +268,13 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const obj = space.db.add(new Expando({ data: 'test' }));
-    expect(getSpaceForObject(obj)).to.equal(space);
-  });
-
-  // TODO(mykola): Automerge epochs are not supported yet.
-  test.skip('epoch correctly resets database', async () => {
-    const testBuilder = new TestBuilder();
-    const services = testBuilder.createLocal();
-    const client = new Client({ services });
-    await client.initialize();
-    afterTest(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'test-user' });
-
-    const space = await client.spaces.create();
-    await space.waitUntilReady();
-
-    const dataSpace = services.host!.context.dataSpaceManager!.spaces.get(space.key)!;
-
-    // Create Item.
-    const text = PublicKey.random().toHex();
-    const idx = '0';
-    const item = new Expando({ idx, text });
-    space.db.add(item);
-    await space.db.flush();
-    expect(space.db.objects.length).to.equal(2);
-
-    const writeEpochWithSnapshot = async (databaseSnapshot: EchoSnapshot) => {
-      const processedEpoch = dataSpace.dataPipeline.onNewEpoch.waitForCount(1);
-
-      // Empty snapshot.
-      const snapshot: SpaceSnapshot = {
-        spaceKey: space.key.asUint8Array(),
-        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
-        database: databaseSnapshot,
-      };
-
-      const snapshotCid = await services.host!.context.snapshotStore.saveSnapshot(snapshot);
-
-      const epoch: Epoch = {
-        previousId: dataSpace.dataPipeline.currentEpoch?.id,
-        timeframe: dataSpace.inner.dataPipeline.pipelineState!.timeframe,
-        number: (dataSpace.dataPipeline.currentEpoch?.subject.assertion as Epoch).number + 1,
-        snapshotCid,
-      };
-
-      const receipt = await dataSpace.inner.controlPipeline.writer.write({
-        credential: {
-          credential: await services
-            .host!.context.identityManager.identity!.getIdentityCredentialSigner()
-            .createCredential({
-              subject: space.key,
-              assertion: {
-                '@type': 'dxos.halo.credentials.Epoch',
-                ...epoch,
-              },
-            }),
-        },
-      });
-      await dataSpace.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-      await asyncTimeout(processedEpoch, 1000);
-    };
-
-    const dataBaseState = dataSpace.dataPipeline.databaseHost!.createSnapshot();
-
-    const query = space.db.query({ idx });
-
-    // Create empty Epoch and check if it clears items.
-    {
-      const trigger = new Trigger();
-      expect(query.objects.length).to.equal(1);
-
-      const subscription = query.subscribe(async (query) => {
-        expect(query.objects.length).to.equal(0);
-        trigger.wake();
-      });
-
-      await writeEpochWithSnapshot({});
-      await asyncTimeout(trigger.wait(), 500);
-
-      expect(space.db.objects.length).to.equal(0);
-      expect(query.objects.length).to.equal(0);
-      expect(item.__deleted).to.be.true;
-      subscription();
-    }
-
-    // Reset database to previous state.
-    {
-      const trigger = new Trigger();
-      const subscription = query.subscribe(async (query) => {
-        expect(query.objects.length).to.equal(1);
-        trigger.wake();
-      });
-      afterTest(() => subscription());
-
-      await writeEpochWithSnapshot(dataBaseState);
-      await asyncTimeout(trigger.wait(), 500);
-
-      expect(item.__deleted).to.be.false;
-      expect(space.db.objects.length).to.equal(2);
-      expect(query.objects[0].text).to.equal(text);
-      expect(query.objects[0]).to.equal(item);
-    }
-
-    // Create Epoch and check if Item do not flickers.
-    {
-      const checkItem = (object = item) => {
-        expect(object.__deleted).to.be.false;
-        expect(object.text).to.equal(text);
-      };
-      const trigger = new Trigger();
-      const subscription = space.db.query({ idx }).subscribe((query) => {
-        checkItem(query.objects[0]);
-        trigger.wake();
-      });
-      afterTest(() => subscription());
-
-      await client.services.services.SpacesService?.createEpoch({ spaceKey: space.key });
-      await asyncTimeout(trigger.wait(), 500);
-      checkItem();
-    }
-
-    // Set new field and query it.
-    {
-      item.data = 'new text';
-      await space.db.flush();
-      expect(space.db.query({ idx }).objects[0].data).to.equal('new text');
-    }
+    const obj = space.db.add(createEchoObject({ data: 'test' }));
+    expect(getSpace(obj)).to.equal(space);
   });
 
   test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
-    const services = testBuilder.createLocal();
+    const services = testBuilder.createLocalClientServices();
     const client = new Client({ services });
     await client.initialize();
     afterTest(() => client.destroy());
@@ -413,23 +282,23 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
 
-    const { id } = space.db.add(new Expando({ data: 'test' }));
+    const { id } = space.db.add(createEchoObject({ data: 'test' }));
     await space.db.flush();
 
-    await space.internal.close();
+    await space.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space.internal.open();
+    await space.open();
     await space.waitUntilReady();
     await waitForExpect(() => {
       expect(space.state.get()).to.equal(SpaceState.READY);
     }, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
-    space.db.getObjectById<Expando>(id)!.data = 'test2';
+    space.db.getObjectById(id)!.data = 'test2';
     await space.db.flush();
   });
 
@@ -454,7 +323,7 @@ describe('Spaces', () => {
 
     const space1 = await client1.spaces.create();
 
-    const { id } = space1.db.add(new Expando({ data: 'test' }));
+    const { id } = space1.db.add(createEchoObject({ data: 'test' }));
     await space1.db.flush();
 
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
@@ -462,13 +331,13 @@ describe('Spaces', () => {
       expect(space2.db.getObjectById(id)).to.exist;
     });
 
-    await space1.internal.close();
+    await space1.close();
     // Since updates are throttled we need to wait for the state to change.
     await waitForExpect(() => {
       expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
     }, 1000);
 
-    await space1.internal.open();
+    await space1.open();
 
     await space2.waitUntilReady();
     await waitForExpect(() => {
@@ -476,24 +345,21 @@ describe('Spaces', () => {
     }, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
-    space2.db.getObjectById<Expando>(id)!.data = 'test2';
+    space2.db.getObjectById(id)!.data = 'test2';
     await space2.db.flush();
   });
 
   test('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
-
-    host.addTypes(types);
-    guest.addTypes(types);
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -502,7 +368,7 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
-    const hostDocument = hostSpace.db.add(new DocumentType());
+    const hostDocument = hostSpace.db.add(createDocument());
     await hostSpace.db.flush();
 
     await waitForExpect(() => {
@@ -512,25 +378,21 @@ describe('Spaces', () => {
     (hostDocument.content as any).content = 'Hello, world!';
 
     await waitForExpect(() => {
-      expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
-        'Hello, world!',
-      );
+      expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
     });
   });
 
   test('share two spaces between clients', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
-    host.addTypes(types);
-    guest.addTypes(types);
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();
-
     afterTest(() => host.destroy());
     afterTest(() => guest.destroy());
+    [host, guest].forEach(registerTypes);
 
     await host.halo.createIdentity({ displayName: 'host' });
     await guest.halo.createIdentity({ displayName: 'guest' });
@@ -540,7 +402,7 @@ describe('Spaces', () => {
       await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
       const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
-      const hostDocument = hostSpace.db.add(new DocumentType());
+      const hostDocument = hostSpace.db.add(createDocument());
       await hostSpace.db.flush();
 
       await waitForExpect(() => {
@@ -550,9 +412,7 @@ describe('Spaces', () => {
       (hostDocument.content as any).content = 'Hello, world!';
 
       await waitForExpect(() => {
-        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
-          'Hello, world!',
-        );
+        expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
       });
     }
 
@@ -562,7 +422,7 @@ describe('Spaces', () => {
       await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
       const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
 
-      const hostDocument = hostSpace.db.add(new DocumentType());
+      const hostDocument = hostSpace.db.add(createDocument());
       await hostSpace.db.flush();
 
       await waitForExpect(() => {
@@ -572,18 +432,60 @@ describe('Spaces', () => {
       (hostDocument.content as any).content = 'Hello, world!';
 
       await waitForExpect(() => {
-        expect(getTextContent(guestSpace.db.getObjectById<DocumentType>(hostDocument.id)!.content)).to.equal(
-          'Hello, world!',
-        );
+        expect(getDocumentText(guestSpace, hostDocument.id)).to.equal('Hello, world!');
       });
     }
+  });
+
+  test('queries respect space boundaries', async () => {
+    const testBuilder = new TestBuilder();
+    testBuilder.storage = createStorage({ type: StorageType.RAM });
+
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    await client.initialize();
+    afterTest(() => client.destroy());
+
+    await client.halo.createIdentity({ displayName: 'test-user' });
+
+    const spaceA = await client.spaces.create();
+    const spaceB = await client.spaces.create();
+
+    const objA = spaceA.db.add(createEchoObject({ data: 'object A' }));
+    const objB = spaceB.db.add(createEchoObject({ data: 'object B' }));
+
+    await spaceA.db.flush();
+    await spaceB.db.flush();
+
+    const [wait, inc] = latch({ count: 2, timeout: 1000 });
+
+    spaceA.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objA)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
+
+    spaceB.db.query().subscribe(
+      ({ objects }) => {
+        expect(objects).to.have.length(2);
+        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => obj === objB)).to.be.true;
+        inc();
+      },
+      { fire: true },
+    );
+
+    await wait();
   });
 
   test('object receives updates from another peer', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();
@@ -596,7 +498,7 @@ describe('Spaces', () => {
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
-    const hostRoot = hostSpace.db.add(new Expando({ entries: [new Expando({ name: 'first' })] }));
+    const hostRoot = hostSpace.db.add(createEchoObject({ entries: [createEchoObject({ name: 'first' })] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
 
@@ -606,20 +508,39 @@ describe('Spaces', () => {
     {
       const done = new Trigger();
 
-      await waitForExpect(() => {
-        expect(guestSpace.db.getObjectById(hostRoot.id)).not.to.be.undefined;
+      await waitForExpect(async () => {
+        expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
       const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
-      const unsub = guestRoot[subscribe](() => {
-        expect([...guestRoot.entries].length).to.equal(2);
-        done.wake();
+      const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
+        if (guestRoot.entries.length === 2) {
+          done.wake();
+        }
       });
 
       afterTest(() => unsub());
 
-      hostRoot.entries.push(new Expando({ name: 'second' }));
+      hostRoot.entries.push(createEchoObject({ name: 'second' }));
       await done.wait({ timeout: 1000 });
     }
   });
+
+  const getDocumentText = (space: Space, documentId: string): string => {
+    return (space.db.getObjectById(documentId) as DocumentType).content!.content;
+  };
+
+  const registerTypes = (client: Client) => {
+    client.addSchema(DocumentType, TextV0Type);
+  };
+
+  const createDocument = (): ReactiveObject<DocumentType> => {
+    return create(DocumentType, {
+      content: create(TextV0Type, { content: '' }),
+    });
+  };
+
+  const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
+    return create(Expando, props);
+  };
 });

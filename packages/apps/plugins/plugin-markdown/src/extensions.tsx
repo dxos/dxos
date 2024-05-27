@@ -6,9 +6,9 @@ import { ArrowSquareDown, ArrowSquareOut, type Icon } from '@phosphor-icons/reac
 import React, { type AnchorHTMLAttributes, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Document as DocumentType } from '@braneframe/types';
-import { type IntentDispatcher, NavigationAction } from '@dxos/app-framework';
-import { getSpaceForObject } from '@dxos/react-client/echo';
+import { type DocumentType } from '@braneframe/types';
+import { type IntentDispatcher, LayoutAction } from '@dxos/app-framework';
+import { type Query } from '@dxos/react-client/echo';
 import {
   type AutocompleteResult,
   type Extension,
@@ -24,7 +24,7 @@ import {
 import { getSize, mx } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import type { MarkdownSettingsProps } from './types';
+import { type MarkdownSettingsProps } from './types';
 
 export type ExtensionsOptions = {
   dispatch?: IntentDispatcher;
@@ -32,24 +32,23 @@ export type ExtensionsOptions = {
   document?: DocumentType;
   debug?: boolean;
   experimental?: boolean;
+  query?: Query<DocumentType>;
 };
 
 /**
  * Create extension instances for editor.
  */
-export const getExtensions = ({ dispatch, settings, document }: ExtensionsOptions): Extension[] => {
-  const space = document ? getSpaceForObject(document) : undefined;
-
+export const getExtensions = ({ dispatch, settings, document, query }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     //
     // Common.
     //
     decorateMarkdown({
-      selectionChangeDelay: 400,
+      selectionChangeDelay: 100,
       renderLinkButton: dispatch
         ? onRenderLink((id: string) => {
             void dispatch({
-              action: NavigationAction.ACTIVATE,
+              action: LayoutAction.SCROLL_INTO_VIEW,
               data: { id },
             });
           })
@@ -74,13 +73,13 @@ export const getExtensions = ({ dispatch, settings, document }: ExtensionsOption
   //
   // Autocomplete object links.
   //
-  if (space) {
+  if (query) {
     extensions.push(
       autocomplete({
         onSearch: (text: string) => {
+          // TODO query
           // TODO(burdon): Specify filter (e.g., stack).
-          const { objects = [] } = space?.db.query(DocumentType.filter()) ?? {};
-          return objects
+          return query.objects
             .map<AutocompleteResult | undefined>((object) =>
               object.title?.length && object.id !== document?.id
                 ? {

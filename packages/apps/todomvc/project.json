@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "todomvc",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/todomvc/src",
   "projectType": "library",
   "targets": {
@@ -17,8 +20,7 @@
     "bundle": {
       "dependsOn": [
         "^build",
-        "^bundle",
-        "prebuild"
+        "^bundle"
       ],
       "executor": "@nx/vite:build",
       "options": {
@@ -42,15 +44,6 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    },
     "preview": {
       "executor": "@nx/web:file-server",
       "options": {
@@ -59,6 +52,9 @@
       }
     },
     "serve": {
+      "dependsOn": [
+        "^bundle"
+      ],
       "executor": "@nx/vite:dev-server",
       "options": {
         "buildTarget": "todomvc:bundle"

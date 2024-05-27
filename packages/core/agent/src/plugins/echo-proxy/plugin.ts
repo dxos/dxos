@@ -5,7 +5,7 @@
 import express from 'express';
 
 import { PublicKey } from '@dxos/client';
-import { Expando } from '@dxos/client/echo';
+import { create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { type Config } from '@dxos/protocols/proto/dxos/agent/echoproxy';
 
@@ -21,8 +21,8 @@ export class EchoProxyPlugin extends Plugin {
   public readonly id = 'dxos.org/agent/plugin/echo-proxy';
 
   override async onOpen() {
-    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
-    log('starting proxy...', { ports: this._config.config.port });
+    this.config.config = { ...DEFAULT_OPTIONS, ...this.config.config };
+    log('starting proxy...', { ports: this.config.config.port });
     await this.context.client.initialize();
 
     const app = express();
@@ -48,7 +48,7 @@ export class EchoProxyPlugin extends Plugin {
       if (spaceKey) {
         const space = this.context.client.spaces.get(PublicKey.from(spaceKey));
         if (space) {
-          const { objects } = space.db.query();
+          const { objects } = await space.db.query().run();
           Object.assign(result, {
             objects,
           });
@@ -72,7 +72,7 @@ export class EchoProxyPlugin extends Plugin {
           const objects = req.body;
           Object.assign(result, {
             objects: objects.map(async (data: any) => {
-              const object = space.db.add(new Expando(data));
+              const object = space.db.add(create(data));
               return object.id;
             }),
           });
@@ -84,7 +84,7 @@ export class EchoProxyPlugin extends Plugin {
       res.json(result);
     });
 
-    const { port } = this._config.config!;
+    const { port } = this.config.config!;
     const server = app.listen(port, () => {
       log.info('proxy listening', { port });
     });

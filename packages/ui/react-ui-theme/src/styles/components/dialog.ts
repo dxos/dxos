@@ -16,14 +16,14 @@ export type DialogStyleProps = {
 const dialogLayoutFragment = 'overflow-auto grid place-items-center p-2 md:p-4 lg:p-8';
 
 export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
-  mx('fixed z-20 inset-inline-0 block-start-0 bs-[100dvb] surface-scrim', dialogLayoutFragment, ...etc);
+  mx('fixed z-[22] inset-inline-0 block-start-0 bs-[100dvh] surface-scrim', dialogLayoutFragment, ...etc);
 
 export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
   mx(
     // TODO(thure): `flex` should not be default.
     'flex flex-col',
-    !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
-    'is-[95vw] md:is-full max-is-[24rem] border rounded-lg p-4',
+    !inOverlayLayout && 'fixed z-[22] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
+    'is-[95vw] max-is-[24rem] border rounded-lg p-4',
     dialogMotion,
     surfaceElevation({ elevation }),
     'surface-baseGlass backdrop-blur',

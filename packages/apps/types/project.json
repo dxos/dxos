@@ -1,6 +1,9 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "types",
+  "tags": [
+    "scope:apps"
+  ],
   "sourceRoot": "packages/apps/types/src",
   "projectType": "library",
   "targets": {
@@ -14,14 +17,6 @@
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild"
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen"
-      ]
-    }
+    "test": {}
   }
 }

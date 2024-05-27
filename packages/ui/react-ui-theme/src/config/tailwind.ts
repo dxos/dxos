@@ -11,6 +11,7 @@ import tailwindcssLogical from 'tailwindcss-logical';
 import tailwindcssRadix from 'tailwindcss-radix';
 
 import { physicalColors, semanticColors } from './colors';
+// TODO(burdon): from '../util'?
 import { semanticColors as semanticColorsPlugin } from '../util/semanticColors';
 
 export type TailwindConfig = Config;
@@ -76,6 +77,9 @@ export const tailwindConfig = ({
         },
         boxShadow: {
           slider: '0 0 0 5px rgba(0, 0, 0, 0.3)',
+        },
+        transitionProperty: {
+          'max-height': 'max-height',
         },
         keyframes: {
           // Popper chrome

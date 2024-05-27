@@ -6,7 +6,6 @@ import { Plus } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
 import { type Space } from '@dxos/client/echo';
-import { Schema } from '@dxos/echo-schema';
 import { Button, DensityProvider } from '@dxos/react-ui';
 import { createColumnBuilder, Table, type TableColumnDef } from '@dxos/react-ui-table';
 
@@ -16,15 +15,23 @@ type SchemaRecord = {
   count?: number;
 };
 
-export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: number) => void }> = ({
+// TODO(dmaretskyi): Convert to the new dynamic schema API.
+export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */, count: number) => void }> = ({
   space,
   onCreate,
 }) => {
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
-  const { objects } = space.db.query(Schema.filter());
-  const data = objects
-    .filter((object) => object.typename)
-    .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 }));
+  const [data, setData] = useState<SchemaRecord[]>([]);
+  void space.db.schemaRegistry
+    .getAll()
+    .then((objects) => {
+      setData(
+        objects
+          .filter((object) => object.typename)
+          .map((schema) => ({ id: schema.id, typename: schema.typename, count: schemaCount[schema.id] ?? 1 })),
+      );
+    })
+    .catch();
 
   const handleUpdateCount = (record: SchemaRecord, _: string, count: number | undefined) => {
     setSchemaCount((schemaCount) => Object.assign({}, schemaCount, { [record.id]: count }));
@@ -32,7 +39,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: n
 
   const handleCreate = (id: string) => {
     const count = schemaCount[id] ?? 1;
-    const schema = objects.find((schema) => schema.id === id);
+    const schema = data.find((schema) => schema.id === id);
     if (schema) {
       onCreate?.(schema, count);
     }
@@ -62,9 +69,14 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: Schema, count: n
     }),
   ];
 
+  // TODO(burdon):
   return (
     <DensityProvider density={'fine'}>
-      <Table<SchemaRecord> columns={columns} data={data} />
+      <Table.Root>
+        <Table.Viewport>
+          <Table.Main<SchemaRecord> columns={columns} data={data} />
+        </Table.Viewport>
+      </Table.Root>
     </DensityProvider>
   );
 };

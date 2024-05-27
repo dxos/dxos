@@ -73,18 +73,9 @@ export namespace Features {
     },
   });
 
-  export const proto = ({ depVersion }: Context): Partial<PackageJson> => ({
-    scripts: {
-      'gen-schema': 'dxtype src/proto/schema.proto src/proto/gen/schema.ts',
-      prebuild: 'npm run gen-schema',
-      serve: 'npm run prebuild && vite',
-      preview: 'npm run prebuild && vite preview',
-    },
+  export const schema = ({ depVersion }: Context): Partial<PackageJson> => ({
     dependencies: {
       '@dxos/echo-schema': depVersion,
-    },
-    devDependencies: {
-      '@dxos/echo-typegen': depVersion,
     },
   });
 }
@@ -128,10 +119,13 @@ export default template.define
   })
   .text({
     content: async ({ input, slots: { packageJson: slotPackageJson } }) => {
-      const { react, monorepo, pwa, storybook, dxosUi, tailwind, proto } = input;
+
+      
+      const { react, monorepo, pwa, storybook, dxosUi, tailwind, proto: schema } = input;
       // TODO(wittjosiah): Importing directly causes package.json to be included in the output.
       //   Including package.json in the output causes syncpack to fail sometimes.
       //   Upgrading syncpack will likely fix this but this is simpler for now.
+      
       const ownPackageJson = await loadJson('../package.json'); // relative to .ts files in src by the rules of plate execution
       const { version: packageVersion } = monorepo ? await getDxosRepoInfo() : ownPackageJson;
       const version = monorepo ? packageVersion : '0.1.0';
@@ -150,7 +144,7 @@ export default template.define
         dxosUi && Features.dxosUi(context),
         tailwind && Features.tailwind(),
         storybook && Features.storybook(),
-        proto && Features.proto(context),
+        schema && Features.schema(context),
         slotPackageJson?.() ?? {},
       ].filter(Boolean);
 

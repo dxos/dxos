@@ -1,0 +1,159 @@
+#
+# Config file docs: https://lychee.cli.rs/usage/config/
+#
+# Run with `lychee --offline .` to only check local links.
+#
+# The output will show the broken links,
+# check .lychee.report.md to see what files those links are in.
+#
+#
+#
+#     #############################
+#
+#     NOTE: If there's an error in this config
+#           *the config will be silently ignored.*
+#
+#     #############################
+#
+#
+#
+# See here for more info on the options:
+# https://github.com/lycheeverse/lychee/blob/13f4339710d76831d9daf961584d796cee4847d2/lychee-bin/src/options.rs#L162
+
+
+# Based on this lychee.example.toml:
+# https://github.com/lycheeverse/lychee/blob/0a54079d01ba9a4ff9850d8e46d3ba64743d2c8d/lychee.example.toml
+#
+# From lychee-0.15.1
+
+
+# NOTE: The `base` option is currently set to `./docs/content/.vuepress/public`
+# in order to check doc links to images stored there.
+#
+# The means we'll want to override it when checking the rest of the repo.
+#
+# See this issue for details of how `base` works: https://github.com/lycheeverse/lychee/issues/1265
+
+#############################  Display  #############################
+
+# Verbose program output
+# Accepts log level: "error", "warn", "info", "debug", "trace"
+verbose = "error"
+
+# Don't show interactive progress bar while checking links.
+no_progress = true
+
+# Path to summary output file.
+output = ".lychee.report.md"
+
+#############################  Cache  ###############################
+
+# Enable link caching. This can be helpful to avoid checking the same links on
+# multiple runs.
+cache = false
+
+# Discard all cached requests older than this duration.
+max_cache_age = "2d"
+
+#############################  Runtime  #############################
+
+# Number of threads to utilize.
+# Defaults to number of cores available to the system if omitted.
+threads = 2
+
+# Maximum number of allowed redirects.
+max_redirects = 10
+
+# Maximum number of allowed retries before a link is declared dead.
+max_retries = 2
+
+# Maximum number of concurrent link checks.
+max_concurrency = 14
+
+#############################  Requests  ############################
+
+# User agent to send with each request.
+user_agent = "curl/7.83. 1"
+
+# Website timeout from connect to response finished.
+timeout = 20
+
+# Minimum wait time in seconds between retries of failed requests.
+retry_wait_time = 2
+
+# Comma-separated list of accepted status codes for valid links.
+# Supported values are:
+#
+# accept = ["200..=204", "429"]
+# accept = "200..=204, 429"
+# accept = ["200", "429"]
+# accept = "200, 429"
+accept = ["200", "429"]
+
+# Proceed for server connections considered insecure (invalid TLS).
+insecure = false
+
+# Only test links with the given schemes (e.g. https).
+# Omit to check links with any other scheme.
+# At the moment, we support http, https, file, and mailto.
+scheme = ["https"]
+
+# When links are available using HTTPS, treat HTTP links as errors.
+require_https = false
+
+# Request method
+method = "get"
+
+# Custom request headers
+headers = []
+
+# Remap URI matching pattern to different URI.
+remap = []
+
+# Base URL or website root directory to check relative URLs.
+base = "./docs/content/.vuepress/public"
+
+# HTTP basic auth support. This will be the username and password passed to the
+# authorization HTTP header. See
+# <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization>
+basic_auth = []
+
+#############################  Exclusions  ##########################
+
+# Skip missing input files (default is to error if they don't exist).
+skip_missing = false
+
+# Check links inside `<code>` and `<pre>` blocks as well as Markdown code
+# blocks.
+include_verbatim = false
+
+# Ignore case of paths when matching glob patterns.
+glob_ignore_case = false
+
+# Exclude URLs and mail addresses from checking (supports regex).
+#
+# NOTE: For more information on the ".proto" exclude see: https://github.com/dxos/dxos/issues/6375
+exclude = [".proto"]
+
+# Exclude these filesystem paths from getting checked.
+exclude_path = []
+
+# URLs to check (supports regex). Has preference over all excludes.
+include = []
+
+# Exclude all private IPs from checking.
+# Equivalent to setting `exclude_private`, `exclude_link_local`, and
+# `exclude_loopback` to true.
+exclude_all_private = false
+
+# Exclude private IP address ranges from checking.
+exclude_private = false
+
+# Exclude link-local IP address range from checking.
+exclude_link_local = false
+
+# Exclude loopback IP address range and localhost from checking.
+exclude_loopback = false
+
+# Check mail addresses
+include_mail = true

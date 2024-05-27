@@ -2,16 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import { createAdmissionCredentials, getCredentialAssertion } from '@dxos/credentials';
+import {
+  createAdmissionCredentials,
+  createCancelDelegatedSpaceInvitationCredential,
+  createDelegatedSpaceInvitationCredential,
+  getCredentialAssertion,
+} from '@dxos/credentials';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError } from '@dxos/protocols';
+import {
+  AlreadyJoinedError,
+  type ApiError,
+  AuthorizationError,
+  InvalidInvitationError,
+  SpaceNotFoundError,
+} from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import {
   type AdmissionRequest,
   type AdmissionResponse,
@@ -36,6 +47,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
+  checkCanInviteNewMembers(): ApiError | undefined {
+    if (this._spaceKey == null) {
+      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+    }
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    if (space == null) {
+      return new SpaceNotFoundError(this._spaceKey);
+    }
+    if (!space?.inner.spaceState.hasMembershipManagementPermission(this._signingContext.identityKey)) {
+      return new AuthorizationError('No member management permission.');
+    }
+    return undefined;
+  }
+
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.SPACE,
@@ -43,13 +68,21 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async admit(request: AdmissionRequest, guestProfile?: ProfileDocument | undefined): Promise<AdmissionResponse> {
+  async admit(
+    invitation: Invitation,
+    request: AdmissionRequest,
+    guestProfile?: ProfileDocument | undefined,
+  ): Promise<AdmissionResponse> {
     invariant(this._spaceKey);
-    const space = await this._spaceManager.spaces.get(this._spaceKey);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
     invariant(space);
 
     invariant(request.space);
     const { identityKey, deviceKey } = request.space;
+
+    if (space.inner.spaceState.getMemberRole(identityKey) !== SpaceMember.Role.REMOVED) {
+      throw new AlreadyJoinedError();
+    }
 
     log('writing guest credentials', { host: this._signingContext.deviceKey, guest: deviceKey });
     // TODO(burdon): Check if already admitted.
@@ -58,7 +91,10 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       identityKey,
       space.key,
       space.inner.genesisFeedKey,
+      invitation.role ?? SpaceMember.Role.ADMIN,
+      space.inner.spaceState.membershipChainHeads,
       guestProfile,
+      invitation.delegationCredentialId,
     );
 
     // TODO(dmaretskyi): Refactor.
@@ -72,13 +108,65 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       space: {
         credential: spaceMemberCredential,
         controlTimeframe: space.inner.controlPipeline.state.timeframe,
-        dataTimeframe: space.dataPipeline.pipelineState?.timeframe,
       },
     };
   }
 
+  async delegate(invitation: Invitation): Promise<PublicKey> {
+    invariant(this._spaceKey);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    invariant(space);
+    if (invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY) {
+      invariant(invitation.guestKeypair?.publicKey);
+    }
+
+    log('writing delegate space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
+    const credential = await createDelegatedSpaceInvitationCredential(
+      this._signingContext.credentialSigner,
+      space.key,
+      {
+        invitationId: invitation.invitationId,
+        authMethod: invitation.authMethod,
+        swarmKey: invitation.swarmKey,
+        role: invitation.role ?? SpaceMember.Role.ADMIN,
+        expiresOn: invitation.lifetime
+          ? new Date((invitation.created?.getTime() ?? Date.now()) + invitation.lifetime)
+          : undefined,
+        multiUse: invitation.multiUse ?? false,
+        guestKey:
+          invitation.authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY
+            ? invitation.guestKeypair!.publicKey
+            : undefined,
+      },
+    );
+
+    invariant(credential.credential);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
+    return credential.credential.credential.id!;
+  }
+
+  async cancelDelegation(invitation: Invitation): Promise<void> {
+    invariant(this._spaceKey);
+    invariant(invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId);
+    const space = this._spaceManager.spaces.get(this._spaceKey);
+    invariant(space);
+
+    log('cancelling delegated space invitation', { host: this._signingContext.deviceKey, id: invitation.invitationId });
+    const credential = await createCancelDelegatedSpaceInvitationCredential(
+      this._signingContext.credentialSigner,
+      space.key,
+      invitation.delegationCredentialId,
+    );
+
+    invariant(credential.credential);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
+  }
+
   checkInvitation(invitation: Partial<Invitation>) {
-    if (invitation.spaceKey && this._spaceManager.spaces.has(invitation.spaceKey)) {
+    if (invitation.spaceKey == null) {
+      return new InvalidInvitationError('No spaceKey was provided for a space invitation.');
+    }
+    if (this._spaceManager.spaces.has(invitation.spaceKey)) {
       return new AlreadyJoinedError('Already joined space.');
     }
   }

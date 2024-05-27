@@ -64,22 +64,13 @@ console.log(client.toJSON());
         <pre id='output'>
         </pre>
         <p>
-          When you are ready you can deploy this app to your <a href='https://docs.dxos.org/guide/kube' target='_blank' rel='noreferrer'>
-            KUBE
-          </a>
-          .
+          When you are ready you can deploy to any static hosting service. See sample <a href='https://docs.dxos.org/guide/tutorial.html#deploying-the-app' target='_blank' rel='noreferrer'>deploy instructions</a>.
         </p>
-        <pre>pnpm run deploy</pre>
         <h2>Learn more:</h2>
         <ul>
           <li>
             <a href='https://docs.dxos.org/guide/echo/react' target='_blank' rel='noreferrer'>
               Using ECHO with React
-            </a>
-          </li>
-          <li>
-            <a href='https://docs.dxos.org/guide/kube/dx-yml-file' target='_blank' rel='noreferrer'>
-              Deploying to KUBE
             </a>
           </li>
           <li>

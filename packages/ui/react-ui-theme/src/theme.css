@@ -16,15 +16,24 @@
   font-variation-settings:
     'wght' 400,
     'slnt' 0;
+  scroll-padding-block-start: theme(spacing.14);
+  scroll-padding-block-end: theme(spacing.2);
   --surface-bg: theme(colors.neutral.25);
   --input-bg: theme(colors.neutral.50);
   --input-bg-hover: theme(colors.neutral.75);
   --surface-text: black;
   --description-text: theme(colors.neutral.300);
   --topbar-size: theme(spacing.12);
+  --statusbar-size: theme(spacing.6);
   --sticky-top: 0;
   --rail-size: 48px;
   --rail-action: 40px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --statusbar-size: theme(spacing.8);
+  }
 }
 
 .dark {

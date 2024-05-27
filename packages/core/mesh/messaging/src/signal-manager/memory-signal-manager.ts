@@ -13,7 +13,8 @@ import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type CommandTrace, type SignalStatus } from '../signal-client';
+import { type CommandTrace } from '../signal-client';
+import { type SignalStatus } from '../signal-methods';
 
 /**
  * Common signaling context that connects multiple MemorySignalManager instances.

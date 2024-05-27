@@ -9,10 +9,11 @@ import { effect } from '@preact/signals-core';
 import React, { useEffect, useState } from 'react';
 
 import { EventSubscriptions } from '@dxos/async';
+import { create, type EchoReactiveObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { faker } from '@dxos/random';
 import { Client } from '@dxos/react-client';
-import { Expando, type Space, SpaceState } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { ClientRepeater, TestBuilder } from '@dxos/react-client/testing';
 import { Button, DensityProvider, Input, Select } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -32,7 +33,7 @@ const DEFAULT_PERIOD = 500;
 
 registerSignalRuntime();
 const testBuilder = new TestBuilder();
-const client = new Client({ services: testBuilder.createLocal() });
+const client = new Client({ services: testBuilder.createLocalClientServices() });
 await client.initialize();
 await client.halo.createIdentity();
 await client.spaces.create();
@@ -56,6 +57,7 @@ const spaceBuilderExtension = (graph: Graph) => {
       );
 
       const query = space.db.query();
+      subscriptions.add(query.subscribe());
       subscriptions.add(
         effect(() => {
           query.objects.forEach((object) => {
@@ -94,7 +96,8 @@ const objectBuilderExtension = (graph: Graph) => {
     subscriptions.clear();
     spaces.forEach((space) => {
       const query = space.db.query({ type: 'test' });
-      let previousObjects: Expando[] = [];
+      subscriptions.add(query.subscribe());
+      let previousObjects: EchoReactiveObject<any>[] = [];
       subscriptions.add(
         effect(() => {
           const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -168,7 +171,7 @@ const runAction = (action: Action) => {
       break;
 
     case Action.CLOSE_SPACE:
-      void getSpace()?.internal.close();
+      void getSpace()?.close();
       break;
 
     case Action.RENAME_SPACE: {
@@ -180,7 +183,7 @@ const runAction = (action: Action) => {
     }
 
     case Action.ADD_OBJECT:
-      getSpace()?.db.add(new Expando({ type: 'test', name: faker.commerce.productName() }));
+      getSpace()?.db.add(create({ type: 'test', name: faker.commerce.productName() }));
       break;
 
     case Action.REMOVE_OBJECT: {

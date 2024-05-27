@@ -4,7 +4,7 @@
 
 import { type Dispatch, type SetStateAction } from 'react';
 
-import { type Document } from '@braneframe/types';
+import { type DocumentType } from '@braneframe/types';
 import { type Space } from '@dxos/react-client/echo';
 
 export type SpaceResolverProps = {
@@ -16,8 +16,8 @@ export type SpaceResolverProps = {
 };
 
 export type DocumentResolverProps = {
-  document: Document | null;
-  setDocument: Dispatch<SetStateAction<Document | null>>;
+  document: DocumentType | null;
+  setDocument: Dispatch<SetStateAction<DocumentType | null>>;
 };
 
 export type ResolverProps = SpaceResolverProps & DocumentResolverProps;

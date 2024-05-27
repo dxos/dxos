@@ -10,10 +10,11 @@ We love your input. Please submit an issue for any of these reasons:
 
 Some of these other needs are not best handled by github issues:
 - Asking a question about something not working -> [Discord](https://discord.gg/eXVfryv3sW)
-- A security vulnerability or incident -> email security@braneframe.com directly. Do NOT post anywhere else please.
+- A security vulnerability or incident -> email `security@braneframe.com` directly. Do NOT post anywhere else please.
 
 ## Setting up a developer environment
 See the [Repository Guide](./REPOSITORY_GUIDE.md).
+
 ## Submitting PRs
 We welcome your pull requests:
 1. Fork the repo and create your branch from `main`.

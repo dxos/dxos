@@ -6,7 +6,7 @@ import { Check, X } from '@phosphor-icons/react';
 import React, { useMemo } from 'react';
 import { QR } from 'react-qr-rounded';
 
-import { type InvitationStatus, Invitation } from '@dxos/react-client/invitations';
+import { type InvitationStatus } from '@dxos/react-client/invitations';
 import { useId, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -43,16 +43,19 @@ export const InvitationManager = ({
   active,
   send,
   status,
-  type,
+  multiUse,
   authCode,
   id = '0',
 }: InvitationManagerProps) => {
   const { t } = useTranslation('os');
   const qrLabel = useId('invitation-manager__qr-code');
-  const statusValue = type === Invitation.Type.MULTIUSE ? 0 : invitationStatusValue.get(status!) ?? 0;
+  const statusValue = multiUse ? 0 : invitationStatusValue.get(status!) ?? 0;
   const showAuthCode = statusValue === 3;
   const emoji = hexToEmoji(id);
   const activeView = useMemo(() => {
+    if (multiUse) {
+      return 'showing qr';
+    }
     switch (true) {
       case statusValue === 5:
       case statusValue < 0:
@@ -69,7 +72,7 @@ export const InvitationManager = ({
         <Viewport.Views>
           <InvitationManagerView id='showing qr' emoji={emoji}>
             <p className='text-sm mlb-1 font-normal text-center'>
-              {t(type === Invitation.Type.MULTIUSE ? 'invite many qr label' : 'invite one qr label')}
+              {t(multiUse ? 'invite many qr label' : 'invite one qr label')}
             </p>
             <div role='none' className={mx(descriptionText, 'is-full max-is-[14rem] relative')}>
               <QR
@@ -95,7 +98,7 @@ export const InvitationManager = ({
           <InvitationManagerView id='showing auth code'>
             <Label>{t('auth code message')}</Label>
             <AuthCode code={authCode} large classNames='text-black dark:text-white' />
-            <Label>Be sure the other device is showing this symbol:</Label>
+            <Label>{t('auth other device emoji message')}</Label>
             {emoji && <Emoji text={emoji} />}
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>

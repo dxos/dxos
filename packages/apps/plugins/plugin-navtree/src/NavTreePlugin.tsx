@@ -20,8 +20,9 @@ import {
   parseGraphPlugin,
 } from '@dxos/app-framework';
 import { isAction, isGraphNode, type Node, type NodeFilter } from '@dxos/app-graph';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
+import { type PartIdentifier } from '@dxos/react-ui-deck';
 import { treeNodeFromGraphNode, type TreeNode, getTreeNode } from '@dxos/react-ui-navtree';
 import { getHostPlatform } from '@dxos/util';
 
@@ -44,7 +45,7 @@ export type NavTreePluginProvides = SurfaceProvides &
 
 export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   const longestPaths = new Map<string, string[]>();
-  const state = E.object<{ root?: TreeNode }>({});
+  const state = create<{ root?: TreeNode }>({});
   let graphPlugin: Plugin<GraphProvides> | undefined;
 
   // Filter for the longest path to a node from the root.
@@ -153,8 +154,10 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
                   <NavTreeContainer
                     root={state.root}
                     paths={longestPaths}
-                    activeId={data.activeId as string}
+                    activeIds={data.activeIds as Set<string>}
+                    attended={data.attended as Set<string>}
                     popoverAnchorId={data.popoverAnchorId as string}
+                    part={data.part as PartIdentifier | undefined}
                   />
                 );
               }
@@ -170,11 +173,12 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             case 'navbar-start': {
               const path = isGraphNode(data.activeNode) && longestPaths.get(data.activeNode.id);
               if (path && state.root) {
-                const activeNode = getTreeNode(state.root, path);
-
                 return {
                   node: (
-                    <NavBarStart activeNode={activeNode} popoverAnchorId={data.popoverAnchorId as string | undefined} />
+                    <NavBarStart
+                      activeNode={data.activeNode as Node}
+                      popoverAnchorId={data.popoverAnchorId as string | undefined}
+                    />
                   ),
                   disposition: 'hoist',
                 };
@@ -204,7 +208,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
             data: () =>
               intentPlugin?.provides.intent.dispatch({
                 action: LayoutAction.SET_LAYOUT,
-                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands` },
+                data: { element: 'dialog', component: `${NAVTREE_PLUGIN}/Commands`, dialogBlockAlign: 'start' },
               }),
             properties: {
               label: ['open commands label', { ns: NAVTREE_PLUGIN }],

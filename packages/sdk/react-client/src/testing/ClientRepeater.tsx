@@ -5,7 +5,7 @@
 import React, { useState, type FC, useEffect } from 'react';
 
 import { Client, type PublicKey } from '@dxos/client';
-import { type SpaceProxy, type Space, type TypeCollection } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { faker } from '@dxos/random';
@@ -19,12 +19,12 @@ export type RepeatedComponentProps = { id: number; count: number };
 
 export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   component: FC<any>;
+  className?: string;
   controls?: FC<{ clients: Client[] }>;
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
-  className?: string;
-  types?: TypeCollection;
+  schema?: Parameters<Client['addSchema']>;
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -46,7 +46,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     controls: Controls,
     count = 1,
     className = 'flex w-full place-content-evenly',
-    types,
+    schema,
     createIdentity,
     createSpace,
     onCreateSpace,
@@ -60,9 +60,9 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
 
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocal() }));
+      const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
       await Promise.all(clients.map((client) => client.initialize()));
-      types && clients.map((client) => client.spaces.addSchema(types));
+      schema && clients.map((client) => client.addSchema(...schema));
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));
@@ -72,9 +72,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
         const space = await clients[0].spaces.create({ name: faker.commerce.productName() });
         setSpaceKey(space.key);
         await onCreateSpace?.(space);
-        await Promise.all(
-          clients.slice(1).map((client) => performInvitation({ host: space as SpaceProxy, guest: client.spaces })),
-        );
+        await Promise.all(clients.slice(1).map((client) => performInvitation({ host: space, guest: client.spaces })));
       }
 
       setClients(clients);

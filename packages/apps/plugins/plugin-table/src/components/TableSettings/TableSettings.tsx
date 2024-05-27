@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import { type Table as TableType } from '@braneframe/types';
-import { type Schema } from '@dxos/client/echo';
+import { type TableType } from '@braneframe/types';
+import { type DynamicEchoSchema } from '@dxos/echo-schema';
 import { type DialogRootProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
@@ -15,18 +15,22 @@ const NEW_ID = '__new';
 
 export type TableSettingsProps = {
   table: TableType;
-  schemas?: Schema[];
+  schemas?: DynamicEchoSchema[];
   onClose?: (success: boolean) => void;
 } & Pick<DialogRootProps, 'open'>;
 
 export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSettingsProps) => {
   const { t } = useTranslation(TABLE_PLUGIN);
-  const handleValueChange = (id: string) => {
-    table.schema = schemas.find((schema) => schema.id === id) as any; // TODO(burdon): Allow set to undefined.
-  };
+
+  const handleValueChange = useCallback(
+    (id: string) => {
+      table.schema = schemas.find((schema) => schema.id === id) as any; // TODO(burdon): Allow set to undefined.
+    },
+    [table, schemas],
+  );
 
   return (
-    <SettingsDialog title={t('settings title')} open={open} onClose={onClose}>
+    <SettingsDialog title={t('settings title')} open={open} onClose={onClose} cancellable={false}>
       <Input.Root>
         <Input.TextInput
           placeholder={t('table name placeholder')}

@@ -17,7 +17,7 @@ import { ComplexMap, isNotNullOrUndefined } from '@dxos/util';
 import { type Connection, ConnectionState } from './connection';
 import { type ConnectionLimiter } from './connection-limiter';
 import { Peer } from './peer';
-import { SwarmMessenger, type OfferMessage, type SignalMessage } from '../signal';
+import { type OfferMessage, type SignalMessage, SwarmMessenger } from '../signal';
 import { type SwarmController, type Topology } from '../topology';
 import { type TransportFactory } from '../transport';
 import { type Topic } from '../types';
@@ -76,6 +76,7 @@ export class Swarm {
   // TODO(burdon): Split up properties.
   constructor(
     private readonly _topic: PublicKey,
+    // usually the deviceKey
     private readonly _ownPeerId: PublicKey,
     private _topology: Topology,
     private readonly _protocolProvider: WireProtocolProvider,
@@ -319,6 +320,7 @@ export class Swarm {
         candidates: Array.from(this._peers.values())
           .filter((peer) => !peer.connection && peer.advertizing && peer.availableToConnect)
           .map((peer) => peer.id),
+        allPeers: Array.from(this._peers.values()).map((peer) => peer.id),
       }),
       connect: (peer) => {
         if (this._ctx.disposed) {
@@ -356,6 +358,7 @@ export class Swarm {
 
     // It is likely that the other peer will also try to connect to us at the same time.
     // If our peerId is higher, we will wait for a bit so that other peer has a chance to connect first.
+    const peer = this._getOrCreatePeer(remoteId);
     if (remoteId.toHex() < this._ownPeerId.toHex()) {
       log('initiation delay', { remoteId });
       await sleep(this._initiationDelay);
@@ -364,7 +367,9 @@ export class Swarm {
       return;
     }
 
-    const peer = this._getOrCreatePeer(remoteId);
+    if (this._peers.get(remoteId) == null) {
+      throw new Error('Peer left during initiation delay');
+    }
 
     if (peer.connection) {
       // Do nothing if peer is already connected.

@@ -19,6 +19,28 @@ Type: <code>[AuthMethod](/api/@dxos/react-client/enums#AuthMethod)</code>
 
 How the invitation is authenticated.
 
+### [created]()
+Type: <code>Date</code>
+
+Options:
+  - proto3_optional = true
+
+### [delegationCredentialId]()
+Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+
+Present on Type.DELEGATED invitations.
+
+Options:
+  - proto3_optional = true
+
+### [guestKeypair]()
+Type: <code>AdmissionKeypair</code>
+
+Guest's keypair required for AuthMethod.KNOWN_PUBLIC_KEY.
+
+Options:
+  - proto3_optional = true
+
 ### [identityKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
@@ -36,6 +58,36 @@ Local identifier (random).
 Type: <code>[Kind](/api/@dxos/react-client/enums#Kind)</code>
 
 Kind of access the invitation will grant.
+
+### [lifetime]()
+Type: <code>number</code>
+
+Options:
+  - proto3_optional = true
+
+### [multiUse]()
+Type: <code>boolean</code>
+
+Whether an invitation can be used multiple times.
+
+Options:
+  - proto3_optional = true
+
+### [persistent]()
+Type: <code>boolean</code>
+
+Host should resume invitation on startup until timeout.
+
+Options:
+  - proto3_optional = true
+
+### [role]()
+Type: <code>Role</code>
+
+Role of the admitted member, defaults to ADMIN.
+
+Options:
+  - proto3_optional = true
 
 ### [spaceKey]()
 Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
@@ -66,7 +118,7 @@ Options:
 ### [timeout]()
 Type: <code>number</code>
 
-Timeout (ms).
+Timeout for guest to complete invitation once connected (ms).
 
 Options:
   - proto3_optional = true

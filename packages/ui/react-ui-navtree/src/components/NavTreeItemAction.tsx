@@ -3,6 +3,7 @@
 //
 
 import { type IconProps } from '@phosphor-icons/react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type FC, type MutableRefObject, type PropsWithChildren, useRef, useState } from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
@@ -32,14 +33,24 @@ export const NavTreeItemActionDropdownMenu = ({
   active,
   testId,
   actions,
-  suppressNextTooltip,
   onAction,
+  suppressNextTooltip,
+  menuOpen,
+  defaultMenuOpen,
+  onChangeMenuOpen,
 }: Pick<NavTreeItemActionProps, 'icon' | 'actions' | 'testId' | 'active' | 'onAction'> & {
   suppressNextTooltip: MutableRefObject<boolean>;
+  menuOpen?: boolean;
+  defaultMenuOpen?: boolean;
+  onChangeMenuOpen?: (nextOpen: boolean) => void;
 }) => {
   const { t } = useTranslation(translationKey);
 
-  const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
+  const [optionsMenuOpen, setOptionsMenuOpen] = useControllableState({
+    prop: menuOpen,
+    defaultProp: defaultMenuOpen,
+    onChange: onChangeMenuOpen,
+  });
 
   return (
     <DropdownMenu.Root
@@ -228,10 +239,10 @@ export const NavTreeItemActionSearchList = ({
       </Tooltip.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay>
-          <Dialog.Content classNames={['z-[31] is-full max-is-[24rem] px-2 py-1']}>
+          <Dialog.Content classNames='z-[31] is-full max-is-[24rem] pli-2 plb-1'>
             <SearchList.Root label={t('tree item searchlist input placeholder')}>
-              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames={mx('px-3')} />
-              <SearchList.Content classNames={['min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto']}>
+              <SearchList.Input placeholder={t('tree item searchlist input placeholder')} classNames='pli-3' />
+              <SearchList.Content classNames='min-bs-[12rem] bs-[50dvh] max-bs-[30rem] overflow-auto'>
                 {sortedActions?.map((action) => {
                   const label = toLocalizedString(action.label, t);
                   const shortcut =

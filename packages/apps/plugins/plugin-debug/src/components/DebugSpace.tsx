@@ -17,10 +17,11 @@ import {
   Timer,
   UserCirclePlus,
 } from '@phosphor-icons/react';
-import React, { type FC, useContext, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useContext, useMemo, useState } from 'react';
 
-import { type Schema, type TypedObject } from '@dxos/echo-schema';
+import { type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Space, useSpaceInvitation } from '@dxos/react-client/echo';
 import { InvitationEncoder } from '@dxos/react-client/invitations';
@@ -38,23 +39,35 @@ const DEFAULT_COUNT = 100;
 const DEFAULT_PERIOD = 500;
 const DEFAULT_JITTER = 50;
 
-const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => void }> = ({ space, onAddObjects }) => {
+// TODO(burdon): Factor out.
+const useRefresh = (): [any, () => void] => {
+  const [update, setUpdate] = useState({});
+  return [update, () => setUpdate({})];
+};
+
+const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any>[]) => void }> = ({
+  space,
+  onAddObjects,
+}) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
   const [data, setData] = useState<any>({});
-  const handleRefresh = async () => {
-    const data = await client.diagnostics({ truncate: true });
-    setData(
-      data?.diagnostics?.spaces?.find(({ key }: any) => {
-        return space.key.toHex().startsWith(key);
-      }),
-    );
-  };
 
-  useEffect(() => {
-    void handleRefresh();
-  }, [space]);
+  const [update, handleUpdate] = useRefresh();
+  useAsyncEffect(
+    async (isMounted) => {
+      const data = await client.diagnostics({ truncate: true });
+      if (isMounted()) {
+        setData(
+          data?.diagnostics?.spaces?.find(({ key }: any) => {
+            return space.key.toHex().startsWith(key);
+          }),
+        );
+      }
+    },
+    [space, update],
+  );
 
   const download = useFileDownload();
   const handleCopy = async () => {
@@ -75,11 +88,11 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => 
   const handleToggleRunning = () => {
     if (running) {
       stop();
-      void handleRefresh();
+      handleUpdate();
     } else {
       start(
         async () => {
-          generator.updateDocument();
+          await generator.updateDocument();
         },
         {
           count: safeParseInt(mutationCount) ?? 0,
@@ -90,14 +103,16 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => 
     }
   };
 
-  const handleCreate = (schema: Schema, count: number) => {
+  // TODO(dmaretskyi): Convert to the new dynamic schema API.
+  const handleCreate = (schema: any /* Schema */, count: number) => {
     generator.createObjects({ [schema.typename]: count });
   };
 
   const handleCreateInvitation = () => {
     const invitation = space.share({
-      type: Invitation.Type.MULTIUSE,
+      type: Invitation.Type.INTERACTIVE,
       authMethod: Invitation.AuthMethod.NONE,
+      multiUse: true,
     });
 
     // TODO(burdon): Refactor.
@@ -110,7 +125,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => 
 
   const handleCreateEpoch = async () => {
     await space.internal.createEpoch();
-    await handleRefresh();
+    handleUpdate();
   };
 
   return (
@@ -185,7 +200,7 @@ const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: TypedObject[]) => 
           <Button onClick={handleToggleRunning}>
             {running ? <HandPalm className={getSize(5)} /> : <Play className={getSize(5)} />}
           </Button>
-          <Button onClick={handleRefresh}>
+          <Button onClick={handleUpdate}>
             <ArrowClockwise className={getSize(5)} />
           </Button>
           <Button onClick={handleCopy}>

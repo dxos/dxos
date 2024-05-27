@@ -4,27 +4,27 @@
 
 import { Code, type IconProps } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { Script as ScriptType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { ScriptType, TextV0Type } from '@braneframe/types';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { type Filter, type EchoObject, type Schema, TextObject, isTypedObject } from '@dxos/react-client/echo';
+import { create } from '@dxos/echo-schema';
+import { createDocAccessor, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { useDocAccessor } from '@dxos/react-ui-editor';
-import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 
 import { ScriptBlock, type ScriptBlockProps } from './components';
 import meta, { SCRIPT_PLUGIN } from './meta';
 import translations from './translations';
 import { ScriptAction, type ScriptPluginProvides } from './types';
-
-// TODO(burdon): Make generic and remove need for filter.
-const isObject = <T extends EchoObject>(object: unknown, schema: Schema, filter: Filter<T>): T | undefined => {
-  return isTypedObject(object) && object.__typename === schema.typename ? (object as T) : undefined;
-};
 
 export type ScriptPluginProps = {
   containerUrl: string;
@@ -36,24 +36,29 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
     provides: {
       metadata: {
         records: {
-          [ScriptType.schema.typename]: {
+          [ScriptType.typename]: {
             placeholder: ['object title placeholder', { ns: SCRIPT_PLUGIN }],
             icon: (props: IconProps) => <Code {...props} />,
           },
         },
       },
       translations,
+      echo: {
+        schema: [ScriptType],
+      },
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
+          const unsubscribe = effect(() => {
+            subscriptions.clear();
+            client.spaces.get().forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
                   graph,
@@ -68,35 +73,41 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                   dispatch,
                 }),
               );
+            });
 
-              // Add all scripts to the graph.
-              const query = space.db.query(ScriptType.filter());
-              let previousObjects: ScriptType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                // Add all scripts to the graph.
+                const query = space.db.query(Filter.schema(ScriptType));
+                subscriptions.add(query.subscribe());
+                let previousObjects: ScriptType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                    previousObjects = query.objects;
 
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(object.id));
-                    query.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
-                          label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
-                          icon: (props: IconProps) => <Code {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
+                    batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      query.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
+                            label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+                            icon: (props: IconProps) => <Code {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
+                          },
+                        });
                       });
                     });
-                  });
-                }),
-              );
-            });
+                  }),
+                );
+              });
           });
 
           return () => {
@@ -123,21 +134,23 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return isObject(data.active, ScriptType.schema, ScriptType.filter()) ? (
-                <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+              return data.active instanceof ScriptType ? (
+                <Main.Content
+                  classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}
+                >
                   <ScriptBlockWrapper
-                    //
-                    script={data.active as ScriptType}
+                    // prettier-ignore
+                    script={data.active}
                     containerUrl={containerUrl}
                     classes={{ toolbar: 'px-1' }}
                   />
                 </Main.Content>
               ) : null;
             case 'slide':
-              return isObject(data.slide, ScriptType.schema, ScriptType.filter()) ? (
+              return data.slide instanceof ScriptType ? (
                 <ScriptBlockWrapper
-                  //
-                  script={data.slide as ScriptType}
+                  // prettier-ignore
+                  script={data.slide}
                   containerUrl={containerUrl}
                   classes={{ toolbar: 'p-24' }}
                   view='preview'
@@ -145,10 +158,10 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                 />
               ) : null;
             case 'section':
-              return isObject(data.object, ScriptType.schema, ScriptType.filter()) ? (
+              return data.object instanceof ScriptType ? (
                 <ScriptBlockWrapper
-                  //
-                  script={data.object as ScriptType}
+                  // prettier-ignore
+                  script={data.object}
                   containerUrl={containerUrl}
                   classes={{ root: 'h-[400px] py-2' }}
                 />
@@ -162,7 +175,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: new ScriptType({ source: new TextObject(example) }) };
+              return { data: create(ScriptType, { source: create(TextV0Type, { content: example }) }) };
             }
           }
         },
@@ -172,8 +185,8 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
 };
 
 const ScriptBlockWrapper = ({ script, ...props }: { script: ScriptType } & Omit<ScriptBlockProps, 'id' | 'source'>) => {
-  const { accessor } = useDocAccessor(script.source);
-  return <ScriptBlock id={script.id} source={accessor} {...props} />;
+  const source = useMemo(() => script.source && createDocAccessor(script.source, ['content']), [script.source]);
+  return source ? <ScriptBlock id={script.id} source={source} {...props} /> : null;
 };
 
 // TODO(burdon): Import.
@@ -184,7 +197,7 @@ const example = [
   'export default () => {',
   '  const spaces = useSpaces();',
   '  const space = spaces[1];',
-  "  const objects = useQuery(space, Filter.typename('example.com/schema/contact'));",
+  "  const objects = useQuery(space, Filter.typename('example.com/type/contact'));",
   '  return <Chart items={objects} accessor={object => ({ x: object.lat, y: object.lng })} />',
   '}',
 ].join('\n');

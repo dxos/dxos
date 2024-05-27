@@ -4,7 +4,7 @@
 
 import { Flags, ux } from '@oclif/core';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { printAgents } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {

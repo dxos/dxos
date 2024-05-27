@@ -2,26 +2,15 @@
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
-    "stripInternal": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
   "references": [
-    {
-      "path": "../../../common/async"
-    },
-    {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
-      "path": "../../../common/context"
-    },
     {
       "path": "../../../common/debug"
     },
@@ -38,40 +27,16 @@
       "path": "../../../common/node-std"
     },
     {
-      "path": "../../../common/random-access-storage"
-    },
-    {
-      "path": "../../../common/tracing"
-    },
-    {
       "path": "../../../common/util"
     },
     {
       "path": "../../protocols"
     },
     {
-      "path": "../automerge"
-    },
-    {
-      "path": "../document-model"
-    },
-    {
-      "path": "../echo-db"
-    },
-    {
-      "path": "../echo-pipeline"
+      "path": "../echo-protocol"
     },
     {
       "path": "../echo-signals"
-    },
-    {
-      "path": "../echo-typegen"
-    },
-    {
-      "path": "../model-factory"
-    },
-    {
-      "path": "../text-model"
     }
   ]
 }

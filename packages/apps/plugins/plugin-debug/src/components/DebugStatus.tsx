@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Circle, type IconProps, Lightning, LightningSlash } from '@phosphor-icons/react';
-import React, { type FC, useEffect, useRef, useState } from 'react';
+import { ChartBar, Circle, Lightning, LightningSlash } from '@phosphor-icons/react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { getActiveSpace } from '@braneframe/plugin-space';
-import { parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
+import { StatusBar } from '@braneframe/plugin-status-bar';
+import { firstMainId, parseGraphPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
 import { TimeoutError } from '@dxos/async';
+import { StatsPanel, useStats } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
@@ -27,7 +29,7 @@ const styles = {
  * Ensure light doesn't flicker immediately after start.
  */
 // TODO(burdon): Move to @dxos/async (debounce?)
-const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
+const _timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number }) => {
   const min = options?.min ?? 500;
   let start: number;
   let pending: NodeJS.Timeout;
@@ -59,20 +61,16 @@ const timer = (cb: (err?: Error) => void, options?: { min?: number; max?: number
  * Global error handler.
  */
 // TODO(burdon): Integrate with Sentry?
-const ErrorIndicator: FC<IconProps> = (props) => {
+const ErrorIndicator = () => {
   const [, forceUpdate] = useState({});
-  const error = useRef<Error>();
-  const debug = true; // TODO(burdon): From config?
+  const errorRef = useRef<Error>();
   useEffect(() => {
     const errorListener = (event: any) => {
+      const error: Error = event.error ?? event.reason;
       // event.preventDefault();
-      // TODO(burdon): Handler is called twice.
-      if (error.current !== event.error) {
+      if (errorRef.current !== error) {
         log.error('onError', { event });
-        error.current = event.error;
-        if (debug) {
-          log.catch(event.error);
-        }
+        errorRef.current = error;
         forceUpdate({});
       }
     };
@@ -91,21 +89,21 @@ const ErrorIndicator: FC<IconProps> = (props) => {
   }, []);
 
   const handleReset = () => {
-    error.current = undefined;
+    errorRef.current = undefined;
     forceUpdate({});
   };
 
-  if (error.current) {
+  if (errorRef.current) {
     return (
-      <span title={error.current.message} onClick={handleReset}>
-        <Circle weight='fill' className={mx(styles.error, getSize(3))} {...props} />
-      </span>
+      <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
+        <Circle weight='fill' className={mx(styles.error, getSize(3))} />
+      </StatusBar.Button>
     );
   } else {
     return (
-      <span title='No errors.'>
-        <Circle weight='fill' className={getSize(3)} {...props} />
-      </span>
+      <StatusBar.Item title='No errors.'>
+        <Circle weight='fill' className={getSize(3)} />
+      </StatusBar.Item>
     );
   }
 };
@@ -113,7 +111,7 @@ const ErrorIndicator: FC<IconProps> = (props) => {
 /**
  * Swarm connection handler.
  */
-const SwarmIndicator: FC<IconProps> = (props) => {
+const SwarmIndicator = () => {
   const [state, setState] = useState(0);
   const { swarm } = useNetworkStatus();
   useEffect(() => {
@@ -122,15 +120,15 @@ const SwarmIndicator: FC<IconProps> = (props) => {
 
   if (state === 0) {
     return (
-      <span title='Connected to swarm.'>
-        <Lightning className={getSize(4)} {...props} />
-      </span>
+      <StatusBar.Item title='Connected to swarm.'>
+        <Lightning className={getSize(4)} />
+      </StatusBar.Item>
     );
   } else {
     return (
-      <span title='Disconnected from swarm.'>
-        <LightningSlash className={mx(styles.warning, getSize(4))} {...props} />
-      </span>
+      <StatusBar.Item title='Disconnected from swarm.'>
+        <LightningSlash className={mx(styles.warning, getSize(4))} />
+      </StatusBar.Item>
     );
   }
 };
@@ -138,61 +136,85 @@ const SwarmIndicator: FC<IconProps> = (props) => {
 /**
  * Space saving indicator.
  */
-const SavingIndicator: FC<IconProps> = (props) => {
-  const [state, setState] = useState(0);
+const SavingIndicator = () => {
+  const [state, _setState] = useState(0);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const graphPlugin = useResolvePlugin(parseGraphPlugin);
   const location = navigationPlugin?.provides.location;
   const graph = graphPlugin?.provides.graph;
-  const space = location && graph ? getActiveSpace(graph, location.active) : undefined;
-  useEffect(() => {
-    if (!space) {
-      return;
-    }
-    const { start, stop } = timer(() => setState(0), { min: 250 });
-    return space.db.pendingBatch.on(({ duration, error }) => {
-      if (error) {
-        setState(2);
-        stop();
-      } else if (duration === undefined) {
-        setState(1);
-        start();
-      } else {
-        stop();
-      }
-    });
-  }, [space]);
+  const _space = location && graph ? getActiveSpace(graph, firstMainId(location.active)) : undefined;
+  // TODO(dmaretskyi): Fix this when we have save status for automerge.
+  // useEffect(() => {
+  //   if (!space) {
+  //     return;
+  //   }
+  // const { start, stop } = timer(() => setState(0), { min: 250 });
+  // return space.db.pendingBatch.on(({ duration, error }) => {
+  //   if (error) {
+  //     setState(2);
+  //     stop();
+  //   } else if (duration === undefined) {
+  //     setState(1);
+  //     start();
+  //   } else {
+  //     stop();
+  //   }
+  // });
+  // }, [space]);
 
   switch (state) {
     case 2:
       return (
-        <span title='Edit not saved.'>
-          <Circle weight='fill' className={mx(styles.warning, getSize(3))} {...props} />
-        </span>
+        <StatusBar.Item title='Edit not saved.'>
+          <Circle weight='fill' className={mx(styles.warning, getSize(3))} />
+        </StatusBar.Item>
       );
     case 1:
       return (
-        <span title='Saving...'>
-          <Circle weight='fill' className={mx(styles.success, getSize(3))} {...props} />
-        </span>
+        <StatusBar.Item title='Saving...'>
+          <Circle weight='fill' className={mx(styles.success, getSize(3))} />
+        </StatusBar.Item>
       );
     case 0:
     default:
       return (
-        <span title='Modified indicator.'>
-          <Circle weight='fill' className={getSize(3)} {...props} />
-        </span>
+        <StatusBar.Item title='Modified indicator.'>
+          <Circle weight='fill' className={getSize(3)} />
+        </StatusBar.Item>
       );
   }
 };
 
-export const DebugStatus = () => {
-  const indicators = [SavingIndicator, ErrorIndicator, SwarmIndicator];
+const PerformanceIndicator = () => {
+  const [visible, setVisible] = useState(false);
+  const [stats, refreshStats] = useStats();
+
   return (
-    <div className='flex items-center px-1 gap-1 h-6 text-neutral-200 dark:text-neutral-800'>
+    <>
+      <StatusBar.Button onClick={() => setVisible((visible) => !visible)} title='Performance panels'>
+        <ChartBar />
+      </StatusBar.Button>
+      <div
+        className={mx(
+          'z-20 absolute transition-[right] bottom-[24px] w-[450px]',
+          'border-l border-y border-neutral-300 dark:border-neutral-700',
+          visible ? 'right-0' : 'right-[-450px]',
+        )}
+      >
+        <StatsPanel stats={stats} onRefresh={refreshStats} />
+      </div>
+    </>
+  );
+};
+
+const indicators = [PerformanceIndicator, SavingIndicator, ErrorIndicator, SwarmIndicator];
+
+export const DebugStatus = () => {
+  return (
+    <>
       {indicators.map((Indicator) => (
         <Indicator key={Indicator.name} />
       ))}
-    </div>
+    </>
   );
 };

@@ -24,6 +24,16 @@ Type: <code>[Invitation](/api/@dxos/client/interfaces/Invitation)</code>
 
 
 
+### [expired]()
+Type: <code>undefined | boolean | "0"</code>
+
+
+
+### [expiry]()
+Type: <code>undefined | Date</code>
+
+
+
 
 ## Methods
 ### [\[observable\]()]()

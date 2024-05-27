@@ -1,25 +1,23 @@
 ---
 order: 0
-prev: ../
 ---
 
 # Introduction
 
-DXOS provides developers with everything they need to build real-time, collaborative apps which run entirely on the client, and communicate peer-to-peer, without servers.
+DXOS provides developers with a toolkit to build local-first, collaborative apps which preserve privacy by communicating peer-to-peer.
 
 DXOS applications work offline, share state instantly when online, and leave end-users in control of their data and privacy.
 
-Read more [motivation](why.md).
+Composer is a collaborative productivity app where developers can build and organize knowledge, extend with custom data and UI, and run private AI against their knowledge locally.
 
 :::note
 DXOS is under development and will continue to change frequently.<br/>Your feedback is most welcome on [GitHub](https://github.com/dxos/dxos/issues) and [Discord](https://discord.gg/eXVfryv3sW). <br/>See our [Contribution Guide](https://github.com/dxos/dxos/blob/main/CONTRIBUTING.md) about contributing code.
 :::
 
-DXOS is a group of technologies that work together:
+The DXOS SDK includes a key pair of technologies that work together:
 
-* [ECHO](platform) - Database and reactive state container for offline-first, real-time, collaborative apps.
-* [HALO](platform/halo) - Identity for decentralized apps.
-* [KUBE](platform/kube) - Self-contained infrastructure for hosting and operating decentralized apps.
+* [ECHO](echo/) - Database and reactive state container for offline-first, real-time, collaborative apps.
+* [HALO](halo/) - Identity for decentralized apps.
 
 Compare DXOS applications to client-server web applications:
 | | Client-Server Web Apps | DXOS Apps |
@@ -29,20 +27,45 @@ Compare DXOS applications to client-server web applications:
 | How data is exchanged | client to server via HTTP or Web Sockets | peer to peer via WebRTC |
 | How identity is established | servers issue session tokens after validating credentials with methods like OAuth | clients generate their own private/public key pairs and use them to sign messages in the database. |
 
-## ECHO
+# SDK Documentation Overview
 
-ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript. ECHO connects to other peers directly via [WebRTC](https://en.wikipedia.org/wiki/WebRTC), and continuously replicates data with those peers using the [Automerge](https://automerge.org/) [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). ECHO supports multiple concurrent writers collaborating on arbitrary objects and text. Clients may perform writes while offline, reconciling with the swarm when returning online.
+Dependency relationship of some of the technologies covered in the docs:
 
-Learn more about [ECHO](platform).
+```mermaid
+graph TD;
+  %% Make the nodes closer together horizontally to narrow the graph:
+  %%{init:{'flowchart':{'nodeSpacing': 8}}}%%
+  subgraph DXOS["DXOS protocols"];
+    ECHO["<a href='./halo/'>ECHO</a><br>Peer-to-peer object store"];
+    HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
+    MESH["MESH\nNetworking and replication"];
+    ECHO-.->HALO;
+    ECHO-.->MESH
+    HALO-.->MESH;
+  end
+  subgraph Plugins["<a href="./composer-plugins/">Composer Plugins</a>"];
+    Layout["<a href="./composer-plugins/core#layout">Layout</a>"];
+    Theme["<a href="./composer-plugins/core#theme">Theme</a>"];
+    Etc1["..."];
+  end
+  subgraph AppFramework["App Framework"];
+    Surface["<a href="./composer-plugins/surface">Surface</a>"];
+    Intent["<a href="./composer-plugins/intent">Intent</a>"];
+    Graph["<a href="./composer-plugins/graph">Graph</a>"];
+  end
+  subgraph App["DXOS Apps"];
+    TodoMVC["<a href='./samples/#todomvc'>TodoMVC</a>"];
+    Tasks["<a href='./samples/#tasks'>Tasks</a>"];
+    Composer;
+    Etc2["..."];
+  end
+  TodoMVC-->DXOS;
+  Tasks-->DXOS;
+  Composer-->DXOS;
+  Composer-.->Plugins;
+  Composer-->AppFramework;
+  Plugins-->DXOS;
+  Plugins-->AppFramework;
+```
 
-## HALO
-
-Establishing user identity in a non-authoritative internet is hard. Every peer has to decide how to trust each other. HALO is a set of components and protocols for decentralized identity and access control designed around privacy, security, and collaboration requirements.
-
-Learn more about [HALO](platform/halo).
-
-## KUBE
-
-Running an application requires a lot of supporting technology: process monitoring, observability, deployment management, DNS, SSL, ..., etc. KUBE is a compact, self-contained binary that runs anywhere and provides essential hosting services for applications.
-
-Learn more about [KUBE](platform/kube).
+Here solid lines represent direct dependencies and dashed lines pluggable ones.

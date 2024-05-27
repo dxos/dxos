@@ -18,9 +18,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -40,6 +37,9 @@
     },
     {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/kv-store"
     },
     {
       "path": "../../common/log"
@@ -63,9 +63,6 @@
       "path": "../../core/echo/automerge"
     },
     {
-      "path": "../../core/echo/document-model"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
@@ -76,12 +73,6 @@
     },
     {
       "path": "../../core/echo/indexing"
-    },
-    {
-      "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/halo/credentials"

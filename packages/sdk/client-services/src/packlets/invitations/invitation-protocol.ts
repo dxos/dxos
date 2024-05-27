@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type PublicKey } from '@dxos/keys';
 import type { ApiError } from '@dxos/protocols';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { ProfileDocument, DeviceProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -25,15 +26,28 @@ export interface InvitationProtocol {
   // Host
   //
 
+  checkCanInviteNewMembers(): ApiError | undefined;
+
   /**
    * Protocol-specific information to include in the invitation.
    */
   getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'>;
 
   /**
+   * Allow authorized peers to handle this invitation behalf of invitation creator.
+   * @return id of the delegation credential written to subject control-feed.
+   */
+  delegate(invitation: Invitation): Promise<PublicKey>;
+
+  /**
+   * Notify other peers that a delegated invitation was cancelled;
+   */
+  cancelDelegation(invitation: Invitation): Promise<void>;
+
+  /**
    * Once authentication is successful, the host can admit the guest to the requested resource.
    */
-  admit(request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
+  admit(invitation: Invitation, request: AdmissionRequest, guestProfile?: ProfileDocument): Promise<AdmissionResponse>;
 
   //
   // Guest

@@ -24,6 +24,7 @@ import { IFrameManager } from './iframe-manager';
 import { ClientServicesProxy } from './service-proxy';
 import { ShellManager } from './shell-manager';
 import { type Client } from '../client';
+import { RPC_TIMEOUT } from '../common';
 
 export type IFrameClientServicesProxyOptions = {
   source?: string;
@@ -144,9 +145,12 @@ export class IFrameClientServicesProxy implements ClientServicesProvider {
     this._clientServicesProxy = new ClientServicesProxy(this._appPort);
     await this._clientServicesProxy.open();
 
-    this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs({
-      filters: this._logFilter,
-    });
+    this._loggingStream = this._clientServicesProxy.services.LoggingService.queryLogs(
+      {
+        filters: this._logFilter,
+      },
+      { timeout: RPC_TIMEOUT },
+    );
     this._loggingStream.subscribe((entry) => {
       switch (entry.level) {
         case LogLevel.DEBUG:

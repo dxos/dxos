@@ -21,6 +21,7 @@ export default [
         'select editor mode placeholder': 'Select editor mode…',
         'settings editor mode default label': 'Default',
         'settings editor mode vim label': 'Vim',
+        'settings editor mode vscode label': 'VS Code',
         'settings toolbar label': 'Show toolbar',
         'settings experimental label': 'Enable experimental features',
         'settings debug label': 'Enable debugging features',

@@ -146,3 +146,17 @@ tools/intellij-plugin/build/
 
 # socket.ini overrides
 .sscrc
+
+# partykit
+.partykit
+
+# cloudflare
+.wrangler/
+
+# blade-runner
+dump.rdb
+
+# lychee link checker
+/.lychee.report.md
+
+

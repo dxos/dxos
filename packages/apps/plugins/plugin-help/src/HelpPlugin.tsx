@@ -2,18 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Keyboard as KeyboardIcon } from '@phosphor-icons/react';
+import { type IconProps, Keyboard as KeyboardIcon, Info } from '@phosphor-icons/react';
 import React from 'react';
-import { type Step } from 'react-joyride';
 
 import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 
 import { HelpContextProvider, ShortcutsDialogContent, ShortcutsHints, ShortcutsList } from './components';
 import meta, { HELP_PLUGIN } from './meta';
 import translations from './translations';
-import { HelpAction, type HelpPluginProvides } from './types';
+import { type Step, HelpAction, type HelpPluginProvides } from './types';
 
 export type HelpSettingsProps = { showHints?: boolean; showWelcome?: boolean };
 
@@ -21,8 +20,7 @@ export type HelpPluginOptions = { steps?: Step[] };
 
 export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<HelpPluginProvides> => {
   const settings = new LocalStorageStore<HelpSettingsProps>(HELP_PLUGIN, { showHints: true, showWelcome: true });
-  const state = E.object<{ running: boolean }>({ running: false });
-
+  const state = create<{ running: boolean }>({ running: false });
   return {
     meta,
     ready: async () => {
@@ -33,11 +31,27 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           storageKey: 'show-welcome',
           type: LocalStorageStore.bool({ allowUndefined: true }),
         });
+      // TODO(zhenyasav): re-enable welcome tour on startup
+      // the following is not enough to re-enable the welcome tour
+      // for example, when is the right time to show it after
+      // a user landed on a shared piece of content?
+      // const isDeviceInvitation = window.location.pathname.indexOf('deviceInvitationCode') >= 0;
+      // const isSpaceInvitationCode = window.location.pathname.indexOf('spaceInvitationCode') >= 0;
+      // state.running = !!settings.values.showHints && !isDeviceInvitation && !isSpaceInvitationCode;
     },
     provides: {
       context: ({ children }) => {
         return (
-          <HelpContextProvider steps={steps} running={state.running}>
+          <HelpContextProvider
+            steps={steps}
+            running={state.running}
+            onRunningChanged={(newState) => {
+              state.running = newState;
+              if (!newState) {
+                settings.values.showHints = false;
+              }
+            }}
+          >
             {children}
           </HelpContextProvider>
         );
@@ -48,28 +62,28 @@ export const HelpPlugin = ({ steps = [] }: HelpPluginOptions): PluginDefinition<
           const intentPlugin = resolvePlugin(plugins, parseIntentPlugin)!;
           graph.addNodes(
             // TODO(wittjosiah): Welcome tour is broken.
-            // {
-            //   id: HelpAction.START,
-            //   data: () => {
-            //     settings.values.showHints = true;
-            //     return intentPlugin?.provides.intent.dispatch({
-            //       plugin: HELP_PLUGIN,
-            //       action: HelpAction.START,
-            //     });
-            //   },
-            //   properties: {
-            //     label: ['open help tour', { ns: HELP_PLUGIN }],
-            //     icon: (props: IconProps) => <Info {...props} />,
-            //     keyBinding: {
-            //       macos: 'shift+meta+/',
-            //       // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-            //       windows: 'shift+ctrl+/',
-            //       linux: 'shift+ctrl+?',
-            //     },
-            //     testId: 'helpPlugin.openHelp',
-            //   },
-            //   edges: [['root', 'inbound']],
-            // },
+            {
+              id: HelpAction.START,
+              data: () => {
+                settings.values.showHints = true;
+                return intentPlugin?.provides.intent.dispatch({
+                  plugin: HELP_PLUGIN,
+                  action: HelpAction.START,
+                });
+              },
+              properties: {
+                label: ['open help tour', { ns: HELP_PLUGIN }],
+                icon: (props: IconProps) => <Info {...props} />,
+                keyBinding: {
+                  macos: 'shift+meta+/',
+                  // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                  windows: 'shift+ctrl+/',
+                  linux: 'shift+ctrl+?',
+                },
+                testId: 'helpPlugin.openHelp',
+              },
+              edges: [['root', 'inbound']],
+            },
             {
               id: 'dxos.org/plugin/help/open-shortcuts',
               data: () => {

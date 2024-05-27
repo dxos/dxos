@@ -2,7 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Expando, type TypedObject, Schema, type Space } from '@dxos/client/echo';
+import { type Space, Filter } from '@dxos/client/echo';
+import { type DynamicEchoSchema, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { type TestSchemaType } from './data';
@@ -20,35 +22,36 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>
   ) {}
 
-  get schemas(): Schema[] {
+  get schemas(): DynamicEchoSchema[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T) {
+  getSchema(type: T): DynamicEchoSchema | undefined {
     return this.schemas.find((schema) => schema.typename === type);
   }
 
-  protected setSchema(type: T, schema: Schema) {
+  protected setSchema(type: T, schema: DynamicEchoSchema) {
     this._schemas[type] = schema;
   }
 
   // TODO(burdon): Runtime type check via: https://github.com/Effect-TS/schema (or zod).
-  createObject({ types }: { types?: T[] } = {}): TypedObject {
+  async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
     const type = faker.helpers.arrayElement(types ?? (Object.keys(this._schemas) as T[]));
-    const data = this._generators[type](this._provider);
+    const data = await this._generators[type](this._provider);
     const schema = this.getSchema(type);
-    return new Expando(data, { schema });
+    return schema ? create(schema, data) : create(data);
   }
 
   // TODO(burdon): Create batch.
   // TODO(burdon): Based on dependencies (e.g., organization before contact).
-  createObjects(map: Partial<Record<T, number>>): Expando[] {
-    const objects: Expando[] = [];
-    Object.entries<number>(map as any).forEach(([type, count]) => {
-      range(() => objects.push(this.createObject({ types: [type as T] })), count);
-    });
+  async createObjects(map: Partial<Record<T, number>>): Promise<ReactiveObject<any>[]> {
+    const tasks = Object.entries<number>(map as any)
+      .map(([type, count]) => {
+        return range(() => this.createObject({ types: [type as T] }), count);
+      })
+      .flatMap((t) => t);
 
-    return objects;
+    return Promise.all(tasks);
   }
 }
 
@@ -61,37 +64,37 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     schemaMap: TestSchemaMap<T>,
     generators: TestGeneratorMap<T>,
   ) {
-    super(schemaMap, generators, (type: T) => {
-      const { objects } = this._space.db.query((object: TypedObject) => {
-        return object.__schema?.id === this.getSchema(type)?.id;
-      });
-
-      return objects;
+    super(schemaMap, generators, async (type: T) => {
+      const schema = this.getSchema(type);
+      return (schema && (await this._space.db.query(Filter.schema(schema)).run()).objects) ?? [];
     });
 
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
-    const { objects } = this._space.db.query(Schema.filter());
-    Object.keys(schemaMap).forEach((type) => {
-      const schema = objects.find((object) => object.typename === type);
-      if (schema) {
-        this.setSchema(type as T, schema);
+    Object.entries<DynamicEchoSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
+      let schema = this._space.db.schemaRegistry.getRegisteredByTypename(type);
+      if (schema == null) {
+        schema = this._space.db.schemaRegistry.add(dynamicSchema.schema);
       }
+      this.setSchema(type as T, schema);
     });
   }
 
   addSchemas() {
-    const { objects } = this._space.db.query(Schema.filter());
+    const result: DynamicEchoSchema[] = [];
     this.schemas.forEach((schema) => {
-      if (!objects.find((object) => object.typename === schema.typename)) {
-        this._space.db.add(schema);
+      const existing = this._space.db.schemaRegistry.getRegisteredByTypename(schema.typename);
+      if (existing == null) {
+        result.push(this._space.db.schemaRegistry.add(schema.schema));
+      } else {
+        result.push(existing);
       }
     });
 
-    return this.schemas;
+    return result;
   }
 
-  override createObject({ types }: { types?: T[] } = {}): Expando {
-    return this._space.db.add(super.createObject({ types }));
+  override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
+    return this._space.db.add(await super.createObject({ types }));
   }
 }

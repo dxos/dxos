@@ -3,29 +3,24 @@
 //
 
 import fs from 'fs';
-import { type CID } from 'kubo-rpc-client';
+import { type CID, type KuboRPCClient } from 'kubo-rpc-client';
 import { join } from 'path';
 
 interface UploadOptions {
-  timeout: string | number;
   progress?: (bytes: number, path?: string) => void;
   pin?: boolean;
-  authorizationHeader?: string;
 }
 
-export const uploadToIPFS = async (path: string, ipfsServer: string, options?: UploadOptions): Promise<CID> => {
-  const { timeout, pin = true, progress, authorizationHeader } = options || {};
+// eslint-disable-next-line no-new-func
+export const importESM = new Function('modulePath', 'return import(modulePath)');
 
-  const { create, globSource } = await _importESM('kubo-rpc-client');
-  const ipfsClient = create({
-    url: ipfsServer,
-    timeout: timeout || '1m',
-    ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
-  });
-
+export const uploadToIPFS = async (ipfsClient: KuboRPCClient, path: string, options?: UploadOptions): Promise<CID> => {
+  const { globSource } = await importESM('kubo-rpc-client');
   if (!fs.existsSync(path)) {
-    throw new Error('Incorrect path to definitons. File or directory does not exist');
+    throw new Error(`File or directory does not exist: ${path}}`);
   }
+
+  const { pin = true, progress } = options || {};
   if (fs.lstatSync(path).isDirectory()) {
     const files = [];
     for await (const file of ipfsClient.addAll(globSource(path, '**/*'), {
@@ -34,16 +29,14 @@ export const uploadToIPFS = async (path: string, ipfsServer: string, options?: U
       wrapWithDirectory: true,
     })) {
       const fullPath = join(path, file.path);
-
       if (!fs.lstatSync(fullPath).isDirectory()) {
         const remoteChunks = [];
         for await (const chunk of ipfsClient.cat(file.cid)) {
           remoteChunks.push(chunk);
         }
+
         const remoteContent = Buffer.concat(remoteChunks);
-
         const localContent = fs.readFileSync(fullPath);
-
         if (!localContent.equals(remoteContent)) {
           throw new Error('file content mismatch', {
             cause: {
@@ -65,6 +58,3 @@ export const uploadToIPFS = async (path: string, ipfsServer: string, options?: U
     return addResult.cid;
   }
 };
-
-// eslint-disable-next-line no-new-func
-const _importESM = new Function('modulePath', 'return import(modulePath)');

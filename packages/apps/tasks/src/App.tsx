@@ -12,18 +12,19 @@ import {
   useSearchParams,
 } from 'react-router-dom';
 
+import { create } from '@dxos/echo-schema';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { useSpace, useQuery } from '@dxos/react-client/echo';
+import { useSpace, useQuery, Filter } from '@dxos/react-client/echo';
 
 import { TaskList } from './TaskList';
 import { getConfig } from './config';
-import { Task, types } from './proto';
+import { TaskType } from './types';
 
 export const TaskListContainer = () => {
   const { spaceKey } = useParams<{ spaceKey: string }>();
 
   const space = useSpace(spaceKey);
-  const tasks = useQuery<Task>(space, Task.filter());
+  const tasks = useQuery<TaskType>(space, Filter.schema(TaskType));
   const shell = useShell();
 
   return (
@@ -38,7 +39,7 @@ export const TaskListContainer = () => {
         // void shell.shareSpace({ spaceKey: space?.key, invitationUrl: (invitationCode) => `/space/${space.key}?spaceInvitationCode=${invitationCode}` });
       }}
       onTaskCreate={(newTaskTitle) => {
-        const task = new Task({ title: newTaskTitle, completed: false });
+        const task = create(TaskType, { title: newTaskTitle, completed: false });
         space?.db.add(task);
       }}
       onTaskRemove={(task) => {
@@ -64,7 +65,7 @@ export const Home = () => {
 
   useEffect(() => {
     if (deviceInvitationCode) {
-      // TODO: desired API for joining a device
+      // TODO(???): desired API for joining a device.
       // shell.joinDevice({ invitationCode: deviceInvitationCode });
       setSearchParams((p) => {
         p.delete('deviceInvitationCode');
@@ -112,7 +113,7 @@ export const App = () => {
       shell='./shell.html'
       onInitialized={async (client) => {
         // TODO(wittjosiah): ClientProvider should support adding schemas.
-        client.addSchema(types);
+        client.addSchema(TaskType);
 
         const searchParams = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,8 +20,8 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
-    "@preact/signals-core": "^1.5.1",
+    "@phosphor-icons/react": "^2.1.5",
+    "@preact/signals-core": "^1.6.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -21,6 +21,19 @@ Values:
 - `UNKNOWN` 
 
 
+### [`Kind`]()
+
+Defined in:
+   file://./../../../dxos/echo/indexing.proto
+
+Values:
+- `FIELD_MATCH` 
+
+- `FULL_TEXT` 
+
+- `SCHEMA_MATCH` 
+
+
 ### [`DataLocation`]()
 
 Defined in:
@@ -45,28 +58,6 @@ Values:
 - `SHOW_DELETED` 
 
 - `SHOW_DELETED_ONLY` 
-
-
-### [`PropType`]()
-
-
-
-Values:
-- `BOOLEAN` 
-
-- `DATE` 
-
-- `ENUM` 
-
-- `NONE` 
-
-- `NUMBER` 
-
-- `RECORD` 
-
-- `REF` 
-
-- `STRING` 
 
 
 ### [`PresenceState`]()
@@ -114,6 +105,21 @@ Values:
 - `PLAIN` 
 
 - `RICH` 
+
+
+### [`Migration`]()
+
+Defined in:
+   file://./../../../dxos/client/services.proto
+
+Values:
+- `FRAGMENT_AUTOMERGE_ROOT` 
+
+- `INIT_AUTOMERGE` 
+
+- `NONE` 
+
+- `PRUNE_AUTOMERGE_ROOT_HISTORY` 
 
 
 ### [`PresenceState`]()
@@ -165,6 +171,8 @@ Defined in:
    file://./../../../dxos/client/services.proto
 
 Values:
+- `KNOWN_PUBLIC_KEY` 
+
 - `NONE` 
 
 - `SHARED_SECRET` 
@@ -197,6 +205,8 @@ Values:
 
 - `ERROR` 
 
+- `EXPIRED` 
+
 - `INIT` 
 
 - `READY_FOR_AUTHENTICATION` 
@@ -212,11 +222,11 @@ Defined in:
    file://./../../../dxos/client/services.proto
 
 Values:
+- `DELEGATED` 
+
 - `INTERACTIVE` 
 
 - `MULTIUSE` 
-
-- `OFFLINE` 
 
 
 ### [`ConnectionState`]()
@@ -255,11 +265,15 @@ Values:
 
 - `INITIALIZE_IDENTITY` 
 
+- `INITIALIZE_IDENTITY_FROM_INVITATION` 
+
 - `JOIN_SPACE` 
 
 - `SHARE_IDENTITY` 
 
 - `SPACE` 
+
+- `STATUS` 
 
 
 ### [`SystemStatus`]()

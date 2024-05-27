@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -11,49 +11,57 @@
       "browser": "./dist/lib/browser/index.mjs",
       "import": "./dist/lib/browser/index.mjs",
       "require": "./dist/lib/node/index.cjs",
-      "node": "./dist/lib/node/index.cjs"
+      "node": "./dist/lib/node/index.cjs",
+      "types": "./dist/types/src/index.d.ts"
     },
     "./devtools": {
       "browser": "./dist/lib/browser/devtools/index.mjs",
       "import": "./dist/lib/browser/devtools/index.mjs",
       "require": "./dist/lib/node/devtools/index.cjs",
-      "node": "./dist/lib/node/devtools/index.cjs"
+      "node": "./dist/lib/node/devtools/index.cjs",
+      "types": "./dist/types/src/devtools/index.d.ts"
     },
     "./echo": {
       "browser": "./dist/lib/browser/echo/index.mjs",
       "import": "./dist/lib/browser/echo/index.mjs",
       "require": "./dist/lib/node/echo/index.cjs",
-      "node": "./dist/lib/node/echo/index.cjs"
+      "node": "./dist/lib/node/echo/index.cjs",
+      "types": "./dist/types/src/echo/index.d.ts"
     },
     "./halo": {
       "browser": "./dist/lib/browser/halo/index.mjs",
       "import": "./dist/lib/browser/halo/index.mjs",
       "require": "./dist/lib/node/halo/index.cjs",
-      "node": "./dist/lib/node/halo/index.cjs"
+      "node": "./dist/lib/node/halo/index.cjs",
+      "types": "./dist/types/src/halo/index.d.ts"
     },
     "./invitations": {
       "browser": "./dist/lib/browser/invitations/index.mjs",
       "import": "./dist/lib/browser/invitations/index.mjs",
       "require": "./dist/lib/node/invitations/index.cjs",
-      "node": "./dist/lib/node/invitations/index.cjs"
+      "node": "./dist/lib/node/invitations/index.cjs",
+      "types": "./dist/types/src/invitations/index.d.ts"
     },
     "./mesh": {
       "browser": "./dist/lib/browser/mesh/index.mjs",
       "import": "./dist/lib/browser/mesh/index.mjs",
       "require": "./dist/lib/node/mesh/index.cjs",
-      "node": "./dist/lib/node/mesh/index.cjs"
+      "node": "./dist/lib/node/mesh/index.cjs",
+      "types": "./dist/types/src/mesh/index.d.ts"
     },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "import": "./dist/lib/browser/testing/index.mjs",
       "require": "./dist/lib/node/testing/index.cjs",
-      "node": "./dist/lib/node/testing/index.cjs"
+      "node": "./dist/lib/node/testing/index.cjs",
+      "types": "./dist/types/src/testing/index.d.ts"
     },
     "./worker": {
       "browser": "./dist/lib/browser/worker.mjs",
       "import": "./dist/lib/browser/worker.mjs",
       "require": "./dist/lib/node/worker.cjs",
-      "node": "./dist/lib/node/worker.cjs"
+      "node": "./dist/lib/node/worker.cjs",
+      "types": "./dist/types/src/worker.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -93,7 +101,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-async": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
@@ -116,7 +123,6 @@
   },
   "optionalDependencies": {
     "@dxos/random": "workspace:*",
-    "@dxos/text-model": "workspace:*",
     "yjs": "^13.6.10"
   },
   "publishConfig": {

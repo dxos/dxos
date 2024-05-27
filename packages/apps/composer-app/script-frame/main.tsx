@@ -5,7 +5,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { types } from '@braneframe/types';
 import { ClientServicesProxy } from '@dxos/client/services';
 import { ClientProvider } from '@dxos/react-client';
 import { createIFramePort } from '@dxos/rpc-tunnel';
@@ -47,7 +46,7 @@ const services = new ClientServicesProxy(
 );
 
 createRoot(document.getElementById('root')!).render(
-  <ClientProvider services={() => services} types={types}>
+  <ClientProvider services={() => services}>
     <div className='flex fixed inset-0'>
       <Component />
     </div>

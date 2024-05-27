@@ -54,12 +54,22 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-deck/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-explorer/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-files/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-function/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -194,6 +204,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-status-bar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
@@ -235,6 +250,11 @@
         {
           "type": "json",
           "path": "packages/apps/templates/tasks-template/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/testbench-app/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -310,6 +330,11 @@
         {
           "type": "json",
           "path": "packages/common/keys/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/common/kv-store/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -404,11 +429,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/echo/document-model/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/echo/echo-db/package.json",
           "jsonpath": "$.version"
         },
@@ -420,6 +440,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-pipeline/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-protocol/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -445,21 +470,6 @@
         {
           "type": "json",
           "path": "packages/core/echo/indexing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/messenger-model/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/model-factory/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/echo/text-model/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -579,6 +589,11 @@
         },
         {
           "type": "json",
+          "path": "packages/experimental/agent-functions/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/experimental/chess-app/package.json",
           "jsonpath": "$.version"
         },
@@ -595,11 +610,6 @@
         {
           "type": "json",
           "path": "packages/experimental/gem-spore/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/labs-functions/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -624,17 +634,17 @@
         },
         {
           "type": "json",
+          "path": "packages/gravity/blade-runner/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/gravity/gravity-dashboard/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/gravity/kube-publishing/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/gravity/kube-testing/package.json",
           "jsonpath": "$.version"
         },
         {

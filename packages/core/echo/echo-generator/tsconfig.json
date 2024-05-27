@@ -7,7 +7,6 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
@@ -20,6 +19,9 @@
     },
     {
       "path": "../../../sdk/client"
+    },
+    {
+      "path": "../echo-schema"
     }
   ]
 }

@@ -218,12 +218,12 @@ export const semanticColors = {
     dark: physicalColors.neutral['100'],
   },
   description: {
-    light: physicalColors.neutral['300'],
-    dark: physicalColors.neutral['500'],
+    light: physicalColors.neutral['500'],
+    dark: physicalColors.neutral['400'],
   },
   baseGlass: {
-    light: `${physicalColors.neutral['25']}E6`,
-    dark: `${physicalColors.neutral['850']}E6`,
+    light: `${physicalColors.neutral['12']}e0`,
+    dark: `${physicalColors.neutral['850']}e0`,
   },
   input: {
     light: physicalColors.neutral['50'],
@@ -250,6 +250,10 @@ export const semanticColors = {
     light: physicalColors.primary['600'],
     dark: physicalColors.primary['500'],
   },
+  accentFocusIndicator: {
+    light: physicalColors.primary['350'],
+    dark: physicalColors.primary['450'],
+  },
   unAccent: {
     light: physicalColors.neutral['500'],
     dark: physicalColors.neutral['400'],
@@ -265,6 +269,10 @@ export const semanticColors = {
   inverse: {
     light: '#ffffff',
     dark: '#ffffff',
+  },
+  transparent: {
+    light: 'transparent',
+    dark: 'transparent',
   },
   unavailable: {
     light: physicalColors.neutral['100'],

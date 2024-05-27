@@ -5,7 +5,7 @@
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { withLogical, type WithLogicalClassGroups } from './withLogical';
-import { semanticColors } from '../config/colors';
+import { semanticColors } from '../config';
 
 const semanticColorClasses = Object.keys(semanticColors);
 

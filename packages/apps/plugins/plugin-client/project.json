@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-client",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-client/src",
   "projectType": "library",
   "targets": {
@@ -10,9 +13,6 @@
         "entryPoints": [
           "packages/apps/plugins/plugin-client/src/index.ts",
           "packages/apps/plugins/plugin-client/src/meta.ts"
-        ],
-        "platforms": [
-          "browser"
         ]
       }
     },

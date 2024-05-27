@@ -2,39 +2,48 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Args } from '@oclif/core';
+import { ux, Flags } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
+import { Filter } from '@dxos/client/echo';
+import { getTypename } from '@dxos/echo-schema';
 
-import { BaseCommand } from '../../base-command';
+import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
 
-  // TODO(burdon): Implement basic predicates.
-  // TODO(burdon): Standardize and factor out selector.
-  static override args = { key: Args.string({ description: 'Space key head in hex.' }) };
+  static override flags = {
+    ...BaseCommand.flags,
+    data: Flags.boolean({ default: false, description: 'Print serialized object representation.' }),
+    typename: Flags.string({ default: undefined, description: 'Filter objects by typename.' }),
+  };
+
+  static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
-    const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
-      const space = await this.getSpace(client, key);
-      const { objects } = space.db.query({ type: 'test' });
-      if (this.flags.json) {
-        if (this.flags.verbose) {
-          return { objects };
-        } else {
-          return { objects: objects.length };
-        }
-      } else {
-        this.log('Objects:', objects.length);
-        if (this.flags.verbose) {
-          for (const object of objects) {
-            this.log(`- ${object.id}`);
-          }
-        }
-      }
+      const space = await this.getSpace(client, this.args.key);
+      const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
+      const { objects } = await space.db.query(filter).run();
+      this.log('Objects:', objects.length);
+      this._printObjects(objects);
+      return { objects };
+    });
+  }
+
+  private _printObjects(objects: any[]) {
+    ux.table(objects, {
+      id: {
+        header: 'id',
+        get: (row) => row.id.slice(0, 8),
+      },
+      type: {
+        header: 'type',
+        get: (row) => getTypename(row),
+      },
+      ...(this.flags.data ? { data: { header: 'data', get: (row) => row.toJSON() } } : {}),
     });
   }
 }

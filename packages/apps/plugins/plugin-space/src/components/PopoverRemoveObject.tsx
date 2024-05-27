@@ -4,14 +4,21 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Folder } from '@braneframe/types';
-import { NavigationAction, parseIntentPlugin, parseNavigationPlugin, useResolvePlugin } from '@dxos/app-framework';
-import { TypedObject, getSpaceForObject } from '@dxos/react-client/echo';
+import { getSpaceProperty, FolderType } from '@braneframe/types';
+import {
+  NavigationAction,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  useResolvePlugin,
+  isIdActive,
+} from '@dxos/app-framework';
+import { type Expando } from '@dxos/echo-schema';
+import { fullyQualifiedId, getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Button, Popover, useTranslation } from '@dxos/react-ui';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: TypedObject; folder?: Folder }) => {
+export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: Expando; folder?: FolderType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
 
@@ -19,29 +26,30 @@ export const PopoverRemoveObject = ({ object, folder: propsFolder }: { object: T
   const intentPlugin = useResolvePlugin(parseIntentPlugin);
 
   const handleDelete = useCallback(async () => {
-    if (!(object instanceof TypedObject)) {
+    if (!isEchoObject(object)) {
       return;
     }
 
+    const objectId = fullyQualifiedId(object);
     // If the item is active, navigate to "nowhere" to avoid navigating to a removed item.
-    if (navigationPlugin?.provides.location.active === object.id) {
+    if (isIdActive(navigationPlugin?.provides.location.active, objectId)) {
       await intentPlugin?.provides.intent.dispatch({
-        action: NavigationAction.ACTIVATE,
-        data: { id: undefined },
+        action: NavigationAction.CLOSE,
+        data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
       });
     }
 
-    const space = getSpaceForObject(object);
+    const space = getSpace(object);
 
     // Remove object from folder it's in.
-    const folder: Folder = propsFolder ?? space?.properties[Folder.schema.typename];
+    const folder = propsFolder ?? getSpaceProperty<FolderType>(space, FolderType.typename);
     if (folder) {
       const index = folder.objects.indexOf(object);
       index !== -1 && folder.objects.splice(index, 1);
     }
 
     // If the object is a folder, move the objects inside of it to the folder above it.
-    if (object instanceof Folder && folder) {
+    if (object instanceof FolderType && folder) {
       object.objects.forEach((obj) => {
         folder.objects.push(obj);
       });

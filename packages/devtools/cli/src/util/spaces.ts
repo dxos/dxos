@@ -9,8 +9,8 @@ import { asyncTimeout } from '@dxos/async';
 import { type Space, SpaceMember } from '@dxos/client/echo';
 import { truncateKey } from '@dxos/debug';
 
-import { maybeTruncateKey } from './types';
-import { SpaceWaitTimeoutError } from '../errors';
+import { maybeTruncateKey } from './keys';
+import { SpaceTimeoutError } from '../errors';
 import { SPACE_WAIT_TIMEOUT } from '../timeouts';
 
 export const selectSpace = async (spaces: Space[]) => {
@@ -21,10 +21,15 @@ export const selectSpace = async (spaces: Space[]) => {
       name: 'key',
       type: 'list',
       message: 'Select a space:',
-      choices: spaces.map((space) => ({
-        name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
-        value: space.key,
-      })),
+      choices: await Promise.all(
+        spaces.map(async (space) => {
+          await waitForSpace(space);
+          return {
+            name: `[${truncateKey(space.key)}] ${space.properties.name ?? ''}`,
+            value: space.key,
+          };
+        }),
+      ),
     },
   ]);
 
@@ -37,7 +42,7 @@ export const waitForSpace = async (
   exceptionHandler?: (err: Error) => void,
 ) => {
   try {
-    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceWaitTimeoutError(timeout));
+    await asyncTimeout(space.waitUntilReady(), timeout, new SpaceTimeoutError(timeout));
   } catch (err: any) {
     if (exceptionHandler) {
       exceptionHandler(err);
@@ -73,7 +78,7 @@ export const mapSpaces = (spaces: Space[], options: MapSpacesOptions = { verbose
       open: space.isOpen,
       name: space.properties.name,
       members: space.members.get().length,
-      objects: space.db.query().objects.length,
+      objects: space.db.automerge.getAllObjectIds().length,
       startup,
       epoch,
       // appliedEpoch,

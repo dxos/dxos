@@ -36,19 +36,32 @@ export type Toast = z.infer<typeof Toast>;
 // TODO(wittjosiah): Replace Zod w/ Effect Schema to align with ECHO.
 export const Layout = z.object({
   fullscreen: z.boolean(),
+
   sidebarOpen: z.boolean(),
 
   complementarySidebarOpen: z.boolean(),
-  complementarySidebarContent: z.any().optional().describe('Data to be passed to the complementary sidebar Surface.'),
+  /**
+   * @deprecated
+   */
+  complementarySidebarContent: z
+    .any()
+    .optional()
+    .describe('DEPRECATED. Data to be passed to the complementary sidebar Surface.'),
 
   dialogOpen: z.boolean(),
   dialogContent: z.any().optional().describe('Data to be passed to the dialog Surface.'),
+  dialogBlockAlign: z.union([z.literal('start'), z.literal('center')]).optional(),
 
   popoverOpen: z.boolean(),
   popoverContent: z.any().optional().describe('Data to be passed to the popover Surface.'),
   popoverAnchorId: z.string().optional(),
 
   toasts: z.array(Toast),
+
+  scrollIntoView: z
+    .string()
+    .optional()
+    .describe('The identifier of a component to scroll into view when it is mounted.'),
 });
 
 export type Layout = z.infer<typeof Layout>;
@@ -75,11 +88,7 @@ export const parseLayoutPlugin = (plugin: Plugin) => {
 const LAYOUT_ACTION = 'dxos.org/plugin/layout';
 export enum LayoutAction {
   SET_LAYOUT = `${LAYOUT_ACTION}/set-layout`,
-
-  /** @deprecated */
-  // TODO(wittjosiah): At minimum this should be renamed, "focus" means something very specific on a web page.
-  //   Consider removing this action entirely, it's maybe not generic enough to live here.
-  FOCUS = `${LAYOUT_ACTION}/focus`,
+  SCROLL_INTO_VIEW = `${LAYOUT_ACTION}/scroll-into-view`,
 }
 
 /**
@@ -114,5 +123,10 @@ export namespace LayoutAction {
      * Anchor ID for the popover.
      */
     anchorId?: string;
+
+    /**
+     * Block alignment for the dialog.
+     */
+    dialogBlockAlign?: 'start' | 'center';
   }>;
 }

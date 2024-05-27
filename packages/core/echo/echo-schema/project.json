@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "echo-schema",
+  "tags": [
+    "scope:echo"
+  ],
   "sourceRoot": "packages/core/echo/echo-schema/src",
   "projectType": "library",
   "targets": {
@@ -9,26 +12,12 @@
       "options": {
         "entryPoints": [
           "packages/core/echo/echo-schema/src/index.ts",
-          "packages/core/echo/echo-schema/src/schema.ts",
           "packages/core/echo/echo-schema/src/testing/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "prebuild": {
-      "executor": "nx:run-script",
-      "options": {
-        "script": "prebuild",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ]
-      },
-      "outputs": [
-        "{projectRoot}/src/proto/gen",
-        "{projectRoot}/src/tests/proto/gen"
-      ]
-    },
     "test": {
       "options": {
         "forceExit": true

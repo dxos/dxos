@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-template",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "An template project for prototyping plugins for the DXOS app framework.",
   "keywords": [
     "dxos",
@@ -30,12 +30,12 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/shell": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.merge": "^4.6.6",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
     "types-package-json": "^2.0.39",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

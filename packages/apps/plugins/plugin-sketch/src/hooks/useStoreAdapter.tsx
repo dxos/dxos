@@ -5,17 +5,16 @@
 import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 
-import { type Expando, TypedObject, type TextObject, getRawDoc } from '@dxos/react-client/echo';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { createDocAccessor } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter } from './automerge';
-import { YjsStoreAdapter } from './yjs';
 
-export const useStoreAdapter = (data: TextObject | Expando, options = { timeout: 250 }): TLStore => {
-  const automerge = data instanceof TypedObject;
-  const [adapter] = useState(() => (automerge ? new AutomergeStoreAdapter(options) : new YjsStoreAdapter(options)));
+export const useStoreAdapter = (data: EchoReactiveObject<any>, options = { timeout: 250 }): TLStore => {
+  const [adapter] = useState(() => new AutomergeStoreAdapter(options));
 
   useEffect(() => {
-    adapter.open((automerge ? getRawDoc(data, ['content']) : data) as any);
+    adapter.open(createDocAccessor(data, ['content']));
     return () => {
       // TODO(burdon): Throws error if still mounted.
       // adapter.close();

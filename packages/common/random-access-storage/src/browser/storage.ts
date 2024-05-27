@@ -2,24 +2,13 @@
 // Copyright 2021 DXOS.org
 //
 
-import { FirefoxStorage } from './firefox-storage';
 import { IDbStorage } from './idb-storage';
 import { WebFS } from './web-fs';
-import { MemoryStorage, type Storage, type StorageConstructor, StorageType } from '../common';
+import { MemoryStorage, StorageType, type Storage, type StorageConstructor } from '../common';
 
 export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Storage => {
   if (type === undefined) {
-    if (
-      navigator &&
-      navigator.storage &&
-      typeof navigator.storage.getDirectory === 'function' &&
-      FileSystemFileHandle &&
-      typeof (FileSystemFileHandle.prototype as any).createWritable === 'function'
-    ) {
-      return new WebFS(root);
-    } else {
-      return new IDbStorage(root);
-    }
+    return new IDbStorage(root);
   }
 
   switch (type) {
@@ -28,12 +17,9 @@ export const createStorage: StorageConstructor = ({ type, root = '' } = {}): Sto
     }
 
     case StorageType.IDB:
-    case StorageType.CHROME: {
-      return new IDbStorage(root);
-    }
-
+    case StorageType.CHROME:
     case StorageType.FIREFOX: {
-      return new FirefoxStorage(root);
+      return new IDbStorage(root);
     }
 
     case StorageType.WEBFS: {

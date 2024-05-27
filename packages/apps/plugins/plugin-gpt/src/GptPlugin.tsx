@@ -7,7 +7,8 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { Document as DocumentType } from '@braneframe/types';
+import { parseSpacePlugin } from '@braneframe/plugin-space';
+import { DocumentType } from '@braneframe/types';
 import {
   resolvePlugin,
   parseGraphPlugin,
@@ -17,10 +18,11 @@ import {
   type LocationProvides,
   type Plugin,
   type PluginDefinition,
+  firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { SpaceState, getSpaceForObject, isTypedObject } from '@dxos/react-client/echo';
+import { Filter, SpaceState, fullyQualifiedId, getSpace } from '@dxos/react-client/echo';
 
 import { GptAnalyzer } from './analyzer';
 import { GptSettings } from './components';
@@ -49,47 +51,54 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
         // TODO(wittjosiah): Consider a builder which subscribes to the graph itself to add actions.
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
-            spaces.forEach((space) => {
-              if (space.state.get() !== SpaceState.READY) {
-                return;
-              }
+          const unsubscribe = effect(() => {
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                if (space.state.get() !== SpaceState.READY) {
+                  return;
+                }
 
-              const query = space.db.query(DocumentType.filter());
-              let previousObjects: DocumentType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
+                const query = space.db.query(Filter.schema(DocumentType));
+                subscriptions.add(query.subscribe());
+                let previousObjects: DocumentType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                    previousObjects = query.objects;
 
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(`${GptAction.ANALYZE}/${object.id}`, true));
-                    query.objects.forEach((object) =>
-                      graph.addNodes({
-                        id: `${GptAction.ANALYZE}/${object.id}`,
-                        data: () =>
-                          dispatch([
-                            {
-                              plugin: GPT_PLUGIN,
-                              action: GptAction.ANALYZE,
-                            },
-                          ]),
-                        properties: {
-                          label: ['analyze document label', { ns: GPT_PLUGIN }],
-                          icon: (props: IconProps) => <Brain {...props} />,
-                        },
-                      }),
-                    );
-                  });
-                }),
-              );
-            });
+                    batch(() => {
+                      removedObjects.forEach((object) =>
+                        graph.removeNode(`${GptAction.ANALYZE}/${fullyQualifiedId(object)}`, true),
+                      );
+                      query.objects.forEach((object) =>
+                        graph.addNodes({
+                          id: `${GptAction.ANALYZE}/${fullyQualifiedId(object)}`,
+                          data: () =>
+                            dispatch([
+                              {
+                                plugin: GPT_PLUGIN,
+                                action: GptAction.ANALYZE,
+                              },
+                            ]),
+                          properties: {
+                            label: ['analyze document label', { ns: GPT_PLUGIN }],
+                            icon: (props: IconProps) => <Brain {...props} />,
+                          },
+                        }),
+                      );
+                    });
+                  }),
+                );
+              });
           });
 
           return () => {
@@ -115,12 +124,12 @@ export const GptPlugin = (): PluginDefinition<GptPluginProvides> => {
               // TODO(burdon): Factor out.
               const location = navigationPlugin?.provides.location;
               const graph = graphPlugin?.provides.graph;
-              const activeNode = location?.active ? graph?.findNode(location.active) : undefined;
+              const activeNode = location?.active ? graph?.findNode(firstMainId(location.active)) : undefined;
               const active = activeNode?.data;
-              const space = isTypedObject(active) && getSpaceForObject(active);
-              if (space && settings.values.apiKey) {
+              const space = getSpace(active);
+              if (space && active instanceof DocumentType && settings.values.apiKey) {
                 // TODO(burdon): Toast on success.
-                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active as DocumentType);
+                void new GptAnalyzer({ apiKey: settings.values.apiKey }).exec(space, active);
               }
             }
           }

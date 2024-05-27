@@ -2,19 +2,22 @@
 // Copyright 2022 DXOS.org
 //
 
+import { inspect } from 'node:util';
+
 import { log } from '@dxos/log';
 import { safeInstanceof } from '@dxos/util';
 
-import { ContextDisposedError } from './context-disposed';
+import { ContextDisposedError } from './context-disposed-error';
 
-export type ContextErrorHandler = (error: Error) => void;
+export type ContextErrorHandler = (error: Error, ctx: Context) => void;
 
-export type DisposeCallback = () => void | Promise<void>;
+export type DisposeCallback = () => any | Promise<any>;
 
 export type CreateContextParams = {
-  onError?: ContextErrorHandler;
-  attributes?: Record<string, any>;
+  name?: string;
   parent?: Context;
+  attributes?: Record<string, any>;
+  onError?: ContextErrorHandler;
 };
 
 /**
@@ -22,45 +25,48 @@ export type CreateContextParams = {
  */
 const MAX_SAFE_DISPOSE_CALLBACKS = 300;
 
+const DEFAULT_ERROR_HANDLER: ContextErrorHandler = (error, ctx) => {
+  if (error instanceof ContextDisposedError) {
+    return;
+  }
+
+  void ctx.dispose();
+
+  // Will generate an unhandled rejection.
+  throw error;
+};
+
 @safeInstanceof('Context')
 export class Context {
-  private readonly _onError: ContextErrorHandler;
-  private readonly _disposeCallbacks: DisposeCallback[] = [];
-  private _isDisposed = false;
-  private _disposePromise?: Promise<void> = undefined;
-  private _parent: Context | null = null;
+  static default() {
+    return new Context();
+  }
 
-  private _attributes: Record<string, any>;
+  readonly #disposeCallbacks: DisposeCallback[] = [];
+
+  readonly #name?: string = undefined;
+  readonly #parent?: Context = undefined;
+  readonly #attributes: Record<string, any>;
+  readonly #onError: ContextErrorHandler;
+
+  #isDisposed = false;
+  #disposePromise?: Promise<boolean> = undefined;
 
   public maxSafeDisposeCallbacks = MAX_SAFE_DISPOSE_CALLBACKS;
 
-  constructor({
-    onError = (error) => {
-      if (error instanceof ContextDisposedError) {
-        return;
-      }
-
-      void this.dispose();
-
-      // Will generate an unhandled rejection.
-      throw error;
-    },
-    attributes = {},
-    parent,
-  }: CreateContextParams = {}) {
-    this._onError = onError;
-    this._attributes = attributes;
-    if (parent !== undefined) {
-      this._parent = parent;
-    }
+  constructor({ name, parent, attributes = {}, onError = DEFAULT_ERROR_HANDLER }: CreateContextParams = {}) {
+    this.#name = name;
+    this.#parent = parent;
+    this.#attributes = attributes;
+    this.#onError = onError;
   }
 
   get disposed() {
-    return this._isDisposed;
+    return this.#isDisposed;
   }
 
   get disposeCallbacksLength() {
-    return this._disposeCallbacks.length;
+    return this.#disposeCallbacks.length;
   }
 
   /**
@@ -72,8 +78,8 @@ export class Context {
    *
    * @returns A function that can be used to remove the callback from the dispose list.
    */
-  onDispose(callback: DisposeCallback) {
-    if (this._isDisposed) {
+  onDispose(callback: DisposeCallback): () => void {
+    if (this.#isDisposed) {
       // Call the callback immediately if the context is already disposed.
       void (async () => {
         try {
@@ -84,51 +90,80 @@ export class Context {
       })();
     }
 
-    this._disposeCallbacks.push(callback);
-    if (this._disposeCallbacks.length > this.maxSafeDisposeCallbacks) {
-      log.warn('Context has a large number of dispose callbacks. This might be a memory leak.', {
-        count: this._disposeCallbacks.length,
-        safeThreshold: this.maxSafeDisposeCallbacks,
+    this.#disposeCallbacks.push(callback);
+    if (this.#disposeCallbacks.length > this.maxSafeDisposeCallbacks) {
+      log.warn('Context has a large number of dispose callbacks (this might be a memory leak).', {
+        count: this.#disposeCallbacks.length,
       });
     }
 
+    // Remove handler.
     return () => {
-      const index = this._disposeCallbacks.indexOf(callback);
+      const index = this.#disposeCallbacks.indexOf(callback);
       if (index !== -1) {
-        this._disposeCallbacks.splice(index, 1);
+        this.#disposeCallbacks.splice(index, 1);
       }
     };
   }
 
   /**
    * Runs all dispose callbacks.
-   * Sync callbacks are run in the reverse order they were added.
-   * Async callbacks are run in parallel.
+   * Callbacks are run in the reverse order they were added.
    * This function never throws.
    * It is safe to ignore the returned promise if the caller does not wish to wait for callbacks to complete.
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
    */
-  dispose(): Promise<void> {
-    if (this._disposePromise) {
-      return this._disposePromise;
+  async dispose(throwOnError = false): Promise<boolean> {
+    if (this.#disposePromise) {
+      return this.#disposePromise;
     }
-    this._isDisposed = true;
 
-    const promises = [];
-    for (const callback of this._disposeCallbacks.reverse()) {
-      promises.push(
-        (async () => {
-          try {
-            await callback();
-          } catch (error: any) {
-            log.catch(error);
-          }
-        })(),
-      );
+    // TODO(burdon): Probably should not be set until the dispose is complete, but causes tests to fail if moved.
+    this.#isDisposed = true;
+
+    // Set the promise before running the callbacks.
+    let resolveDispose!: (value: boolean) => void;
+    const promise = new Promise<boolean>((resolve) => {
+      resolveDispose = resolve;
+    });
+    this.#disposePromise = promise;
+
+    // Process last first.
+    // Clone the array so that any mutations to the original array don't affect the dispose process.
+    const callbacks = Array.from(this.#disposeCallbacks).reverse();
+    this.#disposeCallbacks.length = 0;
+
+    if (this.#name) {
+      log('disposing', { context: this.#name, count: callbacks.length });
     }
-    this._disposeCallbacks.length = 0;
 
-    return (this._disposePromise = Promise.all(promises).then(() => {}));
+    let i = 0;
+    let clean = true;
+    const errors: Error[] = [];
+    for (const callback of callbacks) {
+      try {
+        await callback();
+        i++;
+      } catch (err: any) {
+        clean = false;
+        if (throwOnError) {
+          errors.push(err);
+        } else {
+          log.catch(err, { context: this.#name, callback: i, count: callbacks.length });
+        }
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new AggregateError(errors);
+    }
+
+    resolveDispose(clean);
+    if (this.#name) {
+      log('disposed', { context: this.#name });
+    }
+
+    return clean;
   }
 
   /**
@@ -137,14 +172,14 @@ export class Context {
    * IF the error handler is not set, the error will dispose the context and cause an unhandled rejection.
    */
   raise(error: Error): void {
-    if (this._isDisposed) {
+    if (this.#isDisposed) {
       // TODO(dmaretskyi): Don't log those.
       // log.warn('Error in disposed context', error);
       return;
     }
 
     try {
-      this._onError(error);
+      this.#onError(error, this);
     } catch (err) {
       // Generate an unhandled rejection and stop the error propagation.
       void Promise.reject(err);
@@ -159,7 +194,7 @@ export class Context {
           this.raise(error);
         } else {
           try {
-            await onError(error);
+            await onError(error, this);
           } catch {
             this.raise(error);
           }
@@ -167,18 +202,27 @@ export class Context {
       },
       attributes,
     });
+
     const clearDispose = this.onDispose(() => newCtx.dispose());
     newCtx.onDispose(clearDispose);
     return newCtx;
   }
 
   getAttribute(key: string): any {
-    if (key in this._attributes) {
-      return this._attributes[key];
+    if (key in this.#attributes) {
+      return this.#attributes[key];
     }
-    if (this._parent !== null) {
-      return this._parent.getAttribute(key);
+    if (this.#parent) {
+      return this.#parent.getAttribute(key);
     }
+
     return undefined;
+  }
+
+  [Symbol.toStringTag] = 'Context';
+  [inspect.custom] = () => this.toString();
+
+  toString() {
+    return `Context(${this.#isDisposed ? 'disposed' : 'active'})`;
   }
 }

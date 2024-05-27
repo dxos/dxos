@@ -3,19 +3,53 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Filter } from '@dxos/echo-schema';
+import { type Heads } from '@dxos/automerge/automerge';
+import { type ObjectStructure } from '@dxos/echo-protocol';
+import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 
-export type ObjectType = Record<string, any>;
+/**
+ * @deprecated To be replaced by a specialized API for each index.
+ */
+// TODO(burdon): Reconcile with proto def.
+export type IndexQuery = {
+  /**
+   * empty array means all objects (no filter).
+   */
+  typenames: string[];
+
+  // TODO(burdon): Hack to exclude.
+  inverted?: boolean;
+};
+
+export type ObjectSnapshot = {
+  /**
+   * Index ID.
+   */
+  id: ObjectPointerEncoded;
+  object: Partial<ObjectStructure>;
+  heads: Heads;
+};
+
+export type IdToHeads = Map<ObjectPointerEncoded, Heads>;
+export type FindResult = { id: string; rank: number };
 
 export interface Index {
   identifier: string;
   kind: IndexKind;
   updated: Event;
 
-  update: (id: string, object: ObjectType) => Promise<void>;
-  remove: (id: string) => Promise<void>;
-  find: (filter: Filter) => Promise<{ id: string; rank: number }[]>;
+  open(): Promise<Index>;
+  close(): Promise<Index>;
+
+  /**
+   * @returns {Promise<boolean>} true if the object was updated, false otherwise.
+   */
+  update(id: string, object: Partial<ObjectStructure>): Promise<boolean>;
+  remove(id: string): Promise<void>;
+
+  // TODO(dmaretskyi): Remove from interface -- Each index has its own query api.
+  find(filter: IndexQuery): Promise<FindResult[]>;
 
   serialize(): Promise<string>;
 }
@@ -31,5 +65,5 @@ export interface IndexStaticProps {
 export const staticImplements =
   <T>() =>
   <U extends T>(constructor: U) => {
-    constructor;
+    return constructor;
   };

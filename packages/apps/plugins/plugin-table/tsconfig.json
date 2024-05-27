@@ -38,6 +38,9 @@
       "path": "../../../core/echo/echo-generator"
     },
     {
+      "path": "../../../core/echo/echo-schema"
+    },
+    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -66,6 +69,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-stack"
     }
   ]
 }

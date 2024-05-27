@@ -21,6 +21,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -61,9 +64,6 @@
     },
     {
       "path": "../../core/echo/echo-typegen"
-    },
-    {
-      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/protocols"

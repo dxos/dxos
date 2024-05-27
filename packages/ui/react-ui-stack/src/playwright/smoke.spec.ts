@@ -34,9 +34,8 @@ test.describe('Stack', () => {
 
     const stack = new StackManager(page.getByTestId('stack-1'));
     const sectionText = await stack.section(0).locator.innerText();
-    await stack.section(0).dragTo(stack.section(5).locator);
-
-    expect(await stack.section(5).locator.innerText()).toEqual(sectionText);
+    await stack.section(0).dragTo(stack.section(2).locator);
+    expect(await stack.section(2).locator.innerText()).toEqual(sectionText);
   });
 
   test('transfer', async ({ browser }) => {
@@ -52,11 +51,11 @@ test.describe('Stack', () => {
     expect(await stack2.length()).toEqual(8);
 
     const sectionText = await stack1.section(0).locator.innerText();
-    await stack1.section(0).dragTo(stack2.section(5).locator);
+    await stack1.section(0).dragTo(stack2.section(2).locator);
 
     expect(await stack1.length()).toEqual(7);
     expect(await stack2.length()).toEqual(9);
-    expect(await stack2.section(5).locator.innerText()).toEqual(sectionText);
+    expect(await stack2.section(2).locator.innerText()).toEqual(sectionText);
   });
 
   test('copy', async ({ browser }) => {

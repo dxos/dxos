@@ -10,6 +10,8 @@ import { ScopedShellManager } from './scoped-shell-manager';
 
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 
+const CONFIRM_INPUT = 'RESET';
+
 export class ShellManager extends ScopedShellManager {
   private _invitationCode = new Trigger<string>();
   private _authCode = new Trigger<string>();
@@ -65,17 +67,17 @@ export class ShellManager extends ScopedShellManager {
     };
 
     this.page.on('dialog', handleDialog);
-    await this.shell.getByTestId('devices-panel.sign-out').click();
-    await this.shell.getByTestId('sign-out.reset-device').click();
-    this.page.off('dialog', handleDialog);
+    await this.shell.getByTestId('device-list-item-current.options').click();
+    await this.shell.getByTestId('device-list-item-current.reset').click();
+    await this.shell.getByTestId('reset-storage.reset-identity-input').fill(CONFIRM_INPUT);
+    await this.shell.getByTestId('reset-storage.reset-identity-confirm').click();
   }
 
   async joinNewIdentity(invitationCode: string) {
-    await this.shell.getByTestId('devices-panel.sign-out').click();
-    await this.shell.getByTestId('sign-out.join-new-identity').click();
-    await this.shell.getByTestId('reset-identity-input').fill('CONFIRM');
-    await this.shell.getByTestId('reset-identity-input-confirm').click();
-    await this.shell.getByTestId('identity-chooser.join-identity').click();
+    await this.shell.getByTestId('device-list-item-current.options').click();
+    await this.shell.getByTestId('device-list-item-current.join-existing').click();
+    await this.shell.getByTestId('join-new-identity.reset-identity-input').fill(CONFIRM_INPUT);
+    await this.shell.getByTestId('join-new-identity.reset-identity-confirm').click();
     await this.inputInvitation('device', invitationCode, this.shell);
   }
 
@@ -117,7 +119,8 @@ export class ShellManager extends ScopedShellManager {
 
   private async _onConsoleMessage(message: ConsoleMessage) {
     try {
-      const json = JSON.parse(message.text());
+      const text = message.text();
+      const json = JSON.parse(text.slice(text.indexOf('{')));
       if (json.invitationCode) {
         this._invitationCode.wake(json.invitationCode);
       }

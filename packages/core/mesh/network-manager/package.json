@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,9 +37,9 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "@koush/wrtc": "^0.5.3",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "nanomessage-rpc": "^3.0.0",
-    "node-datachannel": "^0.5.2",
+    "node-datachannel": "^0.5.5",
     "p-defer": "^3.0.0",
     "simple-peer": "9.11.1",
     "stream": "^0.0.2",
@@ -49,12 +49,12 @@
   },
   "devDependencies": {
     "@dxos/signal": "workspace:*",
-    "@swc-node/register": "1.6.8",
+    "@swc-node/register": "1.9.1",
     "@types/simple-peer": "9.11.3",
     "@types/ws": "^7.4.0",
     "earljs": "~0.1.10",
     "fast-check": "^3.15.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

@@ -21,15 +21,8 @@ describe('tasks template', () => {
   it('execute with permuted inputs', async () => {
     console.log('executing', scenarios.length, 'configurations');
     const tempFolder = await tmp.dir({ unsafeCleanup: false, keep: true, prefix: 'tasks-template' });
-<<<<<<< HEAD
     const pkgJson = path.resolve(__dirname, '..', 'package.json');
     const packageJson = JSON.parse(await readFile(pkgJson, { encoding: 'utf-8' }));
-=======
-    const packageJson = JSON.parse(
-      await readFile(path.resolve(__dirname, '..', 'package.json'), { encoding: 'utf-8' }),
-    );
-
->>>>>>> 3b99194445ba6e689ca57e2015825dda5fab1dc8
     const promises = scenarios.map(async (scenario) => {
       const outputDirectory = path.resolve(tempFolder.path, scenario.name);
       console.log(scenario.name);

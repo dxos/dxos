@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized } from '@dxos/async';
+import { DeferredTask, Event, sleep, scheduleTask, scheduleTaskInterval, synchronized, Trigger } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -100,6 +100,9 @@ export class Connection {
   private readonly _ctx = new Context();
   private connectedTimeoutContext = new Context();
 
+  private _protocolClosed = new Trigger();
+  private _transportClosed = new Trigger();
+
   private _state: ConnectionState = ConnectionState.CREATED;
   private _transport: Transport | undefined;
   closeReason?: string;
@@ -181,6 +184,7 @@ export class Connection {
     // TODO(dmaretskyi): Piped streams should do this automatically, but it break's without this code.
     this._protocol.stream.on('close', () => {
       log('protocol stream closed');
+      this._protocolClosed.wake();
       this.close(new ProtocolError('protocol stream closed')).catch((err) => this.errors.raise(err));
     });
 
@@ -203,6 +207,8 @@ export class Connection {
       sessionId: this.sessionId,
     });
 
+    await this._transport.open();
+
     this._transport.connected.once(async () => {
       this._changeState(ConnectionState.CONNECTED);
       await this.connectedTimeoutContext.dispose();
@@ -213,6 +219,7 @@ export class Connection {
 
     this._transport.closed.once(() => {
       this._transport = undefined;
+      this._transportClosed.wake();
       log('abort triggered by transport close');
       this.abort().catch((err) => this.errors.raise(err));
     });
@@ -242,7 +249,7 @@ export class Connection {
 
     // Replay signals that were received before transport was created.
     for (const signal of this._incomingSignalBuffer) {
-      void this._transport.signal(signal); // TODO(burdon): Remove async?
+      void this._transport.onSignal(signal); // TODO(burdon): Remove async?
     }
 
     this._incomingSignalBuffer = [];
@@ -270,15 +277,14 @@ export class Connection {
 
     try {
       // Forcefully close the stream flushing any unsent data packets.
-      log('aborting protocol... ');
-      await this._protocol.abort();
+      await this._closeProtocol();
     } catch (err: any) {
       log.catch(err);
     }
 
     try {
       // After the transport is closed streams are disconnected.
-      await this._transport?.destroy();
+      await this._closeTransport();
     } catch (err: any) {
       log.catch(err);
     }
@@ -316,26 +322,26 @@ export class Connection {
     if (lastState === ConnectionState.CONNECTED) {
       try {
         // Gracefully close the stream flushing any unsent data packets.
-        await this._protocol.close();
+        await this._closeProtocol();
       } catch (err: any) {
         log.catch(err);
       }
 
       try {
         // After the transport is closed streams are disconnected.
-        await this._transport?.destroy();
+        await this._closeTransport();
       } catch (err: any) {
         log.catch(err);
       }
     } else {
-      log.info(`graceful close requested when we were in ${lastState} state? aborting`);
+      log(`graceful close requested when we were in ${lastState} state? aborting`);
       try {
-        await this._protocol.abort();
+        await this._closeProtocol();
       } catch (err: any) {
         log.catch(err);
       }
       try {
-        await this._transport?.destroy();
+        await this._closeTransport();
       } catch (err: any) {
         log.catch(err);
       }
@@ -344,6 +350,18 @@ export class Connection {
     log('closed', { peerId: this.ownId });
     this._changeState(ConnectionState.CLOSED);
     this._callbacks?.onClosed?.(err);
+  }
+
+  private async _closeProtocol() {
+    log('closing protocol');
+    await Promise.race([this._protocol.close(), this._protocolClosed.wait()]);
+    log('protocol closed');
+  }
+
+  private async _closeTransport() {
+    log('closing transport');
+    await Promise.race([this._transport?.close(), this._transportClosed.wait()]);
+    log('transport closed');
   }
 
   private _sendSignal(signal: Signal) {
@@ -409,7 +427,7 @@ export class Connection {
       } else {
         invariant(this._transport, 'Connection not ready to accept signals.');
         log('received signal', { peerId: this.ownId, remoteId: this.remoteId, msg: msg.data });
-        await this._transport.signal(signal);
+        await this._transport.onSignal(signal);
       }
     }
   }

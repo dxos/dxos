@@ -1,3 +1,7 @@
+//
+// Copyright 2023 DXOS.org
+//
+
 /**
  * Lets types provide custom formatters for the Chrome Devtools.
  *
@@ -12,9 +16,6 @@
  *  }
  * ```
  */
-//
-// Copyright 2023 DXOS.org
-//
 
 export const devtoolsFormatter = Symbol.for('devtoolsFormatter');
 
@@ -27,6 +28,15 @@ export interface DevtoolsFormatter {
   header: (config?: any) => JsonML | null;
   hasBody?: (config?: any) => boolean;
   body?: (config?: any) => JsonML | null;
+}
+
+/**
+ * Types that implement this interface can provide custom formatters for the Chrome Devtools.
+ *
+ * https://firefox-source-docs.mozilla.org/devtools-user/custom_formatters/index.html
+ */
+export interface CustomDevtoolsFormattable {
+  get [devtoolsFormatter](): DevtoolsFormatter;
 }
 
 const register = () => {

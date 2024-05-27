@@ -28,7 +28,6 @@ import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Identity } from './identity';
-import { createDefaultModelFactory } from '../services';
 
 const createStores = () => {
   const storage = createStorage({ type: StorageType.RAM });
@@ -92,10 +91,11 @@ describe('identity/identity', () => {
       genesisFeed: controlFeed,
       feedProvider: (feedKey) => feedStore.openFeed(feedKey),
       memberKey: identityKey,
-      modelFactory: createDefaultModelFactory(),
       metadataStore,
       snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
       snapshotId: undefined,
+      onDelegatedInvitationStatusChange: async () => {},
+      onMemberRolesChanged: async () => {},
     });
     await space.setControlFeed(controlFeed);
     await space.setDataFeed(dataFeed);
@@ -206,9 +206,10 @@ describe('identity/identity', () => {
         genesisFeed: controlFeed,
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
-        modelFactory: createDefaultModelFactory(),
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
+        onDelegatedInvitationStatusChange: async () => {},
+        onMemberRolesChanged: async () => {},
       });
       await space.setControlFeed(controlFeed);
       await space.setDataFeed(dataFeed);
@@ -297,9 +298,10 @@ describe('identity/identity', () => {
         genesisFeed: await feedStore.openFeed(genesisFeedKey),
         feedProvider: (feedKey) => feedStore.openFeed(feedKey),
         memberKey: identityKey,
-        modelFactory: createDefaultModelFactory(),
         metadataStore,
         snapshotManager: new SnapshotManager(snapshotStore, blobStore, protocol.blobSync),
+        onDelegatedInvitationStatusChange: async () => {},
+        onMemberRolesChanged: async () => {},
       });
       await space.setControlFeed(controlFeed);
       await space.setDataFeed(dataFeed);

@@ -3,11 +3,11 @@
 //
 
 import { synchronized, trackLeaks } from '@dxos/async';
+import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ModelFactory } from '@dxos/model-factory';
 import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -24,7 +24,6 @@ import { type MetadataStore } from '../metadata';
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
   networkManager: NetworkManager;
-  modelFactory: ModelFactory;
   metadataStore: MetadataStore;
 
   /**
@@ -44,6 +43,8 @@ export type ConstructSpaceParams = {
    */
   onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
+  onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
+  onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
 };
 
 /**
@@ -54,24 +55,15 @@ export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
   private readonly _networkManager: NetworkManager;
-  private readonly _modelFactory: ModelFactory;
   private readonly _metadataStore: MetadataStore;
   private readonly _snapshotStore: SnapshotStore;
   private readonly _blobStore: BlobStore;
   private readonly _instanceId = PublicKey.random().toHex();
 
-  constructor({
-    feedStore,
-    networkManager,
-    modelFactory,
-    metadataStore,
-    snapshotStore,
-    blobStore,
-  }: SpaceManagerParams) {
+  constructor({ feedStore, networkManager, metadataStore, snapshotStore, blobStore }: SpaceManagerParams) {
     // TODO(burdon): Assert.
     this._feedStore = feedStore;
     this._networkManager = networkManager;
-    this._modelFactory = modelFactory;
     this._metadataStore = metadataStore;
     this._snapshotStore = snapshotStore;
     this._blobStore = blobStore;
@@ -95,6 +87,8 @@ export class SpaceManager {
     swarmIdentity,
     onAuthorizedConnection,
     onAuthFailure,
+    onDelegatedInvitationStatusChange,
+    onMemberRolesChanged,
     memberKey,
   }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
@@ -119,10 +113,11 @@ export class SpaceManager {
       protocol,
       genesisFeed,
       feedProvider: (feedKey, opts) => this._feedStore.openFeed(feedKey, opts),
-      modelFactory: this._modelFactory,
       metadataStore: this._metadataStore,
       snapshotManager,
       memberKey,
+      onDelegatedInvitationStatusChange,
+      onMemberRolesChanged,
     });
     this._spaces.set(space.key, space);
 

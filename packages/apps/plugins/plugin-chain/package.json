@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-chain",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "Prompt chain plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,11 +32,13 @@
     "@codemirror/view": "^6.25.0",
     "@dxos/async": "workspace:*",
     "@dxos/chain": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/text-model": "workspace:*",
-    "@preact/signals-core": "^1.5.1",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2"
   },
   "devDependencies": {
@@ -46,13 +48,13 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/lodash.get": "^4.4.7",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.1.5"
+    "vite": "^5.2.9"
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",

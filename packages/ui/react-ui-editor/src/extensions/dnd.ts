@@ -3,15 +3,37 @@
 //
 
 import type { Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { dropCursor, EditorView } from '@codemirror/view';
 
-import { log } from '@dxos/log';
+import { getToken } from '../styles';
 
-// TODO(burdon): DND experiment.
-export const dnd = (): Extension => {
-  return EditorView.domEventHandlers({
-    drop: (event, view) => {
-      log.info('domEventHandlersDrop', { event });
-    },
-  });
+export type DNDOptions = { onDrop?: (view: EditorView, event: { files: FileList }) => void };
+
+const styles = EditorView.baseTheme({
+  '.cm-dropCursor': {
+    borderLeft: `2px solid ${getToken('extend.colors.primary.500')}`,
+    color: getToken('extend.colors.primary.500'),
+    padding: '0 4px',
+  },
+  '.cm-dropCursor:after': {
+    content: '"←"',
+  },
+});
+
+export const dropFile = (options: DNDOptions = {}): Extension => {
+  return [
+    styles,
+    dropCursor(),
+    EditorView.domEventHandlers({
+      drop: (event, view) => {
+        event.preventDefault();
+        const files = event.dataTransfer?.files;
+        const pos = view.posAtCoords(event);
+        if (files?.length && pos !== null) {
+          view.dispatch({ selection: { anchor: pos } });
+          options.onDrop?.(view, { files });
+        }
+      },
+    }),
+  ];
 };

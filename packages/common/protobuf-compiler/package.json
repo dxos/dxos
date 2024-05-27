@@ -1,6 +1,6 @@
 {
   "name": "@dxos/protobuf-compiler",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
@@ -25,20 +25,20 @@
     "argparse": "^2.0.1",
     "chalk": "^4.1.0",
     "glob": "~7.1.6",
-    "protobufjs": "^7.2.2",
+    "protobufjs": "^7.2.5",
     "read-pkg": "^5.2.0",
     "ts-morph": "^16.0.0"
   },
   "devDependencies": {
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
-    "@swc-node/register": "1.6.8",
+    "@swc-node/register": "1.9.1",
     "@types/argparse": "^2.0.0",
     "@types/glob": "~7.1.3",
     "@types/mocha": "^8.2.2",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "typescript": "^5.2.2"

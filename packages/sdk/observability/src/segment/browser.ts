@@ -64,4 +64,6 @@ export class SegmentTelemetry {
       log.catch('Failed to flush telemetry', err);
     }
   }
+
+  async close() {}
 }

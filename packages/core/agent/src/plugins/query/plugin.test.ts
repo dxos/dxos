@@ -8,10 +8,11 @@ import { Trigger, asyncTimeout } from '@dxos/async';
 import { Client, Config } from '@dxos/client';
 import { QueryOptions } from '@dxos/client/echo';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
+import { Filter, type Query } from '@dxos/echo-db';
 import { createSpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
-import { Filter, type TypedObject, type Query } from '@dxos/echo-schema';
+import { type ReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
 import { QUERY_CHANNEL } from '@dxos/protocols';
-import { type QueryRequest } from '@dxos/protocols/proto/dxos/agent/query';
+import { type QueryRequest } from '@dxos/protocols/proto/dxos/echo/query';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { afterAll, afterTest, beforeAll, describe, test } from '@dxos/test';
 
@@ -37,18 +38,20 @@ describe('QueryPlugin', () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
-    const services1 = builder.createLocal();
+    const services1 = builder.createLocalClientServices();
     const client1 = new Client({
       services: services1,
       config: new Config({
-        runtime: { agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] } },
+        runtime: {
+          agent: { plugins: [{ id: 'dxos.org/agent/plugin/query' }] },
+        },
       }),
     });
     await client1.initialize();
     afterTest(() => client1.destroy());
     await client1.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
-    let org: TypedObject;
+    let org: ReactiveObject<any>;
     {
       const space = await client1.spaces.create({ name: 'first space' });
       await space.waitUntilReady();
@@ -59,12 +62,12 @@ describe('QueryPlugin', () => {
       await space.db.flush();
     }
     const plugin = new QueryPlugin();
-    await plugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+    await plugin.initialize({ client: client1, clientServices: services1 });
 
     await plugin.open();
     afterTest(() => plugin.close());
 
-    const services2 = builder.createLocal();
+    const services2 = builder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client2.initialize();
     afterTest(() => client2.destroy());
@@ -124,7 +127,7 @@ describe('QueryPlugin', () => {
 
       {
         // Init agent (client with a plugin).
-        const services = builder.createLocal();
+        const services = builder.createLocalClientServices();
         agent = new Client({
           services,
           config: new Config({
@@ -135,7 +138,7 @@ describe('QueryPlugin', () => {
         await agent.halo.createIdentity({ displayName: 'user-with-index-plugin' });
 
         plugin = new QueryPlugin();
-        await plugin.initialize({ client: agent, clientServices: services, plugins: [] });
+        await plugin.initialize({ client: agent, clientServices: services });
         await plugin.open();
       }
 
@@ -146,14 +149,14 @@ describe('QueryPlugin', () => {
         const generator = createSpaceObjectGenerator(space);
         generator.addSchemas();
 
-        generator.createObject({ types: [TestSchemaType.organization] });
-        const objects = generator.createObjects({ [TestSchemaType.contact]: 10 });
+        await generator.createObject({ types: [TestSchemaType.organization] });
+        const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
         testName = objects[0].name;
         await space.db.flush();
       }
 
       {
-        const services = builder.createLocal();
+        const services = builder.createLocalClientServices();
         client = new Client({ services });
         await client.initialize();
       }
@@ -178,7 +181,7 @@ describe('QueryPlugin', () => {
     });
 
     const waitForQueryResults = async (query: Query) => {
-      const results = new Trigger<TypedObject[]>();
+      const results = new Trigger<EchoReactiveObject<any>[]>();
       query.subscribe((query) => {
         if (query.results.some((result) => result.resolution?.source === 'remote')) {
           results.wake(query.objects);
@@ -188,11 +191,11 @@ describe('QueryPlugin', () => {
     };
 
     test('Text query', async () => {
-      const results = (await waitForQueryResults(
+      const results = await waitForQueryResults(
         client.spaces.query(testName, {
           dataLocation: QueryOptions.DataLocation.REMOTE,
         }),
-      )) as TypedObject[];
+      );
 
       expect(results.length >= 0).to.be.true;
       expect(results[0].name).to.equal(testName);

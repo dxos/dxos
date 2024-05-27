@@ -35,14 +35,14 @@ export class EpochMonitorPlugin extends Plugin {
    * Monitor spaces for which the agent is the leader.
    */
   override async onOpen() {
-    this._config.config = { ...DEFAULT_OPTIONS, ...this._config.config };
+    this.config.config = { ...DEFAULT_OPTIONS, ...this.config.config };
 
     const monitors = new ComplexMap<PublicKey, SpaceMonitor>(PublicKey.hash);
     const process = (spaces: Space[]) => {
       spaces.forEach(async (space) => {
         if (!monitors.has(space.key)) {
-          invariant(this._config.config);
-          const monitor = new SpaceMonitor(this.context.client, space, this._config.config);
+          invariant(this.config.config);
+          const monitor = new SpaceMonitor(this.context.client, space, this.config.config);
           monitors.set(space.key, monitor);
 
           log.info('init', { space: space.key, isOpen: space.isOpen });
@@ -164,8 +164,8 @@ class SpaceMonitor {
       log.info('creating epoch', { key: this._space.key });
       await this._space.internal.createEpoch();
       log.info('epoch created');
-    } catch (e) {
-      log.catch(e);
+    } catch (err) {
+      log.catch(err);
     } finally {
       this._creatingEpoch = false;
       clearTimeout(this._maxTimeoutTask!);

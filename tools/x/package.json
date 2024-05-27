@@ -1,6 +1,6 @@
 {
   "name": "@dxos/x",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "private": true,
   "description": "Tools.",
   "homepage": "https://dxos.org",
@@ -47,6 +47,6 @@
     "@types/node": "^18.11.9",
     "@types/react": "^18.0.21",
     "@types/yargs": "~16.0.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   }
 }

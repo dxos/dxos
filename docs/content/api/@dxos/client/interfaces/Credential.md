@@ -17,7 +17,7 @@ Options:
   - proto3_optional = true
 
 ### [id]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Options:
   - proto3_optional = true
@@ -28,7 +28,12 @@ Type: <code>Date</code>
 
 
 ### [issuer]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
+
+
+
+### [parentCredentialIds]()
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)[]</code>
 
 
 

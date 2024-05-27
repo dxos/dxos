@@ -1,6 +1,6 @@
 {
   "name": "@dxos/local-storage",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,7 +19,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@preact/signals-core": "^1.5.1"
+    "@preact/signals-core": "^1.6.0"
   },
   "devDependencies": {
     "@dxos/async": "workspace:*",

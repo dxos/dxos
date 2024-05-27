@@ -2,17 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type FC, useRef } from 'react';
+import React, { type FC } from 'react';
+
+import { Table } from '@dxos/react-ui-table';
 
 import { ObjectTable, type ObjectTableProps } from './ObjectTable';
 
-const TableSection: FC<ObjectTableProps> = ({ table }) => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  return (
-    <div className='bs-96 mlb-2 overflow-auto' ref={containerRef}>
-      <ObjectTable table={table} role='table' getScrollElement={() => containerRef.current} />
-    </div>
-  );
-};
+const TableSection: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) => (
+  <Table.Root>
+    <Table.Viewport classNames='max-bs-96 is-full mlb-2 overflow-auto sticky-top-0'>
+      <ObjectTable
+        key={table.id} // New component instance per table.
+        table={table}
+        role='grid'
+        stickyHeader
+      />
+    </Table.Viewport>
+  </Table.Root>
+);
 
 export default TableSection;

@@ -6,8 +6,15 @@ import { test } from '@playwright/test';
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
+import { log } from '@dxos/log';
+
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
+
+if (process.env.DX_PWA !== 'false') {
+  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
+  process.exit(1);
+}
 
 test.describe('Basic tests', () => {
   let host: AppManager;
@@ -40,36 +47,44 @@ test.describe('Basic tests', () => {
     });
   });
 
-  test('error boundary is rendered on invalid storage version', async ({ browserName }) => {
+  test('error boundary is rendered on invalid storage version, reset wipes old data', async ({ browserName }) => {
     // TODO(wittjosiah): This test seems to crash firefox in CI.
     if (browserName === 'firefox') {
       test.skip();
     }
 
-    await host.openSettings();
-    await host.toggleExperimenalPlugins();
-    await host.enablePlugin('dxos.org/plugin/debug');
+    test.setTimeout(60_000);
+
+    await host.createSpace();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(2);
+    });
+
     await host.changeStorageVersionInMetadata(9999);
     expect(await host.page.getByTestId('resetDialog').locator('p').innerText()).to.contain('9999');
     expect(await host.page.getByTestId('resetDialog').locator('h2').innerText()).to.equal('Invalid storage version');
+
+    await host.reset();
+    await waitForExpect(async () => {
+      expect(await host.getSpaceItemsCount()).to.equal(1);
+    });
   });
 
   test('reset device', async ({ browserName }) => {
-    // TODO(wittjosiah): Accepting browser confirm dialog only seems to work in chromium.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
+    test.setTimeout(60_000);
 
     await host.createSpace();
-    await host.createSpace();
     await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(3);
+      expect(await host.getSpaceItemsCount()).to.equal(2);
     });
 
     await host.openIdentityManager();
     await host.shell.resetDevice();
+    // Wait for reset to complete and attempt to reload.
+    await host.page.waitForRequest(host.page.url(), { timeout: 30_000 });
+    await host.page.goto(host.initialUrl);
     await waitForExpect(async () => {
       expect(await host.getSpaceItemsCount()).to.equal(1);
-    }, 15_000);
+    });
   });
 });

@@ -7,6 +7,8 @@ module.exports = {
     "tsconfigRootDir": __dirname,
   },
   "ignorePatterns": [
+    "demos/*",
+    "src/functions/*",
     "tailwind.ts"
   ]
 }

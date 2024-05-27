@@ -26,7 +26,7 @@ Arguments: none
 
 
 
-### [useDevtools()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/devtools/useDevtools.ts#L13)
+### [useDevtools()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/devtools/useDevtools.ts#L13)
 
 
 
@@ -38,7 +38,7 @@ Arguments: none
 
 
 
-### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/devtools/useStream.ts#L13)
+### [useStream(streamFactory, defaultValue, deps)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/devtools/useStream.ts#L13)
 
 
 Subscribe to service API streams.
@@ -54,28 +54,44 @@ Arguments:
 `deps`: <code>DependencyList</code>
 
 
-### [createDefaultModelFactory()]()
+### [create(schema, obj)]()
 
 
 
 
-Returns: <code>ModelFactory</code>
-
-Arguments: none
-
-
-
-
-### [createDocAccessor(text)]()
-
-
-
-
-Returns: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;T&gt;</code>
+Returns: <code>[ReactiveObject](/api/@dxos/react-client/types/ReactiveObject)&lt;T&gt;</code>
 
 Arguments: 
 
-`text`: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
+`schema`: <code>Schema&lt;T, T, never&gt;</code>
+
+`obj`: <code>Simplify&lt;Omit&lt;T, "id"&gt;&gt;</code>
+
+
+### [createDocAccessor(obj, path)]()
+
+
+
+
+Returns: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
+
+Arguments: 
+
+`obj`: <code>[EchoReactiveObject](/api/@dxos/react-client/types/EchoReactiveObject)&lt;T&gt;</code>
+
+`path`: <code>KeyPath</code>
+
+
+### [createEchoObject(init)]()
+
+
+
+
+Returns: <code>[EchoReactiveObject](/api/@dxos/react-client/types/EchoReactiveObject)&lt;T&gt;</code>
+
+Arguments: 
+
+`init`: <code>T</code>
 
 
 ### [createSubscription(onUpdate)]()
@@ -93,7 +109,7 @@ Arguments:
 `onUpdate`: <code>function</code>
 
 
-### [fromCursor(object, cursor)]()
+### [fromCursor(accessor, cursor)]()
 
 
 
@@ -102,26 +118,62 @@ Returns: <code>number</code>
 
 Arguments: 
 
-`object`: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
 
 `cursor`: <code>string</code>
 
 
-### [getRawDoc(obj, \[path\])]()
+### [getAutomergeObjectCore(obj)]()
 
 
 
 
-Returns: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
+Returns: <code>AutomergeObjectCore</code>
 
 Arguments: 
 
-`obj`: <code>[EchoObject](/api/@dxos/react-client/interfaces/EchoObject)</code>
-
-`path`: <code>string[]</code>
+`obj`: <code>[EchoReactiveObject](/api/@dxos/react-client/types/EchoReactiveObject)&lt;T&gt;</code>
 
 
-### [getSpaceForObject(object)]()
+### [getMeta(obj)]()
+
+
+
+
+Returns: <code>[ObjectMeta](/api/@dxos/react-client/types/ObjectMeta)</code>
+
+Arguments: 
+
+`obj`: <code>T</code>
+
+
+### [getRangeFromCursor(accessor, cursor)]()
+
+
+
+
+Returns: <code>undefined | object</code>
+
+Arguments: 
+
+`accessor`: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
+
+`cursor`: <code>string</code>
+
+
+### [getSchema(obj)]()
+
+
+Returns the schema for the given object if one is defined.
+
+Returns: <code>undefined | Schema&lt;any, any, never&gt;</code>
+
+Arguments: 
+
+`obj`: <code>undefined | T</code>
+
+
+### [getSpace(object)]()
 
 
 
@@ -130,10 +182,10 @@ Returns: <code>undefined | [Space](/api/@dxos/react-client/interfaces/Space)</co
 
 Arguments: 
 
-`object`: <code>[EchoObject](/api/@dxos/react-client/interfaces/EchoObject)</code>
+`object`: <code>[ReactiveObject](/api/@dxos/react-client/types/ReactiveObject)&lt;any&gt;</code>
 
 
-### [getTextContent(object, defaultValue)]()
+### [getTextInRange(accessor, start, end)]()
 
 
 
@@ -142,28 +194,38 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`object`: <code>undefined | [TextObject](/api/@dxos/react-client/classes/TextObject)</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
 
-`defaultValue`: <code>string</code>
-
-
-### [getTextInRange(object, begin, end)]()
-
-
-TODO(dima?): This API will change.
-
-Returns: <code>string</code>
-
-Arguments: 
-
-`object`: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
-
-`begin`: <code>string</code>
+`start`: <code>string</code>
 
 `end`: <code>string</code>
 
 
-### [hasType(schema)]()
+### [getType(obj)]()
+
+
+
+
+Returns: <code>undefined | Reference</code>
+
+Arguments: 
+
+`obj`: <code>undefined | T</code>
+
+
+### [getTypeRef(\[type\])]()
+
+
+
+
+Returns: <code>undefined | Reference</code>
+
+Arguments: 
+
+`type`: <code>string | EncodedReferenceObject</code>
+
+
+### [hasType(type)]()
 
 
 
@@ -172,60 +234,34 @@ Returns: <code>function</code>
 
 Arguments: 
 
-`schema`: <code>[Schema](/api/@dxos/react-client/classes/Schema)</code>
+`type`: <code>function</code>
 
 
-### [isAutomergeObject(object)]()
+### [isEchoObject(value)]()
 
 
 
 
-Returns: <code>object is AutomergeObject</code>
+Returns: <code>value is [EchoReactiveObject](/api/@dxos/react-client/types/EchoReactiveObject)&lt;any&gt;</code>
+
+Arguments: 
+
+`value`: <code>unknown</code>
+
+
+### [isSpace(object)]()
+
+
+
+
+Returns: <code>object is [Space](/api/@dxos/react-client/interfaces/Space)</code>
 
 Arguments: 
 
 `object`: <code>unknown</code>
 
 
-### [isDocAccessor(obj)]()
-
-
-
-
-Returns: <code>obj is [DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
-
-Arguments: 
-
-`obj`: <code>any</code>
-
-
-### [isTypedObject(object)]()
-
-
-
-
-Returns: <code>object is [TypedObject](/api/@dxos/react-client/types/TypedObject)&lt;Record&lt;string, any&gt;&gt;</code>
-
-Arguments: 
-
-`object`: <code>unknown</code>
-
-
-### [setTextContent(object, text)]()
-
-
-
-
-Returns: <code>void</code>
-
-Arguments: 
-
-`object`: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
-
-`text`: <code>string</code>
-
-
-### [toCursor(object, pos)]()
+### [toCursor(accessor, pos)]()
 
 
 
@@ -234,12 +270,12 @@ Returns: <code>string</code>
 
 Arguments: 
 
-`object`: <code>[TextObject](/api/@dxos/react-client/classes/TextObject)</code>
+`accessor`: <code>[DocAccessor](/api/@dxos/react-client/interfaces/DocAccessor)&lt;any&gt;</code>
 
 `pos`: <code>number</code>
 
 
-### [useMembers(spaceKey)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useMembers.ts#L12)
+### [useMembers(spaceKey)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useMembers.ts#L12)
 
 
 
@@ -251,7 +287,7 @@ Arguments:
 `spaceKey`: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
-### [useQuery(\[space\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useQuery.ts#L17)
+### [useQuery(\[spaceOrEcho\], \[filter\], \[options\], \[deps\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useQuery.ts#L30)
 
 
 Create subscription.
@@ -260,7 +296,7 @@ Returns: <code>T[]</code>
 
 Arguments: 
 
-`space`: <code>[Space](/api/@dxos/react-client/interfaces/Space)</code>
+`spaceOrEcho`: <code>[Space](/api/@dxos/react-client/interfaces/Space) | [Echo](/api/@dxos/react-client/interfaces/Echo)</code>
 
 `filter`: <code>[FilterSource](/api/@dxos/react-client/types/FilterSource)&lt;T&gt;</code>
 
@@ -269,7 +305,7 @@ Arguments:
 `deps`: <code>any[]</code>
 
 
-### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
+### [useSpace(\[spaceKey\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useSpaces.ts#L21)
 
 
 Get a specific Space using its key.
@@ -284,7 +320,7 @@ Arguments:
 `spaceKey`: <code>[PublicKeyLike](/api/@dxos/react-client/types/PublicKeyLike)</code>
 
 
-### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L31)
+### [useSpaceInvitation(\[spaceKey\], \[invitationId\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L19)
 
 
 
@@ -298,7 +334,7 @@ Arguments:
 `invitationId`: <code>string</code>
 
 
-### [useSpaceInvitations(\[spaceKey\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L13)
+### [useSpaceInvitations(\[spaceKey\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useSpaceInvitations.ts#L14)
 
 
 
@@ -310,7 +346,7 @@ Arguments:
 `spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
 
 
-### [useSpaces(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
+### [useSpaces(options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useSpaces.ts#L62)
 
 
 Get all Spaces available to current user.
@@ -324,7 +360,7 @@ Arguments:
 `options`: <code>[UseSpacesParams](/api/@dxos/react-client/types/UseSpacesParams)</code>
 
 
-### [useSubscription(cb, selection)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/echo/useSubscription.ts#L14)
+### [useSubscription(cb, selection)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/echo/useSubscription.ts#L14)
 
 
 Create reactive selection.
@@ -339,7 +375,7 @@ Arguments:
 `selection`: <code>[Selection](/api/@dxos/react-client/types/Selection)</code>
 
 
-### [useContacts()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useContacts.ts#L16)
+### [useContacts()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useContacts.ts#L15)
 
 
 Returns all known Contacts across all Spaces.
@@ -353,7 +389,7 @@ Arguments: none
 
 
 
-### [useDevices()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useDevices.ts#L11)
+### [useDevices()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useDevices.ts#L10)
 
 
 
@@ -365,7 +401,7 @@ Arguments: none
 
 
 
-### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L24)
+### [useHaloInvitation(\[invitationId\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L17)
 
 
 
@@ -377,7 +413,7 @@ Arguments:
 `invitationId`: <code>string</code>
 
 
-### [useHaloInvitations()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L10)
+### [useHaloInvitations()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useHaloInvitations.ts#L12)
 
 
 
@@ -389,7 +425,7 @@ Arguments: none
 
 
 
-### [useIdentity()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useIdentity.ts#L14)
+### [useIdentity()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useIdentity.ts#L14)
 
 
 Hook returning DXOS identity object.
@@ -402,7 +438,7 @@ Arguments: none
 
 
 
-### [useKeyStore(defaultKeys)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/halo/useKeyStore.ts#L41)
+### [useKeyStore(defaultKeys)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/halo/useKeyStore.ts#L41)
 
 
 Settings store.
@@ -414,7 +450,19 @@ Arguments:
 `defaultKeys`: <code>string[]</code>
 
 
-### [ClientProvider(options)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/ClientContext.tsx#L97)
+### [AgentHostingProvider(props)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L23)
+
+
+
+
+Returns: <code>Element</code>
+
+Arguments: 
+
+`props`: <code>object</code>
+
+
+### [ClientProvider(options)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/ClientContext.tsx#L97)
 
 
 Root component that provides the DXOS client instance to child components.
@@ -475,7 +523,7 @@ Arguments: none
 
 
 
-### [Remote(target)]()
+### [Remote(target, \[authenticationToken\])]()
 
 
 
@@ -485,6 +533,8 @@ Returns: <code>Partial&lt;[Config](/api/@dxos/config/interfaces/Config)&gt;</cod
 Arguments: 
 
 `target`: <code>undefined | string</code>
+
+`authenticationToken`: <code>string</code>
 
 
 ### [Storage()]()
@@ -499,7 +549,7 @@ Arguments: none
 
 
 
-### [createClientServices(config, \[createWorker\])]()
+### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])]()
 
 
 Create services from config.
@@ -511,6 +561,10 @@ Arguments:
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 `createWorker`: <code>function</code>
+
+`observabilityGroup`: <code>string</code>
+
+`signalTelemetryEnabled`: <code>boolean</code>
 
 
 ### [fromAgent(\[options\])]()
@@ -525,7 +579,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/react-client/types/FromAgentOptions)</code>
 
 
-### [fromHost(\[config\], \[params\])]()
+### [fromHost(\[config\], \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])]()
 
 
 Creates stand-alone services without rpc.
@@ -537,6 +591,10 @@ Arguments:
 `config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
 
 `params`: <code>ClientServicesHostParams</code>
+
+`observabilityGroup`: <code>string</code>
+
+`signalTelemetryEnabled`: <code>boolean</code>
 
 
 ### [fromIFrame(\[config\], \[options\])]()
@@ -553,7 +611,7 @@ Arguments:
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/react-client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url)]()
+### [fromSocket(url, \[authenticationToken\])]()
 
 
 Access to remote client via a socket.
@@ -563,6 +621,8 @@ Returns: <code>Promise&lt;[ClientServicesProvider](/api/@dxos/react-client/inter
 Arguments: 
 
 `url`: <code>string</code>
+
+`authenticationToken`: <code>string</code>
 
 
 ### [fromWorker(config, options)]()
@@ -593,19 +653,19 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [useAgentHostingProviderClient(config)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/useAgentHostingProvider.ts#L17)
+### [useAgentHostingClient()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/AgentHostingProvider.tsx#L31)
 
 
 
 
 Returns: <code>"null" | [AgentHostingProviderClient](/api/@dxos/react-client/interfaces/AgentHostingProviderClient)</code>
 
-Arguments: 
-
-`config`: <code>[Config](/api/@dxos/react-client/classes/Config)</code>
+Arguments: none
 
 
-### [useClient()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/ClientContext.tsx#L45)
+
+
+### [useClient()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/ClientContext.tsx#L45)
 
 
 Hook returning instance of DXOS client.
@@ -618,7 +678,7 @@ Arguments: none
 
 
 
-### [useClientServices()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/useClientServices.ts#L12)
+### [useClientServices()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/useClientServices.ts#L12)
 
 
 
@@ -630,7 +690,7 @@ Arguments: none
 
 
 
-### [useConfig()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/useConfig.ts#L15)
+### [useConfig()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/useConfig.ts#L15)
 
 
 Hook returning config object used to initialize the DXOS client instance.
@@ -655,7 +715,7 @@ Arguments:
 `observable`: <code>MulticastObservable&lt;T&gt;</code>
 
 
-### [useShell()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/useShell.ts#L12)
+### [useShell()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/useShell.ts#L12)
 
 
 Helper hook to access the shell.
@@ -667,7 +727,7 @@ Arguments: none
 
 
 
-### [useStatus()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/client/useStatus.ts#L12)
+### [useStatus()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/client/useStatus.ts#L12)
 
 
 
@@ -679,7 +739,7 @@ Arguments: none
 
 
 
-### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L76)
+### [useInvitationStatus(\[initialObservable\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/invitations/useInvitationStatus.ts#L78)
 
 
 
@@ -691,7 +751,7 @@ Arguments:
 `initialObservable`: <code>[CancellableInvitation](/api/@dxos/react-client/classes/CancellableInvitationObservable)</code>
 
 
-### [useNetworkStatus()](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/react-client/src/mesh/useNetworkStatus.ts#L14)
+### [useNetworkStatus()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/react-client/src/mesh/useNetworkStatus.ts#L13)
 
 
 Creates a network status subscription.

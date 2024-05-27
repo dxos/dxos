@@ -30,6 +30,7 @@ export type SignalCallbacks = {
   onDisconnected?: () => void;
 
   onError?: (error: Error) => void;
+  getMetadata?: () => any;
 };
 
 export type SignalRPCClientParams = {
@@ -47,6 +48,7 @@ export class SignalRPCClient {
 
   private readonly _url: string;
   private readonly _callbacks: SignalCallbacks;
+  private readonly _closeComplete = new Trigger();
 
   constructor({ url, callbacks = {} }: SignalRPCClientParams) {
     const traceId = PublicKey.random().toHex();
@@ -113,6 +115,7 @@ export class SignalRPCClient {
     this._socket.onclose = async () => {
       log(`Disconnected ${this._url}`);
       this._callbacks.onDisconnected?.();
+      this._closeComplete.wake();
       await this.close();
     };
 
@@ -143,7 +146,12 @@ export class SignalRPCClient {
     this._closed = true;
     try {
       await this._rpc?.close();
-      this._socket?.close();
+
+      if (this._socket?.readyState === WebSocket.OPEN || this._socket?.readyState === WebSocket.CONNECTING) {
+        // close() only starts the closing handshake.
+        this._socket.close();
+      }
+      await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
       log.warn('close error', err);
     }
@@ -157,6 +165,7 @@ export class SignalRPCClient {
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array(),
+      metadata: this._callbacks?.getMetadata?.(),
     });
     await swarmStream.waitUntilReady();
     return swarmStream;
@@ -183,6 +192,7 @@ export class SignalRPCClient {
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload,
+      metadata: this._callbacks?.getMetadata?.(),
     });
   }
 }

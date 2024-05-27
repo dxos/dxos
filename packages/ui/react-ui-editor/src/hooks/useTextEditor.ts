@@ -4,7 +4,17 @@
 
 import { EditorSelection, EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type DependencyList, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { useFocusableGroup } from '@fluentui/react-tabster';
+import {
+  type DependencyList,
+  type KeyboardEventHandler,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { log } from '@dxos/log';
 import { isNotFalsy } from '@dxos/util';
@@ -16,6 +26,10 @@ import { logChanges } from '../util';
 export type UseTextEditor = {
   parentRef: RefObject<HTMLDivElement>;
   view?: EditorView;
+  focusAttributes: ReturnType<typeof useFocusableGroup> & {
+    tabIndex: 0;
+    onKeyUp: KeyboardEventHandler<HTMLDivElement>;
+  };
 };
 
 export type UseTextEditorProps = Omit<TextEditorProps, 'moveToEndOfLine' | 'dataTestId'>;
@@ -36,9 +50,9 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
       log('create', { id });
 
       // https://codemirror.net/docs/ref/#state.EditorStateConfig
+      // NOTE: Don't set selection here in case it is invalid (and crashes the state); dispatch below.
       const state = EditorState.create({
         doc,
-        selection,
         extensions: [
           id && documentId.of(id),
           // TODO(burdon): Doesn't catch errors in keymap functions.
@@ -98,5 +112,24 @@ export const useTextEditor = (cb: () => UseTextEditorProps = () => ({}), deps: D
     }
   }, [view, autoFocus, selection, scrollTo]);
 
-  return { parentRef, view };
+  const focusableGroup = useFocusableGroup({ tabBehavior: 'limited' });
+  // Focus editor on Enter (e.g., when tabbing to this component).
+  const handleKeyUp = useCallback<KeyboardEventHandler<HTMLDivElement>>(
+    (event) => {
+      const { key, target, currentTarget } = event;
+      if (target === currentTarget) {
+        switch (key) {
+          case 'Enter': {
+            view?.focus();
+            break;
+          }
+        }
+      }
+    },
+    [view],
+  );
+
+  const focusAttributes = { tabIndex: 0 as const, ...focusableGroup, onKeyUp: handleKeyUp };
+
+  return { parentRef, view, focusAttributes };
 };

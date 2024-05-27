@@ -2,16 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type { StackProvides } from '@braneframe/plugin-stack';
-import { Chain as ChainType } from '@braneframe/types';
 import type {
-  GraphBuilderProvides,
   IntentResolverProvides,
-  TranslationsProvides,
-  SurfaceProvides,
   MetadataRecordsProvides,
+  SurfaceProvides,
+  TranslationsProvides,
 } from '@dxos/app-framework';
-import { isTypedObject, type TypedObject } from '@dxos/react-client/echo';
 
 import { CHAIN_PLUGIN } from './meta';
 
@@ -23,11 +21,7 @@ export enum ChainAction {
 
 export type ChainPluginProvides = SurfaceProvides &
   IntentResolverProvides &
-  GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SchemaProvides &
   StackProvides;
-
-export const isObject = (object: unknown): object is TypedObject => {
-  return isTypedObject(object) && ChainType.schema.typename === object.__typename;
-};

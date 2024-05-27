@@ -2,13 +2,11 @@
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
-    "stripInternal": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
@@ -20,13 +18,13 @@
       "path": "../../../common/context"
     },
     {
-      "path": "../../../common/debug"
-    },
-    {
       "path": "../../../common/invariant"
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/kv-store"
     },
     {
       "path": "../../../common/log"
@@ -38,6 +36,9 @@
       "path": "../../../common/random-access-storage"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/util"
     },
     {
@@ -47,7 +48,7 @@
       "path": "../automerge"
     },
     {
-      "path": "../echo-pipeline"
+      "path": "../echo-protocol"
     },
     {
       "path": "../echo-schema"

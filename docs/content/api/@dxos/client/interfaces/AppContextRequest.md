@@ -21,7 +21,7 @@ Options:
   - proto3_optional = true
 
 ### [spaceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 The key of the joined space.
 

@@ -20,7 +20,7 @@ export const Main = () => {
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
       const modifier = event.ctrlKey || event.metaKey;
-      if (event.key === '>' && event.shiftKey && modifier) {
+      if (event.key === '.' && event.shiftKey && modifier) {
         await client.shell.open();
       } else if (space && event.key === '.' && modifier) {
         await client.shell.shareSpace({ spaceKey: space.key });

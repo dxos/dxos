@@ -17,7 +17,13 @@
   ],
   "references": [
     {
+      "path": "../../apps/types"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/util"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -29,7 +35,16 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-deck"
+    },
+    {
+      "path": "../react-ui-editor"
+    },
+    {
       "path": "../react-ui-mosaic"
+    },
+    {
+      "path": "../react-ui-table"
     },
     {
       "path": "../react-ui-theme"

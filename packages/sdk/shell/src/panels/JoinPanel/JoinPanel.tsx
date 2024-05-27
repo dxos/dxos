@@ -19,9 +19,9 @@ import {
   InvitationRescuer,
   InvitationInput,
   InvitationAccepted,
-  ResetIdentity,
 } from './steps';
 import { Viewport } from '../../components';
+import { ConfirmReset } from '../../steps';
 import { stepStyles } from '../../styles';
 
 export const JoinPanelImpl = (props: JoinPanelImplProps) => {
@@ -32,6 +32,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     failed,
     mode,
     unredeemedCodes,
+    invitationIds,
     invitationStates,
     succeededKeys,
     failReasons,
@@ -44,8 +45,10 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
     onSpaceInvitationCancel,
     onHaloInvitationAuthenticate,
     onSpaceInvitationAuthenticate,
+    onCancelResetStorage,
+    onConfirmResetStorage,
     IdentityInput: IdentityInputComponent = IdentityInput,
-    ResetIdentity: ResetIdentityComponent = ResetIdentity,
+    ConfirmReset: ConfirmResetComponent = ConfirmReset,
   } = props;
   return (
     <DensityProvider density='fine'>
@@ -55,11 +58,12 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
           <Viewport.View classNames={stepStyles} id='addition method chooser'>
             <AdditionMethodChooser send={send} active={activeView === 'addition method chooser'} />
           </Viewport.View>
-          <Viewport.View classNames={stepStyles} id='reset identity confirmation'>
-            <ResetIdentityComponent
+          <Viewport.View classNames={stepStyles} id='reset storage confirmation'>
+            <ConfirmResetComponent
               send={send}
-              method='reset identity'
-              active={activeView === 'reset identity confirmation'}
+              active={activeView === 'reset storage confirmation'}
+              onCancel={onCancelResetStorage}
+              onConfirm={onConfirmResetStorage}
             />
           </Viewport.View>
           <Viewport.View classNames={stepStyles} id='create identity input'>
@@ -99,6 +103,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
             <InvitationAuthenticator
               send={send}
               Kind='Halo'
+              invitationId={invitationIds?.Halo}
               active={activeView === 'halo invitation authenticator'}
               onInvitationCancel={onHaloInvitationCancel}
               onInvitationAuthenticate={onHaloInvitationAuthenticate}
@@ -146,6 +151,7 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
             <InvitationAuthenticator
               send={send}
               Kind='Space'
+              invitationId={invitationIds?.Space}
               active={activeView === 'space invitation authenticator'}
               onInvitationCancel={onSpaceInvitationCancel}
               onInvitationAuthenticate={onSpaceInvitationAuthenticate}
@@ -172,11 +178,13 @@ export const JoinPanelImpl = (props: JoinPanelImplProps) => {
 export const JoinPanel = ({
   titleId: propsTitleId,
   mode = 'default',
+  initialDisposition = 'default',
   initialInvitationCode,
   exitActionParent,
   onExit,
   doneActionParent,
   onDone: propsOnDone,
+  onCancelResetStorage,
 }: JoinPanelProps) => {
   const client = useClient();
   const identity = useIdentity();
@@ -186,6 +194,7 @@ export const JoinPanel = ({
   const [joinState, joinSend, joinService] = useJoinMachine(client, {
     context: {
       mode,
+      initialDisposition,
       identity,
       ...(initialInvitationCode && {
         [mode === 'halo-only' ? 'halo' : 'space']: { unredeemedCode: initialInvitationCode },
@@ -216,7 +225,7 @@ export const JoinPanel = ({
       case joinState.matches({ choosingIdentity: 'choosingAuthMethod' }):
         return 'addition method chooser';
       case joinState.matches('resettingIdentity'):
-        return 'reset identity confirmation';
+        return 'reset storage confirmation';
       case joinState.matches({ choosingIdentity: 'creatingIdentity' }):
         return 'create identity input';
       case joinState.matches({ choosingIdentity: 'recoveringIdentity' }):
@@ -353,6 +362,14 @@ export const JoinPanel = ({
     [joinState],
   );
 
+  const invitationIds = useMemo(
+    () => ({
+      Halo: joinState.context.halo.invitationObservable?.get().invitationId,
+      Space: joinState.context.space.invitationObservable?.get().invitationId,
+    }),
+    [joinState],
+  );
+
   const failReasons = useMemo(
     () => ({
       Halo: joinState.context.halo.failReason,
@@ -379,6 +396,14 @@ export const JoinPanel = ({
     });
   }, [joinState, propsOnDone]);
 
+  const onConfirmResetStorage = useCallback(
+    () =>
+      client.reset().then(() => {
+        joinSend({ type: 'resetIdentity' });
+      }),
+    [client, joinSend],
+  );
+
   return (
     <JoinPanelImpl
       {...{
@@ -390,6 +415,7 @@ export const JoinPanel = ({
         failReasons,
         pending: ['connecting', 'authenticating'].some((str) => joinState?.configuration[0].id.includes(str)),
         unredeemedCodes,
+        invitationIds,
         invitationStates,
         succeededKeys,
         identity,
@@ -409,6 +435,8 @@ export const JoinPanel = ({
           joinSend({ type: 'authenticateSpaceVerificationCode' });
           return joinState.context.space.invitationObservable?.authenticate(authCode);
         },
+        onConfirmResetStorage,
+        onCancelResetStorage,
       }}
     />
   );

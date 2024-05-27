@@ -6,9 +6,11 @@ import '@dxosTheme';
 
 import React, { useEffect, useState } from 'react';
 
-import { Table as TableType } from '@braneframe/types';
+import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { Schema, useSpaces } from '@dxos/react-client/echo';
+import { create, type DynamicEchoSchema } from '@dxos/echo-schema';
+import { useClient } from '@dxos/react-client';
+import { type Hypergraph, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/storybook-utils';
@@ -17,14 +19,24 @@ import { TableSettings } from './TableSettings';
 
 const Story = () => {
   const [space] = useSpaces();
+  const client = useClient();
   const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
-  const { objects: schemas } = space.db.query(Schema.filter());
+  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+
   useEffect(() => {
     const generator = createSpaceObjectGenerator(space);
     generator.addSchemas();
 
-    setTable(space.db.add(new TableType()));
+    const graph = (client as any)._graph as Hypergraph;
+    // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
+    // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
+    if (!graph.runtimeSchemaRegistry.hasSchema(TableType)) {
+      graph.runtimeSchemaRegistry.registerSchema(TableType);
+    }
+
+    setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
+    void space.db.schemaRegistry.getAll().then(setSchemas).catch();
   }, []);
 
   const handleClose = (success: boolean) => {

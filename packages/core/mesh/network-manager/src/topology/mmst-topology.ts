@@ -63,6 +63,11 @@ export class MMSTTopology implements Topology {
     }
   }
 
+  forceUpdate() {
+    this._lastAction = new Date(0);
+    this.update();
+  }
+
   async onOffer(peer: PublicKey): Promise<boolean> {
     invariant(this._controller, 'Not initialized');
     const { connected } = this._controller.getState();
@@ -99,7 +104,7 @@ export class MMSTTopology implements Topology {
         }
         this._lastAction = new Date();
       } else {
-        log('rate limited discconnect');
+        log('rate limited disconnect');
       }
     } else if (connected.length < this._originateConnections) {
       // Connect new peers to reach desired quota.

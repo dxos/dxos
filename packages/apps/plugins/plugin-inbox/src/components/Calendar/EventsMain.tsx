@@ -4,19 +4,18 @@
 
 import React, { useState } from 'react';
 
-import { type Calendar as CalendarType, Event as EventType } from '@braneframe/types';
-import { getSpaceForObject, useQuery } from '@dxos/react-client/echo';
+import { type CalendarType, EventType } from '@braneframe/types';
+import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
-import { baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  bottombarBlockPaddingEnd,
+  fixedInsetFlexLayout,
+  topbarBlockPaddingStart,
+} from '@dxos/react-ui-theme';
 
 import { EventList } from './EventtList';
 import { MasterDetail } from '../MasterDetail';
-
-// TODO(burdon): Factor out.
-export const styles = {
-  selected: '!bg-primary-100 dark:!bg-primary-700',
-  columnWidth: 'max-w-[400px]',
-};
 
 const byDate =
   (direction = -1) =>
@@ -29,12 +28,12 @@ export type EventsMainProps = {
 
 const EventsMain = ({ calendar }: EventsMainProps) => {
   const [selected, setSelected] = useState<EventType>();
-  const space = getSpaceForObject(calendar);
-  const objects = useQuery(space, EventType.filter());
+  const space = getSpace(calendar);
+  const objects = useQuery(space, Filter.schema(EventType));
   objects.sort(byDate());
 
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <MasterDetail>
         <EventList events={objects} selected={selected?.id} onSelect={setSelected} />
       </MasterDetail>

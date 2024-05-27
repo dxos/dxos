@@ -5,12 +5,13 @@
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { filterObjects, type SearchResult } from '@braneframe/plugin-search';
-import { type Schema, type Space, type TypedObject } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
+import { type EchoReactiveObject, getType } from '@dxos/echo-schema';
 import { createSvgContext, Grid, SVG, SVGContextProvider, Zoom } from '@dxos/gem-core';
 import { Graph as GraphComponent, GraphForceProjector, type GraphLayoutNode, Markers } from '@dxos/gem-spore';
 import { mx } from '@dxos/react-ui-theme';
 
-import { SpaceGraphModel } from './graph-model';
+import { type EchoGraphNode, SpaceGraphModel } from './graph-model';
 import { Tree } from '../Tree';
 
 type Slots = {
@@ -45,7 +46,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
   const context = createSvgContext();
   const projector = useMemo(
     () =>
-      new GraphForceProjector<TypedObject>(context, {
+      new GraphForceProjector<EchoGraphNode>(context, {
         forces: {
           manyBody: {
             strength: -100,
@@ -59,7 +60,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
           },
         },
         attributes: {
-          radius: (node: GraphLayoutNode<TypedObject>) => (node.data?.__typename === 'dxos.schema.Schema' ? 24 : 12),
+          radius: (node: GraphLayoutNode<EchoGraphNode>) => (node.data?.type === 'schema' ? 24 : 12),
         },
       }),
     [],
@@ -71,7 +72,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
     void projector.start();
   }, [match]);
 
-  const [colorMap] = useState(new Map<Schema, string>());
+  const [colorMap] = useState(new Map<string, string>());
 
   if (!model) {
     return null;
@@ -94,7 +95,7 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
             arrows
             onSelect={(node) => setSelected(node?.data?.id)}
             labels={{
-              text: (node: GraphLayoutNode<TypedObject>) => {
+              text: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
                 if (filteredRef.current?.length && !filteredRef.current.some((object) => object.id === node.data?.id)) {
                   return undefined;
                 }
@@ -104,14 +105,16 @@ export const Graph: FC<GraphProps> = ({ space, match }) => {
               },
             }}
             attributes={{
-              node: (node: GraphLayoutNode<TypedObject>) => {
+              node: (node: GraphLayoutNode<EchoReactiveObject<any>>) => {
                 let className: string | undefined;
-                const schema = node.data?.__schema;
-                if (schema) {
-                  className = colorMap.get(schema);
-                  if (!className) {
-                    className = colors[colorMap.size % colors.length];
-                    colorMap.set(schema, className);
+                if (node.data) {
+                  const typename = getType(node.data)?.itemId;
+                  if (typename) {
+                    className = colorMap.get(typename);
+                    if (!className) {
+                      className = colors[colorMap.size % colors.length];
+                      colorMap.set(typename, className);
+                    }
                   }
                 }
 

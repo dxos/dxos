@@ -3,14 +3,15 @@
 //
 
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
-import { type DatabaseProxy } from '@dxos/echo-db';
-import { type TypedObject, type EchoDatabase } from '@dxos/echo-schema';
+import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
   type Invitation,
   type Space as SpaceData,
   type SpaceMember,
   type SpaceState,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -18,21 +19,7 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type CancellableInvitation } from './invitations';
 
 export interface SpaceInternal {
-  get db(): DatabaseProxy;
   get data(): SpaceData;
-
-  /**
-   * Activates the space enabling the use of the database and starts replication with peers.
-   * The setting is persisted on the local device.
-   */
-  open(): Promise<void>;
-
-  /**
-   * Deactivates the space stopping replication with other peers.
-   * The space will not auto-open on the next app launch.
-   * The setting is persisted on the local device.
-   */
-  close(): Promise<void>;
 
   // TODO(dmaretskyi): Return epoch info.
   createEpoch(): Promise<void>;
@@ -53,7 +40,7 @@ export interface Space {
   /**
    * Properties object.
    */
-  get properties(): TypedObject;
+  get properties(): EchoReactiveObject<any>;
 
   /**
    * Current state of the space.
@@ -70,9 +57,23 @@ export interface Space {
   get invitations(): MulticastObservable<CancellableInvitation[]>;
   get members(): MulticastObservable<SpaceMember[]>;
 
+  /**
+   * @deprecated
+   */
+  // TODO(wittjosiah): Remove. This should not be exposed.
   get internal(): SpaceInternal;
 
+  // TODO(wittjosiah): Rename activate/deactivate?
+  /**
+   * Activates the space enabling the use of the database and starts replication with peers.
+   * The setting is persisted on the local device.
+   */
   open(): Promise<void>;
+  /**
+   * Deactivates the space stopping replication with other peers.
+   * The space will not auto-open on the next app launch.
+   * The setting is persisted on the local device.
+   */
   close(): Promise<void>;
 
   /**
@@ -86,6 +87,8 @@ export interface Space {
   listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 
   share(options?: Partial<Invitation>): CancellableInvitation;
+
+  updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
   createSnapshot(): Promise<SpaceSnapshot>;
 }

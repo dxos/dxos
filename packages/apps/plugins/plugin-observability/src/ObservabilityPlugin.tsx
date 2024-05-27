@@ -22,7 +22,7 @@ import {
   parsePluginHost,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import {
   type Observability,
@@ -36,7 +36,7 @@ import type { EventOptions } from '@dxos/observability/segment';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
-import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction } from './meta';
+import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
 import translations from './translations';
 
 export type ObservabilityPluginState = {
@@ -58,7 +58,7 @@ export const ObservabilityPlugin = (options: {
   namespace: string;
   observability: () => Promise<Observability>;
 }): PluginDefinition<ObservabilityPluginProvides> => {
-  const settings = E.object<ObservabilitySettingsProps>({});
+  const settings = create<ObservabilitySettingsProps>({});
   const state = new LocalStorageStore<ObservabilityPluginState>(OBSERVABILITY_PLUGIN);
   const subscriptions = new EventSubscriptions();
   let observability: Observability | undefined;
@@ -149,10 +149,12 @@ export const ObservabilityPlugin = (options: {
 
         setupTelemetryListeners(options.namespace, client, observability);
 
-        await observability.setIdentityTags(client);
-        await observability.startNetworkMetrics(client);
-        await observability.startSpacesMetrics(client, options.namespace);
-        await observability.startRuntimeMetrics(client);
+        await Promise.all([
+          observability.setIdentityTags(client),
+          observability.startRuntimeMetrics(client),
+          observability.startNetworkMetrics(client),
+          observability.startSpacesMetrics(client, options.namespace),
+        ]);
       });
     },
     unload: async () => {
@@ -192,6 +194,13 @@ export const ObservabilityPlugin = (options: {
               };
               observability.event(event);
               return { data: event };
+            }
+
+            case ObservabilityAction.CAPTURE_USER_FEEDBACK: {
+              const feedback = intent.data as UserFeedback;
+
+              observability.captureUserFeedback(feedback.email, feedback.name, feedback.message);
+              return { data: true };
             }
           }
         },

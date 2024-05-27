@@ -1,5 +1,20 @@
+@layer utilities {
+  .snap-inline {
+    scroll-snap-type: inline var(--tw-scroll-snap-strictness);
+  }
+  .snap-block {
+    scroll-snap-type: block var(--tw-scroll-snap-strictness);
+  }
+  .sticky-top-0 {
+    --sticky-top: 0;
+  }
+}
+
 @layer components {
   .sticky-top-from-topbar-bottom {
     --sticky-top: var(--topbar-size);
+  }
+  .sticky-bottom-from-statusbar-bottom {
+    --sticky-bottom: var(--statusbar-size);
   }
 }

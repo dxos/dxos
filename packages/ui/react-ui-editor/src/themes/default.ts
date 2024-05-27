@@ -236,28 +236,44 @@ export const defaultTheme: ThemeStyles = {
    *   </div>
    * </div
    */
-  '.cm-panels': {
-    border: `1px solid ${get(tokens, 'extend.colors.neutral.200')}`,
-  },
+  '.cm-panels': {},
   '.cm-panel': {
-    background: get(tokens, 'extend.colors.neutral.50'),
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
+  },
+  '.cm-panel input[type=checkbox]': {
+    marginRight: '0.4rem !important',
+  },
+  '&light .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.50'),
+  },
+  '&dark .cm-panel': {
+    background: get(tokens, 'extend.colors.neutral.850'),
   },
   '.cm-button': {
     margin: '4px',
     fontFamily: get(tokens, 'fontFamily.body', []).join(','),
-    background: get(tokens, 'extend.colors.neutral.100'),
     backgroundImage: 'none',
     border: 'none',
+    '&:active': {
+      backgroundImage: 'none',
+    },
+  },
+  '&light .cm-button': {
+    background: get(tokens, 'extend.colors.neutral.100'),
     '&:hover': {
       background: get(tokens, 'extend.colors.neutral.200'),
     },
     '&:active': {
       background: get(tokens, 'extend.colors.neutral.300'),
-      backgroundImage: 'none',
     },
   },
-  '.cm-panel input[type=checkbox]': {
-    marginRight: '0.4rem !important',
+  '&dark .cm-button': {
+    background: get(tokens, 'extend.colors.neutral.800'),
+    '&:hover': {
+      background: get(tokens, 'extend.colors.neutral.700'),
+    },
+    '&:active': {
+      background: get(tokens, 'extend.colors.neutral.600'),
+    },
   },
 };

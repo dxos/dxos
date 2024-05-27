@@ -1,6 +1,7 @@
 <component name="ProjectDictionaryState">
   <dictionary name="burdon">
     <words>
+      <w>agenthosting</w>
       <w>alexjg</w>
       <w>automerge</w>
       <w>blueyard</w>
@@ -12,8 +13,10 @@
       <w>callbackfn</w>
       <w>codeblock</w>
       <w>collab</w>
+      <w>commentblock</w>
       <w>containerd</w>
       <w>crdt</w>
+      <w>crossorigin</w>
       <w>ctors</w>
       <w>delimitered</w>
       <w>demuxer</w>
@@ -26,6 +29,7 @@
       <w>dxos's</w>
       <w>dxrpc</w>
       <w>echofs</w>
+      <w>embedder</w>
       <w>endcap</w>
       <w>faas</w>
       <w>faasd</w>
@@ -52,6 +56,7 @@
       <w>micromark</w>
       <w>mins</w>
       <w>minsize</w>
+      <w>mixtral</w>
       <w>mkcert</w>
       <w>multipass</w>
       <w>nadella</w>
@@ -59,6 +64,7 @@
       <w>nanomessage</w>
       <w>nanoresource</w>
       <w>navtree</w>
+      <w>nomic</w>
       <w>noreferrer</w>
       <w>observablehq</w>
       <w>oclif</w>
@@ -84,10 +90,14 @@
       <w>outliner</w>
       <w>packlets</w>
       <w>permissionless</w>
+      <w>personalizations</w>
+      <w>postbuild</w>
+      <w>preconnect</w>
       <w>prefs</w>
       <w>pricings</w>
       <w>protos</w>
       <w>proxied</w>
+      <w>raleway</w>
       <w>rehype</w>
       <w>reopenable</w>
       <w>repurposable</w>
@@ -97,6 +107,7 @@
       <w>seedphrase</w>
       <w>seedrandom</w>
       <w>statable</w>
+      <w>stockfish</w>
       <w>streamx</w>
       <w>stringified</w>
       <w>subtiles</w>
@@ -107,6 +118,8 @@
       <w>testbench</w>
       <w>testid</w>
       <w>testutils</w>
+      <w>textblock</w>
+      <w>textblocks</w>
       <w>textbox</w>
       <w>tldraw</w>
       <w>topbar</w>
@@ -121,6 +134,7 @@
       <w>unwant</w>
       <w>viewbox</w>
       <w>wittjosiah</w>
+      <w>wnfs</w>
       <w>workflowy</w>
       <w>zoomable</w>
     </words>

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { FriendlyError } from '../../errors';
 
 export default class Error extends BaseCommand<typeof Error> {
@@ -22,7 +22,7 @@ class TestError extends FriendlyError {
     return 'Friendly error message.';
   }
 
-  override get suggestion() {
+  override get hint() {
     return 'Error suggestion.';
   }
 }

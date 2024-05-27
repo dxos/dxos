@@ -198,3 +198,11 @@ export class UnknownModelError extends DatabaseError {
 registerError('UNKNOWN_MODEL', (_, context) => {
   return new UnknownModelError(context.model);
 });
+
+export class AuthorizationError extends ApiError {
+  constructor(message?: string, context?: any) {
+    super('AUTHORIZATION_ERROR', message, context);
+  }
+}
+
+registerErrorMessageContext('AUTHORIZATION_ERROR', AuthorizationError);

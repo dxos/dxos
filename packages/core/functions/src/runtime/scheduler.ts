@@ -2,202 +2,143 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CronJob } from 'cron';
+import path from 'node:path';
 
-import { debounce, DeferredTask } from '@dxos/async';
-import { type Client, type PublicKey } from '@dxos/client';
-import { type Space, TextObject } from '@dxos/client/echo';
+import { Mutex } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, createSubscription, type Query, subscribe } from '@dxos/echo-schema';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ComplexMap } from '@dxos/util';
 
-import { type FunctionSubscriptionEvent } from '../handler';
-import { type FunctionDef, type FunctionManifest, type FunctionTrigger, type TriggerSubscription } from '../manifest';
+import { type FunctionRegistry } from '../function';
+import { type FunctionEventMeta } from '../handler';
+import { type TriggerRegistry } from '../trigger';
+import { type FunctionDef, type FunctionManifest, type FunctionTrigger } from '../types';
 
-type Callback = (data: FunctionSubscriptionEvent) => Promise<number>;
+export type Callback = (data: any) => Promise<void | number>;
 
-type SchedulerOptions = {
+export type SchedulerOptions = {
   endpoint?: string;
   callback?: Callback;
 };
 
 /**
- * Functions scheduler.
+ * The scheduler triggers function execution based on various triggers.
  */
-// TODO(burdon): Create tests.
 export class Scheduler {
-  // Map of mounted functions.
-  private readonly _mounts = new ComplexMap<
-    { id: string; spaceKey: PublicKey },
-    { ctx: Context; trigger: FunctionTrigger }
-  >(({ id, spaceKey }) => `${spaceKey.toHex()}:${id}`);
+  private _ctx = createContext();
+
+  private readonly _functionUriToCallMutex = new Map<string, Mutex>();
 
   constructor(
-    private readonly _client: Client,
-    private readonly _manifest: FunctionManifest,
+    public readonly functions: FunctionRegistry,
+    public readonly triggers: TriggerRegistry,
     private readonly _options: SchedulerOptions = {},
-  ) {}
+  ) {
+    this.functions.registered.on(async ({ space, added }) => {
+      await this._safeActivateTriggers(space, this.triggers.getInactiveTriggers(space), added);
+    });
+    this.triggers.registered.on(async ({ space, triggers }) => {
+      await this._safeActivateTriggers(space, triggers, this.functions.getFunctions(space));
+    });
+  }
 
   async start() {
-    this._client.spaces.subscribe(async (spaces) => {
-      for (const space of spaces) {
-        await space.waitUntilReady();
-        for (const trigger of this._manifest.triggers ?? []) {
-          await this.mount(new Context(), space, trigger);
-        }
-      }
-    });
+    await this._ctx.dispose();
+    this._ctx = createContext();
+    await this.functions.open(this._ctx);
+    await this.triggers.open(this._ctx);
   }
 
   async stop() {
-    for (const { id, spaceKey } of this._mounts.keys()) {
-      await this.unmount(id, spaceKey);
-    }
+    await this._ctx.dispose();
+    await this.functions.close();
+    await this.triggers.close();
   }
 
-  private async mount(ctx: Context, space: Space, trigger: FunctionTrigger) {
-    const key = { id: trigger.function, spaceKey: space.key };
-    const def = this._manifest.functions.find((config) => config.id === trigger.function);
-    invariant(def, `Function not found: ${trigger.function}`);
-
-    // Currently supports only one trigger declaration per function.
-    const exists = this._mounts.get(key);
-    if (!exists) {
-      this._mounts.set(key, { ctx, trigger });
-      log('mount', { space: space.key, trigger });
-      if (ctx.disposed) {
-        return;
-      }
-
-      // Timer.
-      if (trigger.schedule) {
-        this._createTimer(ctx, space, def, trigger);
-      }
-
-      // Subscription.
-      for (const triggerSubscription of trigger.subscriptions ?? []) {
-        this._createSubscription(ctx, space, def, triggerSubscription);
-      }
-    }
+  // TODO(burdon): Remove and update registries directly.
+  public async register(space: Space, manifest: FunctionManifest) {
+    await this.functions.register(space, manifest.functions);
+    await this.triggers.register(space, manifest);
   }
 
-  private async unmount(id: string, spaceKey: PublicKey) {
-    const key = { id, spaceKey };
-    const { ctx } = this._mounts.get(key) ?? {};
-    if (ctx) {
-      this._mounts.delete(key);
-      await ctx.dispose();
-    }
+  private async _safeActivateTriggers(
+    space: Space,
+    triggers: FunctionTrigger[],
+    functions: FunctionDef[],
+  ): Promise<void> {
+    const mountTasks = triggers.map((trigger) => {
+      return this.activate(space, functions, trigger);
+    });
+    await Promise.all(mountTasks).catch(log.catch);
   }
 
-  private _createTimer(ctx: Context, space: Space, def: FunctionDef, trigger: FunctionTrigger) {
-    const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, {
-        space: space.key,
+  private async activate(space: Space, functions: FunctionDef[], trigger: FunctionTrigger) {
+    const definition = functions.find((def) => def.uri === trigger.function);
+    if (!definition) {
+      log.info('function is not found for trigger', { trigger });
+      return;
+    }
+
+    await this.triggers.activate(space, trigger, async (args) => {
+      const mutex = this._functionUriToCallMutex.get(definition.uri) ?? new Mutex();
+      this._functionUriToCallMutex.set(definition.uri, mutex);
+
+      log.info('function triggered, waiting for mutex', { uri: definition.uri });
+      return mutex.executeSynchronized(() => {
+        log.info('mutex acquired', { uri: definition.uri });
+        return this._execFunction(definition, trigger, {
+          meta: trigger.meta ?? {},
+          data: { ...args, spaceKey: space.key },
+        });
       });
     });
 
-    invariant(trigger.schedule);
-    let last = 0;
-    let run = 0;
-    // https://www.npmjs.com/package/cron#constructor
-    const job = CronJob.from({
-      cronTime: trigger.schedule,
-      runOnInit: false,
-      onTick: () => {
-        // TODO(burdon): Check greater than 30s (use cron-parser).
-        const now = Date.now();
-        const delta = last ? now - last : 0;
-        last = now;
-
-        run++;
-        log.info('tick', { space: space.key.truncate(), count: run, delta });
-        task.schedule();
-      },
-    });
-
-    job.start();
-    ctx.onDispose(() => job.stop());
+    log('activated trigger', { space: space.key, trigger });
   }
 
-  private _createSubscription(ctx: Context, space: Space, def: FunctionDef, triggerSubscription: TriggerSubscription) {
-    const objectIds = new Set<string>();
-    const task = new DeferredTask(ctx, async () => {
-      await this._execFunction(def, {
-        space: space.key,
-        objects: Array.from(objectIds),
-      });
-    });
-
-    // TODO(burdon): Don't fire initially.
-    // TODO(burdon): Standardize subscription handles.
-    const subscriptions: (() => void)[] = [];
-    const subscription = createSubscription(({ added, updated }) => {
-      for (const object of added) {
-        objectIds.add(object.id);
-      }
-      for (const object of updated) {
-        objectIds.add(object.id);
-      }
-
-      task.schedule();
-    });
-    subscriptions.push(() => subscription.unsubscribe());
-
-    // TODO(burdon): Create queue. Only allow one invocation per trigger at a time?
-    // TODO(burdon): Disable trigger if keeps failing.
-    const { type, props, deep, delay } = triggerSubscription;
-    const update = ({ objects }: Query) => {
-      subscription.update(objects);
-
-      // TODO(burdon): Hack to monitor changes to Document's text object.
-      if (deep) {
-        log.info('update', { type, deep, objects: objects.length });
-        for (const object of objects) {
-          const content = object.content;
-          if (content instanceof TextObject) {
-            subscriptions.push(content[subscribe](debounce(() => subscription.update([object]), 1_000)));
-          }
-        }
-      }
-    };
-
-    // TODO(burdon): [Bug]: all callbacks are fired on the first mutation.
-    // TODO(burdon): [Bug]: not updated when document is deleted (either top or hierarchically).
-    const query = space.db.query(Filter.typename(type, props));
-    subscriptions.push(query.subscribe(delay ? debounce(update, delay * 1_000) : update));
-
-    ctx.onDispose(() => {
-      subscriptions.forEach((unsubscribe) => unsubscribe());
-    });
-  }
-
-  private async _execFunction(def: FunctionDef, data: any) {
+  private async _execFunction<TData, TMeta>(
+    def: FunctionDef,
+    trigger: FunctionTrigger,
+    { data, meta }: { data: TData; meta?: TMeta },
+  ): Promise<number> {
+    let status = 0;
     try {
-      log('request', { function: def.id });
+      // TODO(burdon): Pass in Space key (common context)?
+      const payload = Object.assign({}, meta && ({ meta } satisfies FunctionEventMeta<TMeta>), data);
+
       const { endpoint, callback } = this._options;
-      let status = 0;
       if (endpoint) {
         // TODO(burdon): Move out of scheduler (generalize as callback).
-        const response = await fetch(`${this._options.endpoint}/${def.name}`, {
+        const url = path.join(endpoint, def.route);
+        log.info('exec', { function: def.uri, url, triggerType: trigger.spec.type });
+        const response = await fetch(url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
 
         status = response.status;
       } else if (callback) {
-        status = await callback(data);
+        log.info('exec', { function: def.uri });
+        status = (await callback(payload)) ?? 200;
+      }
+
+      // Check errors.
+      if (status && status >= 400) {
+        throw new Error(`Response: ${status}`);
       }
 
       // const result = await response.json();
-      log('result', { function: def.id, result: status });
+      log.info('done', { function: def.uri, status });
     } catch (err: any) {
-      log.error('error', { function: def.id, error: err.message });
+      log.error('error', { function: def.uri, error: err.message });
+      status = 500;
     }
+
+    return status;
   }
 }
+
+const createContext = () => new Context({ name: 'FunctionScheduler' });

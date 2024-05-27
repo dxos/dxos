@@ -8,15 +8,16 @@ import { CSS } from '@dnd-kit/utilities';
 import { DotsSixVertical, X, Plus } from '@phosphor-icons/react';
 import React, { type FC } from 'react';
 
-import { type Kanban as KanbanType } from '@braneframe/types';
+import { type KanbanColumnType, type KanbanItemType } from '@braneframe/types';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { modalSurface, getSize, groupSurface, mx } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { KanbanCardComponent } from './KanbanCard';
 import { useSubscription } from './util';
 import { KANBAN_PLUGIN } from '../meta';
 
-export type ItemsMapper = (column: string, items: KanbanType.Item[]) => KanbanType.Item[];
+export type ItemsMapper = (column: string, items: KanbanItemType[]) => KanbanItemType[];
 
 const DeleteColumn = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
@@ -52,17 +53,17 @@ export const KanbanColumnComponentPlaceholder: FC<{ onAdd: () => void }> = ({ on
 };
 
 export const KanbanColumnComponent: FC<{
-  column: KanbanType.Column;
+  column: KanbanColumnType;
   itemMapper?: ItemsMapper;
   debug?: boolean; // TODO(burdon): Context.
-  onCreate?: (column: KanbanType.Column) => KanbanType.Item;
+  onCreate?: (column: KanbanColumnType) => KanbanItemType;
   onDelete?: () => void;
 }> = ({ column, itemMapper, debug = false, onCreate, onDelete }) => {
   const { t } = useTranslation(KANBAN_PLUGIN);
 
   // TODO(wittjosiah): Remove?
   useSubscription([column.items]);
-  const items = itemMapper?.(column.id!, column.items!) ?? column.items!;
+  const items = itemMapper?.(column.id!, column.items.filter(nonNullable)) ?? column.items!;
 
   const { setNodeRef: setDroppableNodeRef } = useDroppable({ id: column.id! });
   const { isDragging, attributes, listeners, transform, transition, setNodeRef } = useSortable({
@@ -79,7 +80,7 @@ export const KanbanColumnComponent: FC<{
     : undefined;
 
   const handleDeleteItem = (id: string) => {
-    const index = column.items!.findIndex((column) => column.id === id);
+    const index = column.items.filter(nonNullable).findIndex((column) => column.id === id);
     if (index >= 0) {
       column.items!.splice(index, 1);
     }
@@ -119,9 +120,9 @@ export const KanbanColumnComponent: FC<{
         </div>
 
         {/* TODO(burdon): Scrolling (radix; see kai/mosaic). */}
-        <SortableContext strategy={verticalListSortingStrategy} items={items.map(({ id }) => id)}>
+        <SortableContext strategy={verticalListSortingStrategy} items={items.filter(nonNullable).map(({ id }) => id)}>
           <div ref={setDroppableNodeRef} className='flex flex-col grow overflow-y-scroll space-y-2 pr-4'>
-            {items.map((item) => (
+            {items.filter(nonNullable).map((item) => (
               <div key={item.id} id={item.id} className='flex pl-2'>
                 <KanbanCardComponent column={column} item={item} onDelete={() => handleDeleteItem(item.id)} />
               </div>

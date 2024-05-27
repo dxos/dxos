@@ -2,111 +2,109 @@
 // Copyright 2024 DXOS.org
 //
 
+import isEqual from 'lodash.isequal';
+
 import { invariant } from '@dxos/invariant';
+import { type SublevelDB } from '@dxos/kv-store';
 import { type IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type File, type Directory } from '@dxos/random-access-storage';
+import { trace } from '@dxos/tracing';
 
 import { IndexConstructors } from './index-constructors';
 import { type Index } from './types';
-import { overrideFile } from './util';
 
-const RESERVED_SIZE = 4; // 4 bytes
-const HEADER_VERSION = 1;
+const CODEC_VERSION = 2;
 
-type IndexHeader = {
+type IndexData = {
   kind: IndexKind;
+  index: string;
   version: number;
 };
 
 export type IndexStoreParams = {
-  directory: Directory;
+  db: SublevelDB;
 };
 
+// TODO(mykola): Delete header from storage codec.
 export class IndexStore {
-  private readonly _directory: Directory;
-  constructor({ directory }: IndexStoreParams) {
-    this._directory = directory;
+  private readonly _db: SublevelDB;
+  constructor({ db }: IndexStoreParams) {
+    this._db = db;
+
+    trace.diagnostic({
+      id: 'indexes',
+      name: 'Indexes',
+      fetch: async () => {
+        const indexes = await this._db.iterator<string, IndexData>(encodings).all();
+        return indexes.map(([identifier, { index, ...rest }]) => ({
+          identifier,
+          ...rest,
+        }));
+      },
+    });
   }
 
   async save(index: Index) {
-    const file = this._directory.getOrCreateFile(index.identifier);
-
-    const serialized = Buffer.from(await index.serialize());
-    const header = Buffer.from(JSON.stringify(headerCodec.encode(index.kind)));
-
-    const metadata = Buffer.alloc(RESERVED_SIZE);
-    metadata.writeInt32LE(header.length, 0);
-    const data = Buffer.concat([metadata, header, serialized]);
-
-    await overrideFile(file, data);
+    await this._db.put<string, IndexData>(index.identifier, await indexCodec.encode(index), encodings);
   }
 
   async load(identifier: string): Promise<Index> {
-    const file = this._directory.getOrCreateFile(identifier);
-    const { size } = await file.stat();
-
-    const { header, headerSize } = await getHeader(file);
-
-    const kind = headerCodec.decode(header);
-    const IndexConstructor = IndexConstructors[kind.kind];
-    invariant(IndexConstructor, `Index kind ${kind.kind} is not supported`);
-
-    const offset = RESERVED_SIZE + headerSize;
-    invariant(size > offset, `Index file ${identifier} is too small`);
-
-    const serialized = (await file.read(offset, size - offset)).toString();
-    return IndexConstructor.load({ serialized, indexKind: kind, identifier });
+    const data = await this._db.get<string, IndexData>(identifier, encodings);
+    return indexCodec.decode(identifier, data);
   }
 
   async remove(identifier: string) {
-    const file = this._directory.getOrCreateFile(identifier);
-    await file.destroy();
+    await this._db.del(identifier, encodings);
   }
 
   /**
    *
    * @returns Map of index identifiers vs their kinds.
    */
-  async loadIndexKinds(): Promise<Map<string, IndexKind>> {
-    const identifiers = await this._directory.list();
-    const headers = new Map<string, IndexKind>();
+  async loadIndexKindsFromDisk(): Promise<Map<string, IndexKind>> {
+    const kinds = new Map<string, IndexKind>();
 
-    await Promise.all(
-      identifiers.map(async (identifier) => {
-        const file = this._directory.getOrCreateFile(identifier);
-        const header = await getHeader(file).catch(() => {});
-        if (header) {
-          headers.set(identifier, headerCodec.decode(header.header));
+    for await (const [identifier, data] of this._db.iterator<string, IndexData>(encodings)) {
+      data.kind && kinds.set(identifier, data.kind);
+    }
+
+    // Delete all indexes that are colliding with the same kind.
+    {
+      const seenKinds: IndexKind[] = [];
+      const allKinds = Array.from(kinds.values());
+      for (const kind of allKinds) {
+        if (!seenKinds.some((seenKind) => isEqual(seenKind, kind))) {
+          seenKinds.push(kind);
+          continue;
         }
-      }),
-    );
 
-    return headers;
+        const entries = Array.from(kinds.entries());
+        for (const [identifier, indexKind] of entries) {
+          if (isEqual(indexKind, kind)) {
+            await this.remove(identifier);
+            kinds.delete(identifier);
+          }
+        }
+      }
+    }
+
+    return kinds;
   }
 }
 
-const headerCodec = {
-  encode: (kind: IndexKind): IndexHeader => {
+const encodings = { keyEncoding: 'utf8', valueEncoding: 'json' };
+
+const indexCodec = {
+  encode: async (index: Index): Promise<IndexData> => {
     return {
-      kind,
-      version: HEADER_VERSION,
+      index: await index.serialize(),
+      kind: index.kind,
+      version: CODEC_VERSION,
     };
   },
-  decode: (header: IndexHeader): IndexKind => {
-    invariant(header.version === HEADER_VERSION, `Index version ${header.version} is not supported`);
-    return header.kind;
+  decode: async (identifier: string, data: IndexData): Promise<Index> => {
+    invariant(data.version === CODEC_VERSION, `Index version ${data.version} is not supported`);
+    const IndexConstructor = IndexConstructors[data.kind.kind];
+    invariant(IndexConstructor, `Index kind ${data.kind.kind} is not supported`);
+    return IndexConstructor.load({ serialized: data.index, indexKind: data.kind, identifier });
   },
 };
-
-const getHeader = async (file: File): Promise<{ header: IndexHeader; headerSize: number }> => {
-  const { size } = await file.stat();
-
-  invariant(size > RESERVED_SIZE, 'Index file is too small');
-
-  const headerSize = fromBytesInt32(await file.read(0, 4));
-  invariant(size > RESERVED_SIZE + headerSize, 'Index file is too small');
-
-  return { header: JSON.parse((await file.read(RESERVED_SIZE, headerSize)).toString()), headerSize };
-};
-
-const fromBytesInt32 = (buf: Buffer) => buf.readInt32LE(0);

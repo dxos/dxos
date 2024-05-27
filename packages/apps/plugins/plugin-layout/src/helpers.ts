@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-export const uriToActive = (uri: string) => {
+import { type Location, firstMainId } from '@dxos/app-framework';
+
+export const uriToActive = (uri: string): Location['active'] => {
   const [_, ...nodeId] = uri.split('/');
   return nodeId ? nodeId.map(decodeURIComponent).join(':') : undefined;
 };
 
-export const activeToUri = (active?: string) =>
-  '/' + (active ? active.split(':').map(encodeURIComponent).join('/') : '');
+export const activeToUri = (active?: Location['active']) =>
+  '/' + firstMainId(active).split(':').map(encodeURIComponent).join('/');
 
 // TODO(mjamesderocher): Factor out as part of NavigationPlugin.
 export const checkAppScheme = (url: string) => {
@@ -16,7 +18,7 @@ export const checkAppScheme = (url: string) => {
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
 
-  iframe.src = url + window.location.pathname.replace(/^\/+/, '');
+  iframe.src = url + window.location.pathname.replace(/^\/+/, '') + window.location.search;
 
   const timer = setTimeout(() => {
     document.body.removeChild(iframe);

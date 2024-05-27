@@ -3,8 +3,23 @@
 
 
 ## Properties
+### [deviceInvitationParam]()
+Type: <code>string</code>
+
+
+
 ### [invitationCode]()
 Type: <code>string</code>
+
+
+
+### [invitationUrl]()
+Type: <code>string</code>
+
+
+
+### [invitationUrlUpdate]()
+Type: <code>Event&lt;[InvitationUrlRequest](/api/@dxos/client/interfaces/InvitationUrlRequest)&gt;</code>
 
 
 
@@ -23,13 +38,23 @@ Type: <code>function</code>
 
 
 
+### [setInvitationUrl]()
+Type: <code>function</code>
+
+
+
 ### [setLayout]()
 Type: <code>function</code>
 
 
 
+### [spaceInvitationParam]()
+Type: <code>string</code>
+
+
+
 ### [spaceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 

@@ -15,6 +15,8 @@
     ]
   },
   "exclude": [
+    "demos/*",
+    "src/functions/*",
     "vite.config.ts"
   ],
   "include": [
@@ -28,6 +30,9 @@
     },
     {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
@@ -105,10 +110,16 @@
       "path": "../plugins/plugin-debug"
     },
     {
+      "path": "../plugins/plugin-deck"
+    },
+    {
       "path": "../plugins/plugin-explorer"
     },
     {
       "path": "../plugins/plugin-files"
+    },
+    {
+      "path": "../plugins/plugin-function"
     },
     {
       "path": "../plugins/plugin-github"
@@ -187,6 +198,9 @@
     },
     {
       "path": "../plugins/plugin-stack"
+    },
+    {
+      "path": "../plugins/plugin-status-bar"
     },
     {
       "path": "../plugins/plugin-table"

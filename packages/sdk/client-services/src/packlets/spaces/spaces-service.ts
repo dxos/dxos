@@ -4,24 +4,32 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { type CredentialProcessor } from '@dxos/credentials';
+import { createAdmissionCredentials, type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
-import { type DataServiceSubscriptions, type SpaceManager } from '@dxos/echo-pipeline';
+import { type SpaceManager } from '@dxos/echo-pipeline';
+import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
 import {
+  ApiError,
+  SpaceNotFoundError,
+  encodeError,
+  IdentityNotInitializedError,
+  AuthorizationError,
+} from '@dxos/protocols';
+import {
+  SpaceMember,
+  SpaceState,
   type CreateEpochRequest,
   type PostMessageRequest,
   type QueryCredentialsRequest,
   type QuerySpacesResponse,
   type Space,
-  SpaceMember,
-  SpaceState,
   type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
+  type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -35,15 +43,11 @@ export class SpacesServiceImpl implements SpacesService {
   constructor(
     private readonly _identityManager: IdentityManager,
     private readonly _spaceManager: SpaceManager,
-    private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
   async createSpace(): Promise<Space> {
-    if (!this._identityManager.identity) {
-      throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo');
-    }
-
+    this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
     return this._serializeSpace(space);
@@ -66,6 +70,32 @@ export class SpacesServiceImpl implements SpacesService {
           throw new ApiError('Invalid space state');
       }
     }
+  }
+
+  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<void> {
+    const identity = this._requireIdentity();
+    const space = this._spaceManager.spaces.get(request.spaceKey);
+    if (space == null) {
+      throw new SpaceNotFoundError(request.spaceKey);
+    }
+    if (!space.spaceState.hasMembershipManagementPermission(identity.identityKey)) {
+      throw new AuthorizationError('No member management permission.', {
+        spaceKey: space.key,
+        role: space.spaceState.getMemberRole(identity.identityKey),
+      });
+    }
+    const credentials = await createAdmissionCredentials(
+      identity.getIdentityCredentialSigner(),
+      request.memberKey,
+      space.key,
+      space.genesisFeedKey,
+      request.newRole,
+      space.spaceState.membershipChainHeads,
+    );
+    invariant(credentials[0].credential);
+    const spaceMemberCredential = credentials[0].credential.credential;
+    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await writeMessages(space.controlPipeline.writer, credentials);
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -96,13 +126,10 @@ export class SpacesServiceImpl implements SpacesService {
             subscriptions.add(space.stateUpdate.on(ctx, () => scheduler.forceTrigger()));
 
             subscriptions.add(space.presence.updated.on(ctx, () => scheduler.trigger()));
-            subscriptions.add(space.dataPipeline.onNewEpoch.on(ctx, () => scheduler.trigger()));
+            subscriptions.add(space.automergeSpaceState.onNewEpoch.on(ctx, () => scheduler.trigger()));
 
             // Pipeline progress.
             subscriptions.add(space.inner.controlPipeline.state.timeframeUpdate.on(ctx, () => scheduler.trigger()));
-            if (space.dataPipeline.pipelineState) {
-              subscriptions.add(space.dataPipeline.pipelineState.timeframeUpdate.on(ctx, () => scheduler.trigger()));
-            }
           }
         };
 
@@ -190,19 +217,19 @@ export class SpacesServiceImpl implements SpacesService {
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
       pipeline: {
-        currentEpoch: space.dataPipeline.currentEpoch,
-        appliedEpoch: space.dataPipeline.appliedEpoch,
+        currentEpoch: space.automergeSpaceState.lastEpoch,
+        appliedEpoch: space.automergeSpaceState.lastEpoch,
 
         controlFeeds: space.inner.controlPipeline.state.feeds.map((feed) => feed.key),
         currentControlTimeframe: space.inner.controlPipeline.state.timeframe,
         targetControlTimeframe: space.inner.controlPipeline.state.targetTimeframe,
         totalControlTimeframe: space.inner.controlPipeline.state.endTimeframe,
 
-        dataFeeds: space.dataPipeline.pipelineState?.feeds.map((feed) => feed.key) ?? [],
-        startDataTimeframe: space.dataPipeline.pipelineState?.startTimeframe,
-        currentDataTimeframe: space.dataPipeline.pipelineState?.timeframe,
-        targetDataTimeframe: space.dataPipeline.pipelineState?.targetTimeframe,
-        totalDataTimeframe: space.dataPipeline.pipelineState?.endTimeframe,
+        dataFeeds: undefined,
+        startDataTimeframe: undefined,
+        currentDataTimeframe: undefined,
+        targetDataTimeframe: undefined,
+        totalDataTimeframe: undefined,
       },
       members: Array.from(space.inner.spaceState.members.values()).map((member) => {
         const peers = space.presence.getPeersOnline().filter(({ identityKey }) => identityKey.equals(member.key));
@@ -217,11 +244,8 @@ export class SpacesServiceImpl implements SpacesService {
             identityKey: member.key,
             profile: member.profile ?? {},
           },
-          presence: member.removed
-            ? SpaceMember.PresenceState.REMOVED
-            : isMe || peers.length > 0
-              ? SpaceMember.PresenceState.ONLINE
-              : SpaceMember.PresenceState.OFFLINE,
+          role: member.role,
+          presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
         };
       }),
@@ -229,6 +253,15 @@ export class SpacesServiceImpl implements SpacesService {
       cache: space.cache,
       metrics: space.metrics,
     };
+  }
+
+  private _requireIdentity() {
+    if (!this._identityManager.identity) {
+      throw new IdentityNotInitializedError(
+        'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
+      );
+    }
+    return this._identityManager.identity;
   }
 }
 

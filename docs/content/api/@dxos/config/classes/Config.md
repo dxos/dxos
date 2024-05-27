@@ -1,12 +1,12 @@
 # Class `Config`
-<sub>Declared in [sdk/config/src/config.ts:122](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L122)</sub>
+<sub>Declared in [sdk/config/src/config.ts:126](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L126)</sub>
 
 
 Global configuration object.
 NOTE: Config objects are immutable.
 
 ## Constructors
-### [constructor(config, objects)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L129)
+### [constructor(config, objects)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L133)
 
 
 Creates an immutable instance.
@@ -22,14 +22,14 @@ Arguments:
 
 
 ## Properties
-### [values](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L136)
+### [values](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L140)
 Type: <code>[Config](/api/@dxos/config/interfaces/Config)</code>
 
 Returns an immutable config JSON object.
 
 
 ## Methods
-### [find(path, test)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L157)
+### [find(path, test)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L161)
 
 
 Get unique key.
@@ -43,7 +43,7 @@ Arguments:
 `test`: <code>object</code>
 
 
-### [get(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L147)
+### [get(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L151)
 
 
 Returns the given config property.
@@ -57,7 +57,7 @@ Arguments:
 `defaultValue`: <code>[DeepIndex](/api/@dxos/config/types/DeepIndex)&lt;[Config](/api/@dxos/config/interfaces/Config), [ParseKey](/api/@dxos/config/types/ParseKey)&lt;K&gt;&gt;</code>
 
 
-### [getOrThrow(key)](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L180)
+### [getOrThrow(key)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L184)
 
 
 Returns the given config property or throw if it doesn't exist.
@@ -69,7 +69,7 @@ Arguments:
 `key`: <code>K</code>
 
 
-### [getUnchecked(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/d2aae6ea4/packages/sdk/config/src/config.ts#L171)
+### [getUnchecked(key, \[defaultValue\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/config/src/config.ts#L175)
 
 
 Returns config key without type checking.

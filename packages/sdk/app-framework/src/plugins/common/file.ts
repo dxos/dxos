@@ -14,11 +14,14 @@ export const defaultFileTypes = {
 
 export type FileInfo = {
   url?: string;
-  cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system?
+  cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system? (e.g., WNFS).
 };
 
 export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
 
+/**
+ * Generic interface provided by file plugins (e.g., IPFS, WNFS).
+ */
 export type FileManagerProvides = {
   file: {
     upload?: FileUploader;

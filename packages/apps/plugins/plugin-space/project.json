@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "plugin-space",
+  "tags": [
+    "scope:plugins"
+  ],
   "sourceRoot": "packages/apps/plugins/plugin-space/src",
   "projectType": "library",
   "targets": {
@@ -21,11 +24,6 @@
         "lintFilePatterns": [
           "packages/apps/plugins/plugin-space/src/**/*.{ts,tsx,js,jsx}"
         ]
-      }
-    },
-    "test": {
-      "options": {
-        "forceExit": true
       }
     }
   },

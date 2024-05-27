@@ -3,50 +3,45 @@
 //
 
 export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
-export { type ItemID, DocumentModel } from '@dxos/document-model';
-// TODO(burdon): Remove/Rename Item.
-export { Item } from '@dxos/echo-db';
 export {
-  base,
-  debug,
-  subscribe,
-  createSubscription,
-  hasType,
-  isTypedObject,
+  getMeta,
+  getSchema,
+  getType,
   Expando,
+  create,
+  type EchoReactiveObject,
+  type ReactiveObject,
+  type ObjectMeta,
+} from '@dxos/echo-schema';
+export {
+  createSubscription,
+  createEchoObject,
+  getRangeFromCursor,
+  getTypeRef,
+  getAutomergeObjectCore,
+  hasType,
   Filter,
   Query,
-  Schema,
-  TypedObject,
-  getRawDoc,
+  createDocAccessor,
   getTextInRange,
   fromCursor,
   toCursor,
   DocAccessor,
-  type AutomergeTextCompat,
+  isEchoObject,
+  RuntimeSchemaRegistry,
+  type IDocHandle,
   type EchoDatabase,
-  type EchoObject, // TODO(burdon): Remove from API.
   type FilterSource,
-  type ObjectMeta,
   type Selection,
   type Subscription,
   type SubscriptionHandle,
+  type Hypergraph,
+} from '@dxos/echo-db';
 
-  // TODO(burdon): Deprecated.
-  createDocAccessor,
-  isAutomergeObject,
-  getTextContent,
-  setTextContent,
-  Text,
-  TextObject,
-  TypeCollection,
-} from '@dxos/echo-schema';
-
+export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
-export { TextModel } from '@dxos/text-model';
 
-export { SpaceList } from './space-list';
-export { SpaceProxy } from './space-proxy'; // TODO(burdon): Don't export as part of API.
-export { createDefaultModelFactory, getSpaceForObject } from './util';
+export { getSpace, isSpace, fullyQualifiedId } from './util';

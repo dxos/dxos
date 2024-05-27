@@ -5,25 +5,33 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
-import { useRefCallback } from '@dxos/react-async';
-import { useThemeContext, useTranslation } from '@dxos/react-ui';
+import {
+  LayoutAction,
+  parseFileManagerPlugin,
+  useResolvePlugin,
+  useIntentResolver,
+  parseNavigationPlugin,
+} from '@dxos/app-framework';
+import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
+  type DNDOptions,
   type TextEditorProps,
   TextEditor,
   Toolbar,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
-  focusComment,
+  scrollThreadIntoView,
   useComments,
   useActionHandler,
   useFormattingState,
+  processAction,
 } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -50,32 +58,45 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
+  const idParts = id.split(':');
+  const docId = idParts[idParts.length - 1];
 
-  const { ref: editorRef, value: view } = useRefCallback<EditorView>();
-  useComments(view, id, comments);
-  useTest(view);
+  const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  // Toolbar actions.
-  const handleAction = useActionHandler(view);
+  useComments(editorView, docId, comments);
+  useTest(editorView);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
-      case LayoutAction.FOCUS: {
-        const object = data?.object;
-        if (view) {
-          focusComment(view, object);
-          return { data: true };
+      case LayoutAction.SCROLL_INTO_VIEW: {
+        const id = data?.id;
+        if (editorView) {
+          scrollThreadIntoView(editorView, id);
+          return undefined;
         }
         break;
       }
     }
   });
 
+  // Toolbar actions.
+  const handleAction = useActionHandler(editorView);
   const [formattingState, formattingObserver] = useFormattingState();
+
+  const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
+    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    if (info) {
+      processAction(view, { type: 'image', data: info.url });
+    }
+  };
+
   const extensions = useMemo(() => {
     return [
       _extensions,
+      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
@@ -93,10 +114,10 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <>
+    <div role='none' className='contents group/editor' {...(isAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
           state={formattingState}
           onAction={handleAction}
         >
@@ -120,23 +141,22 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
       >
         <TextEditor
           {...props}
-          id={id}
+          id={docId}
           extensions={extensions}
           autoFocus
           moveToEndOfLine
           className={mx(
             focusRing,
-            attentionSurface,
             textBlockWidth,
             editorFillLayoutRoot,
-            'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+            'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
-          ref={editorRef}
+          ref={editorRefCallback}
         />
       </div>
-    </>
+    </div>
   );
 };
 

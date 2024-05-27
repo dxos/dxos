@@ -3,51 +3,46 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
+import { Context, Resource } from '@dxos/context';
+import { getCredentialAssertion, type CredentialProcessor } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
-import {
-  valueEncoding,
-  MetadataStore,
-  SpaceManager,
-  DataServiceSubscriptions,
-  SnapshotStore,
-  AutomergeHost,
-} from '@dxos/echo-pipeline';
+import { EchoHost } from '@dxos/echo-db';
+import { MetadataStore, SnapshotStore, SpaceManager, valueEncoding } from '@dxos/echo-pipeline';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
-import { IndexMetadataStore, IndexStore, Indexer } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type ModelFactory } from '@dxos/model-factory';
 import { type NetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
-import { type ProfileDocument, type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Storage } from '@dxos/random-access-storage';
+import type { TeleportParams } from '@dxos/teleport';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 import { trace as Trace } from '@dxos/tracing';
 import { safeInstanceof } from '@dxos/util';
 
 import {
-  type CreateIdentityOptions,
   IdentityManager,
+  type CreateIdentityOptions,
   type IdentityManagerRuntimeParams,
   type JoinIdentityParams,
 } from '../identity';
-import { createGetAllDocuments, createLoadDocuments } from '../indexing';
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
-  type InvitationProtocol,
   SpaceInvitationProtocol,
+  type InvitationProtocol,
 } from '../invitations';
+import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
-export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams;
+export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
+  DataSpaceManagerRuntimeParams & { invitationConnectionDefaultParams?: Partial<TeleportParams> };
 /**
  * Shared backend for all client services.
  */
@@ -55,9 +50,8 @@ export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams & DataSpa
 // TODO(dmaretskyi): Gets duplicated in CJS build between normal and testing bundles.
 @safeInstanceof('dxos.client-services.ServiceContext')
 @Trace.resource()
-export class ServiceContext {
+export class ServiceContext extends Resource {
   public readonly initialized = new Trigger();
-  public readonly dataServiceSubscriptions = new DataServiceSubscriptions();
   public readonly metadataStore: MetadataStore;
   /**
    * @deprecated
@@ -69,9 +63,8 @@ export class ServiceContext {
   public readonly spaceManager: SpaceManager;
   public readonly identityManager: IdentityManager;
   public readonly invitations: InvitationsHandler;
-  public readonly automergeHost: AutomergeHost;
-  public readonly indexMetadata: IndexMetadataStore;
-  public readonly indexer: Indexer;
+  public readonly invitationsManager: InvitationsManager;
+  public readonly echoHost: EchoHost;
 
   // Initialized after identity is initialized.
   public dataSpaceManager?: DataSpaceManager;
@@ -87,11 +80,13 @@ export class ServiceContext {
 
   constructor(
     public readonly storage: Storage,
+    public readonly level: LevelDB,
     public readonly networkManager: NetworkManager,
     public readonly signalManager: SignalManager,
-    public readonly modelFactory: ModelFactory,
-    public readonly _runtimeParams?: IdentityManagerRuntimeParams & DataSpaceManagerRuntimeParams,
+    public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {
+    super();
+
     // TODO(burdon): Move strings to constants.
     this.metadataStore = new MetadataStore(storage.createDirectory('metadata'));
     this.snapshotStore = new SnapshotStore(storage.createDirectory('snapshots'));
@@ -114,7 +109,6 @@ export class ServiceContext {
       networkManager: this.networkManager,
       blobStore: this.blobStore,
       metadataStore: this.metadataStore,
-      modelFactory: this.modelFactory,
       snapshotStore: this.snapshotStore,
     });
 
@@ -126,21 +120,17 @@ export class ServiceContext {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.indexMetadata = new IndexMetadataStore({ directory: storage.createDirectory('index-metadata') });
-
-    this.automergeHost = new AutomergeHost({
-      directory: storage.createDirectory('automerge'),
-      metadata: this.indexMetadata,
+    this.echoHost = new EchoHost({
+      kv: this.level,
+      storage: this.storage,
     });
 
-    this.indexer = new Indexer({
-      indexStore: new IndexStore({ directory: storage.createDirectory('index-store') }),
-      metadataStore: this.indexMetadata,
-      loadDocuments: createLoadDocuments(this.automergeHost),
-      getAllDocuments: createGetAllDocuments(this.automergeHost),
-    });
-
-    this.invitations = new InvitationsHandler(this.networkManager);
+    this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
+    this.invitationsManager = new InvitationsManager(
+      this.invitations,
+      (invitation) => this.getInvitationHandler(invitation),
+      this.metadataStore,
+    );
 
     // TODO(burdon): _initialize called in multiple places.
     // TODO(burdon): Call _initialize on success.
@@ -156,7 +146,7 @@ export class ServiceContext {
   }
 
   @Trace.span()
-  async open(ctx: Context) {
+  protected override async _open(ctx: Context) {
     await this._checkStorageVersion();
 
     log('opening...');
@@ -164,31 +154,34 @@ export class ServiceContext {
     await this.signalManager.open();
     await this.networkManager.open();
 
+    await this.echoHost.open(ctx);
     await this.metadataStore.load();
     await this.spaceManager.open();
     await this.identityManager.open(ctx);
     if (this.identityManager.identity) {
       await this._initialize(ctx);
     }
+
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
+
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
 
-  async close() {
+  protected override async _close(ctx: Context) {
     log('closing...');
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.automergeHost.close();
     await this.dataSpaceManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();
     await this.feedStore.close();
+    await this.metadataStore.close();
+    await this.echoHost.close(ctx);
     await this.networkManager.close();
     await this.signalManager.close();
-    this.dataServiceSubscriptions.clear();
-    await this.metadataStore.close();
-    await this.indexer.destroy();
     log('closed');
   }
 
@@ -246,11 +239,11 @@ export class ServiceContext {
     this.dataSpaceManager = new DataSpaceManager(
       this.spaceManager,
       this.metadataStore,
-      this.dataServiceSubscriptions,
       this.keyring,
       signingContext,
       this.feedStore,
-      this.automergeHost,
+      this.echoHost,
+      this.invitationsManager,
       this._runtimeParams as DataSpaceManagerRuntimeParams,
     );
     await this.dataSpaceManager.open();

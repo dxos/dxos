@@ -5,6 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -13,11 +14,11 @@ import {
   type Plugin,
   type PluginDefinition,
   type TranslationsProvides,
+  filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
-import { type TypeCollection } from '@dxos/react-client/echo';
 
 import meta, { CLIENT_PLUGIN } from './meta';
 import translations from './translations';
@@ -30,7 +31,22 @@ export enum ClientAction {
   SHARE_IDENTITY = `${CLIENT_ACTION}/SHARE_IDENTITY`,
 }
 
-export type ClientPluginOptions = ClientOptions & { appKey: string; debugIdentity?: boolean; types?: TypeCollection };
+export type ClientPluginOptions = ClientOptions & {
+  /**
+   * Used to track app-specific state in spaces.
+   */
+  appKey: string;
+
+  /**
+   * Query string parameter to look for device invitation codes.
+   */
+  deviceInvitationParam?: string;
+
+  /**
+   * Run after the client has been initialized.
+   */
+  onClientInitialized?: (client: Client) => Promise<void>;
+};
 
 export type ClientPluginProvides = IntentResolverProvides &
   GraphBuilderProvides &
@@ -46,9 +62,19 @@ export type ClientPluginProvides = IntentResolverProvides &
 export const parseClientPlugin = (plugin?: Plugin) =>
   (plugin?.provides as any).client instanceof Client ? (plugin as Plugin<ClientPluginProvides>) : undefined;
 
+export type SchemaProvides = {
+  echo: {
+    schema: Parameters<Client['addSchema']>;
+  };
+};
+
+export const parseSchemaPlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).echo?.schema) ? (plugin as Plugin<SchemaProvides>) : undefined;
+
 export const ClientPlugin = ({
-  types,
   appKey,
+  deviceInvitationParam = 'deviceInvitationCode',
+  onClientInitialized,
   ...options
 }: ClientPluginOptions): PluginDefinition<
   Omit<ClientPluginProvides, 'client' | 'firstRun'>,
@@ -65,10 +91,14 @@ export const ClientPlugin = ({
     initialize: async () => {
       let firstRun = false;
 
-      client = new Client({ config: new Config(await Storage(), Envs(), Local(), Defaults()), ...options });
+      const config = new Config(await Storage(), Envs(), Local(), Defaults());
+      client = new Client({ config, ...options });
 
       try {
         await client.initialize();
+        // TODO(wittjosiah): Why is this here? Remove?
+        client.addSchema(TextV0Type);
+        await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
         client.reloaded.on(() => {
@@ -79,33 +109,41 @@ export const ClientPlugin = ({
           });
         });
 
-        if (types) {
-          client.addTypes(types);
-        }
-
         // TODO(burdon): Factor out invitation logic since depends on path routing?
         const searchParams = new URLSearchParams(location.search);
-        const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+        const deviceInvitationCode = searchParams.get(deviceInvitationParam);
         const identity = client.halo.identity.get();
         if (!identity && !deviceInvitationCode) {
           await client.halo.createIdentity();
           // TODO(wittjosiah): Ideally this would be per app rather than per identity.
           firstRun = true;
         } else if (deviceInvitationCode) {
-          await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode });
+          await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
+            if (!identity) {
+              return;
+            }
+
+            const url = new URL(window.location.href);
+            const params = Array.from(url.searchParams.entries());
+            const [name] = params.find(([_, value]) => value === deviceInvitationCode) ?? [null, null];
+            if (name) {
+              url.searchParams.delete(name);
+              history.replaceState({}, document.title, url.href);
+            }
+          });
         }
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
           // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
-          if (typeof client.spaces.default.properties[appKey] === 'boolean') {
-            client.spaces.default.properties[appKey] = {};
+          if (typeof getSpaceProperty(client.spaces.default, appKey) === 'boolean') {
+            setSpaceProperty(client.spaces.default, appKey, {});
           }
           const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
           //   There's no guaruntee that the default space will be fully synced by the time this is called.
-          // firstRun = !client.spaces.default.properties[key];
-          client.spaces.default.properties[key] = Date.now();
+          // firstRun = !getSpaceProperty(client.spaces.default, key);
+          setSpaceProperty(client.spaces.default, key, Date.now());
         }
       } catch (err) {
         error = err;
@@ -129,10 +167,14 @@ export const ClientPlugin = ({
         },
       };
     },
-    ready: async () => {
+    ready: async (plugins) => {
       if (error) {
         throw error;
       }
+
+      filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
+        client.addSchema(...plugin.provides.echo.schema);
+      });
     },
     unload: async () => {
       await client.destroy();

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/config",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "Config utilities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,6 +32,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "boolean": "^3.0.1",
     "js-yaml": "^4.1.0",
     "localforage": "^1.10.0",

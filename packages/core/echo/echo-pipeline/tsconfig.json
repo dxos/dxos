@@ -7,7 +7,6 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
@@ -38,6 +37,9 @@
     },
     {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/kv-store"
     },
     {
       "path": "../../../common/log"
@@ -97,16 +99,13 @@
       "path": "../automerge"
     },
     {
-      "path": "../document-model"
+      "path": "../echo-protocol"
     },
     {
-      "path": "../echo-db"
+      "path": "../echo-schema"
     },
     {
-      "path": "../model-factory"
-    },
-    {
-      "path": "../text-model"
+      "path": "../indexing"
     }
   ]
 }

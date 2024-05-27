@@ -38,6 +38,12 @@ Type: <code>string</code>
 Options:
   - proto3_optional = true
 
+### [remoteSourceAuthenticationToken]()
+Type: <code>string</code>
+
+Options:
+  - proto3_optional = true
+
 ### [snapshotInterval]()
 Type: <code>number</code>
 

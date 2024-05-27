@@ -38,7 +38,7 @@ describe('Tests against old storage', () => {
   test('check if space loads', async () => {
     const builder = new TestBuilder(getConfig(testStoragePath));
     afterTest(() => builder.destroy());
-    const services = builder.createLocal();
+    const services = builder.createLocalClientServices();
 
     log.info('running', { storage: services.host?.config?.values.runtime?.client?.storage?.dataRoot });
     const client = new Client({ services });
@@ -66,7 +66,7 @@ describe('Tests against old storage', () => {
     {
       // TODO(dmaretskyi): Only needed because waitUntilReady seems to not guarantee that all objects will be present.
       const expectedObjects = 3;
-      if (space.db.query(undefined, { models: ['*'] }).objects.length < expectedObjects) {
+      if ((await space.db.query(undefined, { models: ['*'] }).run()).objects.length < expectedObjects) {
         const queryPromise = new Promise<void>((resolve) => {
           space.db.query().subscribe((query) => {
             if (query.objects.length >= expectedObjects) {
@@ -84,7 +84,7 @@ describe('Tests against old storage', () => {
       expect(space.properties.toJSON()).to.contain(data.space.properties);
 
       // Expando.
-      const expando = space.db.query({ type: 'expando' }).objects[0];
+      const expando = (await space.db.query({ type: 'expando' }).run()).objects[0];
       expect(contains(expando.toJSON(), data.space.expando)).to.be.true;
 
       // Text.

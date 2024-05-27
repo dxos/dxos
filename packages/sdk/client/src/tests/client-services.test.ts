@@ -10,13 +10,13 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
+import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { Device, DeviceKind, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { Client } from '../client';
-import { type SpaceProxy } from '../echo';
-import { syncItems, TestBuilder } from '../testing';
+import { syncItemsAutomerge, TestBuilder } from '../testing';
 
 // TODO(burdon): Use as set-up for test suite.
 // TODO(burdon): Timeouts and progress callback/events.
@@ -26,7 +26,7 @@ describe('Client services', () => {
     const testBuilder = new TestBuilder();
     afterTest(() => testBuilder.destroy());
 
-    const servicesProvider = testBuilder.createLocal();
+    const servicesProvider = testBuilder.createLocalClientServices();
     await servicesProvider.open();
     afterTest(() => servicesProvider.close());
 
@@ -55,6 +55,7 @@ describe('Client services', () => {
 
   test('creates clients with multiple peers connected via memory transport', async () => {
     const testBuilder = new TestBuilder();
+    testBuilder.level = createTestLevel();
     afterTest(() => testBuilder.destroy());
 
     {
@@ -219,9 +220,10 @@ describe('Client services', () => {
 
     const hostSpace = await client1.spaces.create();
     log('spaces.create', { key: hostSpace.key });
+
     const [{ invitation: hostInvitation }, { invitation: guestInvitation }] = await Promise.all(
       performInvitation({
-        host: hostSpace as SpaceProxy,
+        host: hostSpace,
         guest: client2.spaces,
         options: { authMethod: Invitation.AuthMethod.SHARED_SECRET },
       }),
@@ -248,7 +250,7 @@ describe('Client services', () => {
       await waitForExpect(() => {
         const members = space.members.get();
         expect(members).to.have.length(2);
-
+        members.sort((m1, m2) => (m1.identity.identityKey.equals(client1.halo.identity.get()!.identityKey) ? -1 : 1));
         expect(members[0]).to.deep.include({
           identity: {
             identityKey: client1.halo.identity.get()!.identityKey,
@@ -270,6 +272,6 @@ describe('Client services', () => {
       }, 20_000);
     }
 
-    await syncItems(hostSpace.internal.db, guestSpace.internal.db);
-  });
+    await syncItemsAutomerge(hostSpace.db, guestSpace.db);
+  }).timeout(20_000);
 });

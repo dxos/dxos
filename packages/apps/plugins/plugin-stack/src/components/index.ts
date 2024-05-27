@@ -8,3 +8,4 @@ import React from 'react';
 export const StackMain = React.lazy(() => import('./StackMain'));
 
 export * from './StackSettings';
+export * from './AddSectionDialog';

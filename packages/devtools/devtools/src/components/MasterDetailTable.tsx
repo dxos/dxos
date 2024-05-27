@@ -30,17 +30,21 @@ export const MasterDetailTable = <T extends {}>({
 
   return (
     <div className='flex grow overflow-hidden divide-x'>
-      <TableContainer {...tableContainerStyles}>
-        <Table<T>
-          columns={columns}
-          data={data}
-          rowsSelectable
-          currentDatum={selected}
-          onDatumClick={setSelected}
-          fullWidth
-        />
-        {pinToBottom && <AnchoredOverflow.Anchor />}
-      </TableContainer>
+      <Table.Root>
+        <Table.Viewport asChild>
+          <TableContainer {...tableContainerStyles}>
+            <Table.Main<T>
+              columns={columns}
+              data={data}
+              rowsSelectable
+              currentDatum={selected}
+              onDatumClick={setSelected}
+              fullWidth
+            />
+            {pinToBottom && <AnchoredOverflow.Anchor />}
+          </TableContainer>
+        </Table.Viewport>
+      </Table.Root>
       <div className={mx('flex overflow-auto', widths[1])}>{selected && <JsonView data={selected} />}</div>
     </div>
   );

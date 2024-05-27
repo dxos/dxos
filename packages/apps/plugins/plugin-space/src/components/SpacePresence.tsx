@@ -6,9 +6,10 @@ import React, { useEffect, useState } from 'react';
 
 import { NavigationAction, useIntentDispatcher, usePlugin } from '@dxos/app-framework';
 import { generateName } from '@dxos/display-name';
+import { type Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { type TypedObject, getSpaceForObject, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -23,7 +24,7 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { AttentionGlyphCloseButton } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -39,14 +40,14 @@ const noViewers = new ComplexMap<PublicKey, ObjectViewerProps>(PublicKey.hash);
 // TODO(wittjosiah): Factor out?
 const getName = (identity: Identity) => identity.profile?.displayName ?? generateName(identity.identityKey.toHex());
 
-export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; spaceKey?: PublicKey }) => {
+export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?: PublicKey }) => {
   const density = useDensityContext();
   const dispatch = useIntentDispatcher();
   const spacePlugin = usePlugin<SpacePluginProvides>(SPACE_PLUGIN);
   const client = useClient();
   const identity = useIdentity();
   const defaultSpace = useSpace();
-  const space = spaceKey ? client.spaces.get(spaceKey) : getSpaceForObject(object);
+  const space = spaceKey ? client.spaces.get(spaceKey) : getSpace(object);
   const spaceMembers = useMembers(space?.key);
 
   const [moment, setMoment] = useState(Date.now());
@@ -64,18 +65,21 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
   }
 
   const spaceState = spacePlugin.provides.space;
-  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
   const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
-    .map((member) => ({
-      ...member,
-      match: currentObjectViewers.has(member.identity.identityKey),
-      // Infinity if not seen before on this document, to ensure that all online members are included.
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
-    }))
-    .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
+    .map((member) => {
+      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
+      // If the member was not seen within the activity duration, they are not considered active on the object.
+      const match = moment - lastSeen < ACTIVITY_DURATION;
+      return {
+        ...member,
+        match,
+        lastSeen,
+      };
+    })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
@@ -89,10 +93,8 @@ export const SpacePresence = ({ object, spaceKey }: { object: TypedObject; space
           (viewing.get(member.identity.identityKey)?.size ?? 0) > 0
         ) {
           void dispatch({
-            action: NavigationAction.ACTIVATE,
-            // TODO(thure): Multitasking will make this multifarious; implement a way to follow other members that
-            //  doesn’t assume they can only view one object at a time.
-            data: { id: Array.from(viewing.get(member.identity.identityKey)!)[0] },
+            action: NavigationAction.OPEN,
+            data: { activeParts: { main: Array.from(viewing.get(member.identity.identityKey)!) } },
           });
         } else {
           log.warn('No viewing object found for member');
@@ -212,7 +214,13 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   );
 };
 
-export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
+export const SmallPresenceLive = ({
+  viewers,
+  onCloseClick,
+}: {
+  viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
+  onCloseClick?: () => void;
+}) => {
   const [moment, setMoment] = useState(Date.now());
 
   // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
@@ -225,15 +233,19 @@ export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey,
     ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
     : [];
 
-  return <SmallPresence count={activeViewers.length} />;
+  return <SmallPresence count={activeViewers.length} onCloseClick={onCloseClick} />;
 };
 
-export const SmallPresence = ({ count }: { count: number }) => {
+export const SmallPresence = ({ count, onCloseClick }: { count: number; onCloseClick?: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
+        <AttentionGlyphCloseButton
+          presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+          classNames='self-center mie-1'
+          onClick={onCloseClick}
+        />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>

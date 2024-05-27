@@ -11,13 +11,22 @@ import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxo
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
+import { DiagnosticsManager } from './diagnostic';
+import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
+export type Diagnostics = {
+  resources: Record<string, Resource>;
+  spans: Span[];
+  logs: LogEntry[];
+};
+
 export type TraceResourceConstructorParams = {
   constructor: { new (...args: any[]): {} };
   instance: any;
+  annotation?: symbol;
 };
 
 export type TraceSpanParams = {
@@ -36,8 +45,9 @@ export class ResourceEntry {
   public readonly sanitizedClassName: string;
 
   constructor(
-    public data: Resource,
-    public instance: WeakRef<any>,
+    public readonly data: Resource,
+    public readonly instance: WeakRef<any>,
+    public readonly annotation?: symbol,
   ) {
     this.sanitizedClassName = sanitizeClassName(data.className);
   }
@@ -64,28 +74,45 @@ const REFRESH_INTERVAL = 1_000;
 const MAX_INFO_OBJECT_DEPTH = 8;
 
 export class TraceProcessor {
-  resources = new Map<number, ResourceEntry>();
-  resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
-  resourceIdList: number[] = [];
+  public readonly diagnostics = new DiagnosticsManager();
+  public readonly diagnosticsChannel = new DiagnosticsChannel();
 
-  spans = new Map<number, Span>();
-  spanIdList: number[] = [];
+  readonly subscriptions: Set<TraceSubscription> = new Set();
 
-  logs: LogEntry[] = [];
+  readonly resources = new Map<number, ResourceEntry>();
+  readonly resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
+  readonly resourceIdList: number[] = [];
 
-  subscriptions: Set<TraceSubscription> = new Set();
+  readonly spans = new Map<number, Span>();
+  readonly spanIdList: number[] = [];
+
+  readonly logs: LogEntry[] = [];
+
+  private _instanceTag: string | null = null;
 
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
     const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
     unrefTimeout(refreshInterval);
+
+    this.diagnosticsChannel.serve(this.diagnostics);
+    this.diagnosticsChannel.unref();
   }
 
-  traceResourceConstructor(params: TraceResourceConstructorParams) {
+  setInstanceTag(tag: string) {
+    this._instanceTag = tag;
+    this.diagnostics.setInstanceTag(tag);
+  }
+
+  /**
+   * @internal
+   */
+  // TODO(burdon): Comment.
+  createTraceResource(params: TraceResourceConstructorParams) {
     const id = this.resources.size;
 
-    // init metrics counters.
+    // Init metrics counters.
     const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
     for (const key of Object.keys(tracingContext.metricsProperties)) {
       (params.instance[key] as BaseCounter)._assign(params.instance, key);
@@ -101,6 +128,7 @@ export class TraceProcessor {
         metrics: this.getResourceMetrics(params.instance),
       },
       new WeakRef(params.instance),
+      params.annotation,
     );
 
     this.resources.set(id, entry);
@@ -109,17 +137,50 @@ export class TraceProcessor {
     if (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
       this._clearResources();
     }
+
     this._markResourceDirty(id);
+  }
+
+  createTraceSender() {
+    return new TraceSender(this);
+  }
+
+  traceSpan(params: TraceSpanParams): TracingSpan {
+    const span = new TracingSpan(this, params);
+    this._flushSpan(span);
+    return span;
+  }
+
+  // TODO(burdon): Not implemented.
+  addLink(parent: any, child: any, opts: AddLinkOptions) {}
+
+  //
+  // Getters
+  //
+
+  // TODO(burdon): Define type.
+  // TODO(burdon): Reconcile with system service.
+  getDiagnostics(): Diagnostics {
+    this.refresh();
+
+    return {
+      resources: Object.fromEntries(
+        Array.from(this.resources.entries()).map(([id, entry]) => [
+          `${entry.sanitizedClassName}#${entry.data.instanceId}`,
+          entry.data,
+        ]),
+      ),
+      spans: Array.from(this.spans.values()),
+      logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
+    };
   }
 
   getResourceInfo(instance: any): Record<string, any> {
     const res: Record<string, any> = {};
     const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
-
     for (const [key, { options }] of Object.entries(tracingContext.infoProperties)) {
       try {
         const value = typeof instance[key] === 'function' ? instance[key]() : instance[key];
-
         if (options.enum) {
           res[key] = options.enum[value];
         } else {
@@ -140,7 +201,6 @@ export class TraceProcessor {
   getResourceMetrics(instance: any): Metric[] {
     const res: Metric[] = [];
     const tracingContext = getTracingContext(Object.getPrototypeOf(instance));
-
     for (const [key, _opts] of Object.entries(tracingContext.metricsProperties)) {
       res.push(instance[key].getData());
     }
@@ -148,21 +208,19 @@ export class TraceProcessor {
     return res;
   }
 
-  traceSpan(params: TraceSpanParams): TracingSpan {
-    const span = new TracingSpan(this, params);
-    this._flushSpan(span);
-    return span;
-  }
-
-  addLink(parent: any, child: any, opts: AddLinkOptions) {}
-
   getResourceId(instance: any): number | null {
     const entry = this.resourceInstanceIndex.get(instance);
     return entry ? entry.data.id : null;
   }
 
-  createTraceSender() {
-    return new TraceSender(this);
+  findResourcesByClassName(className: string): ResourceEntry[] {
+    return [...this.resources.values()].filter(
+      (res) => res.data.className === className || res.sanitizedClassName === className,
+    );
+  }
+
+  findResourcesByAnnotation(annotation: symbol): ResourceEntry[] {
+    return [...this.resources.values()].filter((res) => res.annotation === annotation);
   }
 
   refresh() {
@@ -199,30 +257,9 @@ export class TraceProcessor {
     }
   }
 
-  findResourcesByClassName(className: string): ResourceEntry[] {
-    const res: ResourceEntry[] = [];
-    for (const entry of this.resources.values()) {
-      if (entry.data.className === className || entry.sanitizedClassName === className) {
-        res.push(entry);
-      }
-    }
-    return res;
-  }
-
-  getDiagnostics() {
-    this.refresh();
-
-    return {
-      resources: Object.fromEntries(
-        Array.from(this.resources.entries()).map(([id, entry]) => [
-          `${entry.sanitizedClassName}#${entry.data.instanceId}`,
-          entry.data,
-        ]),
-      ),
-      spans: Array.from(this.spans.values()),
-      logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
-    };
-  }
+  //
+  // Implementation
+  //
 
   /**
    * @internal
@@ -287,7 +324,6 @@ export class TraceProcessor {
         }
 
         const context = getContextFromEntry(entry) ?? {};
-
         for (const key of Object.keys(context)) {
           context[key] = sanitizeValue(context[key], 0, this);
         }
@@ -311,6 +347,7 @@ export class TraceProcessor {
   };
 }
 
+// TODO(burdon): Comment.
 export class TracingSpan {
   static nextId = 0;
 
@@ -392,6 +429,7 @@ export class TracingSpan {
   }
 }
 
+// TODO(burdon): Log cause.
 const serializeError = (err: unknown): SerializedError => {
   if (err instanceof Error) {
     return {
@@ -405,6 +443,7 @@ const serializeError = (err: unknown): SerializedError => {
   };
 };
 
+// TODO(burdon): Rename singleton and move out of package.
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
 
 const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor): any => {
@@ -414,7 +453,6 @@ const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor
     case 'boolean':
     case 'undefined':
       return value;
-      break;
     case 'object':
     case 'function':
       if (value === null) {

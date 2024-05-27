@@ -6,9 +6,11 @@ import '@dxosTheme';
 
 import React, { type FC, useState } from 'react';
 
-import { TextObject } from '@dxos/echo-schema';
+import { TextV0Type } from '@braneframe/types';
+import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
+import { createDocAccessor } from '@dxos/react-client/echo';
 import { Tooltip, useThemeContext } from '@dxos/react-ui';
 import { textBlockWidth } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
@@ -28,27 +30,25 @@ import {
   useComments,
   useFormattingState,
 } from '../../extensions';
-import { useActionHandler, useDocAccessor, useTextEditor } from '../../hooks';
+import { useActionHandler, useTextEditor } from '../../hooks';
 import translations from '../../translations';
 
 faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
-  console.log('STORY');
   const { themeMode } = useThemeContext();
-  const [item] = useState({ text: new TextObject(content) });
-  const { id, doc, accessor } = useDocAccessor(item.text);
+  const [text] = useState(create(TextV0Type, { content }));
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(() => {
     return {
-      id,
-      doc,
+      id: text.id,
+      doc: text.content,
       extensions: [
         formattingObserver,
         createBasicExtensions(),
         createMarkdownExtensions({ themeMode }),
         createThemeExtensions({ themeMode, slots: { editor: { className: 'p-2' } } }),
-        createDataExtensions({ id, text: accessor }),
+        createDataExtensions({ id: text.id, text: createDocAccessor(text, ['content']) }),
         comments({
           onCreate: ({ cursor }) => {
             const id = PublicKey.random().toHex();
@@ -62,12 +62,12 @@ const Story: FC<{ content: string }> = ({ content }) => {
         table(),
       ],
     };
-  }, [id, accessor, formattingObserver, themeMode]);
+  }, [text, formattingObserver, themeMode]);
 
   const handleAction = useActionHandler(view);
 
   const [_comments, setComments] = useState<Comment[]>([]);
-  useComments(view, id, _comments);
+  useComments(view, text.id, _comments);
 
   return (
     <Tooltip.Provider>

@@ -8,7 +8,6 @@ import path from 'node:path';
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { SystemStatus, fromAgent, getUnixSocket } from '@dxos/client/services';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 
 import { CHECK_INTERVAL, DAEMON_START_TIMEOUT } from './defs';
@@ -49,7 +48,7 @@ export const waitForAgentToStart = async (profile: string, timeout?: number) => 
   // Check if agent is initialized.
   {
     const services = fromAgent({ profile });
-    await services.open(new Context());
+    await services.open();
 
     const trigger = new Trigger();
     const stream = services.services.SystemService!.queryStatus({});
@@ -60,6 +59,6 @@ export const waitForAgentToStart = async (profile: string, timeout?: number) => 
     await asyncTimeout(trigger.wait(), DAEMON_START_TIMEOUT, new AgentWaitTimeoutError());
 
     await stream.close();
-    await services.close(new Context());
+    await services.close();
   }
 };

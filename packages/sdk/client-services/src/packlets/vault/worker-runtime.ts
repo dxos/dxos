@@ -5,8 +5,14 @@
 import { Trigger } from '@dxos/async';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
+import {
+  MemorySignalManager,
+  MemorySignalManagerContext,
+  WebsocketSignalManager,
+  setIdentityTags,
+} from '@dxos/messaging';
 import { SimplePeerTransportProxyFactory } from '@dxos/network-manager';
 import { type RpcPort } from '@dxos/rpc';
 import { type MaybePromise } from '@dxos/util';
@@ -41,6 +47,8 @@ export class WorkerRuntime {
   private readonly _clientServices!: ClientServicesHost;
   private _sessionForNetworking?: WorkerSession; // TODO(burdon): Expose to client QueryStatusResponse.
   private _config!: Config;
+  private _signalMetadataTags: any = { runtime: 'worker-runtime' };
+  private _signalTelemetryEnabled: boolean = false;
 
   constructor(
     private readonly _configProvider: () => MaybePromise<Config>,
@@ -68,7 +76,7 @@ export class WorkerRuntime {
       this._clientServices.initialize({
         config: this._config,
         signalManager: signals
-          ? new WebsocketSignalManager(signals)
+          ? new WebsocketSignalManager(signals, () => (this._signalTelemetryEnabled ? this._signalMetadataTags : {}))
           : new MemorySignalManager(new MemorySignalManagerContext()), // TODO(dmaretskyi): Inject this context.
         transportFactory: this._transportFactory,
       });
@@ -76,6 +84,13 @@ export class WorkerRuntime {
       await this._clientServices.open(new Context());
       this._ready.wake(undefined);
       log('started');
+      setIdentityTags({
+        identityService: this._clientServices.services.IdentityService!,
+        devicesService: this._clientServices.services.DevicesService!,
+        setTag: (k: string, v: string) => {
+          this._signalMetadataTags[k] = v;
+        },
+      });
     } catch (err: any) {
       this._ready.wake(err);
       log.error('starting', err);
@@ -105,13 +120,25 @@ export class WorkerRuntime {
       this._sessions.delete(session);
       if (this._sessions.size === 0) {
         // Terminate the worker when all sessions are closed.
-        self.close();
+        if (globalThis.self) {
+          self.close();
+        }
       } else {
         this._reconnectWebrtc();
       }
     });
 
     await session.open();
+    // A worker can only service one origin currently
+    invariant(
+      !this._signalMetadataTags.origin || this._signalMetadataTags.origin === session.origin,
+      `worker origin changed from ${this._signalMetadataTags.origin} to ${session.origin}?`,
+    );
+    if (session.observabilityGroup) {
+      this._signalMetadataTags.group = session.observabilityGroup;
+    }
+    this._signalTelemetryEnabled = session.signalTelemetryEnabled ?? false;
+    this._signalMetadataTags.origin = session.origin;
     this._sessions.add(session);
 
     this._reconnectWebrtc();

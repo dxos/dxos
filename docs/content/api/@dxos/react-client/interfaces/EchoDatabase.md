@@ -1,5 +1,5 @@
 # Interface `EchoDatabase`
-> Declared in [`packages/core/echo/echo-schema/dist/types/src/database.d.ts`]()
+> Declared in [`packages/core/echo/echo-db/dist/types/src/database.d.ts`]()
 
 
 ## Properties
@@ -9,7 +9,7 @@ Type: <code>AutomergeDb</code>
 
 
 ### [pendingBatch]()
-Type: <code>ReadOnlyEvent&lt;BatchUpdate&gt;</code>
+Type: <code>ReadOnlyEvent&lt;unknown&gt;</code>
 
 
 

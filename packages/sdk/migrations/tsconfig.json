@@ -2,13 +2,11 @@
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
-    "stripInternal": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
@@ -18,6 +16,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../client"

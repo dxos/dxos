@@ -6,7 +6,7 @@ import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { EditorModes } from '@dxos/react-ui-editor';
+import { type EditorMode, EditorModes } from '@dxos/react-ui-editor';
 
 import { MARKDOWN_PLUGIN } from '../meta';
 import { type MarkdownSettingsProps } from '../types';
@@ -19,9 +19,9 @@ export const MarkdownSettings = ({ settings }: { settings: MarkdownSettingsProps
     <>
       <SettingsValue label={t('editor mode label')}>
         <Select.Root
-          value={settings.editorMode}
+          value={settings.editorMode ?? 'default'}
           onValueChange={(value) => {
-            settings.editorMode = value === 'vim' ? 'vim' : 'default';
+            settings.editorMode = value as EditorMode;
           }}
         >
           <Select.TriggerButton placeholder={t('select editor mode placeholder')} />

@@ -41,6 +41,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/kv-store"
+    },
+    {
       "path": "../../common/lock-file"
     },
     {
@@ -65,25 +68,19 @@
       "path": "../../core/echo/automerge"
     },
     {
-      "path": "../../core/echo/document-model"
-    },
-    {
       "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/echo/echo-pipeline"
     },
     {
+      "path": "../../core/echo/echo-protocol"
+    },
+    {
       "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/echo/indexing"
-    },
-    {
-      "path": "../../core/echo/model-factory"
-    },
-    {
-      "path": "../../core/echo/text-model"
     },
     {
       "path": "../../core/halo/credentials"

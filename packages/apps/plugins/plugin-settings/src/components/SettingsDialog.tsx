@@ -7,6 +7,7 @@ import React from 'react';
 import { type Plugin, Surface, usePlugins } from '@dxos/app-framework';
 import { Button, Dialog, List, ListItem, useTranslation } from '@dxos/react-ui';
 import { ghostHover, ghostSelected } from '@dxos/react-ui-theme';
+import { nonNullable } from '@dxos/util';
 
 import { SETTINGS_PLUGIN } from '../meta';
 
@@ -22,6 +23,7 @@ export const SettingsDialog = ({
 
   const core = [
     'dxos.org/plugin/layout',
+    'dxos.org/plugin/deck',
     'dxos.org/plugin/space',
     'dxos.org/plugin/observability',
     'dxos.org/plugin/registry',
@@ -34,24 +36,26 @@ export const SettingsDialog = ({
     .sort(({ name: a }, { name: b }) => a?.localeCompare(b ?? '') ?? 0);
 
   return (
-    <Dialog.Content classNames={['h-full md:max-is-[40rem] overflow-hidden']}>
+    <Dialog.Content classNames={['bs-content max-bs-full md:max-is-[40rem] overflow-hidden']}>
       <Dialog.Title>{t('settings dialog title')}</Dialog.Title>
 
       <div className='grow mlb-4 overflow-hidden grid grid-cols-[minmax(min-content,1fr)_3fr] gap-1'>
         <div className='flex flex-col p-1 gap-4 surface-input rounded place-self-start max-bs-[100%] is-full overflow-y-auto'>
           <PluginList
             title='Options'
-            plugins={core.map((id) => plugins.find((plugin) => plugin.meta.id === id)!.meta)}
+            plugins={core.map((id) => plugins.find((plugin) => plugin.meta.id === id)?.meta).filter(nonNullable)}
             selected={selected}
             onSelect={(plugin) => onSelected(plugin)}
           />
 
-          <PluginList
-            title='Plugins'
-            plugins={filteredPlugins}
-            selected={selected}
-            onSelect={(plugin) => onSelected(plugin)}
-          />
+          {filteredPlugins.length > 0 && (
+            <PluginList
+              title='Plugins'
+              plugins={filteredPlugins}
+              selected={selected}
+              onSelect={(plugin) => onSelected(plugin)}
+            />
+          )}
         </div>
 
         <div className='pli-1 md:pli-2 max-bs-[100%] overflow-y-auto'>

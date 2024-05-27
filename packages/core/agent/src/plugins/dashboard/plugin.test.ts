@@ -20,7 +20,7 @@ describe('DashboardPlugin', () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
-    const services1 = builder.createLocal();
+    const services1 = builder.createLocalClientServices();
     const client1 = new Client({
       services: services1,
       config: new Config({
@@ -32,11 +32,11 @@ describe('DashboardPlugin', () => {
     await client1.halo.createIdentity({ displayName: 'user-with-dashboard-plugin' });
 
     const dashboardPlugin = new DashboardPlugin();
-    await dashboardPlugin.initialize({ client: client1, clientServices: services1, plugins: [] });
+    await dashboardPlugin.initialize({ client: client1, clientServices: services1 });
     await dashboardPlugin.open();
     afterTest(() => dashboardPlugin.close());
 
-    const services2 = builder.createLocal();
+    const services2 = builder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client2.initialize();
     afterTest(() => client2.destroy());

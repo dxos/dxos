@@ -1,6 +1,6 @@
 {
   "name": "@dxos/toolbox",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -28,7 +28,7 @@
     "@types/lodash.sortby": "^4.7.7",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "executors": "./executors.json"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/websocket-rpc",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "websocket-rpc",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -26,12 +26,12 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/util": "workspace:*",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {
     "@types/node": "^18.11.9",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

@@ -13,6 +13,7 @@ import {
   type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { Timeframe } from '@dxos/timeframe';
 
 import { createCredential, type CredentialSigner } from './credential-factory';
@@ -87,7 +88,7 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceMember',
           spaceKey,
-          role: SpaceMember.Role.MEMBER,
+          role: SpaceMember.Role.EDITOR,
           genesisFeedKey,
         },
       }),
@@ -201,22 +202,37 @@ export const createDeviceAuthorization = async (
 };
 
 // TODO(burdon): Reconcile with above (esp. Signer).
+/**
+ * @param signer - invitation signer.
+ * @param identityKey - identity key of the admitted member.
+ * @param spaceKey - subject space key.
+ * @param genesisFeedKey - genesis feed key of the space.
+ * @param role - role of the newly added member.
+ * @param membershipChainHeads - ids of the last known SpaceMember credentials (branching possible).
+ * @param profile - profile of the newly added member.
+ * @param invitationCredentialId - id of the delegated invitation credential in case one was used to add the member.
+ */
 export const createAdmissionCredentials = async (
   signer: CredentialSigner,
   identityKey: PublicKey,
   spaceKey: PublicKey,
   genesisFeedKey: PublicKey,
+  role: SpaceMember.Role = SpaceMember.Role.ADMIN,
+  membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
+  invitationCredentialId?: PublicKey,
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
       subject: identityKey,
+      parentCredentialIds: membershipChainHeads,
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceMember',
         spaceKey,
-        role: SpaceMember.Role.ADMIN, // TODO(burdon): Configure.
+        role,
         profile,
         genesisFeedKey,
+        invitationCredentialId,
       },
     }),
   ]);
@@ -224,4 +240,45 @@ export const createAdmissionCredentials = async (
   return credentials.map((credential) => ({
     credential: { credential },
   }));
+};
+
+export const createDelegatedSpaceInvitationCredential = async (
+  signer: CredentialSigner,
+  subject: PublicKey,
+  invitation: DelegateSpaceInvitation,
+): Promise<FeedMessage.Payload> => {
+  const credential = await signer.createCredential({
+    subject,
+    assertion: {
+      '@type': 'dxos.halo.invitations.DelegateSpaceInvitation',
+      invitationId: invitation.invitationId,
+      authMethod: invitation.authMethod,
+      swarmKey: invitation.swarmKey,
+      role: invitation.role,
+      guestKey: invitation.guestKey,
+      expiresOn: invitation.expiresOn,
+      multiUse: invitation.multiUse,
+    },
+  });
+  return { credential: { credential } };
+};
+
+/**
+ * @param signer - credential issuer.
+ * @param subject - key of the space the invitation was for.
+ * @param invitationCredentialId id of a dxos.halo.invitations.DelegateSpaceInvitation credential.
+ */
+export const createCancelDelegatedSpaceInvitationCredential = async (
+  signer: CredentialSigner,
+  subject: PublicKey,
+  invitationCredentialId: PublicKey,
+): Promise<FeedMessage.Payload> => {
+  const credential = await signer.createCredential({
+    subject,
+    assertion: {
+      '@type': 'dxos.halo.invitations.CancelDelegatedInvitation',
+      credentialId: invitationCredentialId,
+    },
+  });
+  return { credential: { credential } };
 };

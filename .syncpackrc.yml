@@ -42,6 +42,11 @@ versionGroups:
       - 'dxos-example-template'
     dependencies:
       - '@dxos/*'
+  - packages:
+      - '@dxos/automerge'
+    dependencies:
+      - 'xstate'
+      - '@automerge/automerge-wasm'
 sortFirst:
   - name
   - version

@@ -2,33 +2,33 @@
 // Copyright 2020 DXOS.org
 //
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { type ClientServices } from '@dxos/client-protocol';
 import { ClientServicesHost } from '@dxos/client-services';
 import { type ServiceContextRuntimeParams } from '@dxos/client-services/src';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { DocumentModel } from '@dxos/document-model';
-import { type DatabaseProxy, genesisMutation } from '@dxos/echo-db';
+import { create, Expando } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey } from '@dxos/keys';
+import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  createSimplePeerTransportFactory,
   createLibDataChannelTransportFactory,
+  createSimplePeerTransportFactory,
   MemoryTransportFactory,
-  TransportKind,
-  type TransportFactory,
   TcpTransportFactory,
+  type TransportFactory,
+  TransportKind,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 
 import { Client } from '../client';
-import { createDefaultModelFactory } from '../echo';
+import { type EchoDatabase } from '../echo';
 import { ClientServicesProxy, LocalClientServices } from '../services';
 
 export const testConfigWithLocalSignal = new Config({
@@ -49,23 +49,27 @@ export const testConfigWithLocalSignal = new Config({
  * Client builder supports different configurations, incl. signaling, transports, storage.
  */
 export class TestBuilder {
-  private readonly _ctx = new Context();
+  private readonly _ctx = new Context({ name: 'TestBuilder' });
 
   public config: Config;
-
   public storage?: Storage;
+  public level?: LevelDB;
+
   _transport: TransportKind;
 
-  // prettier-ignore
-  constructor (
+  // TODO(burdon): Pass in params as object.
+  constructor(
     config?: Config,
-    private readonly _modelFactory = createDefaultModelFactory(),
     public signalManagerContext = new MemorySignalManagerContext(),
-    // TODO(nf): configure better
+    // TODO(nf): Configure better.
     transport = process.env.MOCHA_ENV === 'nodejs' ? TransportKind.LIBDATACHANNEL : TransportKind.SIMPLE_PEER,
   ) {
     this.config = config ?? new Config();
     this._transport = transport;
+  }
+
+  public get ctx() {
+    return this._ctx;
   }
 
   /**
@@ -82,14 +86,17 @@ export class TestBuilder {
             iceServers: this.config.get('runtime.services.ice'),
           });
           break;
+
         case TransportKind.LIBDATACHANNEL:
           transportFactory = createLibDataChannelTransportFactory({
             iceServers: this.config.get('runtime.services.ice'),
           });
           break;
+
         case TransportKind.TCP:
           transportFactory = TcpTransportFactory;
           break;
+
         default:
           throw new Error(`Unsupported transport w/ signalling: ${this._transport}`);
       }
@@ -99,9 +106,9 @@ export class TestBuilder {
         transportFactory,
       };
     }
-    if (this._transport !== TransportKind.MEMORY) {
-      // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
-    }
+    // if (this._transport !== TransportKind.MEMORY) {
+    // log.warn(`specified transport ${this._transport} but no signalling configured, using memory transport instead`);
+    // }
 
     // Memory transport with shared context.
     return {
@@ -116,25 +123,34 @@ export class TestBuilder {
   createClientServicesHost(runtimeParams?: ServiceContextRuntimeParams) {
     const services = new ClientServicesHost({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
+      level: this.level,
       runtimeParams,
       ...this.networking,
     });
+
     this._ctx.onDispose(() => services.close());
     return services;
   }
 
   /**
    * Create local services host.
+   * @param options - fastPeerPresenceUpdate: enable for faster space-member online/offline status changes.
    */
-  createLocal() {
+  createLocalClientServices(options?: { fastPeerPresenceUpdate?: boolean }): LocalClientServices {
     const services = new LocalClientServices({
       config: this.config,
-      modelFactory: this._modelFactory,
       storage: this.storage,
+      level: this.level,
+      runtimeParams: {
+        ...(options?.fastPeerPresenceUpdate
+          ? { spaceMemberPresenceAnnounceInterval: 200, spaceMemberPresenceOfflineTimeout: 400 }
+          : {}),
+        invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+      },
       ...this.networking,
     });
+
     this._ctx.onDispose(() => services.close());
     return services;
   }
@@ -144,49 +160,35 @@ export class TestBuilder {
    */
   createClientServer(host: ClientServicesHost = this.createClientServicesHost()): [Client, ProtoRpcPeer<{}>] {
     const [proxyPort, hostPort] = createLinkedPorts();
+    const client = new Client({ config: this.config, services: new ClientServicesProxy(proxyPort) });
     const server = createProtoRpcPeer({
       exposed: host.descriptors,
       handlers: host.services as ClientServices,
       port: hostPort,
     });
+
     this._ctx.onDispose(() => server.close());
-
-    // TODO(dmaretskyi): Refactor.
-
-    const client = new Client({ services: new ClientServicesProxy(proxyPort) });
     this._ctx.onDispose(() => client.destroy());
     return [client, server];
   }
 
-  destroy() {
-    void this._ctx.dispose();
+  async destroy() {
+    await this._ctx.dispose(false); // TODO(burdon): Set to true to check clean shutdown.
+    await this.level?.close();
   }
 }
 
-export const testSpace = async (create: DatabaseProxy, check: DatabaseProxy = create) => {
-  const objectId = PublicKey.random().toHex();
+export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
+  const object = create(Expando, {});
+  createDb.add(object);
+  await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
 
-  const result = create.mutate(genesisMutation(objectId, DocumentModel.meta.type));
-  create.commitBatch();
-
-  await result.batch.getReceipt();
-  // TODO(dmaretskiy): await result.waitToBeProcessed()
-  invariant(create._itemManager.entities.has(result.updateEvent.itemsUpdated[0].id));
-
-  await asyncTimeout(
-    check.itemUpdate.waitForCondition(() => check._itemManager.entities.has(objectId)),
-    1000,
-  );
-
-  return result;
+  return { objectId: object.id };
 };
 
-export const syncItems = async (db1: DatabaseProxy, db2: DatabaseProxy) => {
-  // Check item replicated from 1 => 2.
-  await testSpace(db1, db2);
-
-  // Check item replicated from 2 => 1.
-  await testSpace(db2, db1);
+export const syncItemsAutomerge = async (db1: EchoDatabase, db2: EchoDatabase) => {
+  await testSpaceAutomerge(db1, db2);
+  await testSpaceAutomerge(db2, db1);
 };
 
 /**

@@ -71,6 +71,7 @@ export class Observability {
   // TODO(wittjosiah): Generic error logging interface.
   private _errorReportingOptions?: InitOptions;
   private _captureException?: typeof SentryCaptureException;
+  private _captureUserFeedback?: (name: string, email: string, message: string) => Promise<void>;
   private _setTag?: (key: string, value: string) => void;
 
   private _secrets: ObservabilitySecrets;
@@ -112,6 +113,18 @@ export class Observability {
     this.setTag('mode', this._mode);
   }
 
+  get mode() {
+    return this._mode;
+  }
+
+  get group() {
+    return this._group;
+  }
+
+  get enabled() {
+    return this._mode !== 'disabled';
+  }
+
   private _loadSecrets(config: Config | undefined, secrets?: Record<string, string>) {
     if (isNode()) {
       const mergedSecrets = {
@@ -150,6 +163,9 @@ export class Observability {
   }
 
   async close() {
+    if (this._telemetry) {
+      await this._telemetry.close();
+    }
     await this._ctx.dispose();
 
     // TODO(wittjosiah): Remove telemetry, etc. scripts.
@@ -157,18 +173,6 @@ export class Observability {
 
   setMode(mode: Mode) {
     this._mode = mode;
-  }
-
-  get mode() {
-    return this._mode;
-  }
-
-  get group() {
-    return this._group;
-  }
-
-  get enabled() {
-    return this._mode !== 'disabled';
   }
 
   //
@@ -379,6 +383,7 @@ export class Observability {
         this.setTag('runtime', platform.runtime);
       }
     }
+
     scheduleTaskInterval(
       this._ctx,
       async () => {
@@ -446,8 +451,10 @@ export class Observability {
 
   private async _initErrorLogs() {
     if (this._secrets.SENTRY_DESTINATION && this._mode !== 'disabled') {
-      const { captureException, configureTracing, init, setTag } = await import('./sentry');
+      const { captureException, configureTracing, captureUserFeedback, init, setTag } = await import('./sentry');
       this._captureException = captureException;
+      this._captureUserFeedback = captureUserFeedback;
+
       this._setTag = setTag;
 
       // TODO(nf): refactor package into this one?
@@ -490,5 +497,17 @@ export class Observability {
     if (this.enabled) {
       this._captureException?.(err);
     }
+  }
+
+  /**
+   * Manually capture user feedback.
+   *
+   * The default implementation uses Sentry.
+   */
+  captureUserFeedback(name: string, email: string, message: string) {
+    // TODO(Zan): Should this respect telemetry mode? Sending feedback is explicitly user-initiated.
+    // - Maybe if telemetry is disable we shouldn't enable replay.
+    // - (Check the browser.ts implementation for reference).
+    void this._captureUserFeedback?.(name, email, message);
   }
 }

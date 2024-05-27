@@ -8,6 +8,7 @@ import { rmSync } from 'node:fs';
 
 import {
   Agent,
+  type AgentHttpParams,
   ChainPlugin,
   DashboardPlugin,
   DiscordPlugin,
@@ -17,13 +18,13 @@ import {
   QueryPlugin,
   parseAddress,
 } from '@dxos/agent';
-import { runInContext, scheduleTaskInterval } from '@dxos/async';
+import { asyncTimeout, runInContext, scheduleTaskInterval, Trigger } from '@dxos/async';
 import { DX_RUNTIME, getProfilePath } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { type Platform } from '@dxos/protocols/proto/dxos/client/services';
 
-import { BaseCommand } from '../../base-command';
-import { FriendlyError } from '../../errors';
+import { BaseCommand } from '../../base';
+import { AgentAlreadyRunningError } from '../../errors';
 
 export default class Start extends BaseCommand<typeof Start> {
   static override enableJsonFlag = true;
@@ -43,6 +44,10 @@ export default class Start extends BaseCommand<typeof Start> {
       description: 'Expose web socket port.',
       helpValue: 'port',
       aliases: ['web-socket'],
+    }),
+    http: Flags.integer({
+      description: 'Expose http port.',
+      helpValue: 'port',
     }),
     metrics: Flags.boolean({
       description: 'Start metrics recording.',
@@ -76,13 +81,29 @@ export default class Start extends BaseCommand<typeof Start> {
       rmSync(path, { force: true });
     }
 
+    let httpParams: AgentHttpParams | undefined;
+    if (this.flags.http) {
+      if (!process.env.DX_AGENT_HTTP_AUTHENTICATION_TOKEN || !process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN) {
+        this.log(
+          'DX_AGENT_HTTP_AUTHENTICATION_TOKEN or DX_AGENT_WS_AUTHENTICATION_TOKEN not set, http server will not be started.',
+        );
+      } else {
+        httpParams = {
+          port: this.flags.http,
+          authenticationToken: process.env.DX_AGENT_HTTP_AUTHENTICATION_TOKEN,
+          wsAuthenticationToken: process.env.DX_AGENT_WS_AUTHENTICATION_TOKEN,
+        };
+      }
+    }
+
     this._agent = new Agent({
       config: this.clientConfig,
       profile: this.flags.profile,
       metrics: this.flags.metrics,
       protocol: {
-        socket,
+        socketPath: socket,
         webSocket: this.flags.ws,
+        ...(httpParams ? { http: httpParams } : {}),
       },
       plugins: [
         new ChainPlugin(),
@@ -95,6 +116,50 @@ export default class Start extends BaseCommand<typeof Start> {
       ],
     });
 
+    const started = new Trigger();
+    let gracefulStopRequested: boolean;
+    const gracefulStopComplete = new Trigger();
+
+    const gracefulStop = (processSignal: string) => {
+      return async () => {
+        // Note: using this.{errors,warn,catch} in a signal handler will not cause the process to exit.
+        if (gracefulStopRequested) {
+          this.log('multiple graceful stop requests received, exiting immediately.');
+          process.exit(5);
+        }
+
+        gracefulStopRequested = true;
+
+        // wait for agent to finish starting before asking it to stop.
+        asyncTimeout(started.wait(), 5_000, 'Agent start timeout').catch((err) => {
+          this.log('agent never started, exiting.', err);
+          process.exit(4);
+        });
+
+        if (!this._agent) {
+          this.log('agent never started, exiting.');
+          process.exit(3);
+        }
+
+        this.log(`${processSignal} received, shutting down agent.`);
+        await Promise.all([
+          asyncTimeout(this._ctx.dispose(), 1_000, 'Waiting for agent support to shutdown.'),
+          asyncTimeout(this._agent.stop(), 5_000, 'Agent stop'),
+        ]).catch((err) => {
+          this.log('error in graceful shutdown: ', err);
+          process.exit(1);
+        });
+
+        this.log('done stopping, exiting.');
+        gracefulStopComplete.wake();
+      };
+    };
+
+    process.on('SIGINT', gracefulStop('SIGINT'));
+    process.on('SIGTERM', gracefulStop('SIGTERM'));
+
+    // TODO(nf): Handle SIGHUP/etc.
+
     try {
       await this._agent.start();
     } catch (err: any) {
@@ -103,30 +168,30 @@ export default class Start extends BaseCommand<typeof Start> {
       }
       throw err;
     }
+
     this.log('Agent started... (ctrl-c to exit)');
 
     await this._sendTelemetry();
     const platform = (await this._agent.client!.services.services.SystemService?.getPlatform()) as Platform;
     if (!platform) {
       this.log('failed to get platform, could not initialize observability');
-      return undefined;
-    }
-
-    if (this._observability?.enabled) {
-      this.log('Metrics initialized!');
-
-      await this._observability.initialize();
-      await this._observability.setIdentityTags(this._agent.client!);
-      await this._observability.startNetworkMetrics(this._agent.client!);
-      await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
-      await this._observability.startRuntimeMetrics(this._agent.client!);
-      // initAgentMetrics(this._ctx, this._observability, this._startTime);
-      //  initClientMetrics(this._ctx, this._observability, this._agent!);
+    } else {
+      if (this._observability?.enabled) {
+        await this._observability.initialize();
+        await this._observability.setIdentityTags(this._agent.client!);
+        await this._observability.startNetworkMetrics(this._agent.client!);
+        await this._observability.startSpacesMetrics(this._agent.client!, 'cli');
+        await this._observability.startRuntimeMetrics(this._agent.client!);
+        // initAgentMetrics(this._ctx, this._observability, this._startTime);
+        // initClientMetrics(this._ctx, this._observability, this._agent!);
+      }
     }
 
     if (this.flags.ws) {
       this.log(`Open devtools: https://devtools.dxos.org?target=ws://localhost:${this.flags.ws}`);
     }
+    started.wake();
+    await gracefulStopComplete.wait();
   }
 
   private async _runAsDaemon(system: boolean) {
@@ -170,19 +235,5 @@ export default class Start extends BaseCommand<typeof Start> {
 
     runInContext(this._ctx, sendTelemetry);
     scheduleTaskInterval(this._ctx, sendTelemetry, 1000 * 60);
-  }
-}
-
-class AgentAlreadyRunningError extends FriendlyError {
-  constructor() {
-    super('Agent is already running.');
-  }
-
-  get friendlyMessage() {
-    return 'Agent is already running.';
-  }
-
-  override get suggestion() {
-    return 'Make sure you stop the daemonized agent process.';
   }
 }

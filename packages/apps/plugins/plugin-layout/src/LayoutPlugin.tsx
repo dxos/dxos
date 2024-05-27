@@ -4,7 +4,7 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -27,9 +27,12 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  type Attention,
   IntentAction,
+  firstMainId,
+  activeIds,
 } from '@dxos/app-framework';
-import * as E from '@dxos/echo-schema/schema';
+import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -62,12 +65,13 @@ export const LayoutPlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
-  const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
+  const settings = new LocalStorageStore<LayoutSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
+    deck: false,
   });
 
-  const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
     sidebarOpen: true,
 
@@ -76,6 +80,7 @@ export const LayoutPlugin = ({
 
     dialogContent: null,
     dialogOpen: false,
+    dialogBlockAlign: undefined,
 
     popoverContent: null,
     popoverAnchorId: undefined,
@@ -84,22 +89,35 @@ export const LayoutPlugin = ({
     toasts: [],
   });
 
-  const location = E.object<NavigationState>({
+  const location = create<NavigationState>({
     active: undefined,
-    previous: undefined,
+    closed: undefined,
 
     // TODO(burdon): Should not be on this object.
     get activeNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.active && graphPlugin.provides.graph.findNode(this.active);
+      return this.active ? graphPlugin.provides.graph.findNode(firstMainId(this.active)) : undefined;
     },
     get previousNode() {
       invariant(graphPlugin, 'Graph plugin not found.');
-      return this.previous && graphPlugin.provides.graph.findNode(this.previous);
+      return this.closed
+        ? graphPlugin.provides.graph.findNode(Array.isArray(this.closed) ? this.closed[0] : this.closed)
+        : undefined;
     },
   });
 
-  const handleSetLayout = ({ element, state, component, subject, anchorId }: LayoutAction.SetLayout) => {
+  const attention = create<Attention>({
+    attended: new Set(),
+  });
+
+  const handleSetLayout = ({
+    element,
+    state,
+    component,
+    subject,
+    anchorId,
+    dialogBlockAlign,
+  }: LayoutAction.SetLayout) => {
     switch (element) {
       case 'fullscreen': {
         layout.values.fullscreen = state ?? !layout.values.fullscreen;
@@ -120,6 +138,7 @@ export const LayoutPlugin = ({
       case 'dialog': {
         layout.values.dialogOpen = state ?? Boolean(component);
         layout.values.dialogContent = component ? { component, subject } : null;
+        layout.values.dialogBlockAlign = dialogBlockAlign ?? 'center';
         return { data: true };
       }
 
@@ -150,7 +169,8 @@ export const LayoutPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -163,6 +183,7 @@ export const LayoutPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
+      attention,
       translations,
       graph: {
         builder: (_, graph) => {
@@ -196,7 +217,7 @@ export const LayoutPlugin = ({
         const { plugins } = usePlugins();
         const { dispatch } = useIntent();
         const { graph } = useGraph();
-        const [shortId, component] = location.active?.split(':') ?? [];
+        const [shortId, component] = location.active ? firstMainId(location.active).split(':') : [];
         const plugin = parseSurfacePlugin(findPlugin(plugins, shortId));
 
         // Update selection based on browser navigation.
@@ -204,8 +225,8 @@ export const LayoutPlugin = ({
           const handleNavigation = async () => {
             await dispatch({
               plugin: LAYOUT_PLUGIN,
-              action: NavigationAction.ACTIVATE,
-              data: { id: uriToActive(window.location.pathname) },
+              action: NavigationAction.OPEN,
+              data: { activeParts: { main: [uriToActive(window.location.pathname)] } },
             });
           };
 
@@ -267,10 +288,13 @@ export const LayoutPlugin = ({
                 },
               };
 
-        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
-
         return (
-          <AttentionProvider attended={attended}>
+          <AttentionProvider
+            attended={attention.attended}
+            onChangeAttend={(nextAttended) => {
+              attention.attended = nextAttended;
+            }}
+          >
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
           </AttentionProvider>
@@ -282,6 +306,9 @@ export const LayoutPlugin = ({
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  attendableId={firstMainId(location.active)}
+                  attended={attention.attended}
+                  activeIds={activeIds(location.active)}
                   fullscreen={layout.values.fullscreen}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
@@ -351,8 +378,8 @@ export const LayoutPlugin = ({
             }
 
             // TODO(wittjosiah): Factor out.
-            case NavigationAction.ACTIVATE: {
-              const id = intent.data?.id ?? intent.data?.result?.id;
+            case NavigationAction.OPEN: {
+              const id = firstMainId(intent.data?.activeParts);
               const path = id && graphPlugin?.provides.graph.getPath({ target: id });
               if (path) {
                 // TODO(wittjosiah): Factor out.
@@ -360,7 +387,7 @@ export const LayoutPlugin = ({
               }
 
               batch(() => {
-                location.previous = location.active;
+                location.closed = firstMainId(location.active);
                 location.active = id;
               });
 
@@ -389,6 +416,13 @@ export const LayoutPlugin = ({
                     : [],
                 ],
               };
+            }
+
+            case NavigationAction.CLOSE: {
+              batch(() => {
+                location.closed = firstMainId(location.active);
+                location.active = undefined;
+              });
             }
           }
         },

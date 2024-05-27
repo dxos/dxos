@@ -10,39 +10,45 @@ import { describe, test } from '@dxos/test';
 
 import { InvitationEncoder } from './encoder';
 
+const baseInvitation: Invitation = {
+  invitationId: PublicKey.random().toHex(),
+  type: Invitation.Type.INTERACTIVE,
+  kind: Invitation.Kind.SPACE,
+  authMethod: Invitation.AuthMethod.NONE,
+  state: Invitation.State.INIT,
+  swarmKey: PublicKey.random(),
+  spaceKey: PublicKey.random(),
+};
+
 describe('Invitation utils', () => {
   test('encodes and decodes an invitation', () => {
-    const invitation: Invitation = {
-      invitationId: PublicKey.random().toHex(),
-      type: Invitation.Type.INTERACTIVE,
-      kind: Invitation.Kind.SPACE,
-      authMethod: Invitation.AuthMethod.NONE,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      spaceKey: PublicKey.random(),
-    };
-
-    const encoded = InvitationEncoder.encode(invitation);
+    const encoded = InvitationEncoder.encode(baseInvitation);
     const decoded = InvitationEncoder.decode(encoded);
-    expect(decoded).to.deep.eq(invitation);
+    expect(decoded).to.deep.eq(baseInvitation);
   });
 
   test('secrets are never encoded into invitation code', () => {
-    const invitation: Invitation = {
-      invitationId: PublicKey.random().toHex(),
-      type: Invitation.Type.INTERACTIVE,
-      kind: Invitation.Kind.SPACE,
-      authMethod: Invitation.AuthMethod.NONE,
-      state: Invitation.State.INIT,
-      swarmKey: PublicKey.random(),
-      spaceKey: PublicKey.random(),
-    };
-
     const encoded = InvitationEncoder.encode({
-      ...invitation,
+      ...baseInvitation,
       authCode: 'example',
       identityKey: PublicKey.random(),
     });
+    const decoded = InvitationEncoder.decode(encoded);
+    expect(decoded.authCode).to.not.exist;
+    expect(decoded.identityKey).to.not.exist;
+    expect(decoded).to.deep.eq(baseInvitation);
+  });
+
+  test('guestKeypair for known public key auth method is encoded', () => {
+    const invitation: Invitation = {
+      ...baseInvitation,
+      guestKeypair: {
+        publicKey: PublicKey.random(),
+        privateKey: PublicKey.random().asBuffer(),
+      },
+    };
+
+    const encoded = InvitationEncoder.encode(invitation);
     const decoded = InvitationEncoder.decode(encoded);
     expect(decoded.authCode).to.not.exist;
     expect(decoded.identityKey).to.not.exist;

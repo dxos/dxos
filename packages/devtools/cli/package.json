@@ -1,6 +1,6 @@
 {
   "name": "@dxos/cli",
-  "version": "0.4.7",
+  "version": "0.5.2",
   "description": "DXOS CLI",
   "keywords": [
     "dxos",
@@ -24,12 +24,14 @@
   ],
   "scripts": {
     "bin": "./bin/dx",
+    "manifest": "oclif manifest",
     "prepack": "oclif manifest && oclif readme --multi",
     "postpack": "shx rm -f oclif.manifest.json",
     "prepublishOnly": "scripts/patch_dx_environment.sh",
     "readme": "oclif readme --multi"
   },
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
@@ -39,6 +41,7 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/hello-template": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -52,8 +55,11 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/tasks-template": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@oclif/core": "^2.9.4",
-    "@oclif/plugin-help": "^5.2.14",
+    "@oclif/core": "^3.26.6",
+    "@oclif/plugin-autocomplete": "^3.0.18",
+    "@oclif/plugin-help": "^6.0.22",
+    "@oclif/plugin-plugins": "^5.1.2",
+    "@oclif/plugin-update": "^4.2.13",
     "@octokit/core": "^4.0.4",
     "chalk": "^4.1.0",
     "cli-progress": "^3.11.2",
@@ -65,20 +71,23 @@
     "ink": "^3.2.0",
     "ink-table": "~3.0.0",
     "inquirer": "^8.2.0",
-    "isomorphic-ws": "^4.0.1",
+    "isomorphic-ws": "^5.0.0",
     "js-yaml": "^4.1.0",
-    "kubo-rpc-client": "^3.0.2",
+    "kubo-rpc-client": "^4.1.1",
     "lodash.defaultsdeep": "^4.6.1",
+    "node-clipboardy": "^1.0.3",
     "node-fetch": "^2.6.0",
     "pkg-up": "^3.1.0",
     "platform": "^1.3.6",
     "react": "^18.2.0",
+    "undici": "*",
     "uuid": "^8.3.2",
-    "ws": "^8.14.2"
+    "ws": "^8.14.2",
+    "wtfnode": "^0.9.1"
   },
   "devDependencies": {
-    "@oclif/test": "^2.3.31",
-    "@phosphor-icons/react": "^2.0.5",
+    "@oclif/test": "^3.2.15",
+    "@phosphor-icons/react": "^2.1.5",
     "@types/cli-progress": "^3.11.0",
     "@types/fs-extra": "^9.0.4",
     "@types/js-yaml": "^4.0.5",
@@ -88,17 +97,17 @@
     "@types/platform": "^1.3.4",
     "@types/react-dom": "^18.0.6",
     "fast-check": "^3.15.1",
-    "oclif": "^3.7.0",
+    "oclif": "^4.10.11",
     "prettier": "^3.2.4",
     "shx": "^0.3.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "peerDependencies": {
     "@phosphor-icons/react": "^2.0.5",
     "@types/react-dom": "^18.0.6"
   },
   "engines": {
-    "node": ">=12.0.0"
+    "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public"
@@ -111,34 +120,31 @@
       "command_not_found": "./dist/src/hooks/command-not-found"
     },
     "plugins": [
-      "@oclif/plugin-help"
+      "@oclif/plugin-autocomplete",
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins",
+      "@oclif/plugin-update"
     ],
     "helpClass": "./dist/src/help",
     "topicSeparator": " ",
     "topics": {
       "agent": {
-        "description": "Long-running agent extended with plugins (e.g., functions, search, epoch management)."
-      },
-      "app": {
-        "description": "Control apps that are published to KUBE specified in DXOS config."
+        "description": "Manage agents."
       },
       "debug": {
-        "description": "Commands to help debug stuff (contains data generation to imitate high load, database metrics, etc.)."
+        "description": "Debugging tools and diagnostics."
       },
       "device": {
-        "description": "Devices in your HALO."
+        "description": "Manage HALO devices."
       },
       "function": {
-        "description": "Runtime pluggable code with data/event specific triggers."
+        "description": "Manage distributed functions and triggers."
       },
       "halo": {
-        "description": "HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements."
-      },
-      "kube": {
-        "description": "KUBE is a set of runtime services for static web apps and peer-to-peer applications. "
+        "description": "Manage HALO identity and devices."
       },
       "space": {
-        "description": "A space is an instance of an ECHO database which can be replicated by a number of peers."
+        "description": "Manage ECHO Spaces."
       }
     }
   }

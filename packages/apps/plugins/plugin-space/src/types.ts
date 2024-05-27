@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type SchemaProvides } from '@braneframe/plugin-client';
 import type {
   GraphBuilderProvides,
   IntentResolverProvides,
@@ -10,13 +11,12 @@ import type {
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
-import type { PublicKey } from '@dxos/react-client';
-import type { ItemID } from '@dxos/react-client/echo';
+import { type PublicKey } from '@dxos/react-client';
 import { type ComplexMap } from '@dxos/util';
 
 import { SPACE_PLUGIN } from './meta';
 
-export const SPACE_DIRECTORY_HANDLE = 'dxos.org/spaces/dir-handle';
+export const SPACE_DIRECTORY_HANDLE = 'dxos.org/plugin/space/directory';
 
 const SPACE_ACTION = `${SPACE_PLUGIN}/action`;
 export enum SpaceAction {
@@ -36,11 +36,16 @@ export enum SpaceAction {
   WAIT_FOR_OBJECT = `${SPACE_ACTION}/wait-for-object`,
   TOGGLE_HIDDEN = `${SPACE_ACTION}/toggle-hidden`,
   SELECT_DIRECTORY = `${SPACE_ACTION}/select-directory`,
+
+  /**
+   * @deprecated Temporary action to help with composer performance.
+   */
+  // TODO(wittjosiah): Replace with `OPEN`?
+  ENABLE = `${SPACE_ACTION}/enable`,
 }
 
 export type ObjectViewerProps = {
   lastSeen: number;
-  spaceKey: PublicKey;
 };
 
 export type ObjectId = string;
@@ -50,6 +55,7 @@ export type PluginState = {
    * Which objects are currently being viewed by which peers.
    */
   viewersByObject: Record<ObjectId, ComplexMap<PublicKey, ObjectViewerProps>>;
+
   /**
    * Which peers are currently viewing which objects.
    */
@@ -58,7 +64,15 @@ export type PluginState = {
   /**
    * Object that was linked to directly but not found and is being awaited.
    */
-  awaiting: ItemID | undefined;
+  awaiting: string | undefined;
+
+  /**
+   * Spaces which have been touched by the user and should have queries run against them.
+   *
+   * @deprecated Temporary action to help with composer performance.
+   */
+  // TODO(wittjosiah): Move state into space?
+  enabled: PublicKey[];
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };
@@ -68,6 +82,7 @@ export type SpacePluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   SettingsProvides<SpaceSettingsProps> &
-  TranslationsProvides & {
+  TranslationsProvides &
+  SchemaProvides & {
     space: Readonly<PluginState>;
   };

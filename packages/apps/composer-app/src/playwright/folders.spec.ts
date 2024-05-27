@@ -32,6 +32,8 @@ test.describe('Folder tests', () => {
     await host.createFolder(1);
     await host.renameObject('Folder 1', 1);
     await host.renameObject('Folder 2', 2);
+    await host.toggleFolderCollapsed(1);
+    await host.toggleFolderCollapsed(2);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('Folder 2').hover();
@@ -51,7 +53,6 @@ test.describe('Folder tests', () => {
     await host.createSpace();
     await host.createObject('markdownPlugin', 1);
     await host.createFolder(1);
-    await host.toggleFolderCollapsed(2);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('New document').hover();
@@ -77,8 +78,6 @@ test.describe('Folder tests', () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
 
-      // Folder must be collapsed for playwright to click in the right place.
-      await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
       await waitForExpect(async () => {
@@ -98,8 +97,6 @@ test.describe('Folder tests', () => {
         expect(await host.getObjectsCount()).to.equal(4);
       });
 
-      // Folder must be collapsed for playwright to click in the right place.
-      await host.toggleFolderCollapsed(1);
       // Delete the containing folder.
       await host.deleteObject(1);
       await waitForExpect(async () => {

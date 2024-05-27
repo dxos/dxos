@@ -3,32 +3,46 @@
 //
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
+import { type Doc } from '@dxos/automerge/automerge';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, Context } from '@dxos/context';
-import { type CredentialSigner, getCredentialAssertion } from '@dxos/credentials';
 import {
-  type AutomergeHost,
-  type DataServiceSubscriptions,
+  type CredentialSigner,
+  type DelegateInvitationCredential,
+  getCredentialAssertion,
+  type MemberInfo,
+} from '@dxos/credentials';
+import { type EchoHost } from '@dxos/echo-db';
+import {
+  AuthStatus,
   type MetadataStore,
   type Space,
   type SpaceManager,
+  type SpaceProtocol,
+  type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
+import { type SpaceDoc } from '@dxos/echo-protocol';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
-import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { trace as Trace } from '@dxos/protocols';
+import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
+import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
+import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace } from './data-space';
+import { DataSpace, findPropertiesObject } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
+import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -80,11 +94,11 @@ export class DataSpaceManager {
   constructor(
     private readonly _spaceManager: SpaceManager,
     private readonly _metadataStore: MetadataStore,
-    private readonly _dataServiceSubscriptions: DataServiceSubscriptions,
     private readonly _keyring: Keyring,
     private readonly _signingContext: SigningContext,
     private readonly _feedStore: FeedStore<FeedMessage>,
-    private readonly _automergeHost: AutomergeHost,
+    private readonly _echoHost: EchoHost,
+    private readonly _invitationsManager: InvitationsManager,
     params?: DataSpaceManagerRuntimeParams,
   ) {
     const {
@@ -93,6 +107,31 @@ export class DataSpaceManager {
     } = params ?? {};
     this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
     this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
+
+    trace.diagnostic({
+      id: 'spaces',
+      name: 'Spaces',
+      fetch: async () => {
+        return Array.from(this._spaces.values()).map((space) => {
+          const rootUrl = space.automergeSpaceState.rootUrl;
+          const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
+          const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
+
+          const properties = rootDoc && findPropertiesObject(rootDoc);
+
+          return {
+            key: space.key.toHex(),
+            state: SpaceState[space.state],
+            name: properties?.[1].data.name ?? null,
+            inlineObjects: rootDoc ? Object.keys(rootDoc.objects ?? {}).length : null,
+            linkedObjects: rootDoc ? Object.keys(rootDoc.links ?? {}).length : null,
+            credentials: space.inner.spaceState.credentials.length,
+            members: space.inner.spaceState.members.size,
+            rootUrl,
+          };
+        });
+      },
+    });
   }
 
   // TODO(burdon): Remove.
@@ -103,7 +142,7 @@ export class DataSpaceManager {
   @synchronized
   async open() {
     log('open');
-    log.trace('dxos.echo.data-space-manager.open', trace.begin({ id: this._instanceId }));
+    log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
@@ -124,7 +163,7 @@ export class DataSpaceManager {
       }
     }
 
-    log.trace('dxos.echo.data-space-manager.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
   @synchronized
@@ -156,14 +195,10 @@ export class DataSpaceManager {
 
     log('creating space...', { spaceKey });
 
-    const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: any) => {
-      doc.access = { spaceKey: spaceKey.toHex() };
-    });
-
+    const root = await this._echoHost.createSpaceRoot(spaceKey);
     const space = await this._constructSpace(metadata);
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, automergeRoot.url);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -247,13 +282,21 @@ export class DataSpaceManager {
           gossip.createExtension({ remotePeerId: session.remotePeerId }),
         );
         session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-        this._automergeHost.authorizeDevice(space.key, session.remotePeerId);
-        session.addExtension('dxos.mesh.teleport.automerge', this._automergeHost.createExtension());
+        this._echoHost.authorizeDevice(space.key, session.remotePeerId);
+        session.addExtension('dxos.mesh.teleport.automerge', this._echoHost.createReplicationExtension());
       },
       onAuthFailure: () => {
         log.warn('auth failure');
       },
+      onMemberRolesChanged: async (members: MemberInfo[]) => {
+        if (dataSpace?.state === SpaceState.READY) {
+          this._handleMemberRoleChanges(presence, space.protocol, members);
+        }
+      },
       memberKey: this._signingContext.identityKey,
+      onDelegatedInvitationStatusChange: (invitation, isActive) => {
+        return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
+      },
     });
     controlFeed && (await space.setControlFeed(controlFeed));
     dataFeed && (await space.setDataFeed(dataFeed));
@@ -266,28 +309,31 @@ export class DataSpaceManager {
       presence,
       keyring: this._keyring,
       feedStore: this._feedStore,
+      echoHost: this._echoHost,
       signingContext: this._signingContext,
       callbacks: {
         beforeReady: async () => {
           log('before space ready', { space: space.key });
-          await this._dataServiceSubscriptions.registerSpace(
-            space.key,
-            dataSpace.dataPipeline.databaseHost!.createDataServiceHost(),
-          );
         },
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._isOpen });
           if (this._isOpen) {
+            await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
+            this._handleMemberRoleChanges(presence, space.protocol, [...space.spaceState.members.values()]);
             this.updated.emit();
           }
         },
         beforeClose: async () => {
           log('before space close', { space: space.key });
-          await this._dataServiceSubscriptions.unregisterSpace(space.key);
         },
       },
       cache: metadata.cache,
-      automergeHost: this._automergeHost,
+    });
+
+    presence.newPeer.on((peerState) => {
+      if (dataSpace.state === SpaceState.READY) {
+        this._handleNewPeerConnected(space, peerState);
+      }
     });
 
     if (metadata.state !== SpaceState.INACTIVE) {
@@ -297,11 +343,83 @@ export class DataSpaceManager {
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
-    if (metadata.dataTimeframe) {
-      dataSpace.dataPipeline.setTargetTimeframe(metadata.dataTimeframe);
-    }
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
+  }
+
+  private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
+    let closedSessions = 0;
+    for (const member of memberInfo) {
+      if (member.key.equals(presence.getLocalState().identityKey)) {
+        continue;
+      }
+      const peers = presence.getPeersByIdentityKey(member.key);
+      const sessions = peers.map((p) => p.peerId && spaceProtocol.sessions.get(p.peerId));
+      const sessionsToClose = sessions.filter((s): s is SpaceProtocolSession => {
+        return (s && (member.role === SpaceMember.Role.REMOVED) !== (s.authStatus === AuthStatus.FAILURE)) ?? false;
+      });
+      sessionsToClose.forEach((session) => {
+        void session.close().catch(log.error);
+      });
+      closedSessions += sessionsToClose.length;
+    }
+    log('processed member role changes', {
+      roleChangeCount: memberInfo.length,
+      peersOnline: presence.getPeersOnline().length,
+      closedSessions,
+    });
+    // Handle the case when there was a removed peer online, we can now establish a connection with them
+    spaceProtocol.updateTopology();
+  }
+
+  private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
+    const role = space.spaceState.getMemberRole(peerState.identityKey);
+    if (role === SpaceMember.Role.REMOVED) {
+      const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
+      if (session != null) {
+        log('closing a session with a removed peer', { peerId: peerState.peerId });
+        void session.close().catch(log.error);
+      }
+    }
+  }
+
+  private async _handleInvitationStatusChange(
+    dataSpace: DataSpace | undefined,
+    delegatedInvitation: DelegateInvitationCredential,
+    isActive: boolean,
+  ): Promise<void> {
+    if (dataSpace?.state !== SpaceState.READY) {
+      return;
+    }
+    if (isActive) {
+      await this._createDelegatedInvitations(dataSpace, [
+        [delegatedInvitation.credentialId, delegatedInvitation.invitation],
+      ]);
+    } else {
+      await this._invitationsManager.cancelInvitation(delegatedInvitation.invitation);
+    }
+  }
+
+  private async _createDelegatedInvitations(
+    space: DataSpace,
+    invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
+  ): Promise<void> {
+    const tasks = invitations.map(([credentialId, invitation]) => {
+      return this._invitationsManager.createInvitation({
+        type: Invitation.Type.DELEGATED,
+        kind: Invitation.Kind.SPACE,
+        spaceKey: space.key,
+        authMethod: invitation.authMethod,
+        invitationId: invitation.invitationId,
+        swarmKey: invitation.swarmKey,
+        guestKeypair: invitation.guestKey ? { publicKey: invitation.guestKey } : undefined,
+        lifetime: invitation.expiresOn ? invitation.expiresOn.getTime() - Date.now() : undefined,
+        multiUse: invitation.multiUse,
+        delegationCredentialId: credentialId,
+        persistent: false,
+      });
+    });
+    await Promise.all(tasks);
   }
 }

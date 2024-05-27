@@ -1,0 +1,66 @@
+{
+  "name": "@braneframe/plugin-deck",
+  "version": "0.5.2",
+  "description": "DXOS Surface plugin for the main application layout.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "license": "MIT",
+  "author": "DXOS.org",
+  "exports": {
+    ".": "./dist/lib/browser/index.mjs",
+    "./meta": "./dist/lib/browser/meta.mjs"
+  },
+  "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "meta": [
+        "dist/types/src/meta.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@braneframe/plugin-settings": "workspace:*",
+    "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keyboard": "workspace:*",
+    "@dxos/local-storage": "workspace:*",
+    "@dxos/react-ui-deck": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@preact/signals-core": "^1.6.0"
+  },
+  "devDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-observability": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@phosphor-icons/react": "^2.1.5",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite": "^5.2.9"
+  },
+  "peerDependencies": {
+    "@braneframe/plugin-graph": "workspace:*",
+    "@braneframe/plugin-observability": "workspace:*",
+    "@braneframe/plugin-theme": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-theme": "workspace:*",
+    "@phosphor-icons/react": "^2.0.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

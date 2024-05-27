@@ -1,35 +1,61 @@
 //
 // Copyright 2023 DXOS.org
 //
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
+
+import { type Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import {
+  type GroupingState,
+  type Row,
+  type RowData,
   getCoreRowModel,
+  getExpandedRowModel,
+  getGroupedRowModel,
   getSortedRowModel,
   useReactTable,
-  type ColumnSizingInfoState,
-  type GroupingState,
-  type RowData,
-  type ColumnSizingState,
-  type OnChangeFn,
-  type RowSelectionState,
-  getGroupedRowModel,
-  getExpandedRowModel,
 } from '@tanstack/react-table';
-import { useVirtualizer, type VirtualizerOptions } from '@tanstack/react-virtual';
-import React, { Fragment, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState, useContext } from 'react';
 
-import { debounce } from '@dxos/async';
-import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-ui';
+import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 
 import { TableBody } from './TableBody';
-import { TableProvider as UntypedTableProvider, type TypedTableProvider, useTableContext } from './TableContext';
+import { type TypedTableProvider, TableProvider as UntypedTableProvider, useTableContext } from './TableContext';
 import { TableFooter } from './TableFooter';
 import { TableHead } from './TableHead';
+import { TableRootContext, useTableRootContext } from './TableRootContext';
 import { type TableProps } from './props';
+import { useColumnResizing, useColumnSorting, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
 
-export const Table = <TData extends RowData>(props: TableProps<TData>) => {
+type TableRootProps = { children: React.ReactNode };
+
+const TableRoot = ({ children }: TableRootProps) => {
+  const contextValue = useTableRootContext();
+  return <TableRootContext.Provider value={contextValue}>{children}</TableRootContext.Provider>;
+};
+
+type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+};
+
+const TableViewport = ({ children, classNames, asChild, ...props }: TableViewportProps) => {
+  const { scrollContextRef } = useContext(TableRootContext);
+
+  const classes = mx(classNames);
+
+  return asChild ? (
+    <Slot ref={scrollContextRef} {...props}>
+      {children}
+    </Slot>
+  ) : (
+    <div role='none' className={classes} ref={scrollContextRef} {...props}>
+      {children}
+    </div>
+  );
+};
+
+export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) => {
   const {
     role,
     onColumnResize,
@@ -38,54 +64,31 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     rowsSelectable,
     debug,
     onDataSelectionChange,
-    getScrollElement,
     pinLastRow,
   } = props;
 
   const columns = useDefaultValue(props.columns, []);
-  const data = useDefaultValue(props.data, []);
+  const incomingData = useDefaultValue(props.data, []);
+
+  const [data, setData] = useState([...incomingData]);
+
+  // Reactivity workaround: https://github.com/dxos/dxos/issues/6376.
+  const forceUpdate = useCallback(() => setData([...incomingData]), [incomingData]);
+  useEffect(() => forceUpdate(), [JSON.stringify(incomingData), forceUpdate]);
 
   const TableProvider = UntypedTableProvider as TypedTableProvider<TData>;
 
-  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
-
-  useEffect(() => {
-    setColumnSizing(
-      columns
-        .filter((column) => !!column.size && (column as any).prop !== undefined)
-        .reduce<ColumnSizingState>((state, column) => {
-          state[(column as any).prop] = column.size!;
-          return state;
-        }, {}),
-    );
-  }, [columns, setColumnSizing]);
-
-  const [columnSizingInfo, setColumnSizingInfo] = useState<ColumnSizingInfoState>({} as ColumnSizingInfoState);
-
-  const [rowSelection = {}, setRowSelection] = useControllableState({
-    prop: props.rowSelection,
-    onChange: props.onRowSelectionChange,
-    defaultProp: props.defaultRowSelection,
+  const { columnSizing, setColumnSizing, columnSizingInfo, setColumnSizingInfo } = useColumnResizing({
+    columns,
+    onColumnResize,
   });
 
-  // TODO(thure): Does @tanstack/react-table really need this intervention? It did seem necessary to enforce single-selection...
-  const handleRowSelectionChange = useCallback<OnChangeFn<RowSelectionState>>(
-    (updaterOrValue) => {
-      const nextRowSelection = typeof updaterOrValue === 'function' ? updaterOrValue(rowSelection) : updaterOrValue;
-      if (rowsSelectable === 'multi') {
-        setRowSelection(nextRowSelection);
-      } else if (rowsSelectable) {
-        const nextRowSelectionKey = Object.keys(nextRowSelection).filter((id) => !rowSelection[id])[0];
-        setRowSelection(nextRowSelectionKey ? { [nextRowSelectionKey]: true } : {});
-      } else {
-        setRowSelection({});
-      }
-    },
-    [rowsSelectable, setRowSelection, rowSelection],
-  );
+  const { rowSelection, handleRowSelectionChange } = useRowSelection(props);
 
   const [grouping, handleGroupingChange] = useState<GroupingState>(props.grouping ?? []);
   useEffect(() => handleGroupingChange(props.grouping ?? []), [handleGroupingChange, props.grouping]);
+
+  const columnSorting = useColumnSorting();
 
   const table = useReactTable({
     // Data
@@ -104,6 +107,7 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
       columnVisibility,
       columnSizing,
       columnSizingInfo,
+      sorting: columnSorting.sorting,
       rowSelection,
       grouping,
     },
@@ -135,62 +139,35 @@ export const Table = <TData extends RowData>(props: TableProps<TData>) => {
     debugTable: debug,
   });
 
-  const onColumnResizeDebounced = onColumnResize && debounce(onColumnResize, 1_000);
-
   useEffect(() => {
     onDataSelectionChange?.(Object.keys(rowSelection).map((id) => table.getRowModel().rowsById[id].original));
   }, [onDataSelectionChange, rowSelection, table]);
 
-  useEffect(() => {
-    // TODO(zan): This is super jank, let's think of a nicer way to do this ... later.
-    if (pinLastRow) {
-      // Clear row pinning
-      table.resetRowPinning();
-
-      const rows = table.getRowModel().rows;
-      rows[rows.length - 1].pin('bottom');
-    }
-  }, [pinLastRow, table, data]);
-
-  useEffect(() => {
-    const shouldTriggerResize = columnSizingInfo.columnSizingStart?.length === 0;
-
-    if (shouldTriggerResize) {
-      onColumnResizeDebounced?.(table.getState().columnSizing);
-    }
-  }, [columnSizingInfo, onColumnResizeDebounced, table]);
+  usePinLastRow(pinLastRow, table, data);
 
   // Create additional expansion column if all columns have fixed width.
   const expand = false; // columns.map((column) => column.size).filter(Boolean).length === columns?.length;
 
-  if (!getScrollElement) {
-    log.warn('Table: getScrollElement is not set. This is required for virtualized tables.');
-  }
-
   return (
     <TableProvider
-      {...props}
+      {...{ ...props, ...columnSorting }}
       table={table}
       header={header}
       expand={expand}
       isGrid={role === 'grid' || role === 'treegrid'}
     >
-      <TableImpl<TData> debug={false} getScrollElement={getScrollElement} {...props} />
+      <TableImpl<TData> debug={false} {...props} />
     </TableProvider>
   );
 };
 
+// TODO(Zan): Smush this into the Table component.
 /**
  * Pure implementation of table outside of context set-up.
  */
 const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
-  const { debug, classNames, getScrollElement, role, footer, grouping, fullWidth } = props;
-  const { table } = useTableContext<TData>('TableImpl');
-
-  const centerRows = table.getCenterRows();
-  const bottomRows = table.getBottomRows();
-
-  const rows = [...centerRows, ...bottomRows];
+  const { debug, classNames, role, footer, grouping, fullWidth } = props;
+  const { table } = useTableContext<TData>();
 
   if (debug) {
     return (
@@ -202,6 +179,8 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
   const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
 
+  const TableComponent = isResizingColumn ? MemoizedVirtualisedTableContent : VirtualizedTableContent;
+
   return (
     <table
       role={role}
@@ -210,41 +189,33 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
     >
       <TableHead />
 
-      {grouping?.length !== 0 ? (
-        getScrollElement ? (
-          isResizingColumn ? (
-            <MemoizedVirtualisedTableContent getScrollElement={getScrollElement} />
-          ) : (
-            <VirtualizedTableContent getScrollElement={getScrollElement} />
-          )
-        ) : (
-          <TableBody rows={rows} />
-        )
-      ) : (
-        <GroupedTableContent />
-      )}
+      {grouping?.length !== 0 ? <TableComponent /> : <GroupedTableContent />}
 
       {footer && <TableFooter />}
     </table>
   );
 };
 
-const VirtualizedTableContent = ({
-  getScrollElement,
-}: Pick<VirtualizerOptions<Element, Element>, 'getScrollElement'>) => {
-  const { table } = useTableContext('VirtualizedTableContent');
+const VirtualizedTableContent = () => {
+  const { table } = useTableContext();
+  const { virtualizer, dispatch } = useContext(TableRootContext);
 
   const centerRows = table.getCenterRows();
-  const pinnedRows = table.getBottomRows();
+  let pinnedRows = [] as Row<unknown>[];
 
-  const rows = [...centerRows, ...pinnedRows];
+  useEffect(() => {
+    dispatch({ type: 'updateTableCount', count: centerRows.length });
+  }, [centerRows.length]);
 
-  const { getTotalSize, getVirtualItems } = useVirtualizer({
-    getScrollElement,
-    count: rows.length,
-    overscan: 4,
-    estimateSize: () => 33,
-  });
+  try {
+    // TODO(zan): Work out how to sync the row pinning with rendering
+    // This is a hack because the first call to this function after a row is deleted will throw an error
+    // because the row index is no longer in the table
+    // The pin last row hook updates the pinned row key after the row is deleted
+    pinnedRows = table.getBottomRows();
+  } catch (_) {} // Ignore error
+
+  const { getTotalSize, getVirtualItems } = virtualizer;
 
   const virtualRows = getVirtualItems();
   const totalSize = getTotalSize();
@@ -252,8 +223,12 @@ const VirtualizedTableContent = ({
   const paddingTop = virtualRows.length > 0 ? virtualRows?.[0]?.start || 0 : 0;
   const paddingBottom = virtualRows.length > 0 ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0) : 0;
 
+  const rowsToRender = [...virtualRows.map((virtualRow) => centerRows[virtualRow.index]), ...pinnedRows].filter(
+    (r) => !!r,
+  );
+
   return (
-    <>
+    <Fragment>
       {paddingTop > 0 && (
         <tbody role='none'>
           <tr role='none'>
@@ -261,7 +236,7 @@ const VirtualizedTableContent = ({
           </tr>
         </tbody>
       )}
-      <TableBody rows={virtualRows.map((virtualRow) => rows[virtualRow.index])} />
+      <TableBody rows={rowsToRender} />
       {paddingBottom > 0 && (
         <tbody role='none'>
           <tr role='none'>
@@ -269,17 +244,18 @@ const VirtualizedTableContent = ({
           </tr>
         </tbody>
       )}
-    </>
+    </Fragment>
   );
 };
 
-export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent) as typeof VirtualizedTableContent;
+export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent);
 
 const GroupedTableContent = () => {
   const {
     table: { getGroupedRowModel, getHeaderGroups, getState },
     debug,
-  } = useTableContext('GroupedTableContent');
+  } = useTableContext();
+
   return (
     <>
       {getGroupedRowModel().rows.map((row, i) => {
@@ -304,4 +280,13 @@ const GroupedTableContent = () => {
       })}
     </>
   );
+};
+
+// TODO(burdon): Floating "add row" jumps by 1 pixel on scroll.
+// TODO(burdon): Blue focus highlight is clipped by 1px on the left.
+// TODO(burdon): Focused row and focus ring passes over the sticky header.
+export const Table = {
+  Root: TableRoot,
+  Viewport: TableViewport,
+  Main: TablePrimitive,
 };

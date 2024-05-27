@@ -12,7 +12,7 @@ import { AnchoredOverflow } from '@dxos/react-ui'; // Deliberately not using the
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
-import { LogView } from './LogView';
+import { LogTable } from './LogTable';
 import { MetricsView } from './MetricsView';
 import { ResourceName } from './Resource';
 import { TraceView } from './TraceView';
@@ -112,18 +112,23 @@ export const TracingPanel = () => {
     'border-b first:border-r last:border-l',
   );
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
     <PanelContainer>
-      <AnchoredOverflow.Root classNames='flex flex-col h-1/3 overflow-auto'>
-        <Table<ResourceState>
-          columns={columns}
-          data={Array.from(state.current.resources.values())}
-          currentDatum={selectedResource}
-          onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
-          fullWidth
-        />
-        <AnchoredOverflow.Anchor />
-      </AnchoredOverflow.Root>
+      <Table.Root>
+        <Table.Viewport classNames={'overflow-anchored flex flex-col h-1/3 overflow-auto'}>
+          <Table.Main<ResourceState>
+            columns={columns}
+            data={Array.from(state.current.resources.values())}
+            currentDatum={selectedResource}
+            onDatumClick={(resourceState) => setSelectedResourceId(resourceState.resource.id)}
+            fullWidth
+          />
+          <AnchoredOverflow.Anchor />
+        </Table.Viewport>
+      </Table.Root>
+
       <div className='flex flex-col h-2/3 overflow-hidden border-t'>
         <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
           <Tabs.List className='flex'>
@@ -142,9 +147,13 @@ export const TracingPanel = () => {
             <MetricsView resource={selectedResource?.resource} />
           </Tabs.Content>
 
-          <Tabs.Content value='logs' className='grow overflow-auto'>
-            <LogView logs={selectedResource?.logs ?? []} />
-          </Tabs.Content>
+          <Table.Root>
+            <Table.Viewport asChild>
+              <Tabs.Content ref={containerRef} value='logs' className='grow overflow-auto'>
+                <LogTable logs={selectedResource?.logs ?? []} />
+              </Tabs.Content>
+            </Table.Viewport>
+          </Table.Root>
 
           <Tabs.Content value='spans' className='grow overflow-hidden'>
             <TraceView state={state.current} resourceId={selectedResourceId} />

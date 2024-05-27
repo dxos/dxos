@@ -30,12 +30,10 @@ test.describe('HALO tests', () => {
 
   test('join new identity', async () => {
     await host.createSpace();
-    await host.createSpace();
-    await guest.createSpace();
 
     await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(3);
-      expect(await guest.getSpaceItemsCount()).to.equal(2);
+      expect(await host.getSpaceItemsCount()).to.equal(2);
+      expect(await guest.getSpaceItemsCount()).to.equal(1);
     });
 
     await host.openIdentityManager();
@@ -48,14 +46,15 @@ test.describe('HALO tests', () => {
 
     // Wait for replication to complete.
     await waitForExpect(async () => {
-      expect(await host.getSpaceItemsCount()).to.equal(3);
-      expect(await guest.getSpaceItemsCount()).to.equal(3);
+      expect(await host.getSpaceItemsCount()).to.equal(2);
+      expect(await guest.getSpaceItemsCount()).to.equal(2);
     }, 30_000);
 
-    await host.openIdentityManager();
-    await guest.openIdentityManager();
-    await waitForExpect(async () => {
-      expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
-    });
+    // TODO(wittjosiah): Display name is not currently set in this test.
+    // await host.openIdentityManager();
+    // await guest.openIdentityManager();
+    // await waitForExpect(async () => {
+    //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
+    // });
   });
 });

@@ -4,7 +4,9 @@
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise } from '@dxos/util';
+
+// TODO(burdon): Merge with successor to serialization mechanism in braneframe/types.
 
 export type MigrationContext = {
   space: Space;
