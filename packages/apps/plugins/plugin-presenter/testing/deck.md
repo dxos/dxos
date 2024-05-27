@@ -84,13 +84,29 @@ notes:
 .slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
-# KUBE
+# EDGE
 
 - Decentralized Functions
-- Triggers (cron, query, socket)
-- Messaging relay
-- ETL pipelines
+- Triggers (cron, query, WS)
+- Messaging relay and queues
+- Modular ETL pipelines
 - AI agents
+
+---
+<!--
+.slide: class="text-md" data-background="#994D1C" _data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+-->
+
+# FADE
+
+1. Federated Agent Deployment Environment
+1. Functionally Autonomous Distributed Ecosystem
+1. Flexible Autonomous Decentralized Engine
+1. Fault-tolerant Agent-driven Decentralized Execution
+1. Fully Autonomous Decentralized Entity
+1. Function Agent Decentralized Environment
+1. Federated Autonomous Distributed Execution
+1. Federated Adaptive Decentralized Engine
 
 ## Decentralized Compute
 

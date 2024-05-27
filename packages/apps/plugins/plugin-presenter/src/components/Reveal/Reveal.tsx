@@ -48,11 +48,12 @@ const styles = `
 
 export type RevealProps = {
   content: string;
+  slide?: number;
   onExit?: () => void;
 };
 
 // https://revealjs.com/react
-export const RevealPlayer = ({ content, onExit }: RevealProps) => {
+export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
   const deckDivRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<Reveal.Api | null>(null);
   useEffect(() => {
@@ -88,6 +89,9 @@ export const RevealPlayer = ({ content, onExit }: RevealProps) => {
       });
 
       await deckRef.current.initialize();
+      if (slide !== undefined) {
+        deckRef.current.slide((slide <= 0 ? deckRef.current?.getTotalSlides() + slide : slide) - 1);
+      }
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });

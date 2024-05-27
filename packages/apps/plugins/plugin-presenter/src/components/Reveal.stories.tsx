@@ -6,9 +6,12 @@ import '@dxosTheme';
 
 import React from 'react';
 
-import { RevealPlayer } from './Reveal';
 // @ts-ignore
-import CONTENT from '../../testing/slides.md?raw';
+// eslint-disable-next-line import/order
+import CONTENT from '../../testing/deck.md?raw';
+
+// eslint-disable-next-line import/order
+import { RevealPlayer } from './Reveal';
 
 // https://revealjs.com/markdown
 // https://developer.mozilla.org/en-US/docs/Web/CSS/background-position
