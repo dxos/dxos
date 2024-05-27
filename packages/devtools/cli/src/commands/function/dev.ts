@@ -14,9 +14,9 @@ import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
   DevServer,
+  FUNCTION_SCHEMA,
   type FunctionManifest,
   FunctionRegistry,
-  FunctionTrigger,
   Scheduler,
   TriggerRegistry,
 } from '@dxos/functions';
@@ -50,6 +50,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
     }
 
     await this.execWithClient(async (client) => {
+      // TODO(burdon): Standards?
+      client.addSchema(...FUNCTION_SCHEMA);
+
       // TODO(dmaretskyi): Move into system service?
       const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
@@ -84,8 +87,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
           await scheduler.register(space, { functions, triggers });
         };
 
-        client.addSchema(FunctionTrigger);
-        // TODO(burdon): Option to subscribe for new spaces.
+        // TODO(burdon): Subscribe for new spaces.
         for (const space of await this.getSpaces(client, { spaceKeys: this.flags.key, wait: true })) {
           await update(space);
         }

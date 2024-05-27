@@ -5,8 +5,9 @@
 import { Flags, ux } from '@oclif/core';
 
 import { MessageType } from '@braneframe/types';
-import { Filter } from '@dxos/client/echo';
+import { Filter, getMeta } from '@dxos/client/echo';
 import { getTypename } from '@dxos/echo-schema';
+import { omit } from '@dxos/log';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
@@ -53,7 +54,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
 
 type ObjectPrinter<T = {}> = (data: T) => string;
 
-const printObjects = (objects: any[], printer: ObjectPrinter = (data) => JSON.stringify(data)) => {
+const printObjects = (objects: any[], printer: ObjectPrinter = (data) => JSON.stringify(omit(data, '@type'))) => {
   ux.table(objects, {
     id: {
       header: 'id',
@@ -62,6 +63,13 @@ const printObjects = (objects: any[], printer: ObjectPrinter = (data) => JSON.st
     type: {
       header: 'type',
       get: (row) => getTypename(row),
+    },
+    meta: {
+      header: 'meta',
+      get: (row) =>
+        getMeta(row)
+          .keys?.map(({ source, id }) => `${source}:${id}`)
+          .join(','),
     },
     data: {
       header: 'data',

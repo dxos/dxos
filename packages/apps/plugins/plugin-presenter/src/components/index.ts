@@ -5,5 +5,6 @@
 import React from 'react';
 
 // Lazily load components for content surfaces.
-export const MarkdownSlideMain = React.lazy(() => import('./MarkdownSlideMain'));
+export const RevealMain = React.lazy(() => import('./RevealMain'));
 export const PresenterMain = React.lazy(() => import('./PresenterMain'));
+export const MarkdownSlide = React.lazy(() => import('./MarkdownSlide'));

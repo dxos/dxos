@@ -77,6 +77,9 @@ const hide = Decoration.replace({});
 const fencedCodeLine = Decoration.line({ class: mx('cm-code cm-codeblock-line') });
 const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-first') });
 const fencedCodeLineLast = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-last') });
+const commentBlockLine = fencedCodeLine;
+const commentBlockLineFirst = fencedCodeLineFirst;
+const commentBlockLineLast = fencedCodeLineLast;
 const horizontalRule = Decoration.replace({ widget: new HorizontalRuleWidget() });
 const checkedTask = Decoration.replace({ widget: new CheckboxWidget(true) });
 const uncheckedTask = Decoration.replace({ widget: new CheckboxWidget(false) });
@@ -105,6 +108,30 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
       to,
       enter: (node) => {
         switch (node.name) {
+          // CommentBlock
+          case 'CommentBlock': {
+            const editing = editingRange(state, node, focus);
+            for (const block of view.viewportLineBlocks) {
+              if (block.to < node.from) {
+                continue;
+              }
+              if (block.from > node.to) {
+                break;
+              }
+              const first = block.from <= node.from;
+              const last = block.to >= node.to && /^(\s>)*-->$/.test(state.doc.sliceString(block.from, block.to));
+              deco.add(
+                block.from,
+                block.from,
+                first ? commentBlockLineFirst : last ? commentBlockLineLast : commentBlockLine,
+              );
+              if (!editing && (first || last)) {
+                atomicDeco.add(block.from, block.to, hide);
+              }
+            }
+            break;
+          }
+
           // FencedCode > CodeMark > [CodeInfo] > CodeText > CodeMark
           case 'FencedCode': {
             const editing = editingRange(state, node, focus);
@@ -289,7 +316,6 @@ const formattingStyles = EditorView.baseTheme({
   '& .cm-codeblock-line': {
     paddingInline: '1rem !important',
   },
-
   '& .cm-codeblock-end': {
     display: 'inline-block',
     width: '100%',

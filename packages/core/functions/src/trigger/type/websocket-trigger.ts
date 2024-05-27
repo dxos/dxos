@@ -5,11 +5,12 @@
 import WebSocket from 'ws';
 
 import { sleep, Trigger } from '@dxos/async';
+import { type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { type WebsocketTrigger } from '../../types';
-import { type TriggerCallback, type TriggerContext, type TriggerFactory } from '../trigger-registry';
+import { type TriggerCallback, type TriggerFactory } from '../trigger-registry';
 
 interface WebsocketTriggerOptions {
   retryDelay: number;
@@ -22,7 +23,7 @@ interface WebsocketTriggerOptions {
  */
 export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketTriggerOptions> = async (
   ctx: Context,
-  triggerCtx: TriggerContext,
+  space: Space,
   spec: WebsocketTrigger,
   callback: TriggerCallback,
   options: WebsocketTriggerOptions = { retryDelay: 2, maxAttempts: 5 },
@@ -51,7 +52,7 @@ export const createWebsocketTrigger: TriggerFactory<WebsocketTrigger, WebsocketT
         if (event.code === 1006) {
           setTimeout(async () => {
             log.info(`reconnecting in ${options.retryDelay}s...`, { url });
-            await createWebsocketTrigger(ctx, triggerCtx, spec, callback, options);
+            await createWebsocketTrigger(ctx, space, spec, callback, options);
           }, options.retryDelay * 1_000);
         }
 

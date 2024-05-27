@@ -6,6 +6,10 @@ import { AST } from '@effect/schema';
 import * as S from '@effect/schema/Schema';
 import type { Simplify } from 'effect/Types';
 
+import { type Comparator, intersection } from '@dxos/util';
+
+import { getMeta } from './getter';
+
 export const data = Symbol.for('dxos.echo.data');
 
 export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
@@ -63,6 +67,9 @@ export type EchoReactiveObject<T> = ReactiveObject<T> & Identifiable;
 
 export const foreignKey = (source: string, id: string): ForeignKey => ({ source, id });
 export const foreignKeyEquals = (a: ForeignKey, b: ForeignKey) => a.source === b.source && a.id === b.id;
+
+export const compareForeignKeys: Comparator<ReactiveObject<any>> = (a: ReactiveObject<any>, b: ReactiveObject<any>) =>
+  intersection(getMeta(a).keys, getMeta(b).keys, foreignKeyEquals).length > 0;
 
 /**
  * Utility to split meta property from raw object.

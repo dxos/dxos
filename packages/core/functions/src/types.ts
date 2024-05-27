@@ -12,31 +12,35 @@ import { RawObject, S, TypedObject } from '@dxos/echo-schema';
  */
 export type FunctionTriggerType = 'subscription' | 'timer' | 'webhook' | 'websocket';
 
-const SubscriptionTriggerSchema = S.struct({
-  type: S.literal('subscription'),
-  // TODO(burdon): Define query DSL (from ECHO).
-  filter: S.array(
-    S.struct({
-      type: S.string,
-      props: S.optional(S.record(S.string, S.any)),
-    }),
-  ),
-  options: S.optional(
-    S.struct({
-      // Watch changes to object (not just creation).
-      deep: S.optional(S.boolean),
-      // Debounce changes (delay in ms).
-      delay: S.optional(S.number),
-    }),
-  ),
-});
+const SubscriptionTriggerSchema = S.mutable(
+  S.struct({
+    type: S.literal('subscription'),
+    // TODO(burdon): Define query DSL (from ECHO).
+    filter: S.array(
+      S.struct({
+        type: S.string,
+        props: S.optional(S.record(S.string, S.any)),
+      }),
+    ),
+    options: S.optional(
+      S.struct({
+        // Watch changes to object (not just creation).
+        deep: S.optional(S.boolean),
+        // Debounce changes (delay in ms).
+        delay: S.optional(S.number),
+      }),
+    ),
+  }),
+);
 
 export type SubscriptionTrigger = S.Schema.Type<typeof SubscriptionTriggerSchema>;
 
-const TimerTriggerSchema = S.struct({
-  type: S.literal('timer'),
-  cron: S.string,
-});
+const TimerTriggerSchema = S.mutable(
+  S.struct({
+    type: S.literal('timer'),
+    cron: S.string,
+  }),
+);
 
 export type TimerTrigger = S.Schema.Type<typeof TimerTriggerSchema>;
 
@@ -51,11 +55,13 @@ const WebhookTriggerSchema = S.mutable(
 
 export type WebhookTrigger = S.Schema.Type<typeof WebhookTriggerSchema>;
 
-const WebsocketTriggerSchema = S.struct({
-  type: S.literal('websocket'),
-  url: S.string,
-  init: S.optional(S.record(S.string, S.any)),
-});
+const WebsocketTriggerSchema = S.mutable(
+  S.struct({
+    type: S.literal('websocket'),
+    url: S.string,
+    init: S.optional(S.record(S.string, S.any)),
+  }),
+);
 
 export type WebsocketTrigger = S.Schema.Type<typeof WebsocketTriggerSchema>;
 
@@ -78,17 +84,20 @@ export class FunctionDef extends TypedObject({
   uri: S.string,
   description: S.optional(S.string),
   route: S.string,
-  // TODO(burdon): NPM/GitHub/Docker/CF URL?
   handler: S.string,
 }) {}
 
+/**
+ * Function trigger.
+ */
 export class FunctionTrigger extends TypedObject({
   typename: 'dxos.org/type/FunctionTrigger',
   version: '0.1.0',
 })({
+  enabled: S.optional(S.boolean),
   function: S.string.pipe(S.description('Function URI.')),
-  // Context is merged into the event data passed to the function.
-  meta: S.optional(S.object),
+  // The `meta` property is merged into the event data passed to the function.
+  meta: S.optional(S.mutable(S.any)),
   spec: TriggerSpecSchema,
 }) {}
 
@@ -101,3 +110,6 @@ export const FunctionManifestSchema = S.struct({
 });
 
 export type FunctionManifest = S.Schema.Type<typeof FunctionManifestSchema>;
+
+// TODO(burdon): Standards?
+export const FUNCTION_SCHEMA = [FunctionDef, FunctionTrigger];

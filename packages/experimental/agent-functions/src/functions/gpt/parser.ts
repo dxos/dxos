@@ -8,7 +8,7 @@ import { safeParseJson } from '@dxos/util';
 export type ParseResult = {
   timestamp: string;
   type: string;
-  kind?: 'fenced'; // TODO(burdon): ???
+  kind?: 'fenced';
   pre?: string;
   post?: string;
   content: string;

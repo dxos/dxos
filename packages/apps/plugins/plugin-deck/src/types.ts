@@ -3,18 +3,20 @@
 //
 
 import type {
-  LayoutProvides,
-  SettingsProvides,
-  IntentResolverProvides,
   GraphBuilderProvides,
+  IntentResolverProvides,
+  LayoutProvides,
+  LocationProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
-  LocationProvides,
 } from '@dxos/app-framework';
 
 export type DeckSettingsProps = {
   showFooter: boolean;
+  customSlots: boolean;
   enableNativeRedirect: boolean;
+  deck: boolean;
 };
 
 export type DeckPluginProvides = SurfaceProvides &
