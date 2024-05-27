@@ -40,6 +40,7 @@ const styles = `
     list-style: "- ";
   }
   .reveal blockquote p {
+    text-align: center;
     font-weight: 100;
     padding: 32px;
   }

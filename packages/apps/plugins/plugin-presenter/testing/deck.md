@@ -4,22 +4,28 @@
 
 ![img](https://dxos.org/images/logo/dxos-logotype-white.svg)
 
-Join our Discord <!-- .element: class="!text-center" -->
-<br>
-[dxos.org](https://dxos.org)
+Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 <br>
 [x.com/dxos_org](https://x.com/dxos_org)
-
-notes:
-- our mission is to enable developers to build commercially competitive applications
-- set out to investigate what it would take to build a fully decentralized platform
+<br>
+[dxos.org/discord](https://dxos.org/discord)
 
 ---
 <!-- 
 .slide: data-background="#151515"
 -->
 
-> What is an Operating System?
+## Mission Statement
+<!-- .element: class="!text-center !p-0" -->
+
+> To enable open source developers to build «&nbsp;commercially-competitive&nbsp;» privacy-preserving applications.
+
+---
+<!-- 
+.slide: data-background="#151515"
+-->
+
+> What is a Decentralized Operating System?
 
 1. Storage
 2. Access control
@@ -66,35 +72,37 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#A0153E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # MESH
 
-- P2P Network
+- P2P networks
 - WebRTC + Web socket
-- Encrypted
+- Signaling + Discovery
 - Private key exchange
-- Signaling
+- Encrypted data sync
 
 ## Resilient Networks
 
 ---
 <!-- 
-.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#A0153E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # EDGE
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
-- Messaging relay and queues
 - Modular ETL pipelines
-- AI agents
+- Universal indexing and search
+- Local-first AI agents
+
+## Decentralized Compute
 
 ---
 <!--
-.slide: class="text-md" data-background="#994D1C" _data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-visibility="hidden"
 -->
 
 # FADE
