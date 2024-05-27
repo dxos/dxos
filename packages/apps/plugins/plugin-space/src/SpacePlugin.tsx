@@ -374,11 +374,7 @@ export const SpacePlugin = ({
               );
             }
             case 'navbar-start': {
-              const space =
-                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
-                  ? getSpace(data.activeNode.data)
-                  : undefined;
-              return space ? <PersistenceStatus db={space.db} /> : null;
+              return undefined;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object)) {
