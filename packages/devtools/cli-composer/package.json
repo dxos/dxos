@@ -1,6 +1,7 @@
 {
   "name": "@dxos/cli-composer",
   "version": "0.5.2",
+  "private": true,
   "description": "DXOS Composer CLI",
   "keywords": [
     "dxos",
@@ -101,10 +102,7 @@
     "@types/react-dom": "^18.0.6"
   },
   "engines": {
-    "node": ">=12.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
+    "node": ">=18.0.0"
   },
   "oclif": {
     "bin": "dx",
