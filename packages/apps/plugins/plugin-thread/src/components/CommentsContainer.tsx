@@ -31,10 +31,7 @@ export type ThreadsContainerProps = Omit<
 export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
-    <div
-      role='none'
-      className='flex items-center'
-    >
+    <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
         <Quotes {...plankHeadingIconProps} />
       </PlankHeading.Button>

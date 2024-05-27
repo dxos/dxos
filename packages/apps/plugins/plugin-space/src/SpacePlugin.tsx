@@ -51,7 +51,6 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
-  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,

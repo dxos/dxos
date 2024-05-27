@@ -26,10 +26,7 @@ import { getMessageMetadata } from '../util';
 export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   const { t } = useTranslation(THREAD_PLUGIN);
   return (
-    <div
-      role='none'
-      className='flex items-center'
-    >
+    <div role='none' className='flex items-center'>
       <PlankHeading.Button attendableId={attendableId}>
         <Chat {...plankHeadingIconProps} />
       </PlankHeading.Button>
