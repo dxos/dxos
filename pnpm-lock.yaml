@@ -5716,6 +5716,9 @@ importers:
 
   packages/core/echo/echo-schema:
     dependencies:
+      '@dxos/debug':
+        specifier: workspace:*
+        version: link:../../../common/debug
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../echo-protocol
