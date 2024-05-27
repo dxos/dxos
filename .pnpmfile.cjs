@@ -27,6 +27,14 @@ function lockfileWarning() {
 lockfileWarning();
 
 function readPackage(packageJson, context) {
+  // Ignore all AWS peers.
+  const peerDependencies = Object.keys(packageJson.peerDependencies ?? {});
+  for (const dep of peerDependencies) {
+    if (dep.startsWith('@aws-sdk/') || dep.startsWith('@aws-crypto/')) {
+      delete packageJson.peerDependencies[dep];
+    }
+  }
+
   switch (packageJson.name) {
     // Align on single version of buffer polyfill.
     case '@sammacbeth/random-access-idb-mutable-file':
