@@ -25,6 +25,6 @@ export const DEFAULT_REDIS_TCP_CONNECTION: NetConnectOpts = {
   family: 4,
 };
 
-export const DEFAULT_REDIS_OPTIONS = !isNode()
+export const DEFAULT_REDIS_OPTIONS: RedisOptions = !isNode()
   ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions)
   : { port: REDIS_PORT };
