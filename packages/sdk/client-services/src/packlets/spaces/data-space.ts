@@ -387,7 +387,11 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        await this._echoHost.openSpaceRoot(handle.url);
+        if (!this._echoHost.roots.has(handle.documentId)) {
+          await this._echoHost.openSpaceRoot(handle.url);
+        } else {
+          log.warn('echo database root already exists', { space: this.key, rootUrl });
+        }
       } catch (err) {
         if (err instanceof ContextDisposedError) {
           return;

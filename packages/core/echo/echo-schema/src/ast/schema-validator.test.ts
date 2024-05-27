@@ -133,7 +133,11 @@ describe('schema-validator', () => {
     test('record', () => {
       const schema = S.mutable(
         S.struct({
-          meta: S.optional(S.mutable(S.record(S.string, S.any))),
+          meta: S.optional(S.mutable(S.any)),
+          // NOTE: S.record only supports shallow values.
+          // https://www.npmjs.com/package/@effect/schema#mutable-records
+          // meta: S.optional(S.mutable(S.record(S.string, S.any))),
+          // meta: S.optional(S.mutable(S.object)),
         }),
       );
 
@@ -141,6 +145,12 @@ describe('schema-validator', () => {
         const object = create(schema, {});
         (object.meta ??= {}).test = 100;
         expect(object.meta.test).to.eq(100);
+      }
+
+      {
+        const object = create(schema, {});
+        object.meta = { test: { value: 300 } };
+        expect(object.meta.test.value).to.eq(300);
       }
 
       {

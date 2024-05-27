@@ -47,7 +47,7 @@
     "@vuepress/plugin-search": "2.0.0-rc.0",
     "change-case": "^4.1.2",
     "codesandbox-import-utils": "^2.2.3",
-    "eslint": "^8.49.0",
+    "eslint": "^8.56.0",
     "front-matter": "^4.0.2",
     "gray-matter": "^4.0.3",
     "markdown-it": "^13.0.2",

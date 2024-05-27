@@ -78,7 +78,8 @@ dx composer import ./testing/data/functions.json
 
 ## Email
 
-https://hub.dxos.network/admin/email
+- https://hub.dxos.network/admin/email
+- https://hub.dxos.network/api/mailbox/hello@dxos.network
 
 ```bash
 cd ~/Code/dxos/w3/packages/hub
