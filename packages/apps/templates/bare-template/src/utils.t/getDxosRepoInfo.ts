@@ -53,11 +53,8 @@ const tryReadPackageJson = async (dir: string): Promise<object | undefined> => {
 export const getDxosRepoInfo = async () => {
   let dxosPackage: any | undefined;
   let dir = __dirname;
-  console.log('getDxosRepoInfo');
-  console.log(dir);
   while (!!dir && dir !== '/' && !(dxosPackage = await tryReadPackageJson(dir))) {
     dir = path.resolve(dir, '..');
-    console.log(dir);
   }
   if (!dxosPackage) {
     return { isDxosMonorepo: false as const };

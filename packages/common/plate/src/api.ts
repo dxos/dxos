@@ -18,6 +18,7 @@ import {
 import { type FileSlots, FileEffect } from './util/file';
 import { imports, type Imports } from './util/imports';
 import { safeLoadModule } from './util/loadModule';
+import { error } from './util/logger';
 import { type Optional } from './util/optional';
 import { pretty } from './util/pretty';
 import {
@@ -33,7 +34,6 @@ import {
   type Slot,
 } from './util/template';
 import { type InquirableZodType } from './util/zodInquire';
-import { error } from './util/logger';
 
 export type Group<I = any> = (context: Options<I, any>) => Template<I, any>[];
 
