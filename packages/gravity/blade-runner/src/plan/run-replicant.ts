@@ -7,20 +7,17 @@ import { isNode } from '@dxos/util';
 
 import { type RunParams } from './run-process';
 import { type ReplicantParams } from './spec';
-import { ReplicantEnvImpl, ReplicantRegistry, type RedisOptions } from '../env';
-import { DEFAULT_WEBSOCKET_ADDRESS, WebSocketConnector } from '../redis';
+import { ReplicantEnvImpl, ReplicantRegistry } from '../env';
+import { DEFAULT_REDIS_OPTIONS } from '../redis';
 
 /**
  * Entry point for process running in agent mode.
  */
-export const runReplicant = async ({ replicantParams, options }: RunParams) => {
+export const runReplicant = async ({ replicantParams }: RunParams) => {
   try {
     initLogProcessor(replicantParams);
 
-    const env: ReplicantEnvImpl = new ReplicantEnvImpl(
-      replicantParams,
-      !isNode() ? ({ Connector: WebSocketConnector, address: DEFAULT_WEBSOCKET_ADDRESS } as RedisOptions) : undefined,
-    );
+    const env: ReplicantEnvImpl = new ReplicantEnvImpl(replicantParams, DEFAULT_REDIS_OPTIONS);
     const replicant = new (ReplicantRegistry.instance.get(replicantParams.replicantClass))(env);
 
     env.setReplicant(replicant);
