@@ -9,6 +9,9 @@ import { type Any } from '@dxos/codec-protobuf';
 import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
+// TODO(mykola): createRpcPort(createRedisReadableStream(...), createRedisWritableStream(...))
+//               Consider WebStreams to be the base primitive as they are the most flexible.
+//               We can implement all low-level integration in terms of WebStreams and then derive things like RpcPort from them.
 export const createRedisRpcPort = ({
   sendClient,
   receiveClient,
