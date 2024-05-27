@@ -37,10 +37,10 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet, assignDeep } from '@dxos/util';
 
+import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { NotarizationPlugin } from './notarization-plugin';
-import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
@@ -387,7 +387,11 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        await this._echoHost.openSpaceRoot(handle.url);
+        if (!this._echoHost.roots.has(handle.documentId)) {
+          await this._echoHost.openSpaceRoot(handle.url);
+        } else {
+          log.warn('echo database root already exists', { space: this.key, rootUrl });
+        }
       } catch (err) {
         if (err instanceof ContextDisposedError) {
           return;
