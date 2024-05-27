@@ -1,0 +1,71 @@
+on:
+  pull_request_target:
+    types: [edited, opened, synchronize, reopened]
+
+name: publish-dry-run
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8.15.8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Bump Versions
+        run: node .github/workflows/scripts/bump-version.js main
+
+      - name: Build
+        run: pnpm nx run-many --target=build
+        env:
+          # NOTE: @dxos/cli is the only thing consuming these at build time, the apps all consume them at bundle.
+          NODE_ENV: production
+          DX_ENVIRONMENT: dev
+          DX_IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
+          DX_SENTRY_DESTINATION: ${{ secrets.CLI_SENTRY_DESTINATION }}
+          DX_TELEMETRY_API_KEY: ${{ secrets.CLI_SEGMENT_API_KEY }}
+
+      - name: Bundle Shell
+        run: pnpm nx bundle shell
+        env:
+          NODE_ENV: production
+          DX_ENVIRONMENT: dev
+
+      - name: Publish to NPM
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
+          pnpm --filter-prod="./packages/**" publish --no-git-checks --tag=main --dry-run
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
