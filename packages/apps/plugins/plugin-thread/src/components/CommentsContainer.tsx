@@ -33,7 +33,7 @@ export const CommentsHeading = ({ attendableId }: { attendableId?: string }) => 
   return (
     <div
       role='none'
-      className='grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center border-be separator-separator -mbe-px'
+      className='flex items-center'
     >
       <PlankHeading.Button attendableId={attendableId}>
         <Quotes {...plankHeadingIconProps} />
