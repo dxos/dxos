@@ -23,8 +23,8 @@ import { EchoReplicant } from '../replicants/echo-replicant';
  * |                       | |
  * |  Replicates space     | +-+   N "client" replicants
  * |  from "server"        | | |
- * +-+---------------------+ | |
- *   +-+---------------------+ |
+ * +-----------------------+ | |
+ *   +-----------------------+ |
  *     +-----------------------+
  */
 export type ReplicationTestSpec = {
@@ -70,7 +70,7 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     return {
       platform: 'chromium',
 
-      clientReplicants: 10,
+      clientReplicants: 1,
 
       numberOfObjects: 100,
       objectSizeLimit: 2000,

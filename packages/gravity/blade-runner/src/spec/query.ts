@@ -54,13 +54,11 @@ export class QueryTestPlan implements TestPlan<QueryTestSpec, QueryTestResult> {
     return {
       platform: 'chromium',
 
-      // 50, 200, 500, 1000, 2000
-      numberOfObjects: 1,
+      numberOfObjects: 100,
       objectSizeLimit: 2000,
-
-      // 100, 200, 400, 1000, 1500, 2000
-      numberOfInsertions: 2000,
+      numberOfInsertions: 1000,
       insertionSize: 10,
+
       queryResolution: 'index',
     };
   }
