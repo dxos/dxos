@@ -29,7 +29,7 @@ export class TestProcessorBuilder {
 
     this._space = await this._client.spaces.create();
 
-    this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: '/tmp/dxos/testing/agent/functions/embedding',
       apiKey: getKey(this._client.config, 'openai.com/api_key'),
     });

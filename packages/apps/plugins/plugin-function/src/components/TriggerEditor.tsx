@@ -295,12 +295,12 @@ const TriggerSpec = ({ space, spec }: TriggerSpecProps) => {
 // Trigger meta.
 //
 
-const TriggerMeta = ({ trigger }: { trigger: Partial<FunctionTrigger> }) => {
+const TriggerMeta = ({ trigger }: { trigger: FunctionTrigger }) => {
   const meta = useMemo(() => (trigger?.function ? metaExtensions[trigger.function] : undefined), [trigger.function]);
 
   const Component = meta?.component;
   if (Component && trigger.meta) {
-    return <Component meta={trigger.meta as any} />;
+    return <Component meta={trigger.meta} />;
   }
 
   return null;
@@ -314,7 +314,9 @@ type MetaExtension<T> = {
 
 // TODO(burdon): Possible to build form from function meta schema.
 
-const ChessMeta = ({ meta }: MetaProps<{ level?: number }>) => {
+type ChessMeta = { level?: number };
+
+const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
   return (
     <>
       <InputRow label='Level'>
@@ -329,7 +331,9 @@ const ChessMeta = ({ meta }: MetaProps<{ level?: number }>) => {
   );
 };
 
-const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
+type EmailWorkerMeta = { account?: string };
+
+const EmailWorkerMetaProps = ({ meta }: MetaProps<EmailWorkerMeta>) => {
   return (
     <>
       <InputRow label='Account'>
@@ -343,12 +347,19 @@ const EmailWorkerMeta = ({ meta }: MetaProps<{ account?: string }>) => {
   );
 };
 
-const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptType }>) => {
+type ChainPromptMeta = { prompt?: ChainPromptType };
+
+const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) => {
   const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
   return (
     <>
       <InputRow label='Presets'>
-        <ChainPresets presets={chainPresets} onSelect={(preset) => (meta.prompt = preset.prompt())} />
+        <ChainPresets
+          presets={chainPresets}
+          onSelect={(preset) => {
+            meta.prompt = preset.prompt();
+          }}
+        />
       </InputRow>
       {meta.prompt && (
         <InputRow label='Prompt'>
@@ -362,18 +373,18 @@ const ChainPromptMeta = ({ meta, triggerId }: MetaProps<{ prompt?: ChainPromptTy
 const metaExtensions: Record<string, MetaExtension<any>> = {
   'dxos.org/function/chess': {
     initialValue: () => ({ level: 2 }),
-    component: ChessMeta,
-  },
+    component: ChessMetaProps,
+  } satisfies MetaExtension<ChessMeta>,
 
   'dxos.org/function/email-worker': {
     initialValue: () => ({ account: 'hello@dxos.network' }),
-    component: EmailWorkerMeta,
-  },
+    component: EmailWorkerMetaProps,
+  } satisfies MetaExtension<EmailWorkerMeta>,
 
   'dxos.org/function/gpt': {
     initialValue: () => ({ prompt: undefined }),
-    component: ChainPromptMeta,
-  },
+    component: ChainPromptMetaProps,
+  } satisfies MetaExtension<ChainPromptMeta>,
 };
 
 //

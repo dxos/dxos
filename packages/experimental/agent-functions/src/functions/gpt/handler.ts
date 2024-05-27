@@ -79,7 +79,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   // Process messages.
   if (messages.length > 0) {
-    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
+    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(client.config, 'openai.com/api_key'),
     });

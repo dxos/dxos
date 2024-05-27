@@ -81,7 +81,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#FF204E" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#994D1C" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
 # KUBE
@@ -99,6 +99,7 @@ notes:
 .slide: data-background-transition="zoom" 
 -->
 
-# Composer <!-- .element: class="!text-center !p-0" -->
+# Composer 
+<!-- .element: class="!text-center !p-0" -->
 
 > *Super App*: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
