@@ -11,7 +11,7 @@ import { runInContext } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import { REDIS_PORT } from './util';
+import { DEFAULT_REDIS_TCP_CONNECTION, DEFAULT_WEBSOCKET } from './defaults';
 
 export type WebSocketRedisProxyParams = {
   /**
@@ -19,19 +19,6 @@ export type WebSocketRedisProxyParams = {
    */
   redisTCPConnection?: NetConnectOpts;
   websocketServer?: WebSocket.ServerOptions;
-};
-
-export const DEFAULT_WEBSOCKET: WebSocket.ServerOptions = {
-  host: 'localhost',
-  port: 8080,
-};
-
-export const DEFAULT_WEBSOCKET_ADDRESS = `ws://${DEFAULT_WEBSOCKET.host}:${DEFAULT_WEBSOCKET.port}`;
-
-export const DEFAULT_REDIS_TCP_CONNECTION: NetConnectOpts = {
-  host: 'localhost',
-  port: REDIS_PORT,
-  family: 4,
 };
 
 export class WebSocketRedisProxy {

@@ -55,6 +55,7 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
 
         if (!doc.objects?.[objectId]) {
           yield [];
+          continue;
         }
 
         // Upgrade V0 object pointers to V1.
