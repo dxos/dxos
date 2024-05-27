@@ -36,18 +36,21 @@ export const getTsConfig = async (rootDir: string) => {
   return JSON.parse(content);
 };
 
-export const getDxosRepoInfo = async () => {
-  const tryReadPackageJson = async (dir: string): Promise<object | undefined> => {
-    const fileName = path.resolve(dir, 'package.json');
-    if (!(await exists(fileName))) {
-      return;
-    }
+const tryReadPackageJson = async (dir: string): Promise<object | undefined> => {
+  const fileName = path.resolve(dir, 'package.json');
+  if (!(await exists(fileName))) {
+    return;
+  }
+  try {
     const contents = JSON.parse(await fs.readFile(fileName, 'utf-8'));
     if (contents?.name !== '@dxos/dxos') {
       return;
     }
     return contents;
-  };
+  } catch (err) {}
+};
+
+export const getDxosRepoInfo = async () => {
   let dxosPackage: any | undefined;
   let dir = __dirname;
   while (!!dir && dir !== '/' && !(dxosPackage = await tryReadPackageJson(dir))) {

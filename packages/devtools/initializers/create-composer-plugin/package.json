@@ -1,7 +1,7 @@
 {
-  "name": "@dxos/create-app-plugin",
+  "name": "@dxos/create-composer-plugin",
   "version": "0.5.2",
-  "description": "Creates a project for prototyping a DXOS app-framework plugin.",
+  "description": "Creates a project for prototyping a DXOS Composer plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",

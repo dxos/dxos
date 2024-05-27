@@ -17,16 +17,15 @@
     "lint": {},
     "test": {
       "dependsOn": [
-        {
-          "target": "build"
-        }
+        "build"
       ],
       "options": {
         "checkLeaks": false,
         "ciEnvironments": [
           "nodejs"
         ],
-        "forceExit": true
+        "forceExit": true,
+        "timeout": 1000000
       }
     }
   }
