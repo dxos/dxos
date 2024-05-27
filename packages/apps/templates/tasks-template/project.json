@@ -25,7 +25,7 @@
           "nodejs"
         ],
         "forceExit": true,
-        "timeout": 1000000,
+        "timeout": 1000000
       }
     }
   }
