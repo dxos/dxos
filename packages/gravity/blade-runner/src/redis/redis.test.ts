@@ -21,7 +21,7 @@ import { createRedisReadableStream, createRedisRpcPort, createRedisWritableStrea
  *               `redis-server --port 6378` to start a Redis server on port 6378.
  * TODO(mykola): Mock Redis server.
  */
-describe('Redis', () => {
+describe.skip('Redis', () => {
   test('two redis client can exchange messages', async () => {
     const client = await setupRedisClient();
     const server = await setupRedisClient();
