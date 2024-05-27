@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Low-level React components for DXOS, applying a theme to a core group of primitives",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
