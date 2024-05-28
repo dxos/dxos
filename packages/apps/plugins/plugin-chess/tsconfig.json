@@ -26,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/display-name"
+    },
+    {
       "path": "../../../common/invariant"
     },
     {
