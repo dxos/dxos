@@ -296,9 +296,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   const currentPosition = objectIdParts.indexOf(data.object.id);
 
                   if (currentPosition > 0) {
-                    return (
-                      <ThreadArticle thread={data.object} context={{ object: objectIdParts[currentPosition - 1] }} />
-                    );
+                    const objectToTheLeft = objectIdParts[currentPosition - 1];
+                    return <ThreadArticle thread={data.object} context={{ object: objectToTheLeft }} />;
                   }
                 }
 

@@ -31,8 +31,10 @@ export class Engine {
       return false;
     }
 
-    this._ai.aiMove(this._level);
-    this._state.load(this._ai.exportFEN());
+    const move = this._ai.aiMove(this._level);
+    const [[from, to]] = Object.entries(move).map(([from, to]) => [from.toLowerCase(), to.toLowerCase()] as const);
+    this._state.move({ from, to });
+
     return true;
   }
 
