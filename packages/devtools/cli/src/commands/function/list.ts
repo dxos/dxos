@@ -12,6 +12,27 @@ import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
 
+export default class List extends BaseCommand<typeof List> {
+  static override enableJsonFlag = true;
+  static override description = 'List functions.';
+
+  async run(): Promise<any> {
+    return await this.execWithClient(async (client) => {
+      // TODO(dmaretskyi): Move into system service?
+      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
+        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
+      );
+
+      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
+      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
+      const { functions } = manifest;
+      printFunctions(functions);
+      return manifest;
+    });
+  }
+}
+
 // TODO(burdon): List stats.
 export const printFunctions = (functions: FunctionManifest['functions'], flags = {}) => {
   ux.table(
@@ -36,24 +57,3 @@ export const printFunctions = (functions: FunctionManifest['functions'], flags =
     },
   );
 };
-
-export default class List extends BaseCommand<typeof List> {
-  static override enableJsonFlag = true;
-  static override description = 'List functions.';
-
-  async run(): Promise<any> {
-    return await this.execWithClient(async (client) => {
-      // TODO(dmaretskyi): Move into system service?
-      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
-      const functionsConfig = config.values.runtime?.agent?.plugins?.find(
-        (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
-      );
-
-      const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
-      const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-      const { functions } = manifest;
-      printFunctions(functions);
-      return manifest;
-    });
-  }
-}
