@@ -107,7 +107,7 @@ export const subscriptionHandler = <TMeta>(
 };
 
 // TODO(burdon): Evolve types as part of function metadata.
-export const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
+const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
   const registry = space.db.graph.runtimeSchemaRegistry;
   for (const type of [...types, TextV0Type]) {
     if (!registry.hasSchema(type)) {
