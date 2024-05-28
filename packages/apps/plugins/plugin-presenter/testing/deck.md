@@ -1,5 +1,5 @@
 <!--
-.slide: data-background-video="https://dxos.network/DXOS.mp4"
+.slide: data-background-video="https://dxos.network/DXOS.mp4" data-background-video-loop="true"
 -->
 
 
@@ -71,7 +71,7 @@ notes:
 - Decentralized identity
 - Access control
 - Device management
-- Recovery
+- Account recovery
 - Credentials + key management
 
 ## Identity & Security
@@ -100,8 +100,8 @@ notes:
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
-- Modular ETL pipelines
 - Universal indexing and search
+- Modular ETL pipelines
 - Local-first AI agents
 
 ## Decentralized Compute
@@ -114,13 +114,13 @@ notes:
 # FADE
 
 1. Federated Agent Deployment Environment
-1. Functionally Autonomous Distributed Ecosystem
-1. Flexible Autonomous Decentralized Engine
-1. Fault-tolerant Agent-driven Decentralized Execution
-1. Fully Autonomous Decentralized Entity
-1. Function Agent Decentralized Environment
-1. Federated Autonomous Distributed Execution
-1. Federated Adaptive Decentralized Engine
+2. Functionally Autonomous Distributed Ecosystem
+3. Flexible Autonomous Decentralized Engine
+4. Fault-tolerant Agent-driven Decentralized Execution
+5. Fully Autonomous Decentralized Entity
+6. Function Agent Decentralized Environment
+7. Federated Autonomous Distributed Execution
+8. Federated Adaptive Decentralized Engine
 
 ## Decentralized Compute
 

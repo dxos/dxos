@@ -7,7 +7,7 @@ declare module 'js-chess-engine' {
   export class Game {
     constructor(state?: string);
     move(from: string, to: string): void;
-    aiMove(level?: number): { from: string, to: string };
+    aiMove(level?: number): Record<string, string>;
     exportFEN(): string;
   }
 }
