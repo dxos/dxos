@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools-extension",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
