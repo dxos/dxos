@@ -4,7 +4,7 @@
 
 import { join } from 'node:path';
 
-import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
+import { ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -15,18 +15,19 @@ import { nonNullable } from '@dxos/util';
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
 import { type ChainVariant, createChainResources } from '../../chain';
-import { getKey, registerTypes } from '../../util';
+import { getKey } from '../../util';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
 type Meta = { prompt?: ChainPromptType };
+
+const types = [ChainPromptType, MessageType, ThreadType];
 
 // TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;
   const { space, objects, meta } = event.data;
   invariant(space);
-  registerTypes(space);
   if (!objects) {
     return;
   }
@@ -122,4 +123,4 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }),
     );
   }
-});
+}, types);
