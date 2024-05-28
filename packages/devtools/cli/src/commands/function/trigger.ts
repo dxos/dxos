@@ -38,7 +38,7 @@ export const printTriggers = (functions: FunctionTrigger[], flags = {}) => {
 
 export default class Trigger extends BaseCommand<typeof Trigger> {
   static override enableJsonFlag = true;
-  static override description = 'List triggers.';
+  static override description = 'List and manage triggers.';
   static override flags = {
     ...BaseCommand.flags,
     id: Flags.string({ description: 'Trigger id' }),
