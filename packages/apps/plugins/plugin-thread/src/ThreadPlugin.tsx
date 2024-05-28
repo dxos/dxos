@@ -21,7 +21,6 @@ import {
   resolvePlugin,
   parseGraphPlugin,
   firstMainId,
-  activeIds,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
   isActiveParts,
