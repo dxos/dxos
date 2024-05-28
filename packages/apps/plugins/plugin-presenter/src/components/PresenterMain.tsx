@@ -46,14 +46,14 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
-      ...(running && isDeckModel
-        ? []
-        : [
+      ...(!running && isDeckModel
+        ? [
             {
               action: NavigationAction.CLOSE,
               data: { activeParts: { fullScreen: fullyQualifiedId(stack) } },
             },
-          ]),
+          ]
+        : []),
     ]);
   };
 
