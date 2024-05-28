@@ -12,7 +12,7 @@ import { initDiagnostics } from './diagnostics';
 import { type ReplicantEnv } from './interface';
 import { ReplicantRpcServer } from './replicant-rpc-server';
 import { type ReplicantParams } from '../plan';
-import { REDIS_PORT, createRedisRpcPort } from '../redis';
+import { createRedisRpcPort } from '../redis';
 
 export { type RedisOptions };
 
@@ -43,13 +43,13 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
 
   constructor(
     public params: ReplicantParams,
-    public redisOptions?: RedisOptions,
+    public redisOptions: RedisOptions,
   ) {
     super();
-    this._redis = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this._redisSub = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this._rpcRequests = new Redis(redisOptions ?? { port: REDIS_PORT });
-    this._rpcResponses = new Redis(redisOptions ?? { port: REDIS_PORT });
+    this._redis = new Redis(redisOptions);
+    this._redisSub = new Redis(redisOptions);
+    this._rpcRequests = new Redis(redisOptions);
+    this._rpcResponses = new Redis(redisOptions);
 
     this._redis.on('error', (err) => log.info('Redis Client Error', err));
     this._redisSub.on('error', (err) => log.info('Redis Client Error', err));

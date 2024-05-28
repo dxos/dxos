@@ -51,7 +51,6 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
-  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -374,11 +373,7 @@ export const SpacePlugin = ({
               );
             }
             case 'navbar-start': {
-              const space =
-                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
-                  ? getSpace(data.activeNode.data)
-                  : undefined;
-              return space ? <PersistenceStatus db={space.db} /> : null;
+              return null;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object)) {

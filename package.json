@@ -1,6 +1,6 @@
 {
   "name": "@dxos/dxos",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "description": "A decentralized alternative to the commercial cloud for privacy preserving software.",
   "homepage": "https://dxos.org",
@@ -146,7 +146,7 @@
   },
   "engines": {
     "node": ">=18.0.0",
-    "pnpm": "^8.15.4"
+    "pnpm": "^8.0.0"
   },
   "pnpm": {
     "overrides": {

@@ -1,13 +1,13 @@
-# @dxos/create-app-plugin
+# @dxos/create-composer-plugin
 
-Creates a project for prototyping a DXOS app-framework plugin.
+Creates a project for prototyping a DXOS Composer plugin.
 
 ## Usage
 
 Use with npm init like this:
 
 ```bash
-npm init @dxos/app-plugin@latest
+npm init @dxos/composer-plugin@latest
 ```
 
 ## DXOS Resources
