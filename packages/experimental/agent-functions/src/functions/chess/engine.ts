@@ -34,7 +34,6 @@ export class Engine {
     // Convert { [from]: to } to { from, to }
     const [[from, to]] = Object.entries(this._ai.aiMove(this._level));
     this._state.move({ from: from.toLowerCase(), to: to.toLowerCase() });
-
     return true;
   }
 
