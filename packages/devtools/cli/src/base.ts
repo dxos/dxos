@@ -137,6 +137,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['t'],
     }),
 
+    // TODO(burdon): Standardize across all commands.
     // TODO(burdon): Set `allowNo` and invert.
     'no-wait': Flags.boolean({
       description: 'Do not wait for space to be ready.',
