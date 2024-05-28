@@ -28,7 +28,7 @@
     "use-subscription": "^1.8.0"
   },
   "devDependencies": {
-    "@testing-library/dom": "^8.17.1",
+    "@testing-library/dom": "^10.1.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "@types/react": "^18.0.21",
