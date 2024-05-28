@@ -2,24 +2,37 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GameType } from '@dxos/chess-app/types';
+import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 import { Engine } from './engine';
-import { registerTypes } from '../../util';
 
-type Meta = { level?: number };
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.struct({
+    level: S.optional(S.number.pipe(S.description('AI strength.'))),
+    side: S.optional(S.string),
+  }),
+);
 
+export type Meta = S.Schema.Type<typeof MetaSchema>;
+
+/**
+ * Runtime types.
+ */
+export const types = [GameType];
+
+/**
+ * Chess function handler.
+ */
 export const handler = subscriptionHandler<Meta>(async ({ event }) => {
-  const { meta: { level = 1 } = {}, space, objects } = event.data;
-  invariant(space);
-  registerTypes(space);
-
+  // TODO(burdon): Get side from object.
+  const { meta: { level = 1, side = 'b' } = {}, objects } = event.data;
   for (const game of objects ?? []) {
-    const engine = new Engine({ pgn: game.pgn ?? '', level });
-
-    // TODO(burdon): Only trigger if has player credential (identity from context).
-    const side = 'b';
+    const engine = new Engine({ pgn: game.pgn, level });
     if (!engine.state.isGameOver() && engine.state.turn() === side) {
       engine.move();
       engine.print();
@@ -28,4 +41,4 @@ export const handler = subscriptionHandler<Meta>(async ({ event }) => {
       game.pgn = engine.state.pgn();
     }
   }
-});
+}, types);

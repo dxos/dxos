@@ -22,7 +22,7 @@ const defaultEntry: LogEntry = { level: LogLevel.DEBUG, message: '', timestamp: 
 const shortFile = (file?: string) => file?.split('/').slice(-1).join('/');
 
 const colors: { [index: number]: string } = {
-  [LogLevel.TRACE]: 'text-gray-700',
+  [LogLevel.TRACE]: 'text-neutral-700',
   [LogLevel.DEBUG]: 'text-green-700',
   [LogLevel.INFO]: 'text-blue-700',
   [LogLevel.WARN]: 'text-orange-700',
