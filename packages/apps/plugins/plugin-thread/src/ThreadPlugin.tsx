@@ -458,27 +458,30 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   doc.comments = [{ thread, cursor }];
                 }
                 void intentPlugin?.provides.intent.dispatch([
+                  ...(isDeckModel
+                    ? [
+                        {
+                          action: NavigationAction.OPEN,
+                          data: {
+                            activeParts: {
+                              complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                            },
+                          },
+                        },
+                      ]
+                    : []),
                   {
                     action: ThreadAction.SELECT,
                     data: { current: thread.id, threads: { [thread.id]: location?.top }, focus: true },
                   },
-                  isDeckModel
-                    ? {
-                        action: NavigationAction.OPEN,
-                        data: {
-                          activeParts: {
-                            complementary: `${doc.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                          },
-                        },
-                      }
-                    : {
-                        action: LayoutAction.SET_LAYOUT,
-                        data: {
-                          element: 'complementary',
-                          subject: doc,
-                          state: true,
-                        },
-                      },
+                  {
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'complementary',
+                      subject: doc,
+                      state: true,
+                    },
+                  },
                 ]);
 
                 return thread.id;
