@@ -6,6 +6,7 @@ import { CaretRight, Plus } from '@phosphor-icons/react';
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
+import { useNetworkStatus } from '@dxos/react-client/mesh';
 import { Button, List, useTranslation } from '@dxos/react-ui';
 import { descriptionText, getSize, mx } from '@dxos/react-ui-theme';
 
@@ -20,6 +21,7 @@ export const DeviceList = ({
   onClickJoinExisting,
 }: DeviceListProps) => {
   const { t } = useTranslation('os');
+  const { swarm: connectionState } = useNetworkStatus();
   return (
     <>
       <h2 className={mx(descriptionText, 'text-center mbs-4')}>{t('devices heading')}</h2>
@@ -31,7 +33,7 @@ export const DeviceList = ({
                 key={device.deviceKey.toHex()}
                 device={device}
                 onClickEdit={() => onClickEdit?.(device)}
-                {...{ onClickReset, onClickJoinExisting }}
+                {...{ onClickReset, onClickJoinExisting, connectionState }}
               />
             );
           })}
