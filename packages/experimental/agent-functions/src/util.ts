@@ -64,29 +64,30 @@ export const getKey = (config: Config, name: string) => {
 
 export const multiline = (...parts: string[]): string => parts.filter(Boolean).join('\n');
 
+const schemaList: S.Schema<any>[] = [
+  ContactType,
+  DocumentType,
+  EventType,
+  FileType,
+  GameType,
+  MessageType,
+  MailboxType,
+  SectionType,
+  StackType,
+  TextV0Type,
+  ThreadType,
+];
+
 /**
  * @deprecated
  */
 // TODO(burdon): Register types via function metadata. Export default meta.
-export const registerTypes = (space: Space | undefined) => {
+export const registerTypes = (space: Space | undefined, types: S.Schema<any> = schemaList) => {
   if (!space) {
     return;
   }
 
   const registry = space.db.graph.runtimeSchemaRegistry;
-  const schemaList: S.Schema<any>[] = [
-    MessageType,
-    MailboxType,
-    GameType,
-    SectionType,
-    StackType,
-    DocumentType,
-    ThreadType,
-    EventType,
-    FileType,
-    ContactType,
-    TextV0Type,
-  ];
 
   for (const type of schemaList) {
     if (!registry.hasSchema(type)) {

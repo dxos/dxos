@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GameType } from '@dxos/chess-app';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -13,7 +14,7 @@ type Meta = { level?: number; side?: string };
 export const handler = subscriptionHandler<Meta>(async ({ event }) => {
   const { meta: { level = 1, side = 'b' } = {}, space, objects } = event.data;
   invariant(space);
-  registerTypes(space);
+  registerTypes(space, [GameType]);
 
   for (const game of objects ?? []) {
     const engine = new Engine({ pgn: game.pgn ?? '', level });
