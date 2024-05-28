@@ -21,7 +21,7 @@ export default class Share extends BaseCommand<typeof Share> {
     ...BaseCommand.flags,
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
-      default: 86400,
+      default: 12 * 60 * 60,
     }),
     persistent: Flags.boolean({
       description: 'Invitation should resume if client restarts',
