@@ -21,8 +21,10 @@ import {
   resolvePlugin,
   parseGraphPlugin,
   firstMainId,
+  activeIds,
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
+  isActiveParts,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
@@ -276,12 +278,33 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             case 'article':
             case 'complementary': {
-              if (data.object instanceof ThreadType) {
-                return <ThreadArticle thread={data.object} />;
-              }
-
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
+
+              if (data.object instanceof ThreadType) {
+                // TODO(Zan): Maybe we should have utility for positional main object ids.
+                if (isActiveParts(location?.active) && Array.isArray(location.active.main)) {
+                  const objectIdParts = location.active.main
+                    .map((qualifiedId) => {
+                      try {
+                        return qualifiedId.split(':')[1];
+                      } catch {
+                        return undefined;
+                      }
+                    })
+                    .filter(nonNullable);
+
+                  const currentPosition = objectIdParts.indexOf(data.object.id);
+
+                  if (currentPosition > 0) {
+                    return (
+                      <ThreadArticle thread={data.object} context={{ object: objectIdParts[currentPosition - 1] }} />
+                    );
+                  }
+                }
+
+                return <ThreadArticle thread={data.object} />;
+              }
 
               // TODO(burdon): Hack to detect comments.
               if (data.subject instanceof DocumentType) {
