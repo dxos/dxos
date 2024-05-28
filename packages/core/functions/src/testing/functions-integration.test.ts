@@ -31,8 +31,9 @@ describe('functions e2e', () => {
   test('a function gets triggered in response to another peer object creations', async () => {
     // TODO(burdon): Create builder pattern.
     const functionRuntime = await createFunctionRuntime(testBuilder);
-    const devServer = await startDevServer(functionRuntime);
-    const scheduler = await startScheduler(functionRuntime, devServer);
+    const functionsRegistry = new FunctionRegistry(functionRuntime);
+    const devServer = await startDevServer(functionRuntime, functionsRegistry);
+    const scheduler = await startScheduler(functionRuntime, devServer, functionsRegistry);
 
     const app = (await createInitializedClients(testBuilder, 1))[0];
     const space = await app.spaces.create();
@@ -74,8 +75,7 @@ describe('functions e2e', () => {
 
   // TODO(burdon): Factor out utils to builder pattern.
 
-  const startScheduler = async (client: Client, devServer: DevServer) => {
-    const functionRegistry = new FunctionRegistry(client);
+  const startScheduler = async (client: Client, devServer: DevServer, functionRegistry: FunctionRegistry) => {
     const triggerRegistry = new TriggerRegistry(client);
     const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: devServer.endpoint });
     await scheduler.start();
@@ -83,8 +83,7 @@ describe('functions e2e', () => {
     return scheduler;
   };
 
-  const startDevServer = async (client: Client) => {
-    const functionRegistry = new FunctionRegistry(client);
+  const startDevServer = async (client: Client, functionRegistry: FunctionRegistry) => {
     const server = new DevServer(client, functionRegistry, {
       baseDir: path.join(__dirname, '../testing'),
     });
