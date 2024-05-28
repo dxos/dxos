@@ -15,21 +15,29 @@ export const MetaSchema = S.mutable(
   }),
 );
 
+/**
+ * Trigger configuration.
+ */
 export type Meta = S.Schema.Type<typeof MetaSchema>;
 
-export const handler = subscriptionHandler<Meta>(
-  async ({ event }) => {
-    const { meta: { level = 1, side = 'b' } = {}, objects } = event.data;
-    for (const game of objects ?? []) {
-      const engine = new Engine({ pgn: game.pgn, level });
-      if (!engine.state.isGameOver() && engine.state.turn() === side) {
-        engine.move();
-        engine.print();
+/**
+ * Runtime types.
+ */
+export const types = [GameType];
 
-        // Update object.
-        game.pgn = engine.state.pgn();
-      }
+/**
+ * Chess function handler.
+ */
+export const handler = subscriptionHandler<Meta>(async ({ event }) => {
+  const { meta: { level = 1, side = 'b' } = {}, objects } = event.data;
+  for (const game of objects ?? []) {
+    const engine = new Engine({ pgn: game.pgn, level });
+    if (!engine.state.isGameOver() && engine.state.turn() === side) {
+      engine.move();
+      engine.print();
+
+      // Update object.
+      game.pgn = engine.state.pgn();
     }
-  },
-  [GameType],
-);
+  }
+}, types);

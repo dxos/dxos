@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { TextV0Type } from '@braneframe/types';
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
@@ -77,16 +78,20 @@ export type SubscriptionData = {
  *
  * NOTE: Get space key from devtools or `dx space list --json`
  */
+// TODO(burdon): Evolve into plugin definition like Composer.
 export const subscriptionHandler = <TMeta>(
   handler: FunctionHandler<SubscriptionData, TMeta>,
   types?: S.Schema<any>[],
 ): FunctionHandler<RawSubscriptionData, TMeta> => {
-  return ({ event: { data }, context, ...rest }) => {
+  return async ({ event: { data }, context, response, ...rest }) => {
     const { client } = context;
     const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
-    if (space) {
-      registerTypes(space, types);
+    if (!space) {
+      log.error('Invalid space');
+      return response.status(500);
     }
+
+    registerTypes(space, types);
     const objects = space
       ? data.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
       : [];
@@ -97,14 +102,14 @@ export const subscriptionHandler = <TMeta>(
       log.info('handler', { space: space?.key.truncate(), objects: objects?.length });
     }
 
-    return handler({ event: { data: { ...data, space, objects } }, context, ...rest });
+    return handler({ event: { data: { ...data, space, objects } }, context, response, ...rest });
   };
 };
 
 // TODO(burdon): Evolve types as part of function metadata.
 export const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
   const registry = space.db.graph.runtimeSchemaRegistry;
-  for (const type of types) {
+  for (const type of [...types, TextV0Type]) {
     if (!registry.hasSchema(type)) {
       registry.registerSchema(type);
     }
