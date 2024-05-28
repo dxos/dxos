@@ -17,8 +17,7 @@ const authHandler = authMiddleware({
  */
 const handler: ExportedHandler<Env & { DX_AUTH: any }> = {
   fetch: async (request, env, context) => {
-    console.log('url:', request.url);
-    console.log('Request:', JSON.stringify(request));
+    console.log('origin:', new URL(request.url).origin);
     return env.DX_AUTH ? authHandler(request, env, context) : env.ASSETS.fetch(request);
   },
 };
