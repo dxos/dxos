@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "debug tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-w",
+        "nx",
+        "test",
+        "tasks-template"
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}
