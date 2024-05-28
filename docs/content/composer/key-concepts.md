@@ -36,8 +36,6 @@ Designed for mobile and desktop, works in modern browsers.
 
 The open source DXOS [SDK](../guide/) provides protocols for developing local-first applications. Composer is the flagship example of building on them, but they're available for any other project you can think of.
 
-
-
 ### Availability
 
 Data is available on the peer network as long as peers are online. [Agents](../guide/tooling/cli/agent.md) are personal servers that can be used to boost data availability when the user's devices are offline. They are open source and can be run on any device, or hosted by a trusted third party.

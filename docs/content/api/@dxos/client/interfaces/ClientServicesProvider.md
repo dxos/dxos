@@ -6,8 +6,7 @@ Provide access to client services definitions and service handler.
 ### [closed]()
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
-The connection to the services provider was termintaed.
-
+The connection to the services provider was terminated.
 This should fire if the services disconnect unexpectedly or during a client reset.
 
 ### [descriptors]()

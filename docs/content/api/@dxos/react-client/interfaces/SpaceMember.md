@@ -19,4 +19,9 @@ Type: <code>[PresenceState](/api/@dxos/react-client/enums#PresenceState)</code>
 
 
 
+### [role]()
+Type: <code>[Role](/api/@dxos/react-client/enums#Role)</code>
+
+
+
     

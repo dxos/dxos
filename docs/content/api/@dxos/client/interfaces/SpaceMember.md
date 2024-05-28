@@ -19,4 +19,9 @@ Type: <code>[PresenceState](/api/@dxos/client/enums#PresenceState)</code>
 
 
 
+### [role]()
+Type: <code>[Role](/api/@dxos/client/enums#Role)</code>
+
+
+
     
