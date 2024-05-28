@@ -1,3 +1,9 @@
+<!--
+.slide: data-background-video="https://dxos.network/DXOS.mp4"
+-->
+
+
+---
 <!-- 
 .slide: data-background="#151515"
 -->
@@ -90,7 +96,7 @@ notes:
 .slide: data-background="#A0153E" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
 -->
 
-# EDGE
+# 新発売
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
