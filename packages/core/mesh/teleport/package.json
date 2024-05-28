@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Stream muxer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
