@@ -10,10 +10,14 @@ import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { range } from '@dxos/util';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class Open extends BaseCommand<typeof Open> {
+  static override state = 'deprecated';
   static override enableJsonFlag = true;
   static override description = 'Opens app with provided url and process device invitation.';
 
@@ -26,7 +30,7 @@ export default class Open extends BaseCommand<typeof Open> {
   };
 
   static override flags = {
-    ...super.flags,
+    ...BaseCommand.flags,
     instances: Flags.integer({
       description: 'Amount of test instances.',
       default: 1,

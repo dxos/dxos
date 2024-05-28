@@ -27,7 +27,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -46,7 +46,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -88,7 +88,7 @@ describe('Spaces', () => {
     testBuilder.storage = createStorage({ type: StorageType.RAM });
     testBuilder.level = createTestLevel();
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     await client.halo.createIdentity({ displayName: 'test-user' });
 
@@ -128,8 +128,8 @@ describe('Spaces', () => {
   test('post and listen to messages', async () => {
     const testBuilder = new TestBuilder();
 
-    const client1 = new Client({ services: testBuilder.createLocal() });
-    const client2 = new Client({ services: testBuilder.createLocal() });
+    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
+    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
     await client1.initialize();
     await client2.initialize();
     await client1.halo.createIdentity({ displayName: 'Peer 1' });
@@ -174,10 +174,10 @@ describe('Spaces', () => {
   test.skip('peer do not load mutations before epoch', async () => {
     const testBuilder = new TestBuilder();
 
-    const services1 = testBuilder.createLocal();
+    const services1 = testBuilder.createLocalClientServices();
     const client1 = new Client({ services: services1 });
 
-    const services2 = testBuilder.createLocal();
+    const services2 = testBuilder.createLocalClientServices();
     const client2 = new Client({ services: services2 });
     await client1.initialize();
     afterTest(() => client1.destroy());
@@ -237,7 +237,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -260,7 +260,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -274,7 +274,7 @@ describe('Spaces', () => {
 
   test('spaces can be opened and closed', async () => {
     const testBuilder = new TestBuilder();
-    const services = testBuilder.createLocal();
+    const services = testBuilder.createLocalClientServices();
     const client = new Client({ services });
     await client.initialize();
     afterTest(() => client.destroy());
@@ -352,8 +352,8 @@ describe('Spaces', () => {
   test('text replicates between clients', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();
@@ -385,8 +385,8 @@ describe('Spaces', () => {
   test('share two spaces between clients', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();
@@ -441,7 +441,7 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     testBuilder.storage = createStorage({ type: StorageType.RAM });
 
-    const client = new Client({ services: testBuilder.createLocal() });
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     afterTest(() => client.destroy());
 
@@ -484,8 +484,8 @@ describe('Spaces', () => {
   test('object receives updates from another peer', async () => {
     const testBuilder = new TestBuilder();
 
-    const host = new Client({ services: testBuilder.createLocal() });
-    const guest = new Client({ services: testBuilder.createLocal() });
+    const host = new Client({ services: testBuilder.createLocalClientServices() });
+    const guest = new Client({ services: testBuilder.createLocalClientServices() });
 
     await host.initialize();
     await guest.initialize();

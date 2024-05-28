@@ -1,6 +1,6 @@
 # @dxos/plugin-template
 
-An template project for prototyping plugins for the DXOS app framework.
+An template project for prototyping plugins for DXOS Composer.
 
 ## Installation
 

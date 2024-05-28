@@ -11,7 +11,6 @@ import { dirname } from 'node:path';
 import { Trigger } from '@dxos/async';
 import { type Config, Client, PublicKey } from '@dxos/client';
 import { type ClientServices, type ClientServicesProvider, fromHost } from '@dxos/client/services';
-import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import {
@@ -98,7 +97,7 @@ export class Agent {
       lockKey: lockFilePath(this._options.profile),
       transportFactory,
     });
-    await this._clientServices.open(new Context());
+    await this._clientServices.open();
 
     // Create client.
     // TODO(burdon): Move away from needing client for epochs and proxy?
@@ -176,7 +175,7 @@ export class Agent {
 
     // Close client and services.
     await this._client?.destroy();
-    await this._clientServices?.close(new Context());
+    await this._clientServices?.close();
     this._client = undefined;
     this._clientServices = undefined;
     await Promise.all(

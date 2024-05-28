@@ -16,7 +16,9 @@ export const uriToActive = (uri: string): Location['active'] => {
   return slug
     ? slug.split(SLUG_ENTRY_SEPARATOR).reduce((acc: ActiveParts, slugEntry) => {
         const [part, idsSlug] = slugEntry.split(SLUG_KEY_VALUE_SEPARATOR);
-        acc[part] = idsSlug.split(SLUG_LIST_SEPARATOR);
+        if (part && idsSlug) {
+          acc[part] = idsSlug.split(SLUG_LIST_SEPARATOR);
+        }
         return acc;
       }, {})
     : undefined;
@@ -34,6 +36,7 @@ export const activeToUri = (active?: Location['active']) =>
               ? `${part}${SLUG_KEY_VALUE_SEPARATOR}${Array.isArray(ids) ? ids.filter(Boolean).join(SLUG_LIST_SEPARATOR) : ids}`
               : '',
           )
+          .filter((slug) => slug.length > 0)
           .join(SLUG_ENTRY_SEPARATOR)
       : ''
   }`;

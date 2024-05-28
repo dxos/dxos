@@ -6,6 +6,7 @@ import path from 'node:path';
 import { type Path } from './util/file';
 import { isTemplateFile } from './util/filenames';
 import { type LoadModuleOptions, loadModule } from './util/loadModule';
+import { error } from './util/logger';
 import { promise } from './util/promise';
 import { type Slots, type Template, type FileResults, type Options } from './util/template';
 
@@ -33,14 +34,20 @@ export const executeFileTemplate = async <TInput, TSlots extends Slots<TInput> =
   };
   const absoluteTemplateRelativeTo = path.resolve(relativeTo ?? '');
   const templateFullPath = path.join(absoluteTemplateRelativeTo, src);
-  const templateFunction = await loadTemplate(templateFullPath, options);
-  if (!templateFunction) {
-    throw new Error(`failed to load template function from ${templateFullPath}`);
+  let templateFunction: Template<TInput> | null;
+  try {
+    templateFunction = await loadTemplate(templateFullPath, options);
+    if (!templateFunction) {
+      throw new Error('no export found in template');
+    }
+  } catch (err) {
+    error(`problem loading template ${templateFullPath}`);
+    throw err;
   }
   try {
     return promise(templateFunction(options));
   } catch (err) {
-    console.error(`problem in template ${templateFullPath}`);
+    error(`problem executing template ${templateFullPath}`);
     throw err;
   }
 };

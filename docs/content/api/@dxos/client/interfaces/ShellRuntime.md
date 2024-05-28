@@ -54,7 +54,7 @@ Type: <code>string</code>
 
 
 ### [spaceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 

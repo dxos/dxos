@@ -7,8 +7,9 @@ import { type ComponentFunction } from '@dxos/react-ui-types/src';
 import { mx } from '../../util';
 import { bounceLayout, fixedBorder, fixedSurface } from '../fragments';
 
-// Padding to apply to in-flow elements which need to clear the fixed topbar.
+// Padding to apply to in-flow elements which need to clear the fixed topbar / bottombar.
 export const topbarBlockPaddingStart = 'pbs-[--topbar-size] sticky-top-from-topbar-bottom';
+export const bottombarBlockPaddingEnd = 'pbe-[--statusbar-size] sticky-bottom-from-statusbar-bottom';
 
 export type MainStyleProps = Partial<{
   bounce: boolean;

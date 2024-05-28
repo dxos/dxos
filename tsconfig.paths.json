@@ -44,6 +44,12 @@
       "@braneframe/plugin-files/meta": [
         "packages/apps/plugins/plugin-files/src/meta.tsx"
       ],
+      "@braneframe/plugin-function": [
+        "packages/apps/plugins/plugin-function/src/index.ts"
+      ],
+      "@braneframe/plugin-function/meta": [
+        "packages/apps/plugins/plugin-function/src/meta.tsx"
+      ],
       "@braneframe/plugin-github": [
         "packages/apps/plugins/plugin-github/src/index.ts"
       ],
@@ -199,6 +205,12 @@
       ],
       "@braneframe/plugin-stack/meta": [
         "packages/apps/plugins/plugin-stack/src/meta.tsx"
+      ],
+      "@braneframe/plugin-status-bar": [
+        "packages/apps/plugins/plugin-status-bar/src/index.ts"
+      ],
+      "@braneframe/plugin-status-bar/meta": [
+        "packages/apps/plugins/plugin-status-bar/src/meta.tsx"
       ],
       "@braneframe/plugin-table": [
         "packages/apps/plugins/plugin-table/src/index.ts"

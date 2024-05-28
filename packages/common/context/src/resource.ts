@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos/util';
+import { throwUnhandledError } from '@dxos/util';
 
 import { Context } from './context';
 
@@ -16,6 +16,9 @@ export interface Lifecycle {
   open?(ctx?: Context): Promise<any> | any;
   close?(): Promise<any> | any;
 }
+
+// Feature flag to be enabled later.
+const CLOSE_RESOURCE_ON_UNHANDLED_ERROR = false;
 
 /**
  * Base class for resources that need to be opened and closed.
@@ -36,7 +39,11 @@ export abstract class Resource implements Lifecycle {
    * Context that is used to bubble up errors that are not handled by the resource.
    * Provided in the open method.
    */
-  #parentCtx: Context = new Context();
+  #parentCtx: Context = new Context({ name: this.#name });
+
+  get #name() {
+    return Object.getPrototypeOf(this).constructor.name;
+  }
 
   protected get _lifecycleState() {
     return this.#lifecycleState;
@@ -61,6 +68,13 @@ export abstract class Resource implements Lifecycle {
    * By default, errors are bubbled up to the parent context which is passed to the open method.
    */
   protected async _catch(err: Error): Promise<void> {
+    if (CLOSE_RESOURCE_ON_UNHANDLED_ERROR) {
+      try {
+        await this.close();
+      } catch (doubleErr: any) {
+        throwUnhandledError(doubleErr);
+      }
+    }
     throw err;
   }
 
@@ -107,13 +121,13 @@ export abstract class Resource implements Lifecycle {
   async #open(ctx?: Context) {
     this.#closePromise = null;
     if (ctx) {
-      this.#parentCtx = ctx;
+      this.#parentCtx = ctx.derive({ name: this.#name });
     }
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
   }
 
-  async #close(ctx = new Context()) {
+  async #close(ctx = Context.default()) {
     this.#openPromise = null;
     await this.#internalCtx.dispose();
     await this._close(ctx);

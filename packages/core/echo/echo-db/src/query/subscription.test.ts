@@ -69,7 +69,7 @@ describe('create subscription', () => {
 
     const actions: string[] = [];
     const clearEffect = effect(() => {
-      log.info('effect', { title: task.title });
+      log('effect', { title: task.title });
       actions.push('update');
     });
     // Initial update caused by changed selection.

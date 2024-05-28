@@ -117,7 +117,6 @@ export const SpaceMembersSection = ({ space }: { space: Space }) => {
     {
       [Presence.ONLINE]: [],
       [Presence.OFFLINE]: [],
-      [Presence.REMOVED]: [],
     },
   );
 

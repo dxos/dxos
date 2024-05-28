@@ -17,22 +17,30 @@ import {
   NavigationAction,
   resolvePlugin,
   parseIntentPlugin,
+  type IntentPluginProvides,
+  type LocationProvides,
   parseNavigationPlugin,
-  parseGraphPlugin,
   parseMetadataResolverPlugin,
   LayoutAction,
   activeIds,
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type Identifiable, isReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
-import { type Space, getSpace, type PropertiesProps, isSpace, isEchoObject } from '@dxos/react-client/echo';
+import {
+  type Space,
+  getSpace,
+  type PropertiesProps,
+  isSpace,
+  isEchoObject,
+  fullyQualifiedId,
+} from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
 import { ComplexMap } from '@dxos/util';
@@ -43,7 +51,6 @@ import {
   EmptyTree,
   FolderMain,
   MissingObject,
-  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -63,9 +70,13 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace, prepareSpaceForMigration, getActiveSpace } from './util';
+import { SHARED, updateGraphWithSpace, prepareSpaceForMigration } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
+const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
+
+export const parseSpacePlugin = (plugin?: Plugin) =>
+  Array.isArray((plugin?.provides as any).space?.enabled) ? (plugin as Plugin<SpacePluginProvides>) : undefined;
 
 export type SpacePluginOptions = {
   /**
@@ -99,6 +110,7 @@ export const SpacePlugin = ({
     awaiting: undefined,
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
+    enabled: [],
   });
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
@@ -107,6 +119,8 @@ export const SpacePlugin = ({
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
 
   return {
     meta,
@@ -117,16 +131,14 @@ export const SpacePlugin = ({
         type: LocalStorageStore.bool({ allowUndefined: true }),
       });
 
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const graphPlugin = resolvePlugin(plugins, parseGraphPlugin);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      if (!clientPlugin || !navigationPlugin || !intentPlugin || !graphPlugin) {
+      if (!clientPlugin || !navigationPlugin || !intentPlugin) {
         return;
       }
 
       const client = clientPlugin.provides.client;
-      const graph = graphPlugin.provides.graph;
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
@@ -146,6 +158,21 @@ export const SpacePlugin = ({
         });
       }
 
+      // Enable spaces.
+      state.enabled.push(client.spaces.default.key);
+      subscriptions.add(
+        effect(() => {
+          Array.from(activeIds(location.active)).forEach((part) => {
+            const [key] = part.split(':');
+            const spaceKey = PublicKey.safeFrom(key);
+            const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
+            if (spaceKey && index === -1) {
+              state.enabled.push(spaceKey);
+            }
+          });
+        }),
+      );
+
       // Check if opening app from invitation code.
       const searchParams = new URLSearchParams(window.location.search);
       const spaceInvitationCode = searchParams.get(spaceInvitationParam);
@@ -155,9 +182,17 @@ export const SpacePlugin = ({
             return;
           }
 
+          // TODO(y): Remove after the demo.
+          const migrateSpaceParam = 'migrateSpace';
+          if (searchParams.get(migrateSpaceParam) === 'true') {
+            await space.waitUntilReady();
+            await Migrations.migrate(space);
+          }
+
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
           const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
+          url.searchParams.delete(migrateSpaceParam);
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
@@ -178,12 +213,12 @@ export const SpacePlugin = ({
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
               Array.from(activeIds(location.active)).forEach((id) => {
-                const space = getActiveSpace(graph, id);
+                const [spaceKey] = id.split(':');
+                const space = client.spaces.get(PublicKey.from(spaceKey));
                 if (space) {
                   void space
                     .postMessage('viewing', {
                       identityKey: identity.identityKey.toHex(),
-                      spaceKey: space.key.toHex(),
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
@@ -202,41 +237,41 @@ export const SpacePlugin = ({
 
       // Listen for active nodes from other peers in the space.
       subscriptions.add(
-        client.spaces.subscribe((spaces) => {
+        effect(() => {
           spaceSubscriptions.clear();
-          spaces.forEach((space) => {
-            spaceSubscriptions.add(
-              space.listen('viewing', (message) => {
-                const { added, removed } = message.payload;
-                const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-                const spaceKey = PublicKey.safeFrom(message.payload.spaceKey);
-                if (identityKey && spaceKey && Array.isArray(added) && Array.isArray(removed)) {
-                  added.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      if (!(objectId in state.viewersByObject)) {
-                        state.viewersByObject[objectId] = new ComplexMap(PublicKey.hash);
+          client.spaces
+            .get()
+            .filter((space) => !!state.enabled.find((key) => key.equals(space.key)))
+            .forEach((space) => {
+              spaceSubscriptions.add(
+                space.listen('viewing', (message) => {
+                  const { added, removed } = message.payload;
+                  const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+                  if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
+                    added.forEach((id) => {
+                      if (typeof id === 'string') {
+                        if (!(id in state.viewersByObject)) {
+                          state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                        }
+                        state.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
+                        if (!state.viewersByIdentity.has(identityKey)) {
+                          state.viewersByIdentity.set(identityKey, new Set());
+                        }
+                        state.viewersByIdentity.get(identityKey)!.add(id);
                       }
-                      state.viewersByObject[objectId]!.set(identityKey, { lastSeen: Date.now(), spaceKey });
-                      if (!state.viewersByIdentity.has(identityKey)) {
-                        state.viewersByIdentity.set(identityKey, new Set());
+                    });
+                    removed.forEach((id) => {
+                      if (typeof id === 'string') {
+                        state.viewersByObject[id]?.delete(identityKey);
+                        state.viewersByIdentity.get(identityKey)?.delete(id);
+                        // It’s okay for these to be empty sets/maps, reduces churn.
                       }
-                      state.viewersByIdentity.get(identityKey)!.add(objectId);
-                    }
-                  });
-                  removed.forEach((objectIdAny) => {
-                    if (objectIdAny) {
-                      const objectId = objectIdAny.toString();
-                      state.viewersByObject[objectId]?.delete(identityKey);
-                      state.viewersByIdentity.get(identityKey)?.delete(objectId);
-                      // It’s okay for these to be empty sets/maps, reduces churn.
-                    }
-                  });
-                }
-              }),
-            );
-          });
-        }).unsubscribe,
+                    });
+                  }
+                }),
+              );
+            });
+        }),
       );
     },
     unload: async () => {
@@ -273,7 +308,7 @@ export const SpacePlugin = ({
                 <SpaceMain space={primary} role={role} />
               ) : primary instanceof FolderType ? (
                 <FolderMain folder={primary} />
-              ) : typeof primary === 'string' && primary.length === 64 ? (
+              ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
             // TODO(burdon): Add role name syntax to minimal plugin docs.
@@ -323,17 +358,22 @@ export const SpacePlugin = ({
               }
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+                <SmallPresenceLive
+                  viewers={state.viewersByObject[data.object.id]}
+                  onCloseClick={() => {
+                    const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
+                    return intentPlugin?.provides.intent.dispatch({
+                      action: NavigationAction.CLOSE,
+                      data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                    });
+                  }}
+                />
               ) : (
                 <SmallPresence count={0} />
               );
             }
             case 'navbar-start': {
-              const space =
-                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
-                  ? getSpace(data.activeNode.data)
-                  : undefined;
-              return space ? <PersistenceStatus db={space.db} /> : null;
+              return null;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object)) {
@@ -364,7 +404,6 @@ export const SpacePlugin = ({
       },
       graph: {
         builder: (plugins, graph) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
 
@@ -476,6 +515,7 @@ export const SpacePlugin = ({
                 updateGraphWithSpace({
                   graph,
                   space,
+                  enabled: !!state.enabled.find((key) => key.equals(space.key)),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
                   dispatch,
@@ -521,6 +561,7 @@ export const SpacePlugin = ({
               const folder = create(FolderType, { objects: [] });
               setSpaceProperty(space, FolderType.typename, folder);
               await space.waitUntilReady();
+              state.enabled.push(space.key);
 
               sharedSpacesFolder?.objects.push(folder);
               if (Migrations.versionProperty) {
@@ -535,6 +576,7 @@ export const SpacePlugin = ({
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
+                  state.enabled.push(space.key);
                   const spaceHex = space.key.toHex();
                   return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
                 }
@@ -543,7 +585,6 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
-              const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
                 const target = firstMainId(navigationPlugin?.provides.location.active);
@@ -613,8 +654,6 @@ export const SpacePlugin = ({
               const space = intent.data?.space;
               let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
               if (!rootDir) {
-                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
                 const result = await intentPlugin?.provides.intent.dispatch({
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.SELECT_DIRECTORY,
@@ -653,7 +692,7 @@ export const SpacePlugin = ({
 
               if (intent.data?.target instanceof FolderType) {
                 intent.data?.target.objects.push(object as Identifiable);
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
 
               const space = intent.data?.target;
@@ -664,7 +703,7 @@ export const SpacePlugin = ({
                 } else {
                   space.db.add(object);
                 }
-                return { data: { ...object, activeParts: { main: [object.id] } } };
+                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
               break;
             }
@@ -680,17 +719,13 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
                             folder: intent.data?.folder?.data,
                           },
                         },
-                      },
-                      {
-                        action: NavigationAction.CLOSE,
-                        data: { activeParts: { main: [object.id] } },
                       },
                     ],
                   ],
@@ -710,7 +745,7 @@ export const SpacePlugin = ({
                         action: LayoutAction.SET_LAYOUT,
                         data: {
                           element: 'popover',
-                          anchorId: `dxos.org/ui/${caller}/${object.id}`,
+                          anchorId: `dxos.org/ui/${caller}/${fullyQualifiedId(object)}`,
                           component: 'dxos.org/plugin/space/RenameObjectPopover',
                           subject: object,
                         },
@@ -739,6 +774,15 @@ export const SpacePlugin = ({
             case SpaceAction.TOGGLE_HIDDEN: {
               settings.values.showHidden = intent.data?.state ?? !settings.values.showHidden;
               return { data: true };
+            }
+
+            case SpaceAction.ENABLE: {
+              const space = intent.data?.space;
+              if (isSpace(space)) {
+                state.enabled.push(space.key);
+                return { data: true };
+              }
+              break;
             }
           }
         },

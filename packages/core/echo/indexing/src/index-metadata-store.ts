@@ -7,15 +7,16 @@ import { type MixedEncoding } from 'level-transcoder';
 import { Event } from '@dxos/async';
 import { type Heads } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
-import { type SubLevelDB, type BatchLevel } from '@dxos/kv-store';
+import { type SublevelDB, type BatchLevel } from '@dxos/kv-store';
 import { log } from '@dxos/log';
-import { schema, type ObjectPointerEncoded } from '@dxos/protocols';
+import { schema, type ObjectPointerEncoded, objectPointerCodec } from '@dxos/protocols';
 import { trace } from '@dxos/tracing';
+import { joinTables } from '@dxos/util';
 
 import { type IdToHeads } from './types';
 
 export type IndexMetadataStoreParams = {
-  db: SubLevelDB;
+  db: SublevelDB;
 };
 
 @trace.resource()
@@ -27,17 +28,32 @@ export class IndexMetadataStore {
    * Documents that were saved by automerge-repo but maybe not indexed (also includes indexed documents).
    * ObjectPointerEncoded -> Heads
    */
-  private readonly _lastSeen: SubLevelDB;
+  private readonly _lastSeen: SublevelDB;
 
   /**
    * Documents that were indexing
    * ObjectPointerEncoded -> Heads
    */
-  private readonly _lastIndexed: SubLevelDB;
+  private readonly _lastIndexed: SublevelDB;
 
   constructor({ db }: IndexMetadataStoreParams) {
     this._lastSeen = db.sublevel('last-seen', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
     this._lastIndexed = db.sublevel('last-indexed', { valueEncoding: headsEncoding, keyEncoding: 'utf8' });
+
+    trace.diagnostic({
+      id: 'indexed-documents',
+      name: 'Indexed Documents',
+      fetch: async () => {
+        const [dirty, indexed] = await Promise.all([this.getDirtyDocuments(), this.getAllIndexedDocuments()]);
+
+        return joinTables(
+          'id',
+          'id',
+          Array.from(dirty.entries()).map(([id, heads]) => ({ id, dirtyHeads: heads.join(',') })),
+          Array.from(indexed.entries()).map(([id, heads]) => ({ id, indexedHeads: heads.join(',') })),
+        );
+      },
+    });
   }
 
   @trace.span({ showInBrowserTimeline: true })
@@ -57,6 +73,9 @@ export class IndexMetadataStore {
     log('mark dirty', { count: idToHeads.size });
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastSeen, valueEncoding: headsEncoding });
+
+      // Delete old v0 entries.
+      batch.del(objectPointerCodec.convertV1ToV0(id), { sublevel: this._lastIndexed });
     }
   }
 
@@ -73,6 +92,10 @@ export class IndexMetadataStore {
     for (const [id, heads] of idToHeads.entries()) {
       batch.put(id, heads, { sublevel: this._lastIndexed, valueEncoding: headsEncoding });
       batch.del(id, { sublevel: this._lastSeen });
+
+      // Delete old v0 entries.
+      batch.del(objectPointerCodec.convertV1ToV0(id), { sublevel: this._lastIndexed });
+      batch.del(objectPointerCodec.convertV1ToV0(id), { sublevel: this._lastSeen });
     }
   }
 

@@ -9,7 +9,7 @@ export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T)
 
   const promise = new Promise<T>((resolve, reject) => {
     if (timeout) {
-      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
+      setTimeout(() => reject(new Error(`Timed out after ${timeout.toLocaleString()}ms`)), timeout);
     }
     callback = resolve;
   });

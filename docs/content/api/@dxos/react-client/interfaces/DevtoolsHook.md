@@ -18,6 +18,11 @@ Type: <code>Accessor&lt;unknown&gt;</code>
 
 
 
+### [fetchDiagnostics]()
+Type: <code>function</code>
+
+
+
 ### [halo]()
 Type: <code>[Halo](/api/@dxos/react-client/interfaces/Halo)</code>
 
@@ -32,6 +37,11 @@ Type: <code>ClientServicesHost</code>
 Type: <code>function</code>
 
 Import modules exposed by  `exposeModule`  from @dxos/debug.
+
+### [listDiagnostics]()
+Type: <code>function</code>
+
+
 
 ### [openClientRpcServer]()
 Type: <code>function</code>

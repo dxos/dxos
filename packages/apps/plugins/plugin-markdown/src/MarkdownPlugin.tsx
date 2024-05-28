@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
+import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { DocumentType, TextV0Type } from '@braneframe/types';
 import {
   isObject,
@@ -20,7 +20,7 @@ import {
 import { EventSubscriptions } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { getSpace, Filter, type Query } from '@dxos/react-client/echo';
+import { getSpace, Filter, type Query, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
 import { isTileComponentProps } from '@dxos/react-ui-mosaic';
 
@@ -118,15 +118,16 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       graph: {
         builder: (plugins, graph) => {
           const client = resolvePlugin(plugins, parseClientPlugin)?.provides.client;
+          const enabled = resolvePlugin(plugins, parseSpacePlugin)?.provides.space.enabled;
           const dispatch = resolvePlugin(plugins, parseIntentPlugin)?.provides.intent.dispatch;
-          if (!client || !dispatch) {
+          if (!client || !dispatch || !enabled) {
             return;
           }
 
           const subscriptions = new EventSubscriptions();
-          const { unsubscribe } = client.spaces.subscribe((spaces) => {
+          const unsubscribe = effect(() => {
             subscriptions.clear();
-            spaces.forEach((space) => {
+            client.spaces.get().forEach((space) => {
               subscriptions.add(
                 updateGraphWithAddObjectAction({
                   graph,
@@ -141,62 +142,68 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                   },
                 }),
               );
+            });
 
-              // Add all documents to the graph.
-              const query = space.db.query(Filter.schema(DocumentType));
-              subscriptions.add(query.subscribe());
-              let previousObjects: DocumentType[] = [];
-              subscriptions.add(
-                effect(() => {
-                  const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
-                  previousObjects = query.objects;
-                  batch(() => {
-                    removedObjects.forEach((object) => graph.removeNode(object.id));
-                    query.objects.forEach((object) => {
-                      graph.addNodes({
-                        id: object.id,
-                        data: object,
-                        properties: {
-                          // TODO(wittjosiah): Reconcile with metadata provides.
+            client.spaces
+              .get()
+              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .forEach((space) => {
+                // Add all documents to the graph.
+                const query = space.db.query(Filter.schema(DocumentType));
+                subscriptions.add(query.subscribe());
+                let previousObjects: DocumentType[] = [];
+                subscriptions.add(
+                  effect(() => {
+                    const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
+                    previousObjects = query.objects;
+                    batch(() => {
+                      removedObjects.forEach((object) => graph.removeNode(fullyQualifiedId(object)));
+                      query.objects.forEach((object) => {
+                        graph.addNodes({
+                          id: fullyQualifiedId(object),
+                          data: object,
+                          properties: {
+                            // TODO(wittjosiah): Reconcile with metadata provides.
 
-                          // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
-                          get label() {
-                            return (
-                              object.title ||
-                              getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
-                            );
-                          },
-                          icon: (props: IconProps) => <TextAa {...props} />,
-                          testId: 'spacePlugin.object',
-                          persistenceClass: 'echo',
-                          persistenceKey: space?.key.toHex(),
-                        },
-                        nodes: [
-                          {
-                            id: `${MARKDOWN_PLUGIN}/toggle-readonly/${object.id}`,
-                            data: () =>
-                              intentPlugin?.provides.intent.dispatch([
-                                {
-                                  plugin: MARKDOWN_PLUGIN,
-                                  action: MarkdownAction.TOGGLE_READONLY,
-                                  data: {
-                                    objectId: object.id,
-                                  },
-                                },
-                              ]),
-                            properties: {
-                              label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
-                              icon: (props: IconProps) => <TextAa {...props} />,
-                              keyBinding: 'shift+F5',
+                            // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
+                            get label() {
+                              return (
+                                object.title ||
+                                getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
+                              );
                             },
+                            managesAutofocus: true,
+                            icon: (props: IconProps) => <TextAa {...props} />,
+                            testId: 'spacePlugin.object',
+                            persistenceClass: 'echo',
+                            persistenceKey: space?.key.toHex(),
                           },
-                        ],
+                          nodes: [
+                            {
+                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.key.toHex()}/${object.id}`,
+                              data: () =>
+                                intentPlugin?.provides.intent.dispatch([
+                                  {
+                                    plugin: MARKDOWN_PLUGIN,
+                                    action: MarkdownAction.TOGGLE_READONLY,
+                                    data: {
+                                      objectId: object.id,
+                                    },
+                                  },
+                                ]),
+                              properties: {
+                                label: ['toggle view mode label', { ns: MARKDOWN_PLUGIN }],
+                                icon: (props: IconProps) => <TextAa {...props} />,
+                                keyBinding: 'shift+F5',
+                              },
+                            },
+                          ],
+                        });
                       });
                     });
-                  });
-                }),
-              );
-            });
+                  }),
+                );
+              });
           });
 
           return () => {

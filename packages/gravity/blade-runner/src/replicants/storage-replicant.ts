@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { range } from '@dxos/util';
 
-import { type ReplicantEnv, ReplicantRegistry } from '../plan';
+import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 export type AdaptorKind = 'idb' | 'opfs' | 'node' | 'leveldb';
 

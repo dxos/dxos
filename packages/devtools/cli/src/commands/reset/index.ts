@@ -8,7 +8,7 @@ import fs from 'fs';
 
 import { DX_CACHE, DX_CONFIG, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 
 export default class Reset extends BaseCommand<typeof Reset> {
   static override description = 'Reset user data.';

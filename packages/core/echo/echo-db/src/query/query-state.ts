@@ -6,8 +6,9 @@ import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
 import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { idCodec } from '@dxos/protocols';
+import { objectPointerCodec } from '@dxos/protocols';
 import { type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type QueryRequest, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
@@ -92,30 +93,40 @@ export class QueryState extends Resource {
             this.metrics.objectsReturnedFromIndex++;
           }
 
-          const { objectId, documentId } = idCodec.decode(result.id);
-          const handle =
-            this._params.automergeHost.repo.handles[documentId as DocumentId] ??
-            this._params.automergeHost.repo.find(documentId as DocumentId);
+          const { objectId, documentId, spaceKey: spaceKeyInIndex } = objectPointerCodec.decode(result.id);
 
-          if (!handle.isReady()) {
-            if (this._firstRun) {
-              this.metrics.documentsLoaded++;
+          let spaceKey: string | null;
+          if (spaceKeyInIndex !== undefined) {
+            spaceKey = spaceKeyInIndex;
+          } else {
+            // Indexes created by older versions of the indexer do not have the spaceKey in the index.
+            // If the spaceKey is not in the index, we need to load the document to get it.
+
+            const handle =
+              this._params.automergeHost.repo.handles[documentId as DocumentId] ??
+              this._params.automergeHost.repo.find(documentId as DocumentId);
+
+            if (!handle.isReady()) {
+              if (this._firstRun) {
+                this.metrics.documentsLoaded++;
+              }
+              // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
+              await handle.whenReady();
             }
-            // `whenReady` creates a timeout so we guard it with an if to skip it if the handle is already ready.
-            await handle.whenReady();
+
+            if (this._ctx.disposed) {
+              return;
+            }
+            spaceKey = getSpaceKeyFromDoc(handle.docSync());
           }
 
-          if (this._ctx.disposed) {
-            return;
-          }
-          const spaceKey = getSpaceKeyFromDoc(handle.docSync());
           if (!spaceKey) {
             return;
           }
           // TODO(mykola): Remove business logic from here.
           if (
             this._params.request.filter.options?.spaces?.length &&
-            !this._params.request.filter.options.spaces.some((key) => key.equals(spaceKey.toString()))
+            !this._params.request.filter.options.spaces.some((key) => key.equals(spaceKey!))
           ) {
             return;
           }
@@ -162,8 +173,18 @@ export class QueryState extends Resource {
 
 // TODO(burdon): Process Filter DSL.
 const filterToIndexQuery = (filter: Filter): IndexQuery => {
-  return {
-    typename: filter.type?.itemId,
-    inverted: filter.not,
-  };
+  invariant(!(filter.type && filter.or.length > 0), 'Cannot mix type and or filters.');
+  invariant(
+    filter.or.every((subFilter) => !(subFilter.type && subFilter.or.length > 0)),
+    'Cannot mix type and or filters.',
+  );
+  if (filter.type || (filter.or.length > 0 && filter.or.every((subFilter) => !subFilter.not && subFilter.type))) {
+    return {
+      typenames: filter.type?.itemId ? [filter.type.itemId] : filter.or.map((f) => f.type?.itemId).filter(nonNullable),
+      inverted: filter.not,
+    };
+  } else {
+    // Query all objects.
+    return { typenames: [] };
+  }
 };

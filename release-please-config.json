@@ -69,6 +69,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-function/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },
@@ -195,6 +200,11 @@
         {
           "type": "json",
           "path": "packages/apps/plugins/plugin-stack/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/apps/plugins/plugin-status-bar/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -559,12 +569,12 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create-app-plugin/package.json",
+          "path": "packages/devtools/initializers/create-bare/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create-bare/package.json",
+          "path": "packages/devtools/initializers/create-composer-plugin/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -575,6 +585,11 @@
         {
           "type": "json",
           "path": "packages/e2e/rpc-tunnel-e2e/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/experimental/agent-functions/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -595,11 +610,6 @@
         {
           "type": "json",
           "path": "packages/experimental/gem-spore/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/experimental/labs-functions/package.json",
           "jsonpath": "$.version"
         },
         {

@@ -18,7 +18,7 @@ const env = (value?: string) => (value ? `'${value}'` : undefined);
 // Config: https://vuepress.github.io/reference/config.html
 const config: UserConfig = defineUserConfig({
   title: 'DXOS', // Used in browser title.
-  description: 'The Operating System for Decentralized Software',
+  description: 'Build cloudless, collaborative software',
   pagePatterns: [
     // Defaults
     '**/*.md',
@@ -65,18 +65,19 @@ const config: UserConfig = defineUserConfig({
     navTitle: false,
     navbar: [
       {
-        text: 'Guide',
+        text: 'Composer',
+        link: '/composer/',
+      },
+      {
+        text: 'SDK',
         link: '/guide/',
       },
       {
         text: 'API',
         link: '/api/',
       },
-      {
-        text: 'Composer',
-        link: '/composer/',
-      },
     ],
+    backToTop: false,
     plugins: {
       mdEnhance: {
         codetabs: true,
@@ -85,7 +86,9 @@ const config: UserConfig = defineUserConfig({
         attrs: true,
         figure: true,
         imgMark: true,
-      }
+        mermaid: true,
+      },
+      readingTime: false,
     },
   }),
   plugins: [

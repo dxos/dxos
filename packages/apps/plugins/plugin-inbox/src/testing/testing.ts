@@ -9,6 +9,16 @@ import { PublicKey } from '@dxos/react-client';
 
 faker.seed(1);
 
+const createRandomBlock = () => {
+  return {
+    timestamp: faker.date.recent().toISOString(),
+    content: {
+      id: faker.string.uuid(),
+      content: faker.lorem.paragraph(),
+    },
+  };
+};
+
 export const createInbox = (count = 10) => {
   // const now = new Date();
 
@@ -19,9 +29,13 @@ export const createInbox = (count = 10) => {
         create(MessageType, {
           from: {
             identityKey: PublicKey.random().toHex(),
+            name: faker.person.fullName(),
           },
-          subject: faker.lorem.sentence(),
-          blocks: [],
+          subject: faker.commerce.productName(),
+          blocks: [
+            // Between 1-3 blocks.
+            ...faker.helpers.multiple(createRandomBlock, { count: faker.number.int({ min: 1, max: 3 }) }),
+          ],
         }),
       { count },
     ),

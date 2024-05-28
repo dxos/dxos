@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
+import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -85,19 +86,10 @@ export const useStats = (): [Stats, () => void] => {
     'paint',
   ]);
 
-  useEffect(() => {
-    setTimeout(async () => {
+  // Quick metrics.
+  useAsyncEffect(
+    async (isMounted) => {
       const begin = performance.now();
-
-      // client.experimental.graph;
-      const diagnostics = await client.diagnostics();
-      // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
-      const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
-      const queries: QueryInfo[] = Object.values(resources)
-        .filter((res) => res.className === 'QueryState')
-        .map((res) => {
-          return res.info as QueryInfo;
-        });
 
       // TODO(burdon): Reconcile with diagnostics.
       const objects = Object.values(
@@ -105,6 +97,7 @@ export const useStats = (): [Stats, () => void] => {
       )
         .map((handle: any) => handle.docSync())
         .filter(Boolean);
+
       const database: DatabaseInfo = {
         spaces: client.spaces.get().length,
         objects: objects.length,
@@ -118,16 +111,59 @@ export const useStats = (): [Stats, () => void] => {
       }
       memory.used = memory.usedJSHeapSize / memory.jsHeapSizeLimit;
 
-      log.info('collected stats', { elapsed: performance.now() - begin });
-      setStats({
-        performanceEntries,
-        diagnostics: TRACE_PROCESSOR.getDiagnostics(),
-        memory,
-        database,
-        queries,
-      });
-    });
-  }, [update]);
+      log('collected stats', { elapsed: performance.now() - begin });
+      if (isMounted()) {
+        setStats((stats) =>
+          Object.assign({}, stats, {
+            performanceEntries,
+            diagnostics: TRACE_PROCESSOR.getDiagnostics(),
+            memory,
+            database,
+          }),
+        );
+      }
+    },
+    [update],
+  );
+
+  // Slower metrics.
+  useAsyncEffect(
+    async (isMounted) => {
+      const begin = performance.now();
+
+      // client.experimental.graph;
+      // TODO(burdon): This is very expensive (do separately).
+      const diagnostics = await client.diagnostics();
+
+      // const s = TRACE_PROCESSOR.findResourcesByClassName('QueryState');
+      const resources = get(diagnostics, 'services.diagnostics.trace.resources') as Record<string, Resource>;
+      const queries: QueryInfo[] = Object.values(resources)
+        .filter((res) => res.className === 'QueryState')
+        .map((res) => {
+          return res.info as QueryInfo;
+        });
+
+      log('collected stats', { elapsed: performance.now() - begin });
+      if (isMounted()) {
+        setStats((stats) =>
+          Object.assign({}, stats, {
+            queries,
+          }),
+        );
+      }
+    },
+    [update],
+  );
 
   return [stats, () => forceUpdate({})];
+};
+
+// TODO(burdon): Move to util.
+export const removeEmpty = (obj: any): any => {
+  const maybeTruncateKey = (str: string) => (str.length > 32 ? str.slice(0, 8) : str);
+  return Object.fromEntries(
+    Object.entries(obj)
+      .filter(([_, v]) => v !== undefined && v !== null && v !== false && !(Array.isArray(v) && v.length === 0))
+      .map(([k, v]) => [k, v === Object(v) ? removeEmpty(v) : typeof v === 'string' ? maybeTruncateKey(v) : v]),
+  );
 };
