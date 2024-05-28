@@ -65,12 +65,13 @@ export const LayoutPlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
-  const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
+  const settings = new LocalStorageStore<LayoutSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
+    deck: false,
   });
 
-  const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
     sidebarOpen: true,
 
@@ -168,7 +169,8 @@ export const LayoutPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -414,6 +416,13 @@ export const LayoutPlugin = ({
                     : [],
                 ],
               };
+            }
+
+            case NavigationAction.CLOSE: {
+              batch(() => {
+                location.closed = firstMainId(location.active);
+                location.active = undefined;
+              });
             }
           }
         },

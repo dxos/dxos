@@ -20,7 +20,7 @@ export const getPluginConfig = (config: Config, id: string): Runtime.Agent.Plugi
 export type PluginContext = {
   client: Client;
   clientServices: ClientServicesProvider;
-  plugins: Plugin[];
+  plugins?: Plugin[];
 };
 
 export abstract class Plugin {
@@ -33,9 +33,8 @@ export abstract class Plugin {
   public readonly statusUpdate = new Event();
 
   protected readonly _ctx = new Context();
-
-  protected _config!: Runtime.Agent.Plugin;
   private _pluginCtx?: PluginContext;
+  private _config!: Runtime.Agent.Plugin;
 
   get config(): Runtime.Agent.Plugin {
     return this._config;
@@ -50,19 +49,13 @@ export abstract class Plugin {
     return (this.context.clientServices as LocalClientServices).host ?? failUndefined();
   }
 
-  setConfig(config: Runtime.Agent.Plugin) {
-    this._config = config;
-  }
-
-  // TODO(burdon): Remove Client dependency (client services only).
   async initialize(pluginCtx: PluginContext): Promise<void> {
-    log(`initializing: ${this.id}`);
+    log('initializing', { id: this.id });
     this._pluginCtx = pluginCtx;
 
-    // TODO(burdon): Require config.
     const config = getPluginConfig(this._pluginCtx.client.config, this.id);
     invariant(config, `Plugin not configured: ${this.id}`);
-    this.setConfig(config);
+    this._config = config;
   }
 
   async open() {
@@ -74,19 +67,19 @@ export abstract class Plugin {
       throw new Error(`Plugin not configured: ${this.id}`);
     }
 
-    log(`opening: ${this.id}`);
+    log.info('opening...', { id: this.id });
     await this.onOpen();
     this.statusUpdate.emit();
-    log(`opened: ${this.id}`);
+    log.info('opened', { id: this.id });
   }
 
   async close() {
     invariant(!this._ctx.disposed, `Plugin closed: ${this.id}`);
-    log(`closing: ${this.id}`);
+    log.info('closing...', { id: this.id });
     await this.onClose();
     void this._ctx.dispose();
     this.statusUpdate.emit();
-    log(`closed: ${this.id}`);
+    log.info('closed', { id: this.id });
   }
 
   protected async onOpen(): Promise<void> {}

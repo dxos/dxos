@@ -26,6 +26,9 @@
       "path": "../../../common/async"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
@@ -53,10 +56,10 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-layout"
+      "path": "../plugin-markdown"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-stack"

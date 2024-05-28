@@ -18,7 +18,7 @@ Type: <code>[ShellLayout](/api/@dxos/client/enums#ShellLayout)</code>
 Determins which panel of the shell is opened.
 
 ### [spaceKey]()
-Type: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+Type: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 Key of the space to share.
 

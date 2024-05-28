@@ -77,13 +77,12 @@ describe('Database', () => {
 
     const obj = create(Expando, {});
     expectObjects(getMeta(obj).keys, []);
-    getMeta(obj).keys = [{ id: 'test-key', source: 'test' }];
-    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    getMeta(obj).keys.push({ source: 'test', id: 'test-key' });
+    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
 
     db.add(obj);
     await db.flush();
-
-    expectObjects(getMeta(obj).keys, [{ id: 'test-key', source: 'test' }]);
+    expectObjects(getMeta(obj).keys, [{ source: 'test', id: 'test-key' }]);
   });
 
   test('creating objects', async () => {
@@ -110,7 +109,7 @@ describe('Database', () => {
 
     {
       const container = create(Container, { records: [{ type: RecordType.WORK }] });
-      await database.add(container);
+      database.add(container);
     }
 
     {
@@ -158,8 +157,8 @@ describe('Database', () => {
       const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0])?.itemId).to.equal(Task.typename);
-      expect(getType(container.objects![1])?.itemId).to.equal(Contact.typename);
+      expect(getType(container.objects![0]!)?.itemId).to.equal(Task.typename);
+      expect(getType(container.objects![1]!)?.itemId).to.equal(Contact.typename);
     }
   });
 
@@ -299,6 +298,7 @@ describe('Database', () => {
       expect(root.records).to.have.length(1);
     });
   });
+
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
     graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);

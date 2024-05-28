@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ridoculous",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "description": "Markdown processing CLI and library.",
   "homepage": "https://dxos.org",
@@ -51,6 +51,6 @@
     "@types/yargs": "~16.0.1",
     "diff": "~5.1.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   }
 }

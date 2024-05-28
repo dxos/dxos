@@ -4,17 +4,16 @@
 
 import { inspect } from 'node:util';
 
-import { Event, MulticastObservable, PushStream, Trigger, scheduleTask } from '@dxos/async';
+import { Event, MulticastObservable, PushStream, scheduleTask, Trigger } from '@dxos/async';
 import {
-  CREATE_SPACE_TIMEOUT,
-  Properties,
-  defaultKey,
   type ClientServicesProvider,
+  CREATE_SPACE_TIMEOUT,
+  defaultKey,
   type Echo,
+  Properties,
   type PropertiesProps,
   type Space,
 } from '@dxos/client-protocol';
-import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query } from '@dxos/echo-db';
@@ -50,8 +49,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   constructor(
-    // TODO(dmaretskyi): Seems unused - remove.
-    private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
     private readonly _getIdentityKey: () => PublicKey | undefined,
@@ -100,6 +97,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._invitationProxy.open();
 
     // Subscribe to spaces and create proxies.
+
     const gotInitialUpdate = new Trigger();
 
     const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
@@ -163,7 +161,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       await agentQuerySourceProvider.open();
       this._echoClient.graph.registerQuerySourceProvider(agentQuerySourceProvider);
       this._ctx.onDispose(() => agentQuerySourceProvider.close());
-
       subscription.unsubscribe();
     });
     this._ctx.onDispose(() => subscription.unsubscribe());
@@ -188,7 +185,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
-
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
   }

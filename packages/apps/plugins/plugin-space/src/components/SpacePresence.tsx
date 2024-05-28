@@ -9,7 +9,7 @@ import { generateName } from '@dxos/display-name';
 import { type Expando } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { PublicKey, useClient } from '@dxos/react-client';
-import { getSpace, useSpace, useMembers, type SpaceMember } from '@dxos/react-client/echo';
+import { getSpace, useSpace, useMembers, type SpaceMember, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import {
   Avatar,
@@ -24,7 +24,7 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { AttentionGlyphCloseButton } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -65,18 +65,21 @@ export const SpacePresence = ({ object, spaceKey }: { object: Expando; spaceKey?
   }
 
   const spaceState = spacePlugin.provides.space;
-  const currentObjectViewers = spaceState.viewersByObject[object.id] ?? noViewers;
+  const currentObjectViewers = spaceState.viewersByObject[fullyQualifiedId(object)] ?? noViewers;
   const viewing = spaceState.viewersByIdentity;
 
   const members = spaceMembers
     .filter((member) => member.presence === 1 && !identity.identityKey.equals(member.identity.identityKey))
-    .map((member) => ({
-      ...member,
-      match: currentObjectViewers.has(member.identity.identityKey),
-      // Infinity if not seen before on this document, to ensure that all online members are included.
-      lastSeen: currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? Infinity,
-    }))
-    .filter((member) => moment - member.lastSeen < ACTIVITY_DURATION)
+    .map((member) => {
+      const lastSeen = currentObjectViewers.get(member.identity.identityKey)?.lastSeen ?? -Infinity;
+      // If the member was not seen within the activity duration, they are not considered active on the object.
+      const match = moment - lastSeen < ACTIVITY_DURATION;
+      return {
+        ...member,
+        match,
+        lastSeen,
+      };
+    })
     .toSorted((a, b) => a.lastSeen - b.lastSeen);
 
   return density === 'fine' ? (
@@ -211,7 +214,13 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   );
 };
 
-export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
+export const SmallPresenceLive = ({
+  viewers,
+  onCloseClick,
+}: {
+  viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
+  onCloseClick?: () => void;
+}) => {
   const [moment, setMoment] = useState(Date.now());
 
   // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
@@ -224,15 +233,19 @@ export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey,
     ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
     : [];
 
-  return <SmallPresence count={activeViewers.length} />;
+  return <SmallPresence count={activeViewers.length} onCloseClick={onCloseClick} />;
 };
 
-export const SmallPresence = ({ count }: { count: number }) => {
+export const SmallPresence = ({ count, onCloseClick }: { count: number; onCloseClick?: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
+        <AttentionGlyphCloseButton
+          presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+          classNames='self-center mie-1'
+          onClick={onCloseClick}
+        />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>

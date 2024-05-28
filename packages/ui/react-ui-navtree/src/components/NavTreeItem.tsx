@@ -117,7 +117,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
       (action) => ('invoke' in action ? [action] : []),
     );
     const { t } = useTranslation(translationKey);
-    const { current, attended, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
+    const { current, attended, popoverAnchorId, onSelect, onToggle, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
@@ -137,6 +137,12 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
 
     const isOverCurrent = isOver(path);
 
+    const handleOpenChange = (open: boolean) => {
+      const nextOpen = forceCollapse ? false : open;
+      setOpen(nextOpen);
+      onToggle?.({ path, node, level, position: position as number, open: nextOpen });
+    };
+
     return (
       <Tooltip.Root
         open={tooltipOpen}
@@ -154,7 +160,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             <TreeItem.Root
               collapsible={isBranch}
               open={!forceCollapse && open}
-              onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
+              onOpenChange={handleOpenChange}
               classNames={[
                 'rounded block relative transition-opacity',
                 hoverableFocusedKeyboardControls,
@@ -177,7 +183,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   className={mx(
                     'flex items-start rounded',
                     levelPadding(level),
-                    level > 0 && hoverableControls,
+                    hoverableControls,
                     hoverableFocusedWithinControls,
                     hoverableDescriptionIcons,
                     level < 1 && topLevelCollapsibleSpacing,
@@ -232,7 +238,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   )}
                   <NavTreeItemActionDropdownMenu
                     icon={DotsThreeVertical}
-                    actions={actions}
+                    actions={actions.filter((action) => !action.properties.hidden)}
                     suppressNextTooltip={suppressNextTooltip}
                     onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
                     testId={`navtree.treeItem.actionsLevel${level}`}

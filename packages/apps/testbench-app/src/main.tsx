@@ -14,11 +14,14 @@ import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
+
+TRACE_PROCESSOR.setInstanceTag('app');
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
@@ -82,8 +85,26 @@ const main = async () => {
         });
 
   const handleInitialized = async (client: Client) => {
-    if (!client.halo.identity.get()) {
-      await client.halo.createIdentity({ displayName: 'Test User' });
+    const searchParams = new URLSearchParams(location.search);
+    const deviceInvitationCode = searchParams.get('deviceInvitationCode');
+    const identity = client.halo.identity.get();
+    if (!identity && !deviceInvitationCode) {
+      await client.halo.createIdentity({ displayName: 'Testbench User' });
+      // TODO(wittjosiah): Ideally this would be per app rather than per identity.
+    } else if (deviceInvitationCode) {
+      await client.shell.initializeIdentity({ invitationCode: deviceInvitationCode }).then(({ identity }) => {
+        if (!identity) {
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        const params = Array.from(url.searchParams.entries());
+        const [name] = params.find(([_, value]) => value === deviceInvitationCode) ?? [null, null];
+        if (name) {
+          url.searchParams.delete(name);
+          history.replaceState({}, document.title, url.href);
+        }
+      });
     }
 
     // TODO(burdon): [API]: Pass array.

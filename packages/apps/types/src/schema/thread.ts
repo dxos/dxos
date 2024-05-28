@@ -6,6 +6,8 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 import { TextV0Type } from './document';
 
+// TODO(burdon): Flatten types.
+
 export enum MessageState {
   NONE = 0,
   ARCHIVED = 1,
@@ -13,7 +15,7 @@ export enum MessageState {
   SPAM = 3,
 }
 
-export class ContactType extends TypedObject({ typename: 'braneframe.Contact', version: '0.1.0' })({
+export class ContactType extends TypedObject({ typename: 'dxos.org/type/Contact', version: '0.1.0' })({
   name: S.optional(S.string),
   identifiers: S.mutable(
     S.array(
@@ -33,15 +35,24 @@ const _RecipientSchema = S.mutable(
     contact: S.optional(ref(ContactType)),
   }),
 );
+
 export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
 
 const _BlockSchema = S.struct({
   timestamp: S.string,
+  // TODO(burdon): Should not be a separate object.
   content: S.optional(ref(TextV0Type)),
   object: S.optional(ref(Expando)),
 });
+
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
+// TODO(wittjosiah): This is way too coupled with email.
+//  Thread messages and email messages should not be the same thing.
+//  Interoperability should be handled by lenses or some other transformation mechanism.
+//  Requiring the same schema for all types of messages will not scale -
+//  It also makes the simple cases much more complex than they need to be.
+//  [burdon]: The intent of course is to enable a universal inbox out of the box.
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
   type: S.optional(S.string),
   date: S.optional(S.string),
@@ -62,15 +73,12 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   ),
 }) {}
 
-// TODO(wittjosiah): This is way too coupled with email.
-//   Thread messages and email messages should not be the same thing.
-//   Interoperability should be handled by lenses or some other transformation mechanism.
-//   Requiring the same schema for all types of messages will not scale -
-//   It also makes the simple cases much more complex than they need to be.
 export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
   title: S.optional(S.string),
   messages: S.mutable(S.array(ref(MessageType))),
   // TODO(burdon): Reconcile with Message.Context.
+  // TODO(burdon): Partial?
+  // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
   context: S.optional(
     S.struct({
       space: S.optional(S.string),
@@ -81,12 +89,12 @@ export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', ver
 }) {}
 
 // TODO(burdon): Reconcile with Thread?
-export class MailboxType extends TypedObject({ typename: 'braneframe.Mailbox', version: '0.1.0' })({
+export class MailboxType extends TypedObject({ typename: 'dxos.org/type/Mailbox', version: '0.1.0' })({
   title: S.optional(S.string),
-  messages: S.mutable(S.array(ref(MessageType))),
+  messages: S.optional(S.mutable(S.array(ref(MessageType)))),
 }) {}
 
-export class EventType extends TypedObject({ typename: 'braneframe.Event', version: '0.1.0' })({
+export class EventType extends TypedObject({ typename: 'dxos.org/type/Event', version: '0.1.0' })({
   title: S.optional(S.string),
   owner: _RecipientSchema,
   attendees: S.mutable(S.array(_RecipientSchema)),
@@ -94,6 +102,6 @@ export class EventType extends TypedObject({ typename: 'braneframe.Event', versi
   links: S.mutable(S.array(ref(Expando))),
 }) {}
 
-export class AddressBookType extends TypedObject({ typename: 'braneframe.AddressBook', version: '0.1.0' })({}) {}
+export class AddressBookType extends TypedObject({ typename: 'dxos.org/type/AddressBook', version: '0.1.0' })({}) {}
 
-export class CalendarType extends TypedObject({ typename: 'braneframe.Calendar', version: '0.1.0' })({}) {}
+export class CalendarType extends TypedObject({ typename: 'dxos.org/type/Calendar', version: '0.1.0' })({}) {}

@@ -2,17 +2,18 @@
   "extends": "../../../../tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/types",
-    "stripInternal": true,
     "types": [
       "@dxos/test",
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],
   "references": [
+    {
+      "path": "../../../common/debug"
+    },
     {
       "path": "../../../common/invariant"
     },
@@ -24,6 +25,9 @@
     },
     {
       "path": "../../../common/node-std"
+    },
+    {
+      "path": "../../../common/util"
     },
     {
       "path": "../../protocols"

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/signal",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "DXOS signal server.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/mesh/protocol-plugin-replicator#readme",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -69,10 +69,12 @@ export const sleepWithContext = (ctx: Context, ms: number) => {
       reject(error);
       return;
     }
+
     const timeout = setTimeout(() => {
       clearDispose();
       resolve();
     }, ms);
+
     const clearDispose = ctx.onDispose(() => {
       clearTimeout(timeout);
       reject(error);

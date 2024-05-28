@@ -3,8 +3,8 @@
 //
 
 import React, {
-  createContext,
   type Context,
+  createContext,
   type PropsWithChildren,
   useContext,
   useEffect,
@@ -16,7 +16,7 @@ import { DocumentType, TextV0Type } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
-import { type Space, SpaceState, useQuery, useSpaces, getMeta } from '@dxos/react-client/echo';
+import { getMeta, type Space, SpaceState, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 
 import { type DocumentResolverProps, type SpaceResolverProps } from './ResolverProps';
@@ -92,12 +92,19 @@ const DocumentResolverProviderImpl = ({
       }
 
       if (event.data.type === 'initial-data') {
-        const nextDocument = create(DocumentType, {
-          content: create(TextV0Type, { content: event.data.content }),
-          title: defaultDisplayName,
-        });
-        getMeta(nextDocument).keys = [{ source, id }];
-        space.db.add(nextDocument);
+        const nextDocument = space.db.add(
+          create(
+            DocumentType,
+            {
+              content: create(TextV0Type, { content: event.data.content }),
+              title: defaultDisplayName,
+            },
+            {
+              keys: [{ source, id }],
+            },
+          ),
+        );
+
         setDocument(nextDocument);
       }
     };

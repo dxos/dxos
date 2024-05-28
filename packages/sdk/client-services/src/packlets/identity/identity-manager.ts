@@ -386,6 +386,7 @@ export class IdentityManager {
       },
       memberKey: identityKey,
       onDelegatedInvitationStatusChange: async () => {}, // TODO: will be used for recovery keys
+      onMemberRolesChanged: async () => {}, // TODO: will be used for device revocation
     });
   }
 }

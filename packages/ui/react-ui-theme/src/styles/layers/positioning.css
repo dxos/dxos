@@ -14,4 +14,7 @@
   .sticky-top-from-topbar-bottom {
     --sticky-top: var(--topbar-size);
   }
+  .sticky-bottom-from-statusbar-bottom {
+    --sticky-bottom: var(--statusbar-size);
+  }
 }

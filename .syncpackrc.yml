@@ -46,6 +46,7 @@ versionGroups:
       - '@dxos/automerge'
     dependencies:
       - 'xstate'
+      - '@automerge/automerge-wasm'
 sortFirst:
   - name
   - version

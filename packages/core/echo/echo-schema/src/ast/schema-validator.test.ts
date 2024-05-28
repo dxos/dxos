@@ -6,9 +6,11 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 import get from 'lodash.get';
 
-import { test, describe } from '@dxos/test';
+import { describe, test } from '@dxos/test';
 
 import { SchemaValidator } from './schema-validator';
+import { create } from '../handler';
+import { TypedObject } from '../typed-object-class';
 
 describe('schema-validator', () => {
   describe('validateSchema', () => {
@@ -126,6 +128,51 @@ describe('schema-validator', () => {
         path: ['field', 'nested'],
         valueToAssign: { any: 'value' },
       });
+    });
+
+    test('record', () => {
+      const schema = S.mutable(
+        S.struct({
+          meta: S.optional(S.mutable(S.any)),
+          // NOTE: S.record only supports shallow values.
+          // https://www.npmjs.com/package/@effect/schema#mutable-records
+          // meta: S.optional(S.mutable(S.record(S.string, S.any))),
+          // meta: S.optional(S.mutable(S.object)),
+        }),
+      );
+
+      {
+        const object = create(schema, {});
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
+
+      {
+        const object = create(schema, {});
+        object.meta = { test: { value: 300 } };
+        expect(object.meta.test.value).to.eq(300);
+      }
+
+      {
+        type Test1 = S.Schema.Type<typeof schema>;
+
+        const object: Test1 = {};
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
+
+      {
+        class Test2 extends TypedObject({
+          typename: 'dxos.org/type/FunctionTrigger',
+          version: '0.1.0',
+        })({
+          meta: S.optional(S.mutable(S.record(S.string, S.any))),
+        }) {}
+
+        const object = create(Test2, {});
+        (object.meta ??= {}).test = 100;
+        expect(object.meta.test).to.eq(100);
+      }
     });
 
     test('index signatures', () => {

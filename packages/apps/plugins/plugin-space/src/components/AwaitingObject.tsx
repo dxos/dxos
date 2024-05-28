@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { parseIntentPlugin, useResolvePlugin, parseNavigationPlugin, NavigationAction } from '@dxos/app-framework';
 import { useClient } from '@dxos/react-client';
-import { useQuery } from '@dxos/react-client/echo';
+import { fullyQualifiedId, useQuery } from '@dxos/react-client/echo';
 import { Button, Toast, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
@@ -41,7 +41,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => object.id === id) > -1) {
+    if (objects.findIndex((object) => fullyQualifiedId(object) === id) > -1) {
       setFound(true);
 
       if (navigationPlugin?.provides.location.active === id) {
