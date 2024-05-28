@@ -19,9 +19,11 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
+import { styles } from '../../../styles';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -235,7 +237,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      classNames='flex-row divide-x'
+      classNames={mx('flex-row divide-x', styles.border)}
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
