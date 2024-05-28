@@ -46,7 +46,7 @@ export const Chess = ({ space, game }: { space: Space; game: GameType }) => {
   }
 
   return (
-    <div className='flex flex-col justify-between bs-full mb-4'>
+    <div role='none' className='flex flex-col justify-between bs-full mb-4'>
       <Chessboard model={model} onUpdate={handleUpdate} />
       <PlayerSelector game={game} space={space} />
     </div>
