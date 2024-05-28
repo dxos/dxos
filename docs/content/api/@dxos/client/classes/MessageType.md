@@ -1,5 +1,5 @@
 # Class `MessageType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/8ed3715dc/packages/sdk/client/src/testing/data.ts#L38)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L38)</sub>
 
 
 
@@ -19,18 +19,18 @@ Arguments: none
 
 
 ## Properties
-### [blocks]()
+### [blocks](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L42)
 Type: <code>object[]</code>
 
 
 
-### [context]()
-Type: <code>undefined | object</code>
+### [context](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L45)
+Type: <code>object</code>
 
 
 
-### [date]()
-Type: <code>undefined | string</code>
+### [date](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L40)
+Type: <code>string</code>
 
 
 
@@ -39,23 +39,23 @@ Type: <code>string</code>
 
 
 
-### [links]()
-Type: <code>undefined | readonly Ref&lt;[Expando](/api/@dxos/client/interfaces/Expando)&gt;[]</code>
+### [links](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L43)
+Type: <code>readonly Ref&lt;[Expando](/api/@dxos/client/interfaces/Expando)&gt;[]</code>
 
 
 
-### [read]()
-Type: <code>undefined | boolean</code>
+### [read](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L44)
+Type: <code>boolean</code>
 
 
 
-### [subject]()
-Type: <code>undefined | string</code>
+### [subject](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L41)
+Type: <code>string</code>
 
 
 
-### [type]()
-Type: <code>undefined | string</code>
+### [type](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L39)
+Type: <code>string</code>
 
 
 

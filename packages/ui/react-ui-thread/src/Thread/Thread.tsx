@@ -74,7 +74,10 @@ export const ThreadFooter = forwardRef<HTMLDivElement, ThreadFooterProps>(
     return (
       <div
         {...props}
-        className={mx('col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description', classNames)}
+        className={mx(
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] text-xs fg-description pb-2',
+          classNames,
+        )}
         ref={forwardedRef}
       >
         <Spinner

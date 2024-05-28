@@ -7,7 +7,6 @@ import { Client, Config, Defaults, Dynamics, Local } from '@dxos/client';
 import { type ClientServicesProvider, ClientServicesProxy, type ShellRuntime } from '@dxos/client/services';
 import { DEFAULT_INTERNAL_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import type { IFrameHostRuntime } from '@dxos/client-services';
-import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createIFramePort, createWorkerPort } from '@dxos/rpc-tunnel';
 import { safariCheck } from '@dxos/util';
@@ -30,7 +29,7 @@ const startShell = async (config: Config, runtime: ShellRuntime, services: Clien
       content: ({ inOverlayLayout, elevation = 'chrome' }, ...etc) =>
         mx(
           'flex flex-col',
-          !inOverlayLayout && 'fixed z-20 top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
+          !inOverlayLayout && 'fixed z-[22] top-[50%] left-[50%] -translate-x-[50%] -translate-y-[50%]',
           'is-[95vw] md:is-full max-is-[20rem] rounded-lg p-4',
           dialogMotion,
           surfaceElevation({ elevation }),
@@ -105,7 +104,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled && port) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port }));
-      void shellClientProxy.open(new Context());
+      void shellClientProxy.open();
     }
 
     if (shellClientProxy) {
@@ -195,7 +194,7 @@ export const startIFrameRuntime = async (createWorker: () => SharedWorker): Prom
     let shellClientProxy: ClientServicesProvider | undefined;
     if (!shellDisabled) {
       shellClientProxy = new ClientServicesProxy(createWorkerPort({ port: shellPort }));
-      void shellClientProxy.open(new Context());
+      void shellClientProxy.open();
     }
 
     const { SharedWorkerConnection } = await import('@dxos/client-services');

@@ -2,15 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import { ArrowClockwise, ChartBar } from '@phosphor-icons/react';
-import React, { useState } from 'react';
+import { ChartBar, Pause, Play } from '@phosphor-icons/react';
+import React, { useEffect, useState } from 'react';
 
-import { Button, DensityProvider } from '@dxos/react-ui';
+import { DensityProvider, Toggle } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { Panel, type PanelProps } from './Panel';
-import { DatabasePanel, TimeSeries, MemoryPanel, PerformancePanel, QueriesPanel, SpansPanel } from './panels';
-import { type Stats } from '../../hooks';
+import {
+  DatabasePanel,
+  MemoryPanel,
+  PerformancePanel,
+  QueriesPanel,
+  RawQueriesPanel,
+  SpansPanel,
+  TimeSeries,
+} from './panels';
+import { removeEmpty, type Stats } from '../../hooks';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
 
@@ -19,13 +27,34 @@ export type QueryPanelProps = {
   onRefresh?: () => void;
 };
 
-type PanelKey = 'ts' | 'performance' | 'spans' | 'queries' | 'database' | 'memory';
+type PanelKey = 'ts' | 'performance' | 'spans' | 'queries' | 'rawQueries' | 'database' | 'memory';
 type PanelMap = Record<PanelKey, boolean | undefined>;
-const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'database', 'memory'];
 
-// TODO(burdon): Factor out (for Composer).
+const PANEL_KEYS: PanelKey[] = ['ts', 'performance', 'spans', 'queries', 'rawQueries', 'database', 'memory'];
+
 // TODO(burdon): Reconcile with TraceView in diagnostics.
 export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
+  const [live, setLive] = useState(true);
+  const handleToggleLive = () => setLive((live) => !live);
+
+  useEffect(() => {
+    if (live && onRefresh) {
+      const interval = setInterval(onRefresh, 5_000);
+      return () => clearInterval(interval);
+    }
+  }, [live, onRefresh]);
+
+  // TODO(burdon): Factor out util.
+  const rawQueries = (stats?.queries ?? []).reduce((acc, query) => {
+    const raw = removeEmpty(query.filter);
+    delete raw.options;
+    raw.type = raw.type?.itemId;
+    const str = JSON.stringify(raw);
+    const num = acc.get(str) ?? 0;
+    acc.set(str, num + 1);
+    return acc;
+  }, new Map<string, number>());
+
   const spans = [...(stats?.diagnostics?.spans ?? [])];
   spans.reverse();
 
@@ -39,6 +68,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
       return acc;
     }, {} as PanelMap),
   );
+
   const handleToggle: PanelProps['onToggle'] = (id, open) => {
     setPanelState({ ...panelState, [id]: open });
     localStorage.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
@@ -52,9 +82,15 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
           icon={ChartBar}
           title='Stats'
           info={
-            <Button classNames='!bg-transparent !p-0' density='fine' value='ghost' onClick={onRefresh}>
-              <ArrowClockwise className={getSize(4)} />
-            </Button>
+            <Toggle
+              pressed={live}
+              classNames='!bg-transparent !p-0'
+              density='fine'
+              value='ghost'
+              onClick={handleToggleLive}
+            >
+              {live ? <Pause className={getSize(4)} /> : <Play className={getSize(4)} />}
+            </Toggle>
           }
         />
         <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />
@@ -66,6 +102,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         />
         <SpansPanel id='spans' open={panelState.spans} onToggle={handleToggle} spans={spans} />
         <QueriesPanel id='queries' open={panelState.queries} onToggle={handleToggle} queries={queries} />
+        <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
         <DatabasePanel id='database' database={stats?.database} />
         <MemoryPanel id='memory' memory={stats?.memory} />
       </div>

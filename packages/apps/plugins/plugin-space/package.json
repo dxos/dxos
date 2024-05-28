@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-space",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

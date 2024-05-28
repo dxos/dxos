@@ -3,7 +3,7 @@
 //
 
 import { synchronized, trackLeaks } from '@dxos/async';
-import { type DelegateInvitationCredential } from '@dxos/credentials';
+import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -44,6 +44,7 @@ export type ConstructSpaceParams = {
   onAuthorizedConnection: (session: Teleport) => void;
   onAuthFailure?: (session: Teleport) => void;
   onDelegatedInvitationStatusChange: (invitation: DelegateInvitationCredential, isActive: boolean) => Promise<void>;
+  onMemberRolesChanged: (member: MemberInfo[]) => Promise<void>;
 };
 
 /**
@@ -87,6 +88,7 @@ export class SpaceManager {
     onAuthorizedConnection,
     onAuthFailure,
     onDelegatedInvitationStatusChange,
+    onMemberRolesChanged,
     memberKey,
   }: ConstructSpaceParams) {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
@@ -115,6 +117,7 @@ export class SpaceManager {
       snapshotManager,
       memberKey,
       onDelegatedInvitationStatusChange,
+      onMemberRolesChanged,
     });
     this._spaces.set(space.key, space);
 

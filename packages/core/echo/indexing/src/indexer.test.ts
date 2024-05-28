@@ -74,7 +74,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.execQuery({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typenames: [schemaURI] });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -90,7 +90,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.execQuery({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typenames: [schemaURI] });
       expect(ids.length).to.equal(1);
       expect(ids[0].id).to.equal('0');
     }
@@ -109,7 +109,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.execQuery({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typenames: [schemaURI] });
       expect(ids.length).to.equal(0);
     }
 
@@ -125,7 +125,7 @@ describe('Indexer', () => {
     }
 
     {
-      const ids = await indexer.execQuery({ typename: schemaURI });
+      const ids = await indexer.execQuery({ typenames: [schemaURI] });
       expect(ids.length).to.equal(0);
     }
   });

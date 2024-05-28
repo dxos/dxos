@@ -9,7 +9,7 @@ import { type MixedEncoding } from 'level-transcoder';
 import { PublicKey } from '@dxos/keys';
 import { describe, openAndClose, test } from '@dxos/test';
 
-import { type SubLevelDB } from './level';
+import { type SublevelDB } from './level';
 import { createTestLevel } from './testing';
 
 describe('Level', () => {
@@ -47,8 +47,8 @@ describe('Level', () => {
     const level = createTestLevel();
     await openAndClose(level);
 
-    const first: SubLevelDB = level.sublevel('first');
-    const second: SubLevelDB = level.sublevel('second');
+    const first: SublevelDB = level.sublevel('first');
+    const second: SublevelDB = level.sublevel('second');
 
     const batch = first.batch();
 

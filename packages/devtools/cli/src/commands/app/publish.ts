@@ -7,10 +7,14 @@ import os from 'os';
 
 import { invariant } from '@dxos/invariant';
 
-import { BaseCommand } from '../../base-command';
-import { type PublisherRpcPeer, build, loadConfig, publish } from '../../util';
+import { BaseCommand } from '../../base';
+import { build, loadConfig, publish, type PublisherRpcPeer } from '../../util';
 
+/**
+ * @deprecated
+ */
 export default class Publish extends BaseCommand<typeof Publish> {
+  static override state = 'deprecated';
   static override description = 'Publish apps.';
   static override flags = {
     ...BaseCommand.flags,
@@ -36,13 +40,15 @@ export default class Publish extends BaseCommand<typeof Publish> {
     const moduleConfig = await loadConfig(configPath);
     invariant(moduleConfig.values.package, 'Missing package definition in dx.yml');
     for (const module of moduleConfig.values.package!.modules ?? []) {
-      await build({ verbose }, { log: (...args) => this.log(...args), module });
-      const cid = await publish(
-        { verbose },
-        { log: (...args) => this.log(...args), module, config: this.clientConfig },
-      );
-      module.bundle = cid.bytes;
+      build({ verbose }, { log: (...args) => this.log(...args), module });
+      const cid = await publish({
+        config: this.clientConfig,
+        log: (...args) => this.log(...args),
+        module,
+        verbose,
+      });
 
+      module.bundle = cid.bytes;
       if (version) {
         module.build = { ...module.build, version };
       }
@@ -63,6 +69,7 @@ export default class Publish extends BaseCommand<typeof Publish> {
         skipExisting,
         accessToken,
       });
+
       result?.modules?.forEach(({ module, urls }) => {
         // TODO(zhenyasav): This is to de-advertise any non localhost urls because of security sandboxes
         //  in the browser requiring https for those domains to support halo vault

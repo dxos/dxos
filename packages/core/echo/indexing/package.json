@@ -1,6 +1,6 @@
 {
   "name": "@dxos/indexing",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,7 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",

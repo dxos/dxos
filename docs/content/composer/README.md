@@ -1,14 +1,30 @@
 ---
 order: 0
+headerDepth: 0
 ---
 
-# Composer
+# About Composer
 
-Composer is a free, open-source, multiplayer, local-first knowledge environment powered by DXOS. Users can collaborate real-time, work offline, and retain privacy through the peer-to-peer protocols of DXOS. User data is never stored on any servers and does not leave devices the user trusts. Composer works entirely on the client with no private data silos.
+Composer is a collaborative productivity app where developers can build and organize knowledge, extend with custom data and UI, and run private AI against their knowledge locally.
 
-Developers can extend Composer through plugins - every feature is implemented as a plugin that can be swapped or extended. Community contributions are most welcome.
+Key features:
 
-[Try Composer](https://composer.dxos.org){class="button"}
+* **Extensibility**: If your team is operating in a challenging problem domain you need knowledge tools specific to your work. Composer is built for customization from the ground up.
+* **Collaboration**: Composer has real-time multiplayer implemented through a local-first model. This makes a lot of things better: from meeting notes to working on airplanes.
+* **Openness**: Composer and the DXOS framework are open source. Due to the [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type)-based implementation there's no need for a server other than for backup. DXOS provides backup services if you want them, but you can also host your own.
+* **Privacy**: Composer is built on the peer-to-peer protocols of DXOS which are designed to be private by default. The data is stored on your device and only shared with others you explicitly invite.
+
+## Devices and Agents
+
+For example a running system might sync data like this:
+
+![](alice-and-bob-devices.png)
+
+Here [device](../guide/glossary.md#device) means a running DXOS instance. One device runs per domain/browser profile combination, so users can have multiple devices running on a physical machine. Each device is associated with an [identity](./user-guide/).
+
+[Agents](../guide/tooling/cli/agent.md) are DXOS instances running without an attached user interface. A common use of agents is to run on a server and provide availability if all other devices are offline, but this is completely optional.
+
+## Read More
 
 <a id="technology-preview"></a>
 ::: warning Technology Preview
@@ -17,24 +33,8 @@ Composer is not yet ready for production. There are bugs, and breaking changes m
 All your feedback is most welcome on [Discord](https://discord.gg/eXVfryv3sW).
 :::
 
-## Key Features
-
-* **Extensibility**: Every feature is implemented through the extensibility model, leaving nothing off-limits to malleability.
-* **Collaboration**: Built-in real-time multiplayer functionality for sharing and collaboration.
-* **Privacy-First**: Ensures privacy, availability, and functionality while offline. No data silos or intermediaries.
-* **Runs everywhere**: Designed for mobile and desktop, works in modern browsers.
-* **Native and Desktop apps**: Installable to your desktop or home screen (**coming soon**).
-
-## Use Cases
-
-* **Knowledge Management**: Organize and manage personal knowledge, notes, tasks, diagrams, and other kinds of content.
-* **Collaborative Work**: Share and collaborate on documents, projects, and tasks.
-* **Data Integration**: Integrate and visualize data from diverse sources and formats.
-* **Custom Applications**: Build custom applications and workflows on top of Composer.
-
-### Learn more
-
-* Try [Composer](https://composer.dxos.org)
-* Check out the [source](https://github.com/dxos/dxos/tree/main/packages/apps/composer-app)
-* See the source code to the various [plugins](https://github.com/dxos/dxos/tree/main/packages/apps/plugins)
-* Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+* To try composer see [Quick Start](./quick-start.md)
+* For day-to-day instructions see [User Guide](./user-guide/)
+* For information on privacy, the DXOS protocols, etc. see [Key Concepts](./key-concepts.md)
+* To learn about or write your first plugin see [SDK/Composer Plugins](../guide/composer-plugins/)
+* To learn about full extensibility see the [SDK](../guide/) itself

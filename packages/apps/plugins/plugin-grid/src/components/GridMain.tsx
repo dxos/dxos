@@ -11,7 +11,12 @@ import { create } from '@dxos/echo-schema';
 import { getSpace, isEchoObject } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import type { MosaicDropEvent, MosaicOperation, MosaicTileAction, MosaicTileComponent } from '@dxos/react-ui-mosaic';
-import { baseSurface, topbarBlockPaddingStart, fixedInsetFlexLayout } from '@dxos/react-ui-theme';
+import {
+  baseSurface,
+  topbarBlockPaddingStart,
+  fixedInsetFlexLayout,
+  bottombarBlockPaddingEnd,
+} from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { Grid, type GridDataItem } from './Grid';
@@ -82,7 +87,7 @@ const GridMain: FC<{ grid: GridType }> = ({ grid }) => {
 
   // TODO(burdon): Accessor to get card values.
   return (
-    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart]}>
+    <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <Grid
         id='grid' // TODO(burdon): Namespace.
         // TODO(wittjosiah): Cast is needed because subtypes are currently always optional.

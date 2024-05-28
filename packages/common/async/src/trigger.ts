@@ -15,7 +15,7 @@ export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T)
 
   const promise = new Promise<T>((resolve, reject) => {
     if (timeout) {
-      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
+      setTimeout(() => reject(new Error(`Timed out after ${timeout.toLocaleString()}ms`)), timeout);
     }
 
     callback = resolve;
@@ -82,8 +82,8 @@ export class Trigger<T = void> {
       this._resolve = resolve;
       this._reject = reject;
     });
-    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
 
+    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
     return this;
   }
 

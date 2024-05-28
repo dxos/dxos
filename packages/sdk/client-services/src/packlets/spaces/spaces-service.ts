@@ -4,12 +4,19 @@
 
 import { EventSubscriptions, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf';
-import { type CredentialProcessor } from '@dxos/credentials';
+import { createAdmissionCredentials, type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { type SpaceManager } from '@dxos/echo-pipeline';
+import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ApiError, SpaceNotFoundError, encodeError } from '@dxos/protocols';
+import {
+  ApiError,
+  SpaceNotFoundError,
+  encodeError,
+  IdentityNotInitializedError,
+  AuthorizationError,
+} from '@dxos/protocols';
 import {
   SpaceMember,
   SpaceState,
@@ -24,7 +31,7 @@ import {
   type WriteCredentialsRequest,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { type Credential, SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { type Provider } from '@dxos/util';
 
@@ -40,10 +47,7 @@ export class SpacesServiceImpl implements SpacesService {
   ) {}
 
   async createSpace(): Promise<Space> {
-    if (!this._identityManager.identity) {
-      throw new Error('This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo');
-    }
-
+    this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
     return this._serializeSpace(space);
@@ -68,8 +72,30 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async updateMemberRole(_: UpdateMemberRoleRequest): Promise<void> {
-    throw new Error('not implemented');
+  async updateMemberRole(request: UpdateMemberRoleRequest): Promise<void> {
+    const identity = this._requireIdentity();
+    const space = this._spaceManager.spaces.get(request.spaceKey);
+    if (space == null) {
+      throw new SpaceNotFoundError(request.spaceKey);
+    }
+    if (!space.spaceState.hasMembershipManagementPermission(identity.identityKey)) {
+      throw new AuthorizationError('No member management permission.', {
+        spaceKey: space.key,
+        role: space.spaceState.getMemberRole(identity.identityKey),
+      });
+    }
+    const credentials = await createAdmissionCredentials(
+      identity.getIdentityCredentialSigner(),
+      request.memberKey,
+      space.key,
+      space.genesisFeedKey,
+      request.newRole,
+      space.spaceState.membershipChainHeads,
+    );
+    invariant(credentials[0].credential);
+    const spaceMemberCredential = credentials[0].credential.credential;
+    invariant(getCredentialAssertion(spaceMemberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
+    await writeMessages(space.controlPipeline.writer, credentials);
   }
 
   querySpaces(): Stream<QuerySpacesResponse> {
@@ -218,12 +244,8 @@ export class SpacesServiceImpl implements SpacesService {
             identityKey: member.key,
             profile: member.profile ?? {},
           },
-          presence:
-            member.role === HaloSpaceMember.Role.REMOVED
-              ? SpaceMember.PresenceState.REMOVED
-              : isMe || peers.length > 0
-                ? SpaceMember.PresenceState.ONLINE
-                : SpaceMember.PresenceState.OFFLINE,
+          role: member.role,
+          presence: peers.length > 0 ? SpaceMember.PresenceState.ONLINE : SpaceMember.PresenceState.OFFLINE,
           peerStates: peers,
         };
       }),
@@ -231,6 +253,15 @@ export class SpacesServiceImpl implements SpacesService {
       cache: space.cache,
       metrics: space.metrics,
     };
+  }
+
+  private _requireIdentity() {
+    if (!this._identityManager.identity) {
+      throw new IdentityNotInitializedError(
+        'This device has no HALO identity available. See https://docs.dxos.org/guide/platform/halo',
+      );
+    }
+    return this._identityManager.identity;
   }
 }
 

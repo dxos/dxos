@@ -11,6 +11,8 @@ import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxo
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions } from './api';
+import { DiagnosticsManager } from './diagnostic';
+import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
@@ -72,6 +74,9 @@ const REFRESH_INTERVAL = 1_000;
 const MAX_INFO_OBJECT_DEPTH = 8;
 
 export class TraceProcessor {
+  public readonly diagnostics = new DiagnosticsManager();
+  public readonly diagnosticsChannel = new DiagnosticsChannel();
+
   readonly subscriptions: Set<TraceSubscription> = new Set();
 
   readonly resources = new Map<number, ResourceEntry>();
@@ -83,11 +88,21 @@ export class TraceProcessor {
 
   readonly logs: LogEntry[] = [];
 
+  private _instanceTag: string | null = null;
+
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
     const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
     unrefTimeout(refreshInterval);
+
+    this.diagnosticsChannel.serve(this.diagnostics);
+    this.diagnosticsChannel.unref();
+  }
+
+  setInstanceTag(tag: string) {
+    this._instanceTag = tag;
+    this.diagnostics.setInstanceTag(tag);
   }
 
   /**

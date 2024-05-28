@@ -6,7 +6,6 @@
       "@dxos/test"
     ]
   },
-  "exclude": [],
   "include": [
     "src"
   ],

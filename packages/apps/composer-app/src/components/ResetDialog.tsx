@@ -120,12 +120,16 @@ export const ResetDialog = ({
             <div role='none' className='flex-grow' />
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <Button variant='ghost'>{t('reset client label')}</Button>
+                <Button data-testid='resetDialog.reset' variant='ghost'>
+                  {t('reset client label')}
+                </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Portal>
                 <DropdownMenu.Content side='top' classNames='z-[51]'>
                   <DropdownMenu.Viewport>
-                    <DropdownMenu.Item onClick={handleReset}>{t('reset client confirm label')}</DropdownMenu.Item>
+                    <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
+                      {t('reset client confirm label')}
+                    </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
                 </DropdownMenu.Content>

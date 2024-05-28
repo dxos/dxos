@@ -35,7 +35,7 @@ Returns: <code>unknown</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 ### [_register(spaceKey, database, \[owningObject\])]()
@@ -47,7 +47,7 @@ Returns: <code>void</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 `database`: <code>EchoDatabaseImpl</code>
 
@@ -63,7 +63,7 @@ Returns: <code>void</code>
 
 Arguments: 
 
-`spaceKey`: <code>[PublicKey](/api/@dxos/react-client/classes/PublicKey)</code>
+`spaceKey`: <code>[PublicKey](/api/@dxos/client/classes/PublicKey)</code>
 
 
 ### [query(\[filter\], \[options\])]()

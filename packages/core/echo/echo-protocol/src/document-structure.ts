@@ -9,6 +9,7 @@ export type SpaceState = {
   rootUrl?: string;
 };
 
+// TODO(dmaretskyi): Rename DatabaseRootDoc.
 export interface SpaceDoc {
   access?: {
     spaceKey: string;

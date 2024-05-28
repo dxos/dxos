@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type GenericSignal, compositeRuntime } from '@dxos/echo-signals/runtime';
+import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './handler-meta';
-import { ReactiveArray, createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { getTargetMeta } from './object';
+import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -28,7 +28,6 @@ type ProxyTarget = {
 
 /**
  * Untyped in-memory reactive store.
- *
  * Target can be an array or object with any type of values including other reactive proxies.
  */
 export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
@@ -37,7 +36,7 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private constructor() {}
 
   // TODO(dmaretskyi): Does this work? Should this be a global variable instead?
-  _proxyMap = new WeakMap<object, any>();
+  readonly _proxyMap = new WeakMap<object, any>();
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
@@ -103,11 +102,15 @@ export class UntypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  isObjectDeleted(): boolean {
+  isDeleted(): boolean {
     return false;
   }
 
   getSchema() {
+    return undefined;
+  }
+
+  getTypeReference() {
     return undefined;
   }
 

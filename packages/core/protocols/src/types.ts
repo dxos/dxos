@@ -47,6 +47,7 @@ export interface IEchoStream {
   batch: EchoObjectBatch;
 }
 
+// TODO(burdon): Change to ObjectID;
 // TODO(burdon): Change to Buffer (same as key).
 export type ItemID = string;
 export type ItemType = string;

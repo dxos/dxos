@@ -3,7 +3,7 @@
 //
 
 import '@dxosTheme';
-
+import { markdown } from '@codemirror/lang-markdown';
 import { ArrowSquareOut, X } from '@phosphor-icons/react';
 import { type EditorView } from 'codemirror';
 import defaultsDeep from 'lodash.defaultsdeep';
@@ -28,6 +28,7 @@ import {
   autocomplete,
   blast,
   command,
+  // commentBlock,
   comments,
   createBasicExtensions,
   createDataExtensions,
@@ -110,6 +111,8 @@ const text = {
     '```',
     '',
   ),
+
+  comment: str('<!--', 'A comment', '-->', '', 'No comment.', 'Partial comment. <!-- comment. -->'),
 
   links: str(
     '## Links',
@@ -380,6 +383,19 @@ export const Autocomplete = {
         autocomplete({
           onSearch: (text) => links.filter(({ label }) => label.toLowerCase().includes(text.toLowerCase())),
         }),
+      ]}
+    />
+  ),
+};
+
+export const CommentedOut = {
+  render: () => (
+    <Story
+      text={str('# Commented out', '', text.comment, text.footer)}
+      extensions={[
+        decorateMarkdown(),
+        markdown(),
+        // commentBlock()
       ]}
     />
   ),

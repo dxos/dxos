@@ -19,6 +19,10 @@ Arguments: none
 
 
 ## Properties
+### [schemas]()
+Type: <code>Schema&lt;any, any, never&gt;[]</code>
+
+
 
 
 ## Methods
@@ -34,7 +38,7 @@ Arguments:
 `typename`: <code>string</code>
 
 
-### [isSchemaRegistered(schema)]()
+### [hasSchema(schema)]()
 
 
 

@@ -66,7 +66,7 @@ export class DashboardPlugin extends Plugin {
             ramUsage: String(process.memoryUsage().heapUsed),
           },
 
-          plugins: this.context.plugins.map((plugin) => ({
+          plugins: this.context.plugins?.map((plugin) => ({
             id: plugin.id,
             config: plugin.config,
           })),
@@ -74,7 +74,7 @@ export class DashboardPlugin extends Plugin {
       };
       ready();
 
-      this.context.plugins.forEach((plugin) => {
+      this.context.plugins?.forEach((plugin) => {
         plugin.statusUpdate.on(ctx, () => update());
       });
 
