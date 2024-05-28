@@ -373,7 +373,7 @@ export const SpacePlugin = ({
               );
             }
             case 'navbar-start': {
-              return undefined;
+              return null;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object)) {
