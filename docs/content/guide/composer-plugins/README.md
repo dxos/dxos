@@ -9,7 +9,7 @@ dir:
 To prototype a plugin:
 
 ```bash
-npm create @dxos/app-plugin@latest
+npm create @dxos/composer-plugin@latest
 ```
 
 This will create a working plugin project with a hot reloading development server.
@@ -18,7 +18,7 @@ The plugin definition is found in `src/plugin.ts`.
 
 ```bash
 npm install
-npm run dev
+npm run serve
 ```
 
 This will start your development server with a core set of plugins and the plugin being prototyped.

@@ -61,7 +61,6 @@
   },
   "peerDependencies": {
     "@braneframe/plugin-client": "workspace:*",
-    "@braneframe/plugin-layout": "workspace:*",
     "@braneframe/plugin-markdown": "workspace:*",
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/plugin-stack": "workspace:*",
