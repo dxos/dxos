@@ -1,6 +1,6 @@
 {
   "name": "@dxos/local-storage",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
