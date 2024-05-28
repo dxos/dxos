@@ -7,7 +7,7 @@ import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
-import { Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -85,7 +85,7 @@ export class DevServer {
         }
 
         // TODO(burdon): Get function context.
-        res.statusCode = await this.invoke('/' + path, req.body);
+        res.statusCode = await asyncTimeout(this.invoke('/' + path, req.body), 20_000);
         res.end();
       } catch (err: any) {
         log.catch(err);
