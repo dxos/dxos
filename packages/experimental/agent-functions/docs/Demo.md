@@ -5,6 +5,11 @@
 - TODO(burdon): ENV for no-agent.
 - TODO(burdon): Remove need for functions plugin config.
 
+# Prep
+
+- Space with presentation (lookup hypergraph)
+- iPad with notes
+
 # Terminals
 
 ```bash
