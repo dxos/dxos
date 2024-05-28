@@ -15,12 +15,9 @@ const authHandler = authMiddleware({
  * https://developers.cloudflare.com/pages/functions/advanced-mode
  * Output _worker.js to <pages_build_output_dir> and deploy via git.
  */
-const handler: ExportedHandler<Env> = {
-  fetch: process.env.DX_AUTH
-    ? authHandler
-    : async (request, env) => {
-        return env.ASSETS.fetch(request);
-      },
+const handler: ExportedHandler<Env & { DX_AUTH: any }> = {
+  fetch: async (request, env, context) =>
+    env.DX_AUTH ? authHandler(request, env, context) : env.ASSETS.fetch(request),
 };
 
 export default handler;
