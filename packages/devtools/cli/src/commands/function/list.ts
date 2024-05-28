@@ -8,12 +8,12 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
+import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
 
 // TODO(burdon): List stats.
-export const printFunctions = (functions: FunctionDef[], flags = {}) => {
+export const printFunctions = (functions: FunctionManifest['functions'], flags = {}) => {
   ux.table(
     // TODO(burdon): Cast util.
     functions as Record<string, any>[],
@@ -21,8 +21,8 @@ export const printFunctions = (functions: FunctionDef[], flags = {}) => {
       uri: {
         header: 'uri',
       },
-      path: {
-        header: 'path',
+      route: {
+        header: 'route',
       },
       handler: {
         header: 'handler',
@@ -49,11 +49,10 @@ export default class List extends BaseCommand<typeof List> {
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );
 
-      // TODO(burdon): ???
       const file = this.flags.manifest ?? functionsConfig?.config?.manifest ?? join(process.cwd(), 'functions.yml');
       const manifest = load(await readFile(file, 'utf8')) as FunctionManifest;
-      // const { functions } = manifest;
-      // printFunctions(functions);
+      const { functions } = manifest;
+      printFunctions(functions);
       return manifest;
     });
   }
