@@ -4,7 +4,7 @@
 
 import { type Client, PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { nonNullable } from '@dxos/util';
 
@@ -79,10 +79,14 @@ export type SubscriptionData = {
  */
 export const subscriptionHandler = <TMeta>(
   handler: FunctionHandler<SubscriptionData, TMeta>,
+  types?: S.Schema<any>[],
 ): FunctionHandler<RawSubscriptionData, TMeta> => {
   return ({ event: { data }, context, ...rest }) => {
     const { client } = context;
     const space = data.spaceKey ? client.spaces.get(PublicKey.from(data.spaceKey)) : undefined;
+    if (space) {
+      registerTypes(space, types);
+    }
     const objects = space
       ? data.objects?.map<EchoReactiveObject<any> | undefined>((id) => space!.db.getObjectById(id)).filter(nonNullable)
       : [];
@@ -95,4 +99,14 @@ export const subscriptionHandler = <TMeta>(
 
     return handler({ event: { data: { ...data, space, objects } }, context, ...rest });
   };
+};
+
+// TODO(burdon): Evolve types as part of function metadata.
+export const registerTypes = (space: Space, types: S.Schema<any>[] = []) => {
+  const registry = space.db.graph.runtimeSchemaRegistry;
+  for (const type of types) {
+    if (!registry.hasSchema(type)) {
+      registry.registerSchema(type);
+    }
+  }
 };

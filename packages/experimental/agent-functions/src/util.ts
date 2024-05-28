@@ -81,14 +81,13 @@ const schemaList: S.Schema<any>[] = [
 /**
  * @deprecated
  */
-// TODO(burdon): Register types via function metadata. Export default meta.
-export const registerTypes = (space: Space | undefined, types: S.Schema<any> = schemaList) => {
+// TODO(burdon): Reconcile with agent-functions utils.
+export const registerTypes = (space: Space | undefined, types: S.Schema<any>[] = schemaList) => {
   if (!space) {
     return;
   }
 
   const registry = space.db.graph.runtimeSchemaRegistry;
-
   for (const type of schemaList) {
     if (!registry.hasSchema(type)) {
       registry.registerSchema(type);

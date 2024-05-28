@@ -3,27 +3,33 @@
 //
 
 import { GameType } from '@dxos/chess-app';
+import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 import { Engine } from './engine';
-import { registerTypes } from '../../util';
 
-type Meta = { level?: number; side?: string };
+export const MetaSchema = S.mutable(
+  S.struct({
+    level: S.optional(S.number),
+    side: S.optional(S.string),
+  }),
+);
 
-export const handler = subscriptionHandler<Meta>(async ({ event }) => {
-  const { meta: { level = 1, side = 'b' } = {}, space, objects } = event.data;
-  invariant(space);
-  registerTypes(space, [GameType]);
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
-  for (const game of objects ?? []) {
-    const engine = new Engine({ pgn: game.pgn ?? '', level });
-    if (!engine.state.isGameOver() && engine.state.turn() === side) {
-      engine.move();
-      engine.print();
+export const handler = subscriptionHandler<Meta>(
+  async ({ event }) => {
+    const { meta: { level = 1, side = 'b' } = {}, objects } = event.data;
+    for (const game of objects ?? []) {
+      const engine = new Engine({ pgn: game.pgn, level });
+      if (!engine.state.isGameOver() && engine.state.turn() === side) {
+        engine.move();
+        engine.print();
 
-      // Update object.
-      game.pgn = engine.state.pgn();
+        // Update object.
+        game.pgn = engine.state.pgn();
+      }
     }
-  }
-});
+  },
+  [GameType],
+);
