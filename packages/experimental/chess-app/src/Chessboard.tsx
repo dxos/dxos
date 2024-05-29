@@ -92,19 +92,6 @@ export const Chessboard: FC<ChessboardProps> = ({
   );
 };
 
-const Player = ({ color }: { color: Color }) => {
-  const turn = color === chess.turn();
-
-  return (
-    <div className='flex items-center'>
-      <Circle
-        className={mx(getSize(4), turn && (chess.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
-        weight={turn ? 'fill' : 'thin'}
-      />
-    </div>
-  );
-};
-
 export const ChessPanel: FC<{
   model: ChessModel;
   orientation?: Color;
@@ -122,6 +109,19 @@ export const ChessPanel: FC<{
       : history.length
         ? `Move ${history.length}`
         : '';
+
+  const Player = ({ color }: { color: Color }) => {
+    const turn = color === chess.turn();
+
+    return (
+      <div className='flex items-center'>
+        <Circle
+          className={mx(getSize(4), turn && (chess.isCheckmate() ? 'text-red-500' : 'text-green-500'))}
+          weight={turn ? 'fill' : 'thin'}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className='flex flex-col'>
