@@ -71,7 +71,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.62",
+    "@dxos/web-auth": "^0.4.72",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",
