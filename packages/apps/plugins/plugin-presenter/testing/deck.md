@@ -37,7 +37,6 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 2. Access control
 3. Networking
 4. Compute
-5. Shell
 
 notes:
 - more difficult when decentralized; online/offline
@@ -72,9 +71,9 @@ HALO
 
 - Decentralized identity
 - Access control
+- Credentials + key management
 - Device management
 - Account recovery
-- Credentials + key management
 
 ## Identity & Security
 
@@ -87,7 +86,7 @@ MESH
 # MESH
 
 - P2P networks
-- WebRTC + Web socket
+- WebSockets + WebRTC
 - Signaling + Discovery
 - Private key exchange
 - Encrypted data sync
