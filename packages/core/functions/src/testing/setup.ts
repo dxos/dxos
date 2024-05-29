@@ -16,7 +16,7 @@ import { DevServer, type DevServerOptions, Scheduler } from '../runtime';
 import { TriggerRegistry } from '../trigger';
 import { FunctionDef, FunctionTrigger } from '../types';
 
-let functionsPort = 8080;
+let functionsPort = 8081;
 
 export type FunctionsPluginInitializer = (client: Client) => Promise<{ close: () => Promise<void> }>;
 
