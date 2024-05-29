@@ -5,8 +5,10 @@
 import { Chess } from 'chess.js';
 import { Game } from 'js-chess-engine';
 
+import { sleep } from '@dxos/async';
+
 export type EngineProps = {
-  pgn: string;
+  pgn?: string;
   level?: number;
 };
 
@@ -15,7 +17,7 @@ export class Engine {
   private readonly _ai: Game;
   private readonly _level: number;
 
-  constructor({ pgn, level = 2 }: EngineProps) {
+  constructor({ pgn = '', level = 2 }: EngineProps) {
     this._state = new Chess();
     this._state.loadPgn(pgn);
     this._ai = new Game(this._state.fen());
@@ -26,7 +28,7 @@ export class Engine {
     return this._state;
   }
 
-  move() {
+  async move() {
     if (this._state.isGameOver()) {
       return false;
     }
@@ -34,6 +36,7 @@ export class Engine {
     // Convert { [from]: to } to { from, to }
     const [[from, to]] = Object.entries(this._ai.aiMove(this._level));
     this._state.move({ from: from.toLowerCase(), to: to.toLowerCase(), promotion: 'q' });
+    await sleep(500);
     return true;
   }
 
