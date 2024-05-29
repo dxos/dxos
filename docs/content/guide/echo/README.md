@@ -59,7 +59,7 @@ The top-level of a DXOS `object` is always a JS object, never a number, string, 
 
 ## How to use ECHO
 
-* Install the appropriate npm package [`@dxos/client`](./installation/) or [`@dxos/react-client`](./installation/react/)
+* Install the appropriate npm package [`@dxos/client`](./installation/) or [`@dxos/react-client`](./installation/react.md)
 * Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
 * Set up an identity with [HALO](../halo/)
 * Create or Join a [Space](#spaces)
