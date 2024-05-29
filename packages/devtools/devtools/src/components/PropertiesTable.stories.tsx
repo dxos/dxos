@@ -7,9 +7,11 @@ import '@dxosTheme';
 import React, { useMemo, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { mx } from '@dxos/react-ui-theme';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { type PropertiesSchema, PropertiesTable, PropertySchemaFormat } from './PropertiesTable';
+import { styles } from '../styles';
 
 const TestStory = () => {
   const schema = useMemo<PropertiesSchema>(
@@ -38,7 +40,7 @@ const TestStory = () => {
   });
 
   return (
-    <div className='flex flex-col gap-16 bg-white p-4'>
+    <div className={mx('flex flex-col gap-16 p-4', styles.bgPanel)}>
       <PropertiesTable schema={schema} object={properties} />
     </div>
   );

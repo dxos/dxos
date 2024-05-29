@@ -314,7 +314,7 @@ type MetaExtension<T> = {
 
 // TODO(burdon): Possible to build form from function meta schema.
 
-type ChessMeta = { level?: number };
+type ChessMeta = { level?: number; side?: string };
 
 const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
   return (

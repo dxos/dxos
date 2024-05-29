@@ -28,6 +28,7 @@ import {
 } from '@dxos/client-protocol';
 import { type ConfigProto, Remote } from '@dxos/config';
 import { raise } from '@dxos/debug';
+import { type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { createFileProcessor, log, LogLevel, parseFilter } from '@dxos/log';
 import {
@@ -123,6 +124,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
 
     // This does not check whether an agent is running or not, and could potentially corrupt data.
     // https://github.com/dxos/dxos/issues/6473
+    // TODO(burdon): Set `allowNo` and invert.
     'no-agent': Flags.boolean({
       description: 'Run command without starting an agent.',
       default: false,
@@ -135,6 +137,8 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['t'],
     }),
 
+    // TODO(burdon): Standardize across all commands.
+    // TODO(burdon): Set `allowNo` and invert.
     'no-wait': Flags.boolean({
       description: 'Do not wait for space to be ready.',
     }),
@@ -527,7 +531,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
     callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
-    options: { spaceKeys?: string[]; all?: boolean; verbose?: boolean } = {},
+    options: { spaceKeys?: string[]; all?: boolean; types?: S.Schema<any>[]; verbose?: boolean } = {},
   ): Promise<T[] | undefined> {
     const client = await this.getClient();
     await this.onClientInit(client);
@@ -541,6 +545,15 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     for (const space of spaces) {
       if (options.verbose) {
         this.log(`Space: ${space.key.truncate()}`);
+      }
+
+      // TODO(burdon): Factor out.
+      if (options.types) {
+        for (const type of options.types) {
+          if (!space.db.graph.runtimeSchemaRegistry.hasSchema(type)) {
+            space.db.graph.runtimeSchemaRegistry.registerSchema(type as any);
+          }
+        }
       }
 
       const value = await callback({ client, space });

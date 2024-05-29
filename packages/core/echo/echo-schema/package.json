@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

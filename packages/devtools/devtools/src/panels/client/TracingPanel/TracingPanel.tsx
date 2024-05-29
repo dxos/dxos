@@ -106,7 +106,7 @@ export const TracingPanel = () => {
   }, []);
 
   const tabClass = mx(
-    'radix-state-active:border-b-gray-700 focus-visible:radix-state-active:border-b-transparent radix-state-inactive:bg-gray-50 dark:radix-state-active:border-b-gray-100 dark:radix-state-active:bg-gray-500 focus-visible:dark:radix-state-active:border-b-transparent dark:radix-state-inactive:bg-gray-800',
+    'radix-state-active:border-b-neutral-700 focus-visible:radix-state-active:border-b-transparent radix-state-inactive:bg-neutral-50 dark:radix-state-active:border-b-neutral-100 dark:radix-state-active:bg-neutral-500 focus-visible:dark:radix-state-active:border-b-transparent dark:radix-state-inactive:bg-neutral-800',
     'flex-1 px-3 py-2.5',
     'first:rounded-tl-lg last:rounded-tr-lg',
     'border-b first:border-r last:border-l',

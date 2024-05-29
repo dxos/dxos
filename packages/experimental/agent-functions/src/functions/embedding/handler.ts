@@ -15,14 +15,16 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ChainDocument, type ChainVariant, createChainResources } from '../../chain';
-import { getKey, registerTypes } from '../../util';
+import { getKey } from '../../util';
+
+const types = [DocumentType, FileType];
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client, dataDir } = context;
   const { space, objects } = event.data;
-  registerTypes(space);
-
+  invariant(space);
   invariant(dataDir);
+
   const docs: ChainDocument[] = [];
   const addDocuments =
     (space: PublicKey | undefined = undefined) =>
@@ -101,4 +103,4 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   }
 
   return response.status(200);
-});
+}, types);

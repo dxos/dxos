@@ -13,6 +13,5 @@ pnpm nx bundle composer-app
 Run pages from the app directory:
 
 ```bash
-pnpm nx build:functions composer-app
 wrangler pages dev
 ```

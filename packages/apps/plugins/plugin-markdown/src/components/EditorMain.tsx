@@ -11,6 +11,7 @@ import {
   useResolvePlugin,
   useIntentResolver,
   parseNavigationPlugin,
+  parseLayoutPlugin,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
@@ -59,6 +60,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
   const idParts = id.split(':');
   const docId = idParts[idParts.length - 1];
@@ -143,7 +145,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           {...props}
           id={docId}
           extensions={extensions}
-          autoFocus
+          autoFocus={
+            layoutPlugin?.provides.layout.scrollIntoView ? layoutPlugin?.provides.layout.scrollIntoView === id : true
+          }
           moveToEndOfLine
           className={mx(
             focusRing,

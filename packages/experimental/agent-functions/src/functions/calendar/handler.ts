@@ -15,14 +15,14 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { ObjectSyncer } from '../../sync';
-import { getYaml, registerTypes } from '../../util';
+import { getYaml } from '../../util';
 
-export const handler = subscriptionHandler(async ({ event, context, response }) => {
+const types = [EventType];
+
+// TODO(burdon): Prevent multiple calls from scheduler.
+export const handler = subscriptionHandler(async ({ event, response }) => {
   const { space } = event.data;
   invariant(space);
-  registerTypes(space);
-
-  // TODO(burdon): Prevent multiple calls from scheduler.
 
   // Run `npm run auth` to create credentials file for testing.
   const { access_token: accessToken, refresh_token: refreshToken } =
@@ -102,4 +102,4 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   }
 
   await syncer.close();
-});
+}, types);

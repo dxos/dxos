@@ -4,6 +4,7 @@
 
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Device } from '@dxos/react-client/halo';
+import { type ConnectionState } from '@dxos/react-client/mesh';
 
 export type DeviceListProps = {
   devices: Device[];
@@ -26,6 +27,7 @@ export type AgentFormProps = {
 export type DeviceListItemProps = {
   device: Device;
   presence?: SpaceMember['presence'];
+  connectionState?: ConnectionState;
   onClickAdd?: () => void;
   onClickEdit?: () => void;
   onClickReset?: () => void;
