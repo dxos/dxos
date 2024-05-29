@@ -14,7 +14,8 @@ export const createResolver = async (config: Config): Promise<ResolverMap> => {
   const { value: token } = config.find('runtime.keys', { name: 'discord.com/token' }) ?? {};
   const { value: channelId } = config.find('runtime.keys', { name: 'discord.com/channel' }) ?? {};
   if (!token) {
-    throw new Error('Missing token.');
+    log.warn("'discord.com/token' token is missing from config");
+    return { messages: {} };
   }
 
   // https://github.com/discordjs/discord.js
