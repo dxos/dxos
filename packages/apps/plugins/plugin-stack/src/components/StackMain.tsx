@@ -122,10 +122,14 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
-    await dispatch({
-      action: NavigationAction.OPEN,
-      data: { activeParts: { main: [fullyQualifiedId(object)] } },
-    });
+    const toId = fullyQualifiedId(object);
+    await dispatch([
+      {
+        action: NavigationAction.OPEN,
+        data: { activeParts: { main: [toId] } },
+      },
+      { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: toId } },
+    ]);
   };
 
   const handleTransform = (item: MosaicDataItem, type?: string) => {
