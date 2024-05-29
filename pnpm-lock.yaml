@@ -1006,6 +1006,9 @@ importers:
       '@dxos/chess-app':
         specifier: workspace:*
         version: link:../../../experimental/chess-app
+      '@dxos/display-name':
+        specifier: workspace:*
+        version: link:../../../common/display-name
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../../core/echo/echo-schema
@@ -27310,6 +27313,7 @@ packages:
     dependencies:
       '@types/node': 18.18.9
       form-data: 4.0.0
+    dev: false
 
   /@types/node-forge@1.3.11:
     resolution: {integrity: sha512-FQx220y22OKNTqaByeBGqHWYz4cl94tpcxeFdvBo3wjG6XPBuZ0BNgNZRV5J5TFmmcsJ4IzsLkmGRiQbnYsBEQ==}

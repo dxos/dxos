@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, type Size } from '@dxos/react-ui';
 import { focusRing, mx } from '@dxos/react-ui-theme';
 import { hexToFallback } from '@dxos/util';
@@ -22,12 +23,13 @@ export type HaloButtonProps = {
 export const HaloButton = (props: HaloButtonProps) => {
   const { onClick, identityKey, internal, size = 8 } = props;
   const fallbackValue = hexToFallback(identityKey ?? '0');
+  const { swarm: connectionState } = useNetworkStatus();
   return (
     <button className={mx(focusRing, 'rounded grid place-items-center')} onClick={onClick}>
       <Avatar.Root
         size={size}
         variant='circle'
-        status={internal ? 'internal' : 'active'}
+        status={connectionState === ConnectionState.OFFLINE ? 'error' : internal ? 'internal' : 'active'}
         hue={props.hue || fallbackValue.hue}
       >
         <Avatar.Frame data-testid='treeView.haloButton' data-joyride='welcome/halo'>
