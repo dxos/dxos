@@ -13,6 +13,7 @@ import { describe, test } from '@dxos/test';
 import { DevServer } from './dev-server';
 import { FunctionRegistry } from '../function';
 import { createFunctionRuntime, testFunctionManifest } from '../testing';
+import { initFunctionsPlugin } from '../testing/plugin-init';
 
 describe('dev server', () => {
   let port = 7201;
@@ -20,7 +21,7 @@ describe('dev server', () => {
   let testBuilder: TestBuilder;
   before(async () => {
     testBuilder = new TestBuilder();
-    client = await createFunctionRuntime(testBuilder);
+    client = await createFunctionRuntime(testBuilder, initFunctionsPlugin);
     expect(client.services.services.FunctionRegistryService).to.exist;
   });
 
