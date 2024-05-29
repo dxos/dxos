@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
+import { MailboxType, MessageType } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { create, foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
@@ -36,14 +36,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   const space = context.client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
     return;
-  }
-
-  // TODO(burdon): Register schema (part of function metadata).
-  try {
-    const { client } = context;
-    client.addSchema(TextV0Type, MailboxType, MessageType);
-  } catch (err) {
-    log.catch(err);
   }
 
   // Create mailbox if doesn't exist.
