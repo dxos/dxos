@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'node:path';
-
 import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
@@ -14,8 +12,8 @@ import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { type ChainVariant, createChainResources } from '../../chain';
-import { getKey, registerTypes } from '../../util';
+import { ModelInvokerFactory } from '../../chain/model-invoker';
+import { registerTypes } from '../../util';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
@@ -79,14 +77,12 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   // Process messages.
   if (messages.length > 0) {
-    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
-      baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
-      apiKey: getKey(client.config, 'openai.com/api_key'),
-    });
+    const resources = ModelInvokerFactory.createChainResources(client, dataDir);
+    await resources.init();
 
-    await resources.store.initialize();
     const resolvers = await createResolvers(client.config);
-    const processor = new RequestProcessor(resources, resolvers);
+    const modelInvoker = ModelInvokerFactory.createModelInvoker(resources);
+    const processor = new RequestProcessor(modelInvoker, resources, resolvers);
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {
