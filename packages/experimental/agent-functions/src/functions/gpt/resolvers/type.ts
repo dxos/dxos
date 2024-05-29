@@ -5,5 +5,5 @@
 export type Resolver = () => Promise<any>;
 
 export type ResolverMap = {
-  [key: string]: Resolver | ResolverMap;
+  [key: string]: Resolver | ResolverMap | undefined;
 };
