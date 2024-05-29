@@ -63,6 +63,7 @@ export const startFunctionsHost = async (
   const devServer = await startDevServer(testBuilder, functionRuntime, functionsRegistry, options);
   const scheduler = await startScheduler(testBuilder, functionRuntime, devServer, functionsRegistry);
   return {
+    scheduler,
     client: functionRuntime,
     waitHasActiveTriggers: async (space: Space) => {
       await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
