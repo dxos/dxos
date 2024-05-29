@@ -61,7 +61,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
+  const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
+  const attended = Array.from(navigationPlugin?.provides.attention?.attended ?? []);
+  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const idParts = id.split(':');
   const docId = idParts[idParts.length - 1];
 
@@ -74,9 +76,13 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.SCROLL_INTO_VIEW: {
-        const id = data?.id;
         if (editorView) {
-          scrollThreadIntoView(editorView, id);
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
           return undefined;
         }
         break;
@@ -116,7 +122,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <div role='none' className='contents group/editor' {...(isAttended && { 'aria-current': 'location' })}>
+    <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
@@ -146,7 +152,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           id={docId}
           extensions={extensions}
           autoFocus={
-            layoutPlugin?.provides.layout.scrollIntoView ? layoutPlugin?.provides.layout.scrollIntoView === id : true
+            isDeckModel && layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true
           }
           moveToEndOfLine
           className={mx(
