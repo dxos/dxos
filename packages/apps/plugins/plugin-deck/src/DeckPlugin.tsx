@@ -242,7 +242,7 @@ export const DeckPlugin = ({
             onChangeAttend={(nextAttended) => {
               // TODO(thure): Is this / could this be better handled by an intent?
               attention.attended = nextAttended;
-              if (nextAttended.has(layout.values.scrollIntoView)) {
+              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
                 layout.values.scrollIntoView = undefined;
               }
             }}
