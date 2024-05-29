@@ -11,11 +11,10 @@ import { GameType } from '@dxos/chess-app/types';
 import { TestBuilder } from '@dxos/client/testing';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { type FunctionManifest } from '@dxos/functions';
+import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
 import { afterTest, test } from '@dxos/test';
 
-import { registerTypes } from '../../util';
 import { initFunctionsPlugin } from '../setup';
 
 describe.only('Chess', () => {
@@ -51,7 +50,7 @@ describe.only('Chess', () => {
     };
 
     const space = await functions.client.spaces.create();
-    registerTypes(space);
+    functions.client.addSchema(GameType, FunctionDef, FunctionTrigger);
     const game = space.db.add(create(GameType, {}));
     await space.db.flush();
 
