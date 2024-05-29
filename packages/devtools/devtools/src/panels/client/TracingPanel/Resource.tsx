@@ -10,6 +10,6 @@ import { sanitizeClassName } from '@dxos/tracing';
 export const ResourceName: FC<{ className?: string; resource: Resource }> = ({ className, resource }) => (
   <span className={className}>
     {sanitizeClassName(resource.className)}
-    <span className='text-gray-400'>#{resource.instanceId}</span>
+    <span className='text-neutral-400'>#{resource.instanceId}</span>
   </span>
 );

@@ -11,10 +11,12 @@ import { type ConnectionInfo, type SwarmInfo } from '@dxos/protocols/proto/dxos/
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { type SpaceMember, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { createColumnBuilder, Table, type TableColumnDef, textPadding } from '@dxos/react-ui-table';
+import { mx } from '@dxos/react-ui-theme';
 import { ComplexMap } from '@dxos/util';
 
 import { ConnectionInfoView } from './ConnectionInfoView';
 import { PanelContainer } from '../../../components';
+import { styles } from '../../../styles';
 
 type SwarmConnection = SwarmInfo & { connection?: ConnectionInfo };
 
@@ -132,7 +134,7 @@ export const SwarmPanel = () => {
   items.sort(comparer((row) => (row.connection ? Object.keys(stateFormat).indexOf(row.connection.state) : Infinity)));
 
   return (
-    <PanelContainer classNames='divide-y'>
+    <PanelContainer classNames={mx('divide-y', styles.border)}>
       <Table.Root>
         <Table.Viewport classNames='h-1/2 overflow-auto'>
           <Table.Main<SwarmConnection>

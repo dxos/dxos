@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.4](https://github.com/dxos/dxos/compare/v0.5.3...v0.5.4) (2024-05-29)
+
+
+### Features
+
+* **demo:** Chess player selector ([#6882](https://github.com/dxos/dxos/issues/6882)) ([8757cee](https://github.com/dxos/dxos/commit/8757ceea6a739f6dc703805d87ea15ee711ef12b))
+* **demo:** Provide context object to standalone thread messages in deck ([#6865](https://github.com/dxos/dxos/issues/6865)) ([c4fdd2f](https://github.com/dxos/dxos/commit/c4fdd2f9d21b682142cc822bbd2e8d2eba92f37b))
+
+
+### Bug Fixes
+
+* CLI fixes ([#6879](https://github.com/dxos/dxos/issues/6879)) ([8f486ad](https://github.com/dxos/dxos/commit/8f486ad40d467113d5e3bdcb1aac0baadba46173))
+* Complementary sidebar opening behavior ([#6877](https://github.com/dxos/dxos/issues/6877)) ([7998a3b](https://github.com/dxos/dxos/commit/7998a3b500ebdff4aa735ddbe56ebf3cd3d4b8c2))
+* **composer-app:** read cloudflare env properly in worker ([#6870](https://github.com/dxos/dxos/issues/6870)) ([fb3ef83](https://github.com/dxos/dxos/commit/fb3ef834b585fb8cbbd6debd393718aaf8981107))
+* Halo button signals appropriate status color when intentionally disconnected ([#6878](https://github.com/dxos/dxos/issues/6878)) ([1335b4b](https://github.com/dxos/dxos/commit/1335b4beae71a6546c288f7d255ff2d41b9220f7))
+* **plugin-markdown:** Auto-focus the document when it receives attention in Deck ([#6881](https://github.com/dxos/dxos/issues/6881)) ([79e046c](https://github.com/dxos/dxos/commit/79e046c6d05dcbfb23881788dc1097c3e74f45fe))
+* **plugin-presenter:** Only emit close intent when in Deck ([#6880](https://github.com/dxos/dxos/issues/6880)) ([e051d1b](https://github.com/dxos/dxos/commit/e051d1b61d2e3e4308749b66678530bb571d507c))
+* update release please job with newer pnpm ([#6868](https://github.com/dxos/dxos/issues/6868)) ([056e7da](https://github.com/dxos/dxos/commit/056e7da983a3971b71803e1fdc80dd8fb25159a2))
+
 ## [0.5.3](https://github.com/dxos/dxos/compare/v0.5.2...v0.5.3) (2024-05-28)
 
 

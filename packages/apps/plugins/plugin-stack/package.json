@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-stack",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
