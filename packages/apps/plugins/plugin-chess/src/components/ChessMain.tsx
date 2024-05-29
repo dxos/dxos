@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
@@ -14,11 +15,17 @@ import {
 
 import { Chess } from './Chess';
 
-const ChessMain: React.FC<React.ComponentProps<typeof Chess>> = (props) => {
+const ChessMain: React.FC<Pick<React.ComponentProps<typeof Chess>, 'game'>> = ({ game }) => {
+  const space = getSpace(game);
+
+  if (!space) {
+    return null;
+  }
+
   return (
     <Main.Content classNames={[baseSurface, fixedInsetFlexLayout, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
       <div role='none' className='flex flex-col justify-center is-full bs-full max-is-[640px] mli-auto'>
-        <Chess {...props} />
+        <Chess game={game} space={space} />
       </div>
     </Main.Content>
   );
