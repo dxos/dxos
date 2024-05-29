@@ -3,6 +3,7 @@
 //
 
 import { Flags, ux } from '@oclif/core';
+import chalk from 'chalk';
 
 import { MessageType } from '@braneframe/types';
 import { Filter, getMeta } from '@dxos/client/echo';
@@ -11,7 +12,9 @@ import { omit } from '@dxos/log';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
+import { stringify } from '../../util';
 
+// TODO(burdon): Option no-wrap.
 export default class Query extends ComposerBaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
@@ -19,6 +22,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
     type: Flags.string({ description: 'Data type.' }),
+    extended: Flags.boolean(),
   };
 
   async run(): Promise<any> {
@@ -30,8 +34,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
           case MessageType.typename: {
             filter = Filter.schema(MessageType);
             printer = (data: MessageType) => {
-              // TODO(burdon): Print messages.
-              return JSON.stringify({ from: data.from.email, content: data.blocks.length });
+              return stringify({ from: data.from.email, content: data.blocks.length });
             };
             break;
           }
@@ -42,7 +45,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
 
         const { objects } = await space.db.query(filter).run();
         if (!this.flags.json) {
-          printObjects(objects, printer);
+          printObjects(objects, { printer, extended: this.flags.extended });
         }
 
         return { objects };
@@ -54,26 +57,41 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
 
 type ObjectPrinter<T = {}> = (data: T) => string;
 
-const printObjects = (objects: any[], printer: ObjectPrinter = (data) => JSON.stringify(omit(data, '@type'))) => {
-  ux.table(objects, {
-    id: {
-      header: 'id',
-      get: (row) => row.id.slice(0, 8),
+const defaultPrinter: ObjectPrinter = (data) => stringify(omit(data, '@type'));
+
+type PrintOptions = ux.Table.table.Options & {
+  printer?: ObjectPrinter;
+};
+
+const printObjects = (objects: any[], { printer = defaultPrinter, ...flags }: PrintOptions = {}) => {
+  ux.table(
+    objects,
+    {
+      id: {
+        header: 'id',
+        get: (row) => row.id.slice(0, 8),
+      },
+      type: {
+        header: 'type',
+        get: (row) => chalk.blue(getTypename(row)),
+      },
+      meta: {
+        header: 'meta',
+        get: (row) => {
+          const keys = getMeta(row).keys;
+          if (keys?.length) {
+            return '[' + keys.map(({ source, id }) => `${chalk.green(source)}:${chalk.gray(id)}`).join(', ') + ']';
+          } else {
+            return '';
+          }
+        },
+      },
+      data: {
+        header: 'data',
+        extended: true,
+        get: (row) => printer(row),
+      },
     },
-    type: {
-      header: 'type',
-      get: (row) => getTypename(row),
-    },
-    meta: {
-      header: 'meta',
-      get: (row) =>
-        getMeta(row)
-          .keys?.map(({ source, id }) => `${source}:${id}`)
-          .join(','),
-    },
-    data: {
-      header: 'data',
-      get: (row) => printer(row),
-    },
-  });
+    flags,
+  );
 };

@@ -86,7 +86,10 @@ const IdentityHeading = ({
           <Tooltip.Root>
             <Tooltip.Trigger asChild>
               <Toolbar.Button
-                classNames='bs-[--rail-action] is-[--rail-action] justify-self-end'
+                classNames={[
+                  'bs-[--rail-action] is-[--rail-action] justify-self-end',
+                  !isConnected && 'text-error-500',
+                ]}
                 onClick={() =>
                   onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
                 }

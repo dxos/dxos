@@ -3,38 +3,14 @@
 //
 
 import { Flags, ux } from '@oclif/core';
+import chalk from 'chalk';
 
 import { Filter } from '@dxos/client/echo';
 import { FunctionTrigger } from '@dxos/functions';
+import { omit } from '@dxos/log';
 
 import { BaseCommand } from '../../base';
-
-// TODO(burdon): List stats.
-export const printTriggers = (functions: FunctionTrigger[], flags = {}) => {
-  ux.table(
-    // TODO(burdon): Cast util.
-    functions as Record<string, any>[],
-    {
-      id: {
-        header: 'id',
-        get: (row) => row.id.slice(0, 8),
-      },
-      enabled: {
-        header: 'enabled',
-      },
-      function: {
-        header: 'function',
-      },
-      type: {
-        header: 'type',
-        get: (row) => row.spec.type,
-      },
-    },
-    {
-      ...flags,
-    },
-  );
-};
+import { stringify } from '../../util';
 
 export default class Trigger extends BaseCommand<typeof Trigger> {
   static override enableJsonFlag = true;
@@ -44,6 +20,7 @@ export default class Trigger extends BaseCommand<typeof Trigger> {
     id: Flags.string({ description: 'Trigger id' }),
     enable: Flags.boolean({ description: 'Enable trigger(s)' }),
     disable: Flags.boolean({ description: 'Disable trigger(s)' }),
+    extended: Flags.boolean(),
   };
 
   async run(): Promise<any> {
@@ -61,9 +38,44 @@ export default class Trigger extends BaseCommand<typeof Trigger> {
           }
         }
         await space.db.flush();
-        printTriggers(filtered);
+        if (!this.flags.json) {
+          printTriggers(filtered, { extended: this.flags.extended });
+        }
+        return filtered;
       },
       { verbose: this.flags.verbose, types: [FunctionTrigger] },
     );
   }
 }
+
+// TODO(burdon): List stats.
+// TODO(burdon): Standardize ids, etc.
+export const printTriggers = (functions: FunctionTrigger[], flags: ux.Table.table.Options = {}) => {
+  ux.table(
+    // TODO(burdon): Cast util.
+    functions as Record<string, any>[],
+    {
+      id: {
+        header: 'id',
+        get: (row) => row.id.slice(0, 8),
+      },
+      enabled: {
+        header: 'enabled',
+        get: (row) => (row.enabled ? `${chalk.green('✔')}` : ''),
+      },
+      function: {
+        header: 'function',
+        get: (row) => `${chalk.blue(row.function)}`,
+      },
+      type: {
+        header: 'type',
+        get: (row) => row.spec.type,
+      },
+      meta: {
+        header: 'spec',
+        get: (row) => stringify(omit(row.spec, 'type')),
+      },
+    },
+    flags,
+  );
+};
