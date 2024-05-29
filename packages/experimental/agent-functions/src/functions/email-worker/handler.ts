@@ -2,17 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
+import { MailboxType, MessageType } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
-import { create, foreignKey } from '@dxos/echo-schema';
+import { create, foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EmailMessage, SOURCE_ID, text } from './types';
 
-// TODO(burdon): Effect schema.
-type Meta = { account?: string };
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.struct({
+    account: S.optional(S.string),
+  }),
+);
+
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
 export const handler: FunctionHandler<{ spaceKey: string; data: { messages: EmailMessage[] } }, Meta> = async ({
   event,
@@ -28,14 +36,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   const space = context.client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
     return;
-  }
-
-  // TODO(burdon): Register schema (part of function metadata).
-  try {
-    const { client } = context;
-    client.addSchema(TextV0Type, MailboxType, MessageType);
-  } catch (err) {
-    log.catch(err);
   }
 
   // Create mailbox if doesn't exist.

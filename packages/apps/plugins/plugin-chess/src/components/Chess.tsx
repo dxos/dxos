@@ -74,6 +74,7 @@ const PlayerSelector = ({ game, space }: { game: GameType; space: Space }) => {
   );
 };
 
+// TODO(burdon): Factor out.
 const PlayerSelect = ({
   side,
   value,

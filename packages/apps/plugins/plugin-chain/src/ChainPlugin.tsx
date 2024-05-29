@@ -32,16 +32,16 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
       },
       stack: {
         creators: [
-          {
-            id: 'create-stack-section-chain',
-            testId: 'chainPlugin.createSectionSpaceChain',
-            label: ['create stack section label', { ns: CHAIN_PLUGIN }],
-            icon: (props: any) => <Brain {...props} />,
-            intent: {
-              plugin: CHAIN_PLUGIN,
-              action: ChainAction.CREATE,
-            },
-          },
+          // {
+          //   id: 'create-stack-section-chain',
+          //   testId: 'chainPlugin.createSectionSpaceChain',
+          //   label: ['create stack section label', { ns: CHAIN_PLUGIN }],
+          //   icon: (props: any) => <Brain {...props} />,
+          //   intent: {
+          //     plugin: CHAIN_PLUGIN,
+          //     action: ChainAction.CREATE,
+          //   },
+          // },
         ],
       },
       surface: {

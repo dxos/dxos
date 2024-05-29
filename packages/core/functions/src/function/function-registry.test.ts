@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Trigger } from '@dxos/async';
+import { sleep, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
@@ -37,6 +37,19 @@ describe('function registry', () => {
   afterEach(async () => {
     await ctx.dispose();
     await testBuilder.destroy();
+  });
+
+  test('getUniqueByUri', async () => {
+    const client = (await createInitializedClients(testBuilder))[0];
+    const registry = createRegistry(client);
+    await registry.open();
+    for (let i = 0; i < 2; i++) {
+      const space = await client.spaces.create();
+      await registry.register(space, testManifest.functions);
+    }
+    await sleep(10);
+    const definitions = registry.getUniqueByUri();
+    expect(definitions.length).to.eq(testManifest.functions?.length);
   });
 
   describe('register', () => {
