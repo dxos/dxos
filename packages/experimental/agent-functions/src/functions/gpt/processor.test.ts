@@ -5,24 +5,25 @@
 import { expect } from 'chai';
 
 import { ChainInputType, ChainPromptType, ChainType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
+import { TestBuilder } from '@dxos/client/testing';
 import { create } from '@dxos/echo-schema';
+import { createInitializedClients } from '@dxos/functions/testing';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestProcessor } from './processor';
 import { TestProcessorBuilder } from './testing';
+import { type ChainResources } from '../../chain';
 import { StubModelInvoker } from '../../tests/stub-invoker';
-import { str } from '../../util';
+import { registerTypes, str } from '../../util';
 
 describe.only('RequestProcessor', () => {
   // TODO(burdon): Create test prompt.
   test('translate', async () => {
-    const builder = new TestProcessorBuilder();
-    await builder.init();
-    afterTest(async () => {
-      await builder.destroy(); // TODO(burdon): Hangs.
-    });
-
-    const { space, resources } = builder;
+    const testBuilder = new TestBuilder();
+    afterTest(() => testBuilder.destroy());
+    const client = (await createInitializedClients(testBuilder))[0];
+    const space = await client.spaces.create();
+    registerTypes(space);
 
     // Add prompts.
     const command = 'translate';
@@ -66,7 +67,7 @@ describe.only('RequestProcessor', () => {
       });
 
       const testInvoker = new StubModelInvoker();
-      const processor = new RequestProcessor(testInvoker, resources);
+      const processor = new RequestProcessor(testInvoker, null as any as ChainResources);
       await processor.processThread({ space, thread, message });
       expect(testInvoker.lastCallArguments).to.deep.contain({
         sequenceInput: input,
