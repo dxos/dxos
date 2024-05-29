@@ -49,7 +49,13 @@ If you're using `react`, DXOS provides a simple [UI flow](./react/#joining-space
 
 ## Objects
 
-Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. Objects can have fields with values, and weak references to other objects to form trees or graphs.
+Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. `Objects` can have fields with values, and weak references to other objects to form trees or graphs.
+
+## Values
+
+Values within an `object` are JS strings, numbers, booleans, and null, as well as objects and arrays of the same.
+
+The top-level of a DXOS `object` is always a JS object, never a number, string, etc. Its fields starting with `@` are reserved, for example `@id` and `@meta`.
 
 ## How to use ECHO
 
