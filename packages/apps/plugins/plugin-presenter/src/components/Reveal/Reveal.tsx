@@ -67,11 +67,15 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
         // view: 'scroll',
         progress: false,
         transition: 'none',
-        center: true,
         slideNumber: false,
         embedded: true,
         // https://revealjs.com/speaker-view
         showNotes: false,
+
+        center: true,
+        margin: 0.02,
+        minScale: 0.2,
+        maxScale: 1.5,
 
         // https://revealjs.com/markdown
         plugins: [

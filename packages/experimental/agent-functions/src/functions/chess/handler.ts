@@ -5,6 +5,7 @@
 import { GameType } from '@dxos/chess-app/types';
 import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
+import { nonNullable } from '@dxos/util';
 
 import { Engine } from './engine';
 
@@ -30,23 +31,14 @@ export const types = [GameType];
  */
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const identity = context.client.halo.identity.get();
-  if (!identity) {
-    return;
-  }
+  const identityKey = identity!.identityKey.toHex();
 
-  const identityKey = identity.identityKey.toHex();
-
-  // TODO(burdon): Get side from object.
   const { meta: { level = 1 } = {}, objects } = event.data;
   for (const game of objects ?? []) {
+    const side = [game.playerWhite === identityKey && 'w', game.playerBlack && identityKey && 'b'].filter(nonNullable);
     const engine = new Engine({ pgn: game.pgn, level });
-
-    const side = [];
-    if (game.playerWhite === identityKey) side.push('w');
-    if (game.playerBlack === identityKey) side.push('b');
-
     if (!engine.state.isGameOver() && side.includes(engine.state.turn())) {
-      engine.move();
+      await engine.move();
       engine.print();
 
       // Update object.
