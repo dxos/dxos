@@ -63,7 +63,7 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#5D0E41" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
+.slide: data-background="#5D0E41" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/backgrounds/bg-halo.svg" data-background-position="95% 50%" __data-background-size="30%"
 -->
 
 # HALO

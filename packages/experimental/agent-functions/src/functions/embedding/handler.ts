@@ -9,6 +9,7 @@ import textract from 'textract';
 import { DocumentType, FileType } from '@braneframe/types';
 import { Filter, hasType, loadObjectReferences } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -19,9 +20,20 @@ import { getKey } from '../../util';
 
 const types = [DocumentType, FileType];
 
-export const handler = subscriptionHandler(async ({ event, context, response }) => {
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.struct({
+    model: S.optional(S.string),
+  }),
+);
+
+export type Meta = S.Schema.Type<typeof MetaSchema>;
+
+export const handler = subscriptionHandler<Meta>(async ({ event, context, response }) => {
   const { client, dataDir } = context;
-  const { space, objects } = event.data;
+  const { space, objects, meta } = event.data;
   invariant(space);
   invariant(dataDir);
 
@@ -87,6 +99,9 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
     const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(config, 'openai.com/api_key'),
+      embeddings: {
+        model: meta.model,
+      },
     });
 
     try {
