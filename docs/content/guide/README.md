@@ -35,27 +35,31 @@ Dependency relationship of some of the technologies covered in the docs:
 graph TD;
   %% Make the nodes closer together horizontally to narrow the graph:
   %%{init:{'flowchart':{'nodeSpacing': 8}}}%%
+
+  %% NOTE: GitHub's Mermaid implementation doesn't support relative links
+  %% so use absolute links instead.
+
   subgraph DXOS["DXOS protocols"];
-    ECHO["<a href='./halo/'>ECHO</a><br>Peer-to-peer object store"];
-    HALO["<a href='./halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
+    ECHO["<a href='https://docs.dxos.org/guide/echo/'>ECHO</a><br>Peer-to-peer object store"];
+    HALO["<a href='https://docs.dxos.org/guide/halo/'>HALO</a><br>Authentication, identity,<br>and contact management"];
     MESH["MESH\nNetworking and replication"];
     ECHO-.->HALO;
     ECHO-.->MESH
     HALO-.->MESH;
   end
-  subgraph Plugins["<a href="./composer-plugins/">Composer Plugins</a>"];
-    Layout["<a href="./composer-plugins/core#layout">Layout</a>"];
-    Theme["<a href="./composer-plugins/core#theme">Theme</a>"];
+  subgraph Plugins["<a href="https://docs.dxos.org/guide/composer-plugins/">Composer Plugins</a>"];
+    Layout["<a href="https://docs.dxos.org/guide/composer-plugins/core#layout">Layout</a>"];
+    Theme["<a href="https://docs.dxos.org/guide/composer-plugins/core#theme">Theme</a>"];
     Etc1["..."];
   end
   subgraph AppFramework["App Framework"];
-    Surface["<a href="./composer-plugins/surface">Surface</a>"];
-    Intent["<a href="./composer-plugins/intent">Intent</a>"];
-    Graph["<a href="./composer-plugins/graph">Graph</a>"];
+    Surface["<a href="https://docs.dxos.org/guide/composer-plugins/surface">Surface</a>"];
+    Intent["<a href="https://docs.dxos.org/guide/composer-plugins/intent">Intent</a>"];
+    Graph["<a href="https://docs.dxos.org/guide/composer-plugins/graph">Graph</a>"];
   end
   subgraph App["DXOS Apps"];
-    TodoMVC["<a href='./samples/#todomvc'>TodoMVC</a>"];
-    Tasks["<a href='./samples/#tasks'>Tasks</a>"];
+    TodoMVC["<a href='https://docs.dxos.org/guide/samples/#todomvc'>TodoMVC</a>"];
+    Tasks["<a href='https://docs.dxos.org/guide/samples/#tasks'>Tasks</a>"];
     Composer;
     Etc2["..."];
   end
