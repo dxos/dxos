@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-metadata",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "DXOS app plugin for collecting and resolving type metadata.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
