@@ -9,6 +9,7 @@ import { Table, type TableColumnDef } from '@dxos/react-ui-table';
 import { mx } from '@dxos/react-ui-theme';
 
 import { JsonView } from './JsonView';
+import { styles } from '../styles';
 
 export type MasterTableProps<T extends {}> = {
   columns: TableColumnDef<T>[];
@@ -29,7 +30,7 @@ export const MasterDetailTable = <T extends {}>({
   const tableContainerStyles = pinToBottom ? { classNames: widths[0] } : { className: mx('overflow-auto', widths[0]) };
 
   return (
-    <div className='flex grow overflow-hidden divide-x'>
+    <div className={mx('flex grow overflow-hidden divide-x', styles.border)}>
       <Table.Root>
         <Table.Viewport asChild>
           <TableContainer {...tableContainerStyles}>

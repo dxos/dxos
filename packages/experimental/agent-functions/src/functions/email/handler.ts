@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import type { Config as ImapConfig } from 'imap';
+
 import { MailboxType, MessageType } from '@braneframe/types';
 import { getSpace, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
@@ -9,16 +11,16 @@ import { getMeta } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { Config as ImapConfig } from 'imap';
-import { getKey, registerTypes } from '../../util';
 
 import { ImapProcessor } from './imap-processor';
+import { getKey } from '../../util';
+
+const types = [MailboxType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
-  const { space, objects } = event.data;
   const { client } = context;
+  const { space, objects } = event.data;
   invariant(space);
-  registerTypes(space);
 
   // TODO(burdon): Generalize util for getting properties from config/env.
   const config = client.config;
@@ -64,7 +66,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   }
 
   return response.status(code);
-});
+}, types);
 
 // TODO(burdon): Util.
 const processMailbox = async (space: Space, mailbox: MailboxType, messages: MessageType[]) => {

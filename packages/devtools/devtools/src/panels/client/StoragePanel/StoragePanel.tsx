@@ -19,9 +19,11 @@ import { useAsyncEffect } from '@dxos/react-async';
 import { PublicKey, useClientServices } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { DropdownMenu, Tree, TreeItem, Toolbar } from '@dxos/react-ui';
+import { mx } from '@dxos/react-ui-theme';
 import { BitField } from '@dxos/util';
 
 import { Bitbar, JsonView, PanelContainer } from '../../../components';
+import { styles } from '../../../styles';
 
 // TODO(burdon): Rewrite this panel as a table.
 
@@ -235,7 +237,7 @@ export const StoragePanel = () => {
 
   return (
     <PanelContainer
-      classNames='flex-row divide-x'
+      classNames={mx('flex-row divide-x', styles.border)}
       toolbar={
         <Toolbar.Root>
           <Toolbar.Button onClick={refresh} disabled={isRefreshing}>
@@ -320,6 +322,6 @@ export type TreeItemTextProps = {
 const TreeItemText = ({ primary, secondary }: TreeItemTextProps) => (
   <div className='flex gap-2 overflow-hidden whitespace-nowrap'>
     <span className='font-mono'>{primary}</span>
-    <span className='text-gray-400'>{secondary}</span>
+    <span className='text-neutral-400'>{secondary}</span>
   </div>
 );

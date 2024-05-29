@@ -5,6 +5,8 @@
 import React from 'react';
 import { HorizontalBarSeries, HorizontalGridLines, VerticalGridLines, XAxis, XYPlot, YAxis } from 'react-vis';
 
+import { styles } from '../styles';
+
 const feeds = [0, 1, 2, 3, 4];
 const sequence = [0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 2, 1, 2, 2, 2, 2, 0, 3, 3, 2, 2, 1, 4, 4, 4, 4];
 
@@ -39,7 +41,7 @@ const data = segments.stack.flatMap(([i, length]) => {
  */
 export const FeedGraph = () => {
   return (
-    <div className='bg-white'>
+    <div className={styles.bgPanel}>
       <XYPlot width={600} height={300} animation={false} margin={{ left: 0, right: 0, top: 0, bottom: 0 }} stackBy='x'>
         <VerticalGridLines style={{ stroke: 'red' }} />
         <HorizontalGridLines style={{ stroke: 'green' }} />

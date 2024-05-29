@@ -53,7 +53,7 @@ export interface OllamaInput {
 }
 
 export const defaultOllamaInput: Partial<OllamaInput> = {
-  model: 'llama2',
+  model: 'llama3',
 };
 
 export type OllamaChainResourcesOptions = ChainResourcesOptions<
