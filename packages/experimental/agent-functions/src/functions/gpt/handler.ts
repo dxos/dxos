@@ -6,7 +6,7 @@ import { join } from 'node:path';
 
 import { ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -19,9 +19,19 @@ import { getKey } from '../../util';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-type Meta = { prompt?: ChainPromptType };
-
 const types = [ChainPromptType, MessageType, ThreadType];
+
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.struct({
+    model: S.optional(S.string),
+    prompt: ChainPromptType,
+  }),
+);
+
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
 // TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
@@ -83,6 +93,12 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
     const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
       apiKey: getKey(client.config, 'openai.com/api_key'),
+      embeddings: {
+        model: meta.model,
+      },
+      chat: {
+        model: meta.model,
+      },
     });
 
     await resources.store.initialize();
