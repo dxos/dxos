@@ -6,6 +6,7 @@ export * from './agents';
 export * from './credentials';
 export * from './devices';
 export * from './invitations';
+export * from './json';
 export * from './keys';
 export * from './publish';
 export * from './spaces';

@@ -360,13 +360,6 @@ export const DeckPlugin = ({
                               : []),
                           ],
                         };
-                  if (
-                    !(isActiveParts(location.active) && location.active.complementary) &&
-                    nextActiveParts.complementary &&
-                    matchMedia('(min-width: 1024px)').matches
-                  ) {
-                    layout.values.complementarySidebarOpen = true;
-                  }
                   location.active = nextActiveParts;
                 }
               });

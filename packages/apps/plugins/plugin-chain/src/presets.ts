@@ -42,6 +42,12 @@ export const chainPresets = [
             type: ChainInputType.PASS_THROUGH,
             name: 'input',
           },
+          // TODO(burdon): Message.
+          // {
+          //   type: ChainInputType.CONTEXT,
+          //   name: 'input',
+          //   value: 'object.blocks[0].content',
+          // },
         ],
       }),
   },
@@ -146,8 +152,9 @@ export const chainPresets = [
             name: 'context',
           },
           {
-            type: ChainInputType.PASS_THROUGH,
+            type: ChainInputType.CONTEXT,
             name: 'question',
+            value: 'object.blocks[0].content',
           },
         ],
       }),
