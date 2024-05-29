@@ -48,22 +48,24 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#00224D" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
+ECHO
+.slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-echo.svg" data-background-position="100% 50%"
 -->
 
 # ECHO
 
-- Graph database
+- Federated graph database
 - Effect Schema
+- Queries + subscriptions
+- Rich text search
 - Automerge FTW
-- Subscriptions
-- Federated Hypergraph
 
 ## Distributed Data
 
 ---
 <!-- 
-.slide: data-background="#5D0E41" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/backgrounds/bg-halo.svg" data-background-position="95% 50%" __data-background-size="30%"
+HALO
+.slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-halo.svg" data-background-position="100% 50%"
 -->
 
 # HALO
@@ -78,7 +80,8 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#994D1C" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
+MESH
+.slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-mesh.svg" data-background-position="100% 50%"
 -->
 
 # MESH
@@ -93,10 +96,11 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#A0153E" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+KUBE
+.slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
-# 新発売
+# KUBE
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
