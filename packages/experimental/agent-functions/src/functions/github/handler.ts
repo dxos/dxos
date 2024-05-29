@@ -10,14 +10,11 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { registerTypes } from '../../util';
-
 type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['response']['data'];
 
-export const handler = subscriptionHandler(async ({ event, context }) => {
+export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
   invariant(space);
-  registerTypes(space);
 
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   for (const project of objects ?? []) {

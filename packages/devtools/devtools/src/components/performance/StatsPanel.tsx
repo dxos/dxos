@@ -19,6 +19,7 @@ import {
   TimeSeries,
 } from './panels';
 import { removeEmpty, type Stats } from '../../hooks';
+import { styles } from '../../styles';
 
 const LOCAL_STORAGE_KEY = 'dxos.org/plugin/performance/panel';
 
@@ -76,7 +77,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
 
   return (
     <DensityProvider density='fine'>
-      <div className={mx('flex flex-col w-full h-full', 'divide-y divide-neutral-200 dark:divide-neutral-700')}>
+      <div className={mx('flex flex-col w-full h-full divide-y', styles.border)}>
         <Panel
           id='main'
           icon={ChartBar}

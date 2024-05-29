@@ -18,6 +18,7 @@ enum Status {
   ERROR = 2,
 }
 
+// TODO(Zan): This now has no usages. Remove it?
 export const PersistenceStatus = ({ db }: { db: EchoDatabase }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const [displayMessage, setDisplayMessage] = useState(false);

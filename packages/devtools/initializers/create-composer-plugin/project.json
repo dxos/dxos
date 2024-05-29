@@ -4,12 +4,12 @@
   "tags": [
     "scope:initializers"
   ],
-  "sourceRoot": "packages/devtools/initializers/create-app-plugin/src",
+  "sourceRoot": "packages/devtools/initializers/create-composer-plugin/src",
   "projectType": "library",
   "targets": {
     "build": {
       "options": {
-        "outputPath": "packages/devtools/initializers/create-app-plugin/dist"
+        "outputPath": "packages/devtools/initializers/create-composer-plugin/dist"
       }
     },
     "lint": {}

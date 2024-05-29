@@ -1,6 +1,6 @@
 {
   "name": "@dxos/examples",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "private": true,
   "description": "Example stories used by the docs.",
   "homepage": "https://dxos.org",
@@ -30,7 +30,6 @@
     "typescript": "^5.4.5",
     "vite": "^5.2.9",
     "vite-plugin-top-level-await": "^1.4.1",
-    "vite-plugin-turbosnap": "^1.0.2",
     "vite-plugin-wasm": "^3.3.0"
   }
 }

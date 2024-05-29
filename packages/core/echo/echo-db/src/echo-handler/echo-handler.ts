@@ -5,6 +5,7 @@
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
 import {
   SchemaValidator,
@@ -17,6 +18,7 @@ import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMe
 import { invariant } from '@dxos/invariant';
 import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
 
+import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
   type ProxyTarget,
@@ -84,6 +86,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     target[symbolInternals].core.signal.notifyRead();
 
+    if (prop === devtoolsFormatter) {
+      return this._getDevtoolsFormatter(target);
+    }
+
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
       if (handled != null) {
@@ -104,6 +110,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
+    // TODO(dmaretskyi): toJSON should be available for nested objects too.
     if (prop === 'toJSON') {
       return () => this._toJSON(target);
     }
@@ -432,6 +439,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getMeta(target: ProxyTarget): ObjectMeta {
+    // TODO(dmaretskyi): Reuse meta target.
     const metaTarget: ProxyTarget = {
       [symbolInternals]: target[symbolInternals],
       [symbolPath]: [],
@@ -480,7 +488,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = !!this[symbolInternals].core.getType();
-    const reified = handler.getReified(this);
+    const reified = handler._getReified(this);
     reified.id = this[symbolInternals].core.id;
     return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
       ...options,
@@ -492,7 +500,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _toJSON(target: ProxyTarget): any {
     const typeRef = target[symbolInternals].core.getType();
-    const reified = this.getReified(target);
+    const reified = this._getReified(target);
     return {
       '@type': typeRef ? encodeReference(typeRef) : undefined,
       ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
@@ -507,11 +515,48 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     };
   }
 
-  private getReified(target: ProxyTarget): any {
+  private _getReified(target: ProxyTarget): any {
     const dataPath = [...target[symbolPath]];
     const fullPath = [getNamespace(target), ...dataPath];
     const value = target[symbolInternals].core.getDecoded(fullPath);
     return value;
+  }
+
+  private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
+    return {
+      header: (config?: any) =>
+        getHeader(this.getTypeReference(target)?.itemId ?? 'EchoObject', target[symbolInternals].core.id, config),
+      hasBody: () => true,
+      body: () => {
+        let data = deepMapValues(this._getReified(target), (value, recurse) => {
+          if (value instanceof Reference) {
+            // TODO(dmaretskyi): This will resolve to the proxy object, but we should pull out that resolution from object-core.
+            return target[symbolInternals].core.decode(value);
+          }
+          return recurse(value);
+        });
+        if (isRootDataObject(target)) {
+          // TODO(dmaretskyi): Extract & reuse.
+          const metaTarget: ProxyTarget = {
+            [symbolInternals]: target[symbolInternals],
+            [symbolPath]: [],
+            [symbolNamespace]: META_NAMESPACE,
+          };
+          const metaReified = this._getReified(metaTarget);
+
+          data = {
+            id: target[symbolInternals].core.id,
+            '@type': this.getTypeReference(target)?.itemId,
+            '@meta': metaReified,
+            ...data,
+            '[[Schema]]': this.getSchema(target),
+            '[[Core]]': target[symbolInternals].core,
+          };
+        }
+
+        return getBody(data);
+      },
+    };
   }
 }
 

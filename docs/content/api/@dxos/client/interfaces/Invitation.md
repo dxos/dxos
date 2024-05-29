@@ -82,7 +82,7 @@ Options:
   - proto3_optional = true
 
 ### [role]()
-Type: <code>Role</code>
+Type: <code>[Role](/api/@dxos/client/enums#Role)</code>
 
 Role of the admitted member, defaults to ADMIN.
 

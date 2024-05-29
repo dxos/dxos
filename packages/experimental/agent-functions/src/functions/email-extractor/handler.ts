@@ -9,12 +9,12 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { registerTypes } from '../../util';
+const types = [ContactType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
   invariant(space);
-  registerTypes(space);
+
   const { objects: contacts } = await space.db.query(Filter.schema(ContactType)).run();
   const objectsByEmail = new Map<string, ContactType>();
 
@@ -66,4 +66,4 @@ export const handler = subscriptionHandler(async ({ event }) => {
   log.info(`>>> ${i}`);
   await space.db.flush();
   log.info(`<<< ${i}`);
-});
+}, types);

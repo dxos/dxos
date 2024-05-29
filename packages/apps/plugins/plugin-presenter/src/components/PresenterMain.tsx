@@ -11,6 +11,7 @@ import {
   useResolvePlugin,
   parseLayoutPlugin,
   NavigationAction,
+  parseNavigationPlugin,
 } from '@dxos/app-framework';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -30,6 +31,8 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
   const sections = stack.sections.filter(Boolean).filter((section) => !!section?.object);
 
   // TODO(burdon): Should not depend on split screen.
+  const navPlugin = useResolvePlugin(parseNavigationPlugin);
+  const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const fullscreen = layoutPlugin?.provides.layout.fullscreen;
   const { running } = useContext(PresenterContext);
@@ -43,14 +46,14 @@ const PresenterMain: FC<{ stack: StackType }> = ({ stack }) => {
         action: TOGGLE_PRESENTATION,
         data: { state: running },
       },
-      ...(running
-        ? []
-        : [
+      ...(!running && isDeckModel
+        ? [
             {
               action: NavigationAction.CLOSE,
               data: { activeParts: { fullScreen: fullyQualifiedId(stack) } },
             },
-          ]),
+          ]
+        : []),
     ]);
   };
 

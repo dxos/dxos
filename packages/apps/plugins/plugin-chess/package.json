@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-chess",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -27,6 +27,7 @@
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/chess-app": "workspace:*",
+    "@dxos/display-name": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/react-client": "workspace:*",

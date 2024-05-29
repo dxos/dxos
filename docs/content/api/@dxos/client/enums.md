@@ -21,6 +21,25 @@ Values:
 - `UNKNOWN` 
 
 
+### [`Role`]()
+
+Defined in:
+   file://./../../../dxos/halo/credentials.proto
+
+Values:
+- `ADMIN` 
+
+- `EDITOR` 
+
+- `INVALID` 
+
+- `OWNER` 
+
+- `READER` 
+
+- `REMOVED` 
+
+
 ### [`Kind`]()
 
 Defined in:
@@ -69,8 +88,6 @@ Values:
 - `OFFLINE` 
 
 - `ONLINE` 
-
-- `REMOVED` 
 
 
 ### [`SpaceState`]()

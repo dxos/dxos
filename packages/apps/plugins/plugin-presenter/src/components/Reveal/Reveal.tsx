@@ -14,9 +14,6 @@ import Markdown from 'reveal.js/plugin/markdown/plugin.js';
 
 const styles = `
 <style type="text/css">
-  .reveal .slide-background-content {
-    opacity: 0.5;
-  }
   .reveal h1 {
     font-weight: 100;
     padding-left: 36px;
@@ -40,6 +37,7 @@ const styles = `
     list-style: "- ";
   }
   .reveal blockquote p {
+    text-align: center;
     font-weight: 100;
     padding: 32px;
   }
@@ -48,11 +46,12 @@ const styles = `
 
 export type RevealProps = {
   content: string;
+  slide?: number;
   onExit?: () => void;
 };
 
 // https://revealjs.com/react
-export const RevealPlayer = ({ content, onExit }: RevealProps) => {
+export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
   const deckDivRef = useRef<HTMLDivElement>(null);
   const deckRef = useRef<Reveal.Api | null>(null);
   useEffect(() => {
@@ -88,6 +87,9 @@ export const RevealPlayer = ({ content, onExit }: RevealProps) => {
       });
 
       await deckRef.current.initialize();
+      if (slide !== undefined) {
+        deckRef.current.slide(slide < 0 ? deckRef.current?.getTotalSlides() + slide : slide - 1);
+      }
       deckRef.current.addKeyBinding({ keyCode: 27, key: 'Escape', description: 'Exit full screen' }, () => {
         onExit?.();
       });

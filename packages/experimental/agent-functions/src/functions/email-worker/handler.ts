@@ -9,21 +9,7 @@ import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-// TODO(burdon): Factor out.
-export const text = (content: string) => create(TextV0Type, { content });
-
-// TODO(burdon): Import type from lib.
-export type EmailMessage = {
-  id: number;
-  status?: string;
-  created: number;
-  from: string;
-  to: string;
-  subject: string;
-  body: string;
-};
-
-const SOURCE_ID = 'hub.dxos.network/mailbox';
+import { type EmailMessage, SOURCE_ID, text } from './types';
 
 // TODO(burdon): Effect schema.
 type Meta = { account?: string };
@@ -39,8 +25,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
     spaceKey,
   } = event.data;
   log.info('messages', { space: PublicKey.from(spaceKey), messages: messages.length });
-
-  // TODO(burdon): Generic sync API.
   const space = context.client.spaces.get(PublicKey.from(spaceKey));
   if (!space) {
     return;
@@ -79,7 +63,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
 
   const { objects } = await space.db.query(Filter.schema(MessageType)).run();
   for (const message of messages) {
-    // NOTE: If external DB is reset, it will start to number again from 1.
     let object = findObjectWithForeignKey(objects, { source: SOURCE_ID, id: String(message.id) });
     if (!object) {
       object = space.db.add(
@@ -103,8 +86,6 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      // TODO(burdon): ??= breaks the array?
-      // (mailbox.messages ??= []).push(object);
       mailbox.messages?.push(object);
     }
   }
