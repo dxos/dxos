@@ -7,7 +7,7 @@ order: 0
 
 # About
 
-ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript.
+ECHO (The **E**ventually **C**onsistent **H**ierarchical **O**bject store) is a peer-to-peer graph database written in TypeScript.
 
 * Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
 * No servers or central authority, all the data is with the clients.
