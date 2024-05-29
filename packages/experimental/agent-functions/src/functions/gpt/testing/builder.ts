@@ -10,7 +10,7 @@ import { createSpaceObjectGenerator } from '@dxos/echo-generator';
 import { invariant } from '@dxos/invariant';
 
 import { type ChainResources, type ChainVariant, createChainResources } from '../../../chain';
-import { getConfig, getKey } from '../../../util';
+import { getConfig, getKey, registerTypes } from '../../../util';
 
 export class TestProcessorBuilder {
   private readonly _ctx = new Context();
@@ -28,6 +28,7 @@ export class TestProcessorBuilder {
     await this._client.halo.createIdentity();
 
     this._space = await this._client.spaces.create();
+    registerTypes(this._space);
 
     this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
       baseDir: '/tmp/dxos/testing/agent/functions/embedding',

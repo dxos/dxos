@@ -9,6 +9,8 @@ import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { registerTypes } from '../../util';
+
 // TODO(burdon): Factor out.
 export const text = (content: string) => create(TextV0Type, { content });
 
@@ -45,14 +47,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-
-  // TODO(burdon): Register schema (part of function metadata).
-  try {
-    const { client } = context;
-    client.addSchema(TextV0Type, MailboxType, MessageType);
-  } catch (err) {
-    log.catch(err);
-  }
+  registerTypes(space);
 
   // Create mailbox if doesn't exist.
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();

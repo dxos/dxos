@@ -8,6 +8,8 @@ import path from 'node:path';
 import * as process from 'node:process';
 
 import {
+  ChainPromptType,
+  ChainType,
   ContactType,
   DocumentType,
   EventType,
@@ -86,6 +88,8 @@ export const registerTypes = (space: Space | undefined) => {
     FileType,
     ContactType,
     TextV0Type,
+    ChainType,
+    ChainPromptType,
   ];
 
   for (const type of schemaList) {
