@@ -146,7 +146,7 @@ const NodePlankHeading = ({
   const { dispatch } = useIntent();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
-    <PlankHeading.Root>
+    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
@@ -182,19 +182,27 @@ const NodePlankHeading = ({
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? {
-                  action: NavigationAction.CLOSE,
-                  data: {
-                    activeParts: {
-                      complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                      [part[0]]: slug,
+              ? part[0] === 'complementary'
+                ? {
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'complementary',
+                      state: false,
                     },
-                  },
-                }
+                  }
+                : {
+                    action: NavigationAction.CLOSE,
+                    data: {
+                      activeParts: {
+                        complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                        [part[0]]: slug,
+                      },
+                    },
+                  }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
-        close
+        close={part[0] === 'complementary' ? 'minify-end' : true}
       >
         {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
         {node && !!node.data?.comments && !slug?.endsWith('comments') && (

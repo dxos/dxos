@@ -21,13 +21,12 @@ export default class Create extends BaseCommand<typeof Create> {
         const space = await client.spaces.create();
         await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
         space.properties.name = this.args.name;
-        const data = {
+
+        ux.log(chalk`{green Created}: ${space.key.truncate()}`);
+        return {
           key: space.key,
           name: space.properties.name,
         };
-
-        ux.log(chalk`{green Created}: ${data.key.truncate()}`);
-        return data;
       },
       { halo: true },
     );

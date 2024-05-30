@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-files",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "DXOS Surface plugin for managing files.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

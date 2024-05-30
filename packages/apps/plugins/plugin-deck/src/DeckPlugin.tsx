@@ -79,18 +79,14 @@ export const DeckPlugin = ({
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
-
     sidebarOpen: true,
     complementarySidebarOpen: false,
-
     dialogContent: null,
     dialogOpen: false,
     dialogBlockAlign: undefined,
-
     popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
-
     toasts: [],
   });
 
@@ -242,6 +238,9 @@ export const DeckPlugin = ({
             onChangeAttend={(nextAttended) => {
               // TODO(thure): Is this / could this be better handled by an intent?
               attention.attended = nextAttended;
+              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
+                layout.values.scrollIntoView = undefined;
+              }
             }}
           >
             <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
@@ -320,30 +319,33 @@ export const DeckPlugin = ({
               return { data: true };
             }
 
-            // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
+              // TODO(wittjosiah): Factor out.
               batch(() => {
                 if (intent.data) {
-                  const nextActiveParts =
+                  location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
-                      ? Object.entries(intent.data.activeParts).reduce(
+                      ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
                           (acc: ActiveParts, [part, ids]) => {
                             // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
                             if (part === 'main') {
                               const partMembers = new Set<string>();
                               const prev = new Set(
+                                // TODO(burdon): Explain why this can be an array or string.
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
                               // NOTE(thure): The order of the following `forEach` calls will determine to which end of
                               //   the current `main` part newly opened slugs are added.
-                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
                               Array.from(prev).forEach((id) => partMembers.add(id));
+                              // Add to end.
+                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
                               acc[part] = Array.from(partMembers).filter(Boolean);
                             } else {
                               // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
                               //   that position.
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
+
                             return acc;
                           },
                           { ...location.active },
@@ -360,7 +362,6 @@ export const DeckPlugin = ({
                               : []),
                           ],
                         };
-                  location.active = nextActiveParts;
                 }
               });
 

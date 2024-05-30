@@ -37,7 +37,6 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 2. Access control
 3. Networking
 4. Compute
-5. Shell
 
 notes:
 - more difficult when decentralized; online/offline
@@ -48,43 +47,46 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#00224D" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-echo.svg" data-background-position="95% 50%" data-background-size="30%"
+ECHO
+.slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-echo.svg" data-background-position="100% 50%"
 -->
 
 # ECHO
 
-- Graph database
+- Federated graph database
 - Effect Schema
+- Queries + subscriptions
+- Rich text search
 - Automerge FTW
-- Subscriptions
-- Federated Hypergraph
 
 ## Distributed Data
 
 ---
 <!-- 
-.slide: data-background="#5D0E41" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-halo.svg" data-background-position="95% 50%" data-background-size="30%"
+HALO
+.slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-halo.svg" data-background-position="100% 50%"
 -->
 
 # HALO
 
 - Decentralized identity
 - Access control
+- Credentials + key management
 - Device management
 - Account recovery
-- Credentials + key management
 
 ## Identity & Security
 
 ---
 <!-- 
-.slide: data-background="#994D1C" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-mesh.svg" data-background-position="95% 50%" data-background-size="30%"
+MESH
+.slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-mesh.svg" data-background-position="100% 50%"
 -->
 
 # MESH
 
 - P2P networks
-- WebRTC + Web socket
+- WebSockets + WebRTC
 - Signaling + Discovery
 - Private key exchange
 - Encrypted data sync
@@ -93,10 +95,11 @@ notes:
 
 ---
 <!-- 
-.slide: data-background="#A0153E" data-background-opacity="0.5" data-background-image="https://raw.githubusercontent.com/dxos/dxos/main/packages/ui/brand/assets/icons/white/icon-kube.svg" data-background-position="95% 50%" data-background-size="30%"
+KUBE
+.slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
-# 新発売
+# KUBE
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
