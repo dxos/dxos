@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codec-protobuf",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
