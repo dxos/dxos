@@ -57,7 +57,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 registerSignalRuntime();
 
 const client = new Client();
-Yeah
+
 async () => {
   await client.initialize();
 
