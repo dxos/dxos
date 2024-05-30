@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.5](https://github.com/dxos/dxos/compare/v0.5.4...v0.5.5) (2024-05-30)
+
+
+### Bug Fixes
+
+* brand updates ([#6886](https://github.com/dxos/dxos/issues/6886)) ([bf4f69b](https://github.com/dxos/dxos/commit/bf4f69bfcc415440f0d5ea53899371acc962c55e))
+* Demo docs ([#6887](https://github.com/dxos/dxos/issues/6887)) ([f022b2e](https://github.com/dxos/dxos/commit/f022b2ec8e69c08672966e21f0965c6b7c6b62ee))
+* notes ([#6889](https://github.com/dxos/dxos/issues/6889)) ([971f8a3](https://github.com/dxos/dxos/commit/971f8a323c7ba3bdc71f10a3e80ec116d85f6e47))
+* **react-ui-deck:** Support minification of sidebars as a variation of close ([#6894](https://github.com/dxos/dxos/issues/6894)) ([c7fff6a](https://github.com/dxos/dxos/commit/c7fff6ae5a5e12e0a6cb28f7dafbb3b6ba7c6ad0))
+* Scroll plank into view when navigating from a Stack section ([#6890](https://github.com/dxos/dxos/issues/6890)) ([a7f191d](https://github.com/dxos/dxos/commit/a7f191de8b3bd78fac9aa8c993c4080902a9eb2b))
+* Update links ([#6891](https://github.com/dxos/dxos/issues/6891)) ([5627562](https://github.com/dxos/dxos/commit/56275622285d55fb4309a0b2383b393e6fc7a3bc))
+
 ## [0.5.4](https://github.com/dxos/dxos/compare/v0.5.3...v0.5.4) (2024-05-29)
 
 
