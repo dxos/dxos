@@ -1,6 +1,6 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",

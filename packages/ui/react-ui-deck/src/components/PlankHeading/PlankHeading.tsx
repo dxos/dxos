@@ -209,7 +209,7 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   part: [string, number, number];
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
-  close?: boolean;
+  close?: boolean | 'minify-start' | 'minify-end';
   increment?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
@@ -280,11 +280,11 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
         )}
         {close && (
           <PlankHeadingControl
-            label={t('close label')}
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
             onClick={() => onClick?.({ type: 'close', part })}
           >
-            <X />
+            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <X />}
           </PlankHeadingControl>
         )}
       </ButtonGroup>

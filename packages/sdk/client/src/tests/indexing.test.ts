@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import isEqual from 'lodash.isequal';
 
-import { asyncTimeout, Trigger } from '@dxos/async';
+import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
 import { Properties, type ClientServicesProvider, type Space } from '@dxos/client-protocol';
 import { Filter, type Query } from '@dxos/echo-db';
 import { create, Expando, type EchoReactiveObject } from '@dxos/echo-schema';
@@ -81,17 +81,17 @@ describe('Index queries', () => {
     const receivedIndexedObject = new Trigger<EchoReactiveObject<any>[]>();
     const unsubscribe = query.subscribe(
       (query) => {
-        log('Query results', {
-          length: query.results.length,
-          results: query.results.map(({ object, resolution }) => ({
+        const indexResults = query.results.filter((result) => result.resolution?.source === 'index');
+        log.info('Query results', {
+          length: indexResults.length,
+          results: indexResults.map(({ object, resolution }) => ({
             object: (object as any).toJSON(),
             resolution,
           })),
         });
 
-        const indexResults = query.results.filter((result) => result.resolution?.source === 'index');
-
         if (
+          query.objects.length === objects.length &&
           objects.every((object) => indexResults.some((result) => objectContains(result.object!, object))) &&
           indexResults.every((result) => objects.some((object) => objectContains(result.object!, object)))
         ) {
@@ -293,6 +293,47 @@ describe('Index queries', () => {
     await addObjects(space, expandos);
     const query = space.db.query(Filter.schema(Expando));
     await matchObjects(query, expandos);
+  });
+
+  test('object deletion triggers query update', async () => {
+    const builder = new TestBuilder();
+    afterTest(async () => await builder.destroy());
+    const client = await initClient(builder.createLocalClientServices());
+    await client.halo.createIdentity();
+    const space = await client.spaces.create();
+    const { contacts, documents } = createObjects();
+    const echoContacts = await addObjects(space, contacts);
+    await addObjects(space, documents);
+
+    const query = space.db.query(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType)));
+    const queriedEverything = new Trigger();
+    const receivedDeleteUpdate = new Trigger();
+    const unsub = query.subscribe((query) => {
+      const indexedObjects = query.results
+        .filter((result) => result.resolution?.source === 'index')
+        .map(({ object }) => object);
+      if (indexedObjects.length === contacts.length + documents.length) {
+        queriedEverything.wake();
+      }
+
+      if (
+        indexedObjects.length === contacts.length + documents.length - 1 &&
+        queriedEverything.state === TriggerState.RESOLVED
+      ) {
+        receivedDeleteUpdate.wake();
+      }
+    });
+    afterTest(() => unsub());
+
+    await queriedEverything.wait({ timeout: TIMEOUT });
+    expect(receivedDeleteUpdate.state).to.equal(TriggerState.WAITING);
+
+    const deletedContact = echoContacts.splice(0, 1)[0];
+    space.db.remove(deletedContact);
+    await space.db.flush();
+    await receivedDeleteUpdate.wait({ timeout: TIMEOUT });
+
+    log.info('query', { objects: (await query.run()).objects.length });
   });
 });
 

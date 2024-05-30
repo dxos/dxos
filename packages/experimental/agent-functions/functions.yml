@@ -12,15 +12,30 @@ functions:
     handler: 'hello'
     description: 'Hello World!'
 
+  - uri: 'dxos.org/function/chess'
+    route: '/chess'
+    handler: 'chess'
+    description: 'A simple chess engine.'
+
+  - uri: 'dxos.org/function/email-worker'
+    route: '/email-worker'
+    handler: 'email-worker'
+    description: 'Synchronizes Mailbox with email server.'
+
+  - uri: 'dxos.org/function/embedding'
+    route: '/embedding'
+    handler: 'embedding'
+    description: 'Text document embedding service.'
+
+  - uri: 'dxos.org/function/gpt'
+    route: '/gpt'
+    handler: 'gpt'
+    description: 'GPT chat.'
+
 #  - uri: 'dxos.org/function/calendar'
 #    route: '/calendar'
 #    handler: 'calendar'
 #    description: 'Calendar Sync.'
-
-  - uri: 'dxos.org/function/chess'
-    route: '/chess'
-    handler: 'chess'
-    description: 'Chess.'
 
 #  - uri: 'dxos.org/function/email'
 #    route: '/email'
@@ -31,21 +46,6 @@ functions:
 #    route: '/email-extractor'
 #    handler: 'email-extractor'
 #    description: 'Email Extractor.'
-
-  - uri: 'dxos.org/function/email-worker'
-    route: '/email-worker'
-    handler: 'email-worker'
-    description: 'Synchronize Mailbox with email server.'
-
-  - uri: 'dxos.org/function/embedding'
-    route: '/embedding'
-    handler: 'embedding'
-    description: 'Text embedding.'
-
-  - uri: 'dxos.org/function/gpt'
-    route: '/gpt'
-    handler: 'gpt'
-    description: 'GPT Chat.'
 
 #  - uri: 'dxos.org/function/github'
 #    route: '/github'
@@ -70,7 +70,7 @@ triggers:
 #      type: 'subscription'
 #      filter:
 #      - type: 'dxos.org/type/Chess'
-
+#
 #  - function: 'dxos.org/function/email-worker'
 #    enabled: true
 #    meta:
@@ -80,26 +80,24 @@ triggers:
 #      url: 'https://hub.dxos.network/api/mailbox/hello@dxos.network'
 #      init:
 #        type: 'sync'
-
+#
 #  - function: 'dxos.org/function/gpt'
 #    enabled: true
 #    spec:
 #      type: 'subscription'
 #      filter:
 #      - type: 'braneframe.Message'
-
-  - function: 'dxos.org/function/embedding'
-    enabled: true
-    spec:
-      type: 'subscription'
-      filter:
-      - type: 'dxos.org/type/File'
-        # TODO(burdon): Second is ignored currently.
-#      - type: 'braneframe.Document'
-      options:
-        deep: true
-        delay: 5
-
+#
+#  - function: 'dxos.org/function/embedding'
+#    enabled: true
+#    spec:
+#      type: 'subscription'
+#      filter:
+#      - type: 'dxos.org/type/File'
+#      options:
+#        deep: true
+#        delay: 5
+#
 #  - function: 'dxos.org/function/calendar'
 #    enabled: true
 #    spec:
