@@ -14,7 +14,7 @@ import { Engine } from './engine';
  */
 export const MetaSchema = S.mutable(
   S.struct({
-    level: S.optional(S.number.pipe(S.description('AI strength.'))),
+    level: S.optional(S.number.pipe(S.description('Engine strength.'))),
     side: S.optional(S.string),
   }),
 );
@@ -36,7 +36,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { meta: { level = 1 } = {}, objects } = event.data;
   for (const game of objects ?? []) {
     const engine = new Engine({ pgn: game.pgn, level });
-    const side = game.playerWhite === identityKey ? 'w' : game.playerBlack === identityKey ? 'b' : undefined;
+    const side = identityKey === game.playerWhite ? 'w' : identityKey === game.playerBlack ? 'b' : undefined;
     if (!engine.state.isGameOver() && engine.state.turn() === side) {
       await engine.move();
       engine.print();
