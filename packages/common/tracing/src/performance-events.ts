@@ -102,7 +102,7 @@ export const writeEventStreamToAFile = ({
   stream,
   path,
   separator = ',\n',
-  prefix = '[/n',
+  prefix = '[\n',
   suffix = ']',
 }: {
   stream: ReadableStream;
