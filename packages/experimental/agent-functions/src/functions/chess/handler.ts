@@ -8,14 +8,18 @@ import { subscriptionHandler } from '@dxos/functions';
 
 import { Engine } from './engine';
 
-// @ts-ignore
 /**
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
   S.struct({
-    level: S.optional(S.number.pipe(S.description('Engine strength.'))),
-    side: S.optional(S.string),
+    level: S.optional(
+      S.number.pipe(
+        S.annotations({
+          description: 'Engine strength.',
+        }),
+      ),
+    ),
   }),
 );
 
@@ -29,8 +33,8 @@ export const types = [GameType];
 /**
  * Chess function handler.
  */
-export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
-  const identity = context.client.halo.identity.get();
+export const handler = subscriptionHandler<Meta>(async ({ event, context: { client } }) => {
+  const identity = client.halo.identity.get();
   const identityKey = identity!.identityKey.toHex();
 
   const { meta: { level = 1 } = {}, objects } = event.data;
