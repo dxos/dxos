@@ -3,7 +3,6 @@
 //
 
 import { Client } from '@dxos/client';
-
 import { Expando, create } from '@dxos/client/echo';
 
 const client = new Client();
@@ -31,7 +30,7 @@ async () => {
     space.db.add(taskObject);
     const eventObject = create(Expando, { type: 'event', title: 'arrived at store' });
     space.db.add(eventObject);
-  } finally  {
+  } finally {
     unsubscribeFn();
   }
 };
