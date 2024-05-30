@@ -46,7 +46,7 @@ async () => {
 
 ## Do something when an object changes
 
-Objects returned by ECHO queries are [ReactiveObject](../../../api/@dxos/client/types/ReactiveObject.md)s, which are a kind of `ProxyObject` that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+Objects returned by ECHO queries are [ReactiveObject](../../../api/@dxos/client/types/ReactiveObject.md)s, which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
 
 ```ts{22} file=./snippets/on-object-change.ts#L5-
 import { Client } from '@dxos/client';
@@ -57,7 +57,7 @@ import { registerSignalRuntime } from '@dxos/echo-signals';
 registerSignalRuntime();
 
 const client = new Client();
-
+Yeah
 async () => {
   await client.initialize();
 
