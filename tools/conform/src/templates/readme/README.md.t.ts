@@ -33,7 +33,7 @@ export default template.define.text({
       blogUrl,
       roadmapUrl,
       eventsUrl,
-      discordUrl = 'https://discord.gg/eXVfryv3sW',
+      discordUrl = 'https://dxos.org/discord',
       demo,
       stackOverflowTag,
       repoGuideUrl,
