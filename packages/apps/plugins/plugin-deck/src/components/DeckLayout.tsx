@@ -146,7 +146,7 @@ const NodePlankHeading = ({
   const { dispatch } = useIntent();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
-    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-2' })}>
+    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
