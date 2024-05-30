@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import { getRandomPort } from 'get-port-please';
 import path from 'path';
 
 import { sleep, waitForCondition } from '@dxos/async';
@@ -16,7 +17,6 @@ import { createFunctionRuntime, testFunctionManifest } from '../testing';
 import { initFunctionsPlugin } from '../testing/plugin-init';
 
 describe('dev server', () => {
-  let port = 7201;
   let client: Client;
   let testBuilder: TestBuilder;
   before(async () => {
@@ -67,7 +67,7 @@ describe('dev server', () => {
     const registry = new FunctionRegistry(client);
     const server = new DevServer(client, registry, {
       baseDir: path.join(__dirname, '../testing'),
-      port: port++,
+      port: await getRandomPort('127.0.0.1'),
     });
     const space = await client.spaces.create();
     // TODO(burdon): Doesn't shut down cleanly.
