@@ -22,8 +22,6 @@ import { initFunctionsPlugin } from '../setup';
 import { StubModelInvoker } from '../stub-invoker';
 import { createTestChain, type CreateTestChainInput } from '../test-chain-builder';
 
-let port = 7270;
-
 describe.only('Gpt', () => {
   let modelStub: StubModelInvoker;
   let testBuilder: TestBuilder;
@@ -241,7 +239,6 @@ const waitForGptResponse = async (message: MessageType, thread?: ThreadType) => 
 const setupTest = async (testBuilder: TestBuilder) => {
   const functions = await startFunctionsHost(testBuilder, initFunctionsPlugin, {
     baseDir: join(__dirname, '../../functions'),
-    port: port++,
   });
   const app = (await createInitializedClients(testBuilder))[0];
   const space = await app.spaces.create();
