@@ -33,4 +33,4 @@ We will support merging changes from github with composer documents in the futur
 
 ## Questions?
 
-Have any questions about how to use the extension or composer? Ideas about ways this could be better? Let us know on Discord https://discord.gg/eXVfryv3sW
+Have any questions about how to use the extension or composer? Ideas about ways this could be better? Let us know on Discord https://dxos.org/discord

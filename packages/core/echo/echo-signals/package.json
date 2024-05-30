@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-signals",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "ECHO object reactivity integration with Preact Signals",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

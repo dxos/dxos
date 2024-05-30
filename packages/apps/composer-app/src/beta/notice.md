@@ -6,6 +6,6 @@ Composer will remain free to use; we are committed to building privacy-preservin
 
 This app at `composer.dxos.org` will eventually be sunset in favor of :link[composer.space]{href="https://composer.space"}, please don't wait to migrate your data.
 
-If you have questions or comments, please join our :link[Discord]{href="https://discord.gg/eXVfryv3sW"}.
+If you have questions or comments, please join our :link[Discord]{href="https://dxos.org/discord"}.
 
 Thanks for your support!

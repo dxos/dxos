@@ -4,7 +4,7 @@
 
 import { DocumentType, StackType, type BlockType, TextV0Type, SectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { AST, create } from '@dxos/echo-schema';
+import { AST, create, getTypename } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
@@ -46,7 +46,7 @@ export class ResponseBuilder {
     //
     // Add to stack.
     //
-    if (this._context.object?.__typename === StackType.typename) {
+    if (this._context.object && getTypename(this._context.object) === StackType.typename) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding section to stack', { stack: this._context.object.id });
 
