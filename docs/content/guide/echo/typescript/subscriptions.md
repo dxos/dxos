@@ -81,5 +81,7 @@ async () => {
   } else {
     console.log("This will never happen.");
   }
+
+  unsubscribeFn();
 }
 ```
