@@ -24,4 +24,10 @@ By default, each user has a personal space that contains all of their content. T
 
 Users can create shared spaces and invite others to join them. The data in a shared space is replicated across all of the devices of the users who have access to the space.
 
-## Moving objects between spaces
+## Drag-and-drop
+
+::: warning Technology Preview
+Moving objects between spaces is a work in progress.
+:::
+
+Dragging and dropping a document from one space to another makes a copy in the second space. Copying of other object types is being implemented but shouldn't be relied on yet.
