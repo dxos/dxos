@@ -29,7 +29,7 @@ pnpm nx serve composer-app
 #### 1). Stop and Reset Agent
 
 ```bash
-sudo killall node
+killall node
 dx agent stop && dx reset --force && dx halo create "DXOS Agent" --no-agent && dx halo identity --no-agent && dx agent start -f
 ```
 
