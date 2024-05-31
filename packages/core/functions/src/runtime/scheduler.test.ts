@@ -3,6 +3,7 @@
 //
 
 import { expect } from 'chai';
+import { getRandomPort } from 'get-port-please';
 import WebSocket from 'ws';
 
 import { Trigger } from '@dxos/async';
@@ -108,6 +109,7 @@ describe('scheduler', () => {
   });
 
   test('websocket', async () => {
+    const port = await getRandomPort('127.0.0.1');
     const manifest: FunctionManifest = {
       functions: [
         {
@@ -123,7 +125,7 @@ describe('scheduler', () => {
           spec: {
             type: 'websocket',
             // url: 'https://hub.dxos.network/api/mailbox/test',
-            url: 'http://localhost:8081',
+            url: `http://localhost:${port}`,
             init: {
               type: 'sync',
             },
@@ -141,7 +143,7 @@ describe('scheduler', () => {
 
     // Test server.
     setTimeout(() => {
-      const wss = new WebSocket.Server({ port: 8081 });
+      const wss = new WebSocket.Server({ port });
       wss.on('connection', (ws: WebSocket) => {
         ws.on('message', (data) => {
           const info = JSON.parse(new TextDecoder().decode(data as ArrayBuffer));

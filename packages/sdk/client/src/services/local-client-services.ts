@@ -29,12 +29,16 @@ export const fromHost = async (
   config = new Config(),
   params?: ClientServicesHostParams,
   observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean, // TODO(burdon): Not used?
+  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
-  const networking = await setupNetworking(config, {}, () => ({
-    ...services.signalMetadataTags,
-    ...(observabilityGroup ? { group: observabilityGroup } : {}),
-  }));
+  const networking = await setupNetworking(config, {}, () =>
+    signalTelemetryEnabled
+      ? {
+          ...services.signalMetadataTags,
+          ...(observabilityGroup ? { group: observabilityGroup } : {}),
+        }
+      : {},
+  );
 
   const services = new LocalClientServices({ config, ...networking, ...params });
   return services;
