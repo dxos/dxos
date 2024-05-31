@@ -53,7 +53,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
     download(file, fileName);
 
     if (fileManagerPlugin?.provides.file.upload) {
-      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName));
+      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName), client.spaces.default);
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;

@@ -110,16 +110,17 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   );
 
   // TODO(wittjosiah): Factor out.
-  const handleFileUpload = fileManagerPlugin?.provides.file.upload
-    ? async (file: File) => {
-        const filename = file.name.split('.')[0];
-        const info = await fileManagerPlugin.provides.file.upload?.(file);
-        if (info) {
-          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
-          handleAdd(obj);
+  const handleFileUpload =
+    fileManagerPlugin?.provides.file.upload && space
+      ? async (file: File) => {
+          const filename = file.name.split('.')[0];
+          const info = await fileManagerPlugin.provides.file.upload?.(file, space);
+          if (info) {
+            const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+            handleAdd(obj);
+          }
         }
-      }
-    : undefined;
+      : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
     const toId = fullyQualifiedId(object);

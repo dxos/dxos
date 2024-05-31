@@ -4,7 +4,7 @@
 
 import { type IconProps, TextAa } from '@phosphor-icons/react';
 import { batch, effect } from '@preact/signals-core';
-import React, { useMemo, type Ref } from 'react';
+import React, { useCallback, useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
@@ -16,6 +16,8 @@ import {
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  useResolvePlugin,
+  parseFileManagerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
@@ -244,6 +246,22 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
+          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+          const onFileUpload = useCallback(
+            async (file: File) => {
+              if (space === undefined) {
+                return undefined;
+              }
+
+              if (fileManagerPlugin?.provides.file.upload === undefined) {
+                return undefined;
+              }
+
+              return await fileManagerPlugin.provides.file.upload(file, space);
+            },
+            [fileManagerPlugin, space],
+          );
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'article': {
@@ -254,6 +272,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
+                    onFileUpload={onFileUpload}
                   />
                 );
               } else {
@@ -270,6 +289,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
+                      onFileUpload={onFileUpload}
                     />
                   </MainLayout>
                 );
