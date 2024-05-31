@@ -99,7 +99,7 @@ KUBE
 .slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
-# KUBE
+# 新発売
 
 - Decentralized Functions
 - Triggers (cron, query, WS)

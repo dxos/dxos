@@ -40,13 +40,17 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context: { clie
   const { meta: { level = 1 } = {}, objects } = event.data;
   for (const game of objects ?? []) {
     const engine = new Engine({ pgn: game.pgn, level });
-    const side = identityKey === game.playerWhite ? 'w' : identityKey === game.playerBlack ? 'b' : undefined;
-    if (!engine.state.isGameOver() && engine.state.turn() === side) {
-      await engine.move();
-      engine.print();
+    if (!engine.state.isGameOver()) {
+      if (
+        (engine.state.turn() === 'w' && identityKey === game.playerWhite) ||
+        (engine.state.turn() === 'b' && identityKey === game.playerBlack)
+      ) {
+        await engine.move();
+        engine.print();
 
-      // Update object.
-      game.pgn = engine.state.pgn();
+        // Update object.
+        game.pgn = engine.state.pgn();
+      }
     }
   }
 }, types);
