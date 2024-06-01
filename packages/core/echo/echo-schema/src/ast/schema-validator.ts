@@ -83,14 +83,14 @@ export class SchemaValidator {
 
 /**
  * tuple AST is used both for:
- * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.string, S.number] }
- * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.union(S.string, S.number)] }
+ * fixed-length tuples ([string, number]) in which case AST will be { elements: [S.String, S.Number] }
+ * variable-length arrays (Array<string | number>) in which case AST will be { rest: [S.Union(S.String, S.Number)] }
  */
 const getArrayElementSchema = (tupleAst: AST.TupleType, property: string | symbol | number): S.Schema<any> => {
   const elementIndex = typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {
     invariant(property === 'length', `invalid array property: ${String(property)}`);
-    return S.number;
+    return S.Number;
   }
   if (elementIndex < tupleAst.elements.length) {
     const elementType = tupleAst.elements[elementIndex].type;
@@ -166,7 +166,7 @@ const getTypeDiscriminators = (typeAstList: AST.TypeLiteral[]): AST.PropertySign
 /**
  * Used to check that rootAst is for a type matching the provided predicate.
  * That's not always straightforward because types of optionality and recursive types.
- * const Task = S.struct({
+ * const Task = S.Struct({
  *   ...,
  *   previous?: S.optional(S.suspend(() => Task)),
  * });
