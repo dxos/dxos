@@ -239,8 +239,8 @@ importers:
         specifier: ^27.0.2
         version: 27.5.1
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       fast-xml-parser:
         specifier: ^4.3.2
         version: 4.3.2
@@ -5553,8 +5553,8 @@ importers:
         specifier: ^4.5.0
         version: 4.5.6
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
@@ -5686,8 +5686,8 @@ importers:
         version: 1.0.1
     devDependencies:
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       hypercore-protocol:
         specifier: ^8.0.7
         version: 8.0.7
@@ -5883,8 +5883,8 @@ importers:
         specifier: ^4.5.0
         version: 4.5.6
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       wait-for-expect:
         specifier: ^3.0.2
         version: 3.0.2
@@ -6257,8 +6257,8 @@ importers:
         specifier: ~0.1.10
         version: 0.1.12(typescript@5.4.5)
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -6568,8 +6568,8 @@ importers:
         specifier: ^2.0.6
         version: 2.0.6
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -6829,8 +6829,8 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       oclif:
         specifier: ^4.10.11
         version: 4.10.11
@@ -7528,8 +7528,8 @@ importers:
         specifier: ^2.4.5
         version: 2.4.5
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7)(@types/node@18.11.9)(typescript@5.4.5)
@@ -8440,8 +8440,8 @@ importers:
         specifier: ^18.11.9
         version: 18.11.9
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       source-map-support:
         specifier: ^0.5.12
         version: 0.5.21
@@ -10025,8 +10025,8 @@ importers:
         specifier: ^18.0.6
         version: 18.0.6
       fast-check:
-        specifier: ^3.15.1
-        version: 3.15.1
+        specifier: ^3.19.0
+        version: 3.19.0
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -34583,13 +34583,6 @@ packages:
       count-trailing-zeros: 1.0.1
     dev: true
 
-  /fast-check@3.15.1:
-    resolution: {integrity: sha512-GutOXZ+SCxGaFWfHe0Pbeq8PrkpGtPxA9/hdkI3s9YzqeMlrq5RdJ+QfYZ/S93jMX+tAyqgW0z5c9ppD+vkGUw==}
-    engines: {node: '>=8.0.0'}
-    dependencies:
-      pure-rand: 6.0.2
-    dev: true
-
   /fast-check@3.19.0:
     resolution: {integrity: sha512-CO2JX/8/PT9bDGO1iXa5h5ey1skaKI1dvecERyhH4pp3PGjwd3KIjMAXEg79Ps9nclsdt4oPbfqiAnLU0EwrAQ==}
     engines: {node: '>=8.0.0'}
@@ -37915,7 +37908,7 @@ packages:
       jest-util: 29.5.0
       p-limit: 3.1.0
       pretty-format: 29.7.0
-      pure-rand: 6.0.2
+      pure-rand: 6.1.0
       slash: 3.0.0
       stack-utils: 2.0.5
     transitivePeerDependencies:
@@ -43991,10 +43984,6 @@ packages:
       - encoding
       - supports-color
       - utf-8-validate
-    dev: true
-
-  /pure-rand@6.0.2:
-    resolution: {integrity: sha512-6Yg0ekpKICSjPswYOuC5sku/TSWaRYlA0qsXqJgM/d/4pLPHPuTxK7Nbf7jFKzAeedUhR8C7K9Uv63FBsSo8xQ==}
     dev: true
 
   /pure-rand@6.1.0:

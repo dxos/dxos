@@ -32,8 +32,8 @@ const exampleSchema = S.Struct({
   field1: S.String,
   field2: S.Number,
   field3: S.Date,
-  field4: S.optional(S.String.pipe(S.length(10))),
-  field5: S.optional(
+  field4: S.UndefinedOr(S.String.pipe(S.length(10))),
+  field5: S.UndefinedOr(
     S.Struct({
       innerField1: S.String,
       innerField2: S.Number,
@@ -45,7 +45,7 @@ type ExampleSchema = S.Schema.Type<typeof exampleSchema>;
 
 const columns = schemaToColumnDefs(exampleSchema);
 
-const exampleSchemaArbitrary = Arbitrary.make(exampleSchema)(fc);
+const exampleSchemaArbitrary = Arbitrary.make(exampleSchema);
 
 const items = fc.sample(exampleSchemaArbitrary, 10);
 
