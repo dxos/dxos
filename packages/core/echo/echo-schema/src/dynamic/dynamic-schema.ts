@@ -42,6 +42,7 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
 };
 
 export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<Identifiable> {
+  // TODO(burdon): Any?
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
 
@@ -100,11 +101,11 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 
-  // Rename.
-  public updateColumns(columns: S.Struct.Fields) {
+  // TODO(burdon): Rename updateFields?
+  public updateColumns(fields: S.Struct.Fields) {
     const oldAst = this._getSchema().ast;
     invariant(AST.isTypeLiteral(oldAst));
-    const propertiesToUpdate = (S.partial(S.Struct(columns)).ast as AST.TypeLiteral).propertySignatures;
+    const propertiesToUpdate = (S.partial(S.Struct(fields)).ast as AST.TypeLiteral).propertySignatures;
     const updatedProperties: AST.PropertySignature[] = [...oldAst.propertySignatures];
     for (const property of propertiesToUpdate) {
       const index = updatedProperties.findIndex((p) => p.name === property.name);
@@ -148,6 +149,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
       this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
       this._isDirty = false;
     }
+
     return this._schema;
   }
 }
