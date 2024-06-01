@@ -351,8 +351,7 @@ export class AutomergeObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  // TODO(dmaretskyi): Cleanup to not do resolution in this method.
-  decode(value: any): DecodedAutomergeValue {
+  decode(value: any): DecodedAutomergePrimaryValue {
     if (value === null) {
       return value;
     }
@@ -364,15 +363,7 @@ export class AutomergeObjectCore {
     }
     // For some reason references without `@type` are being stored in the document.
     if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
-      if (value.protocol === 'protobuf') {
-        // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-        // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
-        return decodeReference(value);
-      }
-
-      const reference = decodeReference(value);
-
-      return reference;
+      return decodeReference(value);
     }
     if (typeof value === 'object') {
       return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
@@ -422,7 +413,7 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this._get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
+    return this.decode(this._get(path)) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
@@ -448,7 +439,7 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this._get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
+    const value = this.decode(this._get([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
       return undefined;
     }
