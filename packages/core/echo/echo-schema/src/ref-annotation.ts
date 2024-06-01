@@ -21,21 +21,19 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.Schema<any> => {
   const typePredicate =
     annotation.typename === 'Expando' ? () => true : (obj: object) => getTypename(obj) === annotation.typename;
-  return S.any
-    .pipe(
-      S.filter(
-        (obj) => {
-          if (obj === undefined) {
-            // unresolved reference
-            return true;
-          }
-          if (obj instanceof DynamicEchoSchema) {
-            return annotation.typename === StoredEchoSchema.typename;
-          }
-          return isReactiveObject(obj) && typePredicate(obj);
-        },
-        { jsonSchema: {} },
-      ),
-    )
-    .annotations({ [ReferenceAnnotation]: annotation });
+  return S.Any.pipe(
+    S.filter(
+      (obj) => {
+        if (obj === undefined) {
+          // unresolved reference
+          return true;
+        }
+        if (obj instanceof DynamicEchoSchema) {
+          return annotation.typename === StoredEchoSchema.typename;
+        }
+        return isReactiveObject(obj) && typePredicate(obj);
+      },
+      { jsonSchema: {} },
+    ),
+  ).annotations({ [ReferenceAnnotation]: annotation });
 };

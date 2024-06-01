@@ -1,5 +1,5 @@
 # Type `SurfaceComponent`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx:31](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L31)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx:31](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L31)</sub>
 
 
 Function which resolves a Surface.

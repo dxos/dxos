@@ -9,33 +9,22 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import { runPlan, type RunPlanParams, readYAMLSpecFile, type TestPlan, runReplicant, type GlobalOptions } from './plan';
+import { type RunParams } from './plan/run-process';
 import {
-  runPlan,
-  type RunPlanParams,
-  readYAMLSpecFile,
-  type TestPlan,
-  runAgentForPlan,
-  type PlanOptions,
-} from './plan';
-import {
-  ReplicationTestPlan,
   EmptyTestPlan,
-  SignalTestPlan,
-  TransportTestPlan,
-  EchoTestPlan,
-  AutomergeTestPlan,
   StorageTestPlan,
+  TransportTestPlan,
+  SignalTestPlan,
+  QueryTestPlan,
+  ReplicationTestPlan,
 } from './spec';
-
-// eslint-disable-next-line unused-imports/no-unused-vars
-const DXOS_REPO = process.env.DXOS_REPO;
 
 const plans: { [key: string]: () => TestPlan<any, any> } = {
   signal: () => new SignalTestPlan(),
   transport: () => new TransportTestPlan(),
-  echo: () => new EchoTestPlan(),
+  query: () => new QueryTestPlan(),
   replication: () => new ReplicationTestPlan(),
-  automerge: () => new AutomergeTestPlan(),
   storage: () => new StorageTestPlan(),
   empty: () => new EmptyTestPlan(),
 };
@@ -49,21 +38,19 @@ const plans: { [key: string]: () => TestPlan<any, any> } = {
  * Example: KUBE_HOME=~/Code/dxos/kube p run-tests echo
  */
 const start = async () => {
-  // Run agent entry point in node process.
-  if (process.env.GRAVITY_SPEC) {
-    const name = process.env.GRAVITY_SPEC;
-    await runAgentForPlan(name, process.env.GRAVITY_AGENT_PARAMS!, plans[name]());
+  // Entry point for Replicant node process.
+  if (process.env.DX_RUN_PARAMS) {
+    const params: RunParams = JSON.parse(process.env.DX_RUN_PARAMS!);
+    await runReplicant(params);
     return;
   }
 
-  // Run agent entry point in browser.
-  if ((globalThis as any).dxgravity_env) {
+  // Entry point for Replicant browser process.
+  if ((globalThis as any).DX_RUN_PARAMS) {
     log.info('running in browser');
-    const name = (globalThis as any).dxgravity_env.GRAVITY_SPEC;
-    const params = (globalThis as any).dxgravity_env.GRAVITY_AGENT_PARAMS;
-    invariant(name, 'missing GRAVITY_SPEC');
-    invariant(params, 'missing GRAVITY_AGENT_PARAMS');
-    await runAgentForPlan(name, params, plans[name]());
+    const params = (globalThis as any).DX_RUN_PARAMS;
+    invariant(params, 'missing DX_RUN_PARAMS');
+    await runReplicant(JSON.parse(params));
     return;
   }
 
@@ -75,7 +62,6 @@ const start = async () => {
         alias: 'r',
         describe: 'skip the test, just process the output JSON file from a prior run',
       },
-      staggerAgents: { type: 'number', default: 1000, describe: 'stagger agent start time (ms)' },
       profile: { type: 'boolean', default: false, describe: 'run the node profile for agents' },
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
     })
@@ -84,7 +70,7 @@ const start = async () => {
 
   const name = argv._[0] as string;
 
-  let plan: () => RunPlanParams<any, any>;
+  let plan: () => RunPlanParams<any>;
   const planGenerator = plans[name];
 
   if (!planGenerator) {
@@ -93,8 +79,7 @@ const start = async () => {
     return;
   }
 
-  const options: PlanOptions = {
-    staggerAgents: argv.staggerAgents,
+  const options: GlobalOptions = {
     randomSeed: PublicKey.random().toHex(),
     repeatAnalysis: argv.repeatAnalysis,
     profile: argv.profile,
@@ -116,7 +101,8 @@ const start = async () => {
     });
   }
 
-  await runPlan(name, plan());
+  log.info(`\nrunning test: ${name}`, { options });
+  await runPlan(plan());
 };
 
 void start();

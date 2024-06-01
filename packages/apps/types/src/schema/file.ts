@@ -4,10 +4,10 @@
 
 import { S, TypedObject } from '@dxos/echo-schema';
 
-export class FileType extends TypedObject({ typename: 'braneframe.File', version: '0.1.0' })({
-  filename: S.string,
-  type: S.string,
-  timestamp: S.optional(S.string),
-  title: S.optional(S.string),
-  cid: S.optional(S.string),
+export class FileType extends TypedObject({ typename: 'dxos.org/type/File', version: '0.1.0' })({
+  filename: S.String,
+  type: S.String,
+  timestamp: S.optional(S.String),
+  title: S.optional(S.String),
+  cid: S.optional(S.String),
 }) {}

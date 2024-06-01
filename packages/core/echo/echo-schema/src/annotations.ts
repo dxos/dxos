@@ -8,37 +8,44 @@ import { pipe } from 'effect';
 import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
-import { validateIdNotPresentOnSchema } from './ast';
+import { checkIdNotPresentOnSchema } from './ast';
 import { type Identifiable } from './types';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
+// TODO(burdon): Rename ECHO?
+// TODO(burdon): Make private to this file?
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
   storedSchemaId?: string;
   typename: string;
-  version: string;
+  version: string; // TODO(burdon): Semvar.
 };
+
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   pipe(
     AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
 
+/**
+ * @param typename
+ * @param version
+ */
+// TODO(burdon): Rename createSchema.
 // TODO(dmaretskyi): Add `id` field to the schema type.
 export const echoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('echoObject can only be applied to S.struct instances.');
+      throw new Error('echoObject can only be applied to S.Struct instances.');
     }
 
-    validateIdNotPresentOnSchema(self);
+    checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
-    const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
-
+    const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } })) as S.Schema<
       Simplify<Identifiable & ToMutable<A>>
     >;

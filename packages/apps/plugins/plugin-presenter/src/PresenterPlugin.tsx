@@ -7,13 +7,22 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { Collection, DocumentType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin, LayoutAction } from '@dxos/app-framework';
+import { DocumentType, Collection } from '@braneframe/types';
+import {
+  resolvePlugin,
+  type PluginDefinition,
+  parseIntentPlugin,
+  LayoutAction,
+  NavigationAction,
+  parseNavigationPlugin,
+  type Plugin,
+  type LocationProvides,
+} from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { PresenterMain, MarkdownSlideMain } from './components';
+import { PresenterMain, MarkdownSlide, RevealMain } from './components';
 import meta, { PRESENTER_PLUGIN } from './meta';
 import translations from './translations';
 import { PresenterContext, TOGGLE_PRESENTATION, type PresenterPluginProvides } from './types';
@@ -28,9 +37,15 @@ type PresenterState = {
 export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => {
   // TODO(burdon): Do we need context providers if we can get the state from the plugin?
   const state = create<PresenterState>({ presenting: false });
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
+  let isDeckModel = false;
 
   return {
     meta,
+    ready: async (plugins) => {
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
+    },
     provides: {
       translations,
       graph: {
@@ -45,7 +60,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Filter.schema(Collection));
+              const query = space.db.query(Filter.or(Filter.schema(Collection), Filter.schema(DocumentType)));
               subscriptions.add(query.subscribe());
               let previousObjects: Collection[] = [];
               subscriptions.add(
@@ -55,18 +70,30 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
 
                   batch(() => {
                     removedObjects.forEach((object) => {
-                      graph.removeNode(`${TOGGLE_PRESENTATION}/${object.id}`, true);
+                      graph.removeNode(`${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`, true);
                     });
                     query.objects.forEach((object) => {
                       graph.addNodes({
-                        id: `${TOGGLE_PRESENTATION}/${object.id}`,
+                        id: `${TOGGLE_PRESENTATION}/${fullyQualifiedId(object)}`,
                         // TODO(burdon): Allow function so can generate state when activated.
                         //  So can set explicit fullscreen state coordinated with current presenter state.
-                        data: () =>
-                          dispatch({
-                            plugin: PRESENTER_PLUGIN,
-                            action: TOGGLE_PRESENTATION,
-                          }),
+                        data: () => {
+                          return dispatch([
+                            {
+                              plugin: PRESENTER_PLUGIN,
+                              action: TOGGLE_PRESENTATION,
+                              data: { object },
+                            },
+                            ...(isDeckModel
+                              ? [
+                                  {
+                                    action: NavigationAction.OPEN,
+                                    data: { activeParts: { fullScreen: fullyQualifiedId(object) } },
+                                  },
+                                ]
+                              : []),
+                          ]);
+                        },
                         properties: {
                           label: ['toggle presentation label', { ns: PRESENTER_PLUGIN }],
                           icon: (props: IconProps) => <Presentation {...props} />,
@@ -75,7 +102,7 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
                             windows: 'shift+alt+p',
                           },
                         },
-                        edges: [[object.id, 'inbound']],
+                        edges: [[fullyQualifiedId(object), 'inbound']],
                       });
                     });
                   });
@@ -106,12 +133,18 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
       surface: {
         component: ({ data, role }) => {
           switch (role) {
-            case 'main':
-              return data.active instanceof Collection && state.presenting
-                ? { node: <PresenterMain collection={data.active} />, disposition: 'hoist' }
-                : null;
+            case 'main': {
+              if (state.presenting) {
+                if (data.active instanceof Collection) {
+                  return { node: <PresenterMain collection={data.active} />, disposition: 'hoist' };
+                } else if (data.active instanceof DocumentType) {
+                  return { node: <RevealMain document={data.active} />, disposition: 'hoist' };
+                }
+              }
+              return null;
+            }
             case 'slide':
-              return data.slide instanceof DocumentType ? <MarkdownSlideMain document={data.slide} /> : null;
+              return data.slide instanceof DocumentType ? <MarkdownSlide document={data.slide} /> : null;
           }
 
           return null;

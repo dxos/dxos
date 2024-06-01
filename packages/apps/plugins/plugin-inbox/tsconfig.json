@@ -29,6 +29,9 @@
       "path": "../../../common/display-name"
     },
     {
+      "path": "../../../common/log"
+    },
+    {
       "path": "../../../common/random"
     },
     {
@@ -48,6 +51,9 @@
     },
     {
       "path": "../../../ui/react-ui"
+    },
+    {
+      "path": "../../../ui/react-ui-deck"
     },
     {
       "path": "../../../ui/react-ui-mosaic"

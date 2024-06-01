@@ -1,6 +1,6 @@
 {
   "name": "@dxos/create-tasks",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "Creates a DXOS tasks application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/minimist": "^1.2.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

@@ -8,31 +8,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { Config } from '@dxos/config';
-import { type FunctionDef, type FunctionManifest } from '@dxos/functions';
+import { type FunctionManifest } from '@dxos/functions';
 
-import { BaseCommand } from '../../base-command';
-
-// TODO(burdon): List stats.
-// TODO(burdon): List triggers.
-export const printFunctions = (functions: FunctionDef[], flags = {}) => {
-  ux.table(
-    functions,
-    {
-      id: {
-        header: 'id',
-      },
-      name: {
-        header: 'name',
-      },
-      description: {
-        header: 'description',
-      },
-    },
-    {
-      ...flags,
-    },
-  );
-};
+import { BaseCommand } from '../../base';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -54,3 +32,28 @@ export default class List extends BaseCommand<typeof List> {
     });
   }
 }
+
+// TODO(burdon): List stats.
+export const printFunctions = (functions: FunctionManifest['functions'], flags = {}) => {
+  ux.table(
+    // TODO(burdon): Cast util.
+    functions as Record<string, any>[],
+    {
+      uri: {
+        header: 'uri',
+      },
+      route: {
+        header: 'route',
+      },
+      handler: {
+        header: 'handler',
+      },
+      description: {
+        header: 'description',
+      },
+    },
+    {
+      ...flags,
+    },
+  );
+};

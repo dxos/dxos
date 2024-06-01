@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "uri",
+          "route",
+          "handler"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "route": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "handler": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "function",
+          "spec"
+        ],
+        "properties": {
+          "function": {
+            "type": "string",
+            "description": "Function URI.",
+            "title": "string"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "a boolean",
+            "title": "boolean"
+          },
+          "meta": {
+            "$ref": "#/$defs/object"
+          },
+          "spec": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "cron"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "timer"
+                  },
+                  "cron": {
+                    "type": "string",
+                    "description": "a string",
+                    "title": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "method"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "webhook"
+                  },
+                  "method": {
+                    "type": "string",
+                    "description": "a string",
+                    "title": "string"
+                  },
+                  "port": {
+                    "type": "number",
+                    "description": "a number",
+                    "title": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "url"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "websocket"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "a string",
+                    "title": "string"
+                  },
+                  "init": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {},
+                    "additionalProperties": {
+                      "$id": "/schemas/any",
+                      "title": "any"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "type",
+                  "filter"
+                ],
+                "properties": {
+                  "type": {
+                    "const": "subscription"
+                  },
+                  "filter": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "description": "a string",
+                          "title": "string"
+                        },
+                        "props": {
+                          "type": "object",
+                          "required": [],
+                          "properties": {},
+                          "additionalProperties": {
+                            "$id": "/schemas/any",
+                            "title": "any"
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "options": {
+                    "type": "object",
+                    "required": [],
+                    "properties": {
+                      "deep": {
+                        "type": "boolean",
+                        "description": "a boolean",
+                        "title": "boolean"
+                      },
+                      "delay": {
+                        "type": "number",
+                        "description": "a number",
+                        "title": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "object": {
+      "$id": "/schemas/object",
+      "oneOf": [
+        {
+          "type": "object"
+        },
+        {
+          "type": "array"
+        }
+      ],
+      "description": "an object in the TypeScript meaning, i.e. the `object` type",
+      "title": "object"
+    }
+  }
+}

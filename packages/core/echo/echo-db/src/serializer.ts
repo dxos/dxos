@@ -6,7 +6,7 @@ import { type EncodedReferenceObject, encodeReference, Reference } from '@dxos/e
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { nonNullable, stripUndefinedValues } from '@dxos/util';
+import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
@@ -100,7 +100,7 @@ export class Serializer {
 
     const data = {
       objects: loadedObjects.filter(nonNullable).map((object) => {
-        return this.exportObject(object as any);
+        return this._exportObject(object as any);
       }),
 
       version: Serializer.version,
@@ -135,18 +135,19 @@ export class Serializer {
         continue;
       }
 
-      await this.importObject(database, object);
+      this._importObject(database, object);
     }
+    await database.flush();
   }
 
-  exportObject(object: EchoReactiveObject<any>): SerializedObject {
+  private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
     const core = getAutomergeObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
     const typeRef = core.getType();
 
-    const data = core.getDecoded(['data']) as Record<string, any>;
-    const meta = core.getDecoded(['meta']) as Record<string, any>;
+    const data = serializeEchoData(core.getDecoded(['data']));
+    const meta = serializeEchoData(core.getDecoded(['meta']));
 
     return stripUndefinedValues({
       '@id': core.id,
@@ -158,7 +159,7 @@ export class Serializer {
     });
   }
 
-  async importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObject) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
@@ -174,8 +175,6 @@ export class Serializer {
     }
 
     database.automerge.addCore(core);
-    // TODO(dmaretskyi): It is very slow to call flush after every object.
-    await database.flush();
   }
 }
 
@@ -200,3 +199,11 @@ const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
   }
   return result;
 };
+
+const serializeEchoData = (data: any): any =>
+  deepMapValues(data, (value, recurse) => {
+    if (value instanceof Reference) {
+      return encodeReference(value);
+    }
+    return recurse(value);
+  });

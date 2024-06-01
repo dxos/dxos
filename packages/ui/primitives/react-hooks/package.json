@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-hooks",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "React hooks supporting DXOS React primitives.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

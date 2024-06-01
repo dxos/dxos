@@ -9,7 +9,7 @@ export * from './json';
 export * from './proxy';
 export * from './annotations';
 export * from './expando';
-export { isDeleted, getSchema, getType, getMeta, getTypeReference, requireTypeReference } from './getter';
+export { isDeleted, getSchema, getType, getTypename, getMeta, getTypeReference, requireTypeReference } from './getter';
 export * from './typed-object-class';
 export * from './types';
 export { ref } from './ref-annotation';

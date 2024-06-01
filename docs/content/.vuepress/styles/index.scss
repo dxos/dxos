@@ -84,7 +84,6 @@ html[data-theme='light'] {
 
       .vp-hero-infos {
         font-family: 'Sharp Sans';
-        max-width: 25rem;
         margin-left: auto;
         margin-right: auto;
       }
@@ -122,6 +121,12 @@ html[data-theme='light'] {
       }
     }
   }
+}
+
+p#main-description {
+  max-width: 25rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 html[data-theme='dark'] .vp-project-home .vp-hero-info-wrapper {
@@ -389,4 +394,20 @@ code.ph {
     vertical-align: middle;
     margin-right: 0.5em;
   }
+}
+
+/* Prevent Mermaid diagrams from picking up our green theme color
+as the background color for nodes.
+
+`.mermaid-preview` is for when you click the eye icon to expand the diagram.
+*/
+html[data-theme='light'] .mermaid-wrapper rect,
+html[data-theme='light'] .mermaid-preview rect {
+  fill: white !important;
+  stroke: black !important;
+}
+
+html[data-theme='dark'] .mermaid-wrapper rect,
+html[data-theme='dark'] .mermaid-preview rect {
+  fill: transparent !important;
 }

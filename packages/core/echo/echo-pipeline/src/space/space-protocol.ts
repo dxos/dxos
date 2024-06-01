@@ -70,6 +70,12 @@ export class SpaceProtocol {
 
   private readonly _feeds = new Set<FeedWrapper<FeedMessage>>();
   private readonly _sessions = new ComplexMap<PublicKey, SpaceProtocolSession>(PublicKey.hash);
+  // TODO(burdon): Move to config (with sensible defaults).
+  private readonly _topology = new MMSTTopology({
+    originateConnections: 4,
+    maxPeers: 10,
+    sampleSize: 20,
+  });
 
   private _connection?: SwarmConnection;
 
@@ -117,13 +123,6 @@ export class SpaceProtocol {
     // TODO(burdon): Document why empty buffer.
     const credentials = await this._swarmIdentity.credentialProvider(Buffer.from(''));
 
-    // TODO(burdon): Move to config (with sensible defaults).
-    const topologyConfig = {
-      originateConnections: 4,
-      maxPeers: 10,
-      sampleSize: 20,
-    };
-
     await this.blobSync.open();
 
     log('starting...');
@@ -132,11 +131,15 @@ export class SpaceProtocol {
       protocolProvider: this._createProtocolProvider(credentials),
       peerId: this._swarmIdentity.peerKey,
       topic,
-      topology: new MMSTTopology(topologyConfig),
+      topology: this._topology,
       label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,
     });
 
     log('started');
+  }
+
+  public updateTopology() {
+    this._topology.forceUpdate();
   }
 
   async stop() {

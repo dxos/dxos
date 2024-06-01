@@ -8,7 +8,7 @@ import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const SLUG_LIST_SEPARATOR = '.';
+export const SLUG_LIST_SEPARATOR = '+';
 export const SLUG_ENTRY_SEPARATOR = '_';
 export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';
@@ -36,8 +36,14 @@ export const Location = z.object({
     .describe('Id or ids of recently closed items, in order of when they were closed.'),
 });
 
+export const Attention = z.object({
+  attended: z.set(z.string()).optional().describe('Ids of items which have focus.'),
+});
+
 export type ActiveParts = z.infer<typeof ActiveParts>;
 export type Location = z.infer<typeof Location>;
+export type Attention = z.infer<typeof Attention>;
+
 /**
  * Composed of [ part name, index within the part, size of the part ]
  */
@@ -77,6 +83,7 @@ export const isIdActive = (active: string | ActiveParts | undefined, id: string)
  */
 export type LocationProvides = {
   location: Readonly<Location>;
+  attention?: Readonly<Attention>;
 };
 
 /**
@@ -94,6 +101,7 @@ export const parseNavigationPlugin = (plugin: Plugin) => {
 const NAVIGATION_ACTION = 'dxos.org/plugin/navigation';
 export enum NavigationAction {
   OPEN = `${NAVIGATION_ACTION}/open`,
+  SET = `${NAVIGATION_ACTION}/set`,
   ADJUST = `${NAVIGATION_ACTION}/adjust`,
   CLOSE = `${NAVIGATION_ACTION}/close`,
 }
@@ -110,6 +118,10 @@ export namespace NavigationAction {
    * A subtractive overlay to apply to `location.active` (i.e. the result is a subtraction from the previous active of the argument)
    */
   export type Close = IntentData<{ activeParts: ActiveParts }>;
+  /**
+   * The active parts to directly set, to be used when working with URLs or restoring a specific state.
+   */
+  export type Set = IntentData<{ activeParts: ActiveParts }>;
   /**
    * An atomic transaction to apply to `location.active`, describing which element to (attempt to) move to which location.
    */

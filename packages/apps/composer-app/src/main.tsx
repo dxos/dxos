@@ -14,6 +14,7 @@ import DebugMeta from '@braneframe/plugin-debug/meta';
 import DeckMeta from '@braneframe/plugin-deck/meta';
 import ExplorerMeta from '@braneframe/plugin-explorer/meta';
 import FilesMeta from '@braneframe/plugin-files/meta';
+import FunctionMeta from '@braneframe/plugin-function/meta';
 import GithubMeta from '@braneframe/plugin-github/meta';
 import GptMeta from '@braneframe/plugin-gpt/meta';
 import GraphMeta from '@braneframe/plugin-graph/meta';
@@ -40,6 +41,7 @@ import SettingsMeta from '@braneframe/plugin-settings/meta';
 import SketchMeta from '@braneframe/plugin-sketch/meta';
 import SpaceMeta from '@braneframe/plugin-space/meta';
 import StackMeta from '@braneframe/plugin-stack/meta';
+import StatusBarMeta from '@braneframe/plugin-status-bar/meta';
 import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
@@ -54,9 +56,8 @@ import { getObservabilityGroup, initializeAppObservability, isObservabilityDisab
 import { createClientServices } from '@dxos/react-client';
 import { Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { type JWTPayload } from '@dxos/web-auth';
-
-import './globals';
 
 import { meta as BetaMeta } from './beta/BetaPlugin';
 import { ResetDialog } from './components';
@@ -66,7 +67,11 @@ import { steps } from './help';
 import { FolderType, SectionType, StackType } from './migrations';
 import translations from './translations';
 
+import './globals';
+
 const main = async () => {
+  TRACE_PROCESSOR.setInstanceTag('app');
+
   registerSignalRuntime();
 
   let config = await setupConfig();
@@ -75,7 +80,7 @@ const main = async () => {
     (await defaultStorageIsEmpty(config.values.runtime?.client?.storage))
   ) {
     // NOTE: Set default for first time users to IDB (works better with automerge CRDTs).
-    //       Needs to be done before worker is created.
+    // Needs to be done before worker is created.
     await SaveConfig({
       runtime: { client: { storage: { dataStore: defs.Runtime.Client.Storage.StorageDriver.IDB } } },
     });
@@ -102,7 +107,9 @@ const main = async () => {
     !observabilityDisabled,
   );
   const isSocket = !!(globalThis as any).__args;
-  const isDeck = !!config.values.runtime?.app?.env?.DX_DECK;
+  const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
+  const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
+  const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -132,6 +139,7 @@ const main = async () => {
       NavTreeMeta,
       SettingsMeta,
       HelpMeta,
+      StatusBarMeta,
 
       // Data integrations
       ClientMeta,
@@ -151,22 +159,24 @@ const main = async () => {
 
       // Presentation
       ChainMeta,
-      StackMeta,
-      PresenterMeta,
-      MarkdownMeta,
-      MermaidMeta,
-      SketchMeta,
-      GridMeta,
+      ChessMeta,
+      ExplorerMeta,
+      FunctionMeta,
       InboxMeta,
+      GridMeta,
       KanbanMeta,
       MapMeta,
+      MarkdownMeta,
+      MermaidMeta,
       OutlinerMeta,
+      PresenterMeta,
       ScriptMeta,
+      SketchMeta,
+      StackMeta,
       TableMeta,
       ThreadMeta,
-      ExplorerMeta,
-      ChessMeta,
       WildcardMeta,
+
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
     ],
@@ -213,6 +223,7 @@ const main = async () => {
       [DebugMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-debug')),
       [ExplorerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-explorer')),
       [FilesMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-files')),
+      [FunctionMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-function')),
       [GithubMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-github')),
       [GptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-gpt')),
       [GraphMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-graph')),
@@ -237,9 +248,7 @@ const main = async () => {
       [MarkdownMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-markdown')),
       [MermaidMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-mermaid')),
       [MetadataMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-metadata')),
-      ...(isSocket
-        ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) }
-        : { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) }),
+      ...(isSocket ? { [NativeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-native')) } : {}),
       [NavTreeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-navtree')),
       [ObservabilityMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-observability'), {
         namespace: appKey,
@@ -247,6 +256,7 @@ const main = async () => {
       }),
       [OutlinerMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-outliner')),
       [PresenterMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-presenter')),
+      ...(!isSocket && isPwa ? { [PwaMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-pwa')) } : {}),
       [RegistryMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-registry')),
       [ScriptMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-script'), {
         containerUrl: '/script-frame/index.html',
@@ -258,6 +268,7 @@ const main = async () => {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
           const { DocumentType, TextV0Type, Collection, getSpaceProperty } = await import('@braneframe/types');
+          const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const personalSpaceCollection = getSpaceProperty<Collection | undefined>(
             client.spaces.default,
             Collection.typename,
@@ -267,10 +278,11 @@ const main = async () => {
           personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,
-            data: { activeParts: { main: [document.id] } },
+            data: { activeParts: { main: [fullyQualifiedId(document)] } },
           });
         },
       }),
+      [StatusBarMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status-bar')),
       [StackMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-stack')),
       [TableMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-table')),
       [ThemeMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-theme'), {
@@ -280,7 +292,8 @@ const main = async () => {
       [WildcardMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-wildcard')),
     },
     core: [
-      ...(isSocket ? [NativeMeta.id] : [PwaMeta.id]),
+      ...(isSocket ? [NativeMeta.id] : []),
+      ...(!isSocket && isPwa ? [PwaMeta.id] : []),
       BetaMeta.id,
       ClientMeta.id,
       GraphMeta.id,
@@ -292,11 +305,13 @@ const main = async () => {
       RegistryMeta.id,
       SettingsMeta.id,
       SpaceMeta.id,
+      StatusBarMeta.id,
       ThemeMeta.id,
       WildcardMeta.id,
     ],
     defaults: [
-      // TODO(burdon): Add DebugMeta if dev build.
+      // prettier-ignore
+      ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
       StackMeta.id,
       ThreadMeta.id,

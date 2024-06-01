@@ -1,502 +1,180 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2024 DXOS.org
 //
 
-import { randomBytes } from 'node:crypto';
-
-import { sleep, scheduleTaskInterval } from '@dxos/async';
-import { Context } from '@dxos/context';
-import { FeedFactory, FeedStore, type FeedWrapper } from '@dxos/feed-store';
-import { Keyring, type TestKeyPair, generateJWKKeyPair, parseJWKKeyPair } from '@dxos/keyring';
-import { PublicKey } from '@dxos/keys';
+import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { log } from '@dxos/log';
-import { TransportKind } from '@dxos/network-manager';
-import { TestBuilder as NetworkManagerTestBuilder } from '@dxos/network-manager/testing';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
-import { ReplicatorExtension } from '@dxos/teleport-extension-replicator';
-import { range } from '@dxos/util';
 
-import { forEachSwarmAndAgent, joinSwarm, leaveSwarm } from './util';
-import { type SerializedLogEntry, getReader } from '../analysys';
-import { type PlanResults, type TestParams, type TestPlan, type AgentEnv, type AgentRunOptions } from '../plan';
-import { TestBuilder as SignalTestBuilder } from '../test-builder';
+import { type SchedulerEnvImpl } from '../env';
+import { type ReplicantsSummary, type Platform, type TestParams, type TestPlan, type ReplicantBrain } from '../plan';
+import { EchoReplicant } from '../replicants/echo-replicant';
 
-const REPLICATOR_EXTENSION_NAME = 'replicator';
-
-type FeedConfig = {
-  feedKey: string; // TODO(burdon): Why not PublicKey?
-  writable: boolean;
-};
-
-type FeedEntry = {
-  agentIdx: number; // TODO(burdon): Use key to index?
-  swarmIdx: number;
-  feedLength: number;
-  byteLength: number;
-  writable: boolean;
-  feedKey: string; // TODO(burdon): Key?
-  testCounter: number;
-};
-
-type FeedLoadTimeEntry = {
-  agentIdx: number;
-  testCounter: number;
-  feedLoadTime: number;
-};
-
-type FeedReplicaStats = {
-  feedLength: number;
-  byteLength: number;
-  replicationSpeed?: string; // TODO(burdon): Keep as number and format on demand.
-};
-
-type FeedStats = {
-  feedKey: string;
-  feedLength: number;
-  byteLength: number;
-  replicas: FeedReplicaStats[];
-};
-
+/**
+ * +-----------------------+
+ * |  Replicant "server"   |
+ * |                       |   1 "server" replicant
+ * |  Creates space and    |
+ * |  shares with others   |
+ * +-----------------------+
+ *             ^
+ *             |
+ * +-----------+-----------+
+ * |  Replicant "client"   +-+
+ * |                       | |
+ * |  Replicates space     | +-+   N "client" replicants
+ * |  from "server"        | | |
+ * +-----------------------+ | |
+ *   +-----------------------+ |
+ *     +-----------------------+
+ */
 export type ReplicationTestSpec = {
-  agents: number;
-  swarmsPerAgent: number;
-  duration: number;
-  transport: TransportKind;
+  platform: Platform;
 
-  targetSwarmTimeout: number;
-  fullSwarmTimeout: number;
-  feedsPerSwarm: number;
-  feedAppendInterval: number;
-  feedMessageSize: number;
-  feedLoadDuration?: number;
-  feedMessageCount?: number;
-  repeatInterval: number;
-  signalArguments: string[];
+  /**
+   * Number of "client" replicants.
+   */
+  clientReplicants: number;
+
+  /**
+   * Number of objects in the space.
+   */
+  numberOfObjects: number;
+  /**
+   * Size of each object in bytes.
+   */
+  objectSizeLimit: number;
+  /**
+   * Number of insertions per object.
+   */
+  numberOfInsertions: number;
+  insertionSize: number;
 };
 
-// Note: must be serializable.
-export type ReplicationAgentConfig = {
-  agentIdx: number;
-  signalUrl: string;
-  swarmTopicIds: string[];
-  feeds: Record<string, FeedConfig[]>;
-  feedKeys: TestKeyPair[];
+export type ReplicationTestResult = {
+  /**
+   * Time to create all objects in [ms].
+   */
+  creationTime: number;
+
+  /**
+   * Time to replicate all objects to each client in [ms].
+   */
+  replicationTime: number[];
 };
 
 /**
- * Replication test plan uses ReplicationExtension to measure replication speed by writing to feeds
- * and measuring the time it takes for the data to be replicated to other agents. Real network stack
- * is used for this test, incl. Teleport & real WebRTC connections.
+ * Test plan for replication.
  */
-export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationAgentConfig> {
-  signalBuilder = new SignalTestBuilder();
-  onError?: (err: Error) => void;
-
+export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, ReplicationTestResult> {
   defaultSpec(): ReplicationTestSpec {
     return {
-      agents: 2,
-      swarmsPerAgent: 1,
-      duration: 3_000,
-      transport: TransportKind.SIMPLE_PEER_PROXY,
-      targetSwarmTimeout: 1_000,
-      fullSwarmTimeout: 10_000,
-      signalArguments: ['globalsubserver'],
-      repeatInterval: 100,
-      feedsPerSwarm: 1,
-      feedAppendInterval: 0,
-      feedMessageSize: 500,
-      // feedLoadDuration: 10_000,
-      feedMessageCount: 5_000,
+      platform: 'chromium',
+
+      clientReplicants: 1,
+
+      numberOfObjects: 100,
+      objectSizeLimit: 2000,
+      numberOfInsertions: 1000,
+      insertionSize: 10,
     };
   }
 
-  async init({ spec, outDir }: TestParams<ReplicationTestSpec>): Promise<AgentRunOptions<ReplicationAgentConfig>[]> {
-    if (!!spec.feedLoadDuration === !!spec.feedMessageCount) {
-      throw new Error('Only one of feedLoadDuration or feedMessageCount must be set.');
+  async run(
+    env: SchedulerEnvImpl<ReplicationTestSpec>,
+    params: TestParams<ReplicationTestSpec>,
+  ): Promise<ReplicationTestResult> {
+    const results = {} as ReplicationTestResult;
+
+    //
+    // Create server replicant.
+    //
+    const serverReplicant = await env.spawn(EchoReplicant, { platform: params.spec.platform });
+    await serverReplicant.brain.open();
+    const { peerId: serverId } = await serverReplicant.brain.initializeNetwork();
+    const { spaceKey, rootUrl } = await serverReplicant.brain.createDatabase();
+
+    //
+    // Create objects.
+    //
+    {
+      performance.mark('create:begin');
+      await serverReplicant.brain.createDocuments({
+        amount: params.spec.numberOfObjects,
+        size: params.spec.objectSizeLimit,
+        insertions: params.spec.numberOfInsertions,
+        mutationsSize: params.spec.insertionSize,
+      });
+      performance.mark('create:end');
+      results.creationTime = performance.measure('create', 'create:begin', 'create:end').duration;
+      log.info('objects created', { time: results.creationTime });
     }
 
-    const signal = await this.signalBuilder.createSignalServer(0, outDir, spec.signalArguments, (err) => {
-      log.error('error in signal server', { err });
-      this.onError?.(err);
-    });
-
-    const swarmTopicsIds = range(spec.swarmsPerAgent).map(() => PublicKey.random());
-    const feedsBySwarm = new Map<number, Map<PublicKey, FeedConfig[]>>();
-    range(spec.agents).forEach((agentIdx) => {
-      feedsBySwarm.set(agentIdx, new Map(swarmTopicsIds.map((id) => [id, []])));
-    });
-
-    const feedKeys: TestKeyPair[] = [];
-    const addFeedConfig = async (agentIdx: number, swarmTopicId: PublicKey) => {
-      const feedKey = await generateJWKKeyPair();
-      feedKeys.push(feedKey);
-      for (const [currentAgentIdx, agentFeeds] of feedsBySwarm.entries()) {
-        agentFeeds.get(swarmTopicId)!.push({ feedKey: feedKey.publicKeyHex, writable: currentAgentIdx === agentIdx });
+    //
+    // Create client replicants.
+    //
+    /**
+     * Network peerId -> replicant mapping.
+     */
+    const clientReplicants = new Map<string, ReplicantBrain<EchoReplicant>>();
+    {
+      for (let i = 0; i < params.spec.clientReplicants; i++) {
+        const clientReplicant = await env.spawn(EchoReplicant, { platform: params.spec.platform });
+        await clientReplicant.brain.open();
+        const { peerId } = await clientReplicant.brain.initializeNetwork();
+        clientReplicants.set(peerId, clientReplicant);
       }
-    };
+    }
 
-    // Add spec.feedsPerSwarm feeds for each agent to each swarm.
-    await Promise.all(
-      range(spec.agents).map(async (agentIdx) => {
-        await Promise.all(
-          swarmTopicsIds.map(async (swarmTopicId) => {
-            await Promise.all(
-              range(spec.feedsPerSwarm).map(async () => {
-                await addFeedConfig(agentIdx, swarmTopicId);
-              }),
-            );
-          }),
-        );
-      }),
-    );
-
-    return range(spec.agents).map((agentIdx) => {
-      return {
-        config: {
-          agentIdx,
-          signalUrl: signal.url(),
-          swarmTopicIds: swarmTopicsIds.map((key) => key.toHex()),
-          feeds: Object.fromEntries(feedsBySwarm.get(agentIdx)!.entries()),
-          feedKeys,
-        },
-      };
-    });
-  }
-
-  async run(env: AgentEnv<ReplicationTestSpec, ReplicationAgentConfig>): Promise<void> {
-    const { config, spec, agents } = env.params;
-    const { agentIdx, swarmTopicIds, signalUrl, feeds: feedsSpec, feedKeys } = config;
-
-    const numAgents = Object.keys(agents).length;
-    log.info('run', {
-      agentIdx,
-      runnerAgentIdx: config.agentIdx,
-      agentId: env.params.agentId.substring(0, 8),
-    });
-
-    // Feeds.
-    // TODO(burdon): Config for storage type.
-    // TODO(burdon): Use @dxos/feed-store TestBuilder?
-    const storage = createStorage({ type: StorageType.NODE });
-    const keyring = new Keyring(storage.createDirectory('keyring'));
-    const feedStore = new FeedStore({
-      factory: new FeedFactory({ root: storage.createDirectory('feeds'), signer: keyring }),
-    });
-
-    const networkManagerBuilder = new NetworkManagerTestBuilder({
-      signalHosts: [{ server: signalUrl }],
-      transport: spec.transport,
-    });
-
-    const peer = networkManagerBuilder.createPeer(PublicKey.from(env.params.agentId));
-    await peer.open();
-    log.info('peer created', { agentIdx });
-
-    // Feeds.
-    const feedsBySwarm = new Map<string, { writable: boolean; feed: FeedWrapper<any> }[]>();
-    for (const [swarmTopicId, feedConfigs] of Object.entries(feedsSpec)) {
-      const feedsArr = await Promise.all(
-        feedConfigs.map(async (feedConfig) => {
-          // Import key pairs to keyring.
-          // TODO(burdon): Can these just be created by the keyring?
-          const keyPairExported = feedKeys.find((key) => key.publicKeyHex === feedConfig.feedKey)!;
-          const feedKey = await keyring.importKeyPair(
-            await parseJWKKeyPair(keyPairExported.privateKey, keyPairExported.publicKey),
-          );
-
-          const feed: FeedWrapper<any> = await feedStore.openFeed(feedKey, { writable: feedConfig.writable });
-          return { feed, writable: feedConfig.writable };
+    //
+    // Establish connections between clients and server.
+    //
+    {
+      // Connect clients to server
+      await Promise.all(
+        Array.from(clientReplicants.entries()).map(async ([peerId, clientReplicant]) => {
+          // Unique Redis queues for each client for each test.
+          const readClientQueue = `read-${peerId}-${params.testId}`;
+          const writeClientQueue = `write-${peerId}-${params.testId}`;
+          await clientReplicant.brain.connect({
+            otherPeerId: serverId,
+            readQueue: readClientQueue,
+            writeQueue: writeClientQueue,
+          });
+          await serverReplicant.brain.connect({
+            otherPeerId: peerId,
+            readQueue: writeClientQueue, // Read from client's write queue.
+            writeQueue: readClientQueue, // Write to client's read queue.
+          });
         }),
       );
-
-      feedsBySwarm.set(swarmTopicId, feedsArr);
     }
 
-    // Swarms to join.
-    log.info(`creating ${swarmTopicIds.length} swarms`, { agentIdx });
-    const swarms = swarmTopicIds.map((swarmTopicId) => {
-      return peer.createSwarm(PublicKey.from(swarmTopicId), () => [
-        { name: REPLICATOR_EXTENSION_NAME, extension: new ReplicatorExtension().setOptions({ upload: true }) },
-      ]);
-    });
+    //
+    // Query objects on clients.
+    // Replications is successful if all clients can query all objects.
+    //
+    {
+      const replicationTimes: number[] = [];
+      await Promise.all(
+        Array.from(clientReplicants.values()).map(async (clientReplicant) => {
+          performance.mark('query:begin');
+          await clientReplicant.brain.openDatabase({ spaceKey, rootUrl: rootUrl as AutomergeUrl });
+          await clientReplicant.brain.queryDocuments({
+            expectedAmount: params.spec.numberOfObjects,
+          });
+          performance.mark('query:end');
+          replicationTimes.push(performance.measure('query', 'query:begin', 'query:end').duration);
+        }),
+      );
+      results.replicationTime = replicationTimes;
+    }
 
-    const loadFeed = async (
-      context: Context,
-      feed: FeedWrapper<any>,
-      options: {
-        feedAppendInterval: number;
-        feedMessageSize: number;
-        feedLoadDuration?: number;
-        feedMessageCount?: number;
-      },
-    ) => {
-      const { feedAppendInterval, feedMessageSize, feedLoadDuration, feedMessageCount } = options;
-      if (feedLoadDuration) {
-        scheduleTaskInterval(
-          context,
-          async () => {
-            await feed.append(randomBytes(feedMessageSize));
-          },
-          feedAppendInterval,
-        );
-      } else {
-        for (let i = 0; i < feedMessageCount!; i++) {
-          await feed.append(randomBytes(feedMessageSize));
-        }
-      }
-    };
-
-    const ctx = new Context();
-    const testCounter = 0;
-
-    const testRun = async () => {
-      const context = ctx.derive({
-        onError: (err) => {
-          log.info('testRun iterration error', { iterationId: testCounter, err });
-        },
-      });
-
-      log.info('testRun iteration', { iterationId: testCounter });
-
-      // Join all swarms.
-      // How many connections established within the target duration.
-      {
-        log.info('joining all swarms', { agentIdx });
-        await Promise.all(
-          swarms.map(async (swarm, swarmIdx) => {
-            await joinSwarm({
-              context,
-              swarmIdx,
-              agentIdx,
-              numAgents,
-              targetSwarmTimeout: spec.targetSwarmTimeout,
-              fullSwarmTimeout: spec.fullSwarmTimeout,
-              swarm,
-            });
-          }),
-        );
-
-        await env.syncBarrier(`swarms are ready on ${testCounter}`);
-      }
-
-      await sleep(5_000);
-
-      // Add feeds.
-      {
-        log.info('adding feeds', { agentIdx });
-        await forEachSwarmAndAgent(
-          env.params.agentId,
-          Object.keys(env.params.agents),
-          swarms,
-          async (swarmIdx, swarm, agentId) => {
-            const connection = swarm.protocol.otherConnections.get({
-              remotePeerId: PublicKey.from(agentId),
-              extension: REPLICATOR_EXTENSION_NAME,
-            }) as ReplicatorExtension;
-            const feedsArr = feedsBySwarm.get(swarm.topic.toHex())!;
-            for (const feedObj of feedsArr) {
-              connection.addFeed(feedObj.feed);
-            }
-          },
-        );
-
-        await sleep(5_000);
-
-        await env.syncBarrier(`feeds are added on ${testCounter}`);
-      }
-
-      // Write to writable feeds in all swarms.
-      {
-        const subctx = context.derive({
-          onError: (err) => {
-            log.info('write to writable feeds error', { iterationId: testCounter, err });
-          },
-        });
-
-        log.info('writing to writable feeds', { agentIdx });
-        const loadTasks: Promise<void>[] = [];
-
-        const timeBeforeLoadStarts = Date.now();
-        await forEachSwarmAndAgent(
-          env.params.agentId,
-          Object.keys(env.params.agents),
-          swarms,
-          async (swarmIdx, swarm, agentId) => {
-            const feedsArr = feedsBySwarm.get(swarm.topic.toHex())!;
-            for (const feedObj of feedsArr) {
-              if (feedObj.writable) {
-                const loadPromise = loadFeed(context, feedObj.feed, {
-                  feedMessageCount: spec.feedMessageCount,
-                  feedLoadDuration: spec.feedLoadDuration,
-                  feedAppendInterval: spec.feedAppendInterval,
-                  feedMessageSize: spec.feedMessageSize,
-                });
-                loadTasks.push(loadPromise);
-              }
-            }
-          },
-        );
-
-        await Promise.all(loadTasks);
-
-        if (spec.feedLoadDuration) {
-          await sleep(spec.feedLoadDuration);
-        }
-
-        await subctx.dispose();
-
-        log.trace('dxos.test.feed-load-time', {
-          agentIdx,
-          testCounter,
-          feedLoadTime: Date.now() - timeBeforeLoadStarts,
-        });
-
-        await env.syncBarrier(`feeds are written on ${testCounter}`);
-      }
-
-      // Check length of all feeds.
-      {
-        log.info('checking feeds length', { agentIdx });
-        await forEachSwarmAndAgent(
-          env.params.agentId,
-          Object.keys(env.params.agents),
-          swarms,
-          async (swarmIdx, swarm, agentId) => {
-            const feedsArr = feedsBySwarm.get(swarm.topic.toHex())!;
-            for (const feedObj of feedsArr) {
-              log.trace('dxos.test.feed-stats', {
-                agentIdx,
-                swarmIdx,
-                feedLength: feedObj.feed.length,
-                byteLength: feedObj.feed.byteLength,
-                writable: feedObj.writable,
-                feedKey: feedObj.feed.key.toHex(),
-                testCounter,
-              });
-            }
-          },
-        );
-      }
-
-      await sleep(5_000);
-
-      // Leave all swarms.
-      {
-        log.info('closing all swarms');
-
-        await Promise.all(
-          swarms.map(async (swarm, swarmIdx) => {
-            await leaveSwarm({ context, swarmIdx, swarm, agentIdx, fullSwarmTimeout: spec.fullSwarmTimeout });
-          }),
-        );
-      }
-    };
-
-    await testRun();
-
-    // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
-    // scheduleTaskInterval(
-    //   ctx,
-    //   async () => {
-    //     await env.syncBarrier(`iteration-${testCounter}`);
-    //     await asyncTimeout(testRun(), spec.duration);
-    //     testCounter++;
-    //   },
-    //   spec.repeatInterval,
-    // );
-    // await sleep(spec.duration);
-    // await ctx.dispose();
-
-    log.info('test completed', { agentIdx });
+    return results;
   }
 
-  async finish(params: TestParams<ReplicationTestSpec>, results: PlanResults): Promise<any> {
-    await this.signalBuilder.destroy();
-
-    // Map<agentIdx, Map<swarmId, FeedStats>>
-    const swarmsByAgent = new Map<number, Map<number, FeedEntry[]>>();
-    range(params.spec.agents).forEach((agentIdx) => {
-      swarmsByAgent.set(agentIdx, new Map(range(params.spec.swarmsPerAgent).map((idx) => [idx, []])));
-    });
-
-    // Map<agentIdx, ms>
-    const feedLoadTimes = new Map<number, number>();
-
-    const reader = getReader(results);
-    reader.forEach((entry: SerializedLogEntry<any>) => {
-      switch (entry.message) {
-        case 'dxos.test.feed-stats': {
-          const feedStats = entry.context as FeedEntry;
-          // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
-          if (feedStats.testCounter > 0) {
-            break;
-          }
-
-          const agentFeeds = swarmsByAgent.get(entry.context.agentIdx)!;
-          const swarmFeeds = agentFeeds.get(entry.context.swarmIdx)!;
-          // TODO(egorgripasov): For some reason received logs entry are duplicated.
-          if (!swarmFeeds.find((feed) => feed.feedKey === feedStats.feedKey)) {
-            swarmFeeds.push(feedStats);
-          }
-          break;
-        }
-
-        case 'dxos.test.feed-load-time': {
-          const feedLoadTime = entry.context as FeedLoadTimeEntry;
-          // TODO(egorgripasov): Evaluate if we need to make multiple test runs.
-          if (feedLoadTime.testCounter > 0) {
-            break;
-          }
-
-          feedLoadTimes.set(feedLoadTime.agentIdx, feedLoadTime.feedLoadTime);
-          break;
-        }
-      }
-    });
-
-    const stats: FeedStats[] = [];
-    swarmsByAgent.forEach((agentFeeds, agentIdx) => {
-      agentFeeds.forEach((swarmFeeds, swarmIdx) => {
-        swarmFeeds.forEach((feedStats) => {
-          if (feedStats.writable) {
-            const replicas: FeedReplicaStats[] = [];
-
-            // Check feeds from other agents from this swarm.
-            swarmsByAgent.forEach((otherAgentFeeds, otherAgentIdx) => {
-              if (otherAgentIdx !== agentIdx) {
-                const otherSwarmFeeds = otherAgentFeeds.get(swarmIdx)!;
-                const otherFeedStats = otherSwarmFeeds.find(
-                  (otherFeedStats) => otherFeedStats.feedKey === feedStats.feedKey,
-                );
-
-                if (otherFeedStats) {
-                  const bytesInSecond = otherFeedStats.byteLength / (feedLoadTimes.get(agentIdx)! / 1000);
-                  replicas.push({
-                    feedLength: otherFeedStats.feedLength,
-                    byteLength: otherFeedStats.byteLength,
-                    replicationSpeed: unit(bytesInSecond, 'B/s'),
-                  });
-                }
-              }
-            });
-
-            stats.push({
-              feedKey: feedStats.feedKey,
-              feedLength: feedStats.feedLength,
-              byteLength: feedStats.byteLength,
-              replicas,
-            });
-          }
-        });
-      });
-    });
-
-    log.info('replication stats', { stats });
-  }
+  async analyze(
+    params: TestParams<ReplicationTestSpec>,
+    summary: ReplicantsSummary,
+    result: ReplicationTestResult,
+  ): Promise<any> {}
 }
-
-// TODO(burdon): Factor out.
-const unit = (value: number, unit: string, precision = 2) => {
-  const e = Math.floor(Math.log(value) / Math.log(1024));
-  return `${(value / Math.pow(1024, e)).toFixed(precision)} ${e > 0 ? 'kMGTP'.charAt(e - 1) : ''}${unit}`;
-};

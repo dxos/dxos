@@ -27,7 +27,7 @@ describe('Serialization', () => {
     const builder = new TestBuilder();
     afterTest(() => builder.destroy());
 
-    const client = new Client({ services: builder.createLocal() });
+    const client = new Client({ services: builder.createLocalClientServices() });
     await client.initialize();
     client.addSchema(Collection, DocumentType, TextV0Type);
     afterTest(() => client.destroy());

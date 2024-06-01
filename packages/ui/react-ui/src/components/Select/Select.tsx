@@ -40,7 +40,10 @@ const SelectTriggerButton = forwardRef<HTMLButtonElement, ButtonProps>(
         <Button {...props}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
           <SelectPrimitive.Icon asChild>
-            <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
+            <>
+              <span className='w-1' />
+              <CaretDown className={tx('select.triggerIcon', 'select__trigger__icon', {})} weight='bold' />
+            </>
           </SelectPrimitive.Icon>
         </Button>
       </SelectPrimitive.Trigger>

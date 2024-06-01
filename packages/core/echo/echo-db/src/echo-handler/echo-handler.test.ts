@@ -7,22 +7,24 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
 import {
-  Expando,
   create,
   echoObject,
+  type EchoReactiveObject,
+  Expando,
+  foreignKey,
   getMeta,
   getSchema,
+  getType,
   getTypeReference,
   isDeleted,
   ref,
-  type EchoReactiveObject,
   TypedObject,
 } from '@dxos/echo-schema';
-import { TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
 import {
   TEST_OBJECT,
+  TEST_SCHEMA_TYPE,
   TestClass,
   TestSchema,
   TestSchemaClass,
@@ -45,7 +47,7 @@ registerSignalRuntime();
 const TypedObjectSchema = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
-  const invalidSchema = S.struct({ id: S.number });
+  const invalidSchema = S.Struct({ id: S.Number });
   expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
@@ -130,7 +132,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('existing proxy objects can be passed to create', async () => {
     const { db, graph } = await builder.createDatabase();
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.any }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Any }) {}
     graph.runtimeSchemaRegistry.registerSchema(Schema);
     const objectHost = db.add(create(Schema, { field: [] }));
     const object = db.add(create(Schema, { field: 'foo' }));
@@ -262,10 +264,7 @@ describe('Reactive Object with ECHO database', () => {
   test('data symbol', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-    const objects = [
-      db.add(create(TypedObjectSchema, { ...TEST_OBJECT })),
-      db.add(create(TestSchemaClass, { ...TEST_OBJECT })),
-    ];
+    const objects = [db.add(create(TypedObjectSchema, TEST_OBJECT)), db.add(create(TestSchemaClass, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
@@ -293,14 +292,14 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('references', () => {
-    const Org = S.struct({
-      name: S.string,
+    const Org = S.Struct({
+      name: S.String,
     }).pipe(echoObject('example.Org', '1.0.0'));
 
-    const Person = S.struct({
-      name: S.string,
+    const Person = S.Struct({
+      name: S.String,
       worksAt: ref(Org),
-      previousEmployment: S.optional(S.array(ref(Org))),
+      previousEmployment: S.optional(S.Array(ref(Org))),
     }).pipe(echoObject('example.Person', '1.0.0'));
 
     test('references', async () => {
@@ -412,14 +411,14 @@ describe('Reactive Object with ECHO database', () => {
     test('can set meta on a non-ECHO object', async () => {
       const obj = create({ string: 'foo' });
       expect(getMeta(obj)).to.deep.eq({ keys: [] });
-      const testKey = { key: 'hello', source: 'test' };
+      const testKey = { source: 'test', id: 'hello' };
       getMeta(obj).keys.push(testKey);
       expect(getMeta(obj)).to.deep.eq({ keys: [testKey] });
       expect(() => getMeta(obj).keys.push(1 as any)).to.throw();
     });
 
     test('meta taken from reactive object when saving to echo', async () => {
-      const testKey = { key: 'hello', source: 'test' };
+      const testKey = { source: 'test', id: 'hello' };
       const reactiveObject = create({});
       getMeta(reactiveObject).keys.push(testKey);
 
@@ -430,16 +429,50 @@ describe('Reactive Object with ECHO database', () => {
 
     test('meta updates', async () => {
       const { db } = await builder.createDatabase();
-      const obj = db.add({ string: 'foo' });
+      const obj = db.add({ string: 'test-1' });
 
       expect(getMeta(obj).keys).to.deep.eq([]);
-      const key = { source: 'github.com', id: '123' };
+      const key = { source: 'example.com', id: '123' };
       getMeta(obj).keys.push(key);
       expect(getMeta(obj).keys).to.deep.eq([key]);
     });
 
+    test('object with meta pushed to array', async () => {
+      class NestedType extends TypedObject({ ...TEST_SCHEMA_TYPE, typename: TEST_SCHEMA_TYPE.typename + '2' })({
+        field: S.Number,
+      }) {}
+      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({
+        objects: S.mutable(S.Array(ref(NestedType))),
+      }) {}
+
+      const key = foreignKey('example.com', '123');
+      const { db, graph } = await builder.createDatabase();
+      graph.runtimeSchemaRegistry.registerSchema(TestType, NestedType);
+      const obj = db.add(create(TestType, { objects: [] }));
+      const objectWithMeta = create(NestedType, { field: 42 }, { keys: [key] });
+      obj.objects.push(objectWithMeta);
+      expect(getMeta(obj.objects[0]!).keys).to.deep.eq([key]);
+    });
+
+    test('push key to object created with', async () => {
+      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Number }) {}
+      const { db, graph } = await builder.createDatabase();
+      graph.runtimeSchemaRegistry.registerSchema(TestType);
+      const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
+      getMeta(obj).keys.push(foreignKey('example.com', '456'));
+      expect(getMeta(obj).keys.length).to.eq(2);
+    });
+
+    test('can get type reference of unregistered schema', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(create({ field: 1 }));
+      const typeReference = getTypeReference(TestSchema)!;
+      getAutomergeObjectCore(obj).setType(typeReference);
+      expect(getType(obj)).to.deep.eq(typeReference);
+    });
+
     test('meta persistence', async () => {
-      const metaKey = { source: 'github.com', id: '123' };
+      const metaKey = { source: 'example.com', id: '123' };
       const graph = new Hypergraph();
       const automergeContext = new AutomergeContext();
       const doc = automergeContext.repo.create<SpaceDoc>();
@@ -460,6 +493,21 @@ describe('Reactive Object with ECHO database', () => {
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
+    });
+
+    test('json serialization with references', async () => {
+      const { db } = await builder.createDatabase();
+
+      const org = db.add({ name: 'DXOS' });
+      const employee = db.add({ name: 'John', worksAt: org });
+
+      const employeeJson = JSON.parse(JSON.stringify(employee));
+      expect(employeeJson).to.deep.eq({
+        '@id': employee.id,
+        '@meta': { keys: [] },
+        name: 'John',
+        worksAt: encodeReference(new Reference(org.id)),
+      });
     });
   });
 

@@ -7,13 +7,13 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
   clientServiceBundle,
-  DEFAULT_CLIENT_CHANNEL,
-  Properties,
-  STATUS_TIMEOUT,
   type ClientServices,
   type ClientServicesProvider,
+  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
+  Properties,
+  STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -25,7 +25,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { SystemStatus, type QueryStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
@@ -37,10 +37,10 @@ import type { MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
+// TODO(burdon): Reconcile with ClientContextProps.
 /**
  * This options object configures the DXOS Client.
  */
-// TODO(burdon): Reconcile with ClientContextProps.
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
@@ -222,10 +222,12 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.isSchemaRegistered(s));
-    if (notRegistered.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+    // TODO(burdon): Find?
+    const exists = schemaList.filter((schema) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(schema));
+    if (exists.length > 0) {
+      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...exists);
     }
+
     return this;
   }
 
@@ -362,22 +364,23 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    await this._services.open(this._ctx);
+    await this._services.open();
 
     this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
     });
     await this._echoClient.open(this._ctx);
+
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
-      this._config,
       this._services,
       this._echoClient,
       () => halo.identity.get()?.identityKey,
       this._instanceId,
     );
+
     const shellManager =
       this._services instanceof IFrameClientServicesProxy || this._services instanceof IFrameClientServicesHost
         ? this._services._shellManager
@@ -459,6 +462,7 @@ export class Client {
       return;
     }
 
+    // TODO(burdon): Call flush?
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();
@@ -472,7 +476,7 @@ export class Client {
     await this._statusStream?.close();
     await this._runtime?.close();
     await this._echoClient.close(this._ctx);
-    await this._services?.close(this._ctx);
+    await this._services?.close();
     log('closed');
   }
 

@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [lazy(p, \[props\])](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L117)
+### [lazy(p, \[props\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L117)
 
 
 
@@ -16,7 +16,7 @@ Arguments:
 `props`: <code>T</code>
 
 
-### [IntentProvider(props)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L49)
+### [IntentProvider(props)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L49)
 
 
 **NOTE**: Exotic components are not callable.
@@ -28,7 +28,7 @@ Arguments:
 `props`: <code>ProviderProps&lt;[IntentContext](/api/@dxos/app-framework/types/IntentContext)&gt;</code>
 
 
-### [PluginHost(options)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L35)
+### [PluginHost(options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L35)
 
 
 Bootstraps an application by initializing plugins and rendering root components.
@@ -40,7 +40,7 @@ Arguments:
 `options`: <code>[BootstrapPluginsParams](/api/@dxos/app-framework/types/BootstrapPluginsParams)</code>
 
 
-### [PluginProvider(props)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L67)
+### [PluginProvider(props)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L67)
 
 
 **NOTE**: Exotic components are not callable.
@@ -52,7 +52,7 @@ Arguments:
 `props`: <code>ProviderProps&lt;[PluginContext](/api/@dxos/app-framework/types/PluginContext)&gt;</code>
 
 
-### [Surface(props)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L84)
+### [Surface(props)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L84)
 
 
 A surface is a named region of the screen that can be populated by plugins.
@@ -64,7 +64,7 @@ Arguments:
 `props`: <code>Pick&lt;[SurfaceProps](/api/@dxos/app-framework/types/SurfaceProps), string | number&gt; & RefAttributes&lt;HTMLElement&gt;</code>
 
 
-### [SurfaceProvider(props)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L44)
+### [SurfaceProvider(props)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L44)
 
 
 **NOTE**: Exotic components are not callable.
@@ -76,7 +76,7 @@ Arguments:
 `props`: <code>ProviderProps&lt;[SurfaceRootContext](/api/@dxos/app-framework/types/SurfaceRootContext)&gt;</code>
 
 
-### [activeIds(active)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L57)
+### [activeIds(active)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L63)
 
 
 
@@ -88,7 +88,7 @@ Arguments:
 `active`: <code>undefined | string | Record&lt;string, string | string[]&gt;</code>
 
 
-### [createApp(options)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/App.tsx#L39)
+### [createApp(options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/App.tsx#L39)
 
 
 Expected usage is for this to be the entrypoint of the application.
@@ -101,7 +101,7 @@ Arguments:
 `options`: <code>[BootstrapPluginsParams](/api/@dxos/app-framework/types/BootstrapPluginsParams)</code>
 
 
-### [definePlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/helpers.ts#L12)
+### [definePlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/helpers.ts#L12)
 
 
 Define a plugin
@@ -113,7 +113,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)&lt;TProvides&gt;</code>
 
 
-### [filterPlugins(plugins, predicate)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/helpers.ts#L33)
+### [filterPlugins(plugins, predicate)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/helpers.ts#L33)
 
 
 Filter a list of plugins to only those that match a predicate.
@@ -127,7 +127,7 @@ Arguments:
 `predicate`: <code>function</code>
 
 
-### [findPlugin(plugins, id)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/helpers.ts#L17)
+### [findPlugin(plugins, id)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/helpers.ts#L17)
 
 
 Find a plugin by ID.
@@ -141,7 +141,7 @@ Arguments:
 `id`: <code>string</code>
 
 
-### [firstMainId(active)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L54)
+### [firstMainId(active)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L60)
 
 
 
@@ -153,7 +153,7 @@ Arguments:
 `active`: <code>undefined | string | Record&lt;string, string | string[]&gt;</code>
 
 
-### [getPlugin(plugins, id)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/helpers.ts#L26)
+### [getPlugin(plugins, id)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/helpers.ts#L26)
 
 
 Find a plugin by ID, or raise an error if not found.
@@ -167,7 +167,7 @@ Arguments:
 `id`: <code>string</code>
 
 
-### [initializePlugin(pluginDefinition)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L163)
+### [initializePlugin(pluginDefinition)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L163)
 
 
 Resolve a  `PluginDefinition`  into a fully initialized  `Plugin` .
@@ -179,7 +179,7 @@ Arguments:
 `pluginDefinition`: <code>[PluginDefinition](/api/@dxos/app-framework/types/PluginDefinition)&lt;T, U&gt;</code>
 
 
-### [isActiveParts(active)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L48)
+### [isActiveParts(active)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L54)
 
 
 
@@ -191,7 +191,7 @@ Arguments:
 `active`: <code>undefined | string | Record&lt;string, string | string[]&gt;</code>
 
 
-### [isAdjustTransaction(data)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L51)
+### [isAdjustTransaction(data)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L57)
 
 
 
@@ -203,7 +203,7 @@ Arguments:
 `data`: <code>undefined | [IntentData](/api/@dxos/app-framework/types/IntentData)</code>
 
 
-### [isIdActive(active, id)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L67)
+### [isIdActive(active, id)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L73)
 
 
 
@@ -217,7 +217,7 @@ Arguments:
 `id`: <code>string</code>
 
 
-### [isObject(data)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/helpers.ts#L22)
+### [isObject(data)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/helpers.ts#L22)
 
 
 Checks if the given data is an object and not null.
@@ -231,7 +231,7 @@ Arguments:
 `data`: <code>unknown</code>
 
 
-### [parseFileManagerPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/file.ts#L32)
+### [parseFileManagerPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/file.ts#L32)
 
 
 
@@ -243,7 +243,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseGraphBuilderPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/graph.ts#L32)
+### [parseGraphBuilderPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/graph.ts#L32)
 
 
 Type guard for graph builder plugins.
@@ -255,7 +255,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseGraphPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/graph.ts#L26)
+### [parseGraphPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/graph.ts#L26)
 
 
 Type guard for graph plugins.
@@ -267,7 +267,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseIntentPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L19)
+### [parseIntentPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L19)
 
 
 
@@ -279,7 +279,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseIntentResolverPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L22)
+### [parseIntentResolverPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L22)
 
 
 
@@ -291,7 +291,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseLayoutPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/layout.ts#L74)
+### [parseLayoutPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/layout.ts#L79)
 
 
 Type guard for layout plugins.
@@ -303,7 +303,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseMetadataRecordsPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/metadata.ts#L23)
+### [parseMetadataRecordsPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/metadata.ts#L23)
 
 
 
@@ -315,7 +315,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseMetadataResolverPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/metadata.ts#L27)
+### [parseMetadataResolverPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/metadata.ts#L27)
 
 
 
@@ -327,7 +327,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseNavigationPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/navigation.ts#L85)
+### [parseNavigationPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/navigation.ts#L92)
 
 
 Type guard for layout plugins.
@@ -339,7 +339,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parsePluginHost(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L27)
+### [parsePluginHost(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginHost.tsx#L27)
 
 
 
@@ -351,7 +351,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseRootSurfacePlugin(\[plugin\])](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/provides.ts#L21)
+### [parseRootSurfacePlugin(\[plugin\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/provides.ts#L21)
 
 
 
@@ -363,7 +363,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseSettingsPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/settings.ts#L15)
+### [parseSettingsPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/settings.ts#L15)
 
 
 
@@ -375,7 +375,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseSurfacePlugin(\[plugin\])](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/provides.ts#L24)
+### [parseSurfacePlugin(\[plugin\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/provides.ts#L24)
 
 
 
@@ -387,7 +387,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [parseTranslationsPlugin(plugin)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/common/translations.ts#L39)
+### [parseTranslationsPlugin(plugin)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/common/translations.ts#L39)
 
 
 Type guard for translation plugins.
@@ -399,7 +399,7 @@ Arguments:
 `plugin`: <code>[Plugin](/api/@dxos/app-framework/types/Plugin)</code>
 
 
-### [pluginMeta(meta)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L112)
+### [pluginMeta(meta)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/plugin.ts#L112)
 
 
 
@@ -411,7 +411,7 @@ Arguments:
 `meta`: <code>object</code>
 
 
-### [resolvePlugin(plugins, predicate)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/helpers.ts#L45)
+### [resolvePlugin(plugins, predicate)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/helpers.ts#L45)
 
 
 Resolves a plugin by predicate.
@@ -425,7 +425,7 @@ Arguments:
 `predicate`: <code>function</code>
 
 
-### [useIntent()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L35)
+### [useIntent()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L35)
 
 
 
@@ -437,7 +437,7 @@ Arguments: none
 
 
 
-### [useIntentDispatcher()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L37)
+### [useIntentDispatcher()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L37)
 
 
 
@@ -449,7 +449,7 @@ Arguments: none
 
 
 
-### [useIntentResolver(plugin, resolver)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L42)
+### [useIntentResolver(plugin, resolver)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/IntentContext.tsx#L42)
 
 
 
@@ -463,7 +463,7 @@ Arguments:
 `resolver`: <code>[IntentResolver](/api/@dxos/app-framework/types/IntentResolver)</code>
 
 
-### [usePlugin(id)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L54)
+### [usePlugin(id)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L54)
 
 
 Get a plugin by ID.
@@ -475,7 +475,7 @@ Arguments:
 `id`: <code>string</code>
 
 
-### [usePlugins()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L49)
+### [usePlugins()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L49)
 
 
 Get all plugins.
@@ -487,7 +487,7 @@ Arguments: none
 
 
 
-### [useResolvePlugin(predicate)](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L62)
+### [useResolvePlugin(predicate)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/PluginHost/PluginContext.tsx#L62)
 
 
 Resolve a plugin by predicate.
@@ -499,7 +499,7 @@ Arguments:
 `predicate`: <code>function</code>
 
 
-### [useSurface()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L105)
+### [useSurface()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L105)
 
 
 
@@ -511,7 +511,7 @@ Arguments: none
 
 
 
-### [useSurfaceRoot()](https://github.com/dxos/dxos/blob/061d3392e/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L42)
+### [useSurfaceRoot()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/SurfacePlugin/SurfaceRootContext.tsx#L42)
 
 
 

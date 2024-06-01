@@ -90,7 +90,7 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
 );
 
 type PlankHeadingActionsMenuProps = PropsWithChildren<{
-  triggerLabel?: string;
+  triggerLabel: string;
   actions?: PlankHeadingAction[];
   onAction?: (action: PlankHeadingAction) => void;
 }>;
@@ -170,7 +170,7 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }}>
+          <Tooltip.Content style={{ zIndex: 70 }} side='left'>
             {triggerLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -189,7 +189,10 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
       <h1
         {...props}
         data-attention={hasAttention.toString()}
-        className={mx('pli-1 min-is-0 shrink truncate font-medium fg-base data-[attention=true]:fg-accent', classNames)}
+        className={mx(
+          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          classNames,
+        )}
         ref={forwardedRef}
       />
     );
@@ -202,54 +205,87 @@ type PlankControlEventType = 'close' | `${'pin' | 'increment'}-${'start' | 'end'
 
 type PlankControlHandler = (event: { type: PlankControlEventType; part: PartIdentifier }) => void;
 
-type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'children' | 'onClick'> & {
+type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   part: [string, number, number];
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
-  close?: boolean;
+  close?: boolean | 'minify-start' | 'minify-end';
   increment?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
+const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { label: string }) => {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <Button variant='ghost' {...props}>
+          <span className='sr-only'>{label}</span>
+          {children}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content side='bottom' classNames='z-[70]'>
+          {label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+};
+
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
-  ({ part, onClick, variant = 'default', increment = true, pin = 'both', close = false, ...props }, forwardedRef) => {
+  ({ part, onClick, variant = 'default', increment = true, pin, close = false, children, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
     const buttonClassNames = variant === 'hide-disabled' ? 'disabled:hidden p-1' : 'p-1';
     return (
       <ButtonGroup {...props} ref={forwardedRef}>
+        {children}
         {pin && ['both', 'start'].includes(pin) && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-start', part })}>
+          <PlankHeadingControl
+            label={t('pin start label')}
+            variant='ghost'
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'pin-start', part })}
+          >
             <CaretLineLeft />
-          </Button>
+          </PlankHeadingControl>
         )}
         {increment && (
           <>
-            <Button
+            <PlankHeadingControl
+              label={t('increment start label')}
               disabled={part[1] < 1}
-              variant='ghost'
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-start', part })}
             >
               <CaretLeft />
-            </Button>
-            <Button
+            </PlankHeadingControl>
+            <PlankHeadingControl
+              label={t('increment end label')}
               disabled={part[1] > part[2] - 2}
-              variant='ghost'
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-end', part })}
             >
               <CaretRight />
-            </Button>
+            </PlankHeadingControl>
           </>
         )}
         {pin && ['both', 'end'].includes(pin) && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-end', part })}>
+          <PlankHeadingControl
+            label={t('pin end label')}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'pin-end', part })}
+          >
             <CaretLineRight />
-          </Button>
+          </PlankHeadingControl>
         )}
         {close && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'close', part })}>
-            <X />
-          </Button>
+          <PlankHeadingControl
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'close', part })}
+          >
+            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <X />}
+          </PlankHeadingControl>
         )}
       </ButtonGroup>
     );

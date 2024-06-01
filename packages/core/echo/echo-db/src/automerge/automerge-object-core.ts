@@ -358,7 +358,7 @@ export class AutomergeObjectCore {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.decode(val));
+      return value.map((val) => this.decode(val, { resolveLinks }));
     }
     if (value instanceof A.RawString) {
       return value.toString();
@@ -380,7 +380,9 @@ export class AutomergeObjectCore {
       }
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
+      return Object.fromEntries(
+        Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value, { resolveLinks })]),
+      );
     }
 
     return value;

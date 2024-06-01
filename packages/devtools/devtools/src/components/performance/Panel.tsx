@@ -7,6 +7,8 @@ import React, { type PropsWithChildren } from 'react';
 
 import { getSize, mx } from '@dxos/react-ui-theme';
 
+import { styles } from '../../styles';
+
 export type PanelProps = {
   id: string;
   icon: Icon;
@@ -14,6 +16,7 @@ export type PanelProps = {
   info?: JSX.Element;
   padding?: boolean;
   open?: boolean;
+  className?: string;
   onToggle?: (id: string, open: boolean) => void;
 };
 
@@ -26,16 +29,14 @@ export const Panel = ({
   info,
   padding = true,
   open = true,
+  className,
   onToggle,
   children,
 }: PropsWithChildren<PanelProps>) => {
   return (
     <div className='flex flex-col'>
       <div
-        className={mx(
-          'flex items-center justify-between px-3 text-sm text-fine cursor-pointer',
-          'bg-neutral-100 dark:bg-neutral-850 text-black dark:text-neutral-200',
-        )}
+        className={mx('flex items-center justify-between px-3 text-sm text-fine cursor-pointer', styles.bgPanel)}
         onClick={() => onToggle?.(id, !open)}
       >
         <div className='flex items-center gap-2 py-1'>
@@ -48,9 +49,11 @@ export const Panel = ({
         <div
           className={mx(
             'flex w-full overflow-x-hidden overflow-y-scroll transition-max-height max-h-[240px]',
-            'bg-white dark:bg-neutral-900 text-black dark:text-neutral-300',
-            open ? 'border-t border-neutral-200 dark:border-neutral-800' : 'max-h-0',
+            styles.bgPanel,
+            styles.border,
+            open ? 'border-t' : 'max-h-0',
             padding && 'px-2',
+            className,
           )}
         >
           {children}

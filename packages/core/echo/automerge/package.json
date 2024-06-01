@@ -1,6 +1,6 @@
 {
   "name": "@dxos/automerge",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "Automerge adapter.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -142,7 +142,7 @@
     "compile": "tsx scripts/compile.mts"
   },
   "dependencies": {
-    "@automerge/automerge-wasm": "^0.12.0",
+    "@automerge/automerge-wasm": "^0.17.0",
     "bs58check": "^3.0.1",
     "cbor-x": "^1.5.4",
     "debug": "^4.3.4",
@@ -153,11 +153,11 @@
     "xstate": "^5.9.1"
   },
   "devDependencies": {
-    "@automerge/automerge": "^2.2.0",
-    "@automerge/automerge-repo": "^1.1.9",
-    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.9",
-    "@automerge/automerge-repo-network-websocket": "^1.1.9",
-    "@automerge/automerge-repo-storage-indexeddb": "^1.1.9"
+    "@automerge/automerge": "^2.2.2",
+    "@automerge/automerge-repo": "^1.1.12",
+    "@automerge/automerge-repo-network-broadcastchannel": "^1.1.12",
+    "@automerge/automerge-repo-network-websocket": "^1.1.12",
+    "@automerge/automerge-repo-storage-indexeddb": "^1.1.12"
   },
   "publishConfig": {
     "access": "public"

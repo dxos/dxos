@@ -80,7 +80,8 @@ export interface JsonSchema {
 /**
  * @deprecated
  */
-export const getTypename = (schema: JsonSchema): string | undefined => {
+// TODO(burdon): Remove.
+export const getSchemaTypename = (schema: JsonSchema): string | undefined => {
   const match = schema.$ref?.match(/#\/\$defs\/(.+)/);
   if (match) {
     return match[1];
@@ -122,6 +123,7 @@ export const effectToJsonSchema = (schema: S.Schema<any>): any => {
       [JSONSchemaAnnotationId]: { [ECHO_REFINEMENT_KEY]: refinement },
     });
   };
+
   const schemaWithRefinements = S.make(withEchoRefinements(schema.ast));
   return JSONSchema.make(schemaWithRefinements);
 };
@@ -137,33 +139,38 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
     if (echoRefinement?.type && key === 'id') {
       immutableIdField = jsonToEffectSchema(value, defs);
     } else {
-      fields[key] = root.required.includes(key)
+      // TODO(burdon): Mutable cast.
+      (fields as any)[key] = root.required.includes(key)
         ? jsonToEffectSchema(value, defs)
         : S.optional(jsonToEffectSchema(value, defs));
     }
   }
+
   let schemaWithoutEchoId: S.Schema<any, any, unknown>;
   if (typeof root.additionalProperties !== 'object') {
-    schemaWithoutEchoId = S.struct(fields);
+    schemaWithoutEchoId = S.Struct(fields);
   } else {
     const indexValue = jsonToEffectSchema(root.additionalProperties, defs);
     if (propertyList.length > 0) {
-      schemaWithoutEchoId = S.struct(fields, { key: S.string, value: indexValue });
+      schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
     } else {
-      schemaWithoutEchoId = S.record(S.string, indexValue);
+      schemaWithoutEchoId = S.Record(S.String, indexValue);
     }
   }
+
   if (echoRefinement == null) {
     return schemaWithoutEchoId as any;
   }
+
   invariant(immutableIdField, 'no id in echo type');
-  const schema = S.extend(S.mutable(schemaWithoutEchoId), S.struct({ id: immutableIdField }));
+  const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
   for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
       annotations[annotation] = echoRefinement[annotationToRefinementKey[annotation]];
     }
   }
+
   return schema.annotations(annotations) as any;
 };
 
@@ -172,7 +179,7 @@ const parseJsonSchemaAny = (root: JsonSchema7Any): S.Schema<any> => {
   if (echoRefinement?.reference != null) {
     return createEchoReferenceSchema(echoRefinement.reference);
   }
-  return S.any;
+  return S.Any;
 };
 
 export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSchema7Root['$defs']): S.Schema<any> => {
@@ -180,6 +187,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   if ('type' in root && root.type === 'object') {
     return jsonToEffectTypeSchema(root, defs);
   }
+
   let result: S.Schema<any>;
   if ('$id' in root) {
     switch (root.$id) {
@@ -187,41 +195,41 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
         result = parseJsonSchemaAny(root);
         break;
       case '/schemas/unknown':
-        result = S.unknown;
+        result = S.Unknown;
         break;
       case '/schemas/{}':
       case '/schemas/object':
-        result = S.object;
+        result = S.Object;
         break;
     }
   } else if ('const' in root) {
-    result = S.literal(root.const);
+    result = S.Literal(root.const);
   } else if ('enum' in root) {
-    result = S.union(...root.enum.map((e) => S.literal(e)));
+    result = S.Union(...root.enum.map((e) => S.Literal(e)));
   } else if ('anyOf' in root) {
-    result = S.union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
+    result = S.Union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
   } else if ('$comment' in root && root.$comment === '/schemas/enums') {
-    result = S.enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
+    result = S.Enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string':
-        result = S.string;
+        result = S.String;
         break;
       case 'number':
-        result = S.number;
+        result = S.Number;
         break;
       case 'integer':
-        result = S.number.pipe(S.int());
+        result = S.Number.pipe(S.int());
         break;
       case 'boolean':
-        result = S.boolean;
+        result = S.Boolean;
         break;
       case 'array':
         if (Array.isArray(root.items)) {
-          result = S.tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
+          result = S.Tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
         } else {
           invariant(root.items);
-          result = S.array(jsonToEffectSchema(root.items, defs));
+          result = S.Array(jsonToEffectSchema(root.items, defs));
         }
         break;
     }
@@ -231,8 +239,9 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
     result = jsonToEffectSchema(jsonSchema, defs).pipe(S.identifier(refSegments[refSegments.length - 1]));
   } else {
-    result = S.unknown;
+    result = S.Unknown;
   }
+
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
   return refinement?.fieldMeta
     ? result.annotations({ [EchoObjectFieldMetaAnnotationId]: refinement.fieldMeta })

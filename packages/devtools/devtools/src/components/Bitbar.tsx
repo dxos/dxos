@@ -46,7 +46,7 @@ export const Bitbar: FC<BitbarParams> = ({
     } else if (percent > 0) {
       return 'bg-green-100';
     } else {
-      return 'bg-gray-100';
+      return 'bg-transparent';
     }
   };
 

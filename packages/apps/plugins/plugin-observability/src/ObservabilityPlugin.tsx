@@ -36,7 +36,7 @@ import type { EventOptions } from '@dxos/observability/segment';
 import { getSize, mx } from '@dxos/react-ui-theme';
 
 import { ObservabilitySettings, type ObservabilitySettingsProps } from './components';
-import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction } from './meta';
+import meta, { OBSERVABILITY_PLUGIN, ObservabilityAction, type UserFeedback } from './meta';
 import translations from './translations';
 
 export type ObservabilityPluginState = {
@@ -149,10 +149,12 @@ export const ObservabilityPlugin = (options: {
 
         setupTelemetryListeners(options.namespace, client, observability);
 
-        await observability.setIdentityTags(client);
-        await observability.startNetworkMetrics(client);
-        await observability.startSpacesMetrics(client, options.namespace);
-        await observability.startRuntimeMetrics(client);
+        await Promise.all([
+          observability.setIdentityTags(client),
+          observability.startRuntimeMetrics(client),
+          observability.startNetworkMetrics(client),
+          observability.startSpacesMetrics(client, options.namespace),
+        ]);
       });
     },
     unload: async () => {
@@ -192,6 +194,13 @@ export const ObservabilityPlugin = (options: {
               };
               observability.event(event);
               return { data: event };
+            }
+
+            case ObservabilityAction.CAPTURE_USER_FEEDBACK: {
+              const feedback = intent.data as UserFeedback;
+
+              observability.captureUserFeedback(feedback.email, feedback.name, feedback.message);
+              return { data: true };
             }
           }
         },

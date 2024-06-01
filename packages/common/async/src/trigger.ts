@@ -15,7 +15,7 @@ export const trigger = <T = void>(timeout?: number): [() => Promise<T>, (arg: T)
 
   const promise = new Promise<T>((resolve, reject) => {
     if (timeout) {
-      setTimeout(() => reject(new Error(`Timed out after ${timeout}ms`)), timeout);
+      setTimeout(() => reject(new Error(`Timed out after ${timeout.toLocaleString()}ms`)), timeout);
     }
 
     callback = resolve;
@@ -31,12 +31,19 @@ export type TriggerOptions = {
   autoReset: boolean;
 };
 
+export enum TriggerState {
+  WAITING = 'WAITING',
+  RESOLVED = 'RESOLVED',
+  REJECTED = 'REJECTED',
+}
+
 /**
  * Enables blocked listeners to be awakened with optional timeouts.
  *
  * Has two states:
  * - WAITING: promise is in pending state and will be resolved once `wake()` is called.
- * - READY: promise is already resolved, and all calls to `wait()` resolve immediately.
+ * - RESOLVED: promise is already resolved, and all calls to `wait()` resolve immediately.
+ * - REJECTED: promise is rejected, and all calls to `wait()` return rejected promise.
  *
  * Trigger starts in WAITING state initially.
  * Use `reset()` to switch resolved trigger back to WAITING state.
@@ -45,9 +52,14 @@ export class Trigger<T = void> {
   private _promise!: Promise<T>;
   private _resolve!: (value: T | PromiseLike<T>) => void;
   private _reject!: (error: Error) => void;
+  private _state: TriggerState = TriggerState.WAITING;
 
   constructor(private _options: TriggerOptions = { autoReset: false }) {
     this.reset();
+  }
+
+  get state() {
+    return this._state;
   }
 
   /**
@@ -66,6 +78,7 @@ export class Trigger<T = void> {
    * NOOP if the trigger is already resolved.
    */
   wake(value: T) {
+    this._state = TriggerState.RESOLVED;
     this._resolve(value);
     if (this._options.autoReset) {
       return this.reset();
@@ -78,12 +91,13 @@ export class Trigger<T = void> {
    * Reset promise (new waiters will wait).
    */
   reset() {
+    this._state = TriggerState.WAITING;
     this._promise = new Promise<T>((resolve, reject) => {
       this._resolve = resolve;
       this._reject = reject;
     });
-    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
 
+    this._promise.catch(() => {}); // Prevent unhandled promise rejections.
     return this;
   }
 
@@ -92,6 +106,7 @@ export class Trigger<T = void> {
    * NOOP if the trigger is already resolved.
    */
   throw(error: Error) {
+    this._state = TriggerState.REJECTED;
     this._reject(error);
     if (this._options.autoReset) {
       return this.reset();

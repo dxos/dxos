@@ -1,5 +1,5 @@
 # Class `Filter`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:21]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/query/filter.d.ts:23]()</sub>
 
 
 
@@ -62,7 +62,7 @@ Type: <code>Reference</code>
 
 
 ### [spaceKeys]()
-Type: <code>undefined | [PublicKey](/api/@dxos/react-client/classes/PublicKey)[]</code>
+Type: <code>undefined | [PublicKey](/api/@dxos/client/classes/PublicKey)[]</code>
 
 
 

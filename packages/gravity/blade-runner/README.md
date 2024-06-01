@@ -1,7 +1,7 @@
 
 # @dxos/blade-runner
 
-KUBE Testing.
+Blade Runner.
 
 ## Prerequisites
 
@@ -9,7 +9,7 @@ KUBE Testing.
 
 ```bash
 brew install redis
-redis-server
+redis-server --port 6379
 ```
 
 ## Simple Usage
@@ -30,7 +30,7 @@ For additional usage, `pnpm run-tests --help`
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+- Talk to us on [Discord](https://dxos.org/discord)
 
 ## Contributions
 

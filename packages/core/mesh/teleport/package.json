@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "Stream muxer.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -39,7 +39,7 @@
     "@dxos/async": "workspace:*",
     "@types/randombytes": "^2.0.0",
     "@types/varint": "6.0.0",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

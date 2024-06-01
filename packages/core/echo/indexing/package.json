@@ -1,6 +1,6 @@
 {
   "name": "@dxos/indexing",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,7 @@
     "@dxos/automerge": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/kv-store": "workspace:*",
@@ -35,7 +36,7 @@
   },
   "devDependencies": {
     "@types/lodash.isequal": "^4.5.0",
-    "fast-check": "^3.15.1",
+    "fast-check": "^3.19.0",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

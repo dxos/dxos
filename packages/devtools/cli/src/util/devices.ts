@@ -6,7 +6,7 @@ import { ux } from '@oclif/core';
 
 import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
 
-import { maybeTruncateKey } from './types';
+import { maybeTruncateKey } from './keys';
 
 export const mapDevices = (devices: Device[], truncateKeys = false) => {
   return devices.map((device) => ({

@@ -145,6 +145,7 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+      DX_PWA: false
     steps:
       - checkout
       - *cache_restore
@@ -239,7 +240,7 @@ jobs:
       - image: 'lycheeverse/lychee:0.14.3'
     steps:
       - checkout
-      - run: lychee --offline ./docs/content/composer
+      - run: lychee --offline ./docs/content/composer ./docs/content/guide
 
 workflows:
   default:

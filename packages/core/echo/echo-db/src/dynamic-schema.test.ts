@@ -40,7 +40,7 @@ describe('DynamicSchema', () => {
     const { db } = await setupTest();
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, {}));
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
-      field: S.string,
+      field: S.String,
     }) {}
 
     instanceWithSchemaRef.schema = db.schemaRegistry.add(GeneratedSchema);
@@ -56,7 +56,7 @@ describe('DynamicSchema', () => {
 
   test('create echo object with DynamicSchema', async () => {
     const { db } = await setupTest();
-    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.string }) {}
+    class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
     const schema = db.schemaRegistry.add(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
     expect(instanceWithSchemaRef.schema!.serializedSchema.typename).to.eq(TEST_SCHEMA_TYPE.typename);
@@ -66,7 +66,7 @@ describe('DynamicSchema', () => {
     const { db } = await setupTest();
     const schema = db.schemaRegistry.add(GeneratedEmptySchema);
     const object = create(schema, {});
-    schema.addColumns({ field1: S.string });
+    schema.addColumns({ field1: S.String });
     object.field1 = 'works';
     object.field1 = undefined;
     expect(() => {

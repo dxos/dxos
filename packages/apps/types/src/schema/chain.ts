@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { S, TypedObject, ref } from '@dxos/echo-schema';
+import { ref, S, TypedObject } from '@dxos/echo-schema';
 
-import { TextV0Type } from './document';
-
+// TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {
   VALUE = 0,
   PASS_THROUGH = 1,
@@ -17,19 +16,23 @@ export enum ChainInputType {
   SCHEMA = 7,
 }
 
-export class ChainInput extends TypedObject({ typename: 'braneframe.Chain.Input', version: '0.1.0' })({
-  name: S.string,
-  type: S.optional(S.enums(ChainInputType)),
-  value: S.optional(S.string),
+export const ChainInputSchema = S.mutable(
+  S.Struct({
+    name: S.String,
+    type: S.optional(S.Enums(ChainInputType)),
+    value: S.optional(S.String),
+  }),
+);
+
+export type ChainInput = S.Schema.Type<typeof ChainInputSchema>;
+
+export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/ChainPrompt', version: '0.1.0' })({
+  command: S.optional(S.String),
+  template: S.String,
+  inputs: S.optional(S.mutable(S.Array(ChainInputSchema))),
 }) {}
 
-export class ChainPromptType extends TypedObject({ typename: 'braneframe.Chain.Prompt', version: '0.1.0' })({
-  command: S.string,
-  source: ref(TextV0Type),
-  inputs: S.mutable(S.array(ref(ChainInput))),
-}) {}
-
-export class ChainType extends TypedObject({ typename: 'braneframe.Chain', version: '0.1.0' })({
-  title: S.optional(S.string),
-  prompts: S.mutable(S.array(ref(ChainPromptType))),
+export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
+  title: S.optional(S.String),
+  prompts: S.optional(S.mutable(S.Array(ref(ChainPromptType)))),
 }) {}

@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import type { SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, create, getSchema } from '@dxos/echo-schema';
+import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
@@ -13,7 +13,7 @@ import { AutomergeContext } from './automerge';
 import { EchoDatabaseImpl } from './database';
 import { Hypergraph } from './hypergraph';
 import { Filter } from './query';
-import { Serializer, type SerializedSpace } from './serializer';
+import { type SerializedSpace, Serializer } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
 
 describe('Serializer', () => {
@@ -50,6 +50,9 @@ describe('Serializer', () => {
       });
     }
 
+    // Simulate JSON serialization.
+    data = JSON.parse(JSON.stringify(data));
+
     {
       const { db } = await builder.createDatabase();
       await serializer.import(db, data);
@@ -81,6 +84,9 @@ describe('Serializer', () => {
       });
     }
 
+    // Simulate JSON serialization.
+    data = JSON.parse(JSON.stringify(data));
+
     {
       const { db } = await builder.createDatabase();
       await serializer.import(db, data);
@@ -94,7 +100,7 @@ describe('Serializer', () => {
   test('Nested objects', async () => {
     const serializer = new Serializer();
 
-    let serialized: SerializedSpace;
+    let data: SerializedSpace;
 
     {
       const { db } = await builder.createDatabase();
@@ -115,13 +121,16 @@ describe('Serializer', () => {
       db.add(obj);
       await db.flush();
 
-      serialized = await serializer.export(db);
-      expect(serialized.objects).to.have.length(4);
+      data = await serializer.export(db);
+      expect(data.objects).to.have.length(4);
     }
+
+    // Simulate JSON serialization.
+    data = JSON.parse(JSON.stringify(data));
 
     {
       const { db } = await builder.createDatabase();
-      await serializer.import(db, serialized);
+      await serializer.import(db, data);
 
       const { objects } = await db.query().run();
       expect(objects).to.have.length(4);
@@ -146,6 +155,9 @@ describe('Serializer', () => {
       await db.flush();
       data = await new Serializer().export(db);
     }
+
+    // Simulate JSON serialization.
+    data = JSON.parse(JSON.stringify(data));
 
     {
       const { db, graph } = await builder.createDatabase();

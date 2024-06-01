@@ -35,7 +35,12 @@ import {
   toLocalizedString,
   type Label,
 } from '@dxos/react-ui';
-import { DropDownMenuDragHandleTrigger, resizeHandle, resizeHandleHorizontal } from '@dxos/react-ui-deck';
+import {
+  DropDownMenuDragHandleTrigger,
+  resizeHandle,
+  resizeHandleHorizontal,
+  useAttendable,
+} from '@dxos/react-ui-deck';
 import {
   type MosaicActiveType,
   type MosaicDataItem,
@@ -71,7 +76,7 @@ export type StackContextValue<TData extends StackSectionContent = StackSectionCo
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onAddSection?: (path: string, position: AddSectionPosition) => void;
-  onNavigateToSection?: (id: string) => void;
+  onNavigateToSection?: (object: MosaicDataItem) => void;
   onCollapseSection?: (id: string, collapsed: boolean) => void;
 };
 
@@ -156,6 +161,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
       mover: { cyclic: true, direction: 1, memorizeCurrent: false },
     });
     const sectionContentGroup = useFocusableGroup({});
+    const attendableProps = useAttendable(id);
 
     return (
       <CollapsiblePrimitive.Root
@@ -166,6 +172,7 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
         <ListItem.Root
           ref={forwardedRef}
           id={id}
+          {...attendableProps}
           classNames={[
             'grid col-span-2 group/section',
             active === 'overlay' ? stackColumns : 'grid-cols-subgrid snap-start',
@@ -175,10 +182,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              active && 'surface-attention after:separator-separator s-outline-separator',
+              active && 'surface-attention separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -370,7 +377,7 @@ export const SectionTile: MosaicTileComponent<
       onCollapseSection={onCollapseSection}
       isResizable={isResizable}
       onDelete={() => onDeleteSection?.(path)}
-      onNavigate={() => onNavigateToSection?.(transformedItem.id)}
+      onNavigate={() => onNavigateToSection?.(transformedItem)}
       onAddAfter={() => onAddSection?.(path, 'after')}
       onAddBefore={() => onAddSection?.(path, 'before')}
     >

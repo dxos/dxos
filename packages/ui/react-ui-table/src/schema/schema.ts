@@ -7,6 +7,7 @@ import type * as S from '@effect/schema/Schema';
 
 import { type ColumnType } from './types';
 
+// TODO(burdon): Reconcile with react-ui-table.
 export type ClassifiedColumnType = ColumnType | 'display';
 
 // TODO(burdon): Rename getX? and return typed array?
@@ -70,7 +71,7 @@ const typeToColumn = (type: AST.AST): ClassifiedColumnType => {
   // - Which of these are we storing in the database?
   // - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
 
-  if (AST.isTransform(type)) {
+  if (AST.isTransformation(type)) {
     const identifier = AST.getIdentifierAnnotation(type);
     if (identifier._tag === 'Some') {
       if (identifier.value === 'DateFromString') {

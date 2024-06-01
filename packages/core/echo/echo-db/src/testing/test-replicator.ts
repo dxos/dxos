@@ -132,7 +132,7 @@ export class TestReplicator implements EchoReplicator {
   }
 }
 
-class TestReplicatorConnection implements ReplicatorConnection {
+export class TestReplicatorConnection implements ReplicatorConnection {
   public otherSide: TestReplicatorConnection | undefined = undefined;
   public owningReplicator: TestReplicator | undefined = undefined;
 

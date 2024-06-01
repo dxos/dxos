@@ -6,12 +6,14 @@ import { isTypeLiteral } from '@effect/schema/AST';
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import { type Reference } from '@dxos/echo-protocol';
 import { compositeRuntime, type GenericSignal } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 
-import { getTargetMeta } from './handler-meta';
+import { getTargetMeta } from './object';
 import { SchemaValidator, symbolSchema } from '../ast';
-import { ReactiveArray, type ReactiveHandler, createReactiveProxy, isValidProxyTarget, symbolIsProxy } from '../proxy';
+import { getTypeReference } from '../getter';
+import { createReactiveProxy, isValidProxyTarget, ReactiveArray, type ReactiveHandler, symbolIsProxy } from '../proxy';
 import { data, type ObjectMeta } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -36,12 +38,15 @@ type ProxyTarget = {
   [symbolSchema]: S.Schema<any>;
 } & ({ [key: keyof any]: any } | any[]);
 
+/**
+ * Typed in-memory reactive store (with Schema).
+ */
 export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
-  public static instance = new TypedReactiveHandler();
+  public static readonly instance = new TypedReactiveHandler();
 
   private constructor() {}
 
-  _proxyMap = new WeakMap<object, any>();
+  readonly _proxyMap = new WeakMap<object, any>();
 
   init(target: ProxyTarget): void {
     invariant(typeof target === 'object' && target !== null);
@@ -117,12 +122,16 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return result;
   }
 
-  isObjectDeleted(): boolean {
+  isDeleted(): boolean {
     return false;
   }
 
   getSchema(target: any) {
     return target[symbolSchema];
+  }
+
+  getTypeReference(target: any): Reference | undefined {
+    return getTypeReference(target[symbolSchema]);
   }
 
   getMeta(target: any): ObjectMeta {
@@ -178,6 +187,7 @@ export const prepareTypedTarget = <T>(target: T, schema: S.Schema<T>) => {
   if (!isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
+
   SchemaValidator.validateSchema(schema);
   const _ = S.asserts(schema)(target);
   makeArraysReactive(target);

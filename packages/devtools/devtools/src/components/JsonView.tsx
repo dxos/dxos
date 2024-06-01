@@ -7,16 +7,20 @@ import React, { type FC } from 'react';
 import { JSONTree } from 'react-json-tree';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
-import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
+import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
+  const { themeMode } = useThemeContext();
   return (
-    <SyntaxHighlighter language='json' style={style} className='w-full'>
+    <SyntaxHighlighter language='json' style={themeMode === 'dark' ? styleDark : styleLight} className='w-full'>
       {JSON.stringify(data, replacer(truncate), 2)}
     </SyntaxHighlighter>
   );

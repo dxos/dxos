@@ -8,8 +8,8 @@ import { type Migration } from '@dxos/migrations';
 import { Filter, loadObjectReferences } from '@dxos/react-client/echo';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
-  name: S.optional(S.string),
-  objects: S.mutable(S.array(ref(Expando))),
+  name: S.optional(S.String),
+  objects: S.mutable(S.Array(ref(Expando))),
 }) {}
 
 export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
@@ -17,8 +17,8 @@ export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Secti
 }) {}
 
 export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
-  title: S.optional(S.string),
-  sections: S.mutable(S.array(ref(SectionType))),
+  title: S.optional(S.String),
+  sections: S.mutable(S.Array(ref(SectionType))),
 }) {}
 
 export const migrations: Migration[] = [

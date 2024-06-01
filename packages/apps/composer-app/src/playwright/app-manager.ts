@@ -6,7 +6,6 @@ import type { Browser, Page } from '@playwright/test';
 import os from 'node:os';
 
 import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
-import { PWA_PLUGIN } from '@braneframe/plugin-pwa/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
@@ -44,9 +43,7 @@ export class AppManager {
     await this.isAuthenticated();
     // Wait for and dismiss first-run toasts. This is necessary to avoid flakiness in tests.
     // If the first-run toasts are not dismissed, they will block the UI and cause tests to hang.
-    // TODO(wittjosiah): Sometimes seems to take a long time to hit this in CI. Can we disable PWA in CI?
-    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).waitFor({ timeout: 15_000 });
-    await this.page.getByTestId(`${PWA_PLUGIN}/offline-ready`).getByTestId('toast.close').click();
+    await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).waitFor({ timeout: 30_000 });
     await this.page.getByTestId(`${OBSERVABILITY_PLUGIN}/notice`).getByTestId('toast.close').click();
 
     this.shell = new ShellManager(this.page, this._inIframe);
@@ -232,5 +229,14 @@ export class AppManager {
     );
 
     await this.page.getByTestId('resetDialog').waitFor();
+  }
+
+  //
+  // Error Boundary
+  //
+
+  async reset() {
+    await this.page.getByTestId('resetDialog.reset').click();
+    await this.page.getByTestId('resetDialog.confirmReset').click();
   }
 }

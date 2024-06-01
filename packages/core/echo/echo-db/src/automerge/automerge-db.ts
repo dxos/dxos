@@ -32,7 +32,6 @@ import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type EchoDatabase } from '../database';
-import { isEchoObject } from '../echo-handler';
 import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
@@ -156,6 +155,11 @@ export class AutomergeDb {
     if (!this._isInitialized) {
       return [];
     }
+
+    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
+    if (!hasLoadedHandles) {
+      return [];
+    }
     const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().docSync();
     if (!rootDoc) {
       return [];
@@ -221,7 +225,7 @@ export class AutomergeDb {
   // TODO(Mykola): Reconcile with `getObjectById`.
   async loadObjectById<T = any>(
     objectId: string,
-    { timeout = 5000 }: { timeout?: number } = {},
+    { timeout }: { timeout?: number } = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
     // Check if deleted.
     if (this._objects.get(objectId)?.isDeleted()) {
@@ -233,13 +237,11 @@ export class AutomergeDb {
       return Promise.resolve(obj);
     }
     this._automergeDocLoader.loadObjectDocument(objectId);
+    const waitForUpdate = this._updateEvent
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .then(() => this.getObjectById(objectId));
 
-    return asyncTimeout(
-      this._updateEvent
-        .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-        .then(() => this.getObjectById(objectId)),
-      timeout,
-    );
+    return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
   }
 
   async batchLoadObjects(
@@ -549,16 +551,9 @@ export interface ItemsUpdatedEvent {
 }
 
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
-  if (isEchoObject(core.rootProxy)) {
-    // NOTE: We need to store properties in the root document since space-list initialization
-    //  expects it to be loaded as space become available.
-    if (core.getType()?.itemId === TYPE_PROPERTIES) {
-      return false;
-    }
-    return true;
-  } else {
-    return false;
-  }
+  // NOTE: We need to store properties in the root document since space-list initialization
+  //  expects it to be loaded as space become available.
+  return core.getType()?.itemId !== TYPE_PROPERTIES;
 };
 
 /**

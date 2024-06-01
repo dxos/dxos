@@ -4,18 +4,18 @@
 
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
-export class GridItemType extends TypedObject({ typename: 'braneframe.Grid.Item', version: '0.1.0' })({
+export class GridItemType extends TypedObject({ typename: 'dxos.org/type/GridItem', version: '0.1.0' })({
   object: ref(Expando),
   position: S.mutable(
-    S.struct({
-      x: S.number,
-      y: S.number,
+    S.Struct({
+      x: S.Number,
+      y: S.Number,
     }),
   ),
-  color: S.optional(S.string),
+  color: S.optional(S.String),
 }) {}
 
-export class GridType extends TypedObject({ typename: 'braneframe.Grid', version: '0.1.0' })({
-  title: S.string,
-  items: S.mutable(S.array(ref(GridItemType))),
+export class GridType extends TypedObject({ typename: 'dxos.org/type/Grid', version: '0.1.0' })({
+  title: S.String,
+  items: S.mutable(S.Array(ref(GridItemType))),
 }) {}

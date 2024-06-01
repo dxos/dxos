@@ -5,7 +5,14 @@
 import { type EditorView } from '@codemirror/view';
 import React, { useMemo, useEffect } from 'react';
 
-import { LayoutAction, parseFileManagerPlugin, useResolvePlugin, useIntentResolver } from '@dxos/app-framework';
+import {
+  LayoutAction,
+  parseFileManagerPlugin,
+  useResolvePlugin,
+  useIntentResolver,
+  parseNavigationPlugin,
+  parseLayoutPlugin,
+} from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
   type Comment,
@@ -19,13 +26,13 @@ import {
   dropFile,
   editorFillLayoutRoot,
   editorFillLayoutEditor,
-  focusComment,
+  scrollThreadIntoView,
   useComments,
   useActionHandler,
   useFormattingState,
   processAction,
 } from '@dxos/react-ui-editor';
-import { attentionSurface, focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
+import { focusRing, mx, textBlockWidth } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
 import { MARKDOWN_PLUGIN } from '../meta';
@@ -52,20 +59,31 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
+  const attended = Array.from(navigationPlugin?.provides.attention?.attended ?? []);
+  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
+  const idParts = id.split(':');
+  const docId = idParts[idParts.length - 1];
 
   const { refCallback: editorRefCallback, value: editorView } = useRefCallback<EditorView>();
 
-  useComments(editorView, id, comments);
+  useComments(editorView, docId, comments);
   useTest(editorView);
 
   // Focus comment.
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
-      case LayoutAction.FOCUS: {
-        const object = data?.object;
+      case LayoutAction.SCROLL_INTO_VIEW: {
         if (editorView) {
-          focusComment(editorView, object);
-          return { data: true };
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
+          return undefined;
         }
         break;
       }
@@ -104,10 +122,10 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <>
+    <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
-          classNames='max-is-[60rem] justify-self-center border-be separator-separator'
+          classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
           state={formattingState}
           onAction={handleAction}
         >
@@ -131,23 +149,24 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
       >
         <TextEditor
           {...props}
-          id={id}
+          id={docId}
           extensions={extensions}
-          autoFocus
+          autoFocus={
+            isDeckModel && layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true
+          }
           moveToEndOfLine
           className={mx(
             focusRing,
-            attentionSurface,
             textBlockWidth,
             editorFillLayoutRoot,
-            'md:border-is md:border-ie separator-separator focus-visible:ring-inset',
+            'group-focus-within/editor:attention-surface group-[[aria-current]]/editor:attention-surface md:border-is md:border-ie border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator focus-visible:ring-inset',
             !toolbar && 'border-bs separator-separator',
           )}
           dataTestId='composer.markdownRoot'
           ref={editorRefCallback}
         />
       </div>
-    </>
+    </div>
   );
 };
 

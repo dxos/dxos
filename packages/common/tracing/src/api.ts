@@ -3,6 +3,7 @@
 //
 
 import { Context } from '@dxos/context';
+import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR } from './trace-processor';
@@ -104,12 +105,42 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
   TRACE_PROCESSOR.addLink(parent, child, opts);
 };
 
+export type TraceDiagnosticParams<T> = {
+  /**
+   * Unique ID.
+   */
+  id: string;
+
+  /**
+   * Human-readable name.
+   * @defaults Defaults to `id`
+   */
+  name?: string;
+
+  /**
+   * Function that will be called to fetch the diagnostic data.
+   */
+  fetch: () => MaybePromise<T>;
+};
+
+export interface TraceDiagnostic {
+  id: string;
+  unregister(): void;
+}
+
+/**
+ * Register a diagnostic that could be queried.
+ */
+const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
+  return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
+};
+
 export const trace = {
-  resource,
+  addLink,
+  diagnostic,
   info,
   mark,
-  span,
   metricsCounter,
-
-  addLink,
+  resource,
+  span,
 };

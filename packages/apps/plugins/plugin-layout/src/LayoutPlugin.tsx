@@ -4,7 +4,7 @@
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
 import { batch } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, useEffect } from 'react';
 
 import { type Node, useGraph } from '@braneframe/plugin-graph';
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
@@ -27,8 +27,10 @@ import {
   type GraphProvides,
   type SurfaceProps,
   type Layout,
+  type Attention,
   IntentAction,
   firstMainId,
+  activeIds,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -63,12 +65,13 @@ export const LayoutPlugin = ({
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
 
-  const settings = new LocalStorageStore<LayoutSettingsProps>(LAYOUT_PLUGIN, {
+  const settings = new LocalStorageStore<LayoutSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
     enableNativeRedirect: false,
+    deck: false,
   });
 
-  const layout = new LocalStorageStore<Layout>(LAYOUT_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
     sidebarOpen: true,
 
@@ -101,6 +104,10 @@ export const LayoutPlugin = ({
         ? graphPlugin.provides.graph.findNode(Array.isArray(this.closed) ? this.closed[0] : this.closed)
         : undefined;
     },
+  });
+
+  const attention = create<Attention>({
+    attended: new Set(),
   });
 
   const handleSetLayout = ({
@@ -162,7 +169,8 @@ export const LayoutPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -175,6 +183,7 @@ export const LayoutPlugin = ({
       settings: settings.values,
       layout: layout.values,
       location,
+      attention,
       translations,
       graph: {
         builder: (_, graph) => {
@@ -279,10 +288,13 @@ export const LayoutPlugin = ({
                 },
               };
 
-        const attended = useMemo(() => new Set(location.active ? [location.active] : []), [location.active]);
-
         return (
-          <AttentionProvider attended={attended}>
+          <AttentionProvider
+            attended={attention.attended}
+            onChangeAttend={(nextAttended) => {
+              attention.attended = nextAttended;
+            }}
+          >
             <Surface {...surfaceProps} />
             <Mosaic.DragOverlay />
           </AttentionProvider>
@@ -294,6 +306,9 @@ export const LayoutPlugin = ({
             case `${LAYOUT_PLUGIN}/MainLayout`:
               return (
                 <MainLayout
+                  attendableId={firstMainId(location.active)}
+                  attended={attention.attended}
+                  activeIds={activeIds(location.active)}
                   fullscreen={layout.values.fullscreen}
                   showHintsFooter={settings.values.showFooter}
                   toasts={layout.values.toasts}
@@ -401,6 +416,13 @@ export const LayoutPlugin = ({
                     : [],
                 ],
               };
+            }
+
+            case NavigationAction.CLOSE: {
+              batch(() => {
+                location.closed = firstMainId(location.active);
+                location.active = undefined;
+              });
             }
           }
         },

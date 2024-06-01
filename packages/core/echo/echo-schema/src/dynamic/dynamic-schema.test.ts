@@ -24,8 +24,8 @@ registerSignalRuntime();
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
-      field1: S.string,
-      field2: S.boolean,
+      field1: S.String,
+      field2: S.Boolean,
     }) {}
 
     const registered = createDynamicSchema(GeneratedSchema);
@@ -37,11 +37,11 @@ describe('dynamic schema', () => {
 
   test('addColumns', async () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({
-      field1: S.string,
+      field1: S.String,
     }) {}
 
     const registered = createDynamicSchema(GeneratedSchema);
-    registered.addColumns({ field2: S.boolean });
+    registered.addColumns({ field2: S.Boolean });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.booleanKeyword],
@@ -50,10 +50,10 @@ describe('dynamic schema', () => {
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
     const registered = createDynamicSchema(GeneratedEmptySchema);
-    registered.addColumns({ field1: S.string });
-    registered.addColumns({ field2: S.boolean });
-    registered.addColumns({ field3: S.number });
-    registered.updateColumns({ field4: S.boolean, field2: S.string });
+    registered.addColumns({ field1: S.String });
+    registered.addColumns({ field2: S.Boolean });
+    registered.addColumns({ field3: S.Number });
+    registered.updateColumns({ field4: S.Boolean, field2: S.String });
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
       ['field2', AST.stringKeyword],
@@ -64,9 +64,9 @@ describe('dynamic schema', () => {
 
   test('removeColumns', async () => {
     const registered = createDynamicSchema(GeneratedEmptySchema);
-    registered.addColumns({ field1: S.string });
-    registered.addColumns({ field2: S.boolean });
-    registered.addColumns({ field3: S.number });
+    registered.addColumns({ field1: S.String });
+    registered.addColumns({ field2: S.Boolean });
+    registered.addColumns({ field3: S.Number });
     registered.removeColumns(['field2']);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', AST.stringKeyword],
@@ -79,11 +79,11 @@ describe('dynamic schema', () => {
     const metaInfo = { maxLength: 10 };
     const registered = createDynamicSchema(GeneratedEmptySchema);
     registered.addColumns({
-      field1: S.string.pipe(fieldMeta(meteNamespace, metaInfo)),
-      field2: S.string,
+      field1: S.String.pipe(fieldMeta(meteNamespace, metaInfo)),
+      field2: S.String,
     });
-    registered.addColumns({ field3: S.string });
-    registered.updateColumns({ field3: S.boolean });
+    registered.addColumns({ field3: S.String });
+    registered.updateColumns({ field3: S.Boolean });
     registered.removeColumns(['field2']);
     expect(getEchoObjectAnnotation(registered)).to.deep.contain(TEST_SCHEMA_TYPE);
     expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
@@ -97,10 +97,12 @@ describe('dynamic schema', () => {
         jsonSchema: effectToJsonSchema(schema),
       }),
     );
+
     effect(() => {
       const _ = dynamicSchema.serializedSchema.jsonSchema;
       dynamicSchema.invalidate();
     });
+
     return dynamicSchema;
   };
 });

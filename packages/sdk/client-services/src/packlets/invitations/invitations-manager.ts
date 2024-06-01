@@ -57,7 +57,12 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
+    const invitationError = handler.checkCanInviteNewMembers();
+    if (invitationError != null) {
+      throw invitationError;
+    }
     const invitation = this._createInvitation(handler, options);
+
     const { ctx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);

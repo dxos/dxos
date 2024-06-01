@@ -3,35 +3,37 @@
 //
 
 import { ArrowsOut, type IconProps } from '@phosphor-icons/react';
-import { batch } from '@preact/signals-core';
-import React, { type PropsWithChildren, useEffect } from 'react';
+import { batch, effect } from '@preact/signals-core';
+import React, { type PropsWithChildren } from 'react';
 
 import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import {
-  parseGraphPlugin,
-  parseIntentPlugin,
-  resolvePlugin,
-  useIntent,
-  LayoutAction,
-  NavigationAction,
-  Toast as ToastSchema,
-  type IntentPluginProvides,
-  type Plugin,
-  type PluginDefinition,
-  type GraphProvides,
-  type Layout,
-  type Location,
   type ActiveParts,
+  type Attention,
+  type GraphProvides,
   IntentAction,
+  type IntentPluginProvides,
+  type IntentResult,
   isActiveParts,
   isAdjustTransaction,
+  type Layout,
+  LayoutAction,
+  type Location,
+  NavigationAction,
+  parseGraphPlugin,
+  parseIntentPlugin,
+  type Plugin,
+  type PluginDefinition,
+  resolvePlugin,
+  Toast as ToastSchema,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
+import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
-import { AttentionProvider } from '@dxos/react-ui-deck';
+import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { LayoutContext, LayoutSettings, type AttentionState, DeckLayout, NAV_ID } from './components';
+import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
 import { type DeckPluginProvides, type DeckSettingsProps } from './types';
@@ -39,8 +41,23 @@ import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
 const isSocket = !!(globalThis as any).__args;
+
 // TODO(mjamesderocher): Can we get this directly from Socket?
 const appScheme = 'composer://';
+
+// TODO(burdon): Evolve into customizable prefs, but pls leave for demo.
+const customSlots: DeckLayoutProps['slots'] = {
+  wallpaper: {
+    classNames:
+      'bg-cover bg-no-repeat dark:bg-[url(https://cdn.midjourney.com/3865ba61-f98a-4d94-b91a-1763ead01f4f/0_0.jpeg)]',
+  },
+  deck: {
+    classNames: 'px-96 bg-neutral-50 __dark:bg-neutral-950 dark:bg-transparent dark:opacity-95',
+  },
+  plank: {
+    classNames: 'mx-1 bg-neutral-25 dark:bg-neutral-900',
+  },
+};
 
 export const DeckPlugin = ({
   observability,
@@ -51,26 +68,25 @@ export const DeckPlugin = ({
   // TODO(burdon): GraphPlugin vs. IntentPluginProvides? (@wittjosiah).
   let intentPlugin: Plugin<IntentPluginProvides> | undefined;
   let currentUndoId: string | undefined;
+  let handleNavigation: () => Promise<void | IntentResult> | undefined;
 
-  const settings = new LocalStorageStore<DeckSettingsProps>(DECK_PLUGIN, {
+  const settings = new LocalStorageStore<DeckSettingsProps>('dxos.org/settings/layout', {
     showFooter: false,
+    customSlots: false,
     enableNativeRedirect: false,
+    deck: true,
   });
 
-  const layout = new LocalStorageStore<Layout>(DECK_PLUGIN, {
+  const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
     fullscreen: false,
-
     sidebarOpen: true,
     complementarySidebarOpen: false,
-
     dialogContent: null,
     dialogOpen: false,
     dialogBlockAlign: undefined,
-
     popoverContent: null,
     popoverAnchorId: undefined,
     popoverOpen: false,
-
     toasts: [],
   });
 
@@ -79,7 +95,7 @@ export const DeckPlugin = ({
     closed: [],
   });
 
-  const attention = create<AttentionState>({
+  const attention = create<Attention>({
     attended: new Set(),
   });
 
@@ -143,20 +159,55 @@ export const DeckPlugin = ({
       // prettier-ignore
       settings
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
-        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() });
+        .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
+        .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
       }
+
+      effect(() => {
+        const id = Array.from(attention.attended ?? [])[0];
+        const path = id && graphPlugin?.provides.graph.getPath({ target: id });
+        if (path) {
+          Keyboard.singleton.setCurrentContext(path.join('/'));
+        }
+      });
+
+      handleNavigation = async () => {
+        const activeParts = uriToActive(window.location.pathname);
+        if (activeParts) {
+          return intentPlugin?.provides.intent.dispatch({
+            // TODO(thure): handle popstate
+            action: NavigationAction.OPEN,
+            data: { activeParts },
+          });
+        }
+      };
+
+      await handleNavigation();
+
+      // NOTE(thure): This *must* follow the `await … dispatch()` for navigation, otherwise it will lose the initial
+      //   active parts
+      effect(() => {
+        const selectedPath = activeToUri(location.active);
+        // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
+        history.pushState(null, '', `${selectedPath}${window.location.search}`);
+      });
+
+      window.addEventListener('popstate', handleNavigation);
     },
     unload: async () => {
+      window.removeEventListener('popstate', handleNavigation);
       layout.close();
     },
     provides: {
       settings: settings.values,
       layout: layout.values,
       location,
-      translations,
+      attention,
+      translations: [...translations, ...deckTranslations],
       graph: {
         builder: (_, graph) => {
           // TODO(burdon): Root menu isn't visible so nothing bound.
@@ -182,50 +233,28 @@ export const DeckPlugin = ({
       },
       context: (props: PropsWithChildren) => {
         return (
-          <AttentionProvider attended={attention.attended}>
+          <AttentionProvider
+            attended={attention.attended}
+            onChangeAttend={(nextAttended) => {
+              // TODO(thure): Is this / could this be better handled by an intent?
+              attention.attended = nextAttended;
+              if (layout.values.scrollIntoView && nextAttended.has(layout.values.scrollIntoView)) {
+                layout.values.scrollIntoView = undefined;
+              }
+            }}
+          >
             <LayoutContext.Provider value={layout.values}>{props.children}</LayoutContext.Provider>
           </AttentionProvider>
         );
       },
       root: () => {
-        const { dispatch } = useIntent();
-
-        // Update selection based on browser navigation.
-        useEffect(() => {
-          const handleNavigation = async () => {
-            await dispatch({
-              plugin: DECK_PLUGIN,
-              action: NavigationAction.OPEN,
-              data: { id: uriToActive(window.location.pathname) },
-            });
-          };
-
-          if (!location.active && window.location.pathname.length > 1) {
-            void handleNavigation();
-          }
-
-          window.addEventListener('popstate', handleNavigation);
-          return () => {
-            window.removeEventListener('popstate', handleNavigation);
-          };
-        }, []);
-
-        // Update URL when selection changes.
-        useEffect(() => {
-          const selectedPath = activeToUri(location.active);
-          if (window.location.pathname !== selectedPath) {
-            // TODO(wittjosiah): Better support for search params?
-            history.pushState(null, '', `${selectedPath}${window.location.search}`);
-          }
-        }, [location.active]);
-
         return (
           <Mosaic.Root>
             <DeckLayout
               attention={attention}
               location={location}
-              fullscreen={layout.values.fullscreen}
               showHintsFooter={settings.values.showFooter}
+              slots={settings.values.customSlots ? customSlots : undefined}
               toasts={layout.values.toasts}
               onDismissToast={(id) => {
                 const index = layout.values.toasts.findIndex((toast) => toast.id === id);
@@ -260,6 +289,11 @@ export const DeckPlugin = ({
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
             }
 
+            case LayoutAction.SCROLL_INTO_VIEW: {
+              layout.values.scrollIntoView = intent.data?.id ?? undefined;
+              return undefined;
+            }
+
             case IntentAction.SHOW_UNDO: {
               // TODO(wittjosiah): Support undoing further back than the last action.
               if (currentUndoId) {
@@ -285,27 +319,33 @@ export const DeckPlugin = ({
               return { data: true };
             }
 
-            // TODO(wittjosiah): Factor out.
             case NavigationAction.OPEN: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
+              // TODO(wittjosiah): Factor out.
               batch(() => {
                 if (intent.data) {
                   location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
-                      ? Object.entries(intent.data.activeParts).reduce(
+                      ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
                           (acc: ActiveParts, [part, ids]) => {
-                            const partMembers = new Set<string>();
-                            (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                              partMembers.add(id),
-                            );
-                            (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.add(id));
-                            acc[part] = Array.from(partMembers).filter(Boolean);
+                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
+                            if (part === 'main') {
+                              const partMembers = new Set<string>();
+                              const prev = new Set(
+                                // TODO(burdon): Explain why this can be an array or string.
+                                Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
+                              );
+                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
+                              //   the current `main` part newly opened slugs are added.
+                              Array.from(prev).forEach((id) => partMembers.add(id));
+                              // Add to end.
+                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
+                              acc[part] = Array.from(partMembers).filter(Boolean);
+                            } else {
+                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
+                              //   that position.
+                              acc[part] = Array.isArray(ids) ? ids[0] : ids;
+                            }
+
                             return acc;
                           },
                           { ...location.active },
@@ -325,9 +365,9 @@ export const DeckPlugin = ({
                 }
               });
 
-              const openedIds: string[] = Array.from(
-                intent.data
-                  ? Object.values(intent.data).reduce((acc, ids) => {
+              const openIds: string[] = Array.from(
+                location.active
+                  ? Object.values(location.active).reduce((acc, ids) => {
                       Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
                       return acc;
                     }, new Set<string>())
@@ -336,11 +376,11 @@ export const DeckPlugin = ({
 
               return {
                 data: {
-                  ids: openedIds,
+                  ids: openIds,
                 },
                 intents: [
                   observability
-                    ? openedIds.map((id) => ({
+                    ? openIds.map((id) => ({
                         // TODO(thure): Can this handle Deck’s multifariousness?
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
@@ -358,39 +398,44 @@ export const DeckPlugin = ({
 
             // TODO(wittjosiah): Factor out.
             case NavigationAction.CLOSE: {
-              // TODO(thure): set Keyboard context based on attention rather than navigation.
-              // const id = intent.data?.id ?? intent.data?.result?.id;
-              // const path = id && graphPlugin?.provides.graph.getPath({ target: id });
-              // if (path) {
-              //   Keyboard.singleton.setCurrentContext(path.join('/'));
-              // }
-
-              return batch(() => {
+              batch(() => {
                 // NOTE(thure): the close action is only supported when `location.active` is already of type ActiveParts.
                 if (intent.data && isActiveParts(location.active)) {
-                  location.active = Object.entries(intent.data).reduce((acc: ActiveParts, [part, ids]) => {
-                    const partMembers = new Set<string>();
-                    (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
-                      partMembers.add(id),
-                    );
-                    (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
-                    acc[part] = Array.from(partMembers);
-                    return acc;
-                  }, location.active);
+                  location.active = Object.entries(intent.data.activeParts).reduce(
+                    (acc: ActiveParts, [part, ids]) => {
+                      const partMembers = new Set<string>();
+                      (Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string]).forEach((id) =>
+                        partMembers.add(id),
+                      );
+                      (Array.isArray(ids) ? ids : [ids]).forEach((id) => partMembers.delete(id));
+                      acc[part] = Array.from(partMembers);
+                      return acc;
+                    },
+                    { ...location.active },
+                  );
                 }
               });
+              return { data: true };
+            }
 
-              // TODO(thure): What needs doing for cleaning up?
+            // TODO(wittjosiah): Factor out.
+            case NavigationAction.SET: {
+              batch(() => {
+                if (isActiveParts(intent.data?.activeParts)) {
+                  location.active = intent.data!.activeParts;
+                }
+              });
+              return { data: true };
             }
 
             case NavigationAction.ADJUST: {
-              return batch(() => {
+              batch(() => {
                 if (isAdjustTransaction(intent.data)) {
                   const nextActive = applyActiveAdjustment(location.active, intent.data);
-                  // console.log('[next active]', nextActive);
                   location.active = nextActive;
                 }
               });
+              return { data: true };
             }
           }
         },

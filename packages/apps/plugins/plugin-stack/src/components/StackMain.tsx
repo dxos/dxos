@@ -17,8 +17,9 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
-import { Button, ButtonGroup, useTranslation, toLocalizedString } from '@dxos/react-ui';
+import { create, isReactiveObject, getType, EchoReactiveObject } from '@dxos/echo-schema';
+import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { Button, ButtonGroup, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
   Stack,
@@ -72,9 +73,9 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         const view = {
           ...stack.sections[object.id],
           collapsed: collapsedSections[object.id],
-          title: object.title ?? toLocalizedString(graph.findNode(object.id)?.properties.label, t),
+          title: (object as any)?.title ?? toLocalizedString(graph.findNode(object.id)?.properties.label, t),
         } as StackSectionItem['view'];
-        return { id: object.id, object, metadata, view };
+        return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];
 
   const handleOver = ({ active }: MosaicMoveEvent<number>) => {
@@ -142,11 +143,15 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
       }
     : undefined;
 
-  const handleNavigate = async (id: string) => {
-    await dispatch({
-      action: NavigationAction.OPEN,
-      data: { activeParts: { main: [id] } },
-    });
+  const handleNavigate = async (object: MosaicDataItem) => {
+    const toId = fullyQualifiedId(object);
+    await dispatch([
+      {
+        action: NavigationAction.OPEN,
+        data: { activeParts: { main: [toId] } },
+      },
+      { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: toId } },
+    ]);
   };
 
   const handleTransform = (item: MosaicDataItem, type?: string) => {

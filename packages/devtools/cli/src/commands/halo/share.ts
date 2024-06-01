@@ -10,7 +10,7 @@ import { spawn } from 'node:child_process';
 import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
@@ -18,10 +18,14 @@ export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create HALO (device) invitation.';
 
   static override flags = {
-    ...super.flags,
+    ...BaseCommand.flags,
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
-      default: 86400,
+      default: 12 * 60 * 60,
+    }),
+    persistent: Flags.boolean({
+      description: 'Invitation should resume if client restarts',
+      default: true,
     }),
     open: Flags.boolean({
       description: 'Open browser with invitation.',
@@ -32,10 +36,6 @@ export default class Share extends BaseCommand<typeof Share> {
     }),
     'no-auth': Flags.boolean({
       description: 'Skip authentication challenge.',
-    }),
-    // TODO(nf): --no- doesn't work
-    'no-persistent': Flags.boolean({
-      description: "Don't resume invitation if client restarts",
     }),
     'no-wait': Flags.boolean({
       description: "Don't wait for a peer to connect before exiting CLI.",
@@ -63,10 +63,9 @@ export default class Share extends BaseCommand<typeof Share> {
           onConnecting: async () => {
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
-
             if (authMethod !== Invitation.AuthMethod.NONE) {
-              this.log(chalk`\n{red Secret}: ${observable.get().authCode}\n`);
               copy(invitation.authCode!);
+              this.log(chalk`\n{red Secret}: ${observable.get().authCode} (copied to clipboard)\n`);
             }
 
             if (this.flags.open) {

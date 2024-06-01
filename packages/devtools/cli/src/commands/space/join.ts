@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Flags } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { sleep, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 
-import { BaseCommand } from '../../base-command';
+import { BaseCommand } from '../../base';
 import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand<typeof Join> {

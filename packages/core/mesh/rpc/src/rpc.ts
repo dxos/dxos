@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { encodeError, RpcClosedError, RpcNotOpenError, schema } from '@dxos/protocols';
-import { type Request, type Response, RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -393,7 +393,10 @@ export class RpcPeer {
       });
 
       // Wait until send completes or throws an error (or response throws a timeout), the resume waiting.
-      const waiting = asyncTimeout<any>(responseReceived, options?.timeout ?? this._params.timeout ?? DEFAULT_TIMEOUT);
+      const timeout = options?.timeout ?? this._params.timeout;
+      const waiting =
+        timeout === 0 ? responseReceived : asyncTimeout<any>(responseReceived, timeout ?? DEFAULT_TIMEOUT);
+
       await Promise.race([sending, waiting]);
       response = await waiting;
       invariant(response.id === id);

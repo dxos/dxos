@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/protocols';
-import { ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
+import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
@@ -240,6 +240,7 @@ export class Messenger {
       messageId: reliablePayload.messageId,
     });
 
+    // Ignore message if it was already received, i.e. from multiple signal servers.
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
       return;
     }

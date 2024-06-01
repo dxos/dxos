@@ -1,6 +1,6 @@
 {
   "name": "@dxos/messaging",
-  "version": "0.5.1",
+  "version": "0.5.4",
   "description": "Messaging",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -34,7 +34,7 @@
     "@dxos/signal": "workspace:*",
     "@types/node": "^18.11.9",
     "earljs": "~0.1.10",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "wait-for-expect": "^3.0.2"
   },
   "publishConfig": {

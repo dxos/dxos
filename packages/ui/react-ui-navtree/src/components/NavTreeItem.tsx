@@ -117,14 +117,14 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
       (action) => ('invoke' in action ? [action] : []),
     );
     const { t } = useTranslation(translationKey);
-    const { current, popoverAnchorId, onSelect, isOver, renderPresence } = useNavTree();
+    const { current, attended, popoverAnchorId, onSelect, onToggle, isOver, renderPresence } = useNavTree();
     const [open, setOpen] = useState(level < 1);
     const suppressNextTooltip = useRef<boolean>(false);
     const [tooltipOpen, setTooltipOpen] = useState<boolean>(false);
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
     useEffect(() => {
-      if (current && Path.onPath(current, node.id)) {
+      if (current && Array.from(current).find((currentMember) => Path.onPath(currentMember, node.id))) {
         setOpen(true);
       }
     }, [current, path]);
@@ -136,6 +136,12 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
     const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${node.id}` ? Popover.Anchor : Fragment;
 
     const isOverCurrent = isOver(path);
+
+    const handleOpenChange = (open: boolean) => {
+      const nextOpen = forceCollapse ? false : open;
+      setOpen(nextOpen);
+      onToggle?.({ path, node, level, position: position as number, open: nextOpen });
+    };
 
     return (
       <Tooltip.Root
@@ -154,7 +160,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
             <TreeItem.Root
               collapsible={isBranch}
               open={!forceCollapse && open}
-              onOpenChange={(nextOpen) => setOpen(forceCollapse ? false : nextOpen)}
+              onOpenChange={handleOpenChange}
               classNames={[
                 'rounded block relative transition-opacity',
                 hoverableFocusedKeyboardControls,
@@ -177,18 +183,21 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   className={mx(
                     'flex items-start rounded',
                     levelPadding(level),
-                    level > 0 && hoverableControls,
+                    hoverableControls,
                     hoverableFocusedWithinControls,
                     hoverableDescriptionIcons,
                     level < 1 && topLevelCollapsibleSpacing,
                     !renderPresence &&
-                      staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || path === current }),
+                      staticGhostSelectedCurrent({ current: (active && active !== 'overlay') || current?.has(path) }),
                   )}
                   {
                     // NOTE(thure): This is intentionally an empty string to for descendents to select by in the CSS
                     //   without alerting the user (except for in the correct link element). See also:
                     //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
-                    ...(path === current && { 'aria-current': '' as 'page', 'data-attention': true })
+                    ...(current?.has(path) && {
+                      'aria-current': '' as 'page',
+                      'data-attention': attended?.has(node.id) ?? false,
+                    })
                   }
                   onContextMenu={(event) => {
                     event.preventDefault();
@@ -202,7 +211,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                       label: toLocalizedString(node.label, t),
                       icon: node.icon,
                       open,
-                      current: path === current,
+                      current: current?.has(path),
                       branch: node.properties?.role === 'branch' || node.children?.length > 0,
                       disabled: !!node.properties?.disabled,
                       error: !!node.properties?.error,
@@ -230,7 +239,7 @@ export const NavTreeItem: MosaicTileComponent<NavTreeItemData, HTMLLIElement> = 
                   {actions.length ? (
                     <NavTreeItemActionDropdownMenu
                       icon={DotsThreeVertical}
-                      actions={actions}
+                      actions={actions.filter((action) => !action.properties.hidden)}
                       suppressNextTooltip={suppressNextTooltip}
                       onAction={(action) => action.invoke?.({ caller: NAV_TREE_ITEM })}
                       testId={`navtree.treeItem.actionsLevel${level}`}

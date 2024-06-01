@@ -9,14 +9,15 @@ import { expect } from 'chai';
 import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
 import { type SpaceDoc } from '@dxos/echo-protocol';
-import { Expando, type EchoReactiveObject, create, TypedObject, ref } from '@dxos/echo-schema';
+import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
-import { TestBuilder, type TestPeer } from '../testing';
+import { TestBuilder, TestPeer } from '../testing';
 
 describe('AutomergeDb', () => {
   describe('space fragmentation', () => {
@@ -321,6 +322,21 @@ describe('AutomergeDb', () => {
       expect(threw).to.be.true;
     });
 
+    describe('getAllObjectIds', () => {
+      test('returns empty array when closed', async () => {
+        const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
+        const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
+        const peer = new TestPeer(testBuilder, PublicKey.random(), testBuilder.defaultSpaceKey, fakeUrl);
+        const automergeDb = peer.db.automerge;
+        expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
+        void automergeDb.open({ rootUrl: fakeUrl });
+        const barrier = new Trigger();
+        setTimeout(() => barrier.wake());
+        await barrier.wait();
+        expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
+      });
+    });
+
     describe('loadObjectReferences', () => {
       test('loads a field', async () => {
         const nestedValue = 'test';
@@ -410,10 +426,10 @@ describe('AutomergeDb', () => {
     });
 
     test('loads as array of non-nullable items', async () => {
-      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.number }) {}
+      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.Number }) {}
 
       class TestSchema extends TypedObject({ typename: 'Test', version: '1.0.0' })({
-        nested: S.mutable(S.array(ref(Nested))),
+        nested: S.mutable(S.Array(ref(Nested))),
       }) {}
 
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });

@@ -40,7 +40,7 @@ export const latch = ({ count = 1, timeout }: LatchProps = {}): LatchResult => {
   } else {
     if (timeout) {
       t = setTimeout(() => {
-        doReject(new Error(`Timed out after ${timeout}ms`));
+        doReject(new Error(`Timed out after ${timeout.toLocaleString()}ms`));
       }, timeout);
     }
   }

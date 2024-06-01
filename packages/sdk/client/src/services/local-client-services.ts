@@ -12,8 +12,12 @@ import {
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { setIdentityTags } from '@dxos/messaging';
-import { createLibDataChannelTransportFactory, type NetworkManagerOptions } from '@dxos/network-manager';
+import { setIdentityTags, type SignalManager } from '@dxos/messaging';
+import {
+  createLibDataChannelTransportFactory,
+  type NetworkManagerOptions,
+  type TransportFactory,
+} from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -27,17 +31,16 @@ export const fromHost = async (
   observabilityGroup?: string,
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
-  const getSignalMetadata = () => {
-    return {
-      ...services.signalMetadataTags,
-      ...(observabilityGroup ? { group: observabilityGroup } : {}),
-    };
-  };
-  const services = new LocalClientServices({
-    config,
-    ...(await setupNetworking(config, {}, getSignalMetadata)),
-    ...params,
-  });
+  const networking = await setupNetworking(config, {}, () =>
+    signalTelemetryEnabled
+      ? {
+          ...services.signalMetadataTags,
+          ...(observabilityGroup ? { group: observabilityGroup } : {}),
+        }
+      : {},
+  );
+
+  const services = new LocalClientServices({ config, ...networking, ...params });
   return services;
 };
 
@@ -49,7 +52,10 @@ const setupNetworking = async (
   config: Config,
   options: Partial<NetworkManagerOptions> = {},
   signalMetadata?: () => void,
-) => {
+): Promise<{
+  signalManager?: SignalManager;
+  transportFactory: TransportFactory;
+}> => {
   const { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } = await import('@dxos/messaging');
   const { createSimplePeerTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 

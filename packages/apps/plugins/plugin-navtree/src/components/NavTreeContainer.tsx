@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import {
   NavigationAction,
+  LayoutAction,
   Surface,
   useIntent,
   type PartIdentifier,
@@ -14,6 +15,7 @@ import {
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
+import { isSpace } from '@dxos/react-client/echo';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -44,13 +46,15 @@ const renderPresence = (node: TreeNode) => <Surface role='presence--glyph' data=
 export const NavTreeContainer = ({
   root,
   paths,
-  activeId,
+  activeIds,
+  attended,
   popoverAnchorId,
   part,
 }: {
   root: TreeNode;
   paths: Map<string, string[]>;
-  activeId?: string;
+  activeIds: Set<string>;
+  attended: Set<string>;
   popoverAnchorId?: string;
   part?: PartIdentifier;
 }) => {
@@ -61,9 +65,11 @@ export const NavTreeContainer = ({
   const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
-    if (!node.data) {
+    if (!node.data || isSpace(node.data)) {
       return;
     }
+
+    await dispatch({ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: node.id } });
 
     await dispatch({
       action: NavigationAction.OPEN,
@@ -88,7 +94,13 @@ export const NavTreeContainer = ({
     !isLg && closeNavigationSidebar();
   };
 
-  const currentPath = (activeId && getMosaicPath(paths, activeId)) ?? 'never';
+  // TODO(wittjosiah): This is a temporary solution to ensure spaces get enabled when they are expanded.
+  const handleToggle: NavTreeContextType['onToggle'] = ({ node }) => {
+    const defaultAction = node.actions.find((action) => action.properties.disposition === 'default');
+    if (defaultAction && 'invoke' in defaultAction) {
+      void defaultAction.invoke();
+    }
+  };
 
   const isOver: NavTreeProps['isOver'] = ({ path, operation, activeItem, overItem }) => {
     const activeNode = activeItem && getTreeNode(root, paths.get(Path.last(activeItem.path)));
@@ -195,6 +207,16 @@ export const NavTreeContainer = ({
     [root, paths],
   );
 
+  const currentPaths = useMemo(
+    () =>
+      new Set(
+        Array.from(activeIds ?? [])
+          .map((id) => getMosaicPath(paths, id))
+          .filter(Boolean) as string[],
+      ),
+    [activeIds, paths],
+  );
+
   return (
     <ElevationProvider elevation='chrome'>
       <div
@@ -202,12 +224,14 @@ export const NavTreeContainer = ({
         className='bs-full overflow-hidden row-span-3 grid grid-cols-1 grid-rows-[min-content_1fr_min-content]'
       >
         <Surface role='search-input' limit={1} />
-        <div role='none' className='overflow-y-auto p-0.5'>
+        <div role='none' className='!overflow-y-auto p-0.5'>
           <NavTree
             node={root}
-            current={currentPath}
+            current={currentPaths}
+            attended={attended}
             type={NODE_TYPE}
             onSelect={handleSelect}
+            onToggle={handleToggle}
             isOver={isOver}
             onOver={handleOver}
             onDrop={handleDrop}

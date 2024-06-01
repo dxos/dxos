@@ -5,12 +5,20 @@
 import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
+import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { encodeReference, Reference } from '@dxos/echo-protocol';
-import { SchemaValidator, DynamicEchoSchema, StoredEchoSchema, defineHiddenProperty } from '@dxos/echo-schema';
+import {
+  SchemaValidator,
+  DynamicEchoSchema,
+  StoredEchoSchema,
+  defineHiddenProperty,
+  ObjectMetaSchema,
+} from '@dxos/echo-schema';
 import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { assignDeep, defaultMap, getDeep } from '@dxos/util';
+import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
 
+import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
   type ProxyTarget,
@@ -78,6 +86,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     target[symbolInternals].core.signal.notifyRead();
 
+    if (prop === devtoolsFormatter) {
+      return this._getDevtoolsFormatter(target);
+    }
+
     if (isRootDataObject(target)) {
       const handled = this._handleRootObjectProperty(target, prop);
       if (handled != null) {
@@ -98,6 +110,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleRootObjectProperty(target: ProxyTarget, prop: string | symbol) {
+    // TODO(dmaretskyi): toJSON should be available for nested objects too.
     if (prop === 'toJSON') {
       return () => this._toJSON(target);
     }
@@ -284,6 +297,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getSchema(target: ProxyTarget): S.Schema<any> | undefined {
+    if (target[symbolNamespace] === META_NAMESPACE) {
+      return ObjectMetaSchema;
+    }
     // TODO: make reactive
     if (!target[symbolInternals].core.database) {
       return undefined;
@@ -304,7 +320,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
-  isObjectDeleted(target: any): boolean {
+  getTypeReference(target: ProxyTarget): Reference | undefined {
+    return target[symbolNamespace] === DATA_NAMESPACE ? target[symbolInternals].core.getType() : undefined;
+  }
+
+  isDeleted(target: any): boolean {
     return target[symbolInternals].core.isDeleted();
   }
 
@@ -419,6 +439,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   getMeta(target: ProxyTarget): ObjectMeta {
+    // TODO(dmaretskyi): Reuse meta target.
     const metaTarget: ProxyTarget = {
       [symbolInternals]: target[symbolInternals],
       [symbolPath]: [],
@@ -467,9 +488,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   ) {
     const handler = this[symbolHandler] as EchoReactiveHandler;
     const isTyped = !!this[symbolInternals].core.getType();
-    const proxy = handler.getReified(this);
-    invariant(proxy, '_proxyMap corrupted');
-    const reified = { ...proxy }; // Will call proxy methods and construct a plain JS object.
+    const reified = handler._getReified(this);
+    reified.id = this[symbolInternals].core.id;
     return `${isTyped ? 'Typed' : ''}EchoObject ${inspectFn(reified, {
       ...options,
       compact: true,
@@ -480,22 +500,63 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _toJSON(target: ProxyTarget): any {
     const typeRef = target[symbolInternals].core.getType();
-    const reified = this.getReified(target);
-    delete reified.id;
+    const reified = this._getReified(target);
     return {
       '@type': typeRef ? encodeReference(typeRef) : undefined,
       ...(target[symbolInternals].core.isDeleted() ? { '@deleted': true } : {}),
       '@meta': { ...this.getMeta(target) },
       '@id': target[symbolInternals].core.id,
-      ...reified,
+      ...deepMapValues(reified, (value, recurse) => {
+        if (value instanceof Reference) {
+          return encodeReference(value);
+        }
+        return recurse(value);
+      }),
     };
   }
 
-  private getReified(target: ProxyTarget) {
-    const proxy = this._proxyMap.get(target);
-    invariant(proxy, '_proxyMap corrupted');
-    // Will call proxy methods and construct a plain JS object.
-    return { ...proxy };
+  private _getReified(target: ProxyTarget): any {
+    const dataPath = [...target[symbolPath]];
+    const fullPath = [getNamespace(target), ...dataPath];
+    const value = target[symbolInternals].core.getDecoded(fullPath);
+    return value;
+  }
+
+  private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
+    return {
+      header: (config?: any) =>
+        getHeader(this.getTypeReference(target)?.itemId ?? 'EchoObject', target[symbolInternals].core.id, config),
+      hasBody: () => true,
+      body: () => {
+        let data = deepMapValues(this._getReified(target), (value, recurse) => {
+          if (value instanceof Reference) {
+            // TODO(dmaretskyi): This will resolve to the proxy object, but we should pull out that resolution from object-core.
+            return target[symbolInternals].core.decode(value);
+          }
+          return recurse(value);
+        });
+        if (isRootDataObject(target)) {
+          // TODO(dmaretskyi): Extract & reuse.
+          const metaTarget: ProxyTarget = {
+            [symbolInternals]: target[symbolInternals],
+            [symbolPath]: [],
+            [symbolNamespace]: META_NAMESPACE,
+          };
+          const metaReified = this._getReified(metaTarget);
+
+          data = {
+            id: target[symbolInternals].core.id,
+            '@type': this.getTypeReference(target)?.itemId,
+            '@meta': metaReified,
+            ...data,
+            '[[Schema]]': this.getSchema(target),
+            '[[Core]]': target[symbolInternals].core,
+          };
+        }
+
+        return getBody(data);
+      },
+    };
   }
 }
 

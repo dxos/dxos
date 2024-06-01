@@ -7,18 +7,19 @@ import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
-import { Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type FunctionContext, type FunctionHandler, type Response } from '../handler';
-import { type FunctionDef, type FunctionManifest } from '../manifest';
+import { type FunctionRegistry } from '../function';
+import { type FunctionContext, type FunctionEvent, type FunctionHandler, type FunctionResponse } from '../handler';
+import { type FunctionDef } from '../types';
 
 export type DevServerOptions = {
+  baseDir: string;
   port?: number;
-  directory: string;
-  manifest: FunctionManifest;
   reload?: boolean;
   dataDir?: string;
 };
@@ -27,20 +28,30 @@ export type DevServerOptions = {
  * Functions dev server provides a local HTTP server for testing functions.
  */
 export class DevServer {
+  private _ctx = createContext();
+
   // Function handlers indexed by name (URL path).
   private readonly _handlers: Record<string, { def: FunctionDef; handler: FunctionHandler<any> }> = {};
 
   private _server?: http.Server;
   private _port?: number;
-  private _registrationId?: string;
+  private _functionServiceRegistration?: string;
   private _proxy?: string;
   private _seq = 0;
 
-  // prettier-ignore
+  public readonly update = new Event<number>();
+
   constructor(
     private readonly _client: Client,
+    private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
   ) {}
+
+  get stats() {
+    return {
+      seq: this._seq,
+    };
+  }
 
   get endpoint() {
     invariant(this._port);
@@ -55,30 +66,26 @@ export class DevServer {
     return Object.values(this._handlers);
   }
 
-  async initialize() {
-    for (const def of this._options.manifest.functions) {
-      try {
-        await this._load(def);
-      } catch (err) {
-        log.error('parsing function (check manifest)', err);
-      }
-    }
-  }
-
   async start() {
+    invariant(!this._server);
+    log.info('starting...');
+    this._ctx = createContext();
+
+    // TODO(burdon): Move to hono.
     const app = express();
     app.use(express.json());
 
-    app.post('/:name', async (req, res) => {
-      const { name } = req.params;
+    app.post('/:path', async (req, res) => {
+      const { path } = req.params;
       try {
-        log.info('calling', { name });
+        log.info('calling', { path });
         if (this._options.reload) {
-          const { def } = this._handlers[name];
+          const { def } = this._handlers['/' + path];
           await this._load(def, true);
         }
 
-        res.statusCode = await this._invoke(name, req.body);
+        // TODO(burdon): Get function context.
+        res.statusCode = await asyncTimeout(this.invoke('/' + path, req.body), 20_000);
         res.end();
       } catch (err: any) {
         log.catch(err);
@@ -87,87 +94,135 @@ export class DevServer {
       }
     });
 
-    this._port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
+    this._port = this._options.port ?? (await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] }));
     this._server = app.listen(this._port);
 
     try {
       // Register functions.
       const { registrationId, endpoint } = await this._client.services.services.FunctionRegistryService!.register({
         endpoint: this.endpoint,
-        functions: this.functions.map(({ def: { name } }) => ({ name })),
       });
 
-      log.info('registered', { registrationId, endpoint });
-      this._registrationId = registrationId;
+      log.info('registered', { endpoint });
       this._proxy = endpoint;
+      this._functionServiceRegistration = registrationId;
+
+      // Open after registration, so that it can be updated with the list of function definitions.
+      await this._handleNewFunctions(this._functionsRegistry.getUniqueByUri());
+      this._ctx.onDispose(this._functionsRegistry.registered.on(({ added }) => this._handleNewFunctions(added)));
     } catch (err: any) {
       await this.stop();
       throw new Error('FunctionRegistryService not available (check plugin is configured).');
     }
+
+    log.info('started', { port: this._port });
   }
 
   async stop() {
+    if (!this._server) {
+      return;
+    }
+
+    log.info('stopping...');
+    await this._ctx.dispose();
+
     const trigger = new Trigger();
-    this._server?.close(async () => {
-      if (this._registrationId) {
-        await this._client.services.services.FunctionRegistryService!.unregister({
-          registrationId: this._registrationId,
-        });
+    this._server.close(async () => {
+      log.info('server stopped');
+      try {
+        if (this._functionServiceRegistration) {
+          invariant(this._client.services.services.FunctionRegistryService);
+          await this._client.services.services.FunctionRegistryService.unregister({
+            registrationId: this._functionServiceRegistration,
+          });
 
-        log.info('unregistered', { registrationId: this._registrationId });
-        this._registrationId = undefined;
-        this._proxy = undefined;
+          log.info('unregistered', { registrationId: this._functionServiceRegistration });
+          this._functionServiceRegistration = undefined;
+          this._proxy = undefined;
+        }
+
+        trigger.wake();
+      } catch (err) {
+        trigger.throw(err as Error);
       }
-
-      trigger.wake();
     });
 
     await trigger.wait();
     this._port = undefined;
     this._server = undefined;
+    log.info('stopped');
+  }
+
+  private async _handleNewFunctions(newFunctions: FunctionDef[]) {
+    newFunctions.forEach((def) => this._load(def));
+    await this._safeUpdateRegistration();
+    log('new functions loaded', { newFunctions });
   }
 
   /**
    * Load function.
    */
-  private async _load(def: FunctionDef, flush = false) {
-    const { id, name, handler } = def;
-    const path = join(this._options.directory, handler);
-    log.info('loading', { id });
+  private async _load(def: FunctionDef, force?: boolean | undefined) {
+    const { uri, route, handler } = def;
+    const filePath = join(this._options.baseDir, handler);
+    log.info('loading', { uri, force });
 
     // Remove from cache.
-    if (flush) {
+    if (force) {
       Object.keys(require.cache)
-        .filter((key) => key.startsWith(path))
-        .forEach((key) => delete require.cache[key]);
+        .filter((key) => key.startsWith(filePath))
+        .forEach((key) => {
+          delete require.cache[key];
+        });
     }
 
+    // TODO(burdon): Import types.
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const module = require(path);
+    const module = require(filePath);
     if (typeof module.default !== 'function') {
-      throw new Error(`Handler must export default function: ${id}`);
+      throw new Error(`Handler must export default function: ${uri}`);
     }
 
-    this._handlers[name] = { def, handler: module.default };
+    this._handlers[route] = { def, handler: module.default };
+  }
+
+  private async _safeUpdateRegistration(): Promise<void> {
+    invariant(this._functionServiceRegistration);
+    try {
+      await this._client.services.services.FunctionRegistryService!.updateRegistration({
+        registrationId: this._functionServiceRegistration,
+        functions: this.functions.map(({ def: { id, route } }) => ({ id, route })),
+      });
+    } catch (err) {
+      log.catch(err);
+    }
   }
 
   /**
-   * Invoke function handler.
+   * Invoke function.
    */
-  private async _invoke(name: string, event: any) {
+  public async invoke(path: string, data: any): Promise<number> {
     const seq = ++this._seq;
     const now = Date.now();
 
-    log.info('req', { seq, name });
-    const { handler } = this._handlers[name];
+    log.info('req', { seq, path });
+    const statusCode = await this._invoke(path, { data });
 
+    log.info('res', { seq, path, statusCode, duration: Date.now() - now });
+    this.update.emit(statusCode);
+    return statusCode;
+  }
+
+  private async _invoke(path: string, event: FunctionEvent) {
+    const { handler } = this._handlers[path] ?? {};
+    invariant(handler, `invalid path: ${path}`);
     const context: FunctionContext = {
       client: this._client,
       dataDir: this._options.dataDir,
     };
 
     let statusCode = 200;
-    const response: Response = {
+    const response: FunctionResponse = {
       status: (code: number) => {
         statusCode = code;
         return response;
@@ -175,8 +230,8 @@ export class DevServer {
     };
 
     await handler({ context, event, response });
-    log.info('res', { seq, name, statusCode, duration: Date.now() - now });
-
     return statusCode;
   }
 }
+
+const createContext = () => new Context({ name: 'DevServer' });

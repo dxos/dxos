@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Surface, type Toast as ToastSchema } from '@dxos/app-framework';
 import { Button, Main, Dialog, useTranslation, DensityProvider, Popover, Status } from '@dxos/react-ui';
+import { useAttendable } from '@dxos/react-ui-deck';
 import { baseSurface, fixedInsetFlexLayout, getSize } from '@dxos/react-ui-theme';
 
 import { Fallback } from './Fallback';
@@ -15,13 +16,24 @@ import { useLayout } from '../LayoutContext';
 import { LAYOUT_PLUGIN } from '../meta';
 
 export type MainLayoutProps = {
+  attendableId: string;
+  activeIds: Set<string>;
+  attended?: Set<string>;
   fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
 };
 
-export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast }: MainLayoutProps) => {
+export const MainLayout = ({
+  attended,
+  attendableId,
+  activeIds,
+  fullscreen,
+  showHintsFooter,
+  toasts,
+  onDismissToast,
+}: MainLayoutProps) => {
   const context = useLayout();
   const {
     complementarySidebarOpen,
@@ -34,6 +46,8 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
     popoverAnchorId,
   } = context;
   const { t } = useTranslation(LAYOUT_PLUGIN);
+
+  const attendableAttrs = useAttendable(attendableId);
 
   if (fullscreen) {
     return (
@@ -70,7 +84,14 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
       >
         {/* Left navigation sidebar. */}
         <Main.NavigationSidebar>
-          <Surface role='navigation' name='sidebar' />
+          <Surface
+            role='navigation'
+            data={{
+              popoverAnchorId,
+              activeIds,
+              attended,
+            }}
+          />
         </Main.NavigationSidebar>
 
         {/* Notch */}
@@ -124,26 +145,18 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
         <Main.Overlay />
 
         {/* Main content surface. */}
-        <Surface
-          role='main'
-          limit={1}
-          fallback={Fallback}
-          placeholder={
-            // TODO(wittjosiah): Better placeholder? Delay rendering?
-            <div className='flex bs-[100dvh] justify-center items-center'>
-              <Status indeterminate aria-label='Initializing' />
-            </div>
-          }
-        />
-
-        {/* Status info. */}
-        {/* TODO(burdon): Currently obscured by complementary sidebar. */}
-        <div
-          role='none'
-          aria-label={t('status label')}
-          className='fixed bottom-0 right-0 h-[32px] flex justify-end z-[1]'
-        >
-          <Surface role='status' limit={1} />
+        <div role='none' className='contents' {...attendableAttrs}>
+          <Surface
+            role='main'
+            limit={1}
+            fallback={Fallback}
+            placeholder={
+              // TODO(wittjosiah): Better placeholder? Delay rendering?
+              <div className='flex bs-[100dvh] justify-center items-center'>
+                <Status indeterminate aria-label='Initializing' />
+              </div>
+            }
+          />
         </div>
 
         {/* Help hints. */}
@@ -153,6 +166,11 @@ export const MainLayout = ({ fullscreen, showHintsFooter, toasts, onDismissToast
             <Surface role='hints' limit={1} />
           </div>
         )}
+
+        {/* Status info. */}
+        <div role='none' className='fixed block-end-0 inset-inline-0'>
+          <Surface role='status-bar' limit={1} />
+        </div>
 
         {/* Global popovers. */}
         <Popover.Portal>

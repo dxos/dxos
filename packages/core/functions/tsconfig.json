@@ -7,9 +7,9 @@
       "@dxos/typings"
     ]
   },
-  "exclude": [],
   "include": [
-    "src"
+    "src",
+    "tools"
   ],
   "references": [
     {
@@ -25,6 +25,9 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -37,7 +40,16 @@
       "path": "../../sdk/client"
     },
     {
+      "path": "../agent"
+    },
+    {
+      "path": "../echo/echo-db"
+    },
+    {
       "path": "../echo/echo-schema"
+    },
+    {
+      "path": "../protocols"
     }
   ]
 }

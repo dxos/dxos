@@ -104,12 +104,12 @@ export default {
 export const StaticBasicStacks = {
   args: {},
   render: () => {
-    const [attended] = useState(new Set());
+    const [attended] = useState(new Set<string>());
     return (
       <Mosaic.Root>
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
-          <NaturalDeck.Root>
+          <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             <NaturalDeck.Plank>
               <DemoStackPlank />
             </NaturalDeck.Plank>
@@ -188,7 +188,7 @@ export const DynamicBasicStacks = () => {
         return acc;
       }, {}),
   );
-  const [attended] = useState(new Set());
+  const [attended] = useState(new Set<string>());
 
   const [navOpen, setNavOpen] = useState(true);
   const [c11yOpen, setC11yOpen] = useState(false);
@@ -314,7 +314,7 @@ export const DynamicBasicStacks = () => {
                 </StackPlank>
               ))}
           </Main.ComplementarySidebar>
-          <NaturalDeck.Root>
+          <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             {openPlanksInDeck.map((id, index, arr) =>
               id === MENU ? (
                 <NaturalDeck.Plank key={MENU}>{menuChildren}</NaturalDeck.Plank>

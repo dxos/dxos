@@ -26,7 +26,7 @@ import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 import { SpaceState, isSpace } from '@dxos/react-client/echo';
 
-import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsMain } from './components';
+import { DebugGlobal, DebugSettings, DebugSpace, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -104,6 +104,7 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                     data: { graph: graphPlugin?.provides.graph },
                     properties: {
                       label: ['debug label', { ns: DEBUG_PLUGIN }],
+                      icon: (props: IconProps) => <Bug {...props} />,
                     },
                     edges: [['root', 'inbound']],
                   },
@@ -121,10 +122,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                 removeEdges: true,
                 nodes: [
                   {
-                    id: 'dxos.org/plugin/debug/devtools',
+                    // TODO(Zan): Removed `/` because it breaks deck layout reload. Fix?
+                    id: 'dxos.org.plugin.debug.devtools',
                     data: 'devtools',
                     properties: {
                       label: ['devtools label', { ns: DEBUG_PLUGIN }],
+                      icon: (props: IconProps) => <Bug {...props} />,
                     },
                     edges: [['root', 'inbound']],
                     nodes: [],
@@ -199,7 +202,8 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { active } = data;
+          const { active, object } = data;
+
           switch (role) {
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
@@ -207,40 +211,53 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
               return <DebugStatus />;
           }
 
-          if (!settings.values.debug) {
-            return null;
-          }
-
           switch (role) {
-            case 'main':
-              return active === 'devtools' ? (
-                <DevtoolsMain />
-              ) : !active || typeof active !== 'object' ? null : 'space' in active && isSpace(active.space) ? (
-                <DebugSpace
-                  space={active.space}
-                  onAddObjects={(objects) => {
-                    if (!isSpace(active.space)) {
-                      return;
-                    }
+            case 'main': {
+              if (active === 'devtools' && settings.values.devtools) {
+                return <DevtoolsMain />;
+              }
 
-                    const collection =
-                      active.space.state.get() === SpaceState.READY &&
-                      getSpaceProperty(active.space, Collection.typename);
-                    if (!(collection instanceof Collection)) {
-                      return;
-                    }
+              if (!active || typeof active !== 'object' || !settings.values.debug) {
+                return null;
+              }
 
-                    void intentPlugin?.provides.intent.dispatch(
-                      objects.map((object) => ({
-                        action: SpaceAction.ADD_OBJECT,
-                        data: { target: collection, object },
-                      })),
-                    );
-                  }}
-                />
-              ) : 'graph' in active && active.graph instanceof Graph ? (
-                <DebugGlobal graph={active.graph} />
-              ) : null;
+              if ('space' in active && isSpace(active.space)) {
+                return (
+                  <DebugSpace
+                    space={active.space}
+                    onAddObjects={(objects) => {
+                      if (!isSpace(active.space)) {
+                        return;
+                      }
+
+                      const folder =
+                        active.space.state.get() === SpaceState.READY &&
+                        getSpaceProperty(active.space, Collection.typename);
+                      if (!(folder instanceof Collection)) {
+                        return;
+                      }
+
+                      void intentPlugin?.provides.intent.dispatch(
+                        objects.map((object) => ({
+                          action: SpaceAction.ADD_OBJECT,
+                          data: { target: folder, object },
+                        })),
+                      );
+                    }}
+                  />
+                );
+              } else if ('graph' in active && active.graph instanceof Graph) {
+                return <DebugGlobal graph={active.graph} />;
+              }
+
+              return null;
+            }
+
+            case 'article': {
+              if (object === 'devtools' && settings.values.devtools) {
+                return <DevtoolsArticle />;
+              }
+            }
           }
 
           return null;

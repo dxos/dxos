@@ -6,20 +6,20 @@ import { S, TypedObject } from '@dxos/echo-schema';
 
 export const MoveSchema = S.mutable(
   S.partial(
-    S.struct({
-      source: S.string,
-      target: S.string,
-      piece: S.string,
+    S.Struct({
+      source: S.String,
+      target: S.String,
+      piece: S.String,
     }),
   ),
 );
 
-export class GameType extends TypedObject({ typename: 'dxos.experimental.chess.Game', version: '0.1.0' })(
+export class GameType extends TypedObject({ typename: 'dxos.org/type/Chess', version: '0.1.0' })(
   {
-    playerWhite: S.string,
-    playerBlack: S.string,
-    moves: S.mutable(S.array(S.string)),
-    pgn: S.string,
+    playerWhite: S.String,
+    playerBlack: S.String,
+    moves: S.mutable(S.Array(S.String)),
+    pgn: S.String,
   },
   { partial: true },
 ) {}

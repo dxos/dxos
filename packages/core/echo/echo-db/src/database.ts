@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, synchronized, type ReadOnlyEvent } from '@dxos/async';
+import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type EchoReactiveObject, getSchema, type ReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { AutomergeDb, type AutomergeContext, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
+import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { type Hypergraph } from './hypergraph';
@@ -141,7 +141,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.isSchemaRegistered(schema)) {
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

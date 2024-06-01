@@ -1,17 +1,18 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { type Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import {
+  type GroupingState,
+  type Row,
+  type RowData,
   getCoreRowModel,
+  getExpandedRowModel,
+  getGroupedRowModel,
   getSortedRowModel,
   useReactTable,
-  type GroupingState,
-  type RowData,
-  getGroupedRowModel,
-  getExpandedRowModel,
-  type Row,
 } from '@tanstack/react-table';
 import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState, useContext } from 'react';
 
@@ -281,6 +282,9 @@ const GroupedTableContent = () => {
   );
 };
 
+// TODO(burdon): Floating "add row" jumps by 1 pixel on scroll.
+// TODO(burdon): Blue focus highlight is clipped by 1px on the left.
+// TODO(burdon): Focused row and focus ring passes over the sticky header.
 export const Table = {
   Root: TableRoot,
   Viewport: TableViewport,

@@ -28,7 +28,7 @@ describe('Composer migrations', () => {
   let space: Space;
 
   beforeEach(async () => {
-    client = new Client({ services: testBuilder.createLocal() });
+    client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
     client.addSchema(
       FolderType,
