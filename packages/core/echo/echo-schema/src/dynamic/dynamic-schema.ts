@@ -42,12 +42,16 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
 };
 
 export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<Identifiable> {
-  // TODO(burdon): Any?
-  private _schema: S.Schema<any> | undefined;
+  // TODO(burdon): Document.
+  private _schema: S.Schema<Identifiable> | undefined;
   private _isDirty = true;
 
   constructor(public readonly serializedSchema: StoredEchoSchema) {
     super();
+  }
+
+  public override get id() {
+    return this.serializedSchema.id;
   }
 
   public get Type() {
@@ -75,10 +79,6 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
   public get pipe() {
     const schema = this._getSchema();
     return schema.pipe.bind(schema);
-  }
-
-  public override get id() {
-    return this.serializedSchema.id;
   }
 
   public get schema(): S.Schema<Identifiable> {
@@ -121,17 +121,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
   }
 
-  public updatePropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
-    const oldAST = this._getSchema().ast;
-    invariant(AST.isTypeLiteral(oldAST));
-    const newAst: any = {
-      ...oldAST,
-      propertySignatures: oldAST.propertySignatures.map((p) => (p.name === before ? { ...p, name: after } : p)),
-    };
-    const schemaWithUpdatedColumns = S.make(newAst);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
-  }
-
+  // TODO(burdon): Rename removeFields?
   public removeColumns(columnsNames: string[]) {
     const oldSchema = this._getSchema();
     const newSchema = S.make(AST.omit(oldSchema.ast, columnsNames)).annotations(oldSchema.ast.annotations);
@@ -144,7 +134,19 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  private _getSchema(): S.Schema<any> {
+  // TODO(burdon): Rename updateProperty?
+  public updatePropertyName({ before, after }: { before: PropertyKey; after: PropertyKey }) {
+    const oldAST = this._getSchema().ast;
+    invariant(AST.isTypeLiteral(oldAST));
+    const newAst: any = {
+      ...oldAST,
+      propertySignatures: oldAST.propertySignatures.map((p) => (p.name === before ? { ...p, name: after } : p)),
+    };
+    const schemaWithUpdatedColumns = S.make(newAst);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
+  }
+
+  private _getSchema(): S.Schema<Identifiable> {
     if (this._isDirty || this._schema == null) {
       this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
       this._isDirty = false;
