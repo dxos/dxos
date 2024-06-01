@@ -32,8 +32,8 @@ const exampleSchema = S.Struct({
   field1: S.String,
   field2: S.Number,
   field3: S.Date,
-  field4: S.UndefinedOr(S.String.pipe(S.length(10))),
-  field5: S.UndefinedOr(
+  field4: S.optional(S.String.pipe(S.length(10))),
+  field5: S.optional(
     S.Struct({
       innerField1: S.String,
       innerField2: S.Number,

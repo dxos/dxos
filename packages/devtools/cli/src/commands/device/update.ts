@@ -14,7 +14,7 @@ export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update device info.';
   static override flags = {
     ...BaseCommand.flags,
-    label: FlagS.String({ description: 'Set device label', required: true }),
+    label: Flags.string({ description: 'Set device label', required: true }),
   };
 
   async run(): Promise<any> {

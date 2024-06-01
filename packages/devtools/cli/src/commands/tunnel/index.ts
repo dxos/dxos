@@ -18,13 +18,13 @@ export default class Tunnel extends BaseCommand<typeof Tunnel> {
     this.enableJsonFlag = true;
     this.description = 'Enable or disable tunnel (deprecated).';
     this.args = {
-      command: ArgS.String({ description: 'Start.', values: ['start', 'stop'], required: true }),
+      command: Args.string({ description: 'Start.', values: ['start', 'stop'], required: true }),
     };
   }
 
   static override flags = {
     ...BaseCommand.flags,
-    name: FlagS.String({
+    name: Flags.string({
       description: 'Tunnel name',
       async default() {
         return humanize(PublicKey.random());

@@ -28,7 +28,7 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
   };
 
   static override args = {
-    file: ArgS.String({ required: true }),
+    file: Args.string({ required: true }),
   };
 
   async run() {

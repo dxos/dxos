@@ -18,7 +18,7 @@ export default class Upload extends ComposerBaseCommand<typeof Upload> {
   static override flags = {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
-    file: FlagS.String({ required: true }),
+    file: Flags.string({ required: true }),
   };
 
   async run() {

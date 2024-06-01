@@ -13,7 +13,7 @@ import { waitForSpace } from '../../util';
 export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create space.';
-  static override args = { name: ArgS.String() };
+  static override args = { name: Args.string() };
 
   async run(): Promise<any> {
     return await this.execWithClient(

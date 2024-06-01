@@ -62,7 +62,7 @@ export class MessageType extends TypedObject({ typename: 'braneframe.Message', v
   subject: S.optional(S.String),
   blocks: S.mutable(S.Array(_BlockSchema)),
   links: S.optional(S.Array(ref(Expando))),
-  state: S.optional(S.enums(MessageState)),
+  state: S.optional(S.Enums(MessageState)),
   read: S.optional(S.Boolean),
   context: S.optional(
     S.Struct({

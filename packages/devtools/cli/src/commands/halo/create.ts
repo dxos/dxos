@@ -13,13 +13,13 @@ export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create HALO.';
   static override args = {
-    displayName: ArgS.String({ description: 'Display name', required: true }),
+    displayName: Args.string({ description: 'Display name', required: true }),
   };
 
   static override flags = {
     ...BaseCommand.flags,
     managedAgent: Flags.boolean({ description: 'Managed agent', default: false }),
-    deviceLabel: FlagS.String({ description: 'Device label' }),
+    deviceLabel: Flags.string({ description: 'Device label' }),
   };
 
   async run(): Promise<any> {

@@ -15,7 +15,7 @@ export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update identity profile.';
   static override flags = {
     ...BaseCommand.flags,
-    displayName: FlagS.String({ description: 'Set display name' }),
+    displayName: Flags.string({ description: 'Set display name' }),
   };
 
   async run(): Promise<any> {

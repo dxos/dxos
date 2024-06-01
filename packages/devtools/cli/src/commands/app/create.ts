@@ -30,15 +30,15 @@ export default class Create extends BaseCommand<typeof Create> {
   static override state = 'deprecated';
   static override description = 'Manage applications (deprecated).';
   static override args = {
-    name: ArgS.String({ required: true, description: 'App name.' }),
+    name: Args.string({ required: true, description: 'App name.' }),
   };
 
   static override flags = {
     ...BaseCommand.flags,
-    tag: FlagS.String({
+    tag: Flags.string({
       description: 'Git tag or branch of the DXOS repo to checkout.',
     }),
-    template: FlagS.String({
+    template: Flags.string({
       char: 't',
       description: 'Template to use when creating the project.',
       default: 'hello',

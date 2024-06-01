@@ -23,7 +23,7 @@ export default class Open extends BaseCommand<typeof Open> {
 
   static override args = {
     ...super.args,
-    url: ArgS.String({
+    url: Args.string({
       description: 'App URL.',
       required: true,
     }),

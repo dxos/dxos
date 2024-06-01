@@ -13,7 +13,7 @@ export default class Logs extends BaseCommand<typeof Logs> {
   static override state = 'deprecated';
 
   static override args = {
-    name: ArgS.String({ required: true, description: 'Function name.' }),
+    name: Args.string({ required: true, description: 'Function name.' }),
   };
 
   async run(): Promise<any> {

@@ -19,7 +19,7 @@ export enum ChainInputType {
 export const ChainInputSchema = S.mutable(
   S.Struct({
     name: S.String,
-    type: S.optional(S.enums(ChainInputType)),
+    type: S.optional(S.Enums(ChainInputType)),
     value: S.optional(S.String),
   }),
 );
