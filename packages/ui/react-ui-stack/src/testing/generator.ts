@@ -60,11 +60,11 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
 
   project: {
     createSchema: () =>
-      S.struct({
-        title: S.string,
-        repo: S.string,
-        status: S.string,
-        priority: S.number,
+      S.Struct({
+        title: S.String,
+        repo: S.String,
+        status: S.String,
+        priority: S.Number,
       }),
     createData: () => ({
       title: faker.commerce.productName(),

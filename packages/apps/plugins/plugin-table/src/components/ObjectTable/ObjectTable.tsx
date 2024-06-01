@@ -18,7 +18,7 @@ import { TableSettings } from '../TableSettings';
 
 const makeStarterTableSchema = () => {
   return TypedObject({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' })({
-    title: S.optional(S.string),
+    title: S.optional(S.String),
   });
 };
 

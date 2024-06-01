@@ -101,7 +101,7 @@
     "esbuild-plugin-yaml": "^0.0.1",
     "eslint": "^8.56.0",
     "expect": "^27.0.2",
-    "fast-check": "^3.15.1",
+    "fast-check": "^3.19.0",
     "fast-xml-parser": "^4.3.2",
     "glob": "~7.1.6",
     "globrex": "^0.1.2",

@@ -4,7 +4,7 @@
 
 import { echoObject, S } from '@dxos/echo-schema';
 
-const _Properties = S.struct({ name: S.optional(S.string) }, { key: S.string, value: S.any }).pipe(
+const _Properties = S.Struct({ name: S.optional(S.String) }, { key: S.String, value: S.Any }).pipe(
   echoObject('dxos.sdk.client.Properties', '0.1.0'),
 );
 export interface Properties extends S.Schema.Type<typeof _Properties> {}

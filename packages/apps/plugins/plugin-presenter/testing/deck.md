@@ -55,8 +55,8 @@ ECHO
 
 - Federated graph database
 - Effect Schema
-- Queries + subscriptions
-- Rich text search
+- Realtime subscriptions
+- Structured and text queries
 - Automerge FTW
 
 ## Distributed Data
@@ -99,12 +99,12 @@ KUBE
 .slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
-# KUBE
+# EDGE
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
 - Universal indexing and search
-- Modular ETL pipelines
+- Modular ETL data pipelines
 - Local-first AI agents
 
 ## Decentralized Compute

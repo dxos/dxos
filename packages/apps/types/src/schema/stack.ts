@@ -9,6 +9,6 @@ export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Secti
 }) {}
 
 export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
-  title: S.optional(S.string),
-  sections: S.mutable(S.array(ref(SectionType))),
+  title: S.optional(S.String),
+  sections: S.mutable(S.Array(ref(SectionType))),
 }) {}
