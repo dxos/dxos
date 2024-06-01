@@ -1,0 +1,14 @@
+/**
+ * Override.
+ * TODO(burdon): Generate from our theme.
+ */
+
+:root {
+  .tl-theme__dark {
+    --color-background: #252529;
+  }
+
+  .tl-theme__light {
+    --color-background: #ffffff;
+  }
+}

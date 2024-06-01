@@ -69,7 +69,7 @@ export default template.define.script({
   import wasm from 'vite-plugin-wasm';
   ${imports}
 
-  // https://vitejs.dev/config/
+  // https://vitejs.dev/config
   export default defineConfig({
     server: {
       host: true

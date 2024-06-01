@@ -16,7 +16,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 const PACKAGE_VERSION = require('./package.json').version;
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
