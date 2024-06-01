@@ -8,6 +8,7 @@ import { humanize } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
 import { printTunnels, type TunnelRpcPeer } from '../../util';
+import { Args, Flags } from '@oclif/core';
 
 /**
  * @deprecated

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags, ux } from '@oclif/core';
+import { Args, Flags, ux } from '@oclif/core';
 import { chromium } from '@playwright/test';
 import chalk from 'chalk';
 

@@ -8,6 +8,7 @@ import { diff } from '@dxos/util';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
+import { Args } from '@oclif/core';
 
 type DataFile = {
   objects: Record<string, any>[];

@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags } from '@oclif/core';
+import { Args, Flags } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';

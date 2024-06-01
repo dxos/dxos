@@ -9,6 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
 import { createIpfsClient } from '../../util';
+import { Flags } from '@oclif/core';
 
 /**
  * Upload IPFS file.

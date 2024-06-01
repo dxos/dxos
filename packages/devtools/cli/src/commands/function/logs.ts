@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Args } from '@oclif/core';
 import { BaseCommand } from '../../base';
 
 /**
