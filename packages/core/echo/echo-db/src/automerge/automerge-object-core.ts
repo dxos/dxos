@@ -391,7 +391,7 @@ export class AutomergeObjectCore {
   /**
    * @deprecated Use getDecoded.
    */
-  get(path: KeyPath) {
+  private _get(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -405,7 +405,7 @@ export class AutomergeObjectCore {
   /**
    * @deprecated Use setDecoded.
    */
-  set(path: KeyPath, value: any) {
+  private _set(path: KeyPath, value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -415,20 +415,20 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this.get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
+    return this.decode(this._get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
-    this.set(path, this.encode(value, { allowLinks: false, removeUndefined: true }));
+    this._set(path, this.encode(value, { allowLinks: false, removeUndefined: true }));
   }
 
   setType(reference: Reference) {
-    this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+    this._set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
   setMeta(meta: ObjectMeta) {
-    this.set([META_NAMESPACE], this.encode(meta));
+    this._set([META_NAMESPACE], this.encode(meta));
   }
 
   delete(path: KeyPath) {
@@ -441,7 +441,7 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
+    const value = this.decode(this._get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
     if (!value) {
       return undefined;
     }
@@ -451,12 +451,12 @@ export class AutomergeObjectCore {
   }
 
   isDeleted() {
-    const value = this.get([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this._get([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
   setDeleted(value: boolean) {
-    this.set([SYSTEM_NAMESPACE, 'deleted'], value);
+    this._set([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 }
 
