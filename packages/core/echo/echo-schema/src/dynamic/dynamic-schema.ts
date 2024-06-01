@@ -98,9 +98,9 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
   public addColumns(fields: S.Struct.Fields) {
     const oldSchema = this._getSchema();
     const schemaExtension = S.partial(S.Struct(fields));
-    const extended: S.Schema<Identifiable> = S.extend(oldSchema, schemaExtension).annotations(
+    const extended = S.extend(oldSchema, schemaExtension).annotations(
       oldSchema.ast.annotations,
-    );
+    ) as any as S.Schema<Identifiable>;
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 
