@@ -23,6 +23,7 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
     }
 
     static readonly [S.TypeId] = schemaVariance;
+
     static get annotations() {
       const schema = this._schema;
       return schema.annotations.bind(schema);
@@ -34,8 +35,8 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
     }
 
     private static get _schema() {
-      // the field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge
-      return S.union(StoredEchoSchema, S.instanceOf(DynamicEchoSchema)).annotations(StoredEchoSchema.ast.annotations);
+      // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
+      return S.Union(StoredEchoSchema, S.instanceOf(DynamicEchoSchema)).annotations(StoredEchoSchema.ast.annotations);
     }
   } as any;
 };
@@ -43,29 +44,67 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
 export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<Identifiable> {
   private _schema: S.Schema<any> | undefined;
   private _isDirty = true;
+
   constructor(public readonly serializedSchema: StoredEchoSchema) {
     super();
   }
 
-  public override get id(): string {
+  public get Type() {
+    return this.serializedSchema;
+  }
+
+  // TODO(burdon): Remove?
+  public get [S.TypeId]() {
+    return schemaVariance;
+  }
+
+  public get Encoded() {
+    return this.serializedSchema;
+  }
+
+  public get ast() {
+    return this._getSchema().ast;
+  }
+
+  public get annotations() {
+    const schema = this._getSchema();
+    return schema.annotations.bind(schema);
+  }
+
+  public get pipe() {
+    const schema = this._getSchema();
+    return schema.pipe.bind(schema);
+  }
+
+  public override get id() {
     return this.serializedSchema.id;
+  }
+
+  public get schema(): S.Schema<Identifiable> {
+    return this._getSchema();
   }
 
   public get typename(): string {
     return this.serializedSchema.typename;
   }
 
-  public addColumns(columns: S.Struct.Fields) {
-    const oldSchema = this._getSchema();
-    const schemaExtension = S.partial(S.struct(columns));
-    const extended = S.extend(oldSchema, schemaExtension).annotations(oldSchema.ast.annotations);
-    this.serializedSchema.jsonSchema = effectToJsonSchema(extended as S.Schema<any>);
+  invalidate() {
+    this._isDirty = true;
   }
 
+  // TODO(burdon): Rename addFields?
+  public addColumns(fields: S.Struct.Fields) {
+    const oldSchema = this._getSchema();
+    const schemaExtension = S.partial(S.Struct(fields));
+    const extended = S.extend(oldSchema, schemaExtension).annotations(oldSchema.ast.annotations);
+    this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
+  }
+
+  // Rename.
   public updateColumns(columns: S.Struct.Fields) {
     const oldAst = this._getSchema().ast;
     invariant(AST.isTypeLiteral(oldAst));
-    const propertiesToUpdate = (S.partial(S.struct(columns)).ast as AST.TypeLiteral).propertySignatures;
+    const propertiesToUpdate = (S.partial(S.Struct(columns)).ast as AST.TypeLiteral).propertySignatures;
     const updatedProperties: AST.PropertySignature[] = [...oldAst.propertySignatures];
     for (const property of propertiesToUpdate) {
       const index = updatedProperties.findIndex((p) => p.name === property.name);
@@ -75,6 +114,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
         updatedProperties.push(property);
       }
     }
+
     const newAst: any = { ...oldAst, propertySignatures: updatedProperties };
     const schemaWithUpdatedColumns = S.make(newAst);
     this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
@@ -103,32 +143,6 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return [...ast.propertySignatures].filter((p) => p.name !== 'id').map(unwrapOptionality);
   }
 
-  public get schema(): S.Schema<Identifiable> {
-    return this._getSchema();
-  }
-
-  public get ast(): AST.AST {
-    return this._getSchema().ast;
-  }
-
-  public get annotations() {
-    const schema = this._getSchema();
-    return schema.annotations.bind(schema);
-  }
-
-  public get pipe() {
-    const schema = this._getSchema();
-    return schema.pipe.bind(schema);
-  }
-
-  get [S.TypeId]() {
-    return schemaVariance;
-  }
-
-  invalidate() {
-    this._isDirty = true;
-  }
-
   private _getSchema(): S.Schema<any> {
     if (this._isDirty || this._schema == null) {
       this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
@@ -142,6 +156,7 @@ const unwrapOptionality = (property: AST.PropertySignature): AST.PropertySignatu
   if (!AST.isUnion(property.type)) {
     return property;
   }
+
   return {
     ...property,
     type: property.type.types.find((p) => !AST.isUndefinedKeyword(p))!,
@@ -155,9 +170,11 @@ const unwrapProxy = (jsonSchema: any): any => {
   if (Array.isArray(jsonSchema)) {
     return jsonSchema.map(unwrapProxy);
   }
+
   const result: any = {};
   for (const key in jsonSchema) {
     result[key] = unwrapProxy(jsonSchema[key]);
   }
+
   return result;
 };

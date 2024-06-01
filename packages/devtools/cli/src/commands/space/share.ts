@@ -33,7 +33,7 @@ export default class Share extends BaseCommand<typeof Share> {
     open: Flags.boolean({
       description: 'Open browser with invitation.',
     }),
-    host: Flags.string({
+    host: FlagS.String({
       description: 'Application Host URL.',
       default: 'https://composer.space',
     }),

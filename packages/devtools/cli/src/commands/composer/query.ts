@@ -21,7 +21,7 @@ export default class Query extends ComposerBaseCommand<typeof Query> {
   static override flags = {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
-    type: Flags.string({ description: 'Data type.' }),
+    type: FlagS.String({ description: 'Data type.' }),
     extended: Flags.boolean(),
   };
 

@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Args } from '@oclif/core';
-
 import { BaseCommand } from '../../base';
 
 /**
@@ -15,7 +13,7 @@ export default class Logs extends BaseCommand<typeof Logs> {
   static override state = 'deprecated';
 
   static override args = {
-    name: Args.string({ required: true, description: 'Function name.' }),
+    name: ArgS.String({ required: true, description: 'Function name.' }),
   };
 
   async run(): Promise<any> {

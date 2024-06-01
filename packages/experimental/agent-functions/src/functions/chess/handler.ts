@@ -12,14 +12,8 @@ import { Engine } from './engine';
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    level: S.optional(
-      S.number.pipe(
-        S.annotations({
-          description: 'Engine strength.',
-        }),
-      ),
-    ),
+  S.Struct({
+    level: S.optional(S.Number.pipe(S.description('Engine strength.'))),
   }),
 );
 

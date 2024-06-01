@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
+import { Flags } from '@oclif/core';
 import { promises as fs } from 'fs';
 import os from 'os';
 import { cwd } from 'process';
@@ -30,15 +30,15 @@ export default class Create extends BaseCommand<typeof Create> {
   static override state = 'deprecated';
   static override description = 'Manage applications (deprecated).';
   static override args = {
-    name: Args.string({ required: true, description: 'App name.' }),
+    name: ArgS.String({ required: true, description: 'App name.' }),
   };
 
   static override flags = {
     ...BaseCommand.flags,
-    tag: Flags.string({
+    tag: FlagS.String({
       description: 'Git tag or branch of the DXOS repo to checkout.',
     }),
-    template: Flags.string({
+    template: FlagS.String({
       char: 't',
       description: 'Template to use when creating the project.',
       default: 'hello',

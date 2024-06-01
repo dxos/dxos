@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
-
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
@@ -20,13 +18,13 @@ export default class Tunnel extends BaseCommand<typeof Tunnel> {
     this.enableJsonFlag = true;
     this.description = 'Enable or disable tunnel (deprecated).';
     this.args = {
-      command: Args.string({ description: 'Start.', values: ['start', 'stop'], required: true }),
+      command: ArgS.String({ description: 'Start.', values: ['start', 'stop'], required: true }),
     };
   }
 
   static override flags = {
     ...BaseCommand.flags,
-    name: Flags.string({
+    name: FlagS.String({
       description: 'Tunnel name',
       async default() {
         return humanize(PublicKey.random());

@@ -10,10 +10,10 @@ import { type ColumnProps, type TableDef } from '@dxos/react-ui-table';
 
 const FIELD_META_NAMESPACE = 'plugin-table';
 const typeToSchema: Partial<{ [key in ColumnProps['type']]: S.Schema<any> }> = {
-  boolean: S.boolean,
-  number: S.number,
-  date: S.number,
-  string: S.string,
+  boolean: S.Boolean,
+  number: S.Number,
+  date: S.Number,
+  string: S.String,
 };
 
 interface ColumnAnnotation {
@@ -44,9 +44,9 @@ export const getSchema = (
   let schema: S.Schema<any>;
   if (type === 'ref') {
     const referencedSchema = tables.find((table) => table.schema?.id === options.refTable)?.schema;
-    schema = referencedSchema ? ref(referencedSchema) : S.string;
+    schema = referencedSchema ? ref(referencedSchema) : S.String;
   } else {
-    schema = (type && typeToSchema[type]) ?? S.string;
+    schema = (type && typeToSchema[type]) ?? S.String;
   }
   return schema.pipe(
     fieldMeta(FIELD_META_NAMESPACE, {

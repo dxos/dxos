@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, Flags } from '@oclif/core';
+import { Flags } from '@oclif/core';
 
 import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -13,13 +13,13 @@ export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create HALO.';
   static override args = {
-    displayName: Args.string({ description: 'Display name', required: true }),
+    displayName: ArgS.String({ description: 'Display name', required: true }),
   };
 
   static override flags = {
     ...BaseCommand.flags,
     managedAgent: Flags.boolean({ description: 'Managed agent', default: false }),
-    deviceLabel: Flags.string({ description: 'Device label' }),
+    deviceLabel: FlagS.String({ description: 'Device label' }),
   };
 
   async run(): Promise<any> {

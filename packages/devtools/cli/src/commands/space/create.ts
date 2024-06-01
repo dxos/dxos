@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, ux } from '@oclif/core';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { type Client } from '@dxos/client';
@@ -13,7 +13,7 @@ import { waitForSpace } from '../../util';
 export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;
   static override description = 'Create space.';
-  static override args = { name: Args.string() };
+  static override args = { name: ArgS.String() };
 
   async run(): Promise<any> {
     return await this.execWithClient(

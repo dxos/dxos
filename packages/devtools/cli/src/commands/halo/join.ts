@@ -18,17 +18,17 @@ export default class Join extends BaseCommand<typeof Join> {
   static override description = 'Join HALO (device) invitation.';
   static override flags = {
     ...BaseCommand.flags,
-    invitation: Flags.string({
+    invitation: FlagS.String({
       description: 'Invitation code',
     }),
-    secret: Flags.string({
+    secret: FlagS.String({
       description: 'Invitation secret',
     }),
     timeout: Flags.integer({
       description: 'Timeout in seconds',
       default: 300,
     }),
-    'device-label': Flags.string({
+    'device-label': FlagS.String({
       description: 'Set device label',
     }),
     'managed-agent': Flags.boolean({ description: 'set device type as managed agent', default: false }),

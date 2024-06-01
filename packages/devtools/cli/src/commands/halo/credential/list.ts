@@ -16,7 +16,7 @@ export default class List extends BaseCommand<typeof List> {
   static override flags = {
     ...BaseCommand.flags,
     ...ux.table.flags(),
-    type: Flags.string({
+    type: FlagS.String({
       description: 'Type',
     }),
     timeout: Flags.integer({

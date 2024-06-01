@@ -23,12 +23,12 @@ const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' 
 const createTestSchemas = () => [
   create(StoredEchoSchema, {
     ...testType,
-    jsonSchema: effectToJsonSchema(S.struct({ field: S.string })),
+    jsonSchema: effectToJsonSchema(S.Struct({ field: S.String })),
   }),
   create(StoredEchoSchema, {
     ...testType,
     typename: testType.typename + '2',
-    jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
+    jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
   }),
 ];
 
@@ -92,7 +92,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredEchoSchema, {
       ...testType,
-      jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
+      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(registry.isRegistered(new DynamicEchoSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
@@ -103,7 +103,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredEchoSchema, {
       ...testType,
-      jsonSchema: effectToJsonSchema(S.struct({ field: S.number })),
+      jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(() => registry.register(schemaToStore)).to.throw();
     db.add(schemaToStore);
@@ -115,7 +115,7 @@ describe('schema registry', () => {
     const storedSchema = db.add(createTestSchemas()[0]);
     const dynamicSchema = registry.getById(storedSchema.id)!;
     expect(dynamicSchema.getProperties().length).to.eq(1);
-    dynamicSchema.addColumns({ newField: S.number });
+    dynamicSchema.addColumns({ newField: S.Number });
     expect(dynamicSchema.getProperties().length).to.eq(2);
   });
 });

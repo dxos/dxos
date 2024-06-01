@@ -24,8 +24,8 @@ const types = [DocumentType, FileType];
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    model: S.optional(S.string),
+  S.Struct({
+    model: S.optional(S.String),
   }),
 );
 
@@ -52,7 +52,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
             const url = join(endpoint, object.cid);
             log.info('fetching', { url });
             const res = await fetch(url);
-            const buffer = await res.arrayBuffer();
+            const buffer = await reS.ArrayBuffer();
             pageContent = (await promisify(textract.fromBufferWithMime)(
               res.headers.get('content-type')!,
               Buffer.from(buffer),

@@ -3530,8 +3530,8 @@ importers:
         specifier: workspace:*
         version: link:../../../sdk/react-client
       '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -3542,8 +3542,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.2(@types/react@18.0.21)(react@18.2.0)
       effect:
-        specifier: ^2.4.19
-        version: 2.4.19
+        specifier: ^3.2.7
+        version: 3.2.7
       leaflet:
         specifier: ^1.9.3
         version: 1.9.3
@@ -5513,14 +5513,14 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@orama/orama':
         specifier: ^2.0.8
         version: 2.0.8
       effect:
-        specifier: ^2.4.19
-        version: 2.4.19
+        specifier: ^3.2.7
+        version: 3.2.7
       level:
         specifier: ^8.0.1
         version: 8.0.1
@@ -5755,18 +5755,19 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
       '@preact/signals-core':
         specifier: ^1.6.0
         version: 1.6.0
-      effect:
-        specifier: ^2.4.19
-        version: 2.4.19
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
+    devDependencies:
+      '@effect/schema':
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
+      effect:
+        specifier: ^3.2.7
+        version: 3.2.7
 
   packages/core/echo/echo-signals:
     dependencies:
@@ -5933,8 +5934,8 @@ importers:
         specifier: ^3.1.6
         version: 3.1.6
       effect:
-        specifier: ^2.4.19
-        version: 2.4.19
+        specifier: ^3.2.7
+        version: 3.2.7
       express:
         specifier: ^4.19.2
         version: 4.19.2
@@ -7372,8 +7373,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@langchain/community':
         specifier: ^0.0.43
         version: 0.0.43(discord.js@14.14.1)(faiss-node@0.5.1)(google-auth-library@8.9.0)(googleapis@126.0.1)(html-to-text@9.0.5)(jsdom@24.0.0)
@@ -7414,8 +7415,8 @@ importers:
         specifier: ^14.14.1
         version: 14.14.1
       effect:
-        specifier: ^2.4.19
-        version: 2.4.19
+        specifier: ^3.2.7
+        version: 3.2.7
       email-addresses:
         specifier: ^5.0.0
         version: 5.0.0
@@ -9972,8 +9973,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@effect/schema':
-        specifier: ^0.64.20
-        version: 0.64.20(effect@2.4.19)(fast-check@3.15.1)
+        specifier: ^0.67.16
+        version: 0.67.16(effect@3.2.7)
       '@fluentui/react-tabster':
         specifier: ^9.19.0
         version: 9.19.2(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -9999,8 +10000,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       effect:
-        specifier: ^2.4.19
-        version: 2.4.19
+        specifier: ^3.2.7
+        version: 3.2.7
     devDependencies:
       '@dxos/echo-schema':
         specifier: workspace:*
@@ -16192,15 +16193,13 @@ packages:
       lodash.pick: 4.4.0
     dev: false
 
-  /@effect/schema@0.64.20(effect@2.4.19)(fast-check@3.15.1):
-    resolution: {integrity: sha512-oSphgsP9j7yHy31RxTQ0txWq76u1F/H1Hqw+GVcpjnK4n/fuZo7MNYU/qpG+TLJWj4+yUku5I3Rr0Vr7gVoMeQ==}
+  /@effect/schema@0.67.16(effect@3.2.7):
+    resolution: {integrity: sha512-fUHo1t6k2w9UcJF/JlppRVD+KXXKtAN8fZRB48NMocLJfQnJC117c9Zio0SQWN+xP9byLl4Y/MbtFeuxcublxg==}
     peerDependencies:
-      effect: ^2.4.18
-      fast-check: ^3.13.2
+      effect: ^3.2.7
     dependencies:
-      effect: 2.4.19
-      fast-check: 3.15.1
-    dev: false
+      effect: 3.2.7
+      fast-check: 3.19.0
 
   /@emoji-mart/data@1.1.2:
     resolution: {integrity: sha512-1HP8BxD2azjqWJvxIaWAMyTySeZY0Osr83ukYjltPVkNXeJvTz7yDrPLBtnrD5uqJ3tg4CcLuuBW09wahqL/fg==}
@@ -33083,9 +33082,8 @@ packages:
   /ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  /effect@2.4.19:
-    resolution: {integrity: sha512-z/rn878Po3n522g/AYUDHD1SsZaZdvRxlTCLQ8xl8H6xA82nBwwooD1mdn/73Uywmp7d84oay3w3528r0Uyd0w==}
-    dev: false
+  /effect@3.2.7:
+    resolution: {integrity: sha512-8YXJVBVs1zBQCPjwsTUgqE91c6woa6sxo0wni0H3mMM4qpO4vsixEVx+IZLYnh1BnRinJqC7/mJazIfYxLj2Rg==}
 
   /ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -34590,6 +34588,13 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       pure-rand: 6.0.2
+    dev: true
+
+  /fast-check@3.19.0:
+    resolution: {integrity: sha512-CO2JX/8/PT9bDGO1iXa5h5ey1skaKI1dvecERyhH4pp3PGjwd3KIjMAXEg79Ps9nclsdt4oPbfqiAnLU0EwrAQ==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      pure-rand: 6.1.0
 
   /fast-deep-equal@2.0.1:
     resolution: {integrity: sha512-bCK/2Z4zLidyB4ReuIsvALH6w31YfAQDmXMqMx6FyfHqvBxtjC0eRumeSu4Bs3XtXwpyIywtSTrVT99BxY1f9w==}
@@ -43990,6 +43995,10 @@ packages:
 
   /pure-rand@6.0.2:
     resolution: {integrity: sha512-6Yg0ekpKICSjPswYOuC5sku/TSWaRYlA0qsXqJgM/d/4pLPHPuTxK7Nbf7jFKzAeedUhR8C7K9Uv63FBsSo8xQ==}
+    dev: true
+
+  /pure-rand@6.1.0:
+    resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
   /q@1.5.1:
     resolution: {integrity: sha512-kV/CThkXo6xyFEZUugw/+pIOywXcDbFYgSct5cT3gqlbkBE1SJdwy6UQoZvodiWF/ckQLZyDE/Bu1M6gVu5lVw==}

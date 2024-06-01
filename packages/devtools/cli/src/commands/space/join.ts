@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux, Flags } from '@oclif/core';
+import { ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { sleep, Trigger } from '@dxos/async';
@@ -16,10 +16,10 @@ export default class Join extends BaseCommand<typeof Join> {
   static override description = 'Join space invitation';
   static override flags = {
     ...BaseCommand.flags,
-    invitation: Flags.string({
+    invitation: FlagS.String({
       description: 'Invitation code',
     }),
-    secret: Flags.string({
+    secret: FlagS.String({
       description: 'Invitation secret',
     }),
   };

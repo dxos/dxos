@@ -37,9 +37,9 @@ export default class Dev extends BaseCommand<typeof Dev> {
   static override flags = {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
-    require: Flags.string({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
-    manifest: Flags.string({ description: 'Functions manifest file.' }),
-    baseDir: Flags.string({ description: 'Base directory for function handlers.' }),
+    require: FlagS.String({ multiple: true, aliases: ['r'], default: ['ts-node/register'] }),
+    manifest: FlagS.String({ description: 'Functions manifest file.' }),
+    baseDir: FlagS.String({ description: 'Base directory for function handlers.' }),
     reload: Flags.boolean({ description: 'Reload functions on change.' }),
   };
 

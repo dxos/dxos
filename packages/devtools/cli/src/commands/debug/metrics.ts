@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args } from '@oclif/core';
-
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
@@ -13,7 +11,7 @@ export default class Metrics extends BaseCommand<typeof Metrics> {
   static override enableJsonFlag = true;
   static override description = 'Control metrics.';
   static override args = {
-    command: Args.string({ description: 'Control metrics recording.', values: ['reset', 'start', 'stop'] }),
+    command: ArgS.String({ description: 'Control metrics recording.', values: ['reset', 'start', 'stop'] }),
   };
 
   async run(): Promise<any> {

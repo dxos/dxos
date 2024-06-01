@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
+import { type Args, Command, type Config as OclifConfig, Flags, type Interfaces, settings } from '@oclif/core';
 import chalk from 'chalk';
 import * as fs from 'fs-extra';
 import yaml from 'js-yaml';
@@ -70,9 +70,9 @@ export type Args<T extends typeof Command> = Interfaces.InferredArgs<T['args']>;
 /**
  * @deprecated Change to flag.
  */
-export const ARG_SPACE_KEYS = { key: Args.string({ description: 'Space key(s) head in hex.' }) };
+export const ARG_SPACE_KEYS = { key: ArgS.String({ description: 'Space key(s) head in hex.' }) };
 // TODO(burdon): Change to --space?
-export const FLAG_SPACE_KEYS = { key: Flags.string({ multiple: true, description: 'Space key(s) head in hex.' }) };
+export const FLAG_SPACE_KEYS = { key: FlagS.String({ multiple: true, description: 'Space key(s) head in hex.' }) };
 
 /**
  * Custom base command.
@@ -100,13 +100,13 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       default: false,
     }),
 
-    profile: Flags.string({
+    profile: FlagS.String({
       description: 'User profile.',
       default: ENV_DX_PROFILE_DEFAULT,
       env: ENV_DX_PROFILE,
     }),
 
-    config: Flags.string({
+    config: FlagS.String({
       env: ENV_DX_CONFIG,
       description: 'Config file.',
       helpValue: 'path',
@@ -118,7 +118,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
-    target: Flags.string({
+    target: FlagS.String({
       description: 'Target websocket server.',
     }),
 
@@ -150,7 +150,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       description: 'When running in foreground, log JSON format',
     }),
 
-    'json-logfile': Flags.string({
+    'json-logfile': FlagS.String({
       description: "JSON log file destination, or 'stdout' or 'stderr'",
       default: 'stderr',
     }),

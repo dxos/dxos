@@ -17,7 +17,7 @@ export default class Trigger extends BaseCommand<typeof Trigger> {
   static override description = 'List and manage triggers.';
   static override flags = {
     ...BaseCommand.flags,
-    id: Flags.string({ description: 'Trigger id' }),
+    id: FlagS.String({ description: 'Trigger id' }),
     enable: Flags.boolean({ description: 'Enable trigger(s)' }),
     disable: Flags.boolean({ description: 'Disable trigger(s)' }),
     extended: Flags.boolean(),

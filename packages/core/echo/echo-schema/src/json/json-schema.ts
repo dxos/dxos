@@ -146,13 +146,13 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
 
   let schemaWithoutEchoId: S.Schema<any, any, unknown>;
   if (typeof root.additionalProperties !== 'object') {
-    schemaWithoutEchoId = S.struct(fields);
+    schemaWithoutEchoId = S.Struct(fields);
   } else {
     const indexValue = jsonToEffectSchema(root.additionalProperties, defs);
     if (propertyList.length > 0) {
-      schemaWithoutEchoId = S.struct(fields, { key: S.string, value: indexValue });
+      schemaWithoutEchoId = S.Struct(fields, { key: S.String, value: indexValue });
     } else {
-      schemaWithoutEchoId = S.record(S.string, indexValue);
+      schemaWithoutEchoId = S.Record(S.String, indexValue);
     }
   }
 
@@ -161,7 +161,7 @@ const jsonToEffectTypeSchema = (root: JsonSchema7Object, defs: JsonSchema7Root['
   }
 
   invariant(immutableIdField, 'no id in echo type');
-  const schema = S.extend(S.mutable(schemaWithoutEchoId), S.struct({ id: immutableIdField }));
+  const schema = S.extend(S.mutable(schemaWithoutEchoId), S.Struct({ id: immutableIdField }));
   const annotations: Mutable<S.Annotations.Schema<any>> = {};
   for (const annotation of [EchoObjectAnnotationId, ReferenceAnnotation, EchoObjectFieldMetaAnnotationId]) {
     if (echoRefinement[annotationToRefinementKey[annotation]]) {
@@ -182,44 +182,44 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
   if ('$id' in root) {
     switch (root.$id) {
       case '/schemas/any':
-        result = S.any;
+        result = S.Any;
         break;
       case '/schemas/unknown':
-        result = S.unknown;
+        result = S.Unknown;
         break;
       case '/schemas/{}':
       case '/schemas/object':
-        result = S.object;
+        result = S.Object;
         break;
     }
   } else if ('const' in root) {
-    result = S.literal(root.const);
+    result = S.Literal(root.const);
   } else if ('enum' in root) {
-    result = S.union(...root.enum.map((e) => S.literal(e)));
+    result = S.Union(...root.enum.map((e) => S.Literal(e)));
   } else if ('anyOf' in root) {
-    result = S.union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
+    result = S.Union(...root.anyOf.map((v) => jsonToEffectSchema(v, defs)));
   } else if ('$comment' in root && root.$comment === '/schemas/enums') {
-    result = S.enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
+    result = S.Enums(Object.fromEntries(root.oneOf.map(({ title, const: v }) => [title, v])));
   } else if ('type' in root) {
     switch (root.type) {
       case 'string':
-        result = S.string;
+        result = S.String;
         break;
       case 'number':
-        result = S.number;
+        result = S.Number;
         break;
       case 'integer':
-        result = S.number.pipe(S.int());
+        result = S.Number.pipe(S.int());
         break;
       case 'boolean':
-        result = S.boolean;
+        result = S.Boolean;
         break;
       case 'array':
         if (Array.isArray(root.items)) {
-          result = S.tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
+          result = S.Tuple(...root.items.map((v) => jsonToEffectSchema(v, defs)));
         } else {
           invariant(root.items);
-          result = S.array(jsonToEffectSchema(root.items, defs));
+          result = S.Array(jsonToEffectSchema(root.items, defs));
         }
         break;
     }
@@ -229,7 +229,7 @@ export const jsonToEffectSchema = (root: JsonSchema7Root, definitions?: JsonSche
     invariant(jsonSchema, `missing definition for ${root.$ref}`);
     result = jsonToEffectSchema(jsonSchema, defs).pipe(S.identifier(refSegments[refSegments.length - 1]));
   } else {
-    result = S.unknown;
+    result = S.Unknown;
   }
 
   const refinement: EchoRefinement | undefined = (root as any)[ECHO_REFINEMENT_KEY];
