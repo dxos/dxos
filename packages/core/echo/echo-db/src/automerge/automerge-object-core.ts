@@ -378,10 +378,7 @@ export class AutomergeObjectCore {
     return newLength;
   }
 
-  /**
-   * @deprecated Use getDecoded.
-   */
-  private _get(path: KeyPath) {
+  private _getRaw(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -392,10 +389,7 @@ export class AutomergeObjectCore {
     return value;
   }
 
-  /**
-   * @deprecated Use setDecoded.
-   */
-  private _set(path: KeyPath, value: any) {
+  private _setRaw(path: KeyPath, value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -405,20 +399,20 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this._get(path)) as DecodedAutomergePrimaryValue;
+    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
-    this._set(path, this.encode(value));
+    this._setRaw(path, this.encode(value));
   }
 
   setType(reference: Reference) {
-    this._set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
   setMeta(meta: ObjectMeta) {
-    this._set([META_NAMESPACE], this.encode(meta));
+    this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
   delete(path: KeyPath) {
@@ -431,7 +425,7 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this._get([SYSTEM_NAMESPACE, 'type']));
+    const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
       return undefined;
     }
@@ -441,12 +435,12 @@ export class AutomergeObjectCore {
   }
 
   isDeleted() {
-    const value = this._get([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
   setDeleted(value: boolean) {
-    this._set([SYSTEM_NAMESPACE, 'deleted'], value);
+    this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 }
 
