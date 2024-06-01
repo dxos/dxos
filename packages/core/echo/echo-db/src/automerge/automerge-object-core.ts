@@ -352,12 +352,12 @@ export class AutomergeObjectCore {
    * Decode a value from the Automerge document.
    */
   // TODO(dmaretskyi): Cleanup to not do resolution in this method.
-  decode(value: any, { resolveLinks = true }: { resolveLinks?: boolean } = {}): DecodedAutomergeValue {
+  decode(value: any): DecodedAutomergeValue {
     if (value === null) {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.decode(val, { resolveLinks }));
+      return value.map((val) => this.decode(val));
     }
     if (value instanceof A.RawString) {
       return value.toString();
@@ -372,16 +372,10 @@ export class AutomergeObjectCore {
 
       const reference = decodeReference(value);
 
-      if (resolveLinks) {
-        return this.lookupLink(reference);
-      } else {
-        return reference;
-      }
+      return reference;
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value, { resolveLinks })]),
-      );
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
     }
 
     return value;
