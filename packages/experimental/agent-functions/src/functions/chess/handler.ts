@@ -5,7 +5,6 @@
 import { GameType } from '@dxos/chess-app/types';
 import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
-import { nonNullable } from '@dxos/util';
 
 import { Engine } from './engine';
 
@@ -35,9 +34,9 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   const { meta: { level = 1 } = {}, objects } = event.data;
   for (const game of objects ?? []) {
-    const side = [game.playerWhite === identityKey && 'w', game.playerBlack && identityKey && 'b'].filter(nonNullable);
     const engine = new Engine({ pgn: game.pgn, level });
-    if (!engine.state.isGameOver() && side.includes(engine.state.turn())) {
+    const nextMoveIdentity = { w: game.playerWhite, b: game.playerBlack }[engine.state.turn()];
+    if (!engine.state.isGameOver() && nextMoveIdentity === identityKey) {
       await engine.move();
       engine.print();
 

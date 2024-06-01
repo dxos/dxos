@@ -4,6 +4,7 @@
 
 import { type BaseChatModel, type BaseChatModelParams } from 'langchain/chat_models/base';
 import { type EmbeddingsParams, type Embeddings } from 'langchain/embeddings/base';
+import { formatDocumentsAsString } from 'langchain/util/document';
 
 import { PublicKey } from '@dxos/keys';
 
@@ -42,6 +43,14 @@ export class ChainResources<
     private readonly _options: ChainResourcesOptions<E, M> = {},
   ) {
     this._store = new ChainStore(this._embeddings, { id: this._id, baseDir: this._options.baseDir });
+  }
+
+  init() {
+    return this._store.initialize();
+  }
+
+  createStringRetriever() {
+    return this._store.vectorStore.asRetriever().pipe(formatDocumentsAsString);
   }
 
   setFunctions() {}

@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-gpt",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Demo plugin for GPT",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
