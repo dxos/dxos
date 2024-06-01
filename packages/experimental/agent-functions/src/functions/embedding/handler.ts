@@ -52,7 +52,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context, respon
             const url = join(endpoint, object.cid);
             log.info('fetching', { url });
             const res = await fetch(url);
-            const buffer = await reS.ArrayBuffer();
+            const buffer = await res.arrayBuffer();
             pageContent = (await promisify(textract.fromBufferWithMime)(
               res.headers.get('content-type')!,
               Buffer.from(buffer),
