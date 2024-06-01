@@ -58,11 +58,6 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return this.serializedSchema;
   }
 
-  // TODO(burdon): Remove?
-  public get [S.TypeId]() {
-    return schemaVariance;
-  }
-
   public get Encoded() {
     return this.serializedSchema;
   }
@@ -81,6 +76,11 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return schema.pipe.bind(schema);
   }
 
+  // TODO(burdon): Comment?
+  public get [S.TypeId]() {
+    return schemaVariance;
+  }
+
   public get schema(): S.Schema<Identifiable> {
     return this._getSchema();
   }
@@ -89,6 +89,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     return this.serializedSchema.typename;
   }
 
+  // TODO(burdon): Rename.
   invalidate() {
     this._isDirty = true;
   }
@@ -97,7 +98,9 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
   public addColumns(fields: S.Struct.Fields) {
     const oldSchema = this._getSchema();
     const schemaExtension = S.partial(S.Struct(fields));
-    const extended = S.extend(oldSchema, schemaExtension).annotations(oldSchema.ast.annotations);
+    const extended: S.Schema<Identifiable> = S.extend(oldSchema, schemaExtension).annotations(
+      oldSchema.ast.annotations,
+    );
     this.serializedSchema.jsonSchema = effectToJsonSchema(extended);
   }
 
@@ -109,7 +112,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     const updatedProperties: AST.PropertySignature[] = [...oldAst.propertySignatures];
     for (const property of propertiesToUpdate) {
       const index = updatedProperties.findIndex((p) => p.name === property.name);
-      if (index >= 0) {
+      if (index !== -1) {
         updatedProperties.splice(index, 1, property);
       } else {
         updatedProperties.push(property);
@@ -146,7 +149,7 @@ export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Sc
     this.serializedSchema.jsonSchema = effectToJsonSchema(schemaWithUpdatedColumns);
   }
 
-  private _getSchema(): S.Schema<Identifiable> {
+  private _getSchema() {
     if (this._isDirty || this._schema == null) {
       this._schema = jsonToEffectSchema(unwrapProxy(this.serializedSchema.jsonSchema));
       this._isDirty = false;
