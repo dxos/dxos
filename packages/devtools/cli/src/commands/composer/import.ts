@@ -2,13 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Args } from '@oclif/core';
+
 import { Filter, type Space } from '@dxos/client/echo';
 import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
 import { diff } from '@dxos/util';
 
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
-import { Args } from '@oclif/core';
 
 type DataFile = {
   objects: Record<string, any>[];

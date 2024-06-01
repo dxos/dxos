@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Args } from '@oclif/core';
+
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols';
 
 import { BaseCommand } from '../../../base';
-import { Args } from '@oclif/core';
 
 export default class Add extends BaseCommand<typeof Add> {
   static override description = 'Import credential into HALO.';

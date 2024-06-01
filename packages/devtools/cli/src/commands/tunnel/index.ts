@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Args, Flags } from '@oclif/core';
+
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
 import { printTunnels, type TunnelRpcPeer } from '../../util';
-import { Args, Flags } from '@oclif/core';
 
 /**
  * @deprecated

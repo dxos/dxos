@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Flags } from '@oclif/core';
+
 import { FileType } from '@braneframe/types';
 import { type Space } from '@dxos/client-protocol';
 import { create } from '@dxos/echo-schema';
@@ -9,7 +11,6 @@ import { create } from '@dxos/echo-schema';
 import { ComposerBaseCommand } from './base';
 import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
 import { createIpfsClient } from '../../util';
-import { Flags } from '@oclif/core';
 
 /**
  * Upload IPFS file.
