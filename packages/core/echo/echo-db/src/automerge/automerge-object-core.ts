@@ -308,7 +308,7 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue) {
+  encode(value: DecodedAutomergePrimaryValue) {
     if (isReactiveObject(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
