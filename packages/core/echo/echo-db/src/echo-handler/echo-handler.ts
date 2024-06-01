@@ -540,7 +540,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
           if (value instanceof Reference) {
             // TODO(dmaretskyi): This will resolve to the proxy object, but we should pull out that resolution from object-core.
-            return target[symbolInternals].core.decode(value);
+            return target[symbolInternals].core.lookupLink(value);
           }
           return recurse(value);
         });
