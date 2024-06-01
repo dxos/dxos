@@ -478,10 +478,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     });
 
-    return target[symbolInternals].core.encode(linksEncoded, {
-      allowLinks: false,
-      removeUndefined: true,
-    });
+    return target[symbolInternals].core.encode(linksEncoded);
   }
 
   private _getPropertyMountPath(target: ProxyTarget, path: KeyPath): KeyPath {

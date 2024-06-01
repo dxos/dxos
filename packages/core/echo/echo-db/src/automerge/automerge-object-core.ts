@@ -308,37 +308,29 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue, options: { allowLinks?: boolean; removeUndefined?: boolean } = {}) {
-    const allowLinks = options.allowLinks ?? true;
-    const removeUndefined = options.removeUndefined ?? false;
+  encode(value: DecodedAutomergeValue) {
+    if (isReactiveObject(value) as boolean) {
+      throw new TypeError('Linking is not allowed');
+    }
+
     if (value instanceof A.RawString) {
       return value;
     }
     if (value === undefined) {
       return null;
     }
-    // TODO(dmaretskyi): Move proxy handling out of this class.
-    if (isReactiveObject(value) as boolean) {
-      if (!allowLinks) {
-        throw new TypeError('Linking is not allowed');
-      }
 
-      const reference = this.linkObject(value as EchoReactiveObject<any>);
-      return encodeReference(reference);
-    }
     if (value instanceof Reference) {
       // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
       return encodeReference(value);
     }
     if (Array.isArray(value)) {
-      const values: any = value.map((val) => this.encode(val, options));
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
-      const entries = removeUndefined
-        ? Object.entries(value).filter(([_, value]) => value !== undefined)
-        : Object.entries(value);
-      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value, options)]));
+      const entries = Object.entries(value).filter(([_, value]) => value !== undefined);
+      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value)]));
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
@@ -373,7 +365,7 @@ export class AutomergeObjectCore {
   }
 
   arrayPush(path: KeyPath, items: DecodedAutomergeValue[]) {
-    const itemsEncoded = items.map((item) => this.encode(item, { allowLinks: false, removeUndefined: true }));
+    const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
     this.change((doc) => {
@@ -418,7 +410,7 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
-    this._set(path, this.encode(value, { allowLinks: false, removeUndefined: true }));
+    this._set(path, this.encode(value));
   }
 
   setType(reference: Reference) {

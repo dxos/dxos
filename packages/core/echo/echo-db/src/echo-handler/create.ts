@@ -15,7 +15,7 @@ import {
   DynamicEchoSchema,
 } from '@dxos/echo-schema';
 import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
 import {
@@ -25,7 +25,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { AutomergeObjectCore } from '../automerge';
+import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
@@ -90,7 +90,7 @@ const initCore = (core: AutomergeObjectCore, target: any) => {
     target[symbolInternals].core.id = target[PROPERTY_ID];
     delete target[PROPERTY_ID];
   }
-  core.initNewObject(target);
+  core.initNewObject(linkAllNestedProperties(core, target));
 };
 
 export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
@@ -136,3 +136,11 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     }
   }
 };
+
+const linkAllNestedProperties = (core: AutomergeObjectCore, data: any): DecodedAutomergePrimaryValue =>
+  deepMapValues(data, (value, recurse) => {
+    if (isReactiveObject(value) as boolean) {
+      return core.linkObject(value);
+    }
+    return recurse(value);
+  });
