@@ -22,8 +22,6 @@ import {
 import { invariant } from '@dxos/invariant';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
-import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
-import { type KeyPath } from '../automerge/key-path';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
@@ -35,6 +33,8 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
+import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
+import { type KeyPath } from '../automerge/key-path';
 
 export const PROPERTY_ID = 'id';
 
