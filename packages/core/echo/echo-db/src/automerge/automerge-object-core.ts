@@ -420,7 +420,7 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
-    this.set(path, this.encode(value, { allowLinks: false }));
+    this.set(path, this.encode(value, { allowLinks: false, removeUndefined: true }));
   }
 
   setType(reference: Reference) {

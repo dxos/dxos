@@ -192,8 +192,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
-    const value = target[symbolInternals].core.get(fullPath);
-    return { namespace: getNamespace(target), value: target[symbolInternals].core.decode(value), dataPath };
+    let value = target[symbolInternals].core.getDecoded(fullPath);
+
+    if (value instanceof Reference) {
+      value = target[symbolInternals].core.lookupLink(value);
+    }
+
+    return { namespace: getNamespace(target), value, dataPath };
   }
 
   private _arrayGet(target: ProxyTarget, prop: string) {
@@ -237,10 +242,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].core.delete(fullPath);
     } else if (validatedValue !== null && validatedValue[symbolHandler] instanceof EchoReactiveHandler) {
       const link = this._linkReactiveHandler(target, validatedValue, validatedValue[symbolInternals]);
-      target[symbolInternals].core.set(fullPath, encodeReference(link));
+      target[symbolInternals].core.setDecoded(fullPath, link);
     } else {
-      const encoded = target[symbolInternals].core.encode(validatedValue, { removeUndefined: true });
-      target[symbolInternals].core.set(fullPath, encoded);
+      target[symbolInternals].core.setDecoded(fullPath, validatedValue);
     }
 
     return true;
