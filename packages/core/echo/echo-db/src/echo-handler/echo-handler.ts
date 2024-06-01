@@ -6,31 +6,35 @@ import * as S from '@effect/schema/Schema';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
-import { encodeReference, Reference } from '@dxos/echo-protocol';
+import { Reference, encodeReference } from '@dxos/echo-protocol';
 import {
-  SchemaValidator,
   DynamicEchoSchema,
-  StoredEchoSchema,
-  defineHiddenProperty,
   ObjectMetaSchema,
+  SchemaValidator,
+  StoredEchoSchema,
+  createReactiveProxy,
+  defineHiddenProperty,
+  isReactiveObject,
+  symbolIsProxy,
+  type ObjectMeta,
+  type ReactiveHandler,
 } from '@dxos/echo-schema';
-import { createReactiveProxy, symbolIsProxy, type ReactiveHandler, type ObjectMeta } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { assignDeep, defaultMap, getDeep, deepMapValues } from '@dxos/util';
+import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
+import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
+import { type KeyPath } from '../automerge/key-path';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
-  type ProxyTarget,
+  TargetKey,
+  symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
-  symbolHandler,
   type ObjectInternals,
-  TargetKey,
+  type ProxyTarget,
 } from './echo-proxy-target';
-import { type AutomergeObjectCore, META_NAMESPACE } from '../automerge/automerge-object-core';
-import { type KeyPath } from '../automerge/key-path';
 
 export const PROPERTY_ID = 'id';
 
@@ -335,19 +339,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   arrayPush(target: ProxyTarget, path: KeyPath, ...items: any[]): number {
     this._validateForArray(target, path, items, target.length);
 
-    const fullPath = this._getPropertyMountPath(target, path);
-
     const encodedItems = this._encodeForArray(target, items);
 
-    let newLength: number = -1;
-    target[symbolInternals].core.change((doc) => {
-      const array = getDeep(doc, fullPath);
-      invariant(Array.isArray(array));
-      newLength = array.push(...encodedItems);
-    });
-    invariant(newLength !== -1);
-
-    return newLength;
+    return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
   arrayPop(target: ProxyTarget, path: KeyPath): any {
@@ -476,7 +470,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
-    return items?.map((value) => target[symbolInternals].core.encode(value, { removeUndefined: true })) ?? [];
+    const linksEncoded = deepMapValues(items, (value, recurse) => {
+      if (isReactiveObject(value) as boolean) {
+        return target[symbolInternals].core.linkObject(value);
+      } else {
+        return recurse(value);
+      }
+    });
+
+    return target[symbolInternals].core.encode(linksEncoded, {
+      allowLinks: false,
+      removeUndefined: true,
+    });
   }
 
   private _getPropertyMountPath(target: ProxyTarget, path: KeyPath): KeyPath {

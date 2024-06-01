@@ -72,7 +72,6 @@ export class AutomergeObjectCore {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  // TODO(dmaretskyi): Change to object core.
   public linkCache?: Map<string, EchoReactiveObject<any>> = new Map<string, EchoReactiveObject<any>>();
 
   /**
@@ -386,6 +385,20 @@ export class AutomergeObjectCore {
     }
 
     return value;
+  }
+
+  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]) {
+    const itemsEncoded = items.map((item) => this.encode(item, { allowLinks: false, removeUndefined: true }));
+
+    let newLength: number = -1;
+    this.change((doc) => {
+      const fullPath = [...this.mountPath, ...path];
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      newLength = array.push(...itemsEncoded);
+    });
+    invariant(newLength !== -1);
+    return newLength;
   }
 
   /**
