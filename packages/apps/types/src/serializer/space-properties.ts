@@ -12,12 +12,12 @@ import { invariant } from '@dxos/invariant';
  * object['complex']['key']['part']
  * these functions are required for pre- and post- effect schema code full compatibility
  * when working with space properties.
+ *
+ * @deprecated
  */
-
 // TODO( wittjosiah): Mainly need for backwards compat with lodash-style nested selectors.
 //  If we migrate data stored with those kinds of selectors (mainly space properties) then we could probably
 //  just remove this util altogether.
-
 export const getSpaceProperty = <T>(space: Space | undefined, key: string): T | undefined => {
   if (space == null) {
     return undefined;

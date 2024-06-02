@@ -408,8 +408,11 @@ export class SpaceProxy implements Space {
     };
   }
 
-  private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
-    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
+  private async _createEpoch({
+    migration,
+    automergeRootUrl,
+  }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
+    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
   }
 
   private async _removeMember(memberKey: PublicKey) {

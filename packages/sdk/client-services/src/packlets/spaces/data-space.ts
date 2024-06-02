@@ -75,6 +75,7 @@ export type DataSpaceParams = {
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
+  newAutomergeRoot?: string;
 };
 
 @trackLeaks('open', 'close')
@@ -494,6 +495,18 @@ export class DataSpace {
             number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
             timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
             automergeRoot: newRoot.url,
+          };
+        }
+        break;
+      case CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT:
+        {
+          invariant(options.newAutomergeRoot);
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: options.newAutomergeRoot,
           };
         }
         break;

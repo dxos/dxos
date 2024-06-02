@@ -7,6 +7,7 @@ import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
 import {
+  type CreateEpochRequest,
   type Invitation,
   type Space as SpaceData,
   type SpaceMember,
@@ -22,7 +23,7 @@ export interface SpaceInternal {
   get data(): SpaceData;
 
   // TODO(dmaretskyi): Return epoch info.
-  createEpoch(): Promise<void>;
+  createEpoch(options?: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string }): Promise<void>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
 }

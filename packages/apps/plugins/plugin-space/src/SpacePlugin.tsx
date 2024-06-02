@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { getSpaceProperty, setSpaceProperty, Collection, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { setSpaceProperty, Collection, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -295,7 +295,7 @@ export const SpacePlugin = ({
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(primary) ? (
-                <Surface data={{ active: getSpaceProperty(primary, Collection.typename) }} role={role} {...rest} />
+                <Surface data={{ active: primary.properties[Collection.typename] }} role={role} {...rest} />
               ) : primary instanceof Collection ? (
                 { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
@@ -375,7 +375,7 @@ export const SpacePlugin = ({
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
                 ? data.object.state.get() === SpaceState.READY
-                  ? (getSpaceProperty(space, Collection.typename) as Collection)
+                  ? (space?.properties[Collection.typename] as Collection)
                   : undefined
                 : data.object;
               return space && space !== defaultSpace && object
@@ -694,7 +694,7 @@ export const SpacePlugin = ({
 
               const space = intent.data?.target;
               if (isSpace(space)) {
-                const collection = getSpaceProperty(space, Collection.typename);
+                const collection = space.properties[Collection.typename];
                 if (collection instanceof Collection) {
                   collection.objects.push(object as Identifiable);
                 } else {

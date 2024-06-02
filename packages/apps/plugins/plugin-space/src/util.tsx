@@ -135,7 +135,7 @@ export const updateGraphWithSpace = ({
       space.state.get() === SpaceState.READY &&
       !!Migrations.versionProperty &&
       space.properties[Migrations.versionProperty] !== Migrations.targetVersion;
-    const collection = space.state.get() === SpaceState.READY && getSpaceProperty(space, Collection.typename);
+    const collection = space.state.get() === SpaceState.READY && space.properties[Collection.typename];
     const partials =
       space.state.get() === SpaceState.READY && collection instanceof Collection
         ? getFolderGraphNodePartials({ graph, collection, space })
@@ -375,7 +375,7 @@ const updateGraphWithSpaceObjects = ({
 
   const unsubscribeQueryHandler = effect(() => {
     const collection =
-      space.state.get() === SpaceState.READY ? getSpaceProperty<Collection>(space, Collection.typename) : null;
+      space.state.get() === SpaceState.READY ? (space.properties[Collection.typename] as Collection) : null;
     const collectionObjects = collection?.objects ?? [];
     const removedObjects =
       previousObjects

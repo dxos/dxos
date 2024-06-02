@@ -357,11 +357,17 @@ message CreateEpochRequest {
 
     /// Create a new space root and move objects from the current space root to separate automerge documents and.
     FRAGMENT_AUTOMERGE_ROOT = 3;
+
+    /// Replace the current automerge root with a new one specified by the user.
+    REPLACE_AUTOMERGE_ROOT = 4;
   }
 
   dxos.keys.PublicKey space_key = 1;
 
   optional Migration migration = 2;
+
+  /// For REPLACE_AUTOMERGE_ROOT migration.
+  optional string automerge_root_url = 3;
 }
 
 message UpdateMemberRoleRequest {

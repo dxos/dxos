@@ -146,7 +146,7 @@ describe('Composer migrations', () => {
 
     const collectionQuery = space.db.query(Filter.schema(Collection));
     expect((await collectionQuery.run()).objects).to.have.lengthOf(4);
-    const rootCollection = getSpaceProperty(space, Collection.typename) as Collection;
+    const rootCollection = space.properties[Collection.typename] as Collection;
     expect(rootCollection instanceof Collection).to.be.true;
     expect(rootCollection.objects[0] instanceof Collection).to.be.true;
     expect(rootCollection.objects[0]?.objects[0] instanceof Collection).to.be.true;

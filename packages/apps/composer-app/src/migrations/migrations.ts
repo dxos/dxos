@@ -3,9 +3,15 @@
 //
 
 import { Collection, getSpaceProperty, setSpaceProperty } from '@braneframe/types';
-import { create, Expando, ref, S, TypedObject } from '@dxos/echo-schema';
-import { type Migration } from '@dxos/migrations';
-import { Filter, loadObjectReferences } from '@dxos/react-client/echo';
+import * as automerge from '@dxos/automerge/automerge';
+import { CreateEpochRequest } from '@dxos/client/halo';
+import { AutomergeObjectCore, loadObjectReferences } from '@dxos/echo-db';
+import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { create, Expando, ref, requireTypeReference, S, TypedObject } from '@dxos/echo-schema';
+import { Migrations, type Migration } from '@dxos/migrations';
+import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { Filter } from '@dxos/react-client/echo';
+import { getDeep } from '@dxos/util';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
   name: S.optional(S.String),
@@ -60,68 +66,130 @@ export const migrations: Migration[] = [
   {
     version: 3,
     up: async ({ space }) => {
+      /*
+      - Epoch for atomicty
+      - Not loading reference content where not needed
+      - Preserving IDs while chaging the schema
+      */
+
       // Find all folders and stacks.
       const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
       const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
 
-      // Create corresponding collections for folders and stacks.
-      // NOTE: Stacks need to be loaded first because recursive loading is hairy currently.
-      //   Working theory is that it's because folders can contain stacks but stacks can't contain folders.
-      const stackCollections = await Promise.all(
-        stacks.map(async (stack): Promise<[StackType, Collection]> => {
-          const sections = await loadObjectReferences(stack, (stack) => stack.sections);
-          const objects = await Promise.all(
-            sections.map(async (section) => loadObjectReferences(section, (section) => section.object)),
-          );
-          return [
-            stack,
-            create(Collection, {
-              name: stack.title,
-              objects,
-              // StackView will be created when the stack is rendered.
-              // There's nothing to migrate here because no stack-specific data was stored previously.
-              views: {},
-            }),
-          ];
-        }),
-      );
-      const folderCollections = await Promise.all(
-        folders.map(async (folder): Promise<[FolderType, Collection]> => {
-          const objects = await loadObjectReferences(folder, (folder) => folder.objects);
-          return [folder, create(Collection, { name: folder.name, objects, views: {} })];
-        }),
-      );
+      const repo = space.db.automerge.automerge.repo;
+      const automergeContext = space.db.automerge.automerge;
+      const rootDoc = space.db.automerge._automergeDocLoader
+        .getSpaceRootDocHandle()
+        .docSync() as automerge.Doc<SpaceDoc>;
 
-      // Replace folders and stacks, in migrated collections with corresponding collections.
-      // This is only done for folders because stacks previously couldn't contain other stacks or folders.
-      folderCollections.forEach(([_, collection]) => {
-        collection.objects.forEach((object, index) => {
-          if (object instanceof FolderType) {
-            const [_, c] = folderCollections.find(([folder]) => folder === object)!;
-            collection.objects.splice(index, 1, c);
-          }
+      /**
+       * echoId -> automergeUrl
+       */
+      const newLinks: Record<string, string> = {};
+      const flushStates: FlushRequest.DocState[] = [];
 
-          if (object instanceof StackType) {
-            const [_, c] = stackCollections.find(([stack]) => stack === object)!;
-            collection.objects.splice(index, 1, c);
-          }
+      for (const folderId of folders.map((f) => f.id)) {
+        const folderDocHandle = repo.find(rootDoc.links![folderId] as any);
+        await folderDocHandle.whenReady();
+        const folderDoc = (folderDocHandle.docSync() as automerge.Doc<SpaceDoc>).objects![folderId];
+
+        const core = new AutomergeObjectCore();
+        core.id = folderId;
+        core.initNewObject({
+          name: folderDoc.data.name,
+          objects: folderDoc.data.objects,
+          views: {},
         });
-      });
+        core.setType(requireTypeReference(Collection));
 
-      // Add collections to the space.
-      folderCollections.forEach(([_, collection]) => {
-        space.db.add(collection);
-      });
-      stackCollections.forEach(([_, collection]) => {
-        space.db.add(collection);
-      });
-
-      // Update the space property.
-      const rootFolder = getSpaceProperty(space, FolderType.typename);
-      const [_, collection] = folderCollections.find(([folder]) => folder === rootFolder) ?? [];
-      if (collection) {
-        setSpaceProperty(space, Collection.typename, collection);
+        const newHandle = repo.create<SpaceDoc>({
+          access: {
+            spaceKey: space.key.toHex(),
+          },
+          objects: {
+            [folderId]: core.getDoc(),
+          },
+        });
+        newLinks[folderId] = newHandle.url;
+        flushStates.push({
+          documentId: newHandle.documentId,
+          heads: automerge.getHeads(newHandle.docSync()!),
+        });
       }
+
+      for (const stack of stacks) {
+        const stackId = stack.id;
+
+        const sections = await loadObjectReferences(stack, (s) => s.sections);
+        const sectionIds = sections.map((s) => s.id);
+
+        // TODO(wittjosiah): Delete sections.
+        const sectionStructures: ObjectStructure[] = [];
+        for (const sectionId of sectionIds) {
+          const sectionDocHandle = repo.find(rootDoc.links![sectionId] as any);
+          await sectionDocHandle.whenReady();
+          const sectionDoc = (sectionDocHandle.docSync()! as automerge.Doc<SpaceDoc>).objects![sectionId];
+          sectionStructures.push(sectionDoc);
+        }
+
+        const stackDocHandle = repo.find(rootDoc.links![stackId] as any);
+        await stackDocHandle.whenReady();
+        const stackDoc = (stackDocHandle.docSync()! as automerge.Doc<SpaceDoc>).objects![stackId];
+
+        const core = new AutomergeObjectCore();
+        core.id = stackId;
+        core.initNewObject({
+          name: stackDoc.data.title,
+          objects: sectionStructures.map((section) => section.data.object),
+          views: {},
+        });
+        core.setType(requireTypeReference(Collection));
+
+        const newHandle = repo.create<SpaceDoc>({
+          access: {
+            spaceKey: space.key.toHex(),
+          },
+          objects: {
+            [stackId]: core.getDoc(),
+          },
+        });
+        newLinks[stackId] = newHandle.url;
+        flushStates.push({
+          documentId: newHandle.documentId,
+          heads: automerge.getHeads(newHandle.docSync()!),
+        });
+      }
+
+      const newRoot = repo.create<SpaceDoc>({
+        access: {
+          spaceKey: space.key.toHex(),
+        },
+        objects: rootDoc.objects,
+        links: {
+          ...rootDoc.links,
+          ...newLinks,
+        },
+      });
+      // TODO(wittjosiah): This should be done by @dxos/migrations.
+      newRoot.change((doc: SpaceDoc) => {
+        const propertiesStructure = doc.objects![space.properties.id];
+        propertiesStructure.data[Migrations.versionProperty!] = 4;
+        const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename!.split('.'));
+        propertiesStructure.data[Collection.typename] = prevRootFolder ? { ...prevRootFolder } : null;
+      });
+      flushStates.push({
+        documentId: newRoot.documentId,
+        heads: automerge.getHeads(newRoot.docSync()!),
+      });
+      await automergeContext.flush({
+        states: flushStates,
+      });
+
+      // Create new epoch.
+      await space.internal.createEpoch({
+        migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
+        automergeRootUrl: newRoot.url,
+      });
     },
     down: () => {},
   },
