@@ -40,7 +40,6 @@ const useChessModel = (game: GameType) => {
 
 export const Chess = ({ space, game }: { space: Space; game: GameType }) => {
   const { model, handleUpdate } = useChessModel(game);
-
   if (!model) {
     return null;
   }

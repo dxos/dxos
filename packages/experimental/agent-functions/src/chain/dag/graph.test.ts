@@ -65,7 +65,7 @@ describe.only('graph', () => {
  * Value or operation.
  */
 // Nodes: Prompt, Message, Resolver, Retriever
-// const Message = S.struct({ text: S.string });
+// const Message = S.Struct({ text: S.String });
 // type Message = S.Schema.Type<typeof Message>;
 // type Cell<Value> = {
 //   schema?: S.Schema<Value>;
