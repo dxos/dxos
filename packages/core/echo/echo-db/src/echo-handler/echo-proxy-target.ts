@@ -10,6 +10,7 @@ import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { AutomergeObjectCore } from '../automerge';
 import type { KeyPath } from '../automerge/key-path';
+import type { GenericSignal } from '@dxos/echo-signals/src/runtime';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -46,6 +47,8 @@ export type ObjectInternals = {
    * Only used for records and arrays.
    */
   targetsMap: ComplexMap<TargetKey, ProxyTarget>;
+
+  signal: GenericSignal;
 };
 
 /**

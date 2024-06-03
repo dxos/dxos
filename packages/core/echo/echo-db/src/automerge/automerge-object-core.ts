@@ -86,11 +86,6 @@ export class AutomergeObjectCore {
   public updates = new Event();
 
   /**
-   * Reactive signal for update propagation.
-   */
-  public signal = compositeRuntime.createSignal(this);
-
-  /**
    * User-facing proxy for the object.
    * Either an instance of `AutomergeObject` or a `ReactiveEchoObject<T>`.
    */
@@ -241,7 +236,6 @@ export class AutomergeObjectCore {
    */
   public readonly notifyUpdate = () => {
     try {
-      this.signal.notifyWrite();
       this.updates.emit();
     } catch (err) {
       // Print the error message synchronously for easier debugging.

@@ -27,6 +27,7 @@ import {
   symbolPath,
 } from './echo-proxy-target';
 import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
@@ -55,7 +56,12 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolInternals] = {
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+      signal: compositeRuntime.createSignal(),
     };
+
+    // TODO(dmaretskyi): Does this need to be disposed?
+    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
@@ -74,11 +80,16 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
       [symbolInternals]: {
         core,
         targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-      },
+        signal: compositeRuntime.createSignal(),
+      } satisfies ObjectInternals,
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       ...(init as any),
     };
+
+    // TODO(dmaretskyi): Does this need to be disposed?
+    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
     initCore(core, target);
     const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     core.rootProxy = proxy;
@@ -101,10 +112,15 @@ export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
     [symbolInternals]: {
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+      signal: compositeRuntime.createSignal(),
     },
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
+
+  // TODO(dmaretskyi): Does this need to be disposed?
+  core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
   core.rootProxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
