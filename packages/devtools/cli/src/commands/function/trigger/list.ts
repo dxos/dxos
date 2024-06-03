@@ -9,10 +9,10 @@ import { Filter } from '@dxos/client/echo';
 import { FunctionTrigger } from '@dxos/functions';
 import { omit } from '@dxos/log';
 
-import { BaseCommand } from '../../base';
-import { stringify } from '../../util';
+import { BaseCommand } from '../../../base';
+import { stringify } from '../../../util';
 
-export default class Trigger extends BaseCommand<typeof Trigger> {
+export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List and manage triggers.';
   static override flags = {

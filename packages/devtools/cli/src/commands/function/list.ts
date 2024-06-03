@@ -19,7 +19,8 @@ export default class List extends BaseCommand<typeof List> {
   async run(): Promise<any> {
     return await this.execWithClient(async (client) => {
       // TODO(dmaretskyi): Move into system service?
-      const config = new Config(JSON.parse((await client.services.services.DevtoolsHost!.getConfig()).config));
+      const host = await client.services.services.DevtoolsHost!;
+      const config = new Config(JSON.parse((await host.getConfig()).config));
       const functionsConfig = config.values.runtime?.agent?.plugins?.find(
         (plugin) => plugin.id === 'dxos.org/agent/plugin/functions', // TODO(burdon): Use const.
       );

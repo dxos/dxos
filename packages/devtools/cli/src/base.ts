@@ -118,28 +118,25 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['c'],
     }),
 
-    target: Flags.string({
-      description: 'Target websocket server.',
-    }),
-
-    // This does not check whether an agent is running or not, and could potentially corrupt data.
-    // https://github.com/dxos/dxos/issues/6473
-    // TODO(burdon): Set `allowNo` and invert.
-    agent: Flags.boolean({
-      description: 'Run command with agent.',
-      default: false,
-      allowNo: true,
-      env: ENV_DX_NO_AGENT,
-    }),
-
     timeout: Flags.integer({
       description: 'Timeout (ms).',
       default: 60_000,
       aliases: ['t'],
     }),
 
+    target: Flags.string({
+      description: 'Target websocket server.',
+    }),
+
+    agent: Flags.boolean({
+      description: 'Run command with agent.',
+      default: true,
+      allowNo: true,
+      env: ENV_DX_NO_AGENT,
+    }),
+
     wait: Flags.boolean({
-      description: 'Do not wait for space to be ready.',
+      description: 'Wait for space to be ready.',
       allowNo: true,
       default: false,
     }),
@@ -575,12 +572,14 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     options: { halo?: boolean } = {},
   ): Promise<T | undefined> {
     const client = await this.getClient();
+
     if (options.halo && !client.halo.identity.get()) {
       this.warn('HALO not initialized; run `dx halo create --help`');
       process.exit(1);
     }
 
     await this.onClientInit(client);
+
     const value = await callback(client);
     await client.destroy();
     return value;
