@@ -541,4 +541,18 @@ describe('Reactive Object with ECHO database', () => {
     expect(updateCount).to.eq(2);
     expect(obj2.title).to.eq('Object 1');
   });
+
+  test('assign a non-echo reactive object', async () => {
+    registerSignalRuntime();
+
+    const { db } = await builder.createDatabase();
+
+    const obj = db.add(create(Expando, { title: 'Object 1' }));
+
+    obj.ref = create(Expando, { title: 'Object 2' });
+
+    obj.refs = [create(Expando, { title: 'Object 2' })];
+
+    obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
+  });
 });
