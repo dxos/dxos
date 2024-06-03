@@ -89,7 +89,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   get(target: ProxyTarget, prop: string | symbol, receiver: any): any {
     invariant(Array.isArray(target[symbolPath]));
 
-    target[symbolInternals].core.signal.notifyRead();
+    target[symbolInternals].signal.notifyRead();
 
     if (prop === devtoolsFormatter) {
       return this._getDevtoolsFormatter(target);
