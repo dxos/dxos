@@ -247,20 +247,19 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           }, [doc, space, settings.values.editorMode]);
 
           const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
-          const onFileUpload = useCallback(
-            async (file: File) => {
-              if (space === undefined) {
-                return undefined;
-              }
+          const onFileUpload = useMemo(() => {
+            if (space === undefined) {
+              return undefined;
+            }
 
-              if (fileManagerPlugin?.provides.file.upload === undefined) {
-                return undefined;
-              }
+            if (fileManagerPlugin?.provides.file.upload === undefined) {
+              return undefined;
+            }
 
-              return await fileManagerPlugin.provides.file.upload(file, space);
-            },
-            [fileManagerPlugin, space],
-          );
+            return async (file: File) => {
+              return await fileManagerPlugin?.provides?.file?.upload?.(file, space);
+            };
+          }, [fileManagerPlugin, space]);
 
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
