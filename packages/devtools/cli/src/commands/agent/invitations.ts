@@ -18,8 +18,10 @@ export default class Share extends BaseCommand<typeof Share> {
 
   static override flags = {
     ...BaseCommand.flags,
-    'no-truncate': Flags.boolean({
+    truncate: Flags.boolean({
       description: 'Do not truncate keys.',
+      default: true,
+      allowNo: true,
     }),
   };
 
@@ -37,11 +39,11 @@ export default class Share extends BaseCommand<typeof Share> {
         ux.table(mappedInvitations, {
           invitationId: {
             header: 'Inv. ID',
-            get: (row) => (this.flags['no-truncate'] ? row.invitationId : row.invitationId.slice(0, 8)),
+            get: (row) => (this.flags.truncate ? row.invitationId.slice(0, 8) : row.invitationId),
           },
           swarmKey: {
             header: 'Swarm Key',
-            get: (row) => (this.flags['no-truncate'] ? row.swarmKey.toHex() : row.swarmKey.truncate()),
+            get: (row) => (this.flags.truncate ? row.swarmKey.truncate() : row.swarmKey.toHex()),
           },
           created: { header: 'Created' },
           lifetime: { header: 'Lifetime' },
@@ -66,15 +68,15 @@ export default class Share extends BaseCommand<typeof Share> {
         ux.table(mapInvitations(mappedSpaceInvitations), {
           invitationId: {
             header: 'Inv. ID',
-            get: (row) => (this.flags['no-truncate'] ? row.invitationId : row.invitationId.slice(0, 8)),
+            get: (row) => (this.flags.truncate ? row.invitationId.slice(0, 8) : row.invitationId),
           },
           swarmKey: {
             header: 'Swarm Key',
-            get: (row) => (this.flags['no-truncate'] ? row.swarmKey.toHex() : row.swarmKey.truncate()),
+            get: (row) => (this.flags.truncate ? row.swarmKey.truncate() : row.swarmKey.toHex()),
           },
           spaceKey: {
             header: 'Space Key',
-            get: (row) => (this.flags['no-truncate'] ? row.spaceKey?.toHex() : row.spaceKey?.truncate()),
+            get: (row) => (this.flags.truncate ? row.spaceKey?.truncate() : row.spaceKey?.toHex()),
           },
           created: { header: 'Created' },
           lifetime: { header: 'Lifetime' },

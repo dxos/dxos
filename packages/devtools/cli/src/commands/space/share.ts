@@ -37,11 +37,10 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Application Host URL.',
       default: 'https://composer.space',
     }),
-    'no-auth': Flags.boolean({
+    auth: Flags.boolean({
       description: 'Skip authentication challenge.',
-    }),
-    'no-wait': Flags.boolean({
-      description: "Don't wait for a peer to connect before exiting CLI",
+      default: true,
+      allowNo: true,
     }),
   };
 
@@ -51,7 +50,7 @@ export default class Share extends BaseCommand<typeof Share> {
       const space = await this.getSpace(client, key);
 
       // TODO(burdon): Timeout error not propagated.
-      const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
+      const authMethod = this.flags.auth ? Invitation.AuthMethod.NONE : undefined;
       const observable = space!.share({
         authMethod,
         multiUse: this.flags.multiple,
@@ -74,8 +73,7 @@ export default class Share extends BaseCommand<typeof Share> {
             if (this.flags.open) {
               const url = new URL(this.flags.host);
               url.searchParams.append('spaceInvitationCode', InvitationEncoder.encode(invitation));
-              // TODO: remove after the demo
-              url.searchParams.append('migrateSpace', 'true');
+              url.searchParams.append('migrateSpace', 'true'); // TODO(burdon): Remove.
               spawn('open', [url.toString()]);
             } else {
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
@@ -85,7 +83,7 @@ export default class Share extends BaseCommand<typeof Share> {
         waitForSuccess: false,
       });
 
-      if (!this.flags['no-wait']) {
+      if (this.flags.wait) {
         // TODO(burdon): Display joined peer?
         ux.action.start('Waiting for peer to connect');
         await invitationSuccess;

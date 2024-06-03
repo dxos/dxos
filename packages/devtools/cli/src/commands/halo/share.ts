@@ -34,11 +34,10 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Application Host URL.',
       default: 'https://composer.space',
     }),
-    'no-auth': Flags.boolean({
+    auth: Flags.boolean({
       description: 'Skip authentication challenge.',
-    }),
-    'no-wait': Flags.boolean({
-      description: "Don't wait for a peer to connect before exiting CLI.",
+      default: true,
+      allowNo: true,
     }),
   };
 
@@ -49,7 +48,7 @@ export default class Share extends BaseCommand<typeof Share> {
         return {};
       }
 
-      const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
+      const authMethod = this.flags.auth ? Invitation.AuthMethod.NONE : undefined;
       const observable = client.halo.share({
         authMethod,
         timeout: this.flags.timeout,
@@ -80,7 +79,7 @@ export default class Share extends BaseCommand<typeof Share> {
         waitForSuccess: false,
       });
 
-      if (!this.flags['no-wait']) {
+      if (this.flags.wait) {
         ux.action.start('Waiting for peer to connect');
         await invitationSuccess;
         ux.action.stop();

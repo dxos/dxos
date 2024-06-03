@@ -125,9 +125,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     // This does not check whether an agent is running or not, and could potentially corrupt data.
     // https://github.com/dxos/dxos/issues/6473
     // TODO(burdon): Set `allowNo` and invert.
-    'no-agent': Flags.boolean({
-      description: 'Run command without starting an agent.',
+    agent: Flags.boolean({
+      description: 'Run command with agent.',
       default: false,
+      allowNo: true,
       env: ENV_DX_NO_AGENT,
     }),
 
@@ -137,10 +138,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       aliases: ['t'],
     }),
 
-    // TODO(burdon): Standardize across all commands.
-    // TODO(burdon): Set `allowNo` and invert.
-    'no-wait': Flags.boolean({
+    wait: Flags.boolean({
       description: 'Do not wait for space to be ready.',
+      allowNo: true,
+      default: false,
     }),
 
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
@@ -236,6 +237,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       // Load user config file.
       await this._loadConfigFromFile();
     }
+
     await this._initObservability(
       this.flags['json-log'] && this.flags['json-logfile'] === 'stderr'
         ? (input) => process.stderr.write(JSON.stringify({ input }) + '\n')
@@ -263,21 +265,19 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   ) {
     const observabilityState = await getObservabilityState(DX_DATA);
     const { mode, installationId, group } = observabilityState;
-
     if (mode === 'disabled') {
       this.log('observability disabled by config');
       return;
     }
-    {
-      if (group === 'dxos') {
-        this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
-      }
 
-      await showObservabilityBanner(DX_DATA, (input: string) => {
-        // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
-        logCb(input);
-      });
+    if (group === 'dxos') {
+      this.log(chalk`✨ {bgMagenta Running as internal user} ✨\n`);
     }
+
+    await showObservabilityBanner(DX_DATA, (input: string) => {
+      // Use callback to enable avoid interfering with JSON output (--json flag) and JSON log output on stderr (--json-log).
+      logCb(input);
+    });
 
     // TODO(nf): handle cases where the cli starts the agent for the user
     let namespace = 'cli';
@@ -423,7 +423,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   }
 
   async maybeStartDaemon() {
-    if (!this.flags['no-agent']) {
+    if (this.flags.agent) {
       await this.execWithDaemon(async (daemon) => {
         const running = await daemon.isRunning(this.flags.profile);
         if (!running) {
@@ -441,16 +441,16 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     invariant(this._clientConfig);
     if (!this._client) {
       try {
-        // Create a client using a LocalClientServices "host mode" or by connecting to a remote ClientServices.
-        if (this.flags['no-agent'] || this.flags.target) {
-          this._client = new Client({ config: this._clientConfig });
-        } else {
+        if (this.flags.agent) {
           // Connect to a locally-running agent, possibly starting one if necessary.
           await this.maybeStartDaemon();
           this._client = new Client({
             config: this._clientConfig,
             services: fromAgent({ profile: this.flags.profile }),
           });
+        } else {
+          // Create a client using a LocalClientServices "host mode" or by connecting to a remote ClientServices.
+          this._client = new Client({ config: this._clientConfig });
         }
 
         await this._client.initialize();
@@ -475,7 +475,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     {
       spaceKeys,
       includeHalo = false,
-      wait = true,
+      wait = this.flags.wait,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
     await client.spaces.isReady.wait();
@@ -486,7 +486,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
           (includeHalo || space !== client.spaces.default) && (!spaceKeys?.length || matchKeys(space.key, spaceKeys)),
       );
 
-    if (wait && !this.flags['no-wait']) {
+    if (wait) {
       await Promise.all(
         spaces.map(async (space) => {
           if (space.state.get() === SpaceState.INITIALIZING) {
@@ -502,7 +502,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get or select space.
    */
-  async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
+  async getSpace(client: Client, key?: string, wait = this.flags.wait): Promise<Space> {
     await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
     if (!key) {
@@ -517,7 +517,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     if (!space) {
       this.catch(`Invalid key: ${key}`);
     } else {
-      if (wait && !this.flags['no-wait'] && space.state.get() === SpaceState.INITIALIZING) {
+      if (wait && space.state.get() === SpaceState.INITIALIZING) {
         await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
       }
 
