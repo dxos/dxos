@@ -33,7 +33,7 @@ const fields = {
   nullableShapeArray: S.mutable(S.Array(S.Union(Shape, S.Null))),
   boolean: S.Boolean,
   null: S.Null,
-  undefined: S.undefined,
+  undefined: S.Undefined,
   stringArray: S.mutable(S.Array(S.String)),
   twoDimNumberArray: S.mutable(S.Array(S.mutable(S.Array(S.Number)))),
   object: TestNestedSchema,

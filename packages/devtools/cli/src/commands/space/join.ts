@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { sleep, Trigger } from '@dxos/async';

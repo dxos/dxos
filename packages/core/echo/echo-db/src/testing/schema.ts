@@ -67,7 +67,7 @@ export class Container extends TypedObject({
             title: S.String,
             description: S.String,
             contacts: S.mutable(S.Array(ref(Contact))),
-            type: S.enums(RecordType),
+            type: S.Enums(RecordType),
           }),
         ),
       ),

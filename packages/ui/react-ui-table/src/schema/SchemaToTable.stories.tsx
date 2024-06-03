@@ -45,7 +45,7 @@ type ExampleSchema = S.Schema.Type<typeof exampleSchema>;
 
 const columns = schemaToColumnDefs(exampleSchema);
 
-const exampleSchemaArbitrary = Arbitrary.make(exampleSchema)(fc);
+const exampleSchemaArbitrary = Arbitrary.make(exampleSchema);
 
 const items = fc.sample(exampleSchemaArbitrary, 10);
 

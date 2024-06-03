@@ -91,7 +91,7 @@
     "@types/server-destroy": "^1.0.3",
     "@types/split2": "^3.2.1",
     "@types/textract": "^2.4.5",
-    "fast-check": "^3.15.1",
+    "fast-check": "^3.19.0",
     "ts-node": "10.9.1"
   },
   "optionalDependencies": {
