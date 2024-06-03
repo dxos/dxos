@@ -15,7 +15,7 @@ import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';
 
-import { DebugSettings, DebugStatus, DevtoolsMain } from './components';
+import { DebugSettings, DebugStatus, DevtoolsArticle, DevtoolsMain } from './components';
 import meta, { DEBUG_PLUGIN } from './meta';
 import translations from './translations';
 import { DebugContext, type DebugSettingsProps, type DebugPluginProvides, DebugAction } from './types';
@@ -25,6 +25,8 @@ export const SETTINGS_KEY = DEBUG_PLUGIN + '/settings';
 // TODO(burdon): Intent handler.
 // TODO(burdon): Subscriptions.
 // TODO(burdon): Providers.
+// TODO(burdon): Normalize Main/Article.
+// TODO(burdon): tsconfig build, etc. efficiency.
 
 // TODO(burdon): Reconcile debug/devtools plugins.
 
@@ -142,12 +144,12 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
       },
       surface: {
         component: ({ data, role }) => {
-          const { active } = data;
+          const { active, object } = data;
           switch (role) {
             case 'main':
-            case 'article': {
-              return active === 'devtools' && settings.values.devtools ? <DevtoolsMain /> : null;
-            }
+              return settings.values.devtools && active === 'devtools' ? <DevtoolsMain /> : null;
+            case 'article':
+              return settings.values.devtools && object === 'devtools' ? <DevtoolsArticle /> : null;
             case 'settings':
               return data.plugin === meta.id ? <DebugSettings settings={settings.values} /> : null;
             case 'status':
