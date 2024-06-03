@@ -182,7 +182,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @deprecated
    */
   get objects(): EchoReactiveObject<any>[] {
-    return this._automerge.allObjects();
+    return this._automerge.allObjectCores().map((core) => core.rootProxy as EchoReactiveObject<any>);
   }
 
   /**
