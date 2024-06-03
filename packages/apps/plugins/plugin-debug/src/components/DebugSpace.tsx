@@ -17,7 +17,7 @@ import {
   Timer,
   UserCirclePlus,
 } from '@phosphor-icons/react';
-import React, { type FC, useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
@@ -45,10 +45,12 @@ const useRefresh = (): [any, () => void] => {
   return [update, () => setUpdate({})];
 };
 
-const DebugSpace: FC<{ space: Space; onAddObjects?: (objects: ReactiveObject<any>[]) => void }> = ({
-  space,
-  onAddObjects,
-}) => {
+export type DebugSpaceProps = {
+  space: Space;
+  onAddObjects?: (objects: ReactiveObject<any>[]) => void;
+};
+
+const DebugSpace = ({ space, onAddObjects }: DebugSpaceProps) => {
   const { themeMode } = useThemeContext();
   const { connect } = useSpaceInvitation(space?.key);
   const client = useClient();
