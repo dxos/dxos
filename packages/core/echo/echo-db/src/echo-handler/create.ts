@@ -15,6 +15,7 @@ import {
   DynamicEchoSchema,
 } from '@dxos/echo-schema';
 import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
+import { invariant } from '@dxos/invariant';
 import { ComplexMap, deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
@@ -26,7 +27,6 @@ import {
   symbolPath,
 } from './echo-proxy-target';
 import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
-import { invariant } from '@dxos/invariant';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
