@@ -4,7 +4,7 @@
 
 import { type Brand } from 'effect';
 
-import type { GenericSignal } from '@dxos/echo-signals/src/runtime';
+import type { GenericSignal } from '@dxos/echo-signals/runtime';
 import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
