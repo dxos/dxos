@@ -17,7 +17,7 @@ import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '@dxo
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
-import { assignDeep, defer, getDeep } from '@dxos/util';
+import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
@@ -236,7 +236,7 @@ export class AutomergeObjectCore {
   public readonly notifyUpdate = () => {
     try {
       this.updates.emit();
-    } catch (err) {
+    } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
       log.catch(err);
@@ -245,9 +245,7 @@ export class AutomergeObjectCore {
       // This is important since we don't want to silently swallow errors.
       // Unfortunately, this will only report errors in the next microtask after the current stack has already unwound.
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
-      queueMicrotask(() => {
-        throw err;
-      });
+      throwUnhandledError(err);
     }
   };
 
