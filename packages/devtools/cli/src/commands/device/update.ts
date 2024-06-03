@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import { Flags } from '@oclif/core';
+
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
@@ -14,7 +16,7 @@ export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update device info.';
   static override flags = {
     ...BaseCommand.flags,
-    label: FlagS.String({ description: 'Set device label', required: true }),
+    label: Flags.string({ description: 'Set device label', required: true }),
   };
 
   async run(): Promise<any> {

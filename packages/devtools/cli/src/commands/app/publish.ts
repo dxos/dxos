@@ -19,17 +19,17 @@ export default class Publish extends BaseCommand<typeof Publish> {
   static override flags = {
     ...BaseCommand.flags,
     // TODO(burdon): Change to hyphenated flags.
-    configPath: FlagS.String({
+    configPath: Flags.string({
       description: 'Path to dx.yml',
     }),
-    accessToken: FlagS.String({
+    accessToken: Flags.string({
       description: 'Access token for publishing.',
     }),
     skipExisting: Flags.boolean({
       description: 'Do not update content on KUBE if version already exists.',
       default: false,
     }),
-    version: FlagS.String({
+    version: Flags.string({
       description: 'Version of modules to publish.',
     }),
   };

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Args } from '@oclif/core';
+
 import { Filter, type Space } from '@dxos/client/echo';
 import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
 import { diff } from '@dxos/util';
@@ -28,7 +30,7 @@ export default class Import extends ComposerBaseCommand<typeof Import> {
   };
 
   static override args = {
-    file: ArgS.String({ required: true }),
+    file: Args.string({ required: true }),
   };
 
   async run() {

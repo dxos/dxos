@@ -17,7 +17,7 @@ export default class Query extends BaseCommand<typeof Query> {
   static override flags = {
     ...BaseCommand.flags,
     data: Flags.boolean({ default: false, description: 'Print serialized object representation.' }),
-    typename: FlagS.String({ default: undefined, description: 'Filter objects by typename.' }),
+    typename: Flags.string({ default: undefined, description: 'Filter objects by typename.' }),
   };
 
   static override args = ARG_SPACE_KEYS;

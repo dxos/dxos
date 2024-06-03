@@ -16,10 +16,10 @@ export default class Join extends BaseCommand<typeof Join> {
   static override description = 'Join space invitation';
   static override flags = {
     ...BaseCommand.flags,
-    invitation: FlagS.String({
+    invitation: Flags.string({
       description: 'Invitation code',
     }),
-    secret: FlagS.String({
+    secret: Flags.string({
       description: 'Invitation secret',
     }),
   };

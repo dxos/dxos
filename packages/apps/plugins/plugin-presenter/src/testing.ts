@@ -12,7 +12,7 @@ type SlideOptions = {
 };
 
 export const createSlide = (options: SlideOptions = {}) => {
-  const num = optionS.Number === undefined ? '' : `${optionS.Number}. `;
+  const num = options.number === undefined ? '' : `${options.number}. `;
 
   const code = () =>
     [

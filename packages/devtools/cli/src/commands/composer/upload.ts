@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Flags } from '@oclif/core';
+
 import { FileType } from '@braneframe/types';
 import { type Space } from '@dxos/client-protocol';
 import { create } from '@dxos/echo-schema';
@@ -18,7 +20,7 @@ export default class Upload extends ComposerBaseCommand<typeof Upload> {
   static override flags = {
     ...BaseCommand.flags,
     ...FLAG_SPACE_KEYS,
-    file: FlagS.String({ required: true }),
+    file: Flags.string({ required: true }),
   };
 
   async run() {
