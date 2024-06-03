@@ -4,13 +4,13 @@
 
 import { type Brand } from 'effect';
 
+import type { GenericSignal } from '@dxos/echo-signals/src/runtime';
 import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { AutomergeObjectCore } from '../automerge';
 import type { KeyPath } from '../automerge/key-path';
-import type { GenericSignal } from '@dxos/echo-signals/src/runtime';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
