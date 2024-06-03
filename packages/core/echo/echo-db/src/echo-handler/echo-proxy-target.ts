@@ -4,6 +4,7 @@
 
 import { type Brand } from 'effect';
 
+import type { GenericSignal } from '@dxos/echo-signals/runtime';
 import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
@@ -46,6 +47,8 @@ export type ObjectInternals = {
    * Only used for records and arrays.
    */
   targetsMap: ComplexMap<TargetKey, ProxyTarget>;
+
+  signal: GenericSignal;
 };
 
 /**
