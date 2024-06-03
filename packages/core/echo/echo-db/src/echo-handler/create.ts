@@ -26,11 +26,14 @@ import {
   symbolPath,
 } from './echo-proxy-target';
 import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
+import { invariant } from '@dxos/invariant';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+  invariant(!isEchoObject(init));
+
   const schema = getSchema(init);
   if (schema != null) {
     validateSchema(schema);

@@ -35,6 +35,7 @@ import {
 } from './echo-proxy-target';
 import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
+import { createEchoObject, isEchoObject } from './create';
 
 export const PROPERTY_ID = 'id';
 
@@ -244,11 +245,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     if (validatedValue === undefined) {
       target[symbolInternals].core.delete(fullPath);
-    } else if (validatedValue !== null && validatedValue[symbolHandler] instanceof EchoReactiveHandler) {
-      const link = this._linkReactiveHandler(target, validatedValue, validatedValue[symbolInternals]);
-      target[symbolInternals].core.setDecoded(fullPath, link);
     } else {
-      target[symbolInternals].core.setDecoded(fullPath, validatedValue);
+      const withLinks = deepMapValues(validatedValue, (value, recurse) => {
+        if (isReactiveObject(value) as boolean) {
+          return this._linkReactiveHandler(target, value);
+        } else {
+          return recurse(value);
+        }
+      });
+      target[symbolInternals].core.setDecoded(fullPath, withLinks);
     }
 
     return true;
@@ -260,24 +265,30 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    * @param internals - internals of the proxy
    */
-  private _linkReactiveHandler(target: ProxyTarget, proxy: any, internals: ObjectInternals): Reference {
-    const itemId = internals.core.id;
+  private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
+    const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
+
+    const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
+
+    const objectId = echoObject.id;
+    invariant(typeof objectId === 'string' && objectId.length > 0);
+
     if (target[symbolInternals].core.database) {
-      const anotherDb = internals.core.database;
+      const anotherDb = otherInternals?.core.database;
       if (!anotherDb) {
-        target[symbolInternals].core.database.add(proxy);
-        return new Reference(itemId);
+        target[symbolInternals].core.database.add(echoObject);
+        return new Reference(objectId);
       } else {
         if (anotherDb !== target[symbolInternals].core.database) {
-          return new Reference(itemId, undefined, anotherDb.spaceKey.toHex());
+          return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
         } else {
-          return new Reference(itemId);
+          return new Reference(objectId);
         }
       }
     } else {
       invariant(target[symbolInternals].core.linkCache);
-      target[symbolInternals].core.linkCache.set(itemId, proxy);
-      return new Reference(itemId);
+      target[symbolInternals].core.linkCache.set(objectId, echoObject);
+      return new Reference(objectId);
     }
   }
 
