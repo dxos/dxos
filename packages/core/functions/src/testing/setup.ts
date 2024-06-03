@@ -28,6 +28,7 @@ export const createInitializedClients = async (testBuilder: TestBuilder, count: 
     clients.map(async (client, index) => {
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
+      await client.spaces.isReady;
       client.addSchema(FunctionDef, FunctionTrigger, TestType);
       return client;
     }),

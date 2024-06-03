@@ -15,8 +15,8 @@ import { type EmailMessage, SOURCE_ID, text } from './types';
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    account: S.optional(S.string),
+  S.Struct({
+    account: S.optional(S.String),
   }),
 );
 

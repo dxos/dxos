@@ -426,10 +426,10 @@ describe('AutomergeDb', () => {
     });
 
     test('loads as array of non-nullable items', async () => {
-      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.number }) {}
+      class Nested extends TypedObject({ typename: 'Nested', version: '1.0.0' })({ value: S.Number }) {}
 
       class TestSchema extends TypedObject({ typename: 'Test', version: '1.0.0' })({
-        nested: S.mutable(S.array(ref(Nested))),
+        nested: S.mutable(S.Array(ref(Nested))),
       }) {}
 
       const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
