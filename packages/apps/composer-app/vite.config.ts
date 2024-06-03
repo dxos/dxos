@@ -124,7 +124,7 @@ export default defineConfig({
         process.env.DX_PWA === 'false',
       workbox: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
