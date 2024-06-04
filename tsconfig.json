@@ -9,10 +9,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "jsx": "react",
-    "lib": [
-      "DOM",
-      "ESNext"
-    ],
+    "lib": ["DOM", "ESNext"],
     "module": "CommonJS",
     "moduleResolution": "Node",
     "isolatedModules": true,
@@ -22,20 +19,10 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2018"
+    "target": "ES2018",
   },
   "ts-node": {
-    "swc": true
+    "swc": true,
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "vitest.shared.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "out",
-    "**/*.mts"
-  ]
+  "exclude": ["dist", "node_modules", "out", "**/*.mts"],
 }
