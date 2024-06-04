@@ -97,7 +97,17 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     listDiagnostics: async () => {
       diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
       // eslint-disable-next-line no-console
-      console.table(diagnostics);
+      console.table(
+        diagnostics.map((diagnostic) => ({
+          ...diagnostic,
+          get fetch() {
+            queueMicrotask(async () => {
+              console.table(await hook.fetchDiagnostics(diagnostic.id, diagnostic.instanceTag ?? undefined));
+            });
+            return undefined;
+          },
+        })),
+      );
     },
 
     // TODO(dmaretskyi): Joins across multiple diagnostics.
@@ -106,7 +116,12 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
         diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
       }
 
-      const diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
+      let diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
+      if (!diagnostic) {
+        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      }
+
+      diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
       if (!diagnostic) {
         log.error(`Diagnostic ${id} not found.`);
         return;
