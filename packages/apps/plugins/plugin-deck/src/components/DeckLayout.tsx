@@ -32,6 +32,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -168,9 +169,11 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
-        {label}
-      </PlankHeading.Label>
+      <TextTooltip text={label} onlyWhenTruncating>
+        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
+          {label}
+        </PlankHeading.Label>
+      </TextTooltip>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}
