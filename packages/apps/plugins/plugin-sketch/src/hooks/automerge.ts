@@ -3,95 +3,63 @@
 //
 
 import { transact } from '@tldraw/state';
-import { createTLStore, defaultShapeUtils, type TLRecord } from '@tldraw/tldraw';
+import { createTLStore, defaultShapes, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
 import { next as A } from '@dxos/automerge/automerge';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
-import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
 import { type Unsubscribe } from '../types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
 
-export interface StoreAdapter {
-  store?: TLStore;
-  readonly: boolean;
-}
-
-// TODO(burdon): Move to SketchType?
-export type TLDrawStoreData = {
-  schema?: string; // Undefined means version 1.
-  content: Record<string, any>;
-};
-
-/**
- * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
- */
-export class AutomergeStoreAdapter implements StoreAdapter {
+// TODO(dmaretskyi): Take a look at https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
+export class AutomergeStoreAdapter {
+  private readonly _store: TLStore;
   private readonly _subscriptions: Unsubscribe[] = [];
-  private _store?: TLStore;
-  private _readonly = false;
   private _lastHeads: A.Heads | undefined = undefined;
 
-  constructor(private readonly _options = { timeout: 250 }) {}
-
-  get isOpen() {
-    return !!this._store;
+  constructor(private readonly _options = { timeout: 250 }) {
+    this._store = createTLStore({ shapes: defaultShapes });
   }
 
   get store() {
     return this._store;
   }
 
-  get readonly() {
-    return this._readonly;
-  }
-
-  // TODO(burdon): Just pass in object?
-  open(accessor: DocAccessor<TLDrawStoreData>) {
-    if (this.isOpen) {
+  open(accessor: DocAccessor<{ content: Record<string, any> }>) {
+    if (this._subscriptions.length) {
       this.close();
     }
 
-    // Path: objects > xxx > data > content
-    log('opening...', { path: accessor.path });
-    invariant(accessor.path.length);
+    const path = accessor.path ?? [];
 
-    // Initial sync.
-    const contentRecords: Record<string, TLRecord> | undefined = getDeep(accessor.handle.docSync()!, accessor.path);
+    // Initial sync
+    {
+      const contentRecords: Record<string, TLRecord> | undefined = getDeep(accessor.handle.docSync()!, path);
 
-    // Create store.
-    const store = createTLStore({ shapeUtils: defaultShapeUtils });
-    this._store = store;
-
-    // Initialize the store with the automerge doc records.
-    // If the automerge doc is empty, initialize the automerge doc with the default store records.
-    if (Object.entries(contentRecords ?? {}).length === 0) {
-      // Sync the store records to the automerge doc.
-      saveStore(this._store, accessor);
-    } else {
-      // Replace the store records with the automerge doc records.
-      transact(() => {
-        store.clear();
-        const currentVersion = accessor.handle.docSync()?.schema;
-        const version = maybeMigrateSnapshot(
-          store,
-          Object.values(contentRecords ?? {}).map((record) => decode(record)),
-          currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-        );
-
-        if (version !== undefined) {
-          if (version === -1) {
-            this._readonly = true;
-          } else {
-            saveStore(store, accessor);
+      // Initialize the store with the automerge doc records.
+      // If the automerge doc is empty, initialize the automerge doc with the default store records.
+      if (Object.entries(contentRecords ?? {}).length === 0) {
+        // Sync the store records to the automerge doc.
+        accessor.handle.change((doc) => {
+          const content: Record<string, TLRecord> = getAndInit(doc, path, {});
+          const allRecords = this._store.allRecords();
+          log('seed initial records', { allRecords });
+          for (const record of allRecords) {
+            content[record.id] = encode(record);
           }
-        }
-      });
+        });
+      } else {
+        // Replace the store records with the automerge doc records.
+        transact(() => {
+          log('load initial records', { contentRecords });
+          this._store.clear();
+          this._store.put([...Object.values(contentRecords ?? {})].map((record) => decode(record)));
+        });
+      }
     }
 
     //
@@ -99,20 +67,21 @@ export class AutomergeStoreAdapter implements StoreAdapter {
     //
     const handleChange = () => {
       const doc = accessor.handle.docSync()!;
+
       const currentHeads = A.getHeads(doc);
       const diff = A.equals(this._lastHeads, currentHeads) ? [] : A.diff(doc, this._lastHeads ?? [], currentHeads);
-      const contentRecords: Record<string, TLRecord> = getDeep(doc, accessor.path);
+      const contentRecords: Record<string, TLRecord> = getDeep(doc, path);
 
       const updated = new Set<TLRecord['id']>();
       const removed = new Set<TLRecord['id']>();
 
       diff.forEach((patch) => {
         // TODO(dmaretskyi): Filter out local updates.
-        const relativePath = rebasePath(patch.path, accessor.path);
+
+        const relativePath = rebasePath(patch.path, path);
         if (!relativePath) {
           return;
         }
-
         if (relativePath.length === 0) {
           for (const id of Object.keys(contentRecords)) {
             updated.add(id as TLRecord['id']);
@@ -137,15 +106,15 @@ export class AutomergeStoreAdapter implements StoreAdapter {
             break;
           }
           default:
-            log.warn('did not process patch', { patch, path: accessor.path });
+            log.warn('did not process patch', { patch, mountPath: path });
         }
       });
 
       log('remote change', {
         currentHeads,
         lastHeads: this._lastHeads,
-        path: accessor.path,
-        diff: diff.filter((patch) => !!rebasePath(patch.path, accessor.path)),
+        path,
+        diff: diff.filter((patch) => !!rebasePath(patch.path, path)),
         automergeState: contentRecords,
         doc,
         updated,
@@ -153,24 +122,14 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       });
 
       // Update/remove the records in the store.
-      store.mergeRemoteChanges(() => {
+      this._store.mergeRemoteChanges(() => {
         if (removed.size) {
-          store.remove(Array.from(removed));
+          this._store.remove(Array.from(removed));
         }
-
         if (updated.size) {
-          const currentVersion = accessor.handle.docSync()?.schema;
-          const version = maybeMigrateSnapshot(
-            store,
-            Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
-            currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-          );
-          if (version === -1) {
-            this._readonly = true;
-          }
+          this._store.put(Array.from(updated).map((id) => decode(contentRecords[id])));
         }
       });
-
       this._lastHeads = currentHeads;
     };
 
@@ -203,7 +162,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
 
           timeout = setTimeout(() => {
             accessor.handle.change((doc) => {
-              const content: Record<string, TLRecord> = getAndInit(doc, accessor.path, {});
+              const content: Record<string, TLRecord> = getAndInit(doc, path, {});
               log('submitting mutations', { mutations });
               mutations.forEach(({ type, record }) => {
                 switch (type) {
@@ -236,7 +195,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
   close() {
     this._subscriptions.forEach((unsubscribe) => unsubscribe());
     this._subscriptions.length = 0;
-    this._store = undefined;
+    this._store.clear();
   }
 }
 
@@ -246,7 +205,6 @@ const getDeep = (obj: any, path: readonly (string | number)[]) => {
   for (const key of path) {
     value = value?.[key];
   }
-
   return value;
 };
 
@@ -256,7 +214,6 @@ const getAndInit = (obj: any, path: readonly (string | number)[], value: any) =>
     parent[key] ??= {};
     parent = parent[key];
   }
-
   return parent;
 };
 
@@ -275,13 +232,12 @@ const rebasePath = (path: A.Prop[], base: readonly (string | number)[]): A.Prop[
 };
 
 // TLDraw -> Automerge
-// TODO(burdon): Types?
 const encode = (value: any): any => {
   if (Array.isArray(value)) {
     return value.map(encode);
   }
   if (value instanceof A.RawString) {
-    throw new Error('Encode called on automerge data.');
+    throw new Error('encode called on automerge data');
   }
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, encode(value)]));
@@ -289,7 +245,6 @@ const encode = (value: any): any => {
   if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
     return new A.RawString(value);
   }
-
   return value;
 };
 
@@ -304,60 +259,5 @@ const decode = (value: any): any => {
   if (typeof value === 'object' && value !== null) {
     return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
   }
-
   return value;
-};
-
-/**
- * Insert records into the store catching possible schema errors.
- * @returns The new schema version; undefined if no migration was needed; -1 if error.
- */
-// TODO(burdon): Make readonly if we are behind the records. Need to inform user.
-const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | undefined => {
-  try {
-    log('loading', { records: records.length, schema: version });
-    store.put(records);
-  } catch (err) {
-    log.info('migrating schema...', err);
-    const serialized = records.reduce<Record<string, any>>((acc, record) => {
-      acc[record.id] = record;
-      return acc;
-    }, {});
-
-    const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
-    try {
-      log('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
-      store.loadSnapshot(snapshot);
-      log.info('migrated schema', { version: CURRENT_VERSION });
-      return CURRENT_VERSION;
-    } catch (err) {
-      // Fallback.
-      // TODO(burdon): Notify user shapes missing. Make readonly.
-      log.info('loading records...');
-      for (const record of Object.values(serialized)) {
-        try {
-          store.put([record]);
-        } catch (err) {
-          log.catch(err, { record });
-        }
-      }
-
-      return -1;
-    }
-  }
-};
-
-// TODO(burdon): Need unit test and check that records are duplicated.
-const saveStore = (store: TLStore, accessor: DocAccessor<TLDrawStoreData>, version = CURRENT_VERSION) => {
-  accessor.handle.change((doc) => {
-    // TODO(burdon): Why isn't path just "content"?
-    const content: Record<string, TLRecord> = getAndInit(doc, accessor.path, {});
-    const records = store.allRecords();
-    log('saving records...', { records: records.length });
-    // TODO(burdon): Do we need to construct a different path?
-    doc.schema = String(version);
-    for (const record of records) {
-      content[record.id] = encode(record);
-    }
-  });
 };
