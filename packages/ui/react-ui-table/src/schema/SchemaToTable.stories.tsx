@@ -53,7 +53,7 @@ export const SchemaTable = {
   render: () => {
     return (
       <Table.Root>
-        <Table.Viewport classNames='inset-0 fixed'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<ExampleSchema>
             role='grid'
             rowsSelectable='multi'
