@@ -13,15 +13,13 @@ import { Button, Toolbar } from '@dxos/react-ui';
 
 import SketchComponent from './Sketch';
 
-const createSketch = () => create(SketchType, { data: create(Expando, {}) });
-
 const Story = () => {
-  const [sketch, setSketch] = useState<SketchType>(createSketch());
+  const [sketch, setSketch] = useState<SketchType>(create(SketchType, { data: create(Expando, {}) }));
 
   return (
     <div className='flex flex-col grow overflow-hidden divide-y'>
       <Toolbar.Root>
-        <Button variant='ghost' onClick={() => setSketch(createSketch())}>
+        <Button variant={'ghost'} onClick={() => setSketch(new SketchType())}>
           Change
         </Button>
       </Toolbar.Root>

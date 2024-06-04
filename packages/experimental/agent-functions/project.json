@@ -1,23 +1,32 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "agent-functions",
-  "tags": ["scope:experimental"],
+  "tags": [
+    "scope:experimental"
+  ],
   "sourceRoot": "packages/experimental/agent-functions/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": ["packages/experimental/agent-functions/src/index.ts"]
+        "entryPoints": [
+          "packages/experimental/agent-functions/src/index.ts"
+        ]
       }
     },
     "lint": {},
     "test": {
       "options": {
-        "ciEnvironments": ["nodejs"],
+        "ciEnvironments": [
+          "nodejs"
+        ],
         "forceExit": true
       }
     }
   },
-  "implicitDependencies": ["esbuild", "test"]
+  "implicitDependencies": [
+    "esbuild",
+    "test"
+  ]
 }
