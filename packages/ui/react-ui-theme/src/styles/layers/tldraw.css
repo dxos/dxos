@@ -1,12 +1,12 @@
 .tl-container.tl-theme__light {
   /* Converted */
+  /* General */
   --color-accent: var(--color-accent);
   --color-background: var(--surface-bg); /* Main background. */
 
-  /* WIP */
+  /* Panels *
   --color-panel: theme(colors.neutral.50);
   --color-divider: theme(colors.neutral.75); /* Separator light. */
-
   --color-panel-contrast: theme(colors.neutral.25);
   --color-panel-overlay: rgba(255, 255, 255, 0.82);
 
@@ -46,13 +46,13 @@
 
 .tl-container.tl-theme__dark {
   /* Converted */
+  /* General */
   --color-accent: var(--color-accent);
   --color-background: var(--surface-bg);
 
-  /* WIP */
+  /* Panels */
   --color-divider: theme(colors.neutral.750); /* Separator dark. */
   --color-panel: theme(colors.neutral.900);
-
   --color-panel-contrast: theme(colors.neutral.750);
   --color-panel-overlay: rgba(54, 61, 68, 0.82);
 
