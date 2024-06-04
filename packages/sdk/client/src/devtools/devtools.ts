@@ -102,6 +102,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
           ...diagnostic,
           get fetch() {
             queueMicrotask(async () => {
+              // eslint-disable-next-line no-console
               console.table(await hook.fetchDiagnostics(diagnostic.id, diagnostic.instanceTag ?? undefined));
             });
             return undefined;
