@@ -49,8 +49,7 @@ export default class Share extends BaseCommand<typeof Share> {
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, key);
 
-      // TODO(burdon): Timeout error not propagated.
-      const authMethod = this.flags.auth ? Invitation.AuthMethod.NONE : undefined;
+      const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = space!.share({
         authMethod,
         multiUse: this.flags.multiple,
@@ -59,10 +58,12 @@ export default class Share extends BaseCommand<typeof Share> {
         lifetime: this.flags.lifetime,
       });
 
-      const invitationSuccess = hostInvitation({
+      ux.action.start('Waiting for peer to connect');
+      await hostInvitation({
         observable,
         callbacks: {
           onConnecting: async () => {
+            ux.action.stop();
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
             if (authMethod !== Invitation.AuthMethod.NONE) {
@@ -80,18 +81,9 @@ export default class Share extends BaseCommand<typeof Share> {
             }
           },
         },
-        waitForSuccess: false,
       });
 
-      if (this.flags.wait) {
-        // TODO(burdon): Display joined peer?
-        ux.action.start('Waiting for peer to connect');
-        await invitationSuccess;
-        ux.action.stop();
-        ux.log(chalk`{green Joined successfully.}`);
-      } else {
-        await invitationSuccess;
-      }
+      ux.log(chalk`{green Joined successfully.}`);
     });
   }
 }

@@ -135,12 +135,6 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
       env: ENV_DX_NO_AGENT,
     }),
 
-    wait: Flags.boolean({
-      description: 'Wait for space to be ready.',
-      allowNo: true,
-      default: false,
-    }),
-
     // For consumption by Docker/Kubernetes/other log collection agents, write JSON logs to stderr.
     // Use stdout for user-facing interaction, and potentially JSON formatted output.
     // TODO(burdon): unify output/logging with oclif.
@@ -472,7 +466,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     {
       spaceKeys,
       includeHalo = false,
-      wait = this.flags.wait,
+      wait = true,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
     await client.spaces.isReady.wait();
@@ -499,7 +493,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   /**
    * Get or select space.
    */
-  async getSpace(client: Client, key?: string, wait = this.flags.wait): Promise<Space> {
+  async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
     await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
     if (!key) {
