@@ -7,11 +7,11 @@ import React, { useMemo, useEffect } from 'react';
 
 import {
   LayoutAction,
-  parseFileManagerPlugin,
   useResolvePlugin,
   useIntentResolver,
   parseNavigationPlugin,
   parseLayoutPlugin,
+  type FileInfo,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
@@ -53,12 +53,20 @@ export type EditorMainProps = {
   readonly?: boolean;
   toolbar?: boolean;
   comments?: Comment[];
+  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
-export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({
+  id,
+  onFileUpload,
+  readonly,
+  toolbar,
+  comments,
+  extensions: _extensions,
+  ...props
+}: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
   const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
@@ -95,7 +103,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const [formattingState, formattingObserver] = useFormattingState();
 
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+
     if (info) {
       processAction(view, { type: 'image', data: info.url });
     }
@@ -104,7 +114,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const extensions = useMemo(() => {
     return [
       _extensions,
-      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
+      onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
@@ -130,14 +140,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           onAction={handleAction}
         >
           <Toolbar.Markdown />
-          {fileManagerPlugin?.provides.file.upload && (
-            <Toolbar.Custom
-              onUpload={async (file) => {
-                const info = await fileManagerPlugin.provides.file.upload!(file);
-                return { url: info?.url };
-              }}
-            />
-          )}
+          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>

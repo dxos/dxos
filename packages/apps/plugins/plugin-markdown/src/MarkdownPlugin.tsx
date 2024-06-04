@@ -16,6 +16,8 @@ import {
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  useResolvePlugin,
+  parseFileManagerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
@@ -244,6 +246,21 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
+          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+          const onFileUpload = useMemo(() => {
+            if (space === undefined) {
+              return undefined;
+            }
+
+            if (fileManagerPlugin?.provides.file.upload === undefined) {
+              return undefined;
+            }
+
+            return async (file: File) => {
+              return await fileManagerPlugin?.provides?.file?.upload?.(file, space);
+            };
+          }, [fileManagerPlugin, space]);
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'article': {
@@ -254,6 +271,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
+                    onFileUpload={onFileUpload}
                   />
                 );
               } else {
@@ -270,6 +288,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
+                      onFileUpload={onFileUpload}
                     />
                   </MainLayout>
                 );

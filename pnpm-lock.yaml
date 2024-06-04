@@ -8229,6 +8229,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../client-protocol
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
