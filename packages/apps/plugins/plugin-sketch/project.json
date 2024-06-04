@@ -19,11 +19,9 @@
         ]
       }
     },
-    "lint": {},
-    "test": {}
+    "lint": {}
   },
   "implicitDependencies": [
-    "esbuild",
-    "test"
+    "esbuild"
   ]
 }
