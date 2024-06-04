@@ -22,30 +22,24 @@
     "dist",
     "src"
   ],
-  "scripts": {
-    "vitest-ui": "VITEST_ENV=chrome nx vitest plugin-sketch"
-  },
   "dependencies": {
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/automerge": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
-    "@tldraw/assets": "^2.1.4",
-    "@tldraw/editor": "^2.1.4",
-    "@tldraw/state": "^2.1.4",
-    "@tldraw/store": "^2.1.4",
-    "@tldraw/tldraw": "^2.1.4",
-    "@tldraw/tlschema": "^2.1.4",
-    "@tldraw/utils": "^2.1.4",
-    "classnames": "^2.3.2",
-    "react-resize-detector": "^7.1.2"
+    "@tldraw/assets": "2.0.0-alpha.14",
+    "@tldraw/editor": "2.0.0-alpha.14",
+    "@tldraw/state": "2.0.0-alpha.14",
+    "@tldraw/tldraw": "2.0.0-alpha.14",
+    "@tldraw/tlschema": "2.0.0-alpha.14",
+    "react-resize-detector": "^7.1.2",
+    "signia": "^0.1.4",
+    "signia-react": "^0.1.4",
+    "yjs": "^13.6.10"
   },
   "devDependencies": {
     "@braneframe/plugin-client": "workspace:*",
