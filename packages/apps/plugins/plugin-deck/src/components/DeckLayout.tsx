@@ -151,16 +151,15 @@ const NodePlankHeading = ({
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
+            Icon={Icon}
+            attendableId={node.id}
             triggerLabel={t('actions menu label')}
             actions={node.actions()}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
           >
-            <PlankHeading.Button attendableId={node.id}>
-              <span className='sr-only'>{label}</span>
-              <Icon {...plankHeadingIconProps} />
-            </PlankHeading.Button>
+            <Surface role='menu-footer' data={{ object: node.data }} />
           </PlankHeading.ActionsMenu>
         ) : (
           <PlankHeading.Button>
