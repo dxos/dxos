@@ -18,9 +18,7 @@ import '@tldraw/tldraw/tldraw.css';
 
 import { useStoreAdapter } from '../hooks';
 
-const styles = {
-  background: '[&>div>span>div>div]:bg-white dark:[&>div>span>div>div]:bg-black',
-};
+// NOTE(Zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
 
 export type SketchComponentProps = {
   sketch: SketchType;
@@ -85,6 +83,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
   // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
   return (
     <div
+      role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx(
@@ -99,8 +98,8 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)]:hidden',
         // 14Hide .tlui-debug-panel
         '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
-        styles.background,
         className,
+        'attention-within',
       )}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
