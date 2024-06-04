@@ -88,18 +88,13 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx(
         'is-full bs-full',
-        // 14Override z-index.
         '[&>div>span>div]:z-0',
-        // 14Hide .tlui-menu-zone
-        '[&>div>main>div:nth-child(1)>div:nth-child(1)]:hidden',
-        // 14Hide .tlui-navigation-zone
-        '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(1)]:hidden',
-        // 14Hide .tlui-help-menu
-        '[&>div>main>div:nth-child(2)>div:nth-child(1)>div:nth-child(3)]:hidden',
-        // 14Hide .tlui-debug-panel
-        '[&>div>main>div:nth-child(2)>div:nth-child(2)]:hidden',
-        className,
+        '[&_.tlui-menu-zone]:hidden',
+        '[&_.tlui-navigation-zone]:hidden',
+        '[&_.tlui-help-menu]:hidden',
+        '[&_.tlui-debug-panel]:hidden',
         'attention-within',
+        className,
       )}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
