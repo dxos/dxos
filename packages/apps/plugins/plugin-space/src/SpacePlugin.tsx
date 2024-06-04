@@ -50,6 +50,7 @@ import {
   EmptySpace,
   EmptyTree,
   FolderMain,
+  MenuFooter,
   MissingObject,
   PopoverRemoveObject,
   PopoverRenameObject,
@@ -397,6 +398,12 @@ export const SpacePlugin = ({
             }
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
+            case 'menu-footer':
+              if (!isEchoObject(data.object)) {
+                return null;
+              } else {
+                return <MenuFooter object={data.object} />;
+              }
             default:
               return null;
           }
