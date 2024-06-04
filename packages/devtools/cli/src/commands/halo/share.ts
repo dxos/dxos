@@ -43,11 +43,6 @@ export default class Share extends BaseCommand<typeof Share> {
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
-      if (!client.halo.identity.get()) {
-        this.log(chalk`{red Profile not initialized.}`);
-        return {};
-      }
-
       const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = client.halo.share({
         authMethod,
@@ -80,7 +75,7 @@ export default class Share extends BaseCommand<typeof Share> {
         },
       });
 
-      ux.log(chalk`{green Joined successfully.}`);
+      ux.log(chalk`{green OK}`);
     });
   }
 }

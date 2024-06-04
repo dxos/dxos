@@ -16,19 +16,16 @@ export default class Create extends BaseCommand<typeof Create> {
   static override args = { name: Args.string() };
 
   async run(): Promise<any> {
-    return await this.execWithClient(
-      async (client: Client) => {
-        const space = await client.spaces.create();
-        await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
-        space.properties.name = this.args.name;
+    return await this.execWithClient(async (client: Client) => {
+      const space = await client.spaces.create();
+      await waitForSpace(space, this.flags.timeout, (err) => this.catch(err));
+      space.properties.name = this.args.name;
 
-        ux.log(chalk`{green Created}: ${space.key.truncate()}`);
-        return {
-          key: space.key,
-          name: space.properties.name,
-        };
-      },
-      { halo: true },
-    );
+      ux.log(chalk`{green Created}: ${space.key.truncate()}`);
+      return {
+        key: space.key,
+        name: space.properties.name,
+      };
+    });
   }
 }

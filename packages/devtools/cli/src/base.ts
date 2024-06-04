@@ -563,12 +563,12 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
    */
   async execWithClient<T>(
     callback: (client: Client) => Promise<T | undefined>,
-    options: { halo?: boolean } = {},
+    options: { halo?: boolean } = { halo: true },
   ): Promise<T | undefined> {
     const client = await this.getClient();
 
     if (options.halo && !client.halo.identity.get()) {
-      this.warn('HALO not initialized; run `dx halo create --help`');
+      this.warn('Identity not initialized.');
       process.exit(1);
     }
 

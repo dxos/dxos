@@ -48,14 +48,13 @@ export default class Share extends BaseCommand<typeof Share> {
     const { key } = this.args;
     return await this.execWithClient(async (client: Client) => {
       const space = await this.getSpace(client, key);
-
       const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = space!.share({
         authMethod,
-        multiUse: this.flags.multiple,
         timeout: this.flags.timeout,
         persistent: this.flags.persistent,
         lifetime: this.flags.lifetime,
+        multiUse: this.flags.multiple,
       });
 
       ux.action.start('Waiting for peer to connect');
@@ -83,7 +82,7 @@ export default class Share extends BaseCommand<typeof Share> {
         },
       });
 
-      ux.log(chalk`{green Joined successfully.}`);
+      ux.log(chalk`{green OK}`);
     });
   }
 }

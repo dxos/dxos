@@ -92,8 +92,6 @@ export default class Share extends BaseCommand<typeof Share> {
   }
 }
 
-const mapInvitations = (invitations: CancellableInvitation[], options = { halo: false, truncateKeys: true }) => {
-  return invitations.map((invitation) => {
-    return { ...invitation.get(), expiry: invitation.expiry };
-  });
+const mapInvitations = (invitations: CancellableInvitation[]) => {
+  return invitations.map((invitation) => ({ ...invitation.get(), expiry: invitation.expiry }));
 };

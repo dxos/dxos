@@ -11,6 +11,7 @@ import { BaseCommand } from '../../base';
 export default class Identity extends BaseCommand<typeof Identity> {
   static override enableJsonFlag = true;
   static override description = 'Show HALO identity.';
+  static override aliases = ['halo:id'];
 
   async run(): Promise<any> {
     return await this.execWithClient(async (client: Client) => {
