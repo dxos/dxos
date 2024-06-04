@@ -10,6 +10,7 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { DocumentType, TextV0Type } from '@braneframe/types';
 import {
+  LayoutAction,
   isObject,
   parseIntentPlugin,
   resolvePlugin,
@@ -353,11 +354,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
+              const doc = create(DocumentType, {
+                content: create(TextV0Type, { content: '' }),
+                comments: [],
+              }) satisfies ReactiveObject<DocumentType>;
+
               return {
-                data: create(DocumentType, {
-                  content: create(TextV0Type, { content: '' }),
-                  comments: [],
-                }) satisfies ReactiveObject<DocumentType>,
+                data: doc,
+                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
               };
             }
 
