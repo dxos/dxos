@@ -19,9 +19,9 @@ export const MenuFooter = ({ object }: { object: EchoReactiveObject<any> }) => {
     <>
       <DropdownMenu.Separator />
       <DropdownMenu.GroupLabel>{t('menu footer label')}</DropdownMenu.GroupLabel>
-      <dl className='pli-2 mbe-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
-        <dt className='uppercase text-[.75em] tracking-wide font-medium self-center mbs-px'>{t('location label')}</dt>
-        <dd>
+      <dl className='pis-2 mbe-2 text-xs grid grid-cols-[max-content_1fr] gap-2'>
+        <dt className='uppercase text-[.75em] tracking-wide font-medium mbs-px self-start'>{t('location label')}</dt>
+        <dd className='line-clamp-3'>
           <Planet className='inline-block mie-1' />
           {toLocalizedString(spaceName, t)}
         </dd>
