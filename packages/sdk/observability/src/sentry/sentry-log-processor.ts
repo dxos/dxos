@@ -7,7 +7,7 @@ import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
-import { withScope, captureException, captureMessage } from './';
+import { withScope, captureException, captureMessage } from './node';
 
 const MAX_LOG_BREADCRUMBS = 80;
 
