@@ -2,8 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { captureConsoleIntegration } from '@sentry/integrations';
 import {
+  type Event,
   init as naturalInit,
   setTag,
   addBreadcrumb as naturalAddBreadcrumb,
@@ -11,7 +11,6 @@ import {
   captureMessage as naturalCaptureMessage,
   withScope as naturalWithScope,
 } from '@sentry/node';
-import type { Event } from '@sentry/node';
 
 import { log } from '@dxos/log';
 
@@ -28,17 +27,13 @@ export { setTag, setTags, setUser } from '@sentry/node';
  */
 export const init = (options: InitOptions) => {
   try {
-    if (options.tracing) {
-      void import('@sentry/tracing');
-    }
-
     naturalInit({
       enabled: options.enable ?? true,
       dsn: options.destination,
       serverName: options.installationId,
       release: options.release,
       environment: options.environment ?? process.env.DX_ENVIRONMENT,
-      integrations: [captureConsoleIntegration({ levels: ['error', 'warn'] })],
+      integrations: [],
       tracesSampleRate: options.sampleRate,
       transport: options.transport,
       beforeSend: (event) => {

@@ -76,10 +76,8 @@
     "@dxos/util": "workspace:*",
     "@segment/analytics-node": "^2.1.0",
     "@segment/snippet": "^4.15.3",
-    "@sentry/browser": "^7.100.1",
-    "@sentry/integrations": "7.100.1",
-    "@sentry/node": "^7.100.1",
-    "@sentry/tracing": "^7.100.1",
+    "@sentry/browser": "^8.7.0",
+    "@sentry/node": "^8.7.0",
     "datadog-metrics": "^0.11.1",
     "debug": "^4.3.4",
     "js-yaml": "^4.1.0",
@@ -87,7 +85,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@sentry/types": "^7.100.1",
+    "@sentry/types": "^8.7.0",
     "@types/debug": "^4.1.10",
     "@types/js-yaml": "^4.0.5",
     "sentry-testkit": "^5.0.5"

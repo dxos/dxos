@@ -135,6 +135,13 @@ const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
   return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
 };
 
+/**
+ * Push remote metrics.
+ */
+const metrics = () => {
+  return TRACE_PROCESSOR.remoteMetrics;
+};
+
 export const trace = {
   addLink,
   diagnostic,
@@ -143,4 +150,5 @@ export const trace = {
   metricsCounter,
   resource,
   span,
+  metrics,
 };
