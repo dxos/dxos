@@ -14,7 +14,7 @@ import type { AddLinkOptions } from './api';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
-import { RemoteMetrics } from './sentry';
+import { RemoteMetrics, RemoteTracing } from './remote';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
@@ -78,6 +78,7 @@ export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
   public readonly diagnosticsChannel = new DiagnosticsChannel();
   public readonly remoteMetrics = new RemoteMetrics();
+  public readonly remoteTracing = new RemoteTracing();
 
   readonly subscriptions: Set<TraceSubscription> = new Set();
 
