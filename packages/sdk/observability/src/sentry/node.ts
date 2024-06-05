@@ -10,9 +10,11 @@ import {
   captureException as naturalCaptureException,
   captureMessage as naturalCaptureMessage,
   withScope as naturalWithScope,
+  metrics,
 } from '@sentry/node';
 
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
 import { type InitOptions } from './types';
 
@@ -43,6 +45,8 @@ export const init = (options: InitOptions) => {
         return event;
       },
     });
+
+    trace.metrics().registerProcessor(metrics);
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {
       setTag(key, value);

@@ -24,9 +24,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
-    "@sentry/browser": "^8.7.0",
-    "@sentry/node": "^8.7.0"
+    "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/test": "workspace:*"

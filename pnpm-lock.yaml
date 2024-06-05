@@ -5235,12 +5235,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
-      '@sentry/browser':
-        specifier: ^8.7.0
-        version: 8.7.0
-      '@sentry/node':
-        specifier: ^8.7.0
-        version: 8.7.0
     devDependencies:
       '@dxos/test':
         specifier: workspace:*
@@ -8796,6 +8790,9 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../react-client
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
