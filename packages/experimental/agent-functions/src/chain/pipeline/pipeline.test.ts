@@ -78,12 +78,12 @@ describe('Pipeline', () => {
   test('JSON chat', async () => {
     const { model } = createChainResources('ollama');
 
-    const contactSchema = S.struct({
-      name: S.string,
+    const contactSchema = S.Struct({
+      name: S.String,
     }).pipe(S.description("A person's contact record"));
 
-    const schema = S.struct({
-      person: S.array(contactSchema),
+    const schema = S.Struct({
+      person: S.Array(contactSchema),
     });
 
     const pipeline = pipe(

@@ -230,19 +230,19 @@ describe('LangChain', () => {
   // TODO(burdon): Metadata for zod: https://github.com/colinhacks/zod/issues/273
   //
   test('functions', async () => {
-    const defs = S.struct({
-      company: S.array(
-        S.struct({
-          name: S.string.pipe(S.description('The name of the company')),
-          website: S.string.pipe(S.description('The URL of the company website')),
-          public: S.boolean.pipe(S.description('Public company')),
+    const defs = S.Struct({
+      company: S.Array(
+        S.Struct({
+          name: S.String.pipe(S.description('The name of the company')),
+          website: S.String.pipe(S.description('The URL of the company website')),
+          public: S.Boolean.pipe(S.description('Public company')),
         }),
       ).pipe(S.description('An array of companies mentioned in the text')),
 
-      person: S.array(
-        S.struct({
-          name: S.string.pipe(S.description('The name of the person')),
-          wiki: S.string.pipe(S.description('The persons wikipedia article')),
+      person: S.Array(
+        S.Struct({
+          name: S.String.pipe(S.description('The name of the person')),
+          wiki: S.String.pipe(S.description('The persons wikipedia article')),
         }),
       ).pipe(S.description('An array of people mentioned in the text')),
     });

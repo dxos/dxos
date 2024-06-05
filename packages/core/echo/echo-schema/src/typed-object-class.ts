@@ -32,8 +32,8 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     fields: SchemaFields,
     options?: Options,
   ): EchoSchemaClass<Fields> => {
-    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
-    const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
+    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.Struct(fields)) : S.Struct(fields));
+    const typeSchema = S.extend(fieldsSchema, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
     });

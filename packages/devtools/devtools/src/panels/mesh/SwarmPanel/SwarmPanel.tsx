@@ -136,7 +136,7 @@ export const SwarmPanel = () => {
   return (
     <PanelContainer classNames={mx('divide-y', styles.border)}>
       <Table.Root>
-        <Table.Viewport classNames='h-1/2 overflow-auto'>
+        <Table.Viewport classNames='h-1/2'>
           <Table.Main<SwarmConnection>
             columns={columns}
             data={items}

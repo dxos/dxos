@@ -20,7 +20,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
 
 export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', version: '0.1.0' })({
-  content: S.string,
+  content: S.String,
 }) {}
 
 export class EchoReplicant {
