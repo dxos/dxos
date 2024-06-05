@@ -32,9 +32,12 @@ export type TraceResourceConstructorParams = {
 
 export type TraceSpanParams = {
   instance: any;
+  // TODO(wittjosiah): Rename to `name`.
   methodName: string;
   parentCtx: Context | null;
   showInBrowserTimeline: boolean;
+  op?: string;
+  attributes?: Record<string, any>;
 };
 
 export class ResourceEntry {
@@ -275,6 +278,7 @@ export class TraceProcessor {
       this._clearSpans();
     }
     this._markSpanDirty(span.id);
+    this.remoteTracing.flushSpan(runtimeSpan);
   }
 
   private _markResourceDirty(id: number) {
@@ -358,6 +362,8 @@ export class TracingSpan {
   readonly parentId: number | null = null;
   readonly methodName: string;
   readonly resourceId: number | null = null;
+  readonly op: string | undefined;
+  readonly attributes: Record<string, any>;
   startTs: number;
   endTs: number | null = null;
   error: SerializedError | null = null;
@@ -374,6 +380,8 @@ export class TracingSpan {
     this.resourceId = _traceProcessor.getResourceId(params.instance);
     this.startTs = performance.now();
     this._showInBrowserTimeline = params.showInBrowserTimeline;
+    this.op = params.op;
+    this.attributes = params.attributes ?? {};
 
     if (params.parentCtx) {
       this._ctx = params.parentCtx.derive({

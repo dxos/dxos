@@ -16,8 +16,7 @@ import {
   httpClientIntegration,
   replayIntegration,
   metrics,
-  startSpan,
-  startSpanManual,
+  startInactiveSpan,
 } from '@sentry/browser';
 
 import { log } from '@dxos/log';
@@ -61,8 +60,7 @@ export const init = (options: InitOptions) => {
 
     trace.metrics.registerProcessor(metrics);
     trace.remote.registerProcessor({
-      startSpan,
-      startSpanManual,
+      startSpan: startInactiveSpan,
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {

@@ -2,27 +2,52 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type TracingSpan } from '../trace-processor';
+
+type RemoteSpan = {
+  end: () => void;
+};
+
+type StartSpanOptions = {
+  name: string;
+  op?: string;
+  attributes?: Record<string, any>;
+};
+
 interface TracingMethods {
-  startSpan: <T>(context: any, callback: (span?: any) => T) => T;
-  startSpanManual: <T>(context: any, callback: (span?: any, finish?: () => void) => T) => T;
+  startSpan: (options: StartSpanOptions) => RemoteSpan;
 }
 
 /**
  * Allows traces to be recorded within SDK code without requiring specific consumers.
  */
 // TODO(wittjosiah): Should probably just use otel. Use `any` for now to not depend on Sentry directly.
-export class RemoteTracing implements TracingMethods {
+export class RemoteTracing {
   private _tracing: TracingMethods | undefined;
+  private _spanMap = new Map<TracingSpan, RemoteSpan>();
 
   async registerProcessor(processor: TracingMethods) {
     this._tracing = processor;
   }
 
-  startSpan<T>(context: any, callback: (span?: any) => T) {
-    return this._tracing ? this._tracing.startSpan(context, callback) : callback();
-  }
+  flushSpan(span: TracingSpan) {
+    if (!this._tracing) {
+      return;
+    }
 
-  startSpanManual<T>(context: any, callback: (span?: any, finish?: () => void) => T) {
-    return this._tracing ? this._tracing.startSpanManual(context, callback) : callback();
+    if (span.endTs === undefined) {
+      const remoteSpan = this._tracing.startSpan({
+        name: span.methodName,
+        op: span.op,
+        attributes: span.attributes,
+      });
+      this._spanMap.set(span, remoteSpan);
+    } else {
+      const remoteSpan = this._spanMap.get(span);
+      if (remoteSpan) {
+        remoteSpan.end();
+        this._spanMap.delete(span);
+      }
+    }
   }
 }

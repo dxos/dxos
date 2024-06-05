@@ -11,8 +11,7 @@ import {
   captureMessage as naturalCaptureMessage,
   withScope as naturalWithScope,
   metrics,
-  startSpan,
-  startSpanManual,
+  startInactiveSpan,
 } from '@sentry/node';
 
 import { log } from '@dxos/log';
@@ -50,8 +49,7 @@ export const init = (options: InitOptions) => {
 
     trace.metrics.registerProcessor(metrics);
     trace.remote.registerProcessor({
-      startSpan,
-      startSpanManual,
+      startSpan: startInactiveSpan,
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {
