@@ -26,7 +26,13 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject, type ReactiveObject, Expando } from '@dxos/echo-schema';
+import {
+  type EchoReactiveObject,
+  type Identifiable,
+  isReactiveObject,
+  type ReactiveObject,
+  Expando,
+} from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';

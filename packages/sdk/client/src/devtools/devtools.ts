@@ -9,9 +9,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
+import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
-import { joinTables } from '@dxos/util';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -115,6 +115,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
                 return;
               }
 
+              // eslint-disable-next-line no-console
               console.table(data);
             });
             return undefined;

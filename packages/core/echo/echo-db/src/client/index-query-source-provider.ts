@@ -46,7 +46,7 @@ export type IndexQuerySourceParams = {
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
-  
+
   private _filter?: Filter = undefined;
   private _results?: QueryResult[] = [];
   private _stream?: Stream<QueryResponse>;
@@ -139,7 +139,7 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
-    if(!OBJECT_DIAGNOSTICS.has(result.id)) {
+    if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
         spaceKey: result.spaceKey.toHex(),

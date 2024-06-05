@@ -123,7 +123,7 @@ export class Hypergraph {
       }
     }
 
-    if(!OBJECT_DIAGNOSTICS.has(ref.itemId)) {
+    if (!OBJECT_DIAGNOSTICS.has(ref.itemId)) {
       OBJECT_DIAGNOSTICS.set(ref.itemId, {
         objectId: ref.itemId,
         spaceKey: spaceKey.toHex(),
