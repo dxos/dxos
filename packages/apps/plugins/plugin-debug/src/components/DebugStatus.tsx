@@ -218,3 +218,5 @@ export const DebugStatus = () => {
     </>
   );
 };
+
+export default DebugStatus;
