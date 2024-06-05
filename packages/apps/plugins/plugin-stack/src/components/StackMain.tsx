@@ -210,6 +210,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
                       </DropdownMenu.Item>
                     </FileUploader>
                   </DropdownMenu.Viewport>
+                  <DropdownMenu.Arrow />
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
