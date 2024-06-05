@@ -123,11 +123,14 @@ export class Hypergraph {
       }
     }
 
-    OBJECTS.add({
-      id: ref.itemId,
-      spaceKey: spaceKey.toHex(),
-      loadedStack: new StackTrace(),
-    });
+    if(!OBJECT_DIAGNOSTICS.has(ref.itemId)) {
+      OBJECT_DIAGNOSTICS.set(ref.itemId, {
+        objectId: ref.itemId,
+        spaceKey: spaceKey.toHex(),
+        loadReason: 'reference access',
+        loadedStack: new StackTrace(),
+      });
+    }
 
     log('trap', { spaceKey, itemId: ref.itemId });
     entry(this._resolveEvents, spaceKey)
@@ -352,24 +355,27 @@ class SpaceQuerySource implements QuerySource {
   }
 }
 
-// NOTE: Make sure this doesn't keep references to the queries so that they can be garbage collected.
 type ObjectDiagnostic = {
-  id: string;
+  objectId: string;
   spaceKey: string;
-  loadedStack: StackTrace;
+  loadReason: string;
+  loadedStack?: StackTrace;
+  query?: string;
 };
 
-const OBJECTS = new Set<ObjectDiagnostic>();
+export const OBJECT_DIAGNOSTICS = new Map<string, ObjectDiagnostic>();
 
 trace.diagnostic({
   id: 'referenced-objects',
   name: 'Referenced Objects (Client)',
   fetch: () => {
-    return Array.from(OBJECTS).map((object) => {
+    return Array.from(OBJECT_DIAGNOSTICS.values()).map((object) => {
       return {
-        id: object.id,
+        objectId: object.objectId,
         spaceKey: object.spaceKey,
-        creationStack: object.loadedStack.getStack(),
+        loadReason: object.loadReason,
+        creationStack: object.loadedStack?.getStack(),
+        query: object.query,
       };
     });
   },

@@ -11,6 +11,7 @@ import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
 import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
 
 import { type Client } from '../client';
+import { joinTables } from '@dxos/util';
 
 // Didn't want to add a dependency on feed store.
 type FeedWrapper = unknown;
@@ -44,6 +45,11 @@ export interface DevtoolsHook {
   listDiagnostics: () => Promise<void>;
 
   fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
+
+  /**
+   * Utility function.
+   */
+  joinTables: any;
 }
 
 export type MountOptions = {
@@ -103,7 +109,13 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
           get fetch() {
             queueMicrotask(async () => {
               // eslint-disable-next-line no-console
-              console.table(await hook.fetchDiagnostics(diagnostic.id, diagnostic.instanceTag ?? undefined));
+              const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+              if (error) {
+                log.error(`Error fetching diagnostic ${diagnostic.id}: ${error}`);
+                return;
+              }
+
+              console.table(data);
             });
             return undefined;
           },
@@ -136,6 +148,8 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       return data;
     },
+
+    joinTables,
   };
 
   if (client) {
