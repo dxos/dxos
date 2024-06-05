@@ -92,15 +92,17 @@ const main = async () => {
   const observabilityDisabled = await isObservabilityDisabled(appKey);
   const observabilityGroup = await getObservabilityGroup(appKey);
 
+  // Create the shared worker here is it can start booting up earlier
+  const worker: SharedWorker | undefined = config.values.runtime?.app?.env?.DX_HOST
+    ? undefined
+    : new SharedWorker(new URL('./shared-worker', import.meta.url), {
+          type: 'module',
+          name: 'dxos-client-worker',
+        })
+
   const services = await createClientServices(
     config,
-    config.values.runtime?.app?.env?.DX_HOST
-      ? undefined
-      : () =>
-          new SharedWorker(new URL('./shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
+    worker ? () => worker : undefined,
     observabilityGroup,
     !observabilityDisabled,
   );
