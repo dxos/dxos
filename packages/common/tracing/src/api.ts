@@ -144,5 +144,4 @@ export const trace = {
   resource,
   span,
   metrics: TRACE_PROCESSOR.remoteMetrics,
-  remote: TRACE_PROCESSOR.remoteTracing,
 };

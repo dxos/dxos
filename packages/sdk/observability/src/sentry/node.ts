@@ -15,7 +15,7 @@ import {
 } from '@sentry/node';
 
 import { log } from '@dxos/log';
-import { trace } from '@dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type InitOptions } from './types';
 
@@ -47,8 +47,8 @@ export const init = (options: InitOptions) => {
       },
     });
 
-    trace.metrics.registerProcessor(metrics);
-    trace.remote.registerProcessor({
+    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
+    TRACE_PROCESSOR.remoteTracing.registerProcessor({
       startSpan: startInactiveSpan,
     });
 
