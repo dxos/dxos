@@ -2,7 +2,7 @@
 title: Functions
 ---
 # Functions
-### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/devtools/devtools.ts#L54)
+### [mountDevtoolsHooks(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/devtools/devtools.ts#L54)
 
 
 
@@ -14,7 +14,7 @@ Arguments:
 `options`: <code>[MountOptions](/api/@dxos/client/types/MountOptions)</code>
 
 
-### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/devtools/devtools.ts#L202)
+### [unmountDevtoolsHooks()](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/devtools/devtools.ts#L202)
 
 
 
@@ -98,7 +98,7 @@ Arguments:
 `cursor`: <code>string</code>
 
 
-### [fullyQualifiedId(object)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/echo/util.ts#L32)
+### [fullyQualifiedId(object)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/echo/util.ts#L32)
 
 
 Fully qualified id of a reactive object is a combination of the space key and the object id.
@@ -160,7 +160,7 @@ Arguments:
 `obj`: <code>undefined | T</code>
 
 
-### [getSpace(object)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/echo/util.ts#L12)
+### [getSpace(object)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/echo/util.ts#L12)
 
 
 
@@ -236,7 +236,7 @@ Arguments:
 `value`: <code>unknown</code>
 
 
-### [isSpace(object)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/echo/util.ts#L25)
+### [isSpace(object)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/echo/util.ts#L25)
 
 
 
@@ -336,7 +336,7 @@ Arguments: none
 
 
 
-### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/client-services-factory.tsx#L21)
+### [createClientServices(config, \[createWorker\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/client-services-factory.tsx#L21)
 
 
 Create services from config.
@@ -354,7 +354,7 @@ Arguments:
 `signalTelemetryEnabled`: <code>boolean</code>
 
 
-### [fromAgent(options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/agent.ts#L31)
+### [fromAgent(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/agent.ts#L31)
 
 
 Connects to locally running CLI daemon.
@@ -366,7 +366,7 @@ Arguments:
 `options`: <code>[FromAgentOptions](/api/@dxos/client/types/FromAgentOptions)</code>
 
 
-### [fromHost(config, \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/local-client-services.ts#L28)
+### [fromHost(config, \[params\], \[observabilityGroup\], \[signalTelemetryEnabled\])](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/local-client-services.ts#L28)
 
 
 Creates stand-alone services without rpc.
@@ -384,7 +384,7 @@ Arguments:
 `signalTelemetryEnabled`: <code>boolean</code>
 
 
-### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/utils.ts#L21)
+### [fromIFrame(config, options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/utils.ts#L21)
 
 
 Create services provider proxy connected via iFrame to host.
@@ -398,7 +398,7 @@ Arguments:
 `options`: <code>Omit&lt;Partial&lt;[IFrameClientServicesProxyOptions](/api/@dxos/client/types/IFrameClientServicesProxyOptions)&gt;, "source"&gt;</code>
 
 
-### [fromSocket(url, \[authenticationToken\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/socket.ts#L14)
+### [fromSocket(url, \[authenticationToken\])](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/socket.ts#L14)
 
 
 Access to remote client via a socket.
@@ -412,7 +412,7 @@ Arguments:
 `authenticationToken`: <code>string</code>
 
 
-### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/worker-client-services.ts#L24)
+### [fromWorker(config, options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/worker-client-services.ts#L24)
 
 
 Creates services provider connected via worker.
@@ -426,7 +426,7 @@ Arguments:
 `options`: <code>Omit&lt;WorkerClientServicesParams, "config"&gt;</code>
 
 
-### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/services/agent.ts#L21)
+### [getUnixSocket(profile, protocol)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/agent.ts#L21)
 
 
 
@@ -440,7 +440,7 @@ Arguments:
 `protocol`: <code>string</code>
 
 
-### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/test-builder.ts#L197)
+### [joinCommonSpace(options, \[spaceKey\])](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/test-builder.ts#L197)
 
 
 
@@ -466,7 +466,7 @@ Arguments:
 `options`: <code>PerformInvitationParams</code>
 
 
-### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/test-builder.ts#L189)
+### [syncItemsAutomerge(db1, db2)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/test-builder.ts#L189)
 
 
 
@@ -480,7 +480,7 @@ Arguments:
 `db2`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [testSpaceAutomerge(createDb, checkDb)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/test-builder.ts#L181)
+### [testSpaceAutomerge(createDb, checkDb)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/test-builder.ts#L181)
 
 
 
@@ -494,7 +494,7 @@ Arguments:
 `checkDb`: <code>[EchoDatabase](/api/@dxos/client/interfaces/EchoDatabase)</code>
 
 
-### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/utils.ts#L16)
+### [waitForSpace(client, spaceKey, options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/utils.ts#L16)
 
 
 
