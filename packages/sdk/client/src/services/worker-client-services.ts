@@ -4,7 +4,6 @@
 
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type ClientServices, type ClientServicesProvider, clientServiceBundle } from '@dxos/client-protocol';
-import { type SharedWorkerConnection } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
 import { Config } from '@dxos/config';
 import type { PublicKey } from '@dxos/keys';
@@ -15,6 +14,7 @@ import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { trace } from '@dxos/tracing';
 
 import { ClientServicesProxy } from './service-proxy';
+import { SharedWorkerConnection } from './shared-worker-connection';
 import { RPC_TIMEOUT } from '../common';
 import { LOCK_KEY } from '../lock-key';
 
@@ -86,8 +86,6 @@ export class WorkerClientServices implements ClientServicesProvider {
     }
 
     log('opening...');
-    const { SharedWorkerConnection } = await import('@dxos/client-services');
-
     const ports = new Trigger<{ systemPort: MessagePort; appPort: MessagePort }>();
     const worker = this._createWorker();
     worker.port.postMessage({ dxlog: localStorage.getItem('dxlog') });
