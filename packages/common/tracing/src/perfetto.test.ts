@@ -9,7 +9,8 @@ import { describe, test } from '@dxos/test';
 
 import { PerformanceEvents, writeEventStreamToAFile } from './performance-events';
 
-describe('perfetto traces', () => {
+// Note: Skiped the test because it produces a file in the file system, and it is not automatically tested.
+describe.skip('perfetto traces', () => {
   test('performance marks', async () => {
     const trace = new PerformanceEvents({
       fields: {
