@@ -5,7 +5,11 @@
 import React, { type FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
 import { JSONTree } from 'react-json-tree';
-import SyntaxHighlighter from 'react-syntax-highlighter';
+
+// Importing light & async version directly from dist to avoid any chance of the heavy one being loaded.
+// https://www.npmjs.com/package/react-syntax-highlighter#async-build
+// eslint-disable-next-line no-restricted-imports
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/light-async';
 // eslint-disable-next-line no-restricted-imports
 import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
 // eslint-disable-next-line no-restricted-imports
