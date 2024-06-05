@@ -57,6 +57,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
       signal: compositeRuntime.createSignal(),
+      linkCache: new Map<string, EchoReactiveObject<any>>(),
     };
 
     // TODO(dmaretskyi): Does this need to be disposed?
@@ -81,6 +82,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
         core,
         targetsMap: new ComplexMap((key) => JSON.stringify(key)),
         signal: compositeRuntime.createSignal(),
+        linkCache: new Map<string, EchoReactiveObject<any>>(),
       } satisfies ObjectInternals,
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
@@ -113,6 +115,7 @@ export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
       signal: compositeRuntime.createSignal(),
+      linkCache: new Map<string, EchoReactiveObject<any>>(),
     },
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
@@ -156,10 +159,11 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
   }
 };
 
-const linkAllNestedProperties = (core: AutomergeObjectCore, data: any): DecodedAutomergePrimaryValue =>
-  deepMapValues(data, (value, recurse) => {
+const linkAllNestedProperties = (core: AutomergeObjectCore, data: any): DecodedAutomergePrimaryValue => {
+  return deepMapValues(data, (value, recurse) => {
     if (isReactiveObject(value) as boolean) {
-      return core.linkObject(value);
+      return EchoReactiveHandler.instance.linkObject(data, value);
     }
     return recurse(value);
   });
+};

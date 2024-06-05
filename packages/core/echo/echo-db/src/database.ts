@@ -12,6 +12,8 @@ import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
+import { EchoReactiveHandler } from './echo-handler/echo-handler';
+import { ProxyTarget, symbolHandler } from './echo-handler/echo-proxy-target';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
 
@@ -136,6 +138,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (isEchoObject(obj)) {
       this._automerge.add(obj);
+      EchoReactiveHandler.instance.afterBind(obj as any);
       return obj as any;
     } else {
       const schema = getSchema(obj);
@@ -148,6 +151,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
+      EchoReactiveHandler.instance.afterBind(echoObj as any);
       return echoObj as any;
     }
   }

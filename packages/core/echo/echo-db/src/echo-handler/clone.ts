@@ -7,6 +7,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
+import { symbolInternals } from './echo-proxy-target';
 import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 
 export type CloneOptions = {
@@ -63,7 +64,7 @@ export const clone = <T extends {}>(
         continue;
       }
 
-      getAutomergeObjectCore(clone).linkCache!.set(ref.id, ref);
+      clone[symbolInternals as any].linkCache!.set(ref.id, ref);
     }
   }
 
