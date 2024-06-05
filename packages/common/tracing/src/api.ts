@@ -135,6 +135,33 @@ const diagnostic = <T>(params: TraceDiagnosticParams<T>): TraceDiagnostic => {
   return TRACE_PROCESSOR.diagnostics.registerDiagnostic(params);
 };
 
+export type RunInSpanOptions = {
+  name: string;
+  showInBrowserTimeline: boolean,
+  op?: string;
+  attributes?: Record<string, any>;
+}
+
+const runInSpan = async <T> (opts: RunInSpanOptions, cb: () => Promise<T>): Promise<T> => {
+  const span = TRACE_PROCESSOR.traceSpan({
+    parentCtx: null,
+    methodName: opts.name,
+    instance: this,
+    showInBrowserTimeline: opts.showInBrowserTimeline,
+    op: opts.op,
+    attributes: opts.attributes,
+  });
+
+  try {
+    return await cb();
+  } catch (err) {
+    span.markError(err);
+    throw err;
+  } finally {
+    span.markSuccess();
+  }
+};
+
 export const trace = {
   addLink,
   diagnostic,
@@ -143,5 +170,6 @@ export const trace = {
   metricsCounter,
   resource,
   span,
+  runInSpan,
   metrics: TRACE_PROCESSOR.remoteMetrics,
 };
