@@ -2,8 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plus } from '@phosphor-icons/react';
+import { CaretDown, FilePlus, Plus } from '@phosphor-icons/react';
 import React, { useCallback, type FC, useState } from 'react';
+import { FileUploader } from 'react-drag-drop-files';
 
 import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
 import {
@@ -18,13 +19,11 @@ import {
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
 import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, ButtonGroup } from '@dxos/react-ui';
+import { Button, ButtonGroup, DropdownMenu, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
-import { getSize, surfaceElevation, staticDefaultButtonColors } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
@@ -36,6 +35,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   const { dispatch } = useIntent();
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const { t } = useTranslation(STACK_PLUGIN);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
@@ -168,11 +168,11 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='flex justify-center mbs-4 pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
+      <div role='none' className='mlb-4 pli-2'>
+        <ButtonGroup classNames='is-full'>
           <Button
-            variant='ghost'
             data-testid='stack.createSection'
+            classNames='grow gap-2'
             onClick={() =>
               dispatch?.({
                 action: LayoutAction.SET_LAYOUT,
@@ -184,13 +184,35 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
               })
             }
           >
-            <Plus className={getSize(6)} />
+            <Plus />
+            {t('add section label')}
           </Button>
           {handleFileUpload && (
-            <FileUpload
-              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-              onUpload={handleFileUpload}
-            />
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <Button>
+                  <CaretDown />
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content>
+                  <DropdownMenu.Viewport>
+                    <FileUploader
+                      name='file'
+                      types={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
+                      hoverTitle=' '
+                      dropMessageStyle={{ border: 'none', backgroundColor: 'transparent' }}
+                      handleChange={handleFileUpload}
+                    >
+                      <DropdownMenu.Item>
+                        <FilePlus />
+                        {t('upload file label')}
+                      </DropdownMenu.Item>
+                    </FileUploader>
+                  </DropdownMenu.Viewport>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           )}
         </ButtonGroup>
       </div>
