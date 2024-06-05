@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "Core DXOS Client API.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -156,7 +156,7 @@
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",
     "@types/node": "^18.11.9",
-    "fast-check": "^3.15.1",
+    "fast-check": "^3.19.0",
     "source-map-support": "^0.5.12"
   },
   "engines": {

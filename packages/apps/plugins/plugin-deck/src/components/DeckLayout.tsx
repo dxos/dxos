@@ -32,6 +32,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -146,20 +147,19 @@ const NodePlankHeading = ({
   const { dispatch } = useIntent();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
-    <PlankHeading.Root>
+    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
+            Icon={Icon}
+            attendableId={node.id}
             triggerLabel={t('actions menu label')}
             actions={node.actions()}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
           >
-            <PlankHeading.Button attendableId={node.id}>
-              <span className='sr-only'>{label}</span>
-              <Icon {...plankHeadingIconProps} />
-            </PlankHeading.Button>
+            <Surface role='menu-footer' data={{ object: node.data }} />
           </PlankHeading.ActionsMenu>
         ) : (
           <PlankHeading.Button>
@@ -168,9 +168,11 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
-        {label}
-      </PlankHeading.Label>
+      <TextTooltip text={label} onlyWhenTruncating>
+        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
+          {label}
+        </PlankHeading.Label>
+      </TextTooltip>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}
@@ -182,19 +184,27 @@ const NodePlankHeading = ({
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? {
-                  action: NavigationAction.CLOSE,
-                  data: {
-                    activeParts: {
-                      complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                      [part[0]]: slug,
+              ? part[0] === 'complementary'
+                ? {
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'complementary',
+                      state: false,
                     },
-                  },
-                }
+                  }
+                : {
+                    action: NavigationAction.CLOSE,
+                    data: {
+                      activeParts: {
+                        complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                        [part[0]]: slug,
+                      },
+                    },
+                  }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
-        close
+        close={part[0] === 'complementary' ? 'minify-end' : true}
       >
         {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
         {node && !!node.data?.comments && !slug?.endsWith('comments') && (

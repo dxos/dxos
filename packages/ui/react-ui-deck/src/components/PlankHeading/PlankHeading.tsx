@@ -3,7 +3,14 @@
 //
 
 import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, X } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type FC,
+  forwardRef,
+  type PropsWithChildren,
+  useRef,
+  useState,
+} from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -90,13 +97,15 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
 );
 
 type PlankHeadingActionsMenuProps = PropsWithChildren<{
+  attendableId?: string;
   triggerLabel: string;
   actions?: PlankHeadingAction[];
+  Icon: FC<IconProps>;
   onAction?: (action: PlankHeadingAction) => void;
 }>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, children }, forwardedRef) => {
+  ({ actions, onAction, triggerLabel, attendableId, Icon, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -128,7 +137,10 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
-              {children}
+              <PlankHeadingButton attendableId={attendableId}>
+                <span className='sr-only'>{triggerLabel}</span>
+                <Icon {...plankHeadingIconProps} />
+              </PlankHeadingButton>
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
           <DropdownMenu.Portal>
@@ -164,13 +176,14 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                     </DropdownMenu.Item>
                   );
                 })}
+                {children}
               </DropdownMenu.Viewport>
               <DropdownMenu.Arrow />
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }} side='left'>
+          <Tooltip.Content style={{ zIndex: 70 }} side='bottom'>
             {triggerLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -209,7 +222,7 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   part: [string, number, number];
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
-  close?: boolean;
+  close?: boolean | 'minify-start' | 'minify-end';
   increment?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
@@ -280,11 +293,11 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
         )}
         {close && (
           <PlankHeadingControl
-            label={t('close label')}
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
             classNames={buttonClassNames}
             onClick={() => onClick?.({ type: 'close', part })}
           >
-            <X />
+            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <X />}
           </PlankHeadingControl>
         )}
       </ButtonGroup>

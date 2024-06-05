@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-deck",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -31,6 +31,7 @@
     "@dxos/local-storage": "workspace:*",
     "@dxos/react-ui-deck": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
+    "@dxos/react-ui-text-tooltip": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0"
   },

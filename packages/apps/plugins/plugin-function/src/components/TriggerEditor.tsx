@@ -314,7 +314,7 @@ type MetaExtension<T> = {
 
 // TODO(burdon): Possible to build form from function meta schema.
 
-type ChessMeta = { level?: number; side?: string };
+type ChessMeta = { level?: number };
 
 const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
   return (
@@ -324,7 +324,7 @@ const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
           type='number'
           value={meta.level ?? 1}
           onChange={(event) => (meta.level = safeParseInt(event.target.value))}
-          placeholder='AI level.'
+          placeholder='Engine strength.'
         />
       </InputRow>
     </>
@@ -347,12 +347,19 @@ const EmailWorkerMetaProps = ({ meta }: MetaProps<EmailWorkerMeta>) => {
   );
 };
 
-type ChainPromptMeta = { prompt?: ChainPromptType };
+type ChainPromptMeta = { model?: string; prompt?: ChainPromptType };
 
 const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) => {
   const schema = triggerId ? state.selectedSchema[triggerId] : undefined;
   return (
     <>
+      <InputRow label='Model'>
+        <Input.TextInput
+          value={meta.model ?? ''}
+          onChange={(event) => (meta.model = event.target.value)}
+          placeholder='llama2'
+        />
+      </InputRow>
       <InputRow label='Presets'>
         <ChainPresets
           presets={chainPresets}
@@ -370,6 +377,22 @@ const ChainPromptMetaProps = ({ meta, triggerId }: MetaProps<ChainPromptMeta>) =
   );
 };
 
+type EmbeddingMeta = { model?: string; prompt?: ChainPromptType };
+
+const EmbeddingMetaProps = ({ meta }: MetaProps<EmbeddingMeta>) => {
+  return (
+    <>
+      <InputRow label='Model'>
+        <Input.TextInput
+          value={meta.model ?? ''}
+          onChange={(event) => (meta.model = event.target.value)}
+          placeholder='llama2'
+        />
+      </InputRow>
+    </>
+  );
+};
+
 const metaExtensions: Record<string, MetaExtension<any>> = {
   'dxos.org/function/chess': {
     initialValue: () => ({ level: 2 }),
@@ -382,9 +405,14 @@ const metaExtensions: Record<string, MetaExtension<any>> = {
   } satisfies MetaExtension<EmailWorkerMeta>,
 
   'dxos.org/function/gpt': {
-    initialValue: () => ({ prompt: undefined }),
+    initialValue: () => ({ model: 'llama2' }),
     component: ChainPromptMetaProps,
   } satisfies MetaExtension<ChainPromptMeta>,
+
+  'dxos.org/function/embedding': {
+    initialValue: () => ({ model: 'llama2' }),
+    component: EmbeddingMetaProps,
+  } satisfies MetaExtension<EmbeddingMeta>,
 };
 
 //

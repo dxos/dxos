@@ -2,11 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'node:path';
-
-import { ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
+import {
+  ChainPromptType,
+  DocumentType,
+  MessageType,
+  SectionType,
+  StackType,
+  TextV0Type,
+  ThreadType,
+} from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -14,14 +20,23 @@ import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { type ChainVariant, createChainResources } from '../../chain';
-import { getKey } from '../../util';
+import { ModelInvokerFactory } from '../../chain/model-invoker';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-type Meta = { prompt?: ChainPromptType };
+const types = [ChainPromptType, DocumentType, MessageType, SectionType, StackType, TextV0Type, ThreadType];
 
-const types = [ChainPromptType, MessageType, ThreadType];
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.Struct({
+    model: S.optional(S.String),
+    prompt: ChainPromptType,
+  }),
+);
+
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
 // TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
@@ -80,14 +95,12 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   // Process messages.
   if (messages.length > 0) {
-    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
-      baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
-      apiKey: getKey(client.config, 'openai.com/api_key'),
-    });
+    const resources = ModelInvokerFactory.createChainResources(client, { dataDir, model: meta.model });
+    await resources.init();
 
-    await resources.store.initialize();
     const resolvers = await createResolvers(client.config);
-    const processor = new RequestProcessor(resources, resolvers);
+    const modelInvoker = ModelInvokerFactory.createModelInvoker(resources);
+    const processor = new RequestProcessor(modelInvoker, resources, resolvers);
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {

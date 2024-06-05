@@ -110,22 +110,27 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
   );
 
   // TODO(wittjosiah): Factor out.
-  const handleFileUpload = fileManagerPlugin?.provides.file.upload
-    ? async (file: File) => {
-        const filename = file.name.split('.')[0];
-        const info = await fileManagerPlugin.provides.file.upload?.(file);
-        if (info) {
-          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
-          handleAdd(obj);
+  const handleFileUpload =
+    fileManagerPlugin?.provides.file.upload && space
+      ? async (file: File) => {
+          const filename = file.name.split('.')[0];
+          const info = await fileManagerPlugin.provides.file.upload?.(file, space);
+          if (info) {
+            const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+            handleAdd(obj);
+          }
         }
-      }
-    : undefined;
+      : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
-    await dispatch({
-      action: NavigationAction.OPEN,
-      data: { activeParts: { main: [fullyQualifiedId(object)] } },
-    });
+    const toId = fullyQualifiedId(object);
+    await dispatch([
+      {
+        action: NavigationAction.OPEN,
+        data: { activeParts: { main: [toId] } },
+      },
+      { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: toId } },
+    ]);
   };
 
   const handleTransform = (item: MosaicDataItem, type?: string) => {

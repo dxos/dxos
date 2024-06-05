@@ -4,7 +4,7 @@
 
 import { ref, S, TypedObject } from '@dxos/echo-schema';
 
-// TODO(burdon): Change to S.literal (and discriminated union).
+// TODO(burdon): Change to S.Literal (and discriminated union).
 export enum ChainInputType {
   VALUE = 0,
   PASS_THROUGH = 1,
@@ -17,22 +17,22 @@ export enum ChainInputType {
 }
 
 export const ChainInputSchema = S.mutable(
-  S.struct({
-    name: S.string,
-    type: S.optional(S.enums(ChainInputType)),
-    value: S.optional(S.string),
+  S.Struct({
+    name: S.String,
+    type: S.optional(S.Enums(ChainInputType)),
+    value: S.optional(S.String),
   }),
 );
 
 export type ChainInput = S.Schema.Type<typeof ChainInputSchema>;
 
 export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/ChainPrompt', version: '0.1.0' })({
-  command: S.optional(S.string),
-  template: S.string,
-  inputs: S.optional(S.mutable(S.array(ChainInputSchema))),
+  command: S.optional(S.String),
+  template: S.String,
+  inputs: S.optional(S.mutable(S.Array(ChainInputSchema))),
 }) {}
 
 export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
-  title: S.optional(S.string),
-  prompts: S.optional(S.mutable(S.array(ref(ChainPromptType)))),
+  title: S.optional(S.String),
+  prompts: S.optional(S.mutable(S.Array(ref(ChainPromptType)))),
 }) {}
