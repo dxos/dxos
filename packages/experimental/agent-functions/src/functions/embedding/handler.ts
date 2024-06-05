@@ -24,8 +24,8 @@ const types = [DocumentType, FileType];
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    model: S.optional(S.string),
+  S.Struct({
+    model: S.optional(S.String),
   }),
 );
 

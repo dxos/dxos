@@ -120,7 +120,7 @@ describe('Filter', () => {
   });
 
   test('dynamic schema', async () => {
-    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.string }) {}
+    class GeneratedSchema extends TypedObject({ typename: 'dynamic', version: '0.1.0' })({ title: S.String }) {}
 
     const { db } = await builder.createDatabase();
     const schema = db.schemaRegistry.add(GeneratedSchema);

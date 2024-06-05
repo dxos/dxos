@@ -117,7 +117,7 @@ export const TracingPanel = () => {
   return (
     <PanelContainer>
       <Table.Root>
-        <Table.Viewport classNames={'overflow-anchored flex flex-col h-1/3 overflow-auto'}>
+        <Table.Viewport classNames={'overflow-anchored flex flex-col h-1/3'}>
           <Table.Main<ResourceState>
             columns={columns}
             data={Array.from(state.current.resources.values())}
@@ -149,7 +149,7 @@ export const TracingPanel = () => {
 
           <Table.Root>
             <Table.Viewport asChild>
-              <Tabs.Content ref={containerRef} value='logs' className='grow overflow-auto'>
+              <Tabs.Content ref={containerRef} value='logs' className='grow'>
                 <LogTable logs={selectedResource?.logs ?? []} />
               </Tabs.Content>
             </Table.Viewport>

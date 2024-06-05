@@ -73,7 +73,7 @@
     "level-transcoder": "^1.0.1"
   },
   "devDependencies": {
-    "fast-check": "^3.15.1",
+    "fast-check": "^3.19.0",
     "hypercore-protocol": "^8.0.7",
     "source-map-support": "^0.5.12",
     "wait-for-expect": "^3.0.2"

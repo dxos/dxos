@@ -14,6 +14,7 @@
   "dependencies": {
     "@dxos/app-graph": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",

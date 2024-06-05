@@ -14,11 +14,10 @@ import {
   Reference,
 } from '@dxos/echo-protocol';
 import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
-import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
-import { assignDeep, defer, getDeep } from '@dxos/util';
+import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
 import { getAutomergeObjectCore } from './automerge-object';
@@ -72,7 +71,6 @@ export class AutomergeObjectCore {
    * Until object is persisted in the database, the linked object references are stored in this cache.
    * Set only when the object is not bound to a database.
    */
-  // TODO(dmaretskyi): Change to object core.
   public linkCache?: Map<string, EchoReactiveObject<any>> = new Map<string, EchoReactiveObject<any>>();
 
   /**
@@ -85,11 +83,6 @@ export class AutomergeObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public updates = new Event();
-
-  /**
-   * Reactive signal for update propagation.
-   */
-  public signal = compositeRuntime.createSignal(this);
 
   /**
    * User-facing proxy for the object.
@@ -242,9 +235,8 @@ export class AutomergeObjectCore {
    */
   public readonly notifyUpdate = () => {
     try {
-      this.signal.notifyWrite();
       this.updates.emit();
-    } catch (err) {
+    } catch (err: any) {
       // Print the error message synchronously for easier debugging.
       // The stack trace and details will be printed asynchronously.
       log.catch(err);
@@ -253,9 +245,7 @@ export class AutomergeObjectCore {
       // This is important since we don't want to silently swallow errors.
       // Unfortunately, this will only report errors in the next microtask after the current stack has already unwound.
       // TODO(dmaretskyi): Take some inspiration from facebook/react/packages/shared/invokeGuardedCallbackImpl.js
-      queueMicrotask(() => {
-        throw err;
-      });
+      throwUnhandledError(err);
     }
   };
 
@@ -309,37 +299,29 @@ export class AutomergeObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(value: DecodedAutomergeValue, options: { allowLinks?: boolean; removeUndefined?: boolean } = {}) {
-    const allowLinks = options.allowLinks ?? true;
-    const removeUndefined = options.removeUndefined ?? false;
+  encode(value: DecodedAutomergePrimaryValue) {
+    if (isReactiveObject(value) as boolean) {
+      throw new TypeError('Linking is not allowed');
+    }
+
     if (value instanceof A.RawString) {
       return value;
     }
     if (value === undefined) {
       return null;
     }
-    // TODO(dmaretskyi): Move proxy handling out of this class.
-    if (isReactiveObject(value) as boolean) {
-      if (!allowLinks) {
-        throw new TypeError('Linking is not allowed');
-      }
 
-      const reference = this.linkObject(value as EchoReactiveObject<any>);
-      return encodeReference(reference);
-    }
     if (value instanceof Reference) {
       // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
       return encodeReference(value);
     }
     if (Array.isArray(value)) {
-      const values: any = value.map((val) => this.encode(val, options));
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
-      const entries = removeUndefined
-        ? Object.entries(value).filter(([_, value]) => value !== undefined)
-        : Object.entries(value);
-      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value, options)]));
+      const entries = Object.entries(value).filter(([_, value]) => value !== undefined);
+      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value)]));
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
@@ -352,46 +334,42 @@ export class AutomergeObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  // TODO(dmaretskyi): Cleanup to not do resolution in this method.
-  decode(value: any, { resolveLinks = true }: { resolveLinks?: boolean } = {}): DecodedAutomergeValue {
+  decode(value: any): DecodedAutomergePrimaryValue {
     if (value === null) {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.decode(val, { resolveLinks }));
+      return value.map((val) => this.decode(val));
     }
     if (value instanceof A.RawString) {
       return value.toString();
     }
     // For some reason references without `@type` are being stored in the document.
     if (isEncodedReferenceObject(value) || looksLikeReferenceObject(value)) {
-      if (value.protocol === 'protobuf') {
-        // TODO(mykola): Delete this once we clean up Reference 'protobuf' protocols types.
-        // TODO(dmaretskyi): Why are we returning raw reference here instead of doing lookup?
-        return decodeReference(value);
-      }
-
-      const reference = decodeReference(value);
-
-      if (resolveLinks) {
-        return this.lookupLink(reference);
-      } else {
-        return reference;
-      }
+      return decodeReference(value);
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value, { resolveLinks })]),
-      );
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
     }
 
     return value;
   }
 
-  /**
-   * @deprecated Use getDecoded.
-   */
-  get(path: KeyPath) {
+  arrayPush(path: KeyPath, items: DecodedAutomergeValue[]) {
+    const itemsEncoded = items.map((item) => this.encode(item));
+
+    let newLength: number = -1;
+    this.change((doc) => {
+      const fullPath = [...this.mountPath, ...path];
+      const array = getDeep(doc, fullPath);
+      invariant(Array.isArray(array));
+      newLength = array.push(...itemsEncoded);
+    });
+    invariant(newLength !== -1);
+    return newLength;
+  }
+
+  private _getRaw(path: KeyPath) {
     const fullPath = [...this.mountPath, ...path];
 
     let value = this.getDoc();
@@ -402,10 +380,7 @@ export class AutomergeObjectCore {
     return value;
   }
 
-  /**
-   * @deprecated Use setDecoded.
-   */
-  set(path: KeyPath, value: any) {
+  private _setRaw(path: KeyPath, value: any) {
     const fullPath = [...this.mountPath, ...path];
 
     this.change((doc) => {
@@ -415,20 +390,20 @@ export class AutomergeObjectCore {
 
   // TODO(dmaretskyi): Rename to `get`.
   getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(this.get(path), { resolveLinks: false }) as DecodedAutomergePrimaryValue;
+    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
   setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue) {
-    this.set(path, this.encode(value, { allowLinks: false }));
+    this._setRaw(path, this.encode(value));
   }
 
   setType(reference: Reference) {
-    this.set([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], this.encode(reference));
   }
 
   setMeta(meta: ObjectMeta) {
-    this.set([META_NAMESPACE], this.encode(meta));
+    this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
   delete(path: KeyPath) {
@@ -441,7 +416,7 @@ export class AutomergeObjectCore {
   }
 
   getType(): Reference | undefined {
-    const value = this.decode(this.get([SYSTEM_NAMESPACE, 'type']), { resolveLinks: false });
+    const value = this.decode(this._getRaw([SYSTEM_NAMESPACE, 'type']));
     if (!value) {
       return undefined;
     }
@@ -451,12 +426,12 @@ export class AutomergeObjectCore {
   }
 
   isDeleted() {
-    const value = this.get([SYSTEM_NAMESPACE, 'deleted']);
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     return typeof value === 'boolean' ? value : false;
   }
 
   setDeleted(value: boolean) {
-    this.set([SYSTEM_NAMESPACE, 'deleted'], value);
+    this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 }
 
