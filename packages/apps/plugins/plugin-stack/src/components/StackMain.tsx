@@ -2,24 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CaretDown, FilePlus, Plus } from '@phosphor-icons/react';
-import React, { useCallback, type FC, useState } from 'react';
-import { FileUploader } from 'react-drag-drop-files';
+import { Plus } from '@phosphor-icons/react';
+import React, { type FC, useState } from 'react';
 
-import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
+import { StackType, SectionType, FolderType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
   Surface,
-  defaultFileTypes,
   parseMetadataResolverPlugin,
-  parseFileManagerPlugin,
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
 import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, ButtonGroup, DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
@@ -34,7 +31,6 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { dispatch } = useIntent();
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const { t } = useTranslation(STACK_PLUGIN);
 
   const id = `stack-${stack.id}`;
@@ -100,27 +96,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     }
   };
 
-  const handleAdd = useCallback(
-    (sectionObject: SectionType['object']) => {
-      stack.sections.push(create(SectionType, { object: sectionObject }));
-      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
-      folder?.objects.push(sectionObject);
-    },
-    [stack, stack.sections],
-  );
-
   // TODO(wittjosiah): Factor out.
-  const handleFileUpload =
-    fileManagerPlugin?.provides.file.upload && space
-      ? async (file: File) => {
-          const filename = file.name.split('.')[0];
-          const info = await fileManagerPlugin.provides.file.upload?.(file, space);
-          if (info) {
-            const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
-            handleAdd(obj);
-          }
-        }
-      : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
     const toId = fullyQualifiedId(object);
@@ -168,54 +144,24 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='mlb-4 pli-2'>
-        <ButtonGroup classNames='is-full'>
-          <Button
-            data-testid='stack.createSection'
-            classNames='grow gap-2'
-            onClick={() =>
-              dispatch?.({
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', stack },
-                },
-              })
-            }
-          >
-            <Plus />
-            {t('add section label')}
-          </Button>
-          {handleFileUpload && (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button>
-                  <CaretDown />
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <FileUploader
-                      name='file'
-                      types={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-                      hoverTitle=' '
-                      dropMessageStyle={{ border: 'none', backgroundColor: 'transparent' }}
-                      handleChange={handleFileUpload}
-                    >
-                      <DropdownMenu.Item>
-                        <FilePlus />
-                        {t('upload file label')}
-                      </DropdownMenu.Item>
-                    </FileUploader>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-          )}
-        </ButtonGroup>
+      <div role='none' className='mlb-2 pli-2'>
+        <Button
+          data-testid='stack.createSection'
+          classNames='is-full gap-2'
+          onClick={() =>
+            dispatch?.({
+              action: LayoutAction.SET_LAYOUT,
+              data: {
+                element: 'dialog',
+                component: 'dxos.org/plugin/stack/AddSectionDialog',
+                subject: { position: 'afterAll', stack },
+              },
+            })
+          }
+        >
+          <Plus />
+          <span className='sr-only'>{t('add section label')}</span>
+        </Button>
       </div>
     </>
   );
