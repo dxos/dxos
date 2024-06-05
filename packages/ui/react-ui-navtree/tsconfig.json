@@ -44,6 +44,9 @@
       "path": "../react-ui-searchlist"
     },
     {
+      "path": "../react-ui-text-tooltip"
+    },
+    {
       "path": "../react-ui-theme"
     },
     {
