@@ -73,10 +73,10 @@ export class AutomergeContext {
 
           return (Object.entries(doc.objects) as [string, ObjectStructure][]).map(([objectId, object]) => {
             return {
-              id: objectId,
+              objectId,
               docId,
               spaceKey,
-              type: object.system.type?.itemId,
+              type: object.system?.type?.itemId,
             };
           });
         }),
