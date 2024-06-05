@@ -16,7 +16,8 @@ export class SentryLogProcessor {
 
   public readonly logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
     const { level, meta, error } = entry;
-    if (!shouldLog(entry, config.captureFilters)) {
+    // Don't forward logs from remote sessions.
+    if (!shouldLog(entry, config.captureFilters) || meta?.S?.remoteSessionId) {
       return;
     }
     if (entry.level !== LogLevel.WARN && entry.level !== LogLevel.ERROR) {

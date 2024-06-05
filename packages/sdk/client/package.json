@@ -57,13 +57,6 @@
       "node": "./dist/lib/node/services/index.cjs",
       "types": "./dist/types/src/services/index.d.ts"
     },
-    "./shared-worker": {
-      "browser": "./dist/lib/browser/worker/shared-worker.mjs",
-      "import": "./dist/lib/browser/worker/shared-worker.mjs",
-      "require": "./dist/lib/node/worker/shared-worker.cjs",
-      "node": "./dist/lib/node/worker/shared-worker.cjs",
-      "types": "./dist/types/src/worker/shared-worker.d.ts"
-    },
     "./testing": {
       "browser": "./dist/lib/browser/testing/index.mjs",
       "import": "./dist/lib/browser/testing/index.mjs",
