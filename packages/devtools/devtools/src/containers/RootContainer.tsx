@@ -37,7 +37,7 @@ const Sidebar = () => {
       className={mx(
         'flex flex-col w-[180px] shrink-0 overflow-hidden overflow-y-auto border-r',
         styles.border,
-        styles.bgSidebar,
+        styles.bgPanel,
       )}
     >
       <div className={mx('flex flex-col gap-4 divide-y', styles.border)}>
