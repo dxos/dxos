@@ -20,7 +20,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -78,7 +78,7 @@ describe('identity/identity', () => {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       blobStore,
-      networkManager: new NetworkManager({
+      networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
       }),
@@ -193,7 +193,7 @@ describe('identity/identity', () => {
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         blobStore,
-        networkManager: new NetworkManager({
+        networkManager: new SwarmNetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
@@ -281,7 +281,7 @@ describe('identity/identity', () => {
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         blobStore,
-        networkManager: new NetworkManager({
+        networkManager: new SwarmNetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
