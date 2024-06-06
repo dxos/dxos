@@ -3147,6 +3147,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../../ui/react-ui-mosaic
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
       '@dxos/react-ui-theme':
         specifier: workspace:*
         version: link:../../../ui/react-ui-theme

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Chat, MagnifyingGlass, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
@@ -21,16 +21,7 @@ import {
   type Toast as ToastSchema,
   useIntent,
 } from '@dxos/app-framework';
-import {
-  Button,
-  DensityProvider,
-  Dialog,
-  Main,
-  Popover,
-  Status,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Dialog, Main, Popover, Status, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -229,6 +220,25 @@ const NodePlankHeading = ({
             <Chat />
           </Button>
         )}
+        {/* TODO(thure): Move to column between planks */}
+        <Button
+          variant='ghost'
+          classNames='p-1'
+          onClick={() =>
+            dispatch([
+              {
+                action: LayoutAction.SET_LAYOUT,
+                data: {
+                  element: 'dialog',
+                  component: 'dxos.org/plugin/search/Dialog',
+                },
+              },
+            ])
+          }
+        >
+          <span className='sr-only'>{t('insert plank label')}</span>
+          <MagnifyingGlass />
+        </Button>
       </PlankHeading.Controls>
     </PlankHeading.Root>
   );
@@ -502,11 +512,9 @@ export const DeckLayout = ({
 
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
-          <DensityProvider density='fine'>
-            <Dialog.Overlay blockAlign={dialogBlockAlign}>
-              <Surface role='dialog' data={dialogContent} />
-            </Dialog.Overlay>
-          </DensityProvider>
+          <Dialog.Overlay blockAlign={dialogBlockAlign}>
+            <Surface role='dialog' data={dialogContent} />
+          </Dialog.Overlay>
         </Dialog.Root>
 
         {/* Global toasts. */}

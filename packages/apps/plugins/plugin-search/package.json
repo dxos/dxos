@@ -25,7 +25,8 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*"
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
