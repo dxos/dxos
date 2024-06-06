@@ -472,10 +472,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
       const core = getAutomergeObjectCore(obj);
       if (!core.database) {
-        database.add(obj);
+        database._dbApi.add(obj);
         return new Reference(core.id);
       } else {
-        if ((core.database as any) !== database) {
+        if (core.database !== database) {
           return new Reference(core.id, undefined, core.database.spaceKey.toHex());
         } else {
           return new Reference(core.id);

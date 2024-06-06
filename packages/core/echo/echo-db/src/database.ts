@@ -96,20 +96,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       initEchoReactiveObjectRootProxy(core);
     };
 
-    this._automerge = new AutomergeDb(
-      params.graph,
-      params.automergeContext,
-      params.spaceKey,
-      initRootProxyFn,
-      this,
-      (core) => {
-        // Note: @dxos/echo-db raw Serializer do not create EchoReactiveObject, and do not create linkCache.
-        //       So no drainLinkCache is needed for that path.
-        if (core.rootProxy) {
-          EchoReactiveHandler.instance.drainLinkCache(core.rootProxy as any);
-        }
-      },
-    );
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -155,6 +142,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (isEchoObject(obj)) {
       this._automerge.add(obj);
+      EchoReactiveHandler.instance.drainLinkCache(obj as any);
       return obj as any;
     } else {
       const schema = getSchema(obj);
@@ -167,6 +155,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
+      EchoReactiveHandler.instance.drainLinkCache(echoObj as any);
       return echoObj as any;
     }
   }
