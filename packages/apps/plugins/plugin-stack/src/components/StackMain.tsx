@@ -3,28 +3,24 @@
 //
 
 import { Plus } from '@phosphor-icons/react';
-import React, { useCallback, type FC, useState } from 'react';
+import React, { type FC, useState } from 'react';
 
-import { FileType, StackType, SectionType, FolderType } from '@braneframe/types';
+import { StackType, SectionType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
   Surface,
-  defaultFileTypes,
   parseMetadataResolverPlugin,
-  parseFileManagerPlugin,
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, ButtonGroup } from '@dxos/react-ui';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
-import { getSize, surfaceElevation, staticDefaultButtonColors } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { FileUpload } from './FileUpload';
 import { STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
@@ -35,7 +31,7 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, separation }) => {
   const { dispatch } = useIntent();
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const { t } = useTranslation(STACK_PLUGIN);
 
   const id = `stack-${stack.id}`;
   const items = stack.sections
@@ -52,8 +48,6 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         ...rest,
       };
     });
-  const space = getSpace(stack);
-  const [folder] = useQuery(space, Filter.schema(FolderType));
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
@@ -100,26 +94,7 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
     }
   };
 
-  const handleAdd = useCallback(
-    (sectionObject: SectionType['object']) => {
-      stack.sections.push(create(SectionType, { object: sectionObject }));
-      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
-      folder?.objects.push(sectionObject);
-    },
-    [stack, stack.sections],
-  );
-
   // TODO(wittjosiah): Factor out.
-  const handleFileUpload = fileManagerPlugin?.provides.file.upload
-    ? async (file: File) => {
-        const filename = file.name.split('.')[0];
-        const info = await fileManagerPlugin.provides.file.upload?.(file);
-        if (info) {
-          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
-          handleAdd(obj);
-        }
-      }
-    : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
     const toId = fullyQualifiedId(object);
@@ -167,31 +142,24 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         onChangeCollapsedSections={onChangeCollapsedSections}
       />
 
-      <div role='none' className='flex justify-center mbs-4 pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
-          <Button
-            variant='ghost'
-            data-testid='stack.createSection'
-            onClick={() =>
-              dispatch?.({
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', stack },
-                },
-              })
-            }
-          >
-            <Plus className={getSize(6)} />
-          </Button>
-          {handleFileUpload && (
-            <FileUpload
-              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-              onUpload={handleFileUpload}
-            />
-          )}
-        </ButtonGroup>
+      <div role='none' className='mlb-2 pli-2'>
+        <Button
+          data-testid='stack.createSection'
+          classNames='is-full gap-2'
+          onClick={() =>
+            dispatch?.({
+              action: LayoutAction.SET_LAYOUT,
+              data: {
+                element: 'dialog',
+                component: 'dxos.org/plugin/stack/AddSectionDialog',
+                subject: { position: 'afterAll', stack },
+              },
+            })
+          }
+        >
+          <Plus />
+          <span className='sr-only'>{t('add section label')}</span>
+        </Button>
       </div>
     </>
   );

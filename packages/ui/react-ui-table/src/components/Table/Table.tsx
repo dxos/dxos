@@ -42,10 +42,10 @@ type TableViewportProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primit
 const TableViewport = ({ children, classNames, asChild, ...props }: TableViewportProps) => {
   const { scrollContextRef } = useContext(TableRootContext);
 
-  const classes = mx(classNames);
+  const classes = mx(classNames, 'overflow-auto');
 
   return asChild ? (
-    <Slot ref={scrollContextRef} {...props}>
+    <Slot ref={scrollContextRef} className={classes} {...props}>
       {children}
     </Slot>
   ) : (
