@@ -44,7 +44,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out. See copy paste in devtools
 const useThemeWatcher = () => {
   const [themeMode, setThemeMode] = React.useState<ThemeMode>('dark');
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
