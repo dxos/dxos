@@ -5,7 +5,7 @@
 import { Plus } from '@phosphor-icons/react';
 import React, { type FC, useState } from 'react';
 
-import { StackType, SectionType, FolderType } from '@braneframe/types';
+import { StackType, SectionType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -15,7 +15,7 @@ import {
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
-import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { Stack, type StackProps, type CollapsedSections, type AddSectionPosition } from '@dxos/react-ui-stack';
@@ -48,8 +48,6 @@ const StackMain: FC<{ stack: StackType; separation?: boolean }> = ({ stack, sepa
         ...rest,
       };
     });
-  const space = getSpace(stack);
-  const [folder] = useQuery(space, Filter.schema(FolderType));
 
   const [collapsedSections, onChangeCollapsedSections] = useState<CollapsedSections>({});
 
