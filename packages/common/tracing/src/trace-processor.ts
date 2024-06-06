@@ -431,8 +431,15 @@ export class TracingSpan {
     };
   }
 
+  getResourceEntry(): ResourceEntry | undefined {
+    if (this.resourceId === null) {
+      return undefined;
+    }
+    return this._traceProcessor.resources.get(this.resourceId);
+  }
+
   private _markInBrowserTimeline() {
-    const resource = this._traceProcessor.resources.get(this.resourceId!);
+    const resource = this.getResourceEntry();
     const name = resource
       ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}`
       : this.methodName;
