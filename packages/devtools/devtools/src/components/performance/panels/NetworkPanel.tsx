@@ -5,7 +5,8 @@
 import { WifiHigh } from '@phosphor-icons/react';
 import React from 'react';
 
-import type { NetworkStatus } from '@dxos/client/src/mesh';
+import type { NetworkStatus } from '@dxos/client/mesh';
+
 import { Panel, type CustomPanelProps } from '../Panel';
 
 export const NetworkPanel = ({ network, ...props }: CustomPanelProps<{ network?: NetworkStatus }>) => {

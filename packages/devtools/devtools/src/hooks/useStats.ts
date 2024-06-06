@@ -5,14 +5,13 @@
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
+import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
-import { useStream } from '@dxos/react-client/src/devtools';
-import { ConnectionState, type NetworkStatus } from '@dxos/client/src/mesh';
 
 // TODO(burdon): Factor out.
 
