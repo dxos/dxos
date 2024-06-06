@@ -103,7 +103,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       initRootProxyFn,
       this,
       (core) => {
-        EchoReactiveHandler.instance.drainLinkCache(core.rootProxy as any);
+        // Note: @dxos/echo-db raw Serializer do not create EchoReactiveObject, and do not create linkCache.
+        //       So no drainLinkCache is needed for that path.
+        if (core.rootProxy) {
+          EchoReactiveHandler.instance.drainLinkCache(core.rootProxy as any);
+        }
       },
     );
     this.schemaRegistry = new DynamicSchemaRegistry(this);
