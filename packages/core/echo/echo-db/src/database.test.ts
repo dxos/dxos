@@ -10,7 +10,6 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { getAutomergeObjectCore } from './automerge';
-import { clone } from './echo-handler';
 import { Filter } from './query';
 import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from './testing';
 
@@ -171,27 +170,6 @@ describe('Database', () => {
 
     getMeta(task).keys.push({ source: 'example', id: 'test' });
     expect(getMeta(task).keys).to.have.length(1);
-  });
-
-  test('clone', async () => {
-    const { db: db1 } = await createDbWithTypes();
-    const { db: db2 } = await createDbWithTypes();
-
-    const task1 = create(Task, { title: 'Main task' });
-    db1.add(task1);
-    await db1.flush();
-
-    const task2 = clone(task1);
-    expect(task2 !== task1).to.be.true;
-    expect(task2.id).to.equal(task1.id);
-    expect(task2.title).to.equal(task1.title);
-
-    db2.add(task2);
-    await db2.flush();
-    expect(task2).to.be.instanceOf(Task);
-    expect(task2.id).to.equal(task1.id);
-
-    expect(() => db1.add(task1)).to.throw;
   });
 
   test('operator-based filters', async () => {

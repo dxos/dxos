@@ -500,7 +500,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const database = target[symbolInternals].core.database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return database.graph._lookupLink(ref, database, () => target[symbolInternals].core.notifyUpdate());
+      return database.graph._lookupLink(ref, database._dbApi, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(ref.itemId);

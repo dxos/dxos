@@ -13,7 +13,7 @@ import {
   type SpaceDoc,
   Reference,
 } from '@dxos/echo-protocol';
-import { isReactiveObject, type ObjectMeta, type EchoReactiveObject } from '@dxos/echo-schema';
+import { isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
@@ -75,11 +75,6 @@ export class AutomergeObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public updates = new Event();
-
-  /**
-   * User-facing proxy for the object.
-   */
-  public rootProxy?: EchoReactiveObject<any>;
 
   /**
    * Create local doc with initial state from this object.

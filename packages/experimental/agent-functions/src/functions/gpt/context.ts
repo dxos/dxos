@@ -26,7 +26,7 @@ export const createContext = async (
   if (contextObjectId) {
     // TODO(burdon): Handle composite key?
     const idParts = contextObjectId.split(':');
-    object = await space.db.automerge.loadObjectById(idParts[idParts.length - 1]);
+    object = await space.db.loadObjectById(idParts[idParts.length - 1]);
   } else {
     object = message;
   }

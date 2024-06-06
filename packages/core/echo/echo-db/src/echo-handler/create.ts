@@ -48,7 +48,6 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     const meta = getProxyHandlerSlot<ObjectMeta>(getMeta(proxy)).target!;
 
     const core = new AutomergeObjectCore();
-    core.rootProxy = proxy;
 
     slot.handler = EchoReactiveHandler.instance;
     const target = slot.target as ProxyTarget;
@@ -84,7 +83,6 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
 
     initCore(core, target);
     const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
-    core.rootProxy = proxy;
     saveTypeInAutomerge(target[symbolInternals], schema);
     return proxy;
   }
@@ -99,7 +97,7 @@ const initCore = (core: AutomergeObjectCore, target: any) => {
   core.initNewObject(linkAllNestedProperties(core, target));
 };
 
-export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
+export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core),
     [symbolPath]: [],
@@ -109,7 +107,7 @@ export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
   // TODO(dmaretskyi): Does this need to be disposed?
   core.updates.on(() => target[symbolInternals].signal.notifyWrite());
 
-  core.rootProxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
+  return createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
 const validateSchema = (schema: S.Schema<any>) => {

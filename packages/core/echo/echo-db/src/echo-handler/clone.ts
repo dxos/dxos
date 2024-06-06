@@ -40,15 +40,12 @@ export const clone = <T extends {}>(
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  const core = requireAutomergeCore(obj);
-
-  const clone = cloneInner(core, retainId ? obj.id : PublicKey.random().toHex());
+  const clone = cloneInner(obj, retainId ? obj.id : PublicKey.random().toHex());
 
   const clones: EchoReactiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      const innerCore = requireAutomergeCore(innerObj);
-      clones.push(cloneInner(innerCore, retainId ? innerCore.id : PublicKey.random().toHex()));
+      clones.push(cloneInner(innerObj, retainId ? innerObj.id : PublicKey.random().toHex()));
     }
   }
 
@@ -71,18 +68,19 @@ export const clone = <T extends {}>(
   return clone;
 };
 
-const cloneInner = (core: AutomergeObjectCore, id: string): EchoReactiveObject<any> => {
+const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
+  const core = requireAutomergeCore(obj);
   const coreClone = new AutomergeObjectCore();
   coreClone.initNewObject();
   coreClone.id = id;
-  initEchoReactiveObjectRootProxy(coreClone);
+  const proxy = initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
   coreClone.change((doc: any) => {
     for (const key of Object.keys(automergeSnapshot)) {
       doc[key] = automergeSnapshot[key];
     }
   });
-  return coreClone.rootProxy as any;
+  return proxy as any;
 };
 
 const getObjectDoc = (core: AutomergeObjectCore): any => {
