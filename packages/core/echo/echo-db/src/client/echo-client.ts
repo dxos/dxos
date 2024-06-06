@@ -13,6 +13,7 @@ import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { trace } from '@dxos/tracing';
 
 export type EchoClientParams = {};
 
@@ -71,6 +72,7 @@ export class EchoClient extends Resource {
     this._queryService = undefined;
   }
 
+  @trace.span({ showInBrowserTimeline: true })
   protected override async _open(ctx: Context): Promise<void> {
     invariant(this._dataService && this._queryService, 'Invalid state: not connected');
     this._automergeContext = new AutomergeContext(this._dataService, {

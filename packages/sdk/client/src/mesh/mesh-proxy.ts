@@ -8,10 +8,11 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
+import { trace as Trace } from '@dxos/protocols';
 import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 
 import { RPC_TIMEOUT } from '../common';
+import { trace } from '@dxos/tracing';
 
 /**
  * Public API for MESH services.
@@ -53,8 +54,9 @@ export class MeshProxy {
   /**
    * @internal
    */
+  @trace.span({ showInBrowserTimeline: true })
   async _open() {
-    log.trace('dxos.sdk.mesh-proxy.open', trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log.trace('dxos.sdk.mesh-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({ onError: (err) => log.catch(err) });
 
     invariant(this._serviceProvider.services.NetworkService, 'NetworkService is not available.');
@@ -66,7 +68,7 @@ export class MeshProxy {
     });
 
     this._ctx.onDispose(() => networkStatusStream.close());
-    log.trace('dxos.sdk.mesh-proxy.open', trace.end({ id: this._instanceId }));
+    log.trace('dxos.sdk.mesh-proxy.open', Trace.end({ id: this._instanceId }));
   }
 
   /**

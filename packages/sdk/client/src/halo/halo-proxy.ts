@@ -107,6 +107,7 @@ export class HaloProxy implements Halo {
    *
    * @internal
    */
+  @trace.span({ showInBrowserTimeline: true })
   async _open() {
     log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     const gotIdentity = this._identityChanged.waitForCount(1);

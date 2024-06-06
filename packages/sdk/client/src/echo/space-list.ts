@@ -76,7 +76,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /**
    * @internal
    */
-  @trace.span()
+  @trace.span({ showInBrowserTimeline: true })
   async _open() {
     log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
