@@ -9,3 +9,4 @@ export * from './QueriesPanel';
 export * from './RawQueriesPanel';
 export * from './SpansPanel';
 export * from './TimeSeries';
+export * from './NetworkPanel';

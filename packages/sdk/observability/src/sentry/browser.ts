@@ -10,19 +10,19 @@ import {
   captureMessage as naturalCaptureMessage,
   sendFeedback as naturalSendFeedback,
   withScope as naturalWithScope,
-  BrowserTracing,
-  replayIntegration,
   breadcrumbsIntegration,
+  browserTracingIntegration,
   feedbackIntegration,
+  httpClientIntegration,
+  replayIntegration,
+  metrics,
+  startInactiveSpan,
 } from '@sentry/browser';
-import { httpClientIntegration } from '@sentry/integrations';
 
 import { log } from '@dxos/log';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type InitOptions } from './types';
-
-// Browser only feature.
-export * from './tracing';
 
 // Polyfill export.
 export { setTag, setTags, setUser } from '@sentry/browser';
@@ -45,7 +45,7 @@ export const init = (options: InitOptions) => {
         breadcrumbsIntegration({ console: false, fetch: false }),
         httpClientIntegration({ failedRequestStatusCodes: [[400, 599]] }),
         feedbackIntegration({ autoInject: false }),
-        ...(options.tracing ? [new BrowserTracing()] : []),
+        ...(options.tracing ? [browserTracingIntegration()] : []),
         ...(options.replay ? [replayIntegration({ blockAllMedia: true, maskAllText: true })] : []),
       ],
       replaysSessionSampleRate: options.replaySampleRate,
@@ -56,6 +56,11 @@ export const init = (options: InitOptions) => {
         options.onError?.(event);
         return event;
       },
+    });
+
+    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
+    TRACE_PROCESSOR.remoteTracing.registerProcessor({
+      startSpan: startInactiveSpan,
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {

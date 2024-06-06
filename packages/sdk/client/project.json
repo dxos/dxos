@@ -19,8 +19,7 @@
           "packages/sdk/client/src/mesh/index.ts",
           "packages/sdk/client/src/services/index.ts",
           "packages/sdk/client/src/testing/index.ts",
-          "packages/sdk/client/src/worker/index.ts",
-          "packages/sdk/client/src/worker/shared-worker.ts"
+          "packages/sdk/client/src/worker/index.ts"
         ]
       }
     },
