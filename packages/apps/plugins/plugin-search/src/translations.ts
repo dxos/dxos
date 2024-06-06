@@ -11,6 +11,8 @@ export default [
         'plugin name': 'Search',
         'search action label': 'Search spaces',
         'search placeholder': 'Search...',
+        'search dialog title': 'Open',
+        'recently closed heading': 'Recently closed',
       },
     },
   },
