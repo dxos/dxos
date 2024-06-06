@@ -66,14 +66,14 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
   // Store in local storage.
   const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
     PANEL_KEYS.reduce<PanelMap>((acc, key) => {
-      acc[key] = localStorage.getItem(`${LOCAL_STORAGE_KEY}/${key}`) !== 'false';
+      acc[key] = localStorage?.getItem(`${LOCAL_STORAGE_KEY}/${key}`) !== 'false';
       return acc;
     }, {} as PanelMap),
   );
 
   const handleToggle: PanelProps['onToggle'] = (id, open) => {
     setPanelState({ ...panelState, [id]: open });
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
+    localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
   };
 
   return (
