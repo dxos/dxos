@@ -508,6 +508,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   drainLinkCache(target: ProxyTarget): void {
+    if (!target[symbolInternals].linkCache) {
+      return;
+    }
     if (target[symbolInternals].linkCache) {
       for (const obj of target[symbolInternals].linkCache.values()) {
         this.linkObject(target, obj);
