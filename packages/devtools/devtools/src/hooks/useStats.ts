@@ -11,6 +11,8 @@ import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 import { type Diagnostics, TRACE_PROCESSOR } from '@dxos/tracing';
+import { useStream } from '@dxos/react-client/src/devtools';
+import { ConnectionState, type NetworkStatus } from '@dxos/client/src/mesh';
 
 // TODO(burdon): Factor out.
 
@@ -54,6 +56,7 @@ export type Stats = {
   database?: DatabaseInfo;
   queries?: QueryInfo[];
   memory?: MemoryInfo;
+  network?: NetworkStatus;
 };
 
 /**
@@ -154,6 +157,21 @@ export const useStats = (): [Stats, () => void] => {
     },
     [update],
   );
+
+  useEffect(() => {
+    const stream = client.services.services.NetworkService!.queryStatus();
+    stream.subscribe((network) => {
+      setStats((stats) =>
+        Object.assign({}, stats, {
+          network,
+        }),
+      );
+    });
+
+    return () => {
+      void stream.close();
+    };
+  });
 
   return [stats, () => forceUpdate({})];
 };

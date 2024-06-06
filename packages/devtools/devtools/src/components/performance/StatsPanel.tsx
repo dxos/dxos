@@ -12,6 +12,7 @@ import { Panel, type PanelProps } from './Panel';
 import {
   DatabasePanel,
   MemoryPanel,
+  NetworkPanel,
   PerformancePanel,
   QueriesPanel,
   RawQueriesPanel,
@@ -106,6 +107,7 @@ export const StatsPanel = ({ stats, onRefresh }: QueryPanelProps) => {
         <RawQueriesPanel id='rawQueries' open={panelState.rawQueries} onToggle={handleToggle} queries={rawQueries} />
         <DatabasePanel id='database' database={stats?.database} />
         <MemoryPanel id='memory' memory={stats?.memory} />
+        <NetworkPanel id='network' network={stats?.network} />
       </div>
     </DensityProvider>
   );
