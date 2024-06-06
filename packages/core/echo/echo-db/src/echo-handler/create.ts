@@ -53,12 +53,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     slot.handler = EchoReactiveHandler.instance;
     const target = slot.target as ProxyTarget;
 
-    target[symbolInternals] = {
-      core,
-      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-      signal: compositeRuntime.createSignal(),
-      linkCache: new Map<string, EchoReactiveObject<any>>(),
-    };
+    target[symbolInternals] = initInternals(core);
 
     // TODO(dmaretskyi): Does this need to be disposed?
     core.updates.on(() => target[symbolInternals].signal.notifyWrite());
@@ -78,12 +73,7 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
   } else {
     const core = new AutomergeObjectCore();
     const target: ProxyTarget = {
-      [symbolInternals]: {
-        core,
-        targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-        signal: compositeRuntime.createSignal(),
-        linkCache: new Map<string, EchoReactiveObject<any>>(),
-      } satisfies ObjectInternals,
+      [symbolInternals]: initInternals(core),
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       ...(init as any),
@@ -111,12 +101,7 @@ const initCore = (core: AutomergeObjectCore, target: any) => {
 
 export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
   const target: ProxyTarget = {
-    [symbolInternals]: {
-      core,
-      targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-      signal: compositeRuntime.createSignal(),
-      linkCache: new Map<string, EchoReactiveObject<any>>(),
-    },
+    [symbolInternals]: initInternals(core),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
@@ -167,3 +152,10 @@ const linkAllNestedProperties = (core: AutomergeObjectCore, data: any): DecodedA
     return recurse(value);
   });
 };
+
+const initInternals = (core: AutomergeObjectCore): ObjectInternals => ({
+  core,
+  targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+  signal: compositeRuntime.createSignal(),
+  linkCache: new Map<string, EchoReactiveObject<any>>(),
+});
