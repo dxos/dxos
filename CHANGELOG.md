@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.6](https://github.com/dxos/dxos/compare/v0.5.5...v0.5.6) (2024-06-06)
+
+
+### Features
+
+* **composer:** autofocus new document added to a stack ([#6907](https://github.com/dxos/dxos/issues/6907)) ([97acb7f](https://github.com/dxos/dxos/commit/97acb7f7fc0b91a3975313193921aa11075259f4))
+* Fetch button in console diagnostics ([#6916](https://github.com/dxos/dxos/issues/6916)) ([b2f4cd2](https://github.com/dxos/dxos/commit/b2f4cd2217fe224672ec24b7a637f62bf48924d1))
+* Pass space ref to file.upload provider ([#6789](https://github.com/dxos/dxos/issues/6789)) ([777211f](https://github.com/dxos/dxos/commit/777211fa3558b982c50c985624ad2f3b4331db33))
+* Plank heading menu detail section ([#6930](https://github.com/dxos/dxos/issues/6930)) ([c4185e0](https://github.com/dxos/dxos/commit/c4185e04ac2a9d9015654f492f8fbadb963b1f11))
+* TextTooltip ([#6927](https://github.com/dxos/dxos/issues/6927)) ([a77ceba](https://github.com/dxos/dxos/commit/a77cebae96eb6cc4af526e3dd0020d5cfa8abb3b))
+
+
+### Bug Fixes
+
+* agentmanager expired access token ([#6922](https://github.com/dxos/dxos/issues/6922)) ([dc713d5](https://github.com/dxos/dxos/commit/dc713d53221749fc98b57081d64f7e2cdf32f947))
+* **composer-app:** include wasm files in service worker cache ([#6912](https://github.com/dxos/dxos/issues/6912)) ([ffd017e](https://github.com/dxos/dxos/commit/ffd017e919489b9d04ee960688d8dc7b6559e0da))
+* **functions:** email-worker missing schema registration ([#6898](https://github.com/dxos/dxos/issues/6898)) ([c30b711](https://github.com/dxos/dxos/commit/c30b711a9f5a58e29e62d49d048e82638c1252f6))
+* **functions:** fix websocket reconnects ([#6906](https://github.com/dxos/dxos/issues/6906)) ([6a9d10e](https://github.com/dxos/dxos/commit/6a9d10e4a9931e884a5d7d14179d5aa72feb1ee5))
+* **functions:** fixed the logic for determining whose turn is next ([#6899](https://github.com/dxos/dxos/issues/6899)) ([288794c](https://github.com/dxos/dxos/commit/288794ce02b64f7774f5aadc1381a7d1a79cb547))
+* honor signaling telemetry for host mode ([#6903](https://github.com/dxos/dxos/issues/6903)) ([23d7ea6](https://github.com/dxos/dxos/commit/23d7ea6928b8cb45063807191e6438ef1bf78645))
+* Narrow down space order query ([#6936](https://github.com/dxos/dxos/issues/6936)) ([c9f6fbd](https://github.com/dxos/dxos/commit/c9f6fbda50fe86573883c4b6af57b9fd4ec54b96))
+* peer dependencies ([#6924](https://github.com/dxos/dxos/issues/6924)) ([9071bf4](https://github.com/dxos/dxos/commit/9071bf40255bd50d58731140c38e085a3cff87c8))
+* Stack add section menu ([#6943](https://github.com/dxos/dxos/issues/6943)) ([e11ff5d](https://github.com/dxos/dxos/commit/e11ff5d24cf267f84c1ebc2b34c4a8f4d32eae65))
+
 ## [0.5.5](https://github.com/dxos/dxos/compare/v0.5.4...v0.5.5) (2024-05-30)
 
 
