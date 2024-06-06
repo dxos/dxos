@@ -13,7 +13,6 @@ import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, type Init
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
-import { ProxyTarget, symbolHandler } from './echo-handler/echo-proxy-target';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
 
@@ -85,6 +84,11 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   public readonly schemaRegistry: DynamicSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
+
+  /**
+   * Mapping `object core` -> `root proxy`.
+   */
+  private readonly _rootProxies = new Map<AutomergeObjectCore, EchoReactiveObject<any>>();
 
   constructor(params: EchoDatabaseParams) {
     super();
