@@ -1,6 +1,6 @@
 {
   "name": "@dxos/app-framework",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "A framework for building applications from composible plugins.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
