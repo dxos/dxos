@@ -5,12 +5,12 @@
 import { Collection, getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import * as automerge from '@dxos/automerge/automerge';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { AutomergeObjectCore, loadObjectReferences } from '@dxos/echo-db';
+import { type AutomergeContext, AutomergeObjectCore, loadObjectReferences } from '@dxos/echo-db';
 import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando, ref, requireTypeReference, S, TypedObject } from '@dxos/echo-schema';
 import { Migrations, type Migration } from '@dxos/migrations';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, type Space } from '@dxos/react-client/echo';
 import { getDeep } from '@dxos/util';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
@@ -76,17 +76,7 @@ export const migrations: Migration[] = [
       const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
       const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
 
-      const repo = space.db.automerge.automerge.repo;
-      const automergeContext = space.db.automerge.automerge;
-      const rootDoc = space.db.automerge._automergeDocLoader
-        .getSpaceRootDocHandle()
-        .docSync() as automerge.Doc<SpaceDoc>;
-
-      /**
-       * echoId -> automergeUrl
-       */
-      const newLinks: Record<string, string> = {};
-      const flushStates: FlushRequest.DocState[] = [];
+      const builder = new MigrationBuilder(space);
 
       for (const folderId of folders.map((f) => f.id)) {
         const folderDocHandle = repo.find(rootDoc.links![folderId] as any);
@@ -101,20 +91,7 @@ export const migrations: Migration[] = [
           views: {},
         });
         core.setType(requireTypeReference(Collection));
-
-        const newHandle = repo.create<SpaceDoc>({
-          access: {
-            spaceKey: space.key.toHex(),
-          },
-          objects: {
-            [folderId]: core.getDoc(),
-          },
-        });
-        newLinks[folderId] = newHandle.url;
-        flushStates.push({
-          documentId: newHandle.documentId,
-          heads: automerge.getHeads(newHandle.docSync()!),
-        });
+        builder.addObject(core);
       }
 
       for (const stack of stacks) {
@@ -144,53 +121,97 @@ export const migrations: Migration[] = [
           views: {},
         });
         core.setType(requireTypeReference(Collection));
-
-        const newHandle = repo.create<SpaceDoc>({
-          access: {
-            spaceKey: space.key.toHex(),
-          },
-          objects: {
-            [stackId]: core.getDoc(),
-          },
-        });
-        newLinks[stackId] = newHandle.url;
-        flushStates.push({
-          documentId: newHandle.documentId,
-          heads: automerge.getHeads(newHandle.docSync()!),
-        });
+        builder.addObject(core);
       }
 
-      const newRoot = repo.create<SpaceDoc>({
-        access: {
-          spaceKey: space.key.toHex(),
-        },
-        objects: rootDoc.objects,
-        links: {
-          ...rootDoc.links,
-          ...newLinks,
-        },
-      });
+      builder.buildNewRoot();
+
       // TODO(wittjosiah): This should be done by @dxos/migrations.
-      newRoot.change((doc: SpaceDoc) => {
-        const propertiesStructure = doc.objects![space.properties.id];
+      builder.changeProperties((propertiesStructure) => {
         propertiesStructure.data[Migrations.versionProperty!] = 4;
         const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename!.split('.'));
         propertiesStructure.data[Collection.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
-      flushStates.push({
-        documentId: newRoot.documentId,
-        heads: automerge.getHeads(newRoot.docSync()!),
-      });
-      await automergeContext.flush({
-        states: flushStates,
-      });
 
-      // Create new epoch.
-      await space.internal.createEpoch({
-        migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
-        automergeRootUrl: newRoot.url,
-      });
+      await builder.commit();
     },
     down: () => {},
   },
 ];
+
+class MigrationBuilder {
+  private readonly _repo: Repo;
+  private readonly _automergeContext: AutomergeContext;
+  private readonly _rootDoc: DocHandle<SpaceDoc>;
+
+  /**
+   * echoId -> automergeUrl
+   */
+  private readonly _newLinks: Record<string, string> = {};
+  private readonly _flushStates: FlushRequest.DocState[] = [];
+
+  private _newRoot?: DocHandle<SpaceDoc> = undefined;
+
+  constructor(private readonly _space: Space) {
+    this._repo = space.db.automerge.automerge.repo;
+    this._automergeContext = space.db.automerge.automerge;
+    this._rootDoc = space.db.automerge._automergeDocLoader.getSpaceRootDocHandle().docSync() as automerge.Doc<SpaceDoc>;
+  }
+
+  addObject(core: AutomergeObjectCore) {
+    const newHandle = repo.create<SpaceDoc>({
+      access: {
+        spaceKey: space.key.toHex(),
+      },
+      objects: {
+        [folderId]: core.getDoc(),
+      },
+    });
+    this._newLinks[folderId] = newHandle.url;
+    this._flushStates.push({
+      documentId: newHandle.documentId,
+      heads: automerge.getHeads(newHandle.docSync()!),
+    });
+  }
+
+  buildNewRoot() {
+    this._newRoot = repo.create<SpaceDoc>({
+      access: {
+        spaceKey: space.key.toHex(),
+      },
+      objects: this._rootDoc.objects,
+      links: {
+        ...this._rootDoc.links,
+        ...this._newLinks,
+      },
+    });
+    this._flushStates.push({
+      documentId: newRoot.documentId,
+      heads: automerge.getHeads(newRoot.docSync()!),
+    });
+  }
+
+  changeProperties(changeFn: (properties: ObjectStructure) => void) {
+    invariant(this._newRoot);
+    this._newRoot.change((doc: SpaceDoc) => {
+      const propertiesStructure = doc.objects![space.properties.id];
+      changeFn(propertiesStructure);
+    });
+    this._flushStates.push({
+      documentId: this._newRoot.documentId,
+      heads: automerge.getHeads(this._newRoot.docSync()!),
+    });
+  }
+
+  async commit() {
+    await this._automergeContext.flush({
+      states: flushStates,
+    });
+
+    // Create new epoch.
+    await this._space.internal.createEpoch({
+      migration: CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT,
+      automergeRootUrl: newRoot.url,
+    });
+  }
+}
