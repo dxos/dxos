@@ -17,7 +17,6 @@ import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
   const { themeMode } = useThemeContext();
-  console.log('JsonView', themeMode);
   return (
     <SyntaxHighlighter language='json' style={themeMode === 'dark' ? styleDark : styleLight} className='w-full'>
       {JSON.stringify(data, replacer(truncate), 2)}
