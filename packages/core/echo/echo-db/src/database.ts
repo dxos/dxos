@@ -96,7 +96,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       initEchoReactiveObjectRootProxy(core);
     };
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
+    this._automerge = new AutomergeDb(
+      params.graph,
+      params.automergeContext,
+      params.spaceKey,
+      initRootProxyFn,
+      this,
+      (core) => {
+        EchoReactiveHandler.instance.drainLinkCache(core.rootProxy as any);
+      },
+    );
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -142,7 +151,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
     if (isEchoObject(obj)) {
       this._automerge.add(obj);
-      EchoReactiveHandler.instance.afterBind(obj as any);
       return obj as any;
     } else {
       const schema = getSchema(obj);
@@ -155,7 +163,6 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
       const echoObj = createEchoObject(obj);
       this._automerge.add(echoObj);
-      EchoReactiveHandler.instance.afterBind(echoObj as any);
       return echoObj as any;
     }
   }

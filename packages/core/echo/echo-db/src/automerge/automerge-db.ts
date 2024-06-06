@@ -74,6 +74,7 @@ export class AutomergeDb {
     public readonly spaceKey: PublicKey,
     private readonly _initRootProxyFn: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
+    private readonly _afterBind: (core: AutomergeObjectCore) => void,
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
     this._dbApi = dbApi;
@@ -320,6 +321,8 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
+
+    this._afterBind(core);
 
     // TODO(dmaretskyi): This should be handled in the API layer.
     if (!core.rootProxy) {
