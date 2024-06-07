@@ -422,8 +422,8 @@ export class TracingSpan {
   markError(err: unknown) {
     this.endTs = performance.now();
     this.error = serializeError(err);
-    this._traceProcessor._flushSpan(this);
     this._traceProcessor.perfettoEvents.end({ name: this.name, error: this.error });
+    this._traceProcessor._flushSpan(this);
 
     if (this._showInBrowserTimeline) {
       this._markInBrowserTimeline();
