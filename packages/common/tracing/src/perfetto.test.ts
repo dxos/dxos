@@ -8,20 +8,19 @@ import path from 'node:path';
 import { sleep } from '@dxos/async';
 import { afterTest, describe, test } from '@dxos/test';
 
-import { PerformanceEvents, writeEventStreamToAFile } from './performance-events';
+import { PerfettoEvents, writeEventStreamToAFile } from './perfetto-events';
 
 describe('perfetto traces', () => {
   // Note: Skiped the test because it produces a file in the file system, and it is not automatically tested.
   test.skip('write traces to a file', async () => {
-    const trace = new PerformanceEvents({
-      fields: {
-        cat: 'default',
-        args: {
-          platform: globalThis.process?.platform,
-          arch: globalThis.process?.arch,
-        },
-        'something-else': 'value',
+    const trace = new PerfettoEvents();
+    trace.setDefaultFields({
+      cat: 'default',
+      args: {
+        platform: globalThis.process?.platform,
+        arch: globalThis.process?.arch,
       },
+      'something-else': 'value',
     });
 
     const outPath = path.join(__dirname, '..', 'out', 'trace.json');
@@ -34,7 +33,7 @@ describe('perfetto traces', () => {
     await sleep(10);
     trace.begin({ name: '2' });
 
-    trace.completeEvent({ name: '3', duration: 5 });
+    trace.completeEvent({ name: '3', dur: 5 });
     await sleep(10);
 
     trace.end({ name: '1' });
@@ -47,11 +46,10 @@ describe('perfetto traces', () => {
   });
 
   test('traces are created correctly', async () => {
-    const trace = new PerformanceEvents({
-      fields: {
-        cat: 'default',
-        'something-else': 'value',
-      },
+    const trace = new PerfettoEvents();
+    trace.setDefaultFields({
+      cat: 'default',
+      'something-else': 'value',
     });
     afterTest(() => trace.destroy());
 

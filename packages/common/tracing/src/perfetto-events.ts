@@ -11,19 +11,19 @@ import { defaultMap, isNode } from '@dxos/util';
 export type EventPhase = 'B' | 'E' | 'X' | 'I';
 
 export interface Event {
+  name: string;
   ts: number;
   pid: number;
   tid: number;
-  ph?: EventPhase;
-  [otherData: string]: any;
+  ph: EventPhase;
+  [data: string]: any;
 }
 
 export interface Fields {
   name: string;
   cat?: string;
   args?: any;
-  tid?: number;
-  [filedName: string]: any;
+  [data: string]: any;
 }
 
 export interface EventsCollectorParams {
@@ -31,11 +31,13 @@ export interface EventsCollectorParams {
 }
 
 /**
+ * Collector for events that could be inspected at https://ui.perfetto.dev/.
+ * Developed mainly to collect decentralized events inside blade-runner's replicants.
+ *
  * Inspired by https://github.com/samccone/chrome-trace-event.
  * see https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU for details.
  */
-
-export class PerformanceEvents {
+export class PerfettoEvents {
   private _currentTid = 0;
   /**
    * Map to keep track of the thread id for each span.
@@ -69,11 +71,25 @@ export class PerformanceEvents {
   private readonly _nameVsTid = new Map<string, number>();
 
   private readonly _stream: ReadableStream;
-  private readonly _fields: Partial<Fields>;
+  private _fields!: Partial<Fields>;
   private _controller?: ReadableStreamDefaultController<string>;
 
-  constructor({ fields }: EventsCollectorParams = {}) {
-    this._fields = fields ?? {};
+  constructor() {
+    this.setDefaultFields({});
+
+    this._stream = new ReadableStream({
+      start: (controller) => {
+        this._controller = controller;
+      },
+    });
+  }
+
+  /**
+   * Set field that would be applied to all events.
+   * It is not required to call this method.
+   */
+  public setDefaultFields(fields: Partial<Fields>) {
+    this._fields = fields;
 
     if (!this._fields.cat) {
       // trace-viewer requires `cat`.
@@ -84,12 +100,6 @@ export class PerformanceEvents {
       // trace-viewer requires `args`.
       this._fields.args = {};
     }
-
-    this._stream = new ReadableStream({
-      start: (controller) => {
-        this._controller = controller;
-      },
-    });
   }
 
   public get stream() {
@@ -97,29 +107,23 @@ export class PerformanceEvents {
   }
 
   public begin(fields: Fields) {
-    return this.mkEventFunc('B')(
-      fields,
-      defaultMap(this._nameVsTid, fields.name, () => this._currentTid++),
-    );
+    return this._event({ fields, ph: 'B', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
   }
 
   public end(fields: Fields) {
-    return this.mkEventFunc('E')(
-      fields,
-      defaultMap(this._nameVsTid, fields.name, () => this._currentTid++),
-    );
+    return this._event({ fields, ph: 'E', tid: defaultMap(this._nameVsTid, fields.name, () => this._currentTid++) });
   }
 
-  public completeEvent(fields: Fields) {
-    return this.mkEventFunc('X')(fields);
+  public completeEvent(fields: Fields & { dur: number }) {
+    return this._event({ fields, ph: 'X' });
   }
 
   public instantEvent(fields: Fields) {
-    return this.mkEventFunc('I')(fields);
+    return this._event({ fields, ph: 'I' });
   }
 
-  public mkEventFunc(ph: EventPhase) {
-    return (fields: Fields, tid?: number) => {
+  private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }) {
+    return () => {
       this._pushEvent({
         ts: Date.now(),
         pid: isNode() ? process.pid : Math.floor(Math.random() * 100_000),
