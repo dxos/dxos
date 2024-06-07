@@ -29,10 +29,7 @@ export class ReplicantRpcHandle<T> {
       timeout: 0,
     });
 
-    for (const method of [
-      ...Object.getOwnPropertyNames(Object.getPrototypeOf(replicantClass.prototype)),
-      ...Object.getOwnPropertyNames(replicantClass.prototype),
-    ]) {
+    for (const method of getAllProperties(replicantClass.prototype)) {
       if (method === 'constructor' || method.startsWith('_')) {
         continue;
       }
@@ -53,3 +50,14 @@ export class ReplicantRpcHandle<T> {
     await this._rpc.abort();
   };
 }
+
+const getAllProperties = (obj: any) => {
+  const props = new Set<string>();
+  while (obj) {
+    for (const key of Object.getOwnPropertyNames(obj)) {
+      props.add(key);
+    }
+    obj = Object.getPrototypeOf(obj);
+  }
+  return props;
+};
