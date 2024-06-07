@@ -231,6 +231,7 @@ const NodePlankHeading = ({
                 data: {
                   element: 'dialog',
                   component: 'dxos.org/plugin/search/Dialog',
+                  dialogBlockAlign: 'start',
                 },
               },
             ])

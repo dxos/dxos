@@ -9,7 +9,7 @@ import { create, Expando } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
-import { filterObjects } from './search';
+import { filterObjectsSync } from './search';
 
 faker.seed(1);
 
@@ -30,7 +30,7 @@ describe('Search', () => {
     });
 
     const { objects } = await space.db.query().run();
-    const results = filterObjects(objects, new RegExp(match, 'i'));
+    const results = filterObjectsSync(objects, new RegExp(match, 'i'));
     expect(results).to.have.length(1);
   });
 });

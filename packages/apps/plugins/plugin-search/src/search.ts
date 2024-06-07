@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { yieldOrContinue } from 'main-thread-scheduling';
+
 import { TextV0Type } from '@braneframe/types';
 import { getSchema, type S } from '@dxos/echo-schema';
 import { AST } from '@dxos/echo-schema';
@@ -38,7 +40,8 @@ export type SearchResult = {
   object?: any;
 };
 
-export const filterObjects = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
+// TODO(thure): This returns `SearchResult[]` which is not just a narrower set of objects as the name implies.
+export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], match?: RegExp): SearchResult[] => {
   if (!match) {
     return [];
   }
@@ -75,6 +78,33 @@ export const filterObjects = <T extends Record<string, any>>(objects: T[], match
 
     return results;
   }, []);
+};
+
+export const filterObjects = async <T extends Record<string, any>>(
+  objects: T[],
+  match?: RegExp,
+): Promise<Map<T, string[][]>> => {
+  const result = new Map<T, string[][]>();
+  if (!match) {
+    return result;
+  }
+  await Promise.all(
+    objects
+      .filter((object) => !(object instanceof TextV0Type))
+      .map(async (object) => {
+        await yieldOrContinue('interactive');
+        const fields = mapObjectToTextFields<T>(object);
+        Object.entries(fields)
+          .filter(([_, value]) => value.match(match))
+          .forEach(([key, value]) => {
+            if (!result.has(object)) {
+              result.set(object, []);
+            }
+            result.set(object, [...result.get(object)!, [key, value]]);
+          });
+      }),
+  );
+  return result;
 };
 
 // TODO(burdon): Use schema?
