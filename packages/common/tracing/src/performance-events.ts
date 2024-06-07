@@ -3,14 +3,10 @@
 // Copyright (c) 2015 Joyent Inc.
 //
 
-/**
- * Inspired by https://github.com/samccone/chrome-trace-event.
- * see https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU for details.
- */
-
 import fs from 'node:fs';
 
 import { log } from '@dxos/log';
+import { defaultMap, isNode } from '@dxos/util';
 
 export type EventPhase = 'B' | 'E' | 'X' | 'I';
 
@@ -23,18 +19,57 @@ export interface Event {
 }
 
 export interface Fields {
+  name: string;
   cat?: string;
   args?: any;
+  tid?: number;
   [filedName: string]: any;
 }
 
 export interface EventsCollectorParams {
-  fields?: Fields;
+  fields?: Partial<Fields>;
 }
 
+/**
+ * Inspired by https://github.com/samccone/chrome-trace-event.
+ * see https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU for details.
+ */
+
 export class PerformanceEvents {
+  private _currentTid = 0;
+  /**
+   * Map to keep track of the thread id for each span.
+   * Perfetto allows only nested spans on the same thread.
+   * We mark each span as a different thread, even though there are no explicit threads in JS.
+   *
+   * +-----------------------------------------------------------------+
+   * |                            trace1                               |
+   * | Same     +-----------------------------------------+            | - Not allowed
+   * | thread                            trace2                        |
+   * |                           +--------------------------------+    |
+   * +-----------------------------------------------------------------+
+   *
+   *
+   * +-----------------------------------------------------------------+
+   * |                            trace1                               |
+   * | Same     +--------------------------------------------------+   | - Allowed
+   * | thread                            trace2                        |
+   * |                           +--------------------------+          |
+   * +-----------------------------------------------------------------+
+   *
+   *
+   * +-----------------------------------------------------------------+
+   * |                            trace1                               |
+   * | thread1     +-----------------------------------------+         | - Allowed
+   * +-----------------------------------------------------------------+
+   * |                                   trace2                        |
+   * | thread2                   +--------------------------------+    |
+   * +-----------------------------------------------------------------+
+   */
+  private readonly _nameVsTid = new Map<string, number>();
+
   private readonly _stream: ReadableStream;
-  private readonly _fields: Fields;
+  private readonly _fields: Partial<Fields>;
   private _controller?: ReadableStreamDefaultController<string>;
 
   constructor({ fields }: EventsCollectorParams = {}) {
@@ -62,11 +97,17 @@ export class PerformanceEvents {
   }
 
   public begin(fields: Fields) {
-    return this.mkEventFunc('B')(fields);
+    return this.mkEventFunc('B')(
+      fields,
+      defaultMap(this._nameVsTid, fields.name, () => this._currentTid++),
+    );
   }
 
   public end(fields: Fields) {
-    return this.mkEventFunc('E')(fields);
+    return this.mkEventFunc('E')(
+      fields,
+      defaultMap(this._nameVsTid, fields.name, () => this._currentTid++),
+    );
   }
 
   public completeEvent(fields: Fields) {
@@ -78,12 +119,14 @@ export class PerformanceEvents {
   }
 
   public mkEventFunc(ph: EventPhase) {
-    return (fields?: Fields) => {
+    return (fields: Fields, tid?: number) => {
       this._pushEvent({
-        ...evCommon(),
+        ts: Date.now(),
+        pid: isNode() ? process.pid : Math.floor(Math.random() * 100_000),
+        tid: tid ?? this._currentTid++,
+        ph,
         ...this._fields,
         ...(fields ?? {}),
-        ph,
         args: { ...this._fields.args, ...(fields?.args ?? {}) },
       });
     };
@@ -94,15 +137,24 @@ export class PerformanceEvents {
   }
 
   public destroy() {
-    this._controller!.close();
+    try {
+      this._controller!.close();
+    } catch (err) {
+      if (!(err as Error).message.includes('Controller is already closed')) {
+        log.catch(err);
+      }
+    }
   }
 }
 
+/**
+ * This function produces a file that could be opened in chrome://tracing.
+ */
 export const writeEventStreamToAFile = ({
   stream,
   path,
   separator = ',\n',
-  prefix = '[\n',
+  prefix = '[',
   suffix = ']',
 }: {
   stream: ReadableStream;
@@ -118,14 +170,14 @@ export const writeEventStreamToAFile = ({
   queueMicrotask(async () => {
     try {
       while (true) {
-        if (firstWrite) {
-          firstWrite = false;
-          writer.write(prefix);
-        }
-        // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
         const { done, value } = await reader.read();
         if (done) {
           break;
+        }
+        if (firstWrite) {
+          firstWrite = false;
+          writer.write(prefix + value);
+          continue;
         }
         writer.write(separator + value);
       }
@@ -135,13 +187,4 @@ export const writeEventStreamToAFile = ({
     writer.write(suffix);
     reader.releaseLock();
   });
-};
-
-const evCommon = (): Event => {
-  const ts = Date.now();
-  return {
-    ts,
-    pid: process.pid,
-    tid: 0, // no meaningful tid for node.js
-  };
 };
