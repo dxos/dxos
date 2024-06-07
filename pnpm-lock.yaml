@@ -6131,6 +6131,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../rpc
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
