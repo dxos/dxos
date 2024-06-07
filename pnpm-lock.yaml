@@ -3459,12 +3459,6 @@ importers:
       node-fetch:
         specifier: ^2.6.0
         version: 2.6.7
-      react-drag-drop-files:
-        specifier: ^2.3.8
-        version: 2.3.8(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
-      react-dropzone:
-        specifier: ^14.2.3
-        version: 14.2.3(react@18.2.0)
       react-is:
         specifier: ^18.2.0
         version: 18.2.0
@@ -6852,21 +6846,18 @@ importers:
 
   packages/devtools/devtools:
     dependencies:
-      '@braneframe/types':
-        specifier: workspace:*
-        version: link:../../apps/types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/codec-protobuf':
+        specifier: workspace:*
+        version: link:../../common/codec-protobuf
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
-      '@dxos/debug':
-        specifier: workspace:*
-        version: link:../../common/debug
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
@@ -7012,9 +7003,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/shell':
-        specifier: workspace:*
-        version: link:../../sdk/shell
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../ui/storybook-utils
