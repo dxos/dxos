@@ -123,17 +123,15 @@ export class PerfettoEvents {
   }
 
   private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }) {
-    return () => {
-      this._pushEvent({
-        ts: Date.now(),
-        pid: isNode() ? process.pid : Math.floor(Math.random() * 100_000),
-        tid: tid ?? this._currentTid++,
-        ph,
-        ...this._fields,
-        ...(fields ?? {}),
-        args: { ...this._fields.args, ...(fields?.args ?? {}) },
-      });
-    };
+    this._pushEvent({
+      ts: Date.now(),
+      pid: isNode() ? process.pid : Math.floor(Math.random() * 100_000),
+      tid: tid ?? this._currentTid++,
+      ph,
+      ...this._fields,
+      ...(fields ?? {}),
+      args: { ...this._fields.args, ...(fields?.args ?? {}) },
+    });
   }
 
   private _pushEvent(event: Event) {
