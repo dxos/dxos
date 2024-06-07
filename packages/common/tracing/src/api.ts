@@ -64,10 +64,12 @@ const mark = (name: string) => {
 
 export type SpanOptions = {
   showInBrowserTimeline?: boolean;
+  op?: string;
+  attributes?: Record<string, any>;
 };
 
 const span =
-  ({ showInBrowserTimeline = false }: SpanOptions = {}) =>
+  ({ showInBrowserTimeline = false, op, attributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
@@ -78,6 +80,8 @@ const span =
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
+        op,
+        attributes,
       });
 
       const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
@@ -143,4 +147,5 @@ export const trace = {
   metricsCounter,
   resource,
   span,
+  metrics: TRACE_PROCESSOR.remoteMetrics,
 };

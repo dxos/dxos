@@ -3,17 +3,17 @@
 
 
 ## Properties
-### [content](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L33)
+### [content](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/data.ts#L33)
 Type: <code>Ref&lt;object & object&gt;</code>
 
 
 
-### [object](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L34)
+### [object](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/data.ts#L34)
 Type: <code>Ref&lt;[Expando](/api/@dxos/client/interfaces/Expando)&gt;</code>
 
 
 
-### [timestamp](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L32)
+### [timestamp](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/testing/data.ts#L32)
 Type: <code>string</code>
 
 

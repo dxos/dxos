@@ -1,6 +1,6 @@
 {
   "name": "@dxos/storybook-utils",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "private": true,
   "description": "Utilities for DXOS UI Storybooks.",
   "homepage": "https://dxos.org",
