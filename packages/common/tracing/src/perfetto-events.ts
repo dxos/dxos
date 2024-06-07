@@ -135,7 +135,7 @@ export class PerfettoEvents {
   }
 
   private _pushEvent(event: Event) {
-    this._controller!.enqueue(JSON.stringify(event, null, 2));
+    this._controller!.enqueue(JSON.stringify(event));
   }
 
   public destroy() {

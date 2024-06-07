@@ -5,7 +5,8 @@
 import { expect } from 'chai';
 import path from 'node:path';
 
-import { sleep } from '@dxos/async';
+import { scheduleMicroTask, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { PerfettoEvents, writeEventStreamToAFile } from './perfetto-events';
@@ -85,4 +86,46 @@ describe('perfetto traces', () => {
       name: '1',
     });
   });
+
+  test.skip('pipe multiple streams to a file', async () => {
+    const trace1 = new PerfettoEvents();
+    afterTest(() => trace1.destroy());
+    const trace2 = new PerfettoEvents();
+    afterTest(() => trace2.destroy());
+
+    trace1.instantEvent({ name: '1' });
+    trace2.instantEvent({ name: '2' });
+
+    const outPath = path.join(__dirname, '..', 'out', 'trace.json');
+    writeEventStreamToAFile({ stream: muxReadableStreams(trace1.stream, trace2.stream), path: outPath });
+  });
 });
+
+const muxReadableStreams = (...streams: ReadableStream[]): ReadableStream => {
+  const ctx = new Context();
+  let doneCounter = 0;
+  return new ReadableStream({
+    cancel: () => {
+      void ctx.dispose();
+    },
+    start: (controller) => {
+      streams.forEach((stream) => {
+        const reader = stream.getReader();
+        ctx.onDispose(() => reader.releaseLock());
+        scheduleMicroTask(ctx, async () => {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) {
+              doneCounter++;
+              if (doneCounter === streams.length) {
+                controller.close();
+              }
+              break;
+            }
+            controller.enqueue(value);
+          }
+        });
+      });
+    },
+  });
+};
