@@ -8,7 +8,6 @@ import { scheduleMicroTask } from '@dxos/async';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Any } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 import { type RpcPort } from '@dxos/rpc';
 
 // TODO(mykola): createRpcPort(createRedisReadableStream(...), createRedisWritableStream(...))
