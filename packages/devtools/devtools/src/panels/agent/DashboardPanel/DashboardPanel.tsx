@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { scheduleTaskInterval } from '@dxos/async';
+import { scheduleMicroTask, scheduleTaskInterval } from '@dxos/async';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { AgentStatus } from '@dxos/protocols/proto/dxos/agent/dashboard';
-import { useAsyncEffect } from '@dxos/react-async';
 import { useClient } from '@dxos/react-client';
 
 import { AgentStat } from './AgentStat';
@@ -21,42 +21,49 @@ export const DashboardPanel = () => {
   const client = useClient();
   const [agentState, setAgentState] = useState<AgentStatus>({ status: AgentStatus.Status.OFF });
 
-  useAsyncEffect(async () => {
-    await client.spaces.isReady.wait();
-    await client.spaces.default.waitUntilReady();
-
-    const dashboard = new DashboardProxy({ client });
-    await dashboard.open();
-
+  useEffect(() => {
     const context = new Context();
-    const subscribe = () => {
-      const stream = dashboard.services.DashboardService.status();
 
-      stream.subscribe((response) => {
-        setAgentState(response);
-        // NOTE: Turn off retries if, we received first message.
-        void context.dispose();
-      });
-      return stream;
-    };
+    let dashboard: DashboardProxy;
+    let stream: Stream<AgentStatus>;
 
-    let stream = subscribe();
+    scheduleMicroTask(context, async () => {
+      await client.spaces.isReady.wait();
+      await client.spaces.default.waitUntilReady();
 
-    // NOTE: RPC is opened through unreliable Gossip protocol, so we need to retry stream creation, if some message got lost, and agent did not opened stream.
-    scheduleTaskInterval(
-      context,
-      async () => {
-        log.info('DashboardPanel: retrying to open stream with agent');
-        await stream.close();
-        stream = subscribe();
-      },
-      RETRY_IN_IF_FAILURE,
-    );
+      dashboard = new DashboardProxy({ client });
+      await dashboard.open();
 
+      const subContext = context.derive();
+
+      const subscribe = async (): Promise<Stream<AgentStatus>> => {
+        const stream = dashboard.services.DashboardService.status();
+
+        stream.subscribe((response: AgentStatus) => {
+          setAgentState(response);
+          // NOTE: Turn off retries if, we received first message.
+          void subContext.dispose();
+        });
+        return stream;
+      };
+
+      stream = await subscribe();
+
+      // NOTE: RPC is opened through unreliable Gossip protocol, so we need to retry stream creation, if some message got lost, and agent did not opened stream.
+      scheduleTaskInterval(
+        subContext,
+        async () => {
+          log.info('DashboardPanel: retrying to open stream with agent');
+          await stream.close();
+          stream = await subscribe();
+        },
+        RETRY_IN_IF_FAILURE,
+      );
+    });
     return () => {
-      void stream.close();
-      void dashboard.close();
       void context.dispose();
+      void stream?.close();
+      void dashboard?.close();
     };
   }, []);
 
