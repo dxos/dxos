@@ -29,7 +29,10 @@ export class ReplicantRpcHandle<T> {
       timeout: 0,
     });
 
-    for (const method of Object.getOwnPropertyNames(replicantClass.prototype)) {
+    for (const method of [
+      ...Object.getOwnPropertyNames(Object.getPrototypeOf(replicantClass.prototype)),
+      ...Object.getOwnPropertyNames(replicantClass.prototype),
+    ]) {
       if (method === 'constructor' || method.startsWith('_')) {
         continue;
       }

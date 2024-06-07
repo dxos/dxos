@@ -10,6 +10,7 @@ import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
 import { log } from '@dxos/log';
+import { writeEventStreamToAFile } from '@dxos/tracing';
 
 import { buildBrowserBundle } from './browser/browser-bundle';
 import { type GlobalOptions, type ReplicantsSummary, type TestPlan, type TestParams } from './spec';

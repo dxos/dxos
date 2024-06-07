@@ -73,6 +73,7 @@ export class PerfettoEvents {
   private readonly _stream: ReadableStream;
   private _fields!: Partial<Fields>;
   private _controller?: ReadableStreamDefaultController<string>;
+  private readonly _pid = isNode() ? process.pid : Math.floor(Math.random() * 100_000);
 
   constructor() {
     this.setDefaultFields({});
@@ -125,7 +126,7 @@ export class PerfettoEvents {
   private _event({ fields, ph, tid }: { fields: Fields; ph: EventPhase; tid?: number }) {
     this._pushEvent({
       ts: Date.now(),
-      pid: isNode() ? process.pid : Math.floor(Math.random() * 100_000),
+      pid: this._pid,
       tid: tid ?? this._currentTid++,
       ph,
       ...this._fields,

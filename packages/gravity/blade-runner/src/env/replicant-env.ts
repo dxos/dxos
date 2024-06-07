@@ -7,12 +7,13 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { initDiagnostics } from './diagnostics';
 import { type ReplicantEnv } from './interface';
 import { ReplicantRpcServer } from './replicant-rpc-server';
 import { type ReplicantParams } from '../plan';
-import { createRedisRpcPort } from '../redis';
+import { createRedisRpcPort, createRedisWritableStream } from '../redis';
 
 export { type RedisOptions };
 
@@ -39,6 +40,11 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
    */
   private readonly _rpcResponses: Redis;
 
+  /**
+   * Redis client to send tracing data.
+   */
+  private readonly _tracingRedis: Redis;
+
   private _replicantRpcServer!: ReplicantRpcServer;
 
   constructor(
@@ -50,9 +56,11 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
     this._redisSub = new Redis(redisOptions);
     this._rpcRequests = new Redis(redisOptions);
     this._rpcResponses = new Redis(redisOptions);
+    this._tracingRedis = new Redis(redisOptions);
 
-    this._redis.on('error', (err) => log.info('Redis Client Error', err));
-    this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
+    for (const client of [this._redis, this._redisSub, this._rpcRequests, this._rpcResponses, this._tracingRedis]) {
+      client.on('error', (err) => log.info('Redis Client Error', err));
+    }
   }
 
   setReplicant(replicant: any) {
@@ -68,6 +76,14 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   }
 
   protected override async _open() {
+    // Send tracing data to the scheduler process.
+    const tracingStream = createRedisWritableStream({
+      client: this._tracingRedis,
+      queue: this.params.redisTracingQueue,
+    });
+    TRACE_PROCESSOR.perfettoEvents.stream.pipeTo(tracingStream);
+    this._ctx.onDispose(() => tracingStream.close());
+
     const disableDiagnostics = initDiagnostics();
     this._ctx.onDispose(() => disableDiagnostics?.());
 
