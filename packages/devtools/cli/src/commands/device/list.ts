@@ -3,12 +3,10 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
+import { printDevices, TABLE_FLAGS, IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
-import { IdentityWaitTimeoutError } from '../../errors';
-import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
-import { printDevices, TABLE_FLAGS } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

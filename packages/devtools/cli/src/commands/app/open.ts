@@ -6,12 +6,12 @@ import { Args, Flags, ux } from '@oclif/core';
 import { chromium } from '@playwright/test';
 import chalk from 'chalk';
 
+import { hostInvitation } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
 
 /**
  * @deprecated

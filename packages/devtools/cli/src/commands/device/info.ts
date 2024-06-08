@@ -5,12 +5,11 @@
 import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
+import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base';
-import { IdentityWaitTimeoutError } from '../../errors';
-import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 
 export default class Info extends BaseCommand<typeof Info> {
   static override enableJsonFlag = true;

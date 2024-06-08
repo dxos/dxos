@@ -5,12 +5,12 @@
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
+import { stringify, table, type TableOptions } from '@dxos/cli-base';
 import { Filter } from '@dxos/client/echo';
 import { FunctionTrigger } from '@dxos/functions';
 import { omit } from '@dxos/log';
 
 import { BaseCommand } from '../../../base';
-import { stringify, table, type TableOptions } from '../../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

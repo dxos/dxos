@@ -7,10 +7,10 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 
 import { sleep, Trigger } from '@dxos/async';
+import { acceptInvitation } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
-import { acceptInvitation } from '../../util';
 
 export default class Join extends BaseCommand<typeof Join> {
   static override enableJsonFlag = true;

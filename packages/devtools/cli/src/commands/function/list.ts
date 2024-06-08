@@ -7,11 +7,11 @@ import { load } from 'js-yaml';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { table } from '@dxos/cli-base';
 import { Config } from '@dxos/config';
 import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
-import { table } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

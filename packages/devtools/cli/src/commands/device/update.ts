@@ -5,12 +5,11 @@
 import { Flags } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
+import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
-import { IdentityWaitTimeoutError } from '../../errors';
-import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 
 export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update device info.';

@@ -2,10 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { mapMembers, printMembers, TABLE_FLAGS, ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
-import { mapMembers, printMembers, TABLE_FLAGS } from '../../util';
+import { BaseCommand } from '../../base';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;

@@ -7,11 +7,11 @@ import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
+import { hostInvitation } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;

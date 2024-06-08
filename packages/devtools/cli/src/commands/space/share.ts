@@ -7,12 +7,12 @@ import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
+import { hostInvitation, ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
+import { BaseCommand } from '../../base';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';

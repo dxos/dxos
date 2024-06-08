@@ -6,11 +6,10 @@ import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
+import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
-import { IdentityWaitTimeoutError } from '../../errors';
-import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 
 export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update identity profile.';

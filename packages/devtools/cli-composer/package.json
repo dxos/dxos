@@ -35,6 +35,7 @@
     "@dxos/agent": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/bare-template": "workspace:*",
+    "@dxos/cli-base": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/client-services": "workspace:*",
@@ -105,50 +106,10 @@
     "shx": "^0.3.3",
     "typescript": "^5.4.5"
   },
-  "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5",
-    "@types/react-dom": "^18.0.6"
-  },
   "engines": {
     "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "oclif": {
-    "bin": "dx",
-    "dirname": "dx",
-    "commands": "./dist/src/commands",
-    "hooks": {
-      "command_not_found": "./dist/src/hooks/command-not-found"
-    },
-    "plugins": [
-      "@oclif/plugin-autocomplete",
-      "@oclif/plugin-help",
-      "@oclif/plugin-plugins",
-      "@oclif/plugin-update"
-    ],
-    "helpClass": "./dist/src/help",
-    "topicSeparator": " ",
-    "topics": {
-      "agent": {
-        "description": "Manage agents."
-      },
-      "debug": {
-        "description": "Debugging tools and diagnostics."
-      },
-      "device": {
-        "description": "Manage HALO devices."
-      },
-      "function": {
-        "description": "Manage distributed functions and triggers."
-      },
-      "halo": {
-        "description": "Manage HALO identity and devices."
-      },
-      "space": {
-        "description": "Manage ECHO Spaces."
-      }
-    }
   }
 }

@@ -4,12 +4,12 @@
 
 import { Args } from '@oclif/core';
 
+import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { Filter, type Space } from '@dxos/client/echo';
 import { compareForeignKeys, getTypename } from '@dxos/echo-schema';
 import { diff } from '@dxos/util';
 
-import { ComposerBaseCommand } from './base';
-import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
+import { BaseCommand } from '../../base';
 
 type DataFile = {
   objects: Record<string, any>[];
@@ -22,7 +22,7 @@ type DataFile = {
  * dx composer import ./testing/data/space.json --space 043a42f1 --dry-run
  * ```
  */
-export default class Import extends ComposerBaseCommand<typeof Import> {
+export default class Import extends BaseCommand<typeof Import> {
   static override description = 'Import ECHO objects.';
   static override flags = {
     ...BaseCommand.flags,

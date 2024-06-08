@@ -6,13 +6,14 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
+import { table } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
 import { BaseCommand } from '../../base';
-import { table } from '../../util';
 
+// TODO(burdon): Move managed agent to separate CLI.
 export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;
   static override description = 'List valid invitations.';

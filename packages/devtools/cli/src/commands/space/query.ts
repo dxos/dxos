@@ -4,12 +4,13 @@
 
 import { Flags, ux } from '@oclif/core';
 
+import { table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
+import { ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 import { getTypename } from '@dxos/echo-schema';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
-import { table, TABLE_FLAGS, type TableFlags } from '../../util';
+import { BaseCommand } from '../../base';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;

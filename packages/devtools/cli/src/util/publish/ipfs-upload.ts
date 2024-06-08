@@ -6,14 +6,14 @@ import fs from 'fs';
 import { type CID, type KuboRPCClient } from 'kubo-rpc-client';
 import { join } from 'path';
 
+import { importESM } from '@dxos/cli-base';
+
 interface UploadOptions {
   progress?: (bytes: number, path?: string) => void;
   pin?: boolean;
 }
 
-// eslint-disable-next-line no-new-func
-export const importESM = new Function('modulePath', 'return import(modulePath)');
-
+// TODO(burdon): Generalize.
 export const uploadToIPFS = async (ipfsClient: KuboRPCClient, path: string, options?: UploadOptions): Promise<CID> => {
   const { globSource } = await importESM('kubo-rpc-client');
   if (!fs.existsSync(path)) {

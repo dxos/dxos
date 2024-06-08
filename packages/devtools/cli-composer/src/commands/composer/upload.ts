@@ -5,17 +5,16 @@
 import { Flags } from '@oclif/core';
 
 import { FileType } from '@braneframe/types';
+import { FLAG_SPACE_KEYS, createIpfsClient } from '@dxos/cli-base';
 import { type Space } from '@dxos/client-protocol';
 import { create } from '@dxos/echo-schema';
 
-import { ComposerBaseCommand } from './base';
-import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
-import { createIpfsClient } from '../../util';
+import { BaseCommand } from '../../base';
 
 /**
  * Upload IPFS file.
  */
-export default class Upload extends ComposerBaseCommand<typeof Upload> {
+export default class Upload extends BaseCommand<typeof Upload> {
   static override description = 'Upload IPFS file.';
   static override flags = {
     ...BaseCommand.flags,

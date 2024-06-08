@@ -23,22 +23,7 @@
   ],
   "references": [
     {
-      "path": "../../apps/templates/bare-template"
-    },
-    {
-      "path": "../../apps/templates/hello-template"
-    },
-    {
-      "path": "../../apps/templates/tasks-template"
-    },
-    {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
-    },
-    {
-      "path": "../../common/context"
     },
     {
       "path": "../../common/debug"
@@ -50,13 +35,7 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/plate"
-    },
-    {
-      "path": "../../common/process"
-    },
-    {
-      "path": "../../common/random"
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/util"
@@ -66,15 +45,6 @@
     },
     {
       "path": "../../core/echo/echo-schema"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/mesh/network-manager"
-    },
-    {
-      "path": "../../core/mesh/rpc"
     },
     {
       "path": "../../core/protocols"
@@ -93,9 +63,6 @@
     },
     {
       "path": "../../sdk/observability"
-    },
-    {
-      "path": "../cli-base"
     }
   ],
   "ts-node": {

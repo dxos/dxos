@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Args } from '@oclif/core';
+import { ux, Args } from '@oclif/core';
 import chalk from 'chalk';
 
+import { waitForSpace } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
-import { waitForSpace } from '../../util';
 
 export default class Create extends BaseCommand<typeof Create> {
   static override enableJsonFlag = true;

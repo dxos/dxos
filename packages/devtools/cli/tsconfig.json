@@ -32,9 +32,6 @@
       "path": "../../apps/templates/tasks-template"
     },
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -96,6 +93,12 @@
     },
     {
       "path": "../../sdk/observability"
+    },
+    {
+      "path": "../cli-base"
+    },
+    {
+      "path": "../cli-composer"
     }
   ],
   "ts-node": {

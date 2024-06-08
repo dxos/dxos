@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
+import { BaseCommand } from '../../base';
 
 export default class Epoch extends BaseCommand<typeof Epoch> {
   static override enableJsonFlag = true;

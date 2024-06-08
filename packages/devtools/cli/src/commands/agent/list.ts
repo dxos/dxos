@@ -4,8 +4,9 @@
 
 import { Flags } from '@oclif/core';
 
+import { TABLE_FLAGS, printAgents } from '@dxos/cli-base';
+
 import { BaseCommand } from '../../base';
-import { TABLE_FLAGS, printAgents } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;

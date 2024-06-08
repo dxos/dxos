@@ -5,11 +5,12 @@
 import { Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
+import { ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): Testing plugin (vs. debug)?
 // TODO(burdon): Disable unless NODE_ENV=development?
