@@ -11,5 +11,6 @@ export * from './keys';
 export * from './publish';
 export * from './spaces';
 export * from './supervisor';
+export * from './table';
 export * from './testing';
 export * from './tunnel';

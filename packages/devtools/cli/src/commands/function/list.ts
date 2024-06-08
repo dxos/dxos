@@ -11,6 +11,7 @@ import { Config } from '@dxos/config';
 import { type FunctionManifest } from '@dxos/functions';
 
 import { BaseCommand } from '../../base';
+import { table } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -35,26 +36,13 @@ export default class List extends BaseCommand<typeof List> {
 }
 
 // TODO(burdon): List stats.
-export const printFunctions = (functions: FunctionManifest['functions'], flags = {}) => {
-  ux.table(
-    // TODO(burdon): Cast util.
-    functions as Record<string, any>[],
-    {
-      uri: {
-        header: 'uri',
-      },
-      route: {
-        header: 'route',
-      },
-      handler: {
-        header: 'handler',
-      },
-      description: {
-        header: 'description',
-      },
-    },
-    {
-      ...flags,
-    },
+export const printFunctions = (functions: FunctionManifest['functions'] = []) => {
+  ux.stdout(
+    table(functions, {
+      uri: { primary: true },
+      route: {},
+      handler: {},
+      description: {},
+    }),
   );
 };

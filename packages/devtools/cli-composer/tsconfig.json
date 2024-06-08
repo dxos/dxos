@@ -50,9 +50,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/node-std"
-    },
-    {
       "path": "../../common/plate"
     },
     {

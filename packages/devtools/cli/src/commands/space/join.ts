@@ -4,6 +4,7 @@
 
 import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 import { sleep, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
@@ -28,7 +29,11 @@ export default class Join extends BaseCommand<typeof Join> {
     return await this.execWithClient(async (client: Client) => {
       let { invitation: encoded, secret } = this.flags;
       if (!encoded) {
-        encoded = await ux.prompt(chalk`\n{blue Invitation}`);
+        const { invitation } = await inquirer.prompt<{ invitation: string }>({
+          name: 'invitaiton',
+          message: 'Invitation',
+        });
+        encoded = invitation;
       }
 
       if (encoded.startsWith('http') || encoded.startsWith('socket')) {
@@ -36,7 +41,7 @@ export default class Join extends BaseCommand<typeof Join> {
         encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
       }
 
-      ux.log('');
+      ux.stdout('');
       ux.action.start('Waiting for peer to connect');
       const done = new Trigger();
       // TODO(burdon): Error code if joining same space (don't throw!)
@@ -44,7 +49,16 @@ export default class Join extends BaseCommand<typeof Join> {
         observable: client.spaces.join(encoded!),
         callbacks: {
           onConnecting: async () => ux.action.stop(),
-          onReadyForAuth: async () => secret ?? ux.prompt(chalk`\n{red Secret}`),
+          onReadyForAuth: async () => {
+            if (!secret) {
+              const { secret } = await inquirer.prompt<{ secret: string }>({
+                name: 'secret',
+                message: chalk`\n{red Secret}`,
+              });
+              return secret;
+            }
+            return secret;
+          },
           onSuccess: async () => {
             done.wake();
           },
@@ -56,8 +70,8 @@ export default class Join extends BaseCommand<typeof Join> {
       await sleep(1000);
       const space = client.spaces.get(invitation.spaceKey!)!;
 
-      ux.log();
-      ux.log(chalk`{green Joined successfully.}`);
+      ux.stdout();
+      ux.stdout(chalk`{green Joined successfully.}`);
 
       return {
         key: space.key,

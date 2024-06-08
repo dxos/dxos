@@ -2,22 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux } from '@oclif/core';
-
 import { asyncTimeout } from '@dxos/async';
 import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
 import { IdentityWaitTimeoutError } from '../../errors';
 import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
-import { printDevices } from '../../util';
+import { printDevices, TABLE_FLAGS } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'Show device info.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags(),
+    ...TABLE_FLAGS,
   };
 
   async run(): Promise<any> {

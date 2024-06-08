@@ -10,7 +10,7 @@ import { FunctionTrigger } from '@dxos/functions';
 import { omit } from '@dxos/log';
 
 import { BaseCommand } from '../../../base';
-import { stringify } from '../../../util';
+import { stringify, table, type TableOptions } from '../../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
@@ -49,33 +49,18 @@ export default class List extends BaseCommand<typeof List> {
 }
 
 // TODO(burdon): List stats.
-// TODO(burdon): Standardize ids, etc.
-export const printTriggers = (functions: FunctionTrigger[], flags: ux.Table.table.Options = {}) => {
-  ux.table(
-    // TODO(burdon): Cast util.
-    functions as Record<string, any>[],
-    {
-      id: {
-        header: 'id',
-        get: (row) => row.id.slice(0, 8),
+export const printTriggers = (functions: FunctionTrigger[], options: TableOptions) => {
+  ux.stdout(
+    table(
+      functions,
+      {
+        id: { primary: true, truncate: true },
+        enabled: { get: (row) => (row.enabled ? `${chalk.green('✔')}` : '') },
+        function: {},
+        spec: { get: (row) => row.spec.type },
+        meta: { get: (row) => stringify(omit(row.spec, 'type')) },
       },
-      enabled: {
-        header: 'enabled',
-        get: (row) => (row.enabled ? `${chalk.green('✔')}` : ''),
-      },
-      function: {
-        header: 'function',
-        get: (row) => `${chalk.blue(row.function)}`,
-      },
-      type: {
-        header: 'type',
-        get: (row) => row.spec.type,
-      },
-      meta: {
-        header: 'spec',
-        get: (row) => stringify(omit(row.spec, 'type')),
-      },
-    },
-    flags,
+      options,
+    ),
   );
 };

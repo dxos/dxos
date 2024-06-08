@@ -75,7 +75,7 @@ export default class Share extends BaseCommand<typeof Share> {
         },
       });
 
-      ux.log(chalk`{green OK}`);
+      ux.stdout(chalk`{green OK}`);
     });
   }
 }

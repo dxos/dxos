@@ -1,4 +1,5 @@
 #!/bin/bash
+
 # TODO(nf): container currently built with Debian due to musl incompatibilities, but still avoiding bash-isms
 set -eu
 
