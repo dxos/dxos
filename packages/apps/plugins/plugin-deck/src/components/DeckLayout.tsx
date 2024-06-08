@@ -22,7 +22,7 @@ import {
   useIntent,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
@@ -436,41 +436,43 @@ export const DeckLayout = ({
                     const part = ['main', index, main.length] satisfies PartIdentifier;
                     const attendableAttrs = useAttendable(id);
                     return (
-                      <Deck.Plank
-                        key={id}
-                        {...attendableAttrs}
-                        classNames={slots?.plank?.classNames}
-                        scrollIntoViewOnMount={id === scrollIntoView}
-                        suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
-                      >
-                        {id === NAV_ID ? (
-                          <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
-                        ) : node ? (
-                          <>
-                            <NodePlankHeading
-                              node={node.node}
-                              slug={id}
-                              part={part}
-                              popoverAnchorId={popoverAnchorId}
-                            />
-                            <Surface
-                              role='article'
-                              data={{
-                                ...(node.path
-                                  ? { subject: node.node.data, path: node.path }
-                                  : { object: node.node.data }),
-                                part,
-                                popoverAnchorId,
-                              }}
-                              limit={1}
-                              fallback={PlankContentError}
-                              placeholder={<PlankLoading />}
-                            />
-                          </>
-                        ) : (
-                          <PlankError part={part} slug={id} />
-                        )}
-                      </Deck.Plank>
+                      <Plank.Root key={id}>
+                        <Plank.Content
+                          {...attendableAttrs}
+                          classNames={slots?.plank?.classNames}
+                          scrollIntoViewOnMount={id === scrollIntoView}
+                          suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
+                        >
+                          {id === NAV_ID ? (
+                            <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
+                          ) : node ? (
+                            <>
+                              <NodePlankHeading
+                                node={node.node}
+                                slug={id}
+                                part={part}
+                                popoverAnchorId={popoverAnchorId}
+                              />
+                              <Surface
+                                role='article'
+                                data={{
+                                  ...(node.path
+                                    ? { subject: node.node.data, path: node.path }
+                                    : { object: node.node.data }),
+                                  part,
+                                  popoverAnchorId,
+                                }}
+                                limit={1}
+                                fallback={PlankContentError}
+                                placeholder={<PlankLoading />}
+                              />
+                            </>
+                          ) : (
+                            <PlankError part={part} slug={id} />
+                          )}
+                        </Plank.Content>
+                        <Plank.ResizeHandle />
+                      </Plank.Root>
                     );
                   })}
               </Deck.Root>
