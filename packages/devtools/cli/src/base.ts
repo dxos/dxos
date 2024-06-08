@@ -465,7 +465,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
     client: Client,
     {
       spaceKeys,
-      includeHalo = false,
+      includeHalo = true,
       wait = true,
     }: { spaceKeys?: string[]; includeHalo?: boolean; wait?: boolean } = {},
   ): Promise<Space[]> {
@@ -496,6 +496,10 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Comman
   async getSpace(client: Client, key?: string, wait = true): Promise<Space> {
     await client.spaces.isReady.wait();
     const spaces = await this.getSpaces(client, { wait });
+    if (!spaces.length) {
+      throw new Error('No spaces found.');
+    }
+
     if (!key) {
       if (spaces.length === 1) {
         key = spaces[0].key.toHex();
