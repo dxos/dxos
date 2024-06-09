@@ -18,17 +18,13 @@ import { test } from '@dxos/test';
 
 // TODO(burdon): SecurityError: localStorage is not available for opaque origins
 test('config', async () => {
-  const configPath = path.join(__dirname, '../../../config/config-default.yml');
+  const root = path.join(__dirname, '../../../');
+  const configPath = path.join(root, 'config/config-default.yml');
   const config = yaml.load(String(fs.readFileSync(configPath))) as any;
 
-  const { stdout } = await runCommand<{ name: string }>(`config --json --config ${configPath}}`);
-  console.log(stdout);
-  expect(JSON.stringify(JSON.parse(stdout))).to.equal(JSON.stringify(config));
+  const { stdout } = await runCommand(['config', '--json', '--config', configPath], {
+    root,
+  });
 
-  // test.ux
-  //   .stdout()
-  //   .command(['config', '--json', '--config', configPath])
-  //   .it('runs config', (ctx) => {
-  //     expect(JSON.stringify(JSON.parse(ctx.stdout))).to.equal(JSON.stringify(config));
-  //   });
+  expect(JSON.stringify(JSON.parse(stdout))).to.equal(JSON.stringify(config));
 });
