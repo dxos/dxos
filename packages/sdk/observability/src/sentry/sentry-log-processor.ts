@@ -8,6 +8,7 @@ import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog }
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
 import { withScope, captureException, captureMessage } from './node';
+import {InvariantViolation} from "@dxos/invariant";
 
 const MAX_LOG_BREADCRUMBS = 80;
 
@@ -49,6 +50,9 @@ export class SentryLogProcessor {
         capturedError = Object.values(entry.context ?? {}).find((v): v is Error => v instanceof Error);
       }
       if (capturedError) {
+        if (capturedError instanceof InvariantViolation) {
+          scope.setExtra('invariant_violation', true);
+        }
         const isMessageDifferentFromStackTrace = error == null;
         if (isMessageDifferentFromStackTrace) {
           scope.setExtra('message', extendedMessage);
