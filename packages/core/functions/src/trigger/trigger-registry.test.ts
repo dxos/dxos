@@ -193,9 +193,15 @@ describe('trigger registry', () => {
   });
 
   describe('trigger events', () => {
-    test('event fired when all registered when opened', async () => {
+    test('event fired when all registered are opened', async () => {
       const [client] = await createInitializedClients(testBuilder);
       const registry = createRegistry(client);
+
+      // TODO(burdon): Race condition (already called in createInitializedClients).
+      //  Error: invariant violation: Default space is not yet available. Use `client.spaces.isReady` to wait for the default space. [space] at packages/sdk/client/src/echo/space-list.ts:218
+      console.log('before');
+      await client.spaces.isReady;
+      console.log('after', client.spaces.default);
       const triggers = createTriggers(client.spaces.default, 3);
 
       const triggersRegistered = new Trigger<FunctionTrigger[]>();
