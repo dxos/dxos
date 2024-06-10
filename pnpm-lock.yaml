@@ -3125,6 +3125,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
+      main-thread-scheduling:
+        specifier: ^14.1.1
+        version: 14.1.1
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -3135,6 +3141,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -41706,6 +41715,13 @@ packages:
       libqp: 2.0.1
     dev: false
 
+  /main-thread-scheduling@14.1.1:
+    resolution: {integrity: sha512-ETo4mBK6M+gO45yU109t/V/ZS1r1fE7ZI1ohizD1/6jGEqqLT1QB3QcKxa2rCWMYGipvI8WIbbyFx38lUspsWw==}
+    engines: {node: '>=10'}
+    dependencies:
+      p-is-promise: 4.0.0
+    dev: false
+
   /make-dir@2.1.0:
     resolution: {integrity: sha512-LS9X+dc8KLxXCb8dni79fLIIUA5VyZoyjSMCwTluaXA0o27cCK0bhXkpgw+sTXVpPy/lSO57ilRixqk0vDmtRA==}
     engines: {node: '>=6'}
@@ -44276,6 +44292,11 @@ packages:
   /p-finally@1.0.0:
     resolution: {integrity: sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow==}
     engines: {node: '>=4'}
+
+  /p-is-promise@4.0.0:
+    resolution: {integrity: sha512-4G3B+86qsIAX/+ip/yhHX9WUcyFKYkQYtE5bGkjpZyGK0Re53RbHky2UKt6RQVkDbUXb8EJRb4iga2SaI360nQ==}
+    engines: {node: '>=12'}
+    dev: false
 
   /p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
