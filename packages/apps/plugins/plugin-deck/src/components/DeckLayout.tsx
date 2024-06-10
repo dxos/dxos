@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, MagnifyingGlass, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Chat, Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
@@ -220,26 +220,6 @@ const NodePlankHeading = ({
             <Chat />
           </Button>
         )}
-        {/* TODO(thure): Move to column between planks */}
-        <Button
-          variant='ghost'
-          classNames='p-1'
-          onClick={() =>
-            dispatch([
-              {
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/search/Dialog',
-                  dialogBlockAlign: 'start',
-                },
-              },
-            ])
-          }
-        >
-          <span className='sr-only'>{t('insert plank label')}</span>
-          <MagnifyingGlass />
-        </Button>
       </PlankHeading.Controls>
     </PlankHeading.Root>
   );
@@ -298,7 +278,7 @@ export const DeckLayout = ({
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
-
+  const { dispatch } = useIntent();
   const navigationData = {
     popoverAnchorId,
     activeIds,
@@ -471,7 +451,29 @@ export const DeckLayout = ({
                             <PlankError part={part} slug={id} />
                           )}
                         </Plank.Content>
-                        <Plank.ResizeHandle />
+                        <div role='none' className='grid grid-rows-subgrid row-span-3'>
+                          <Button
+                            variant='ghost'
+                            classNames='p-1'
+                            onClick={() =>
+                              dispatch([
+                                {
+                                  action: LayoutAction.SET_LAYOUT,
+                                  data: {
+                                    element: 'dialog',
+                                    component: 'dxos.org/plugin/search/Dialog',
+                                    dialogBlockAlign: 'start',
+                                    subject: { action: NavigationAction.SET, position: 'add-after', part },
+                                  },
+                                },
+                              ])
+                            }
+                          >
+                            <span className='sr-only'>{t('insert plank label')}</span>
+                            <Plus />
+                          </Button>
+                          <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
+                        </div>
                       </Plank.Root>
                     );
                   })}

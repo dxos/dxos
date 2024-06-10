@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { type ClassNameValue, type ThemedClassName, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
 import { resizeHandle, resizeHandleVertical } from '../../fragments';
@@ -50,7 +50,8 @@ const deckLayout =
   'overflow-x-auto overflow-y-hidden snap-inline snap-proximity sm:snap-none sm:justify-center-if-no-scroll ' +
   deckGrid;
 
-const resizeButtonStyles = mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3');
+const resizeButtonStyles = (...etc: ClassNameValue[]) =>
+  mx(resizeHandle, resizeHandleVertical, 'hidden sm:grid row-span-3', ...etc);
 
 const DeckRoot = forwardRef<HTMLDivElement, DeckRootProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
@@ -113,10 +114,10 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
   },
 );
 
-type DeckPlankResizeHandleProps = {};
+type DeckPlankResizeHandleProps = ThemedClassName<ComponentPropsWithRef<'button'>>;
 
 const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlankResizeHandleProps>>(
-  ({ __plankScope, ...props }, forwardedRef) => {
+  ({ __plankScope, classNames, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
     const { unit, size, setSize } = usePlankContext('PlankResizeHandle', __plankScope);
@@ -148,8 +149,9 @@ const DeckPlankResizeHandle = forwardRef<HTMLButtonElement, ScopedProps<DeckPlan
 
     return (
       <button
+        {...props}
         data-resizing={`${!!resizing}`}
-        className={resizeButtonStyles}
+        className={resizeButtonStyles(classNames)}
         onPointerDown={({ isPrimary, pageX }) => {
           if (isPrimary) {
             const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);

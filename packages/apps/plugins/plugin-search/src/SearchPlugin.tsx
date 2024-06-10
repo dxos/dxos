@@ -86,7 +86,9 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
 
           switch (role) {
             case 'dialog':
-              return data.component === `${SEARCH_PLUGIN}/Dialog` ? <SearchDialog /> : null;
+              return data.component === `${SEARCH_PLUGIN}/Dialog` ? (
+                <SearchDialog subject={data.subject as any} />
+              ) : null;
             case 'search-input':
               return space ? <SearchMain space={space} /> : null;
           }
