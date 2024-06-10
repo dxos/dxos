@@ -13,9 +13,8 @@ import {
   type SpaceDoc,
   Reference,
 } from '@dxos/echo-protocol';
-import { isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
+import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
@@ -46,7 +45,7 @@ export class AutomergeObjectCore {
   /**
    * Id of the ECHO object.
    */
-  public id = PublicKey.random().toHex();
+  public id = generateEchoId();
 
   // TODO(dmaretskyi): Create a discriminated union for the bound/not bound states.
 
