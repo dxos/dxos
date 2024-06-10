@@ -2,12 +2,12 @@
 // Copyright 2020 DXOS.org
 //
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 import { expect } from 'earljs';
 
 import { Trigger, asyncTimeout, waitForCondition } from '@dxos/async';
 import { type TaggedType } from '@dxos/codec-protobuf';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { type TYPES } from '@dxos/protocols';
 import { runTestSignalServer, type SignalServerRunner } from '@dxos/signal';
 import { afterAll, beforeAll, describe, test, afterTest } from '@dxos/test';
@@ -41,9 +41,7 @@ describe('SignalClient', () => {
     const message = createMessage(peer2, peer1);
     await peer2.client.sendMessage(message);
     expect(await peer1.waitForNextMessage()).toEqual(message);
-  })
-    .timeout(500)
-    .retries(2);
+  }).timeout(500);
 
   test('join', async () => {
     const topic = PublicKey.random();
@@ -54,9 +52,7 @@ describe('SignalClient', () => {
 
     await peer1.waitForPeer(peer2.id);
     await peer2.waitForPeer(peer1.id);
-  })
-    .timeout(500)
-    .retries(2);
+  }).timeout(500);
 
   test('signal to self', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
@@ -74,7 +70,7 @@ describe('SignalClient', () => {
 
     await peer1.client.subscribeMessages(peer1.id);
     await peer2.client.subscribeMessages(peer2.id);
-    await waitForSubscription(peer2.client, peer2.id);
+    await waitForSubscription(peer1.client, peer1.id);
 
     const message = createMessage(peer2, peer1);
 
@@ -90,9 +86,7 @@ describe('SignalClient', () => {
       await peer2.client.sendMessage(message);
       await expect(peer1.waitForNextMessage({ timeout: 200 })).toBeRejected();
     }
-  })
-    .timeout(1_000)
-    .retries(2);
+  }).timeout(1_500);
 
   test('signal after re-entrance', async () => {
     const [peer1, peer2] = setupPeers({ peerCount: 2 });
@@ -112,16 +106,14 @@ describe('SignalClient', () => {
     //
 
     await peer1.client.close();
-    void peer1.client.open();
+    await peer1.client.open();
     await waitForSubscription(peer1.client, peer1.id);
 
     {
       await peer2.client.sendMessage(message);
       expect(await peer1.waitForNextMessage()).toEqual(message);
     }
-  })
-    .timeout(1_000)
-    .retries(2);
+  }).timeout(1_000);
 
   const setupPeers = (options?: { broker?: SignalServerRunner; peerCount?: number }): TestPeer[] => {
     return range(options?.peerCount ?? 1, () => {
@@ -133,7 +125,6 @@ describe('SignalClient', () => {
         (options?.broker ?? broker1).url(),
         async (msg) => {
           nextMessage = msg;
-          log.info('here');
           nextMessageTrigger.wake();
         },
         async (event) => {
@@ -145,7 +136,9 @@ describe('SignalClient', () => {
         },
       );
       void client.open();
-      afterTest(() => client.close());
+      afterTest(async () => {
+        await client.close();
+      });
       return {
         id,
         client,

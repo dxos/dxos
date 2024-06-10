@@ -3,7 +3,7 @@
 //
 
 export const safeAwaitAll = async <T>(
-  source: IterableIterator<T>,
+  source: Array<T> | IterableIterator<T>,
   taskFactory: (item: T) => Promise<any>,
   onError?: (error: Error, item: T, idx: number) => void,
 ): Promise<T[]> => {
