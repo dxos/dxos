@@ -130,7 +130,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.automerge.loadObjectById(objectId);
+    const object = await db.loadObjectById(objectId);
     return object;
   }
 }

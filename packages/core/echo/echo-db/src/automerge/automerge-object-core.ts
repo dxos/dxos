@@ -13,19 +13,17 @@ import {
   type SpaceDoc,
   Reference,
 } from '@dxos/echo-protocol';
-import { type EchoReactiveObject, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
+import { isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type AutomergeDb } from './automerge-db';
-import { getAutomergeObjectCore } from './automerge-object';
 import { type DocAccessor } from './automerge-types';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
-import { isEchoObject } from '../echo-handler';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -68,12 +66,6 @@ export class AutomergeObjectCore {
   public docHandle?: DocHandle<SpaceDoc> = undefined;
 
   /**
-   * Until object is persisted in the database, the linked object references are stored in this cache.
-   * Set only when the object is not bound to a database.
-   */
-  public linkCache?: Map<string, EchoReactiveObject<any>> = new Map<string, EchoReactiveObject<any>>();
-
-  /**
    * Key path at where we are mounted in the `doc` or `docHandle`.
    * The value at path must be of type `ObjectStructure`.
    */
@@ -83,12 +75,6 @@ export class AutomergeObjectCore {
    * Handles link resolution as well as manual changes.
    */
   public updates = new Event();
-
-  /**
-   * User-facing proxy for the object.
-   * Either an instance of `AutomergeObject` or a `ReactiveEchoObject<T>`.
-   */
-  public rootProxy: unknown;
 
   /**
    * Create local doc with initial state from this object.
@@ -112,14 +98,6 @@ export class AutomergeObjectCore {
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
-
-    if (this.linkCache) {
-      for (const obj of this.linkCache.values()) {
-        this.linkObject(obj);
-      }
-
-      this.linkCache = undefined;
-    }
 
     const doc = this.doc;
     this.doc = undefined;
@@ -248,53 +226,6 @@ export class AutomergeObjectCore {
       throwUnhandledError(err);
     }
   };
-
-  /**
-   * Store referenced object.
-   */
-  linkObject(obj: EchoReactiveObject<any>): Reference {
-    if (this.database) {
-      // TODO(dmaretskyi): Fix this.
-      if (isReactiveObject(obj) && !isEchoObject(obj)) {
-        invariant(this.database, 'BUG');
-        this.database._dbApi.add(obj);
-      }
-
-      const core = getAutomergeObjectCore(obj);
-      if (!core.database) {
-        this.database.add(obj);
-        return new Reference(core.id);
-      } else {
-        if ((core.database as any) !== this.database) {
-          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
-        } else {
-          return new Reference(core.id);
-        }
-      }
-    } else {
-      invariant(this.linkCache);
-
-      // Can be caused not using `object(Expando, { ... })` constructor.
-      // TODO(dmaretskyi): Add better validation.
-      invariant(obj.id != null);
-
-      this.linkCache.set(obj.id, obj as EchoReactiveObject<any>);
-      return new Reference(obj.id);
-    }
-  }
-
-  /**
-   * Lookup referenced object.
-   */
-  lookupLink(ref: Reference): EchoReactiveObject<any> | undefined {
-    if (this.database) {
-      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return this.database.graph._lookupLink(ref, this.database, this.notifyUpdate);
-    } else {
-      invariant(this.linkCache);
-      return this.linkCache.get(ref.itemId);
-    }
-  }
 
   /**
    * Encode a value to be stored in the Automerge document.

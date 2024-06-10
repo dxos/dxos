@@ -5,11 +5,11 @@
 import {
   Event,
   Trigger,
+  type UnsubscribeCallback,
   UpdateScheduler,
   asyncTimeout,
   synchronized,
   TimeoutError,
-  type UnsubscribeCallback,
 } from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
@@ -21,7 +21,7 @@ import {
   type ObjectDocumentLoaded,
 } from '@dxos/echo-pipeline';
 import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, isReactiveObject, type EchoReactiveObject } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -64,7 +64,7 @@ export class AutomergeDb {
   readonly rootChanged = new Event<void>();
 
   /**
-   * @deprecated Remove
+   * @deprecated TODO: Remove
    */
   _dbApi: EchoDatabase;
 
@@ -72,7 +72,6 @@ export class AutomergeDb {
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     public readonly spaceKey: PublicKey,
-    private readonly _initRootProxyFn: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
@@ -188,60 +187,40 @@ export class AutomergeDb {
       return undefined;
     }
 
-    if (objCore.isDeleted()) {
-      return undefined;
-    }
-
     invariant(objCore instanceof AutomergeObjectCore);
     return objCore;
   }
 
-  getObjectById(id: string): EchoReactiveObject<any> | undefined {
-    const objCore = this.getObjectCoreById(id);
-    if (!objCore) {
-      return undefined;
-    }
-
-    const root = objCore.rootProxy;
-    invariant(isReactiveObject(root));
-    return root as any;
-  }
-
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectById<T = any>(
+  async loadObjectCoreById(
     objectId: string,
     { timeout }: { timeout?: number } = {},
-  ): Promise<EchoReactiveObject<T> | undefined> {
-    // Check if deleted.
-    if (this._objects.get(objectId)?.isDeleted()) {
-      return Promise.resolve(undefined);
-    }
-
-    const obj = this.getObjectById(objectId);
-    if (obj) {
-      return Promise.resolve(obj);
+  ): Promise<AutomergeObjectCore | undefined> {
+    const core = this.getObjectCoreById(objectId);
+    if (core) {
+      return Promise.resolve(core);
     }
     this._automergeDocLoader.loadObjectDocument(objectId);
     const waitForUpdate = this._updateEvent
       .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-      .then(() => this.getObjectById(objectId));
+      .then(() => this.getObjectCoreById(objectId));
 
     return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
   }
 
-  async batchLoadObjects(
+  async batchLoadObjectCores(
     objectIds: string[],
     { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
-  ): Promise<Array<EchoReactiveObject<any> | undefined>> {
-    const result = new Array(objectIds.length);
+  ): Promise<(AutomergeObjectCore | undefined)[]> {
+    const result: (AutomergeObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
-      const object = this.getObjectById(objectId);
+      const core = this.getObjectCoreById(objectId);
       if (this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
-      } else if (object != null) {
-        result[i] = object;
+      } else if (core != null) {
+        result[i] = core;
       } else {
         objectsToLoad.push({ id: objectId, resultIndex: i });
       }
@@ -269,7 +248,7 @@ export class AutomergeDb {
             clearTimeout(inactivityTimeoutTimer);
             result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
               ? undefined
-              : this.getObjectById(objectToLoad.id)!;
+              : this.getObjectCoreById(objectToLoad.id)!;
             objectsToLoad.splice(i, 1);
             scheduleInactivityTimeout();
           }
@@ -320,11 +299,6 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
-
-    // TODO(dmaretskyi): This should be handled in the API layer.
-    if (!core.rootProxy) {
-      this._initRootProxyFn(core);
-    }
   }
 
   add(obj: EchoReactiveObject<any>) {
@@ -491,7 +465,6 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: false,
     });
-    this._initRootProxyFn(core);
   }
 
   private _rebindObjects(docHandle: DocHandle<SpaceDoc>, objectIds: string[]) {
