@@ -2,11 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
-import { TypedObject, create } from '@dxos/echo-schema';
+import { S, TypedObject, create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
