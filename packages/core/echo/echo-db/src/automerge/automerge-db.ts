@@ -56,7 +56,7 @@ export class AutomergeDb {
   readonly rootChanged = new Event<void>();
 
   /**
-   * @deprecated Remove
+   * @deprecated TODO: Remove
    */
   _dbApi: EchoDatabase;
 

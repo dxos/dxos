@@ -221,7 +221,9 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
 
   if (filter.type) {
     const type = core.getType();
-    const dynamicSchemaTypename = legacyGetDynamicSchemaTypename(core);
+
+    /** @deprecated TODO(mykola): Remove */
+    const dynamicSchemaTypename = type?.itemId;
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
@@ -296,12 +298,6 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
     return true;
   }
 };
-
-/**
- * @deprecated
- */
-// TODO(dmaretskyi): Cleanup.
-const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined => core.getType()?.itemId;
 
 /**
  * @deprecated
