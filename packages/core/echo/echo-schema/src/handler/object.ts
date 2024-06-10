@@ -3,9 +3,9 @@
 //
 
 import type * as S from '@effect/schema/Schema';
+import { ulid } from 'ulid';
 
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 
 import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
@@ -63,7 +63,7 @@ const _create = <T extends {}>(
 };
 
 // TODO(dmaretskyi): UUID v8.
-const _generateId = () => PublicKey.random().toHex();
+const _generateId = () => ulid();
 
 /**
  * Set ID on ECHO objects (Schema and Expando).
