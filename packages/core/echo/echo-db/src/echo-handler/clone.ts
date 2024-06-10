@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { generateEchoId, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { symbolInternals } from './echo-proxy-target';
@@ -40,12 +39,12 @@ export const clone = <T extends {}>(
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  const clone = cloneInner(obj, retainId ? obj.id : PublicKey.random().toHex());
+  const clone = cloneInner(obj, retainId ? obj.id : generateEchoId());
 
   const clones: EchoReactiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      clones.push(cloneInner(innerObj, retainId ? innerObj.id : PublicKey.random().toHex()));
+      clones.push(cloneInner(innerObj, retainId ? innerObj.id : generateEchoId()));
     }
   }
 

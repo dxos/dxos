@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
-import { TypedObject, create } from '@dxos/echo-schema';
+import { TypedObject, create, generateEchoId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
@@ -88,7 +88,7 @@ describe('Filter', () => {
 
   test('compare types', () => {
     const spaceKey = PublicKey.random();
-    const itemId = PublicKey.random().toHex();
+    const itemId = generateEchoId();
 
     expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
     expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random()))
