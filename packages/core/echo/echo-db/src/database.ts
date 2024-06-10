@@ -164,8 +164,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   getObjectById(id: string, { deleted = false } = {}): EchoReactiveObject<any> | undefined {
-    const objCore = this._automerge.getObjectCoreById(id, { deleted });
-    if (!objCore) {
+    const objCore = this._automerge.getObjectCoreById(id);
+    if (!objCore || (objCore.isDeleted() && !deleted)) {
       return undefined;
     }
 
@@ -270,7 +270,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getAutomergeObjectCore(echoObject), echoObject);
     this._automerge.add(echoObject);
-    EchoReactiveHandler.instance.drainLinkCache(echoObject as any);
+    EchoReactiveHandler.instance.saveLinkedObjects(echoObject as any);
     return echoObject as any;
   }
 

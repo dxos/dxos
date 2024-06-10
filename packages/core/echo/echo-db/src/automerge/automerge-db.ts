@@ -173,14 +173,10 @@ export class AutomergeDb {
     }
   }
 
-  getObjectCoreById(id: string, options: { deleted: boolean }): AutomergeObjectCore | undefined {
+  getObjectCoreById(id: string): AutomergeObjectCore | undefined {
     const objCore = this._objects.get(id);
     if (!objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
-      return undefined;
-    }
-
-    if (!options.deleted && objCore.isDeleted()) {
       return undefined;
     }
 

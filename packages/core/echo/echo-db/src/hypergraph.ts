@@ -265,7 +265,8 @@ class SpaceQuerySource implements QuerySource {
           !this._results ||
           this._results.find((result) => result.id === object.id) ||
           (this._database.automerge._objects.has(object.id) &&
-            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id, { deleted: false })!))
+            !this._database.automerge.getObjectCoreById(object.id)!.isDeleted() &&
+            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)))
         );
       });
 
