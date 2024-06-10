@@ -65,9 +65,10 @@ const _create = <T extends {}>(
 const generateId = () => ulid();
 
 /**
- * Set ID on ECHO objects (Schema and Expando).
+ * Set ID on ECHO object targets during creation.
+ * Used for objects with schema and the ones explicitly marked as Expando.
  */
-const setId = <T extends {}>(obj: ExcludeId<T>) => {
+const setIdOnTarget = (target: any) => {
   invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
   (obj as any).id = generateId();
 };
