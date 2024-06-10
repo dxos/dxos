@@ -48,14 +48,14 @@ const _create = <T extends {}>(
   if (schema) {
     const shouldGenerateId = options?.expando || getEchoObjectAnnotation(schema);
     if (shouldGenerateId) {
-      setId(obj);
+      setIdOnTarget(obj);
     }
     initMeta(obj, meta);
     prepareTypedTarget(obj, schema);
     return createReactiveProxy<T>(obj, TypedReactiveHandler.instance as ReactiveHandler<any>);
   } else {
     if (options?.expando) {
-      setId(obj);
+      setIdOnTarget(obj);
     }
     initMeta(obj, meta);
     return createReactiveProxy<T>(obj, UntypedReactiveHandler.instance as ReactiveHandler<any>);
@@ -69,8 +69,8 @@ export const generateEchoId = () => ulid();
  * Used for objects with schema and the ones explicitly marked as Expando.
  */
 const setIdOnTarget = (target: any) => {
-  invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
-  (obj as any).id = generateEchoId();
+  invariant(!('id' in target), 'Object already has an `id` field, which is reserved.');
+  target.id = generateEchoId();
 };
 
 const symbolMeta = Symbol.for('@dxos/meta');
