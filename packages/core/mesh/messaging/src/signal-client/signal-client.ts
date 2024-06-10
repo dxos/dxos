@@ -19,7 +19,7 @@ import { type Message, type SignalClientMethods, type SignalStatus } from '../si
 const DEFAULT_RECONNECT_TIMEOUT = 100;
 const MAX_RECONNECT_TIMEOUT = 5_000;
 const ERROR_RECONCILE_DELAY = 1_000;
-const RECONCILE_INTERVAL = 20;
+const RECONCILE_INTERVAL = 5_000;
 
 /**
  * KUBE-specific signaling client.
@@ -88,7 +88,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._setState(SignalState.CONNECTING);
 
     this._reconcileTask = new DeferredTask(this._ctx, async () => {
-      log('reconciling');
       try {
         await cancelWithContext(this._connectionCtx!, this._clientReady.wait({ timeout: 5_000 }));
         invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');

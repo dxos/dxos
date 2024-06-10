@@ -4,11 +4,11 @@
 
 import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
 
+import { InvariantViolation } from '@dxos/invariant';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
 import { withScope, captureException, captureMessage } from './node';
-import {InvariantViolation} from "@dxos/invariant";
 
 const MAX_LOG_BREADCRUMBS = 80;
 
