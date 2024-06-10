@@ -163,8 +163,10 @@ export class PublicKey implements Equatable {
     return key.toHex();
   }
 
-  static fromBase32(encoded: string): PublicKey {
-    return new PublicKey(new Uint8Array(base32Decode(encoded, 'RFC4648')));
+  static fromMultibase32(encoded: string): PublicKey {
+    invariant(encoded.startsWith('B'), 'Invalid multibase32 encoding');
+
+    return new PublicKey(new Uint8Array(base32Decode(encoded.slice(1), 'RFC4648')));
   }
 
   constructor(private readonly _value: Uint8Array) {
@@ -193,8 +195,8 @@ export class PublicKey implements Equatable {
     return this.asBuffer().toString('hex');
   }
 
-  toBase32(): string {
-    return base32Encode(this._value, 'RFC4648');
+  toMultibase32(): string {
+    return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
   truncate(length = undefined) {
