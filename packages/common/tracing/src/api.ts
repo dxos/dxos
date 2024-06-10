@@ -3,7 +3,6 @@
 //
 
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 import { type MaybePromise } from '@dxos/util';
 
 import { getTracingContext } from './symbols';
