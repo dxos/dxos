@@ -7,16 +7,20 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { initDiagnostics } from './diagnostics';
 import { type ReplicantEnv } from './interface';
 import { ReplicantRpcServer } from './replicant-rpc-server';
 import { type ReplicantParams } from '../plan';
 import { createRedisRpcPort, createRedisWritableStream } from '../redis';
+import { PERFETTO_EVENTS, registerPerfettoTracer } from '../tracing';
 
 export { type RedisOptions };
 
+/**
+ * Singleton class that represents the environment for a replicant.
+ * Responsible for managing connection to Orchestrator through Redis.
+ */
 export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
   /**
    *  Redis client for data exchange.
@@ -77,11 +81,12 @@ export class ReplicantEnvImpl extends Resource implements ReplicantEnv {
 
   protected override async _open() {
     // Send tracing data to the scheduler process.
+    registerPerfettoTracer();
     const tracingStream = createRedisWritableStream({
       client: this._tracingRedis,
       queue: this.params.redisTracingQueue,
     });
-    TRACE_PROCESSOR.perfettoEvents.stream.pipeTo(tracingStream);
+    void PERFETTO_EVENTS.stream.pipeTo(tracingStream);
     this._ctx.onDispose(() => tracingStream.close());
 
     const disableDiagnostics = initDiagnostics();

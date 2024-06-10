@@ -5,10 +5,9 @@
 import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import path from 'node:path';
 
-import { Trigger, scheduleMicroTask } from '@dxos/async';
+import { Trigger } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
-import { writeEventStreamToAFile } from '@dxos/tracing';
 
 import { type SchedulerEnv, type RpcHandle } from './interface';
 import { ReplicantRpcHandle, open, close } from './replicant-rpc-handle';
@@ -26,8 +25,14 @@ import {
   runNode,
 } from '../plan';
 import { REDIS_PORT, createRedisRpcPort, WebSocketRedisProxy, createRedisReadableStream } from '../redis';
+import { PERFETTO_EVENTS, registerPerfettoTracer, writeEventStreamToAFile } from '../tracing';
+import { ReadableMuxer } from '../tracing/readable-muxer';
 
 // TODO(mykola): Unify with ReplicatorEnv.
+/**
+ * Environment for the scheduler.
+ * Responsible for managing connection to replicants through Redis.
+ */
 export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   /**
    *  Redis client for data exchange.
@@ -39,8 +44,10 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
    */
   private readonly _redisSub: Redis;
 
-  private _perffetoController!: ReadableStreamDefaultController<string>;
-  public readonly perfettoEventsStream: ReadableStream<string>;
+  /**
+   * Stream of perfetto events collected from all Replicants.
+   */
+  public readonly perfettoEventsStream: ReadableMuxer<string>;
 
   /**
    * Start websocket REDIS proxy for browser tests.
@@ -69,11 +76,8 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     this._redis.on('error', (err) => log.info('Redis Client Error', err));
     this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
 
-    this.perfettoEventsStream = new ReadableStream<string>({
-      start: (controller) => {
-        this._perffetoController = controller;
-      },
-    });
+    this.perfettoEventsStream = new ReadableMuxer();
+    this._ctx.onDispose(() => this.perfettoEventsStream.close());
   }
 
   getReplicantsSummary(): ReplicantsSummary {
@@ -90,8 +94,12 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     await this._redis.config('SET', 'notify-keyspace-events', 'AKE');
     await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
 
+    // Register perfetto tracing for orchestrator.
+    registerPerfettoTracer();
+    this.perfettoEventsStream.pushStream(PERFETTO_EVENTS.stream);
+
     writeEventStreamToAFile({
-      stream: this.perfettoEventsStream,
+      stream: this.perfettoEventsStream.readable,
       path: path.join(this.params.outDir, 'perfetto.json'),
     });
   }
@@ -105,7 +113,6 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     this._redis.disconnect();
     this._redisSub.disconnect();
     await this._server.destroy();
-    this._perffetoController.close();
   }
 
   /**
@@ -245,17 +252,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
     const tracingQueue = `replicant-${replicantId}:tracing:${this.params.testId}`;
     const tracingStream = createRedisReadableStream({ client: tracingRedis, queue: tracingQueue });
-
-    const reader = tracingStream.getReader();
-    scheduleMicroTask(this._ctx, async () => {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
-        this._perffetoController.enqueue(value!);
-      }
-    });
+    this.perfettoEventsStream.pushStream(tracingStream);
 
     return { tracingQueue, tracingStream };
   }
