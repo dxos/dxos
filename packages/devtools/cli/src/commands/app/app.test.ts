@@ -7,9 +7,8 @@ import fs from 'node:fs';
 import path from 'path';
 import waitForExpect from 'wait-for-expect';
 
+import { runCommand } from '@dxos/cli-base';
 import { describe, test } from '@dxos/test';
-
-import { runCommand } from '../../util';
 
 describe('App', () => {
   const tmpFolder = './tmp/packages/devtools/cli/';

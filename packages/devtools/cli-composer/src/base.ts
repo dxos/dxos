@@ -4,17 +4,18 @@
 
 import { type Command } from '@oclif/core';
 
-import type { Client } from '@dxos/client';
+import { AbstractBaseCommand } from '@dxos/cli-base';
+import { type Client } from '@dxos/client';
 import { create, ECHO_ATTR_META, ECHO_ATTR_TYPE, getEchoObjectAnnotation, type ObjectMeta, S } from '@dxos/echo-schema';
 import { FUNCTION_SCHEMA } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { nonNullable } from '@dxos/util';
 
-import { BaseCommand } from '../../base';
-
-// TODO(burdon): Move to @dxos/cli-composer.
-//  https://oclif.io/docs/command_discovery_strategies
-export abstract class ComposerBaseCommand<T extends typeof Command = any> extends BaseCommand<T> {
+/**
+ * Plugin base command.
+ */
+export abstract class BaseCommand<T extends typeof Command = any> extends AbstractBaseCommand<T> {
+  // TODO(burdon): Move to BaseCommand.
   protected _schemaMap?: Map<string, S.Schema<any>>;
 
   get schemaMap() {

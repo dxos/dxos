@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
-import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { SwarmNetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
@@ -79,7 +79,7 @@ export class ClientServicesHost {
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private _signalManager?: SignalManager;
-  private _networkManager?: NetworkManager;
+  private _networkManager?: SwarmNetworkManager;
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
@@ -210,7 +210,7 @@ export class ClientServicesHost {
     this._signalManager = signalManager;
 
     invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new NetworkManager({
+    this._networkManager = new SwarmNetworkManager({
       log: connectionLog,
       transportFactory,
       signalManager,

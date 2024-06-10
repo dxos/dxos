@@ -53,17 +53,16 @@ export type SwarmOptions = {
   label?: string;
 };
 
-export type NetworkManagerOptions = {
+export type SwarmNetworkManagerOptions = {
   transportFactory: TransportFactory;
   signalManager: SignalManager;
   log?: boolean; // Log to devtools.
 };
 
 /**
- * Manages connection to the swarm.
+ * Manages p2p connection to the swarm.
  */
-// TODO(dmaretskyi): Rename SwarmManager.
-export class NetworkManager {
+export class SwarmNetworkManager {
   /**
    * @internal
    */
@@ -75,17 +74,14 @@ export class NetworkManager {
   private readonly _messenger: Messenger;
   private readonly _signalConnection: SignalConnection;
   private readonly _connectionLimiter: ConnectionLimiter;
+  private readonly _connectionLog?: ConnectionLog;
+  private readonly _instanceId = PublicKey.random().toHex();
 
   private _connectionState = ConnectionState.ONLINE;
   public readonly connectionStateChanged = new Event<ConnectionState>();
-
-  private readonly _connectionLog?: ConnectionLog;
-
   public readonly topicsUpdated = new Event<void>();
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
-  constructor({ transportFactory, signalManager, log }: NetworkManagerOptions) {
+  constructor({ transportFactory, signalManager, log }: SwarmNetworkManagerOptions) {
     this._transportFactory = transportFactory;
 
     // Listen for signal manager events.

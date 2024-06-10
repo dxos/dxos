@@ -11,12 +11,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 
-export const hostInvitation = async ({
-  observable,
-  callbacks,
-  peersNumber = 1,
-  waitForSuccess = true,
-}: {
+type HostInvitationParams = {
   observable: CancellableInvitationObservable;
   callbacks?: {
     onConnecting?: (invitation: Invitation) => Promise<void>;
@@ -24,7 +19,14 @@ export const hostInvitation = async ({
   };
   peersNumber?: number;
   waitForSuccess?: boolean;
-}): Promise<Invitation> => {
+};
+
+export const hostInvitation = async ({
+  observable,
+  callbacks,
+  peersNumber = 1,
+  waitForSuccess = true,
+}: HostInvitationParams): Promise<Invitation> => {
   const invitationEvent = new Event<Invitation>();
   const connectingEvent = new Event<Invitation>();
 
@@ -56,6 +58,7 @@ export const hostInvitation = async ({
   } else {
     invitation = await connectingEvent.waitForCount(1);
   }
+
   unsubscribeHandle.unsubscribe();
   return invitation;
 };
