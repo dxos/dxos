@@ -11,3 +11,11 @@ export const mkdirSync = () => notAvailable();
 export const openSync = () => notAvailable();
 export const existsSync = () => notAvailable();
 export const statSync = () => notAvailable();
+
+export default {
+  appendFileSync,
+  mkdirSync,
+  openSync,
+  existsSync,
+  statSync,
+};
