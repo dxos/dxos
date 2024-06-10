@@ -90,9 +90,7 @@ export class Peer {
             return;
           }
 
-          await peer._connection.setRemoteDescription(
-            new RTCSessionDescription({ type: description.type, sdp: description.sdp }),
-          );
+          await peer._connection.setRemoteDescription({ type: description.type, sdp: description.sdp });
 
           if (description.type === 'offer') {
             await peer._connection.setLocalDescription();

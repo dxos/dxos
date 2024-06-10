@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.schemaRegistry.registerSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -223,9 +223,9 @@ export class Client {
     // }
 
     // TODO(burdon): Find?
-    const exists = schemaList.filter((schema) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(schema));
+    const exists = schemaList.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
     if (exists.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...exists);
+      this._echoClient.graph.schemaRegistry.registerSchema(...exists);
     }
 
     return this;

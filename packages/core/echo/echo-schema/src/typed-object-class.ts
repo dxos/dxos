@@ -15,7 +15,6 @@ type EchoClassOptions = {
 
 export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   new (): Fields;
-
   readonly typename: string;
 }
 
