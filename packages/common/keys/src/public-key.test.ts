@@ -60,4 +60,13 @@ describe('PublicKey', () => {
     const key = PublicKey.random();
     expect(PublicKey.equals(key, PublicKey.from(key.toHex()))).to.be.true;
   });
+
+  test.only('base32', () => {
+    const key = PublicKey.randomOfLength(20); // space keys will be cut to first 20 bytes of sha-256 hash
+    const encoded = key.toBase32();
+
+    console.log('encoded', encoded);
+
+    expect(PublicKey.fromBase32(encoded).toHex()).to.equal(key.toHex());
+  });
 });

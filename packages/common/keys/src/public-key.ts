@@ -3,6 +3,8 @@
 //
 
 import { inspect, type InspectOptionsStylized } from 'node:util';
+import base32Encode from 'base32-encode';
+import base32Decode from 'base32-decode';
 
 import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -89,6 +91,10 @@ export class PublicKey implements Equatable {
     return PublicKey.from(randomBytes(PUBLIC_KEY_LENGTH));
   }
 
+  static randomOfLength(length: number): PublicKey {
+    return PublicKey.from(randomBytes(length));
+  }
+
   static *randomSequence(): Generator<PublicKey> {
     for (let i = 0; i < 1_0000; i++) {
       // Counter just to protect against infinite loops.
@@ -157,6 +163,10 @@ export class PublicKey implements Equatable {
     return key.toHex();
   }
 
+  static fromBase32(encoded: string): PublicKey {
+    return new PublicKey(new Uint8Array(base32Decode(encoded, 'RFC4648')));
+  }
+
   constructor(private readonly _value: Uint8Array) {
     if (!(_value instanceof Uint8Array)) {
       throw new TypeError(`Expected Uint8Array, got: ${_value}`);
@@ -181,6 +191,10 @@ export class PublicKey implements Equatable {
 
   toHex(): string {
     return this.asBuffer().toString('hex');
+  }
+
+  toBase32(): string {
+    return base32Encode(this._value, 'RFC4648');
   }
 
   truncate(length = undefined) {
