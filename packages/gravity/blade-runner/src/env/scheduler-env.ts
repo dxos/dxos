@@ -6,6 +6,7 @@ import { type Callback, Redis, type RedisOptions } from 'ioredis';
 import path from 'node:path';
 
 import { Trigger } from '@dxos/async';
+import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 
 import { type SchedulerEnv, type RpcHandle } from './interface';
@@ -23,10 +24,16 @@ import {
   runBrowser,
   runNode,
 } from '../plan';
-import { REDIS_PORT, createRedisRpcPort, WebSocketRedisProxy } from '../redis';
+import { REDIS_PORT, createRedisRpcPort, WebSocketRedisProxy, createRedisReadableStream } from '../redis';
+import { writeEventStreamToAFile } from '../tracing';
+import { ReadableMuxer } from '../tracing/readable-muxer';
 
 // TODO(mykola): Unify with ReplicatorEnv.
-export class SchedulerEnvImpl<S> implements SchedulerEnv {
+/**
+ * Environment for the scheduler.
+ * Responsible for managing connection to replicants through Redis.
+ */
+export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   /**
    *  Redis client for data exchange.
    */
@@ -36,6 +43,11 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
    *  Redis client for subscribing to sync events.
    */
   private readonly _redisSub: Redis;
+
+  /**
+   * Stream of perfetto events collected from all Replicants.
+   */
+  public readonly perfettoEventsStream: ReadableMuxer<string>;
 
   /**
    * Start websocket REDIS proxy for browser tests.
@@ -55,13 +67,17 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
   constructor(
     private readonly _options: GlobalOptions,
     public params: TestParams<S>,
-    private readonly _redisOptions?: RedisOptions,
+    private readonly _redisOptions: RedisOptions = { port: REDIS_PORT },
   ) {
-    this._redis = new Redis(this._redisOptions ?? { port: REDIS_PORT });
-    this._redisSub = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    super();
+    this._redis = new Redis(this._redisOptions);
+    this._redisSub = new Redis(this._redisOptions);
 
     this._redis.on('error', (err) => log.info('Redis Client Error', err));
     this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
+
+    this.perfettoEventsStream = new ReadableMuxer();
+    this._ctx.onDispose(() => this.perfettoEventsStream.close());
   }
 
   getReplicantsSummary(): ReplicantsSummary {
@@ -74,12 +90,21 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     return summary;
   }
 
-  async open() {
+  override async _open() {
     await this._redis.config('SET', 'notify-keyspace-events', 'AKE');
     await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
+
+    // Register perfetto tracing for orchestrator.
+    // registerPerfettoTracer();
+    // this.perfettoEventsStream.pushStream(PERFETTO_EVENTS.stream);
+
+    writeEventStreamToAFile({
+      stream: this.perfettoEventsStream.readable,
+      path: path.join(this.params.outDir, 'perfetto.json'),
+    });
   }
 
-  async close() {
+  override async _close() {
     for (const replicant of this.replicants) {
       // Kill all replicants.
       replicant.kill('SIGTERM');
@@ -148,18 +173,19 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
 
     const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;
     const responseQueue = `replicant-${replicantId}:responses:${this.params.testId}`;
+    const { tracingQueue, tracingStream } = this._setupTracingStream(replicantId);
 
     /**
      * Redis client for submitting RPC requests.
      */
-    const rpcRequests = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    const rpcRequests = new Redis(this._redisOptions);
     rpcRequests.on('error', (err) => log.info('Redis Client Error', err));
     /**
      * Redis client for pulling RPC responses.
      * This client uses blocking pop operation to wait for responses
      * so we need different clients for RPC requests and responses.
      */
-    const rpcResponses = new Redis(this._redisOptions ?? { port: REDIS_PORT });
+    const rpcResponses = new Redis(this._redisOptions);
     rpcResponses.on('error', (err) => log.info('Redis Client Error', err));
 
     const rpcPort = createRedisRpcPort({
@@ -184,6 +210,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
       planRunDir: this.params.outDir,
       redisPortSendQueue: responseQueue,
       redisPortReceiveQueue: requestQueue,
+      redisTracingQueue: tracingQueue,
 
       runtime,
       testId: this.params.testId,
@@ -208,6 +235,7 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);
+        void tracingStream.cancel();
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
       params: replicantParams,
@@ -216,5 +244,16 @@ export class SchedulerEnvImpl<S> implements SchedulerEnv {
     this.replicants.push(replicantHandle);
 
     return replicantHandle;
+  }
+
+  private _setupTracingStream(replicantId: string) {
+    const tracingRedis = new Redis(this._redisOptions);
+    tracingRedis.on('error', (err) => log.info('Redis Client Error', err));
+
+    const tracingQueue = `replicant-${replicantId}:tracing:${this.params.testId}`;
+    const tracingStream = createRedisReadableStream({ client: tracingRedis, queue: tracingQueue });
+    this.perfettoEventsStream.pushStream(tracingStream);
+
+    return { tracingQueue, tracingStream };
   }
 }

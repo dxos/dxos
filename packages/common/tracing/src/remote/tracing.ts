@@ -26,7 +26,7 @@ export class RemoteTracing {
   private _tracing: TracingMethods | undefined;
   private _spanMap = new Map<TracingSpan, RemoteSpan>();
 
-  async registerProcessor(processor: TracingMethods) {
+  registerProcessor(processor: TracingMethods) {
     this._tracing = processor;
   }
 
