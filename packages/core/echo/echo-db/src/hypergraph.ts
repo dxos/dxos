@@ -36,7 +36,7 @@ export class Hypergraph {
   private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
   // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
-  private readonly _runtimeSchemaRegistry = new RuntimeSchemaRegistry();
+  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoReactiveObject<any>>>>(
     PublicKey.hash,
@@ -45,12 +45,14 @@ export class Hypergraph {
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get runtimeSchemaRegistry(): RuntimeSchemaRegistry {
-    return this._runtimeSchemaRegistry;
+  get schemaRegistry(): RuntimeSchemaRegistry {
+    return this._schemaRegistry;
   }
 
   /**
    * Register a database.
+   * @param spaceKey Space key.
+   * @param database Database backend.
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?

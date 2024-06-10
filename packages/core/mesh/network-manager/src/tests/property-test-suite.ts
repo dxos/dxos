@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { test } from '@dxos/test';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
 
-import { type NetworkManager } from '../network-manager';
+import { type SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 
 /**
@@ -33,7 +33,7 @@ export const propertyTestSuite = () => {
      * The real system being tested.
      */
     interface Real {
-      peers: ComplexMap<PublicKey, { networkManager: NetworkManager; presence?: any }>;
+      peers: ComplexMap<PublicKey, { networkManager: SwarmNetworkManager; presence?: any }>;
     }
 
     const assertState = async (model: Model, real: Real) => {

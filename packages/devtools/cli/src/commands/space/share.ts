@@ -7,12 +7,11 @@ import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
-import { type Client } from '@dxos/client';
+import { hostInvitation, ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
+import { BaseCommand } from '../../base';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override description = 'Create space invitation.';
@@ -37,33 +36,32 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Application Host URL.',
       default: 'https://composer.space',
     }),
-    'no-auth': Flags.boolean({
+    auth: Flags.boolean({
       description: 'Skip authentication challenge.',
-    }),
-    'no-wait': Flags.boolean({
-      description: "Don't wait for a peer to connect before exiting CLI",
+      default: true,
+      allowNo: true,
     }),
   };
 
   async run(): Promise<any> {
     const { key } = this.args;
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, key);
-
-      // TODO(burdon): Timeout error not propagated.
-      const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
+      const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = space!.share({
         authMethod,
-        multiUse: this.flags.multiple,
         timeout: this.flags.timeout,
         persistent: this.flags.persistent,
         lifetime: this.flags.lifetime,
+        multiUse: this.flags.multiple,
       });
 
-      const invitationSuccess = hostInvitation({
+      ux.action.start('Waiting for peer to connect');
+      await hostInvitation({
         observable,
         callbacks: {
           onConnecting: async () => {
+            ux.action.stop();
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
             if (authMethod !== Invitation.AuthMethod.NONE) {
@@ -74,26 +72,16 @@ export default class Share extends BaseCommand<typeof Share> {
             if (this.flags.open) {
               const url = new URL(this.flags.host);
               url.searchParams.append('spaceInvitationCode', InvitationEncoder.encode(invitation));
-              // TODO: remove after the demo
-              url.searchParams.append('migrateSpace', 'true');
+              url.searchParams.append('migrateSpace', 'true'); // TODO(burdon): Remove.
               spawn('open', [url.toString()]);
             } else {
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);
             }
           },
         },
-        waitForSuccess: false,
       });
 
-      if (!this.flags['no-wait']) {
-        // TODO(burdon): Display joined peer?
-        ux.action.start('Waiting for peer to connect');
-        await invitationSuccess;
-        ux.action.stop();
-        ux.log(chalk`{green Joined successfully.}`);
-      } else {
-        await invitationSuccess;
-      }
+      ux.stdout(chalk`{green OK}`);
     });
   }
 }

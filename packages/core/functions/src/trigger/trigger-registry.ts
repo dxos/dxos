@@ -95,8 +95,8 @@ export class TriggerRegistry extends Resource {
       return;
     }
 
-    if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionTrigger)) {
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionTrigger);
+    if (!space.db.graph.schemaRegistry.hasSchema(FunctionTrigger)) {
+      space.db.graph.schemaRegistry.registerSchema(FunctionTrigger);
     }
 
     // Create FK to enable syncing if none are set (NOTE: Possible collision).

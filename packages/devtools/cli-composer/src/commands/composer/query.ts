@@ -6,16 +6,16 @@ import { Flags, ux } from '@oclif/core';
 import chalk from 'chalk';
 
 import { MessageType } from '@braneframe/types';
-import { Filter, getMeta } from '@dxos/client/echo';
-import { getTypename } from '@dxos/echo-schema';
+import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
+import { stringify, table, type TableOptions } from '@dxos/cli-base';
+import { Filter } from '@dxos/client/echo';
+import { getMeta, getTypename } from '@dxos/echo-schema';
 import { omit } from '@dxos/log';
 
-import { ComposerBaseCommand } from './base';
-import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
-import { stringify } from '../../util';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): Option no-wrap.
-export default class Query extends ComposerBaseCommand<typeof Query> {
+export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
   static override flags = {
@@ -59,39 +59,37 @@ type ObjectPrinter<T = {}> = (data: T) => string;
 
 const defaultPrinter: ObjectPrinter = (data) => stringify(omit(data, '@type'));
 
-type PrintOptions = ux.Table.table.Options & {
+type PrintOptions = TableOptions & {
   printer?: ObjectPrinter;
 };
 
 const printObjects = (objects: any[], { printer = defaultPrinter, ...flags }: PrintOptions = {}) => {
-  ux.table(
-    objects,
-    {
-      id: {
-        header: 'id',
-        get: (row) => row.id.slice(0, 8),
-      },
-      type: {
-        header: 'type',
-        get: (row) => chalk.blue(getTypename(row)),
-      },
-      meta: {
-        header: 'meta',
-        get: (row) => {
-          const keys = getMeta(row).keys;
-          if (keys?.length) {
-            return '[' + keys.map(({ source, id }) => `${chalk.green(source)}:${chalk.gray(id)}`).join(', ') + ']';
-          } else {
-            return '';
-          }
+  ux.stdout(
+    table(
+      objects,
+      {
+        id: {
+          truncate: true,
+        },
+        type: {
+          get: (row) => chalk.blue(getTypename(row)),
+        },
+        meta: {
+          get: (row) => {
+            const keys = getMeta(row).keys;
+            if (keys?.length) {
+              return '[' + keys.map(({ source, id }) => `${chalk.green(source)}:${chalk.gray(id)}`).join(', ') + ']';
+            } else {
+              return '';
+            }
+          },
+        },
+        data: {
+          extended: true,
+          get: (row) => printer(row),
         },
       },
-      data: {
-        header: 'data',
-        extended: true,
-        get: (row) => printer(row),
-      },
-    },
-    flags,
+      flags,
+    ),
   );
 };

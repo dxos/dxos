@@ -8,7 +8,7 @@ import { type FeedStore } from '@dxos/feed-store';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager, createSimplePeerTransportFactory } from '@dxos/network-manager';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -22,12 +22,12 @@ import { SnapshotStore } from '../db-host';
 import { MetadataStore } from '../metadata';
 import { MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceManager, SpaceProtocol, type Space } from '../space';
 
-export type NetworkManagerProvider = () => NetworkManager;
+export type NetworkManagerProvider = () => SwarmNetworkManager;
 
 export const MemoryNetworkManagerProvider =
   (signalContext: MemorySignalManagerContext): NetworkManagerProvider =>
   () =>
-    new NetworkManager({
+    new SwarmNetworkManager({
       signalManager: new MemorySignalManager(signalContext),
       transportFactory: MemoryTransportFactory,
     });
@@ -35,7 +35,7 @@ export const MemoryNetworkManagerProvider =
 export const WebsocketNetworkManagerProvider =
   (signalUrl: string): NetworkManagerProvider =>
   () =>
-    new NetworkManager({
+    new SwarmNetworkManager({
       signalManager: new WebsocketSignalManager([{ server: signalUrl }]),
       transportFactory: createSimplePeerTransportFactory(),
     });

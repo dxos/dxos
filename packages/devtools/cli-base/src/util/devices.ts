@@ -7,6 +7,7 @@ import { ux } from '@oclif/core';
 import { Device, DeviceKind, DeviceType } from '@dxos/client/halo';
 
 import { maybeTruncateKey } from './keys';
+import { table } from './table';
 
 export const mapDevices = (devices: Device[], truncateKeys = false) => {
   return devices.map((device) => ({
@@ -24,22 +25,22 @@ export const mapDevices = (devices: Device[], truncateKeys = false) => {
 };
 
 export const printDevices = (devices: Device[], flags = {}) => {
-  ux.table(
-    mapDevices(devices, true),
-    {
-      key: { header: 'key' },
-      label: { header: 'label' },
-      presence: { header: 'presence' },
-      type: { header: 'type' },
-      kind: { header: 'kind' },
-      platform: { header: 'platform' },
-      platformVersion: { header: 'platformVersion' },
-      architecture: { header: 'architecture' },
-      os: { header: 'os' },
-      osVersion: { header: 'osVersion' },
-    },
-    {
-      ...flags,
-    },
+  ux.stdout(
+    table(
+      mapDevices(devices, true),
+      {
+        key: { header: 'key' },
+        label: { header: 'label' },
+        presence: { header: 'presence' },
+        type: { header: 'type' },
+        kind: { header: 'kind' },
+        platform: { header: 'platform' },
+        platformVersion: { header: 'platformVersion' },
+        architecture: { header: 'architecture' },
+        os: { header: 'os' },
+        osVersion: { header: 'osVersion' },
+      },
+      flags,
+    ),
   );
 };

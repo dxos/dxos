@@ -321,23 +321,25 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return ObjectMetaSchema;
     }
-    // TODO: make reactive
+    // TODO(?): Make reactive.
     if (!target[symbolInternals].core.database) {
       return undefined;
     }
+
     const typeReference = target[symbolInternals].core.getType();
     if (typeReference == null) {
       return undefined;
     }
-    const staticSchema = target[symbolInternals].core.database.graph.runtimeSchemaRegistry.getSchema(
-      typeReference.itemId,
-    );
+
+    const staticSchema = target[symbolInternals].core.database.graph.schemaRegistry.getSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
     }
+
     if (typeReference.protocol === 'protobuf') {
       return undefined;
     }
+
     return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
   }
 
