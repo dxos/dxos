@@ -21,6 +21,7 @@ import { range } from '@dxos/util';
 import { Client } from '../client';
 import { SpaceState, getSpace } from '../echo';
 import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
+import { SpaceId } from '@dxos/keys';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
@@ -56,7 +57,14 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await testSpaceAutomerge(space.db);
 
+    expect(SpaceId.isValid(space.id)).to.be.true;
     expect(space.members.get()).to.be.length(1);
+
+    // Get by id.
+    expect(client.spaces.get(space.id) === space).to.be.true;
+
+    // Get by key.
+    expect(client.spaces.get(space.key) === space).to.be.true;
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
@@ -116,6 +124,8 @@ describe('Spaces', () => {
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
+
+      expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
       const obj = await space.db.automerge.loadObjectById(objectId)!;

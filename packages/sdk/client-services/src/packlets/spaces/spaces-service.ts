@@ -216,6 +216,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   private _serializeSpace(space: DataSpace): Space {
     return {
+      id: space.id,
       spaceKey: space.key,
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,

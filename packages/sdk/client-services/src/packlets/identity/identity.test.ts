@@ -7,6 +7,7 @@ import expect from 'expect';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
+  deriveIdFromSpaceKey,
   MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -86,6 +87,7 @@ describe('identity/identity', () => {
 
     await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
     const space: Space = new Space({
+      id: await deriveIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
@@ -201,6 +203,7 @@ describe('identity/identity', () => {
 
       await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
       const space = new Space({
+        id: await deriveIdFromSpaceKey(spaceKey),
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
@@ -293,6 +296,7 @@ describe('identity/identity', () => {
         deviceKey,
       });
       const space = new Space({
+        id: await deriveIdFromSpaceKey(spaceKey),
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),

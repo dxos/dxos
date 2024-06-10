@@ -6,7 +6,7 @@ import { synchronized, trackLeaks } from '@dxos/async';
 import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -16,10 +16,12 @@ import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { Space } from './space';
+import { Space, deriveIdFromSpaceKey } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 import { SnapshotManager, type SnapshotStore } from '../db-host';
 import { type MetadataStore } from '../metadata';
+import { invariant } from '@dxos/invariant';
+import { subtleCrypto } from '@dxos/crypto';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
@@ -98,6 +100,7 @@ export class SpaceManager {
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
+    const spaceId = await deriveIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity,
@@ -109,6 +112,7 @@ export class SpaceManager {
     const snapshotManager = new SnapshotManager(this._snapshotStore, this._blobStore, protocol.blobSync);
 
     const space = new Space({
+      id: spaceId,
       spaceKey,
       protocol,
       genesisFeed,
