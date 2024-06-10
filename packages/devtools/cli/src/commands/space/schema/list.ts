@@ -5,20 +5,23 @@
 import { ux } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
-import { table, type TableFlags } from '@dxos/cli-base';
+import { table, type TableFlags, TABLE_FLAGS } from '@dxos/cli-base';
 import { FunctionDef, FunctionTrigger } from '@dxos/functions';
 
 import { BaseCommand } from '../../../base';
 
+// TODO(burdon): Option to output JSON schema.
+
 export default class List extends BaseCommand<typeof List> {
   static {
     this.description = 'List schema.';
-    // TODO(burdon): Is this typesafe?
-    this.flags = {
-      ...BaseCommand.flags,
-      ...FLAG_SPACE_KEYS,
-    };
   }
+
+  static override flags = {
+    ...BaseCommand.flags,
+    ...TABLE_FLAGS,
+    ...FLAG_SPACE_KEYS,
+  };
 
   async run(): Promise<any> {
     const { space: spaceKeys } = this.flags;
@@ -27,21 +30,18 @@ export default class List extends BaseCommand<typeof List> {
       client.addSchema(FunctionDef, FunctionTrigger);
 
       // TODO(burdon): Doesn't stringify (just returns "null").
+      // TODO(burdon): Reconcile addType with schema.
       //  space.db.schema.get/list()
-      //  typename may be null?
       //  rename runtimeSchemaRegistry
-      const s2 = client.experimental.graph.schemaRegistry.schemas;
-      ux.stdout('2', JSON.stringify(s2, undefined, 2));
-      printSchema(s2);
-      console.log(s2.map((s2) => s2));
+      const schemas = client.experimental.graph.schemaRegistry.schemas;
+      console.log(schemas.map((s2) => s2));
+      printSchema(schemas, this.flags);
     });
 
     return await this.execWithSpace(
       async ({ space }) => {
-        // TODO(burdon): Reconcile addType with schema.
-        const s1 = await space.db.schemaRegistry.getAll();
-        ux.stdout('1', JSON.stringify(s1, undefined, 2));
-        printSchema(s1);
+        const schemas = await space.db.schemaRegistry.getAll();
+        printSchema(schemas, this.flags);
       },
       { spaceKeys },
     );
@@ -53,8 +53,9 @@ const printSchema = (schema: any[], flags: TableFlags = {}) => {
     table(
       schema,
       {
-        typename: {},
-        fields: {},
+        id: {}, // TODO(burdon): undefined.
+        typename: {}, // TODO(burdon): Sometimes undefined.
+        version: {}, // TODO(burdon): undefined.
       },
       flags,
     ),

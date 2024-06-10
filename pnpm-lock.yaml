@@ -8449,6 +8449,9 @@ importers:
       '@dxos/timeframe':
         specifier: workspace:*
         version: link:../../common/timeframe
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
