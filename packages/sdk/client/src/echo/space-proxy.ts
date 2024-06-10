@@ -10,7 +10,7 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
-import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

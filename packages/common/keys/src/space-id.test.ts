@@ -1,4 +1,9 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { expect, test } from 'vitest';
+
 import { SpaceId } from './space-id';
 
 test('space-id', () => {

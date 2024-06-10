@@ -5,6 +5,7 @@
 import { Event, Mutex, synchronized, trackLeaks } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type DelegateInvitationCredential, type FeedInfo, type MemberInfo } from '@dxos/credentials';
+import { subtleCrypto } from '@dxos/crypto';
 import { type FeedOptions, type FeedWrapper } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { SpaceId, type PublicKey } from '@dxos/keys';
@@ -20,7 +21,6 @@ import { type SpaceProtocol } from './space-protocol';
 import { type SnapshotManager } from '../db-host';
 import { type MetadataStore } from '../metadata';
 import { type PipelineAccessor } from '../pipeline';
-import { subtleCrypto } from '@dxos/crypto';
 
 // TODO(burdon): Factor out?
 type FeedProvider = (feedKey: PublicKey, opts?: FeedOptions) => Promise<FeedWrapper<FeedMessage>>;

@@ -6,7 +6,7 @@ import { synchronized, trackLeaks } from '@dxos/async';
 import { type DelegateInvitationCredential, type MemberInfo } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
-import { PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type NetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
@@ -20,8 +20,6 @@ import { Space, deriveIdFromSpaceKey } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 import { SnapshotManager, type SnapshotStore } from '../db-host';
 import { type MetadataStore } from '../metadata';
-import { invariant } from '@dxos/invariant';
-import { subtleCrypto } from '@dxos/crypto';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;

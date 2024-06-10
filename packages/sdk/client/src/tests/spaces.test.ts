@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -21,7 +22,6 @@ import { range } from '@dxos/util';
 import { Client } from '../client';
 import { SpaceState, getSpace } from '../echo';
 import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
-import { SpaceId } from '@dxos/keys';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {

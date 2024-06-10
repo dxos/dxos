@@ -1,6 +1,12 @@
-import { invariant } from '@dxos/invariant';
-import base32Encode from 'base32-encode';
+//
+// Copyright 2024 DXOS.org
+//
+
 import base32Decode from 'base32-decode';
+import base32Encode from 'base32-encode';
+
+import { invariant } from '@dxos/invariant';
+
 import { randomBytes } from './random-bytes';
 
 /**

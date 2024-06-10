@@ -2,12 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { inspect, type InspectOptionsStylized } from 'node:util';
-import base32Encode from 'base32-encode';
 import base32Decode from 'base32-decode';
+import base32Encode from 'base32-encode';
+import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+
 import { randomBytes } from './random-bytes';
 
 export const PUBLIC_KEY_LENGTH = 32;
