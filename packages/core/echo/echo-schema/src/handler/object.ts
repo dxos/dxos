@@ -62,7 +62,6 @@ const _create = <T extends {}>(
   }
 };
 
-// TODO(dmaretskyi): UUID v8.
 const _generateId = () => ulid();
 
 /**
