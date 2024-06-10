@@ -25,7 +25,7 @@ import {
   runNode,
 } from '../plan';
 import { REDIS_PORT, createRedisRpcPort, WebSocketRedisProxy, createRedisReadableStream } from '../redis';
-import { PERFETTO_EVENTS, registerPerfettoTracer, writeEventStreamToAFile } from '../tracing';
+import { writeEventStreamToAFile } from '../tracing';
 import { ReadableMuxer } from '../tracing/readable-muxer';
 
 // TODO(mykola): Unify with ReplicatorEnv.
@@ -95,8 +95,8 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     await this._redisSub.config('SET', 'notify-keyspace-events', 'AKE');
 
     // Register perfetto tracing for orchestrator.
-    registerPerfettoTracer();
-    this.perfettoEventsStream.pushStream(PERFETTO_EVENTS.stream);
+    // registerPerfettoTracer();
+    // this.perfettoEventsStream.pushStream(PERFETTO_EVENTS.stream);
 
     writeEventStreamToAFile({
       stream: this.perfettoEventsStream.readable,
