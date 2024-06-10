@@ -95,7 +95,7 @@ export class Serializer {
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      loadedObjects.push(...(await database.automerge.batchLoadObjects(chunk)));
+      loadedObjects.push(...(await database.batchLoadObjects(chunk)));
     }
 
     const data = {

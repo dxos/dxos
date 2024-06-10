@@ -164,7 +164,7 @@ describe('Serializer', () => {
       graph.runtimeSchemaRegistry.registerSchema(Contact);
 
       await new Serializer().import(db, data);
-      expect(db.objects).to.have.length(1);
+      expect((await db.query().run()).objects).to.have.length(1);
 
       const {
         objects: [contact],
