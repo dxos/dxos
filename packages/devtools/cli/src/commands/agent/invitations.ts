@@ -7,7 +7,6 @@ import chalk from 'chalk';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 import { table } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { type CancellableInvitation } from '@dxos/client-protocol';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -28,7 +27,7 @@ export default class Share extends BaseCommand<typeof Share> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       if (!client.halo.identity.get()) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};

@@ -8,7 +8,6 @@ import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
 import { hostInvitation } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base';
@@ -42,7 +41,7 @@ export default class Share extends BaseCommand<typeof Share> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = client.halo.share({
         authMethod,

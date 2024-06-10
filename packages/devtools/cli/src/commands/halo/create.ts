@@ -4,7 +4,6 @@
 
 import { Args, Flags } from '@oclif/core';
 
-import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base';
@@ -28,7 +27,7 @@ export default class Create extends BaseCommand<typeof Create> {
     const { managedAgent, deviceLabel } = this.flags;
 
     return await this.execWithClient(
-      async (client: Client) => {
+      async ({ client }) => {
         let identity = client.halo.identity.get();
         if (identity) {
           this.error('Identity already initialized.');

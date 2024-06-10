@@ -48,7 +48,7 @@ export class EchoReplicant {
 
   async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
     this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
-    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+    this._db.graph.schemaRegistry.registerSchema(Text);
 
     log.trace('dxos.echo-replicant.createDatabase', { spaceKey });
     return {
@@ -59,7 +59,7 @@ export class EchoReplicant {
 
   async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
     this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
-    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+    this._db.graph.schemaRegistry.registerSchema(Text);
 
     log.trace('dxos.echo-replicant.openDatabase', { spaceKey });
     return {

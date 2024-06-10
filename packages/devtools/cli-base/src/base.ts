@@ -531,9 +531,9 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    */
   // TODO(burdon): Convert most commands to work with this.
   async execWithSpace<T>(
-    callback: (props: { client: Client; space: Space }) => Promise<T | undefined>,
+    callback: (props: { client: Client; space: Space }) => Promise<T | void>,
     options: { spaceKeys?: string[]; all?: boolean; types?: S.Schema<any>[]; verbose?: boolean } = {},
-  ): Promise<T[] | undefined> {
+  ): Promise<T[] | void> {
     const client = await this.getClient();
     await this.onClientInit(client);
 
@@ -551,8 +551,8 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
       // TODO(burdon): Factor out.
       if (options.types) {
         for (const type of options.types) {
-          if (!space.db.graph.runtimeSchemaRegistry.hasSchema(type)) {
-            space.db.graph.runtimeSchemaRegistry.registerSchema(type as any);
+          if (!space.db.graph.schemaRegistry.hasSchema(type)) {
+            space.db.graph.schemaRegistry.registerSchema(type as any);
           }
         }
       }
@@ -572,9 +572,9 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
    * Convenience function to wrap command passing in client object.
    */
   async execWithClient<T>(
-    callback: (client: Client) => Promise<T | undefined>,
+    callback: (params: { client: Client }) => Promise<T | void>,
     options: { halo?: boolean } = { halo: true },
-  ): Promise<T | undefined> {
+  ): Promise<T | void> {
     const client = await this.getClient();
 
     if (options.halo && !client.halo.identity.get()) {
@@ -584,7 +584,7 @@ export abstract class AbstractBaseCommand<T extends typeof Command = any> extend
 
     await this.onClientInit(client);
 
-    const value = await callback(client);
+    const value = await callback({ client });
     await client.destroy();
     return value;
   }

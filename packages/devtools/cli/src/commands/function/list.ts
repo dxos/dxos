@@ -18,7 +18,7 @@ export default class List extends BaseCommand<typeof List> {
   static override description = 'List functions.';
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client) => {
+    return await this.execWithClient(async ({ client }) => {
       // TODO(dmaretskyi): Move into system service?
       const host = await client.services.services.DevtoolsHost!;
       const config = new Config(JSON.parse((await host.getConfig()).config));

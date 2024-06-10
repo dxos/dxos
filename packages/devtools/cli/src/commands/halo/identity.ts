@@ -4,8 +4,6 @@
 
 import chalk from 'chalk';
 
-import { type Client } from '@dxos/client';
-
 import { BaseCommand } from '../../base';
 
 export default class Identity extends BaseCommand<typeof Identity> {
@@ -14,7 +12,7 @@ export default class Identity extends BaseCommand<typeof Identity> {
   static override aliases = ['halo:id'];
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const identity = client.halo.identity.get();
       if (!identity) {
         // TODO(burdon): Error if called twice with no halo.

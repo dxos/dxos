@@ -6,7 +6,6 @@ import { Flags, ux } from '@oclif/core';
 
 import { table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
 import { ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/client/echo';
 import { getTypename } from '@dxos/echo-schema';
 
@@ -25,7 +24,7 @@ export default class Query extends BaseCommand<typeof Query> {
   static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
       const { objects } = await space.db.query(filter).run();

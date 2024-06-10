@@ -4,7 +4,6 @@
 
 import { asyncTimeout } from '@dxos/async';
 import { printDevices, TABLE_FLAGS, IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
 
@@ -17,7 +16,7 @@ export default class List extends BaseCommand<typeof List> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       const devices = client.halo.devices.get();
       printDevices(devices, this.flags);

@@ -6,8 +6,6 @@ import { Flags } from '@oclif/core';
 import { render } from 'ink';
 import React from 'react';
 
-import { type Client } from '@dxos/client';
-
 import { BaseCommand } from '../../base';
 import { App } from '../../components';
 
@@ -25,7 +23,7 @@ export default class Status extends BaseCommand<typeof Status> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const { waitUntilExit } = render(<App client={client} interval={this.flags.interval} />);
       await waitUntilExit();
     });

@@ -3,7 +3,6 @@
 //
 
 import { mapMembers, printMembers, TABLE_FLAGS, ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
 
@@ -17,7 +16,7 @@ export default class Members extends BaseCommand<typeof Members> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       const members = space.members.get();
       if (this.flags.json) {

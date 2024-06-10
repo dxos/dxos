@@ -8,7 +8,6 @@ import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
 import { hostInvitation, ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { InvitationEncoder } from '@dxos/client/invitations';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 
@@ -46,7 +45,7 @@ export default class Share extends BaseCommand<typeof Share> {
 
   async run(): Promise<any> {
     const { key } = this.args;
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, key);
       const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = space!.share({

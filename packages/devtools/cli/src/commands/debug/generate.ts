@@ -6,7 +6,6 @@ import { Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
 import { ARG_SPACE_KEYS } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
@@ -52,7 +51,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     };
 
     const type = 'test';
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
         space?.db.add(create({ type, title: faker.lorem.word() }));

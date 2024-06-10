@@ -6,7 +6,6 @@ import chalk from 'chalk';
 
 import { asyncTimeout } from '@dxos/async';
 import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { BaseCommand } from '../../base';
@@ -16,7 +15,7 @@ export default class Info extends BaseCommand<typeof Info> {
   static override description = 'Show device info.';
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       // TODO(mykola): Hack to wait for identity with `client.halo.identity.wait()`.
       await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       const device = client.halo.device;

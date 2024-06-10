@@ -6,7 +6,6 @@ import { Flags } from '@oclif/core';
 
 import { sleep, Trigger } from '@dxos/async';
 import { printCredentials, mapCredentials, TABLE_FLAGS } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../../base';
 
@@ -30,7 +29,7 @@ export default class List extends BaseCommand<typeof List> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const identity = client.halo.identity;
       if (!identity) {
         this.catch('Profile not initialized.');

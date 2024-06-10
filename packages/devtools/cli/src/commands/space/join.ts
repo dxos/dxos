@@ -8,7 +8,6 @@ import inquirer from 'inquirer';
 
 import { sleep, Trigger } from '@dxos/async';
 import { acceptInvitation } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 
 import { BaseCommand } from '../../base';
 
@@ -26,11 +25,11 @@ export default class Join extends BaseCommand<typeof Join> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       let { invitation: encoded, secret } = this.flags;
       if (!encoded) {
         const { invitation } = await inquirer.prompt<{ invitation: string }>({
-          name: 'invitaiton',
+          name: 'invitation',
           message: 'Invitation',
         });
         encoded = invitation;

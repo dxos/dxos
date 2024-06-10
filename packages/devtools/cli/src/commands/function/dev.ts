@@ -50,7 +50,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       require(requirePath);
     }
 
-    await this.execWithClient(async (client) => {
+    await this.execWithClient(async ({ client }) => {
       // TODO(burdon): Standards?
       client.addSchema(...FUNCTION_SCHEMA);
 

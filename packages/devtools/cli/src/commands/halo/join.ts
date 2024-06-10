@@ -8,7 +8,6 @@ import inquirer from 'inquirer';
 
 import { asyncTimeout, Trigger } from '@dxos/async';
 import { acceptInvitation } from '@dxos/cli-base';
-import { type Client } from '@dxos/client';
 import { type Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { DeviceType } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -38,7 +37,7 @@ export default class Join extends BaseCommand<typeof Join> {
   async run(): Promise<any> {
     let { invitation: encoded, secret, 'device-label': deviceLabel, 'managed-agent': managedAgent } = this.flags;
 
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       if (client.halo.identity.get()) {
         this.catch(chalk`{red Profile already initialized.}`);
       }
