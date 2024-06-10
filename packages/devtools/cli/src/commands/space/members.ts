@@ -2,12 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux } from '@oclif/core';
+import { mapMembers, printMembers, TABLE_FLAGS, ARG_SPACE_KEYS } from '@dxos/cli-base';
 
-import { type Client } from '@dxos/client';
-
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
-import { mapMembers, printMembers } from '../../util';
+import { BaseCommand } from '../../base';
 
 export default class Members extends BaseCommand<typeof Members> {
   static override enableJsonFlag = true;
@@ -15,11 +12,11 @@ export default class Members extends BaseCommand<typeof Members> {
   static override args = ARG_SPACE_KEYS;
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags(),
+    ...TABLE_FLAGS,
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       const members = space.members.get();
       if (this.flags.json) {

@@ -4,7 +4,7 @@
 
 import { Stream } from '@dxos/codec-protobuf';
 import { type SignalManager } from '@dxos/messaging';
-import { type NetworkManager } from '@dxos/network-manager';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type NetworkService,
   type NetworkStatus,
@@ -13,7 +13,7 @@ import {
 
 export class NetworkServiceImpl implements NetworkService {
   constructor(
-    private readonly networkManager: NetworkManager,
+    private readonly networkManager: SwarmNetworkManager,
     private readonly signalManager: SignalManager,
   ) {}
 

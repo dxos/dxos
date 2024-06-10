@@ -45,6 +45,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",

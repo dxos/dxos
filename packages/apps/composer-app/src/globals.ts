@@ -56,6 +56,7 @@ const upgrade035 = async () => {
       if (space.state.get() !== SpaceState.READY) {
         return;
       }
+
       const queries = await Promise.all(dxosTypes.map((type) => space.db.query(Filter.schema(type as any)).run()));
       let spaceFolder = (await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run()).objects[0];
       if (space === defaultSpace) {

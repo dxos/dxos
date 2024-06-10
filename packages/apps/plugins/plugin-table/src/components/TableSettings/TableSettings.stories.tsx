@@ -31,8 +31,8 @@ const Story = () => {
     const graph = (client as any)._graph as Hypergraph;
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
-    if (!graph.runtimeSchemaRegistry.hasSchema(TableType)) {
-      graph.runtimeSchemaRegistry.registerSchema(TableType);
+    if (!graph.schemaRegistry.hasSchema(TableType)) {
+      graph.schemaRegistry.registerSchema(TableType);
     }
 
     setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));

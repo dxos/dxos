@@ -15,7 +15,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type NetworkManager } from '@dxos/network-manager';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -35,10 +35,10 @@ import {
 import {
   DeviceInvitationProtocol,
   InvitationsHandler,
+  InvitationsManager,
   SpaceInvitationProtocol,
   type InvitationProtocol,
 } from '../invitations';
-import { InvitationsManager } from '../invitations/invitations-manager';
 import { DataSpaceManager, type DataSpaceManagerRuntimeParams, type SigningContext } from '../spaces';
 
 export type ServiceContextRuntimeParams = IdentityManagerRuntimeParams &
@@ -81,7 +81,7 @@ export class ServiceContext extends Resource {
   constructor(
     public readonly storage: Storage,
     public readonly level: LevelDB,
-    public readonly networkManager: NetworkManager,
+    public readonly networkManager: SwarmNetworkManager,
     public readonly signalManager: SignalManager,
     public readonly _runtimeParams?: ServiceContextRuntimeParams,
   ) {

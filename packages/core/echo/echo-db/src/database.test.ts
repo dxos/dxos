@@ -5,7 +5,16 @@
 import { expect } from 'chai';
 import { inspect } from 'node:util';
 
-import { create, Expando, getMeta, getSchema, getType, type ReactiveObject } from '@dxos/echo-schema';
+import {
+  create,
+  Expando,
+  getMeta,
+  getSchema,
+  getType,
+  type ReactiveObject,
+  dangerouslyAssignProxyId,
+} from '@dxos/echo-schema';
+import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
@@ -206,6 +215,21 @@ describe('Database', () => {
     ).to.have.length(2);
   });
 
+  test('Database works with old PublicKey IDs and new Ulid IDs', async () => {
+    const { db } = await builder.createDatabase();
+    const obj = db.add(create(Expando, { string: 'foo' })); // Ulid by default
+
+    // Old format
+    const oldId = PublicKey.random().toHex();
+    const reactiveObjWithOldId = create(Expando, { string: 'foo' });
+    dangerouslyAssignProxyId(reactiveObjWithOldId, oldId);
+    const expandoWithOldId = db.add(reactiveObjWithOldId);
+
+    // get by id
+    expect(db.getObjectById(obj.id)).to.eq(obj);
+    expect(db.getObjectById(oldId)).to.eq(expandoWithOldId);
+  });
+
   describe('references', () => {
     test('add with a reference to echo reactive proxy', async () => {
       const { db: database } = await createDbWithTypes();
@@ -301,7 +325,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.registerSchema(Task, Contact, Container, Todo);
+    graph.schemaRegistry.registerSchema(Task, Contact, Container, Todo);
     return { db, graph };
   };
 

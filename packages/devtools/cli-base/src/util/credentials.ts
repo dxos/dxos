@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ux } from '@oclif/core';
-
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { maybeTruncateKey } from './keys';
@@ -18,24 +16,24 @@ export const mapCredentials = (credentials: Credential[], truncateKeys = false) 
 };
 
 export const printCredentials = (credentials: Credential[], flags = {}) => {
-  ux.table(
-    mapCredentials(credentials, true),
-    {
-      id: {
-        header: 'id',
-      },
-      issuer: {
-        header: 'issuer',
-      },
-      subject: {
-        header: 'subject',
-      },
-      type: {
-        header: 'type',
-      },
-    },
-    {
-      ...flags,
-    },
-  );
+  // ux.table(
+  //   mapCredentials(credentials, true),
+  //   {
+  //     id: {
+  //       header: 'id',
+  //     },
+  //     issuer: {
+  //       header: 'issuer',
+  //     },
+  //     subject: {
+  //       header: 'subject',
+  //     },
+  //     type: {
+  //       header: 'type',
+  //     },
+  //   },
+  //   {
+  //     ...flags,
+  //   },
+  // );
 };

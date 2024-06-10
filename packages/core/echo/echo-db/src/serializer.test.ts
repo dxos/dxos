@@ -149,7 +149,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Contact);
+      graph.schemaRegistry.registerSchema(Contact);
       const contact = create(Contact, { name });
       db.add(contact);
       await db.flush();
@@ -161,10 +161,10 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Contact);
+      graph.schemaRegistry.registerSchema(Contact);
 
       await new Serializer().import(db, data);
-      expect(db.objects).to.have.length(1);
+      expect((await db.query().run()).objects).to.have.length(1);
 
       const {
         objects: [contact],

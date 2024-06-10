@@ -18,12 +18,6 @@ export class SpaceTimeoutError extends FriendlyError {
   }
 }
 
-export class PublisherConnectionError extends FriendlyError {
-  constructor() {
-    super('Error while connecting to kube publisher.');
-  }
-}
-
 export class IdentityWaitTimeoutError extends FriendlyError {
   constructor() {
     super('Timeout waiting for identity.');
