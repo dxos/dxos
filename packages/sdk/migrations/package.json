@@ -20,9 +20,13 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {},

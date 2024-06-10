@@ -38,13 +38,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/automerge"
-    },
-    {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/echo/echo-protocol"
     },
     {
       "path": "../../core/echo/echo-schema"
@@ -54,9 +48,6 @@
     },
     {
       "path": "../../core/mesh/rpc-tunnel"
-    },
-    {
-      "path": "../../core/protocols"
     },
     {
       "path": "../../devtools/devtools"

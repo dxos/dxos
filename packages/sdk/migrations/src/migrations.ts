@@ -6,16 +6,16 @@ import { type Space, create, SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { type MaybePromise } from '@dxos/util';
 
-// TODO(burdon): Merge with successor to serialization mechanism in braneframe/types.
+import { MigrationBuilder } from './migration-builder';
 
 export type MigrationContext = {
   space: Space;
+  builder: MigrationBuilder;
 };
 
 export type Migration = {
-  version: string | number;
-  up: (context: MigrationContext) => MaybePromise<void>;
-  down: (context: MigrationContext) => MaybePromise<void>;
+  version: string;
+  next: (context: MigrationContext) => MaybePromise<void>;
 };
 
 export class Migrations {
@@ -56,16 +56,13 @@ export class Migrations {
     if (targetIndex > currentIndex) {
       const migrations = this.migrations.slice(currentIndex, targetIndex);
       for (const migration of migrations) {
-        await migration.up({ space });
-        space.properties[this.versionProperty] = migration.version;
-      }
-    } else {
-      const migrations = this.migrations.slice(targetIndex, currentIndex);
-      migrations.reverse();
-      for (const migration of migrations) {
-        await migration.down({ space });
-        const index = this.migrations.indexOf(migration);
-        space.properties[this.versionProperty] = this.migrations[index - 1]?.version;
+        const builder = new MigrationBuilder(space);
+        await migration.next({ space, builder });
+        builder.changeProperties((propertiesStructure) => {
+          invariant(this.versionProperty, 'Migrations namespace not set');
+          propertiesStructure.data[this.versionProperty] = migration.version;
+        });
+        await builder._commit();
       }
     }
     this._state.running.splice(this._state.running.indexOf(space.key.toHex()), 1);
