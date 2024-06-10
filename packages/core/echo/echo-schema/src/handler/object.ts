@@ -62,7 +62,7 @@ const _create = <T extends {}>(
   }
 };
 
-const generateId = () => ulid();
+export const generateEchoId = () => ulid();
 
 /**
  * Set ID on ECHO object targets during creation.
@@ -70,7 +70,7 @@ const generateId = () => ulid();
  */
 const setIdOnTarget = (target: any) => {
   invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
-  (obj as any).id = generateId();
+  (obj as any).id = generateEchoId();
 };
 
 const symbolMeta = Symbol.for('@dxos/meta');
