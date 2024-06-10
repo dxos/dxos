@@ -15,7 +15,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
+import { type ItemsUpdatedEvent } from './automerge';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import {
@@ -100,7 +100,7 @@ export class Hypergraph {
    */
   _lookupLink(
     ref: Reference,
-    from: EchoDatabase | AutomergeDb,
+    from: EchoDatabase,
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
     if (ref.host === undefined) {
@@ -265,7 +265,8 @@ class SpaceQuerySource implements QuerySource {
           !this._results ||
           this._results.find((result) => result.id === object.id) ||
           (this._database.automerge._objects.has(object.id) &&
-            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
+            !this._database.automerge.getObjectCoreById(object.id)!.isDeleted() &&
+            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)))
         );
       });
 
@@ -333,7 +334,7 @@ class SpaceQuerySource implements QuerySource {
         .map((core) => ({
           id: core.id,
           spaceKey: this.spaceKey,
-          object: core.rootProxy as EchoReactiveObject<any>,
+          object: this._database.getObjectById(core.id, { deleted: true }),
           resolution: {
             source: 'local',
             time: 0,

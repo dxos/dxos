@@ -6,8 +6,8 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { DynamicEchoSchema, requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { getSchema, type EchoReactiveObject } from '@dxos/echo-schema';
+import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -221,7 +221,9 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
 
   if (filter.type) {
     const type = core.getType();
-    const dynamicSchemaTypename = legacyGetDynamicSchemaTypename(core);
+
+    /** @deprecated TODO(mykola): Remove */
+    const dynamicSchemaTypename = type?.itemId;
 
     // Separate branch for objects with dynamic schema and typename filters.
     // TODO(dmaretskyi): Better way to check if schema is dynamic.
@@ -263,7 +265,12 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
   }
 
   // Untracked will prevent signals in the callback from being subscribed to.
-  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(core.rootProxy))) {
+  if (
+    filter.predicate &&
+    !compositeRuntime.untracked(() =>
+      filter.predicate!(core.database?._dbApi.getObjectById(core.id, { deleted: true })),
+    )
+  ) {
     return false;
   }
 
@@ -291,20 +298,6 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
     return true;
   }
 };
-
-/**
- * @deprecated
- */
-// TODO(dmaretskyi): Cleanup.
-const legacyGetDynamicSchemaTypename = (core: AutomergeObjectCore): string | undefined =>
-  compositeRuntime.untracked(() => {
-    const object: any = core.rootProxy;
-    const schema = getSchema(object);
-    if (schema instanceof DynamicEchoSchema) {
-      return schema.id;
-    }
-    return undefined;
-  });
 
 /**
  * @deprecated

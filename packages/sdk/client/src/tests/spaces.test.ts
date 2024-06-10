@@ -118,7 +118,7 @@ describe('Spaces', () => {
       const space = await spaceTrigger.wait({ timeout: 500 });
       await space.waitUntilReady();
 
-      const obj = await space.db.automerge.loadObjectById(objectId)!;
+      const obj = await space.db.loadObjectById(objectId)!;
       expect(obj).to.exist;
     }
 
@@ -509,7 +509,7 @@ describe('Spaces', () => {
       const done = new Trigger();
 
       await waitForExpect(async () => {
-        expect(await guestSpace.db.automerge.loadObjectById(hostRoot.id)).not.to.be.undefined;
+        expect(await guestSpace.db.loadObjectById(hostRoot.id)).not.to.be.undefined;
       });
       const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
