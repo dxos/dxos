@@ -2,14 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import {
-  Event,
-  type ReadOnlyEvent,
-  synchronized,
-  asyncTimeout,
-  type UnsubscribeCallback,
-  TimeoutError,
-} from '@dxos/async';
+import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type EchoReactiveObject, getSchema, type ReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -43,10 +36,18 @@ export interface EchoDatabase {
   get graph(): Hypergraph;
 
   getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
+
+  /**
+   * @deprecated Awaiting API review.
+   */
   loadObjectById<T extends {} = any>(
     id: string,
     options?: { timeout?: number },
   ): Promise<EchoReactiveObject<T> | undefined>;
+
+  /**
+   * @deprecated Awaiting API review.
+   */
   batchLoadObjects<T extends {} = any>(
     ids: string[],
     options?: { inactivityTimeout?: number },
@@ -154,91 +155,53 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   getObjectById(id: string, { deleted = false } = {}): EchoReactiveObject<any> | undefined {
-    const objCore = this._automerge.getObjectCoreById(id);
-    if (!objCore || (objCore.isDeleted() && !deleted)) {
+    const core = this._automerge.getObjectCoreById(id);
+    if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
 
-    const root = defaultMap(this._rootProxies, objCore, () => initEchoReactiveObjectRootProxy(objCore));
-    invariant(isReactiveObject(root));
-    return root as any;
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    invariant(isReactiveObject(object));
+    return object;
   }
 
-  // TODO(Mykola): Reconcile with `getObjectById`.
+  // TODO(Mykola): Reconcile with `getObjectById` and 'batchLoadObjects'.
+  /**
+   * @deprecated Awaiting API review.
+   */
   async loadObjectById<T = any>(
     objectId: string,
     { timeout }: { timeout?: number } = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
-    // Check if deleted.
-    if (this._automerge._objects.get(objectId)?.isDeleted()) {
-      return Promise.resolve(undefined);
+    const core = await this._automerge.loadObjectCoreById(objectId, { timeout });
+
+    if (!core || core?.isDeleted()) {
+      return undefined;
     }
 
-    const obj = this.getObjectById(objectId);
-    if (obj) {
-      return Promise.resolve(obj);
-    }
-    this._automerge._automergeDocLoader.loadObjectDocument(objectId);
-    const waitForUpdate = this._automerge._updateEvent
-      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
-      .then(() => this.getObjectById(objectId));
-
-    return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    invariant(isReactiveObject(object));
+    return object;
   }
 
+  /**
+   * @deprecated Awaiting API review.
+   */
   async batchLoadObjects(
     objectIds: string[],
     { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
   ): Promise<Array<EchoReactiveObject<any> | undefined>> {
-    const result = new Array(objectIds.length);
-    const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
-    for (let i = 0; i < objectIds.length; i++) {
-      const objectId = objectIds[i];
-      const object = this.getObjectById(objectId);
-      if (this._automerge._objects.get(objectId)?.isDeleted()) {
-        result[i] = undefined;
-      } else if (object != null) {
-        result[i] = object;
-      } else {
-        objectsToLoad.push({ id: objectId, resultIndex: i });
+    const cores = await this._automerge.batchLoadObjectCores(objectIds, { inactivityTimeout });
+    const objects = cores.map((core) => {
+      if (!core || core.isDeleted()) {
+        return undefined;
       }
-    }
-    if (objectsToLoad.length === 0) {
-      return result;
-    }
-    const idsToLoad = objectsToLoad.map((v) => v.id);
-    this.automerge._automergeDocLoader.loadObjectDocument(idsToLoad);
 
-    return new Promise((resolve, reject) => {
-      let unsubscribe: UnsubscribeCallback | null = null;
-      let inactivityTimeoutTimer: any | undefined;
-      const scheduleInactivityTimeout = () => {
-        inactivityTimeoutTimer = setTimeout(() => {
-          unsubscribe?.();
-          reject(new TimeoutError(inactivityTimeout));
-        }, inactivityTimeout);
-      };
-      unsubscribe = this._automerge._updateEvent.on(({ itemsUpdated }) => {
-        const updatedIds = itemsUpdated.map((v) => v.id);
-        for (let i = objectsToLoad.length - 1; i >= 0; i--) {
-          const objectToLoad = objectsToLoad[i];
-          if (updatedIds.includes(objectToLoad.id)) {
-            clearTimeout(inactivityTimeoutTimer);
-            result[objectToLoad.resultIndex] = this._automerge._objects.get(objectToLoad.id)?.isDeleted()
-              ? undefined
-              : this.getObjectById(objectToLoad.id)!;
-            objectsToLoad.splice(i, 1);
-            scheduleInactivityTimeout();
-          }
-        }
-        if (objectsToLoad.length === 0) {
-          clearTimeout(inactivityTimeoutTimer);
-          unsubscribe?.();
-          resolve(result);
-        }
-      });
-      scheduleInactivityTimeout();
+      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+      invariant(isReactiveObject(object));
+      return object;
     });
+    return objects;
   }
 
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {

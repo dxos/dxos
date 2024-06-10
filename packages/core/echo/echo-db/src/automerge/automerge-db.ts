@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Event, Trigger, UpdateScheduler, asyncTimeout, synchronized } from '@dxos/async';
+import {
+  Event,
+  Trigger,
+  type UnsubscribeCallback,
+  UpdateScheduler,
+  asyncTimeout,
+  synchronized,
+  TimeoutError,
+} from '@dxos/async';
 import { getHeads } from '@dxos/automerge/automerge';
 import { type DocHandle, type DocHandleChangePayload, type DocumentId } from '@dxos/automerge/automerge-repo';
 import { Context, ContextDisposedError } from '@dxos/context';
@@ -181,6 +189,78 @@ export class AutomergeDb {
 
     invariant(objCore instanceof AutomergeObjectCore);
     return objCore;
+  }
+
+  // TODO(Mykola): Reconcile with `getObjectById`.
+  async loadObjectCoreById(
+    objectId: string,
+    { timeout }: { timeout?: number } = {},
+  ): Promise<AutomergeObjectCore | undefined> {
+    const core = this.getObjectCoreById(objectId);
+    if (core) {
+      return Promise.resolve(core);
+    }
+    this._automergeDocLoader.loadObjectDocument(objectId);
+    const waitForUpdate = this._updateEvent
+      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId))
+      .then(() => this.getObjectCoreById(objectId));
+
+    return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
+  }
+
+  async batchLoadObjectCores(
+    objectIds: string[],
+    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+  ): Promise<(AutomergeObjectCore | undefined)[]> {
+    const result: (AutomergeObjectCore | undefined)[] = new Array(objectIds.length);
+    const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
+    for (let i = 0; i < objectIds.length; i++) {
+      const objectId = objectIds[i];
+      const core = this.getObjectCoreById(objectId);
+      if (this._objects.get(objectId)?.isDeleted()) {
+        result[i] = undefined;
+      } else if (core != null) {
+        result[i] = core;
+      } else {
+        objectsToLoad.push({ id: objectId, resultIndex: i });
+      }
+    }
+    if (objectsToLoad.length === 0) {
+      return result;
+    }
+    const idsToLoad = objectsToLoad.map((v) => v.id);
+    this._automergeDocLoader.loadObjectDocument(idsToLoad);
+
+    return new Promise((resolve, reject) => {
+      let unsubscribe: UnsubscribeCallback | null = null;
+      let inactivityTimeoutTimer: any | undefined;
+      const scheduleInactivityTimeout = () => {
+        inactivityTimeoutTimer = setTimeout(() => {
+          unsubscribe?.();
+          reject(new TimeoutError(inactivityTimeout));
+        }, inactivityTimeout);
+      };
+      unsubscribe = this._updateEvent.on(({ itemsUpdated }) => {
+        const updatedIds = itemsUpdated.map((v) => v.id);
+        for (let i = objectsToLoad.length - 1; i >= 0; i--) {
+          const objectToLoad = objectsToLoad[i];
+          if (updatedIds.includes(objectToLoad.id)) {
+            clearTimeout(inactivityTimeoutTimer);
+            result[objectToLoad.resultIndex] = this._objects.get(objectToLoad.id)?.isDeleted()
+              ? undefined
+              : this.getObjectCoreById(objectToLoad.id)!;
+            objectsToLoad.splice(i, 1);
+            scheduleInactivityTimeout();
+          }
+        }
+        if (objectsToLoad.length === 0) {
+          clearTimeout(inactivityTimeoutTimer);
+          unsubscribe?.();
+          resolve(result);
+        }
+      });
+      scheduleInactivityTimeout();
+    });
   }
 
   addCore(core: AutomergeObjectCore) {
