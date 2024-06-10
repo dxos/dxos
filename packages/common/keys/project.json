@@ -1,25 +1,20 @@
 {
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "name": "keys",
-  "tags": [
-    "scope:common"
-  ],
+  "tags": ["scope:common"],
   "sourceRoot": "packages/common/keys/src",
   "projectType": "library",
   "targets": {
     "build": {},
     "compile": {
       "options": {
-        "entryPoints": [
-          "packages/common/keys/src/index.ts"
-        ],
+        "entryPoints": ["packages/common/keys/src/index.ts"],
+        "bundlePackages": ["base32-encode", "base32-decode", "to-data-view"],
         "injectGlobals": false
       }
     },
     "lint": {},
     "vitest": {}
   },
-  "implicitDependencies": [
-    "esbuild"
-  ]
+  "implicitDependencies": ["esbuild"]
 }

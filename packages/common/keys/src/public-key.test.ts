@@ -61,11 +61,9 @@ describe('PublicKey', () => {
     expect(PublicKey.equals(key, PublicKey.from(key.toHex()))).to.be.true;
   });
 
-  test.only('base32', () => {
+  test('base32', () => {
     const key = PublicKey.randomOfLength(20); // space keys will be cut to first 20 bytes of sha-256 hash
     const encoded = key.toMultibase32();
-
-    console.log('encoded', encoded);
 
     expect(PublicKey.fromMultibase32(encoded).toHex()).to.equal(key.toHex());
   });
