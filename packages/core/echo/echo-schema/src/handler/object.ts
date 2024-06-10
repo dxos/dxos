@@ -92,6 +92,11 @@ export const getTargetMeta = (object: any): ObjectMeta => {
   return metadata;
 };
 
+/**
+ * Unsafe method to override id for debugging/testing and migration purposes.
+ *
+ * @deprecated
+ */
 export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
   (getProxyHandlerSlot(obj).target as any).id = id;
 };
