@@ -70,11 +70,11 @@ export class ReplicationTestPlan implements TestPlan<ReplicationTestSpec, Replic
     return {
       platform: 'chromium',
 
-      clientReplicants: 1,
+      clientReplicants: 5,
 
-      numberOfObjects: 100,
+      numberOfObjects: 10,
       objectSizeLimit: 2000,
-      numberOfInsertions: 1000,
+      numberOfInsertions: 100,
       insertionSize: 10,
     };
   }
