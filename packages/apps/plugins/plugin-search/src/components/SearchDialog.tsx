@@ -22,8 +22,8 @@ import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-u
 import { SearchList, type SearchListItemProps } from '@dxos/react-ui-searchlist';
 import { descriptionText, mx } from '@dxos/react-ui-theme';
 
-import { useSearchResults } from '../context';
 import { SEARCH_PLUGIN } from '../meta';
+import { useSearchResults } from '../search';
 
 type SearchListResultProps = {
   node: Node;

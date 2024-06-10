@@ -11,7 +11,7 @@ import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
-import { filterObjectsSync } from '../../search';
+import { filterObjectsSync } from '../../search-sync';
 
 faker.seed(1);
 

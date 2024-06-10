@@ -22,7 +22,7 @@ import {
 import { SearchDialog, SearchMain } from './components';
 import { SearchContextProvider } from './context';
 import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
-import type { SearchResult } from './search';
+import type { SearchResult } from './search-sync';
 import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 

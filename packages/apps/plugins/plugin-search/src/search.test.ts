@@ -9,7 +9,7 @@ import { create, Expando } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 import { describe, test } from '@dxos/test';
 
-import { filterObjectsSync } from './search';
+import { filterObjectsSync } from './search-sync';
 
 faker.seed(1);
 
