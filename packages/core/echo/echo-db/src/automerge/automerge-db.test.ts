@@ -61,7 +61,7 @@ describe('AutomergeDb', () => {
 
       const document = createExpando({ text: createTextObject('Hello, world!') });
       const peer = await createPeerInSpaceWithObject(document);
-      const peerDocument = (await peer.db.automerge.loadObjectById(document.id)!) as Expando;
+      const peerDocument = (await peer.db.loadObjectById(document.id)!) as Expando;
       expect(peerDocument).not.to.be.undefined;
 
       let isFirstInvocation = true;
@@ -118,7 +118,7 @@ describe('AutomergeDb', () => {
       const oldObject = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(oldObject);
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
-      const beforeUpdate = await peer.db._automerge.loadObjectById(oldObject.id);
+      const beforeUpdate = await peer.db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
       await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
       const afterUpdate = peer.db.getObjectById(oldObject.id);
@@ -132,7 +132,7 @@ describe('AutomergeDb', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
       });
-      const beforeUpdate = (await peer.db.automerge.loadObjectById(originalObj.id))!;
+      const beforeUpdate = (await peer.db.loadObjectById(originalObj.id))!;
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(peer).spaceRootHandle.docSync().links[beforeUpdate.id],
       );
@@ -198,7 +198,7 @@ describe('AutomergeDb', () => {
       const peer = await createPeerInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(peer).spaceRootHandle;
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
-      expect((await (peer.db.automerge.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
+      expect((await (peer.db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
 
       const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
@@ -267,15 +267,15 @@ describe('AutomergeDb', () => {
         expect(peer.db.getObjectById(obj.id)).to.be.undefined;
       }
       for (const obj of objectsToRebind) {
-        expect(getObjectDocHandle(await peer.db.automerge.loadObjectById(obj.id)).url).to.eq(
+        expect(getObjectDocHandle(await peer.db.loadObjectById(obj.id)).url).to.eq(
           (await newRootDocHandle.doc()).links[obj.id],
         );
       }
       for (const obj of objectsToAdd) {
-        expect(getObjectDocHandle(await peer.db.automerge.loadObjectById(obj.id)).url).to.eq(newRootDocHandle.url);
+        expect(getObjectDocHandle(await peer.db.loadObjectById(obj.id)).url).to.eq(newRootDocHandle.url);
       }
       for (const obj of [...loadedLinks]) {
-        expect(getObjectDocHandle(await peer.db.automerge.loadObjectById(obj.id))).not.to.be.undefined;
+        expect(getObjectDocHandle(await peer.db.loadObjectById(obj.id))).not.to.be.undefined;
       }
       for (const obj of partiallyLoadedLinks) {
         await waitObjectLoaded(peer, obj, { triggerLoading: false });
@@ -293,7 +293,7 @@ describe('AutomergeDb', () => {
       const objectId = object.id;
       {
         const testPeer = await testBuilder.createPeer(spaceKey, docId);
-        await testPeer.db.automerge.loadObjectById(objectId);
+        await testPeer.db.loadObjectById(objectId);
         const object = testPeer.db.getObjectById(objectId);
         expect(object).not.to.be.undefined;
         expect((object as any).title).to.eq('first object');
@@ -303,7 +303,7 @@ describe('AutomergeDb', () => {
     test('load object', async () => {
       const object = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(object);
-      await peer.db.automerge.loadObjectById(object.id);
+      await peer.db.loadObjectById(object.id);
       const loadedObject = peer.db.getObjectById(object.id);
       expect(loadedObject).to.deep.eq(object);
     });
@@ -313,7 +313,7 @@ describe('AutomergeDb', () => {
       const peer = await createPeerInSpaceWithObject(object);
       let threw = false;
       try {
-        await peer.db.automerge.batchLoadObjects(['123', object.id], {
+        await peer.db.batchLoadObjects(['123', object.id], {
           inactivityTimeout: 20,
         });
       } catch (e) {
@@ -346,7 +346,7 @@ describe('AutomergeDb', () => {
         testPeer.db.add(object);
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
         expect(loaded.nested?.value).to.be.undefined;
         expect(await loadObjectReferences(loaded, (o) => o.nested?.value)).to.eq(nestedValue);
       });
@@ -358,7 +358,7 @@ describe('AutomergeDb', () => {
         testPeer.db.add(object);
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
         expect(loaded.nested?.value).to.be.undefined;
         const [foo, bar] = await loadObjectReferences(loaded, (o) => [o.foo, o.bar] as any[]);
         expect(foo.value + bar.value).to.eq(3);
@@ -371,7 +371,7 @@ describe('AutomergeDb', () => {
         testPeer.db.add(object);
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
         expect((loaded.nestedArray as any[]).every((v) => v == null)).to.be.true;
         const loadedArray = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
         expect(loadedArray.every((v) => v != null)).to.be.true;
@@ -387,7 +387,7 @@ describe('AutomergeDb', () => {
         objects.forEach((o) => testPeer.db.add(o));
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any[] = await Promise.all(objects.map((o) => restartedPeer.db.automerge.loadObjectById(o.id)));
+        const loaded: any[] = await Promise.all(objects.map((o) => restartedPeer.db.loadObjectById(o.id)));
         const loadedArrays = await loadObjectReferences(loaded, (o) => o.nestedArray as any[]);
         const mergedArrays = loadedArrays.flatMap((v) => v);
         expect(mergedArrays.length).to.eq(objects[0].nestedArray.length + objects[1].nestedArray.length);
@@ -401,7 +401,7 @@ describe('AutomergeDb', () => {
         testPeer.db.add(object);
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
         expect(await loadObjectReferences([loaded], () => loaded.nestedArray)).to.deep.eq([[]]);
       });
 
@@ -413,7 +413,7 @@ describe('AutomergeDb', () => {
         testPeer.db.remove(object.nested);
 
         const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-        const loaded: any = await restartedPeer.db.automerge.loadObjectById(object.id);
+        const loaded: any = await restartedPeer.db.loadObjectById(object.id);
         expect(loaded.nested?.value).to.be.undefined;
         let threw = false;
         try {
@@ -439,7 +439,7 @@ describe('AutomergeDb', () => {
       testPeer.db.add(object);
 
       const restartedPeer = await testBuilder.createPeer(testPeer.spaceKey, testPeer.automergeDocId);
-      const loaded = await restartedPeer.db.automerge.loadObjectById<TestSchema>(object.id);
+      const loaded = await restartedPeer.db.loadObjectById<TestSchema>(object.id);
       const loadedNested = await loadObjectReferences(loaded!, (o) => o.nested);
       const value: number = loadedNested[0].value;
       expect(value).to.eq(42);

@@ -9,6 +9,7 @@ import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
 import {
   DynamicEchoSchema,
+  type EchoReactiveObject,
   ObjectMetaSchema,
   SchemaValidator,
   StoredEchoSchema,
@@ -34,6 +35,7 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
+import { getAutomergeObjectCore } from '../automerge';
 import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
 
@@ -139,7 +141,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return this._handleStoredSchema(target, decoded);
     }
     if (decoded instanceof Reference) {
-      return this._handleStoredSchema(target, target[symbolInternals].core.lookupLink(decoded));
+      return this._handleStoredSchema(target, this.lookupLink(target, decoded));
     }
     if (Array.isArray(decoded)) {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
@@ -200,7 +202,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     let value = target[symbolInternals].core.getDecoded(fullPath);
 
     if (value instanceof Reference) {
-      value = target[symbolInternals].core.lookupLink(value);
+      value = this.lookupLink(target, value);
     }
 
     return { namespace: getNamespace(target), value, dataPath };
@@ -286,8 +288,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
       }
     } else {
-      invariant(target[symbolInternals].core.linkCache);
-      target[symbolInternals].core.linkCache.set(objectId, echoObject);
+      invariant(target[symbolInternals].linkCache);
+      target[symbolInternals].linkCache.set(objectId, echoObject);
       return new Reference(objectId);
     }
   }
@@ -457,6 +459,67 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return createReactiveProxy(metaTarget, this) as any;
   }
 
+  /**
+   * Store referenced object.
+   */
+  linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
+    const database = target[symbolInternals].core.database;
+    if (database) {
+      // TODO(dmaretskyi): Fix this.
+      if (isReactiveObject(obj) && !isEchoObject(obj)) {
+        database._dbApi.add(obj);
+      }
+
+      const core = getAutomergeObjectCore(obj);
+      if (!core.database) {
+        database._dbApi.add(obj);
+        return new Reference(core.id);
+      } else {
+        if (core.database !== database) {
+          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
+        } else {
+          return new Reference(core.id);
+        }
+      }
+    } else {
+      invariant(target[symbolInternals].linkCache);
+
+      // Can be caused not using `object(Expando, { ... })` constructor.
+      // TODO(dmaretskyi): Add better validation.
+      invariant(obj.id != null);
+
+      target[symbolInternals].linkCache.set(obj.id, obj as EchoReactiveObject<any>);
+      return new Reference(obj.id);
+    }
+  }
+
+  /**
+   * Lookup referenced object.
+   */
+  lookupLink(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
+    const database = target[symbolInternals].core.database;
+    if (database) {
+      // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
+      return database.graph._lookupLink(ref, database._dbApi, () => target[symbolInternals].core.notifyUpdate());
+    } else {
+      invariant(target[symbolInternals].linkCache);
+      return target[symbolInternals].linkCache.get(ref.itemId);
+    }
+  }
+
+  saveLinkedObjects(target: ProxyTarget): void {
+    if (!target[symbolInternals].linkCache) {
+      return;
+    }
+    if (target[symbolInternals].linkCache) {
+      for (const obj of target[symbolInternals].linkCache.values()) {
+        this.linkObject(target, obj);
+      }
+
+      target[symbolInternals].linkCache = undefined;
+    }
+  }
+
   private _arraySetLength(target: ProxyTarget, path: KeyPath, newLength: number) {
     if (newLength < 0) {
       throw new RangeError('Invalid array length');
@@ -483,7 +546,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
     const linksEncoded = deepMapValues(items, (value, recurse) => {
       if (isReactiveObject(value) as boolean) {
-        return target[symbolInternals].core.linkObject(value);
+        return this.linkObject(target, value);
       } else {
         return recurse(value);
       }
@@ -547,8 +610,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
           if (value instanceof Reference) {
-            // TODO(dmaretskyi): This will resolve to the proxy object, but we should pull out that resolution from object-core.
-            return target[symbolInternals].core.lookupLink(value);
+            return this.lookupLink(target, value);
           }
           return recurse(value);
         });

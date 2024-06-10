@@ -213,6 +213,14 @@ describe('Reactive Object with ECHO database', () => {
     }
   });
 
+  test('id is persisted after adding object to DB', async () => {
+    const { db } = await builder.createDatabase();
+    const reactiveObj = create(Expando, { string: 'foo' });
+    const echoObj = db.add(reactiveObj);
+
+    expect(echoObj.id).to.eq(reactiveObj.id);
+  });
+
   describe('queries', () => {
     test('filter by schema or typename', async () => {
       const { db, graph } = await builder.createDatabase();
