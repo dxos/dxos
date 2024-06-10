@@ -9,10 +9,10 @@ import {
   create,
   Expando,
   getMeta,
-  getProxyHandlerSlot,
   getSchema,
   getType,
   type ReactiveObject,
+  dangerouslyAssignProxyId,
 } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
@@ -222,7 +222,7 @@ describe('Database', () => {
     // Old format
     const oldId = PublicKey.random().toHex();
     const reactiveObjWithOldId = create(Expando, { string: 'foo' });
-    (getProxyHandlerSlot(reactiveObjWithOldId).target as any).id = oldId;
+    dangerouslyAssignProxyId(reactiveObjWithOldId, oldId);
     const expandoWithOldId = db.add(reactiveObjWithOldId);
 
     // get by id

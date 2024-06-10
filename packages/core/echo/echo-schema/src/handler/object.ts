@@ -11,7 +11,7 @@ import { prepareTypedTarget, TypedReactiveHandler } from './typed-handler';
 import { UntypedReactiveHandler } from './untyped-handler';
 import { getEchoObjectAnnotation } from '../annotations';
 import { Expando } from '../expando';
-import { createReactiveProxy, isValidProxyTarget, type ReactiveHandler } from '../proxy';
+import { createReactiveProxy, getProxyHandlerSlot, isValidProxyTarget, type ReactiveHandler } from '../proxy';
 import { type ExcludeId, type ObjectMeta, ObjectMetaSchema, type ReactiveObject } from '../types';
 import { defineHiddenProperty } from '../utils';
 
@@ -62,14 +62,14 @@ const _create = <T extends {}>(
   }
 };
 
-const _generateId = () => ulid();
+const generateId = () => ulid();
 
 /**
  * Set ID on ECHO objects (Schema and Expando).
  */
 const setId = <T extends {}>(obj: ExcludeId<T>) => {
   invariant(!('id' in (obj as any)), 'Object already has an `id` field, which is reserved.');
-  (obj as any).id = _generateId();
+  (obj as any).id = generateId();
 };
 
 const symbolMeta = Symbol.for('@dxos/meta');
@@ -90,4 +90,8 @@ export const getTargetMeta = (object: any): ObjectMeta => {
   const metadata = object[symbolMeta];
   invariant(metadata, 'Metadata not found.');
   return metadata;
+};
+
+export const dangerouslyAssignProxyId = <T>(obj: ReactiveObject<T>, id: string) => {
+  (getProxyHandlerSlot(obj).target as any).id = id;
 };
