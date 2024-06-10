@@ -41,7 +41,6 @@ export default class Join extends BaseCommand<typeof Join> {
         encoded = searchParams.get('spaceInvitationCode') ?? encoded; // TODO(burdon): Const.
       }
 
-      ux.stdout('');
       ux.action.start('Waiting for peer to connect');
       const done = new Trigger();
       // TODO(burdon): Error code if joining same space (don't throw!)
@@ -69,8 +68,6 @@ export default class Join extends BaseCommand<typeof Join> {
       // TODO(burdon): Race condition.
       await sleep(1000);
       const space = client.spaces.get(invitation.spaceKey!)!;
-
-      ux.stdout();
       ux.stdout(chalk`{green Joined successfully.}`);
 
       return {

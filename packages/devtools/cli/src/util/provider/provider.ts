@@ -2,6 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
+import { ux } from '@oclif/core';
+
+import { table, type TableFlags } from '@dxos/cli-base';
+
 export const KUBE_TAG = 'kube';
 
 export const DEFAULT_PROVIDER = 'digitalocean';
@@ -34,19 +38,19 @@ export const mapKubes = (kubes: KUBE[]) => {
   }));
 };
 
-export const printKubes = (kubes: KUBE[], flags = {}) => {
-  // ux.table(
-  //   mapKubes(kubes),
-  //   {
-  //     key: {
-  //       header: 'hostname',
-  //     },
-  //     ipAddress: {
-  //       header: 'ip address',
-  //     },
-  //   },
-  //   {
-  //     ...flags,
-  //   },
-  // );
+export const printKubes = (kubes: KUBE[], flags: TableFlags = {}) => {
+  ux.stdout(
+    table(
+      mapKubes(kubes),
+      {
+        key: {
+          header: 'hostname',
+        },
+        ipAddress: {
+          header: 'ip address',
+        },
+      },
+      flags,
+    ),
+  );
 };
