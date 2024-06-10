@@ -64,7 +64,6 @@ export class AutomergeDb {
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     public readonly spaceKey: PublicKey,
-    private readonly _initRootProxyIfNeeded: InitRootProxyFn,
     dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
@@ -220,9 +219,6 @@ export class AutomergeDb {
       path: ['objects', core.id],
       assignFromLocalState: true,
     });
-
-    // TODO(dmaretskyi): This should be handled in the API layer.
-    this._initRootProxyIfNeeded(core);
   }
 
   add(obj: EchoReactiveObject<any>) {

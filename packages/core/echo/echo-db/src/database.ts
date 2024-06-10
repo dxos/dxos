@@ -15,14 +15,9 @@ import { type EchoReactiveObject, getSchema, type ReactiveObject, isReactiveObje
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { defaultMap } from '@dxos/util';
 
-import {
-  type AutomergeContext,
-  AutomergeDb,
-  type AutomergeObjectCore,
-  getAutomergeObjectCore,
-  type InitRootProxyFn,
-} from './automerge';
+import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
@@ -118,13 +113,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   constructor(params: EchoDatabaseParams) {
     super();
-    const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
-      if (!this._rootProxies.has(core)) {
-        this._rootProxies.set(core, initEchoReactiveObjectRootProxy(core));
-      }
-    };
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -169,11 +159,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    if (!this._rootProxies.has(objCore)) {
-      this._rootProxies.set(objCore, initEchoReactiveObjectRootProxy(objCore));
-    }
-
-    const root = this._rootProxies.get(objCore);
+    const root = defaultMap(this._rootProxies, objCore, () => initEchoReactiveObjectRootProxy(objCore));
     invariant(isReactiveObject(root));
     return root as any;
   }
