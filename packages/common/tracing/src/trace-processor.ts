@@ -14,7 +14,6 @@ import type { AddLinkOptions } from './api';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
-import { PerfettoEvents } from './perfetto-events';
 import { RemoteMetrics, RemoteTracing } from './remote';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
@@ -83,7 +82,6 @@ export class TraceProcessor {
   public readonly diagnosticsChannel = new DiagnosticsChannel();
   public readonly remoteMetrics = new RemoteMetrics();
   public readonly remoteTracing = new RemoteTracing();
-  public readonly perfettoEvents = new PerfettoEvents();
 
   readonly subscriptions: Set<TraceSubscription> = new Set();
 
@@ -385,8 +383,6 @@ export class TracingSpan {
     this.op = params.op;
     this.attributes = params.attributes ?? {};
 
-    this._traceProcessor.perfettoEvents.begin({ name: this.name });
-
     if (params.parentCtx) {
       this._ctx = params.parentCtx.derive({
         attributes: {
@@ -411,7 +407,6 @@ export class TracingSpan {
 
   markSuccess() {
     this.endTs = performance.now();
-    this._traceProcessor.perfettoEvents.end({ name: this.name });
     this._traceProcessor._flushSpan(this);
 
     if (this._showInBrowserTimeline) {
@@ -422,7 +417,6 @@ export class TracingSpan {
   markError(err: unknown) {
     this.endTs = performance.now();
     this.error = serializeError(err);
-    this._traceProcessor.perfettoEvents.end({ name: this.name, error: this.error });
     this._traceProcessor._flushSpan(this);
 
     if (this._showInBrowserTimeline) {
