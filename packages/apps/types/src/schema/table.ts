@@ -4,7 +4,7 @@
 
 import { DynamicSchema, ref, S, TypedObject } from '@dxos/echo-schema';
 
-const TableTypePropSchema = S.partial(
+const TablePropSchema = S.partial(
   S.mutable(
     S.Struct({
       id: S.String,
@@ -17,10 +17,10 @@ const TableTypePropSchema = S.partial(
   ),
 );
 
-export type TableTypeProp = S.Schema.Type<typeof TableTypePropSchema>;
+export type TableProp = S.Schema.Type<typeof TablePropSchema>;
 
 export class TableType extends TypedObject({ typename: 'dxos.org/type/Table', version: '0.1.0' })({
   name: S.optional(S.String),
   schema: S.optional(ref(DynamicSchema)),
-  props: S.mutable(S.Array(TableTypePropSchema)),
+  props: S.mutable(S.Array(TablePropSchema)),
 }) {}
