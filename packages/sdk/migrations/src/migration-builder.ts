@@ -34,10 +34,15 @@ export class MigrationBuilder {
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
-    const docHandle = this._repo.find(this._rootDoc.links![id] as AnyDocumentId);
+    const documentId = this._rootDoc.links?.[id] as AnyDocumentId | undefined;
+    const docHandle = documentId && this._repo.find(documentId);
+    if (!docHandle) {
+      return undefined;
+    }
+
     await docHandle.whenReady();
     const doc = docHandle.docSync() as Doc<SpaceDoc>;
-    return doc.objects![id];
+    return doc.objects?.[id];
   }
 
   async migrateObject(
@@ -50,14 +55,11 @@ export class MigrationBuilder {
     }
 
     const { schema, props } = migrate(objectStructure);
-    const core = new AutomergeObjectCore();
-    core.id = id;
-    this._createObject(core, schema, props);
+    this._createObject({ id, schema, props });
   }
 
   addObject(schema: S.Schema<any>, props: any) {
-    const core = new AutomergeObjectCore();
-    this._createObject(core, schema, props);
+    const core = this._createObject({ schema, props });
     return core.id;
   }
 
@@ -102,7 +104,7 @@ export class MigrationBuilder {
   }
 
   private _buildNewRoot() {
-    const previousLinks = this._rootDoc.links!;
+    const previousLinks = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete previousLinks[id];
     }
@@ -123,7 +125,12 @@ export class MigrationBuilder {
     });
   }
 
-  private _createObject(core: AutomergeObjectCore, schema: S.Schema<any>, props: any) {
+  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
+    const core = new AutomergeObjectCore();
+    if (id) {
+      core.id = id;
+    }
+
     core.initNewObject(props);
     core.setType(requireTypeReference(schema));
     const newHandle = this._repo.create<SpaceDoc>({
@@ -139,5 +146,7 @@ export class MigrationBuilder {
       documentId: newHandle.documentId,
       heads: getHeads(newHandle.docSync()!),
     });
+
+    return core;
   }
 }
