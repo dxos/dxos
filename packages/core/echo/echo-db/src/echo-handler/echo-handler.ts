@@ -8,18 +8,18 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
 import {
-  DynamicEchoSchema,
+  createReactiveProxy,
+  defineHiddenProperty,
+  getProxyHandlerSlot,
+  isReactiveObject,
+  symbolIsProxy,
+  DynamicSchema,
   type EchoReactiveObject,
   ObjectMetaSchema,
   SchemaValidator,
-  StoredEchoSchema,
-  createReactiveProxy,
-  defineHiddenProperty,
-  isReactiveObject,
-  symbolIsProxy,
+  StoredSchema,
   type ObjectMeta,
   type ReactiveHandler,
-  getProxyHandlerSlot,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
@@ -170,15 +170,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       );
       return createReactiveProxy(newTarget, this);
     }
+
     return decoded;
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // object instanceof StoredEchoSchema requires database to lookup schema
     const database = target[symbolInternals].database;
-    if (object != null && database && object instanceof StoredEchoSchema) {
-      return database.schema.register(object);
+    if (object != null && database && object instanceof StoredSchema) {
+      return database.schema.registerSchema(object);
     }
+
     return object;
   }
 
@@ -307,7 +309,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
     );
@@ -341,7 +343,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schema.getById(typeReference.itemId);
+    return target[symbolInternals].database.schema.getSchemaById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
@@ -650,7 +652,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (value == null || Array.isArray(value)) {
     return;
   }
-  if (value instanceof DynamicEchoSchema) {
+  if (value instanceof DynamicSchema) {
     return;
   }
   const proto = Object.getPrototypeOf(value);

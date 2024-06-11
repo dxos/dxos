@@ -355,7 +355,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               const doc = create(DocumentType, {
-                content: create(TextV0Type, { content: '' }),
+                content: create(TextV0Type, { content: '' }), // TODO(burdon): Simplify.
                 comments: [],
               }) satisfies ReactiveObject<DocumentType>;
 

@@ -9,27 +9,27 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
 import {
   type IntentDispatcher,
-  type PluginDefinition,
-  type Plugin,
-  NavigationAction,
-  resolvePlugin,
-  parseIntentPlugin,
   type IntentPluginProvides,
-  type LocationProvides,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
   LayoutAction,
+  type LocationProvides,
+  NavigationAction,
+  type Plugin,
+  type PluginDefinition,
   activeIds,
   firstMainId,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  parseMetadataResolverPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import {
+  isReactiveObject,
   type EchoReactiveObject,
   type Identifiable,
-  isReactiveObject,
   type ReactiveObject,
   Expando,
 } from '@dxos/echo-schema';
@@ -171,6 +171,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
+            // TODO(burdon): NPE when closing planks.
             const [key] = part.split(':');
             const spaceKey = PublicKey.safeFrom(key);
             const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
@@ -222,8 +223,9 @@ export const SpacePlugin = ({
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
+                    // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                     .catch((err) => {
-                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                      log.warn('Failed to broadcast active node for presence.', { err: err.message });
                     });
                 }
               });
@@ -558,6 +560,7 @@ export const SpacePlugin = ({
               if (!client) {
                 return;
               }
+
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],

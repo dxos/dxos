@@ -33,23 +33,21 @@ export const handler = subscriptionHandler(async ({ event }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = (
-          await space.db.query((object: EchoReactiveObject<any>) =>
-            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-          )
+        project.org = space.db.query((object: EchoReactiveObject<any>) =>
+          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         ).objects[0];
       }
 
       // Create organization if failed to query.
       if (!project.org && repoData.organization) {
-        const orgSchema = space.db.schema.getRegisteredByTypename(TestSchemaType.organization);
+        const orgSchema = space.db.schema.getSchemaByTypename(TestSchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
         project.org = create(orgSchema, { name: repoData.organization?.login });
         getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
 
-    const contactSchema = space.db.schema.getRegisteredByTypename(TestSchemaType.contact);
+    const contactSchema = space.db.schema.getSchemaByTypename(TestSchemaType.contact);
     invariant(contactSchema);
 
     //

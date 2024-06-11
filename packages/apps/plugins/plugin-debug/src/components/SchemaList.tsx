@@ -23,7 +23,7 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
   const [data, setData] = useState<SchemaRecord[]>([]);
   void space.db.schema
-    .listDynamic()
+    .list()
     .then((objects) => {
       setData(
         objects

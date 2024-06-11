@@ -10,7 +10,7 @@ import {
   CREATE_SPACE_TIMEOUT,
   defaultKey,
   type Echo,
-  Properties,
+  PropertiesSchema,
   type PropertiesProps,
   type Space,
 } from '@dxos/client-protocol';
@@ -239,7 +239,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(Properties, meta ?? {}));
+    spaceProxy.db.add(create(PropertiesSchema, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 
