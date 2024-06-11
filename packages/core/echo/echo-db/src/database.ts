@@ -229,8 +229,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveLinkedObjects(target);
-
     this._automerge.add(echoObject);
+
     return echoObject as any;
   }
 
