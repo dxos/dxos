@@ -1,5 +1,5 @@
 # Class `Hypergraph`
-<sub>Declared in [packages/core/echo/echo-db/dist/types/src/hypergraph.d.ts:11]()</sub>
+<sub>Declared in [packages/core/echo/echo-db/dist/types/src/hypergraph.d.ts:12]()</sub>
 
 
 Manages cross-space database interactions.
