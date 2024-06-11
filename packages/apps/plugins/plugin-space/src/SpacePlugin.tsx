@@ -7,29 +7,30 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
+// import { type MarkdownAction } from '@braneframe/markdown-plugin';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
 import {
   type IntentDispatcher,
-  type PluginDefinition,
-  type Plugin,
-  NavigationAction,
-  resolvePlugin,
-  parseIntentPlugin,
   type IntentPluginProvides,
-  type LocationProvides,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
   LayoutAction,
+  type LocationProvides,
+  NavigationAction,
+  type Plugin,
+  type PluginDefinition,
   activeIds,
   firstMainId,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  parseMetadataResolverPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import {
+  isReactiveObject,
   type EchoReactiveObject,
   type Identifiable,
-  isReactiveObject,
   type ReactiveObject,
   Expando,
 } from '@dxos/echo-schema';
@@ -171,6 +172,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
+            // TODO(burdon): NPE when closing planks.
             const [key] = part.split(':');
             const spaceKey = PublicKey.safeFrom(key);
             const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
@@ -439,13 +441,14 @@ export const SpacePlugin = ({
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
           let spacesOrder: EchoReactiveObject<Record<string, any>> | undefined;
-          const [groupNode] = graph.addNodes({
+          // TODO(burdon): Declare type?
+          const [groupNode] = graph.addNodes<any, any>({
             id: SHARED,
             properties: {
               label: ['shared spaces label', { ns: SPACE_PLUGIN }],
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
-              palette: 'pink',
+              palette: 'orange',
               childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {
@@ -474,6 +477,12 @@ export const SpacePlugin = ({
                     },
                     {
                       action: NavigationAction.OPEN,
+                    },
+                    // TODO(burdon): Make configurable to remove dependency (e.g., onCreate event?)
+                    {
+                      // action: MarkdownAction.CREATE,
+                      plugin: 'dxos.org/plugin/markdown', // TODO(burdon): Implicit?
+                      action: 'dxos.org/plugin/markdown/create',
                     },
                   ]),
                 properties: {
@@ -566,6 +575,7 @@ export const SpacePlugin = ({
               if (!client) {
                 return;
               }
+
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
