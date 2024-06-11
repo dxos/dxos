@@ -6,6 +6,7 @@ import { expect } from 'chai';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
+import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
@@ -264,7 +265,7 @@ describe('Queries with types', () => {
   });
 });
 
-test('map over refs in query result', async () => {
+test.only('map over refs in query result', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
@@ -276,6 +277,7 @@ test('map over refs in query result', async () => {
 
   const queryResult = await peer.db.query({ name: 'folder' }).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects);
+  log.info('result', { result });
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);
