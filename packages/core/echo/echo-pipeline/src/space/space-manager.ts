@@ -16,7 +16,7 @@ import { type Teleport } from '@dxos/teleport';
 import { type BlobStore } from '@dxos/teleport-extension-object-sync';
 import { ComplexMap } from '@dxos/util';
 
-import { Space, deriveIdFromSpaceKey } from './space';
+import { Space, createIdFromSpaceKey } from './space';
 import { SpaceProtocol, type SwarmIdentity } from './space-protocol';
 import { SnapshotManager, type SnapshotStore } from '../db-host';
 import { type MetadataStore } from '../metadata';
@@ -98,7 +98,7 @@ export class SpaceManager {
     const genesisFeed = await this._feedStore.openFeed(metadata.genesisFeedKey ?? failUndefined());
 
     const spaceKey = metadata.key;
-    const spaceId = await deriveIdFromSpaceKey(spaceKey);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     const protocol = new SpaceProtocol({
       topic: spaceKey,
       swarmIdentity,
