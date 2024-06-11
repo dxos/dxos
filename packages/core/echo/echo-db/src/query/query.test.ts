@@ -6,7 +6,6 @@ import { expect } from 'chai';
 
 import { asyncTimeout, sleep, Trigger } from '@dxos/async';
 import { create, type EchoReactiveObject, Expando } from '@dxos/echo-schema';
-import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
