@@ -7,7 +7,6 @@ import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
-// import { type MarkdownAction } from '@braneframe/markdown-plugin';
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
 import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
@@ -232,8 +231,9 @@ export const SpacePlugin = ({
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
+                    // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                     .catch((err) => {
-                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                      log.warn('Failed to broadcast active node for presence.', { err: err.message });
                     });
                 }
               });
@@ -441,8 +441,7 @@ export const SpacePlugin = ({
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space keys.
           let spacesOrder: EchoReactiveObject<Record<string, any>> | undefined;
-          // TODO(burdon): Declare type?
-          const [groupNode] = graph.addNodes<any, any>({
+          const [groupNode] = graph.addNodes({
             id: SHARED,
             properties: {
               label: ['shared spaces label', { ns: SPACE_PLUGIN }],
@@ -477,12 +476,6 @@ export const SpacePlugin = ({
                     },
                     {
                       action: NavigationAction.OPEN,
-                    },
-                    // TODO(burdon): Make configurable to remove dependency (e.g., onCreate event?)
-                    {
-                      // action: MarkdownAction.CREATE,
-                      plugin: 'dxos.org/plugin/markdown', // TODO(burdon): Implicit?
-                      action: 'dxos.org/plugin/markdown/create',
                     },
                   ]),
                 properties: {
