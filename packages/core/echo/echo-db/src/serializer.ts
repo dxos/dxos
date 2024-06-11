@@ -8,7 +8,7 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
-import { ObjectCore, getObjectCore } from './automerge';
+import { ObjectCore, getObjectCore } from './core';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 

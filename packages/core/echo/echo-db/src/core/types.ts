@@ -5,13 +5,40 @@
 import get from 'lodash.get';
 
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@dxos/automerge/automerge';
+import { type Reference } from '@dxos/echo-protocol';
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { type KeyPath } from './key-path';
+export type DecodedAutomergePrimaryValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | DecodedAutomergePrimaryValue[]
+  | { [key: string]: DecodedAutomergePrimaryValue }
+  | Reference;
+
+/**
+ * @deprecated Use DecodedAutomergePrimaryValue instead.
+ */
+export type DecodedAutomergeValue =
+  | undefined
+  | string
+  | number
+  | boolean
+  | DecodedAutomergeValue[]
+  | { [key: string]: DecodedAutomergeValue }
+  | Reference
+  | EchoReactiveObject<any>;
 
 //
 // Automerge types.
 // TODO(burdon): Factor out to new low-level type package: @dxos/types or to @dxos/automerge?
 //
+
+export type KeyPath = readonly (string | number)[];
+
+export const isValidKeyPath = (value: unknown): value is KeyPath =>
+  Array.isArray(value) && value.every((v) => typeof v === 'string' || typeof v === 'number');
 
 export interface IDocHandle<T = any> {
   docSync(): Doc<T> | undefined;

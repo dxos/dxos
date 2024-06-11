@@ -10,7 +10,7 @@ import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { getObjectCore } from './automerge';
+import { getObjectCore } from './core';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 

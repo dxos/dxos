@@ -8,7 +8,7 @@ import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { getObjectCore } from './automerge';
+import { getObjectCore } from './core';
 import { TestBuilder } from './testing';
 
 // TODO(dmaretskyi): Convert to new test builder.

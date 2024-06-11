@@ -6,9 +6,8 @@ import { getProxyHandlerSlot, isReactiveObject } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type DocAccessor } from './automerge-types';
-import { isValidKeyPath, type KeyPath } from './key-path';
 import { type ObjectCore } from './object-core';
+import { isValidKeyPath, type KeyPath, type DocAccessor } from './types';
 import { getObjectCoreFromEchoTarget } from '../echo-handler/echo-handler';
 
 // TODO(wittjosiah): `path` should be `keyof T`.

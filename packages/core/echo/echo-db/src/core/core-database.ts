@@ -28,7 +28,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getObjectCore } from './automerge-object';
+import { getObjectCore } from './object-accessor';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
@@ -40,7 +40,7 @@ export type InitRootProxyFn = (core: ObjectCore) => void;
  */
 const THROTTLED_UPDATE_FREQUENCY = 10;
 
-export class AutomergeDb {
+export class CoreDatabase {
   /**
    * @internal
    */
@@ -184,10 +184,7 @@ export class AutomergeDb {
   }
 
   // TODO(Mykola): Reconcile with `getObjectById`.
-  async loadObjectCoreById(
-    objectId: string,
-    { timeout }: { timeout?: number } = {},
-  ): Promise<ObjectCore | undefined> {
+  async loadObjectCoreById(objectId: string, { timeout }: { timeout?: number } = {}): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);

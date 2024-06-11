@@ -36,8 +36,7 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type ObjectCore } from '../automerge/object-core';
-import { type KeyPath } from '../automerge/key-path';
+import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core';
 import { type EchoDatabase } from '../database';
 
 export const PROPERTY_ID = 'id';

@@ -16,7 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, AutomergeDb, type ObjectCore, getObjectCore } from './automerge';
+import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from './core';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
@@ -90,7 +90,7 @@ export interface EchoDatabase {
   /**
    * @deprecated
    */
-  readonly automerge: AutomergeDb;
+  readonly automerge: CoreDatabase;
 }
 
 export type EchoDatabaseParams = {
@@ -107,7 +107,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  _automerge: AutomergeDb;
+  _automerge: CoreDatabase;
 
   public readonly schemaRegistry: DynamicSchemaRegistry;
 
@@ -122,7 +122,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey);
+    this._automerge = new CoreDatabase(params.graph, params.automergeContext, params.spaceKey);
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -279,7 +279,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @deprecated
    */
-  get automerge(): AutomergeDb {
+  get automerge(): CoreDatabase {
     return this._automerge;
   }
 }

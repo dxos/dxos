@@ -2,8 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './automerge';
-export * from './automerge/key-path';
+export * from './core';
 export * from './database';
 export * from './guarded-scope';
 export * from './hypergraph';

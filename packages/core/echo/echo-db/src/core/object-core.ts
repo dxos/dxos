@@ -18,11 +18,15 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
-import { type AutomergeDb } from './automerge-db';
-import { type DocAccessor } from './automerge-types';
+import { type CoreDatabase } from './core-database';
 import { docChangeSemaphore } from './doc-semaphore';
-import { isValidKeyPath, type KeyPath } from './key-path';
-import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
+import {
+  isValidKeyPath,
+  type KeyPath,
+  type DocAccessor,
+  type DecodedAutomergePrimaryValue,
+  type DecodedAutomergeValue,
+} from './types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
@@ -50,7 +54,7 @@ export class ObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public database?: AutomergeDb | undefined;
+  public database?: CoreDatabase | undefined;
 
   /**
    * Set if when the object is not bound to a database.
@@ -364,7 +368,7 @@ export class ObjectCore {
 }
 
 export type BindOptions = {
-  db: AutomergeDb;
+  db: CoreDatabase;
   docHandle: DocHandle<SpaceDoc>;
   path: KeyPath;
 

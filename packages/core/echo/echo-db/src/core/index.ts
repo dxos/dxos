@@ -3,8 +3,7 @@
 //
 
 export * from './automerge-context';
-export * from './automerge-object';
-export * from './automerge-db';
+export * from './object-accessor';
+export * from './core-database';
 export * from './object-core';
-export * from './automerge-types';
 export * from './types';

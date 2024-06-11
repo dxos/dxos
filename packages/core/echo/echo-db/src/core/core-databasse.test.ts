@@ -15,11 +15,11 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { loadObjectReferences } from './automerge-db';
-import { getObjectCore } from './automerge-object';
+import { loadObjectReferences } from './core-database';
+import { getObjectCore } from './object-accessor';
 import { TestBuilder, TestPeer } from '../testing';
 
-describe('AutomergeDb', () => {
+describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
     const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
 

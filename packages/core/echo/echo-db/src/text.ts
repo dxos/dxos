@@ -6,7 +6,7 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { type DocAccessor } from './automerge';
+import { type DocAccessor } from './core';
 
 export const toCursor = (accessor: DocAccessor, pos: number) => {
   const doc = accessor.handle.docSync();
