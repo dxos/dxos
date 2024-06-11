@@ -46,7 +46,7 @@ const createTypenameFilter = (typenameFilter?: string) => {
 
 const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
   const format = {
-    storedSchemaId: {
+    id: {
       header: 'echoId',
       truncate: true,
     },

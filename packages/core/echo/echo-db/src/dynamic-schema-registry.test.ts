@@ -129,7 +129,7 @@ describe('schema registry', () => {
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredEchoSchema), makeStaticSchema(TestSchemaClass)]);
     expect(listed[2]).to.deep.contain({
-      storedSchemaId: storedSchema.id,
+      id: storedSchema.id,
       typename: storedSchema.typename,
       version: storedSchema.version,
     });

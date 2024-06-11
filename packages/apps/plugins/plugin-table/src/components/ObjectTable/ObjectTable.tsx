@@ -40,7 +40,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
       }
 
       if (!table.schema) {
-        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
+        table.schema = space.db.schema.add(makeStarterTableSchema());
         updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
       }
 

@@ -72,7 +72,7 @@ export class DynamicSchemaRegistry {
     const storedSnapshots = storedSchemas.map((storedSchema) => {
       const schema = new DynamicEchoSchema(storedSchema);
       return {
-        storedSchemaId: storedSchema.id,
+        id: storedSchema.id,
         typename: schema.typename,
         version: storedSchema.version,
         schema: schema.schema,
