@@ -5,7 +5,13 @@
 import type * as S from '@effect/schema/Schema';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '@dxos/echo-schema';
+import {
+  type EchoObjectAnnotation,
+  EchoObjectAnnotationId,
+  getEchoObjectAnnotation,
+  makeStaticSchema,
+  type StaticSchema,
+} from '@dxos/echo-schema';
 import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -61,7 +67,22 @@ export class DynamicSchemaRegistry {
     return this._schemaByType.get(typename);
   }
 
-  public async getAll(): Promise<DynamicEchoSchema[]> {
+  public async list(): Promise<StaticSchema[]> {
+    const { objects: storedSchemas } = await this.db.query(Filter.schema(StoredEchoSchema)).run();
+    const storedSnapshots = storedSchemas.map((storedSchema) => {
+      const schema = new DynamicEchoSchema(storedSchema);
+      return {
+        id: storedSchema.id,
+        typename: schema.typename,
+        version: storedSchema.version,
+        schema: schema.schema,
+      } satisfies StaticSchema;
+    });
+    const runtimeSnapshots = this.db.graph.schemaRegistry.schemas.map(makeStaticSchema);
+    return runtimeSnapshots.concat(storedSnapshots);
+  }
+
+  public async listDynamic(): Promise<DynamicEchoSchema[]> {
     return (await this.db.query(Filter.schema(StoredEchoSchema)).run()).objects.map((stored) => {
       return this._register(stored);
     });

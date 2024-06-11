@@ -73,7 +73,7 @@ export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
-    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))');
+    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(echoObject("MyType", "1.0.0"))');
   }
 
   return typeReference;

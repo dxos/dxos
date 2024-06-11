@@ -4,7 +4,13 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { type EchoReactiveObject, getSchema, type ReactiveObject, isReactiveObject } from '@dxos/echo-schema';
+import {
+  type EchoReactiveObject,
+  getSchema,
+  type ReactiveObject,
+  isReactiveObject,
+  getProxyHandlerSlot,
+} from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -14,6 +20,7 @@ import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, getAutome
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
+import { type ProxyTarget } from './echo-handler/echo-proxy-target';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
 
@@ -24,8 +31,7 @@ export type GetObjectByIdOptions = {
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
 
-  // TODO(burdon): Should this be public?
-  get schemaRegistry(): DynamicSchemaRegistry;
+  get schema(): DynamicSchemaRegistry;
 
   /**
    * All loaded objects.
@@ -102,7 +108,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _automerge: AutomergeDb;
 
-  public readonly schemaRegistry: DynamicSchemaRegistry;
+  public readonly schema: DynamicSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -115,8 +121,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
-    this.schemaRegistry = new DynamicSchemaRegistry(this);
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey);
+    this.schema = new DynamicSchemaRegistry(this);
   }
 
   get graph(): Hypergraph {
@@ -160,7 +166,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
     invariant(isReactiveObject(object));
     return object;
   }
@@ -179,7 +185,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       return undefined;
     }
 
-    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
     invariant(isReactiveObject(object));
     return object;
   }
@@ -197,7 +203,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         return undefined;
       }
 
-      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
       invariant(isReactiveObject(object));
       return object;
     });
@@ -210,7 +216,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        if (!this.schema.isRegistered(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
@@ -218,8 +224,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
     invariant(isEchoObject(echoObject));
     this._rootProxies.set(getAutomergeObjectCore(echoObject), echoObject);
+
+    const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
+    EchoReactiveHandler.instance.setDatabase(target, this);
+    EchoReactiveHandler.instance.saveLinkedObjects(target);
     this._automerge.add(echoObject);
-    EchoReactiveHandler.instance.saveLinkedObjects(echoObject as any);
+
     return echoObject as any;
   }
 
@@ -253,6 +263,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @deprecated
    */
   get objects(): EchoReactiveObject<any>[] {
+    // Initialize all proxies.
+    for (const core of this._automerge.allObjectCores()) {
+      defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
+    }
     return Array.from(this._rootProxies.values());
   }
 

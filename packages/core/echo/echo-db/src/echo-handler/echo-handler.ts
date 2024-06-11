@@ -19,6 +19,7 @@ import {
   symbolIsProxy,
   type ObjectMeta,
   type ReactiveHandler,
+  getProxyHandlerSlot,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
@@ -35,9 +36,9 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { getAutomergeObjectCore } from '../automerge';
 import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
 import { type KeyPath } from '../automerge/key-path';
+import { type EchoDatabase } from '../database';
 
 export const PROPERTY_ID = 'id';
 
@@ -174,9 +175,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // object instanceof StoredEchoSchema requires database to lookup schema
-    const database = target[symbolInternals].core.database;
+    const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredEchoSchema) {
-      return database._dbApi.schemaRegistry.register(object);
+      return database.schema.register(object);
     }
     return object;
   }
@@ -322,7 +323,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return ObjectMetaSchema;
     }
     // TODO(?): Make reactive.
-    if (!target[symbolInternals].core.database) {
+    if (!target[symbolInternals].database) {
       return undefined;
     }
 
@@ -331,7 +332,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].core.database.graph.schemaRegistry.getSchema(typeReference.itemId);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
     }
@@ -340,7 +341,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+    return target[symbolInternals].database.schema.getById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
@@ -461,26 +462,30 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return createReactiveProxy(metaTarget, this) as any;
   }
 
+  setDatabase(target: ProxyTarget, database: EchoDatabase): void {
+    target[symbolInternals].database = database;
+  }
+
   /**
    * Store referenced object.
    */
   linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
-    const database = target[symbolInternals].core.database;
+    const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Fix this.
       if (isReactiveObject(obj) && !isEchoObject(obj)) {
-        database._dbApi.add(obj);
+        database.add(obj);
       }
 
-      const core = getAutomergeObjectCore(obj);
-      if (!core.database) {
-        database._dbApi.add(obj);
-        return new Reference(core.id);
+      const foreignDatabase = (getProxyHandlerSlot(obj).target as ProxyTarget)[symbolInternals].database;
+      if (!foreignDatabase) {
+        database.add(obj);
+        return new Reference(obj.id);
       } else {
-        if (core.database !== database) {
-          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
+        if (foreignDatabase !== database) {
+          return new Reference(obj.id, undefined, foreignDatabase.spaceKey.toHex());
         } else {
-          return new Reference(core.id);
+          return new Reference(obj.id);
         }
       }
     } else {
@@ -499,10 +504,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Lookup referenced object.
    */
   lookupLink(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
-    const database = target[symbolInternals].core.database;
+    const database = target[symbolInternals].database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return database.graph._lookupLink(ref, database._dbApi, () => target[symbolInternals].core.notifyUpdate());
+      return database.graph._lookupLink(ref, database, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(ref.itemId);

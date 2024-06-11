@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kv-store",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "DXOS key-value store.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
