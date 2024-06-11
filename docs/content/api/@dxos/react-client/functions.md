@@ -143,7 +143,7 @@ Arguments:
 
 
 
-Returns: <code>AutomergeObjectCore</code>
+Returns: <code>ObjectCore</code>
 
 Arguments: 
 

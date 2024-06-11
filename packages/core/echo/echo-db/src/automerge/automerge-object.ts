@@ -6,7 +6,7 @@ import { getProxyHandlerSlot, isReactiveObject } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
-import { type AutomergeObjectCore } from './automerge-object-core';
+import { type ObjectCore } from './automerge-object-core';
 import { type DocAccessor } from './automerge-types';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { getObjectCoreFromEchoTarget } from '../echo-handler/echo-handler';
@@ -21,6 +21,6 @@ export const createDocAccessor = <T>(obj: EchoReactiveObject<T>, path: KeyPath):
   return core.getDocAccessor(path);
 };
 
-export const getAutomergeObjectCore = <T>(obj: EchoReactiveObject<T>): AutomergeObjectCore => {
+export const getAutomergeObjectCore = <T>(obj: EchoReactiveObject<T>): ObjectCore => {
   return getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
 };

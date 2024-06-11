@@ -12,7 +12,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
 import { Filter, compareType, filterMatch } from './filter';
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { ObjectCore, getAutomergeObjectCore } from '../automerge';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -132,8 +132,8 @@ describe('Filter', () => {
   });
 });
 
-const createAutomergeObjectCore = (props: any = {}, type?: Reference): AutomergeObjectCore => {
-  const core = new AutomergeObjectCore();
+const createAutomergeObjectCore = (props: any = {}, type?: Reference): ObjectCore => {
+  const core = new ObjectCore();
   core.initNewObject(props);
   if (type) {
     core.setType(type);

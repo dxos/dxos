@@ -32,14 +32,13 @@ export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
 // TODO(dmaretskyi): Rename.
-export type TypedObjectOptions = {
+export type ObjectCoreOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
 
-// TODO(dmaretskyi): Rename to `AutomergeObject`.
-export class AutomergeObjectCore {
+export class ObjectCore {
   // TODO(dmaretskyi): Start making some of those fields private.
 
   /**
@@ -78,7 +77,7 @@ export class AutomergeObjectCore {
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
+  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions) {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};

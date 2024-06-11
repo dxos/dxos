@@ -8,7 +8,7 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
-import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
+import { ObjectCore, getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 
@@ -163,7 +163,7 @@ export class Serializer {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
-    const core = new AutomergeObjectCore();
+    const core = new ObjectCore();
     core.id = id;
     // TODO(dmaretskyi): Can't pass type in opts.
     core.initNewObject(dataProperties, {

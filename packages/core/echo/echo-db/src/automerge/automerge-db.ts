@@ -29,11 +29,11 @@ import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
 import { getAutomergeObjectCore } from './automerge-object';
-import { AutomergeObjectCore } from './automerge-object-core';
+import { ObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
 
-export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
+export type InitRootProxyFn = (core: ObjectCore) => void;
 
 /**
  * Maximum number of remote update notifications per second.
@@ -44,7 +44,7 @@ export class AutomergeDb {
   /**
    * @internal
    */
-  readonly _objects = new Map<string, AutomergeObjectCore>();
+  readonly _objects = new Map<string, ObjectCore>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -172,14 +172,14 @@ export class AutomergeDb {
     }
   }
 
-  getObjectCoreById(id: string): AutomergeObjectCore | undefined {
+  getObjectCoreById(id: string): ObjectCore | undefined {
     const objCore = this._objects.get(id);
     if (!objCore) {
       this._automergeDocLoader.loadObjectDocument(id);
       return undefined;
     }
 
-    invariant(objCore instanceof AutomergeObjectCore);
+    invariant(objCore instanceof ObjectCore);
     return objCore;
   }
 
@@ -187,7 +187,7 @@ export class AutomergeDb {
   async loadObjectCoreById(
     objectId: string,
     { timeout }: { timeout?: number } = {},
-  ): Promise<AutomergeObjectCore | undefined> {
+  ): Promise<ObjectCore | undefined> {
     const core = this.getObjectCoreById(objectId);
     if (core) {
       return Promise.resolve(core);
@@ -203,8 +203,8 @@ export class AutomergeDb {
   async batchLoadObjectCores(
     objectIds: string[],
     { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
-  ): Promise<(AutomergeObjectCore | undefined)[]> {
-    const result: (AutomergeObjectCore | undefined)[] = new Array(objectIds.length);
+  ): Promise<(ObjectCore | undefined)[]> {
+    const result: (ObjectCore | undefined)[] = new Array(objectIds.length);
     const objectsToLoad: Array<{ id: string; resultIndex: number }> = [];
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
@@ -255,7 +255,7 @@ export class AutomergeDb {
     });
   }
 
-  addCore(core: AutomergeObjectCore) {
+  addCore(core: ObjectCore) {
     if (core.database) {
       // Already in the database.
       if (core.database !== this) {
@@ -447,7 +447,7 @@ export class AutomergeDb {
 
   private _createObjectInDocument(docHandle: DocHandle<SpaceDoc>, objectId: string) {
     invariant(!this._objects.get(objectId));
-    const core = new AutomergeObjectCore();
+    const core = new ObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
@@ -500,7 +500,7 @@ export interface ItemsUpdatedEvent {
   itemsUpdated: Array<{ id: string }>;
 }
 
-export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
+export const shouldObjectGoIntoFragmentedSpace = (core: ObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
   //  expects it to be loaded as space become available.
   return core.getType()?.itemId !== TYPE_PROPERTIES;

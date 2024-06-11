@@ -16,7 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
+import { type AutomergeContext, AutomergeDb, type ObjectCore, getAutomergeObjectCore } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
@@ -117,7 +117,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<AutomergeObjectCore, EchoReactiveObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, EchoReactiveObject<any>>();
 
   constructor(params: EchoDatabaseParams) {
     super();

@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { symbolInternals } from './echo-proxy-target';
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { ObjectCore, getAutomergeObjectCore } from '../automerge';
 
 export type CloneOptions = {
   /**
@@ -69,7 +69,7 @@ export const clone = <T extends {}>(
 
 const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
   const core = requireAutomergeCore(obj);
-  const coreClone = new AutomergeObjectCore();
+  const coreClone = new ObjectCore();
   coreClone.initNewObject();
   coreClone.id = id;
   const proxy = initEchoReactiveObjectRootProxy(coreClone);
@@ -82,7 +82,7 @@ const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObje
   return proxy as any;
 };
 
-const getObjectDoc = (core: AutomergeObjectCore): any => {
+const getObjectDoc = (core: ObjectCore): any => {
   let value = core.doc ?? core.docHandle!.docSync();
   for (const key of core.mountPath) {
     value = value?.[key];

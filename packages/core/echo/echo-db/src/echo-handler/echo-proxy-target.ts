@@ -10,7 +10,7 @@ import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
-import type { AutomergeObjectCore } from '../automerge';
+import type { ObjectCore } from '../automerge';
 import type { KeyPath } from '../automerge/key-path';
 import { type EchoDatabase } from '../database';
 
@@ -42,7 +42,7 @@ export const TargetKey = {
 };
 
 export type ObjectInternals = {
-  core: AutomergeObjectCore;
+  core: ObjectCore;
 
   /**
    * Caching targets based on key path.
