@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { getAutomergeObjectCore, type AutomergeObjectCore } from '../automerge';
+import { type AutomergeObjectCore } from '../automerge';
 import { getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
@@ -188,18 +188,16 @@ export class Filter<T extends {} = any> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, object: EchoReactiveObject<any> | undefined): boolean => {
-  if (!object) {
+export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefined): boolean => {
+  if (!core) {
     return false;
   }
-  const result = compositeRuntime.untracked(() => filterMatchInner(filter, object));
-
+  const result = filterMatchInner(filter, core);
   // don't apply filter negation to deleted object handling, as it's part of filter options
-  return filter.not && !getAutomergeObjectCore(object).isDeleted() ? !result : result;
+  return filter.not && !core.isDeleted() ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, object: EchoReactiveObject<any>): boolean => {
-  const core = getAutomergeObjectCore(object);
+const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
     if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
@@ -213,7 +211,7 @@ const filterMatchInner = (filter: Filter, object: EchoReactiveObject<any>): bool
 
   if (filter.or.length) {
     for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, object)) {
+      if (filterMatch(orFilter, core)) {
         return true;
       }
     }
@@ -266,12 +264,18 @@ const filterMatchInner = (filter: Filter, object: EchoReactiveObject<any>): bool
     }
   }
 
-  if (filter.predicate && !filter.predicate(object)) {
+  // Untracked will prevent signals in the callback from being subscribed to.
+  if (
+    filter.predicate &&
+    !compositeRuntime.untracked(() =>
+      filter.predicate!(core.database?._dbApi.getObjectById(core.id, { deleted: true })),
+    )
+  ) {
     return false;
   }
 
   for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, object)) {
+    if (!filterMatch(andFilter, core)) {
       return false;
     }
   }

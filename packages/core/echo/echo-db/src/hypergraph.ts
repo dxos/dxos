@@ -268,7 +268,7 @@ class SpaceQuerySource implements QuerySource {
           this._results.find((result) => result.id === object.id) ||
           (this._database.automerge._objects.has(object.id) &&
             !this._database.automerge.getObjectCoreById(object.id)!.isDeleted() &&
-            filterMatch(this._filter!, this._database.getObjectById(object.id)))
+            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)))
         );
       });
 
@@ -328,18 +328,20 @@ class SpaceQuerySource implements QuerySource {
   }
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
-    return compositeRuntime.untracked(() =>
-      this._database.objects
-        .filter((object) => filterMatch(filter, object))
-        .map((object) => ({
-          id: object.id,
+    return (
+      this._database.automerge
+        .allObjectCores()
+        // TODO(dmaretskyi): Cleanup proxy <-> core.
+        .filter((core) => filterMatch(filter, core))
+        .map((core) => ({
+          id: core.id,
           spaceKey: this.spaceKey,
-          object,
+          object: this._database.getObjectById(core.id, { deleted: true }),
           resolution: {
             source: 'local',
             time: 0,
           },
-        })),
+        }))
     );
   }
 

@@ -6,15 +6,13 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
-import { TypedObject, create, generateEchoId, getProxyHandlerSlot } from '@dxos/echo-schema';
+import { TypedObject, create, generateEchoId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
 import { Filter, compareType, filterMatch } from './filter';
-import { createEchoObject } from '../echo-handler';
-import { getObjectCoreFromEchoTarget } from '../echo-handler/echo-handler';
-import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -29,61 +27,61 @@ describe('Filter', () => {
   });
 
   test('properties', () => {
-    const object = createEchoObject({ title: 'test', value: 100, complete: true });
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
-    expect(filterMatch(Filter.from({ title: 'test' }), object)).to.be.true;
-    expect(filterMatch(Filter.from({ value: 100 }), object)).to.be.true;
-    expect(filterMatch(Filter.from({ complete: false }), object)).to.be.false;
-    expect(filterMatch(Filter.from({ missing: undefined }), object)).to.be.true;
+    expect(filterMatch(Filter.from({ title: 'test' }), core)).to.be.true;
+    expect(filterMatch(Filter.from({ value: 100 }), core)).to.be.true;
+    expect(filterMatch(Filter.from({ complete: false }), core)).to.be.false;
+    expect(filterMatch(Filter.from({ missing: undefined }), core)).to.be.true;
   });
 
   test('and', () => {
-    const object = createEchoObject({ title: 'test', value: 100, complete: true });
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.from({ value: 100 });
     const filter3 = Filter.from({ complete: true });
 
-    expect(filterMatch(Filter.and(filter1, filter2, filter3), object)).to.be.true;
-    expect(filterMatch(Filter.from([filter1, filter2, filter3]), object)).to.be.true;
+    expect(filterMatch(Filter.and(filter1, filter2, filter3), core)).to.be.true;
+    expect(filterMatch(Filter.from([filter1, filter2, filter3]), core)).to.be.true;
   });
 
   test('or', () => {
-    const object = createEchoObject({ title: 'test', value: 100, complete: true });
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ value: 200 });
     const filter2 = Filter.from({ title: 'test' });
     const filter3 = Filter.from({ complete: false });
 
-    expect(filterMatch(Filter.or(filter1, filter2, filter3), object)).to.be.true;
+    expect(filterMatch(Filter.or(filter1, filter2, filter3), core)).to.be.true;
   });
 
   test('not', () => {
-    const object = createEchoObject({ title: 'test' });
+    const core = createAutomergeObjectCore({ title: 'test' });
 
     const filter1 = Filter.from({ title: 'test' });
     const filter2 = Filter.not(filter1);
 
-    expect(filterMatch(filter1, object)).to.be.true;
-    expect(filterMatch(filter2, object)).to.be.false;
+    expect(filterMatch(filter1, core)).to.be.true;
+    expect(filterMatch(filter2, core)).to.be.false;
   });
 
   test('not preserves deleted handling', () => {
-    const object = createEchoObject({ title: 'test' });
-    getObjectCoreFromEchoTarget(getProxyHandlerSlot(object).target as ProxyTarget).setDeleted(true);
+    const core = createAutomergeObjectCore({ title: 'test' });
+    core.setDeleted(true);
     const filter1 = Filter.from({ title: 'test' }, { deleted: QueryOptions.ShowDeletedOption.HIDE_DELETED });
     const filter2 = Filter.not(filter1);
 
-    expect(filterMatch(filter1, object)).to.be.false;
-    expect(filterMatch(filter2, object)).to.be.false;
+    expect(filterMatch(filter1, core)).to.be.false;
+    expect(filterMatch(filter2, core)).to.be.false;
   });
 
   test('complex', () => {
-    const object = createEchoObject({ title: 'test', value: 100, complete: true });
+    const core = createAutomergeObjectCore({ title: 'test', value: 100, complete: true });
 
     const filter1 = Filter.from({ title: 'bad' });
     const filter2 = Filter.from({ value: 0 });
-    expect(filterMatch(Filter.not(Filter.or(filter1, filter2)), object)).to.be.true;
+    expect(filterMatch(Filter.not(Filter.or(filter1, filter2)), core)).to.be.true;
   });
 
   // TODO(burdon): Test schema.
@@ -130,6 +128,15 @@ describe('Filter', () => {
     const obj = db.add(create(schema, { title: 'test' }));
 
     const filter = Filter.typename(schema.id);
-    expect(filterMatch(filter, obj)).to.be.true;
+    expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;
   });
 });
+
+const createAutomergeObjectCore = (props: any = {}, type?: Reference): AutomergeObjectCore => {
+  const core = new AutomergeObjectCore();
+  core.initNewObject(props);
+  if (type) {
+    core.setType(type);
+  }
+  return core;
+};
