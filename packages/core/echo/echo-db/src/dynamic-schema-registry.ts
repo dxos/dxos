@@ -5,7 +5,13 @@
 import type * as S from '@effect/schema/Schema';
 
 import { type UnsubscribeCallback } from '@dxos/async';
-import { type EchoObjectAnnotation, EchoObjectAnnotationId, getEchoObjectAnnotation } from '@dxos/echo-schema';
+import {
+  getEchoObjectAnnotation,
+  EchoObjectAnnotationId,
+  type EchoObjectAnnotation,
+  type StaticSchema,
+  makeStaticSchema,
+} from '@dxos/echo-schema';
 import { DynamicSchema, StoredSchema, create, effectToJsonSchema } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -38,12 +44,6 @@ export class DynamicSchemaRegistry {
     });
   }
 
-  public async getAll(): Promise<DynamicSchema[]> {
-    return (await this.db.query(Filter.schema(StoredSchema)).run()).objects.map((stored) => {
-      return this._register(stored);
-    });
-  }
-
   public hasSchema(schema: S.Schema<any>): boolean {
     const storedSchemaId =
       schema instanceof DynamicSchema ? schema.id : getEchoObjectAnnotation(schema)?.storedSchemaId;
@@ -73,6 +73,39 @@ export class DynamicSchemaRegistry {
     return this._register(typeObject);
   }
 
+  public async list(): Promise<StaticSchema[]> {
+    const { objects: storedSchemas } = await this.db.query(Filter.schema(StoredSchema)).run();
+    const storedSnapshots = storedSchemas.map((storedSchema) => {
+      const schema = new DynamicSchema(storedSchema);
+      return {
+        id: storedSchema.id,
+        version: storedSchema.version,
+        typename: schema.typename,
+        schema: schema.schema,
+      } satisfies StaticSchema;
+    });
+
+    const runtimeSnapshots = this.db.graph.schemaRegistry.schemas.map(makeStaticSchema);
+    return runtimeSnapshots.concat(storedSnapshots);
+  }
+
+  public async listDynamic(): Promise<DynamicSchema[]> {
+    return (await this.db.query(Filter.schema(StoredSchema)).run()).objects.map((stored) => {
+      return this._register(stored);
+    });
+  }
+
+  public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {
+    callback([...this._schemaById.values()]);
+    this._schemaListChangeListeners.push(callback);
+    return () => {
+      const index = this._schemaListChangeListeners.indexOf(callback);
+      if (index >= 0) {
+        this._schemaListChangeListeners.splice(index, 1);
+      }
+    };
+  }
+
   public addSchema(schema: S.Schema<any>): DynamicSchema {
     const typeAnnotation = getEchoObjectAnnotation(schema);
     invariant(typeAnnotation, 'use S.Struct({}).pipe(EchoObject(...)) or class syntax to create a valid schema');
@@ -93,8 +126,10 @@ export class DynamicSchemaRegistry {
     return result;
   }
 
-  // TODO(burdon): Disambiguate with addSchema?
-  public register(schema: StoredSchema): DynamicSchema {
+  /**
+   * @internal
+   */
+  registerSchema(schema: StoredSchema): DynamicSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -103,17 +138,6 @@ export class DynamicSchemaRegistry {
     const registered = this._register(schema);
     this._notifySchemaListChanged();
     return registered;
-  }
-
-  public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {
-    callback([...this._schemaById.values()]);
-    this._schemaListChangeListeners.push(callback);
-    return () => {
-      const index = this._schemaListChangeListeners.indexOf(callback);
-      if (index >= 0) {
-        this._schemaListChangeListeners.splice(index, 1);
-      }
-    };
   }
 
   private _register(schema: StoredSchema): DynamicSchema {

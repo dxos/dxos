@@ -50,6 +50,7 @@ export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Ident
   private _schema: S.Schema<Identifiable> | undefined;
   private _isDirty = true;
 
+  // TODO(burdon): Rename property.
   constructor(public readonly serializedSchema: StoredSchema) {
     super();
   }

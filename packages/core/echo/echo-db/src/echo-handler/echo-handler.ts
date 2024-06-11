@@ -177,7 +177,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // object instanceof StoredEchoSchema requires database to lookup schema
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
-      return database.schemaRegistry.register(object);
+      return database.schema.register(object);
     }
     return object;
   }
@@ -341,7 +341,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].database.schemaRegistry.getSchemaById(typeReference.itemId);
+    return target[symbolInternals].database.schema.getSchemaById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {

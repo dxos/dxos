@@ -72,7 +72,6 @@ export default class Share extends BaseCommand<typeof Share> {
             if (this.flags.open) {
               const url = new URL(this.flags.host);
               url.searchParams.append('spaceInvitationCode', InvitationEncoder.encode(invitation));
-              url.searchParams.append('migrateSpace', 'true'); // TODO(burdon): Remove.
               spawn('open', [url.toString()]);
             } else {
               this.log(chalk`\n{blue Invitation}: ${invitationCode}`);

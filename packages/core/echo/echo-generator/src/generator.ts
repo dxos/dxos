@@ -72,9 +72,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
     Object.entries<DynamicSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
-      let schema = this._space.db.schemaRegistry.getSchemaByTypename(type);
+      let schema = this._space.db.schema.getSchemaByTypename(type);
       if (schema == null) {
-        schema = this._space.db.schemaRegistry.addSchema(dynamicSchema.schema);
+        schema = this._space.db.schema.addSchema(dynamicSchema.schema);
       }
       this.setSchema(type as T, schema);
     });
@@ -83,9 +83,9 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   addSchemas() {
     const result: DynamicSchema[] = [];
     this.schemas.forEach((schema) => {
-      const existing = this._space.db.schemaRegistry.getSchemaByTypename(schema.typename);
+      const existing = this._space.db.schema.getSchemaByTypename(schema.typename);
       if (existing == null) {
-        result.push(this._space.db.schemaRegistry.addSchema(schema.schema));
+        result.push(this._space.db.schema.addSchema(schema.schema));
       } else {
         result.push(existing);
       }

@@ -7,12 +7,12 @@ import { expect } from 'chai';
 
 import {
   create,
-  DynamicSchema,
-  EchoObjectAnnotationId,
   getSchema,
   getType,
   getTypeReference,
   ref,
+  DynamicSchema,
+  EchoObjectAnnotationId,
   TypedObject,
 } from '@dxos/echo-schema';
 import { GeneratedEmptySchema, TEST_SCHEMA_TYPE } from '@dxos/echo-schema/testing';
@@ -43,7 +43,7 @@ describe('DynamicSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
       [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
     });
@@ -57,7 +57,7 @@ describe('DynamicSchema', () => {
   test('create echo object with DynamicSchema', async () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    const schema = db.schemaRegistry.addSchema(GeneratedSchema);
+    const schema = db.schema.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
 
     const schemaWithId = GeneratedSchema.annotations({
@@ -68,7 +68,7 @@ describe('DynamicSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.addSchema(GeneratedEmptySchema);
+    const schema = db.schema.addSchema(GeneratedEmptySchema);
     const object = create(schema, {});
     schema.addColumns({ field1: S.String });
     object.field1 = 'works';
@@ -91,7 +91,7 @@ describe('DynamicSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.addSchema(GeneratedEmptySchema);
+    const schema = db.schema.addSchema(GeneratedEmptySchema);
     expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
   });
 

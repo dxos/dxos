@@ -31,8 +31,7 @@ export type GetObjectByIdOptions = {
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
 
-  // TODO(burdon): Should this be public?
-  get schemaRegistry(): DynamicSchemaRegistry;
+  get schema(): DynamicSchemaRegistry;
 
   /**
    * All loaded objects.
@@ -109,7 +108,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _automerge: AutomergeDb;
 
-  public readonly schemaRegistry: DynamicSchemaRegistry;
+  public readonly schema: DynamicSchemaRegistry;
 
   private _rootUrl: string | undefined = undefined;
 
@@ -123,7 +122,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     super();
 
     this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey);
-    this.schemaRegistry = new DynamicSchemaRegistry(this);
+    this.schema = new DynamicSchemaRegistry(this);
   }
 
   get graph(): Hypergraph {
@@ -217,7 +216,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schemaRegistry.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
