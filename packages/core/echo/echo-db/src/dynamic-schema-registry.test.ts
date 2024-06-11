@@ -21,15 +21,15 @@ import { describe, test } from '@dxos/test';
 import { Filter } from './query';
 import { EchoTestBuilder } from './testing';
 
-const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
+const TestType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [
   create(StoredSchema, {
-    ...testType,
+    ...TestType,
     jsonSchema: effectToJsonSchema(S.Struct({ field: S.String })),
   }),
   create(StoredSchema, {
-    ...testType,
-    typename: testType.typename + '2',
+    ...TestType,
+    typename: TestType.typename + '2',
     jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
   }),
 ];
@@ -52,11 +52,13 @@ describe('schema registry', () => {
 
   test('add new schema', async () => {
     const { registry } = await setupTest();
-    class TestClass extends TypedObject(testType)({}) {}
+    class TestClass extends TypedObject(TestType)({}) {}
     const dynamicSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
-      [EchoObjectAnnotationId]: { ...testType, storedSchemaId: dynamicSchema.id },
+      [EchoObjectAnnotationId]: { ...TestType, schemaId: dynamicSchema.id },
     });
+    console.log(dynamicSchema.ast);
+    console.log(expectedSchema.ast);
     expect(dynamicSchema.ast).to.deep.eq(expectedSchema.ast);
     expect(registry.hasSchema(dynamicSchema)).to.be.true;
     expect(registry.getSchemaById(dynamicSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
@@ -64,7 +66,7 @@ describe('schema registry', () => {
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
-    class TestClass extends TypedObject(testType)({}) {}
+    class TestClass extends TypedObject(TestType)({}) {}
     const stored1 = registry.addSchema(TestClass);
     const stored2 = registry.addSchema(TestClass);
     expect(stored1.id).to.not.equal(stored2.id);
@@ -93,7 +95,7 @@ describe('schema registry', () => {
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
-      ...testType,
+      ...TestType,
       jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(registry.hasSchema(new DynamicSchema(schemaToStore))).to.be.false;
@@ -104,7 +106,7 @@ describe('schema registry', () => {
   test("can't register schema if not stored in db", async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = create(StoredSchema, {
-      ...testType,
+      ...TestType,
       jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
     expect(() => registry.registerSchema(schemaToStore)).to.throw();

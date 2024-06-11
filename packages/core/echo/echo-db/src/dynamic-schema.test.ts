@@ -45,7 +45,7 @@ describe('DynamicSchema', () => {
 
     instanceWithSchemaRef.schema = db.schema.addSchema(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
+      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
     });
     expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
 
@@ -60,7 +60,7 @@ describe('DynamicSchema', () => {
     const schema = db.schema.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
     const schemaWithId = GeneratedSchema.annotations({
-      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
+      [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, schemaId: instanceWithSchemaRef.schema?.id },
     });
     expect(instanceWithSchemaRef.schema?.ast).to.deep.eq(schemaWithId.ast);
   });
