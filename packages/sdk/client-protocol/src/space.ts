@@ -89,14 +89,13 @@ export interface Space {
    */
   waitUntilReady(): Promise<this>;
 
-  // TODO(wittjosiah): Gather into messaging abstraction?
-  postMessage: (channel: string, message: any) => Promise<void>;
+  createSnapshot(): Promise<SpaceSnapshot>;
 
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
-
+  // TODO(burdon): Create invitation?
   share(options?: Partial<Invitation>): CancellableInvitation;
-
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
-  createSnapshot(): Promise<SpaceSnapshot>;
+  // TODO(wittjosiah): Gather into messaging abstraction?
+  postMessage: (channel: string, message: any) => Promise<void>;
+  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 }
