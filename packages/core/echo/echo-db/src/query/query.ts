@@ -259,7 +259,9 @@ export class Query<T extends {} = any> {
   }
 
   private _filterResults(filter: Filter, results: QueryResult[]): QueryResult<T>[] {
-    return results.filter((result) => result.object && filterMatch(filter, getAutomergeObjectCore(result.object)));
+    return results.filter(
+      (result) => result.object && filterMatch(filter, getAutomergeObjectCore(result.object), result.object),
+    );
   }
 
   private _uniqueObjects(results: QueryResult<T>[]): EchoReactiveObject<T>[] {
