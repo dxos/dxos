@@ -5,7 +5,7 @@
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
   type Invitation,
   type Space as SpaceData,
@@ -29,6 +29,14 @@ export interface SpaceInternal {
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space {
+  /**
+   * Unique space identifier.
+   */
+  get id(): SpaceId;
+
+  /**
+   * @deprecated Use `id`.
+   */
   get key(): PublicKey;
 
   /**
