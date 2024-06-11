@@ -265,7 +265,7 @@ describe('Queries with types', () => {
   });
 });
 
-test.only('map over refs in query result', async () => {
+test('map over refs in query result', async () => {
   const testBuilder = new TestBuilder();
   const peer = await testBuilder.createPeer();
 
@@ -277,7 +277,6 @@ test.only('map over refs in query result', async () => {
 
   const queryResult = await peer.db.query({ name: 'folder' }).run();
   const result = queryResult.objects.flatMap(({ objects }) => objects);
-  log.info('result', { result });
 
   for (const i in objects) {
     expect(result[i]).to.eq(objects[i]);
