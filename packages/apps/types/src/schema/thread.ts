@@ -22,5 +22,11 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
 
 export class ThreadType extends TypedObject({ typename: 'dxos.org/type/Thread', version: '0.1.0' })({
   name: S.optional(S.String),
+  anchor: S.optional(S.String),
   messages: S.mutable(S.Array(ref(MessageType))),
+}) {}
+
+export class ChannelType extends TypedObject({ typename: 'dxos.org/type/Channel', version: '0.1.0' })({
+  name: S.optional(S.String),
+  threads: S.mutable(S.Array(ref(ThreadType))),
 }) {}
