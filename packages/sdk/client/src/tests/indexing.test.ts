@@ -6,7 +6,7 @@ import { expect } from 'chai';
 import isEqual from 'lodash.isequal';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
-import { Properties, type ClientServicesProvider, type Space } from '@dxos/client-protocol';
+import { type ClientServicesProvider, PropertiesSchema, type Space } from '@dxos/client-protocol';
 import { Filter, type Query } from '@dxos/echo-db';
 import { create, Expando, type EchoReactiveObject } from '@dxos/echo-schema';
 import { type PublicKey } from '@dxos/keys';
@@ -274,7 +274,7 @@ describe('Index queries', () => {
 
     {
       const query = space.db.query(
-        Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType), Filter.schema(Properties))),
+        Filter.not(Filter.or(Filter.schema(ContactType), Filter.schema(DocumentType), Filter.schema(PropertiesSchema))),
       );
       const ids = (await query.run()).objects.map(({ id }) => id);
       expect(ids.every((id) => expectedIds.every((expectedId) => expectedId !== id))).to.be.true;

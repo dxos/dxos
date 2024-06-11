@@ -340,7 +340,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+    return target[symbolInternals].core.database._dbApi.schemaRegistry.getSchemaById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {

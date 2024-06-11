@@ -9,10 +9,10 @@ import {
   clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  Properties,
+  PropertiesSchema,
+  DEFAULT_CLIENT_CHANNEL,
   STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema(Properties);
+    this._echoClient.graph.schemaRegistry.addSchema(PropertiesSchema);
   }
 
   [inspect.custom]() {

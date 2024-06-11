@@ -10,7 +10,7 @@ import { inspect } from 'util';
 import { encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
 import {
   create,
-  echoObject,
+  EchoObject,
   type EchoReactiveObject,
   Expando,
   foreignKey,
@@ -44,7 +44,7 @@ import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
 registerSignalRuntime();
 
-const TypedObjectSchema = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
+const TypedObjectSchema = TestSchema.pipe(EchoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.Struct({ id: S.Number });
@@ -302,13 +302,13 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Org = S.Struct({
       name: S.String,
-    }).pipe(echoObject('example.Org', '1.0.0'));
+    }).pipe(EchoObject('example.Org', '1.0.0'));
 
     const Person = S.Struct({
       name: S.String,
       worksAt: ref(Org),
       previousEmployment: S.optional(S.Array(ref(Org))),
-    }).pipe(echoObject('example.Person', '1.0.0'));
+    }).pipe(EchoObject('example.Person', '1.0.0'));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();

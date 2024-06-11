@@ -14,13 +14,13 @@ import { type Identifiable, type Ref } from './types';
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
-// TODO(burdon): Rename ECHO?
 // TODO(burdon): Make private to this file?
+// TODO(burdon): EchoObjectAnnotation should be teh actual annotation.
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
   storedSchemaId?: string;
   typename: string;
-  version: string; // TODO(burdon): Semvar.
+  version: string;
 };
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
@@ -33,9 +33,8 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
  * @param typename
  * @param version
  */
-// TODO(burdon): Rename createSchema.
 // TODO(dmaretskyi): Add `id` field to the schema type.
-export const echoObject =
+export const EchoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {

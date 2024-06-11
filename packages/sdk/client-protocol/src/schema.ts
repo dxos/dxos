@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { echoObject, S } from '@dxos/echo-schema';
+import { EchoObject, S } from '@dxos/echo-schema';
 
 // TODO(burdon): Is this only used for Space properties?
-const PropertiesSchema = S.Struct(
+export const PropertiesSchema = S.Struct(
   {
     name: S.optional(S.String),
   },
@@ -14,9 +14,9 @@ const PropertiesSchema = S.Struct(
     key: S.String,
     value: S.Any,
   },
-).pipe(echoObject('dxos.sdk.client.Properties', '0.1.0'));
+).pipe(EchoObject('dxos.sdk.client.Properties', '0.1.0'));
+
 export interface Properties extends S.Schema.Type<typeof PropertiesSchema> {}
-// export const Properties = PropertiesSchema;
 
 // TODO(burdon): Rename?
 export type PropertiesProps = Pick<Properties, 'name'>;
