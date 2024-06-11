@@ -5,12 +5,10 @@
 import { Flags } from '@oclif/core';
 
 import { asyncTimeout } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { IdentityWaitTimeoutError, IDENTITY_WAIT_TIMEOUT } from '@dxos/cli-base';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
-import { IdentityWaitTimeoutError } from '../../errors';
-import { IDENTITY_WAIT_TIMEOUT } from '../../timeouts';
 
 export default class Update extends BaseCommand<typeof Update> {
   static override description = 'Update device info.';
@@ -20,7 +18,7 @@ export default class Update extends BaseCommand<typeof Update> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       // TODO(mykola): Hack to wait for identity with `client.halo.identity.wait()`.
       await asyncTimeout(client.spaces.isReady.wait(), IDENTITY_WAIT_TIMEOUT, new IdentityWaitTimeoutError());
       // TODO(nf): should updateDevice also apply defaults?

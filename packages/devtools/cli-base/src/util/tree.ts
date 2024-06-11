@@ -5,6 +5,7 @@
 import { truncateKey } from '@dxos/debug';
 
 // TODO(burdon): Add chalk.
+// TODO(burdon): https://www.npmjs.com/package/object-treeify
 
 export type TreeNode = {
   id: string;

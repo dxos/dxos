@@ -33,7 +33,7 @@ interface MetricsMethods {
 export class RemoteMetrics implements MetricsMethods {
   private _metrics = new Set<MetricsMethods>();
 
-  async registerProcessor(processor: MetricsMethods) {
+  registerProcessor(processor: MetricsMethods) {
     this._metrics.add(processor);
   }
 

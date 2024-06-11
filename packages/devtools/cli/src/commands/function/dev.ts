@@ -10,6 +10,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { Trigger } from '@dxos/async';
+import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { DX_DATA, getProfilePath, type Space } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import {
@@ -21,7 +22,7 @@ import {
   TriggerRegistry,
 } from '@dxos/functions';
 
-import { BaseCommand, FLAG_SPACE_KEYS } from '../../base';
+import { BaseCommand } from '../../base';
 
 export default class Dev extends BaseCommand<typeof Dev> {
   static override enableJsonFlag = true;
@@ -49,7 +50,7 @@ export default class Dev extends BaseCommand<typeof Dev> {
       require(requirePath);
     }
 
-    await this.execWithClient(async (client) => {
+    await this.execWithClient(async ({ client }) => {
       // TODO(burdon): Standards?
       client.addSchema(...FUNCTION_SCHEMA);
 

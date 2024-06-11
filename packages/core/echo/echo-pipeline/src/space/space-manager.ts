@@ -8,7 +8,7 @@ import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type NetworkManager } from '@dxos/network-manager';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import type { FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -23,7 +23,7 @@ import { type MetadataStore } from '../metadata';
 
 export type SpaceManagerParams = {
   feedStore: FeedStore<FeedMessage>;
-  networkManager: NetworkManager;
+  networkManager: SwarmNetworkManager;
   metadataStore: MetadataStore;
 
   /**
@@ -54,7 +54,7 @@ export type ConstructSpaceParams = {
 export class SpaceManager {
   private readonly _spaces = new ComplexMap<PublicKey, Space>(PublicKey.hash);
   private readonly _feedStore: FeedStore<FeedMessage>;
-  private readonly _networkManager: NetworkManager;
+  private readonly _networkManager: SwarmNetworkManager;
   private readonly _metadataStore: MetadataStore;
   private readonly _snapshotStore: SnapshotStore;
   private readonly _blobStore: BlobStore;

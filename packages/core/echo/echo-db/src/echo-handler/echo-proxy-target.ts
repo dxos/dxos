@@ -4,6 +4,7 @@
 
 import { type Brand } from 'effect';
 
+import { type EchoReactiveObject } from '@dxos/echo-schema';
 import type { GenericSignal } from '@dxos/echo-signals/runtime';
 import type { ComplexMap } from '@dxos/util';
 
@@ -49,6 +50,12 @@ export type ObjectInternals = {
   targetsMap: ComplexMap<TargetKey, ProxyTarget>;
 
   signal: GenericSignal;
+
+  /**
+   * Until object is persisted in the database, the linked object references are stored in this cache.
+   * Set only when the object is not bound to a database.
+   */
+  linkCache: Map<string, EchoReactiveObject<any>> | undefined;
 };
 
 /**

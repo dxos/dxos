@@ -4,16 +4,22 @@
 
 import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
-import { type EchoReactiveObject, getSchema, type ReactiveObject } from '@dxos/echo-schema';
+import { type EchoReactiveObject, getSchema, type ReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
+import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, type InitRootProxyFn } from './automerge';
+import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
+import { EchoReactiveHandler } from './echo-handler/echo-handler';
 import { type Hypergraph } from './hypergraph';
 import { type Filter, type FilterSource, type Query } from './query';
+
+export type GetObjectByIdOptions = {
+  deleted?: boolean;
+};
 
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
@@ -29,7 +35,23 @@ export interface EchoDatabase {
 
   get graph(): Hypergraph;
 
-  getObjectById<T extends {} = any>(id: string): EchoReactiveObject<T> | undefined;
+  getObjectById<T extends {} = any>(id: string, opts?: GetObjectByIdOptions): EchoReactiveObject<T> | undefined;
+
+  /**
+   * @deprecated Awaiting API review.
+   */
+  loadObjectById<T extends {} = any>(
+    id: string,
+    options?: { timeout?: number },
+  ): Promise<EchoReactiveObject<T> | undefined>;
+
+  /**
+   * @deprecated Awaiting API review.
+   */
+  batchLoadObjects<T extends {} = any>(
+    ids: string[],
+    options?: { inactivityTimeout?: number },
+  ): Promise<Array<EchoReactiveObject<T> | undefined>>;
 
   /**
    * Adds object to the database.
@@ -84,13 +106,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   private _rootUrl: string | undefined = undefined;
 
+  /**
+   * Mapping `object core` -> `root proxy` (User facing proxies).
+   * @internal
+   */
+  readonly _rootProxies = new Map<AutomergeObjectCore, EchoReactiveObject<any>>();
+
   constructor(params: EchoDatabaseParams) {
     super();
-    const initRootProxyFn: InitRootProxyFn = (core: AutomergeObjectCore) => {
-      initEchoReactiveObjectRootProxy(core);
-    };
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, initRootProxyFn, this);
+    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
     this.schemaRegistry = new DynamicSchemaRegistry(this);
   }
 
@@ -129,27 +154,73 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     }
   }
 
-  getObjectById<T extends EchoReactiveObject<any>>(id: string): T | undefined {
-    return this._automerge.getObjectById(id) as T | undefined;
+  getObjectById(id: string, { deleted = false } = {}): EchoReactiveObject<any> | undefined {
+    const core = this._automerge.getObjectCoreById(id);
+    if (!core || (core.isDeleted() && !deleted)) {
+      return undefined;
+    }
+
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    invariant(isReactiveObject(object));
+    return object;
+  }
+
+  // TODO(Mykola): Reconcile with `getObjectById` and 'batchLoadObjects'.
+  /**
+   * @deprecated Awaiting API review.
+   */
+  async loadObjectById<T = any>(
+    objectId: string,
+    { timeout }: { timeout?: number } = {},
+  ): Promise<EchoReactiveObject<T> | undefined> {
+    const core = await this._automerge.loadObjectCoreById(objectId, { timeout });
+
+    if (!core || core?.isDeleted()) {
+      return undefined;
+    }
+
+    const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+    invariant(isReactiveObject(object));
+    return object;
+  }
+
+  /**
+   * @deprecated Awaiting API review.
+   */
+  async batchLoadObjects(
+    objectIds: string[],
+    { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
+  ): Promise<Array<EchoReactiveObject<any> | undefined>> {
+    const cores = await this._automerge.batchLoadObjectCores(objectIds, { inactivityTimeout });
+    const objects = cores.map((core) => {
+      if (!core || core.isDeleted()) {
+        return undefined;
+      }
+
+      const object = defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core));
+      invariant(isReactiveObject(object));
+      return object;
+    });
+    return objects;
   }
 
   add<T extends ReactiveObject<any>>(obj: T): EchoReactiveObject<{ [K in keyof T]: T[K] }> {
-    if (isEchoObject(obj)) {
-      this._automerge.add(obj);
-      return obj as any;
-    } else {
+    let echoObject = obj;
+    if (!isEchoObject(echoObject)) {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.runtimeSchemaRegistry.hasSchema(schema)) {
+        if (!this.schemaRegistry.isRegistered(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }
-
-      const echoObj = createEchoObject(obj);
-      this._automerge.add(echoObj);
-      return echoObj as any;
+      echoObject = createEchoObject(obj);
     }
+    invariant(isEchoObject(echoObject));
+    this._rootProxies.set(getAutomergeObjectCore(echoObject), echoObject);
+    this._automerge.add(echoObject);
+    EchoReactiveHandler.instance.saveLinkedObjects(echoObject as any);
+    return echoObject as any;
   }
 
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
@@ -182,7 +253,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * @deprecated
    */
   get objects(): EchoReactiveObject<any>[] {
-    return this._automerge.allObjectCores().map((core) => core.rootProxy as EchoReactiveObject<any>);
+    return Array.from(this._rootProxies.values());
   }
 
   /**

@@ -4,9 +4,10 @@
 
 import type Redis from 'ioredis';
 
+import { scheduleMicroTask } from '@dxos/async';
 import { cbor } from '@dxos/automerge/automerge-repo';
 import { type Any } from '@dxos/codec-protobuf';
-import { log } from '@dxos/log';
+import { Context } from '@dxos/context';
 import { type RpcPort } from '@dxos/rpc';
 
 // TODO(mykola): createRpcPort(createRedisReadableStream(...), createRedisWritableStream(...))
@@ -44,7 +45,7 @@ export const createRedisReadableStream = ({ client, queue }: { client: Redis; qu
       });
     },
     cancel: () => {
-      log.info('RedisReadableStream: cancel');
+      client.disconnect();
       unsubscribe?.();
     },
   });
@@ -71,26 +72,18 @@ export const subscribeToRedisQueue = ({
   queue: string;
   callback: (message: Uint8Array) => void;
 }): (() => void) => {
-  let unsubscribed = false;
-  queueMicrotask(async () => {
-    try {
-      // eslint-disable-next-line no-unmodified-loop-condition
-      while (!unsubscribed) {
-        const message = await client.blpopBuffer(queue, 0);
-
-        if (!message) {
-          continue;
-        }
-        callback(message[1]);
+  const ctx = new Context();
+  scheduleMicroTask(ctx, async () => {
+    while (!ctx.disposed) {
+      const message = await client.blpopBuffer(queue, 0);
+      if (!message) {
+        continue;
       }
-    } catch (err) {
-      if (!unsubscribed) {
-        log.catch(err);
-      }
+      callback(message[1]);
     }
   });
   return () => {
-    unsubscribed = true;
+    void ctx.dispose();
   };
 };
 
