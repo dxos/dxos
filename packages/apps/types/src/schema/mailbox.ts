@@ -25,7 +25,7 @@ export class ContactType extends TypedObject({ typename: 'dxos.org/type/Contact'
   ),
 }) {}
 
-const _RecipientSchema = S.mutable(
+const RecipientSchema = S.mutable(
   S.Struct({
     identityKey: S.optional(S.String),
     email: S.optional(S.String),
@@ -34,34 +34,27 @@ const _RecipientSchema = S.mutable(
   }),
 );
 
-export interface RecipientType extends S.Schema.Type<typeof _RecipientSchema> {}
+export interface RecipientType extends S.Schema.Type<typeof RecipientSchema> {}
 
-const _BlockSchema = S.Struct({
+const BlockSchema = S.Struct({
   timestamp: S.String,
   content: S.optional(S.String),
   object: S.optional(ref(Expando)),
 });
 
-export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
+export interface BlockType extends S.Schema.Type<typeof BlockSchema> {}
 
 export class EmailType extends TypedObject({ typename: 'dxos.org/type/Email', version: '0.1.0' })({
   type: S.optional(S.String),
   date: S.optional(S.String),
-  from: _RecipientSchema,
-  to: S.optional(S.Array(_RecipientSchema)),
-  cc: S.optional(S.Array(_RecipientSchema)),
+  from: RecipientSchema,
+  to: S.optional(S.Array(RecipientSchema)),
+  cc: S.optional(S.Array(RecipientSchema)),
   subject: S.optional(S.String),
-  blocks: S.mutable(S.Array(_BlockSchema)),
+  blocks: S.mutable(S.Array(BlockSchema)),
   links: S.optional(S.Array(ref(Expando))),
   state: S.optional(S.Enums(MessageState)),
   read: S.optional(S.Boolean),
-  context: S.optional(
-    S.Struct({
-      space: S.optional(S.String),
-      schema: S.optional(S.String),
-      object: S.optional(S.String),
-    }),
-  ),
 }) {}
 
 export class MailboxType extends TypedObject({ typename: 'dxos.org/type/Mailbox', version: '0.1.0' })({
@@ -71,8 +64,8 @@ export class MailboxType extends TypedObject({ typename: 'dxos.org/type/Mailbox'
 
 export class EventType extends TypedObject({ typename: 'dxos.org/type/Event', version: '0.1.0' })({
   name: S.optional(S.String),
-  owner: _RecipientSchema,
-  attendees: S.mutable(S.Array(_RecipientSchema)),
+  owner: RecipientSchema,
+  attendees: S.mutable(S.Array(RecipientSchema)),
   startDate: S.String,
   links: S.mutable(S.Array(ref(Expando))),
 }) {}
