@@ -266,7 +266,6 @@ const filterMatchInner = (filter: Filter, object: EchoReactiveObject<any>): bool
     }
   }
 
-  // Untracked will prevent signals in the callback from being subscribed to.
   if (filter.predicate && !filter.predicate(object)) {
     return false;
   }
