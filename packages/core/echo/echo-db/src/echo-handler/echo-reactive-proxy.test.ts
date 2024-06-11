@@ -27,7 +27,7 @@ describe('Echo reactive proxy', () => {
         const testSchema = schema === TestSchema ? schema.pipe(echoObject('TestSchema', '1.0.0')) : schema;
         const object = (schema == null ? create(props) : create(testSchema as any, props)) as TestSchema;
         if (testSchema && !db.graph.schemaRegistry.hasSchema(testSchema)) {
-          db.graph.schemaRegistry.registerSchema(testSchema as any);
+          db.graph.schemaRegistry.addSchema(testSchema as any);
         }
         return db.add(object) as TestSchema;
       },

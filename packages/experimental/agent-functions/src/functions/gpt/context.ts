@@ -5,11 +5,11 @@
 import { type DocumentCommentType, DocumentType, type MessageType, type ThreadType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { createDocAccessor, getTextInRange, loadObjectReferences } from '@dxos/echo-db';
-import { type DynamicEchoSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
+import { type DynamicSchema, type EchoReactiveObject, effectToJsonSchema } from '@dxos/echo-schema';
 
 // TODO(burdon): Evolve.
 export type RequestContext = {
-  schema?: Map<string, DynamicEchoSchema>;
+  schema?: Map<string, DynamicSchema>;
   object?: EchoReactiveObject<any>;
   text?: string;
 };
@@ -44,7 +44,7 @@ export const createContext = async (
   // Create schema registry.
   // TODO(burdon): Filter?
   const schemaList = await space.db.schemaRegistry.getAll();
-  const schema = schemaList.reduce<Map<string, DynamicEchoSchema>>((map, schema) => {
+  const schema = schemaList.reduce<Map<string, DynamicSchema>>((map, schema) => {
     const jsonSchema = effectToJsonSchema(schema);
     if (jsonSchema.title) {
       map.set(jsonSchema.title, schema);

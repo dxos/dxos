@@ -8,11 +8,11 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
 import {
-  DynamicEchoSchema,
+  DynamicSchema,
   type EchoReactiveObject,
   ObjectMetaSchema,
   SchemaValidator,
-  StoredEchoSchema,
+  StoredSchema,
   createReactiveProxy,
   defineHiddenProperty,
   isReactiveObject,
@@ -175,7 +175,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // object instanceof StoredEchoSchema requires database to lookup schema
     const database = target[symbolInternals].core.database;
-    if (object != null && database && object instanceof StoredEchoSchema) {
+    if (object != null && database && object instanceof StoredSchema) {
       return database._dbApi.schemaRegistry.register(object);
     }
     return object;
@@ -306,7 +306,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
     );
@@ -645,7 +645,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (value == null || Array.isArray(value)) {
     return;
   }
-  if (value instanceof DynamicEchoSchema) {
+  if (value instanceof DynamicSchema) {
     return;
   }
   const proto = Object.getPrototypeOf(value);

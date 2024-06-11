@@ -7,16 +7,17 @@ import * as S from '@effect/schema/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { StoredEchoSchema } from './stored-schema';
+import { StoredSchema } from './stored-schema';
 import { schemaVariance } from '../ast';
 import { effectToJsonSchema, jsonToEffectSchema } from '../json';
 import { type Identifiable } from '../types';
 
-export interface DynamicSchemaConstructor extends S.Schema<DynamicEchoSchema> {
+export interface DynamicSchemaConstructor extends S.Schema<DynamicSchema> {
   new (): Identifiable;
 }
 
-export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
+// TODO(burdon): Why is this a function?
+export const DynamicSchemaBase = (): DynamicSchemaConstructor => {
   return class {
     static get ast() {
       return this._schema.ast;
@@ -36,17 +37,20 @@ export const DynamicObjectSchemaBase = (): DynamicSchemaConstructor => {
 
     private static get _schema() {
       // The field is DynamicEchoSchema in runtime, but is serialized as StoredEchoSchema in automerge.
-      return S.Union(StoredEchoSchema, S.instanceOf(DynamicEchoSchema)).annotations(StoredEchoSchema.ast.annotations);
+      return S.Union(StoredSchema, S.instanceOf(DynamicSchema)).annotations(StoredSchema.ast.annotations);
     }
   } as any;
 };
 
-export class DynamicEchoSchema extends DynamicObjectSchemaBase() implements S.Schema<Identifiable> {
-  // TODO(burdon): Document.
+/**
+ * Schema that can be modified at runtime via the API.
+ */
+// TODO(burdon): Rename MutableSchema.
+export class DynamicSchema extends DynamicSchemaBase() implements S.Schema<Identifiable> {
   private _schema: S.Schema<Identifiable> | undefined;
   private _isDirty = true;
 
-  constructor(public readonly serializedSchema: StoredEchoSchema) {
+  constructor(public readonly serializedSchema: StoredSchema) {
     super();
   }
 

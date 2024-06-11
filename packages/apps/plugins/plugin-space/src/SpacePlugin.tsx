@@ -447,7 +447,7 @@ export const SpacePlugin = ({
               label: ['shared spaces label', { ns: SPACE_PLUGIN }],
               testId: 'spacePlugin.sharedSpaces',
               role: 'branch',
-              palette: 'orange',
+              palette: 'pink',
               childrenPersistenceClass: 'echo',
               onRearrangeChildren: (nextOrder: Space[]) => {
                 if (!spacesOrder) {

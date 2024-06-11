@@ -6,9 +6,9 @@ import * as S from '@effect/schema/Schema';
 import { expect } from 'chai';
 
 import {
-  DynamicEchoSchema,
+  DynamicSchema,
   EchoObjectAnnotationId,
-  StoredEchoSchema,
+  StoredSchema,
   TypedObject,
   create,
   effectToJsonSchema,
@@ -21,11 +21,11 @@ import { EchoTestBuilder } from './testing';
 
 const testType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [
-  create(StoredEchoSchema, {
+  create(StoredSchema, {
     ...testType,
     jsonSchema: effectToJsonSchema(S.Struct({ field: S.String })),
   }),
-  create(StoredEchoSchema, {
+  create(StoredSchema, {
     ...testType,
     typename: testType.typename + '2',
     jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
@@ -51,20 +51,20 @@ describe('schema registry', () => {
   test('add new schema', async () => {
     const { registry } = await setupTest();
     class TestClass extends TypedObject(testType)({}) {}
-    const dynamicSchema = registry.add(TestClass);
+    const dynamicSchema = registry.addSchema(TestClass);
     const expectedSchema = TestClass.annotations({
       [EchoObjectAnnotationId]: { ...testType, storedSchemaId: dynamicSchema.id },
     });
     expect(dynamicSchema.ast).to.deep.eq(expectedSchema.ast);
-    expect(registry.isRegistered(dynamicSchema)).to.be.true;
-    expect(registry.getById(dynamicSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
+    expect(registry.hasSchema(dynamicSchema)).to.be.true;
+    expect(registry.getSchemaById(dynamicSchema.id)?.ast).to.deep.eq(expectedSchema.ast);
   });
 
   test('can store the same schema multiple times', async () => {
     const { registry } = await setupTest();
     class TestClass extends TypedObject(testType)({}) {}
-    const stored1 = registry.add(TestClass);
-    const stored2 = registry.add(TestClass);
+    const stored1 = registry.addSchema(TestClass);
+    const stored2 = registry.addSchema(TestClass);
     expect(stored1.id).to.not.equal(stored2.id);
   });
 
@@ -81,7 +81,7 @@ describe('schema registry', () => {
   test('get all raw stored schemas', async () => {
     const { db } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = (await db.query(Filter.schema(StoredEchoSchema)).run()).objects;
+    const retrieved = (await db.query(Filter.schema(StoredSchema)).run()).objects;
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -90,18 +90,18 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = create(StoredEchoSchema, {
+    const schemaToStore = create(StoredSchema, {
       ...testType,
       jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
-    expect(registry.isRegistered(new DynamicEchoSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(new DynamicSchema(schemaToStore))).to.be.false;
     const storedSchema = db.add(schemaToStore);
-    expect(registry.isRegistered(new DynamicEchoSchema(storedSchema))).to.be.true;
+    expect(registry.hasSchema(new DynamicSchema(storedSchema))).to.be.true;
   });
 
   test("can't register schema if not stored in db", async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = create(StoredEchoSchema, {
+    const schemaToStore = create(StoredSchema, {
       ...testType,
       jsonSchema: effectToJsonSchema(S.Struct({ field: S.Number })),
     });
@@ -113,7 +113,7 @@ describe('schema registry', () => {
   test('schema is invalidated on update', async () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
-    const dynamicSchema = registry.getById(storedSchema.id)!;
+    const dynamicSchema = registry.getSchemaById(storedSchema.id)!;
     expect(dynamicSchema.getProperties().length).to.eq(1);
     dynamicSchema.addColumns({ newField: S.Number });
     expect(dynamicSchema.getProperties().length).to.eq(2);

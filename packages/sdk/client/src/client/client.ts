@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.schemaRegistry.addSchema(Properties);
   }
 
   [inspect.custom]() {
@@ -216,7 +216,7 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
     //   throw new ApiError('Client not open.');
@@ -225,7 +225,7 @@ export class Client {
     // TODO(burdon): Find?
     const exists = schemaList.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.registerSchema(...exists);
+      this._echoClient.graph.schemaRegistry.addSchema(...exists);
     }
 
     return this;

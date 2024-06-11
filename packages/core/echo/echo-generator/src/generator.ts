@@ -3,7 +3,7 @@
 //
 
 import { type Space, Filter } from '@dxos/client/echo';
-import { type DynamicEchoSchema, type ReactiveObject } from '@dxos/echo-schema';
+import { type DynamicSchema, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
@@ -22,15 +22,15 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     private readonly _provider?: TestObjectProvider<T>
   ) {}
 
-  get schemas(): DynamicEchoSchema[] {
+  get schemas(): DynamicSchema[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): DynamicEchoSchema | undefined {
+  getSchema(type: T): DynamicSchema | undefined {
     return this.schemas.find((schema) => schema.typename === type);
   }
 
-  protected setSchema(type: T, schema: DynamicEchoSchema) {
+  protected setSchema(type: T, schema: DynamicSchema) {
     this._schemas[type] = schema;
   }
 
@@ -71,21 +71,21 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
     // TODO(burdon): Map initially are objects that have not been added to the space.
     // Merge existing schema in space with defaults.
-    Object.entries<DynamicEchoSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
-      let schema = this._space.db.schemaRegistry.getRegisteredByTypename(type);
+    Object.entries<DynamicSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
+      let schema = this._space.db.schemaRegistry.getSchemaByTypename(type);
       if (schema == null) {
-        schema = this._space.db.schemaRegistry.add(dynamicSchema.schema);
+        schema = this._space.db.schemaRegistry.addSchema(dynamicSchema.schema);
       }
       this.setSchema(type as T, schema);
     });
   }
 
   addSchemas() {
-    const result: DynamicEchoSchema[] = [];
+    const result: DynamicSchema[] = [];
     this.schemas.forEach((schema) => {
-      const existing = this._space.db.schemaRegistry.getRegisteredByTypename(schema.typename);
+      const existing = this._space.db.schemaRegistry.getSchemaByTypename(schema.typename);
       if (existing == null) {
-        result.push(this._space.db.schemaRegistry.add(schema.schema));
+        result.push(this._space.db.schemaRegistry.addSchema(schema.schema));
       } else {
         result.push(existing);
       }
