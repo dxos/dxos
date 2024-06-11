@@ -15,7 +15,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './core';
+import { type ItemsUpdatedEvent } from './core-db';
 import { type EchoDatabase, type EchoDatabaseImpl } from './database';
 import { prohibitSignalActions } from './guarded-scope';
 import {

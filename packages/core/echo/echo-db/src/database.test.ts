@@ -18,7 +18,7 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { getObjectCore } from './core';
+import { getObjectCore } from './core-db';
 import { clone } from './echo-handler';
 import { Filter } from './query';
 import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from './testing';

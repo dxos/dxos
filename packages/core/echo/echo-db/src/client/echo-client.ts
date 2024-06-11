@@ -10,7 +10,7 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexQuerySourceProvider } from './index-query-source-provider';
-import { AutomergeContext } from '../core';
+import { AutomergeContext } from '../core-db';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 

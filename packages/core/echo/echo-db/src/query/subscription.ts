@@ -4,7 +4,7 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { getObjectCore } from '../core';
+import { getObjectCore } from '../core-db';
 import { isEchoObject } from '../echo-handler';
 
 export type Selection = any[];

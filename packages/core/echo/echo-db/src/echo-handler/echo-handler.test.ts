@@ -36,7 +36,7 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
-import { AutomergeContext, getObjectCore } from '../core';
+import { AutomergeContext, getObjectCore } from '../core-db';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';

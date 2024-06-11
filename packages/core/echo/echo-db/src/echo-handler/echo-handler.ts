@@ -36,7 +36,7 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core';
+import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
 import { type EchoDatabase } from '../database';
 
 export const PROPERTY_ID = 'id';

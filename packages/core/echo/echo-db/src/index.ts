@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-export * from './core';
+export * from './core-db';
 export * from './database';
 export * from './guarded-scope';
 export * from './hypergraph';

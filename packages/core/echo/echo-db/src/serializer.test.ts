@@ -9,7 +9,7 @@ import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { AutomergeContext } from './core';
+import { AutomergeContext } from './core-db';
 import { EchoDatabaseImpl } from './database';
 import { Hypergraph } from './hypergraph';
 import { Filter } from './query';

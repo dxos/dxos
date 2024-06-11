@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { symbolInternals } from './echo-proxy-target';
-import { ObjectCore, getObjectCore } from '../core';
+import { ObjectCore, getObjectCore } from '../core-db';
 
 export type CloneOptions = {
   /**
