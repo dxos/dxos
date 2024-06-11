@@ -27,7 +27,7 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { ObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
+import { ObjectCore, type DecodedAutomergePrimaryValue } from '../core';
 import { type EchoDatabase } from '../database';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>

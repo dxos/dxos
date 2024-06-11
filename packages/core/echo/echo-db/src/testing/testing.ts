@@ -5,7 +5,7 @@
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
-import { AutomergeContext, type AutomergeContextConfig } from '../automerge';
+import { AutomergeContext, type AutomergeContextConfig } from '../core';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 

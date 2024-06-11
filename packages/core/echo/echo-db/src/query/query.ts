@@ -14,7 +14,7 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
-import { getObjectCore } from '../automerge';
+import { getObjectCore } from '../core';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.

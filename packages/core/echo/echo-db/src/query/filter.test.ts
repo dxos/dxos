@@ -12,7 +12,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
 import { Filter, compareType, filterMatch } from './filter';
-import { ObjectCore, getObjectCore } from '../automerge';
+import { ObjectCore, getObjectCore } from '../core';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
