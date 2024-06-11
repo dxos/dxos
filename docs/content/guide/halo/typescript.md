@@ -102,5 +102,5 @@ const acceptInvitation = async (client: Client) => {
 
 ::: tip
 - `readline-sync` is used in this example to read input from the console. You can use any other method to read input.
-- Your [client](../../api/@dxos/client) instance needs to be [configured](../echo/typescript/config) correctly to talk to a [signalling service](../glossary#signaling-service).
+- Your [client](../../api/@dxos/client) instance needs to be [configured](../echo/typescript/config.md) correctly to talk to a [signalling service](../glossary.md#signaling-service).
 :::
