@@ -10,7 +10,7 @@ import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { getAutomergeObjectCore } from './automerge';
+import { getObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 
@@ -112,7 +112,7 @@ export class DynamicSchemaRegistry {
       return existing;
     }
     const dynamicSchema = new DynamicEchoSchema(schema);
-    const subscription = getAutomergeObjectCore(schema).updates.on(() => {
+    const subscription = getObjectCore(schema).updates.on(() => {
       dynamicSchema.invalidate();
     });
     this._schemaById.set(schema.id, dynamicSchema);

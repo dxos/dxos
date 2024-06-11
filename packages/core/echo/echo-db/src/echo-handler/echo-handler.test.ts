@@ -36,7 +36,7 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
-import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
+import { AutomergeContext, getObjectCore } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
@@ -475,7 +475,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(create({ field: 1 }));
       const typeReference = getTypeReference(TestSchema)!;
-      getAutomergeObjectCore(obj).setType(typeReference);
+      getObjectCore(obj).setType(typeReference);
       expect(getType(obj)).to.deep.eq(typeReference);
     });
 
@@ -539,10 +539,10 @@ describe('Reactive Object with ECHO database', () => {
     expect(updateCount).to.eq(1);
 
     // Rebind obj2 to obj1
-    getAutomergeObjectCore(obj2).bind({
-      db: getAutomergeObjectCore(obj1).database!,
-      docHandle: getAutomergeObjectCore(obj1).docHandle!,
-      path: getAutomergeObjectCore(obj1).mountPath,
+    getObjectCore(obj2).bind({
+      db: getObjectCore(obj1).database!,
+      docHandle: getObjectCore(obj1).docHandle!,
+      path: getObjectCore(obj1).mountPath,
       assignFromLocalState: false,
     });
 

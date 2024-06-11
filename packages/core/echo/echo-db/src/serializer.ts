@@ -8,7 +8,7 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
-import { ObjectCore, getAutomergeObjectCore } from './automerge';
+import { ObjectCore, getObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
 
@@ -141,7 +141,7 @@ export class Serializer {
   }
 
   private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
-    const core = getAutomergeObjectCore(object);
+    const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
     const typeRef = core.getType();

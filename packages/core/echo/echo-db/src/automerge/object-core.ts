@@ -31,7 +31,6 @@ const STRING_CRDT_LIMIT = 300_000;
 export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
-// TODO(dmaretskyi): Rename.
 export type ObjectCoreOptions = {
   type?: Reference;
   meta?: ObjectMeta;

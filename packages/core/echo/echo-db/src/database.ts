@@ -16,7 +16,7 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, AutomergeDb, type ObjectCore, getAutomergeObjectCore } from './automerge';
+import { type AutomergeContext, AutomergeDb, type ObjectCore, getObjectCore } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
 import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
 import { EchoReactiveHandler } from './echo-handler/echo-handler';
@@ -224,7 +224,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       echoObject = createEchoObject(obj);
     }
     invariant(isEchoObject(echoObject));
-    this._rootProxies.set(getAutomergeObjectCore(echoObject), echoObject);
+    this._rootProxies.set(getObjectCore(echoObject), echoObject);
 
     const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);

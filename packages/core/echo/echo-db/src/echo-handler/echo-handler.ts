@@ -36,7 +36,7 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type ObjectCore } from '../automerge/automerge-object-core';
+import { META_NAMESPACE, type ObjectCore } from '../automerge/object-core';
 import { type KeyPath } from '../automerge/key-path';
 import { type EchoDatabase } from '../database';
 

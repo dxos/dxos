@@ -18,7 +18,7 @@ export {
   createEchoObject,
   getRangeFromCursor,
   getTypeRef,
-  getAutomergeObjectCore,
+  getObjectCore,
   hasType,
   Filter,
   Query,

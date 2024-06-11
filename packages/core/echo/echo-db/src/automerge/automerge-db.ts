@@ -28,8 +28,8 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getAutomergeObjectCore } from './automerge-object';
-import { ObjectCore } from './automerge-object-core';
+import { getObjectCore } from './automerge-object';
+import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';
 
@@ -294,13 +294,13 @@ export class AutomergeDb {
   }
 
   add(obj: EchoReactiveObject<any>) {
-    const core = getAutomergeObjectCore(obj);
+    const core = getObjectCore(obj);
     this.addCore(core);
     return obj;
   }
 
   remove(obj: EchoReactiveObject<any>) {
-    const core = getAutomergeObjectCore(obj);
+    const core = getObjectCore(obj);
     invariant(this._objects.has(core.id));
     core.setDeleted(true);
   }
@@ -525,7 +525,7 @@ export const loadObjectReferences = async <
 ): Promise<T extends T[] ? Array<DerefType> : DerefType> => {
   const objectArray = Array.isArray(objOrArray) ? objOrArray : [objOrArray];
   const tasks = objectArray.map((obj) => {
-    const core = getAutomergeObjectCore(obj);
+    const core = getObjectCore(obj);
     const value = valueAccessor(obj);
     if (core.database == null) {
       return value;

@@ -7,7 +7,7 @@ import { invariant } from '@dxos/invariant';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
 import { symbolInternals } from './echo-proxy-target';
-import { ObjectCore, getAutomergeObjectCore } from '../automerge';
+import { ObjectCore, getObjectCore } from '../automerge';
 
 export type CloneOptions = {
   /**
@@ -22,7 +22,7 @@ export type CloneOptions = {
 };
 
 const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
-  const core = getAutomergeObjectCore(obj);
+  const core = getObjectCore(obj);
   invariant(core, 'object is not an EchoObject');
   return core;
 };

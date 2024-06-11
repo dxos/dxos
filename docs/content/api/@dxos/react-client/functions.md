@@ -138,7 +138,7 @@ Arguments:
 `object`: <code>[ReactiveObject](/api/@dxos/react-client/types/ReactiveObject)&lt;any&gt;</code>
 
 
-### [getAutomergeObjectCore(obj)]()
+### [getObjectCore(obj)]()
 
 
 

@@ -12,7 +12,7 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
 import { Filter, compareType, filterMatch } from './filter';
-import { ObjectCore, getAutomergeObjectCore } from '../automerge';
+import { ObjectCore, getObjectCore } from '../automerge';
 import { EchoTestBuilder } from '../testing';
 
 describe('Filter', () => {
@@ -128,7 +128,7 @@ describe('Filter', () => {
     const obj = db.add(create(schema, { title: 'test' }));
 
     const filter = Filter.typename(schema.id);
-    expect(filterMatch(filter, getAutomergeObjectCore(obj))).to.be.true;
+    expect(filterMatch(filter, getObjectCore(obj))).to.be.true;
   });
 });
 

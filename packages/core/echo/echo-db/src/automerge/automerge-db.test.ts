@@ -16,7 +16,7 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './automerge-db';
-import { getAutomergeObjectCore } from './automerge-object';
+import { getObjectCore } from './automerge-object';
 import { TestBuilder, TestPeer } from '../testing';
 
 describe('AutomergeDb', () => {
@@ -90,7 +90,7 @@ describe('AutomergeDb', () => {
       // The second peer treats text as inline right after opening the document
       const peer = await createPeerInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
-        expect(getAutomergeObjectCore(object).docHandle?.url).to.eq(textHandle.url);
+        expect(getObjectCore(object).docHandle?.url).to.eq(textHandle.url);
         handles.spaceRootHandle.change((newDocument: SpaceDoc) => {
           newDocument.objects = textHandle.docSync()?.objects;
         });
@@ -98,9 +98,9 @@ describe('AutomergeDb', () => {
       const peerText = peer.db.getObjectById(object.id)!;
       expect(peerText).not.to.be.undefined;
       const spaceRootHandle = getDocHandles(peer).spaceRootHandle;
-      expect(getAutomergeObjectCore(peerText).docHandle?.url).to.eq(spaceRootHandle.url);
+      expect(getObjectCore(peerText).docHandle?.url).to.eq(spaceRootHandle.url);
       // The first peer rebinds its object to space root too
-      expect(getAutomergeObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
+      expect(getObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
     });
   });
 
@@ -454,7 +454,7 @@ const getDocHandles = (peer: TestPeer): DocumentHandles => {
   return { spaceRootHandle, linkedDocHandles };
 };
 
-const getObjectDocHandle = (obj: any) => getAutomergeObjectCore(obj).docHandle!;
+const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createPeerInSpaceWithObject = async (
   object: EchoReactiveObject<any>,

@@ -8,7 +8,7 @@ import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
-import { getAutomergeObjectCore } from './automerge';
+import { getObjectCore } from './automerge';
 import { TestBuilder } from './testing';
 
 // TODO(dmaretskyi): Convert to new test builder.
@@ -128,7 +128,7 @@ describe('HyperGraph', () => {
     expect(obj1.link).to.eq(undefined);
 
     let called = false;
-    getAutomergeObjectCore(obj1).updates.on(() => {
+    getObjectCore(obj1).updates.on(() => {
       called = true;
     });
 
