@@ -49,7 +49,7 @@ const Story = ({ table }: { table?: TableType }) => {
 
   return (
     <Table.Root>
-      <Table.Viewport classNames={'inset-0 overflow-auto'}>
+      <Table.Viewport classNames={'inset-0'}>
         <ObjectTable table={table} stickyHeader />
       </Table.Viewport>
     </Table.Root>

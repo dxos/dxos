@@ -73,11 +73,13 @@ const resolveReporterConfig = (args: { browserMode: boolean }): UserConfig['test
   if (shouldCreateXmlReport) {
     const vitestReportDir = `vitest${args.browserMode ? '-browser' : ''}-reports`;
     return {
+      passWithNoTests: true,
       reporters: ['junit', 'verbose'],
       outputFile: join(__dirname, `test-results/${vitestReportDir}/${targetProject}/report.xml`),
     };
   }
   return {
+    passWithNoTests: true,
     reporters: ['verbose'],
   };
 };

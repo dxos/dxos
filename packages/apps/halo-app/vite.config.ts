@@ -14,7 +14,7 @@ import WasmPlugin from 'vite-plugin-wasm';
 import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   server: {
     host: true,

@@ -138,14 +138,6 @@ export class AutomergeDb {
   }
 
   /**
-   * @deprecated
-   * Return only loaded objects.
-   */
-  allObjects(): EchoReactiveObject<any>[] {
-    return this.allObjectCores().map((core) => core.rootProxy as EchoReactiveObject<any>);
-  }
-
-  /**
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -60,7 +60,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "cron": "^3.1.6",
-    "effect": "^2.4.19",
+    "effect": "^3.2.7",
     "express": "^4.19.2",
     "get-port-please": "^3.1.1",
     "ws": "^8.14.2"

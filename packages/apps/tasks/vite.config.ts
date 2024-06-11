@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   server: {
     host: true,

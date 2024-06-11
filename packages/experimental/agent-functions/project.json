@@ -20,7 +20,8 @@
       "options": {
         "ciEnvironments": [
           "nodejs"
-        ]
+        ],
+        "forceExit": true
       }
     }
   },

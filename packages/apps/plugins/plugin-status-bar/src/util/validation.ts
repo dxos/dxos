@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 import { ArrayFormatter } from '@effect/schema';
+import { Effect } from 'effect';
 
 import { S } from '@dxos/echo-schema';
 
@@ -12,7 +13,7 @@ export const validate = <T>(schema: S.Schema<T>, data: any): ValidationError[] |
   const result = validator(data);
 
   if (result._tag === 'Left') {
-    const errors = ArrayFormatter.formatError(result.left);
+    const errors = Effect.runSync(ArrayFormatter.formatError(result.left));
     // TODO(Zan): Path.join is an assumption...
     return errors.map(({ message, path }) => ({ message, path: path.join('.') }));
   }
