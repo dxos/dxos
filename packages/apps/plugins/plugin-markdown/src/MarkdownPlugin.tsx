@@ -359,8 +359,6 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                 comments: [],
               }) satisfies ReactiveObject<DocumentType>;
 
-              console.log('==', doc);
-
               return {
                 data: doc,
                 intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
