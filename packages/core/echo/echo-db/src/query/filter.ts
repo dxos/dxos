@@ -192,7 +192,7 @@ export const filterMatch = (filter: Filter, object: EchoReactiveObject<any> | un
   if (!object) {
     return false;
   }
-  const result = filterMatchInner(filter, object);
+  const result = compositeRuntime.untracked(() => filterMatchInner(filter, object));
 
   // don't apply filter negation to deleted object handling, as it's part of filter options
   return filter.not && !getAutomergeObjectCore(object).isDeleted() ? !result : result;
@@ -267,7 +267,7 @@ const filterMatchInner = (filter: Filter, object: EchoReactiveObject<any>): bool
   }
 
   // Untracked will prevent signals in the callback from being subscribed to.
-  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(object))) {
+  if (filter.predicate && !filter.predicate(object)) {
     return false;
   }
 

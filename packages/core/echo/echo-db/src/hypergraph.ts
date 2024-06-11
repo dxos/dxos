@@ -328,17 +328,19 @@ class SpaceQuerySource implements QuerySource {
   }
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
-    return this._database.objects
-      .filter((object) => filterMatch(filter, object))
-      .map((object) => ({
-        id: object.id,
-        spaceKey: this.spaceKey,
-        object,
-        resolution: {
-          source: 'local',
-          time: 0,
-        },
-      }));
+    return compositeRuntime.untracked(() =>
+      this._database.objects
+        .filter((object) => filterMatch(filter, object))
+        .map((object) => ({
+          id: object.id,
+          spaceKey: this.spaceKey,
+          object,
+          resolution: {
+            source: 'local',
+            time: 0,
+          },
+        })),
+    );
   }
 
   private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
