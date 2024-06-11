@@ -6,7 +6,7 @@ import { ux } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { table, type TableFlags, TABLE_FLAGS } from '@dxos/cli-base';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions';
+import { type StaticSchema } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';
 
@@ -24,28 +24,21 @@ export default class List extends BaseCommand<typeof List> {
   };
 
   async run(): Promise<any> {
-    const { space: spaceKeys } = this.flags;
-    await this.execWithClient(async ({ client }) => {
-      // TODO(burdon): Registered by plugin?
-      client.addSchema(FunctionDef, FunctionTrigger);
+    const { key } = this.args;
+    return await this.execWithClient(async ({ client }) => {
+      const space = await this.getSpace(client, key);
+      const schemas = await space.db.schema.list();
+      printSchema(schemas, this.flags);
     });
-
-    return await this.execWithSpace(
-      async ({ space }) => {
-        const schemas = await space.db.schema.list();
-        printSchema(schemas, this.flags);
-      },
-      { spaceKeys },
-    );
   }
 }
 
-const printSchema = (schema: any[], flags: TableFlags = {}) => {
+const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
   return ux.stdout(
     table(
-      schema,
+      schemas,
       {
-        id: {}, // TODO(burdon): undefined.
+        storedSchemaId: { truncate: true }, // TODO(burdon): undefined.
         typename: {}, // TODO(burdon): Sometimes undefined.
         version: {}, // TODO(burdon): undefined.
       },

@@ -8,6 +8,7 @@ import { getEchoObjectAnnotation } from '../annotations';
 import { requireTypeReference } from '../getter';
 
 export type StaticSchema = {
+  storedSchemaId?: string;
   typename: string;
   version: string;
   schema: S.Schema<any>;

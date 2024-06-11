@@ -128,7 +128,11 @@ describe('schema registry', () => {
     const listed = await db.schema.list();
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredEchoSchema), makeStaticSchema(TestSchemaClass)]);
-    expect(listed[2]).to.deep.contain({ typename: storedSchema.typename, version: storedSchema.version });
+    expect(listed[2]).to.deep.contain({
+      storedSchemaId: storedSchema.id,
+      typename: storedSchema.typename,
+      version: storedSchema.version,
+    });
     const dynamicSchema = registry.getById(storedSchema.id)!;
     expect(listed[2].schema.ast).to.deep.eq(dynamicSchema.schema.ast);
   });
