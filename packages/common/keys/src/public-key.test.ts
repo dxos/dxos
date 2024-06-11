@@ -62,7 +62,7 @@ describe('PublicKey', () => {
   });
 
   test('base32', () => {
-    const key = PublicKey.randomOfLength(20); // space keys will be cut to first 20 bytes of sha-256 hash
+    const key = PublicKey.randomOfLength(20); // Space keys will be cut to first 20 bytes of sha-256 hash.
     const encoded = key.toMultibase32();
 
     expect(PublicKey.fromMultibase32(encoded).toHex()).to.equal(key.toHex());
