@@ -28,7 +28,7 @@ import {
   symbolPath,
 } from './echo-proxy-target';
 import { ObjectCore, type DecodedAutomergePrimaryValue } from '../core-db';
-import { type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../proxy-db';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
@@ -98,10 +98,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   core.initNewObject(linkAllNestedProperties(target));
 };
 
-export const initEchoReactiveObjectRootProxy = (
-  core: ObjectCore,
-  database?: EchoDatabase,
-): EchoReactiveObject<any> => {
+export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
     [symbolInternals]: initInternals(core, database),
     [symbolPath]: [],

@@ -16,7 +16,7 @@ import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabase, type EchoDatabaseImpl } from './database';
+import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import { prohibitSignalActions } from './guarded-scope';
 import {
   Filter,

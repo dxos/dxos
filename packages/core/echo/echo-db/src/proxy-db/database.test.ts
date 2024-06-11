@@ -18,10 +18,10 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { getObjectCore } from './core-db';
-import { clone } from './echo-handler';
-import { Filter } from './query';
-import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from './testing';
+import { getObjectCore } from '../core-db';
+import { clone } from '../echo-handler';
+import { Filter } from '../query';
+import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 

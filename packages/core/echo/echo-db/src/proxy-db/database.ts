@@ -16,13 +16,13 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from './core-db';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
-import { EchoReactiveHandler } from './echo-handler/echo-handler';
-import { type ProxyTarget } from './echo-handler/echo-proxy-target';
-import { type Hypergraph } from './hypergraph';
-import { type Filter, type FilterSource, type Query } from './query';
+import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from '../core-db';
+import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
+import { EchoReactiveHandler } from '../echo-handler/echo-handler';
+import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { type Hypergraph } from '../hypergraph';
+import { type Filter, type FilterSource, type Query } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;

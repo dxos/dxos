@@ -11,8 +11,8 @@ import { ComplexMap } from '@dxos/util';
 
 import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
-import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
 
 export type EchoClientParams = {};
 

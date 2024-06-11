@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
 import { ObjectCore, getObjectCore } from './core-db';
-import { type EchoDatabase } from './database';
+import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;

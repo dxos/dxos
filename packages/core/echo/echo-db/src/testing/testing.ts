@@ -6,8 +6,8 @@ import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
-import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder

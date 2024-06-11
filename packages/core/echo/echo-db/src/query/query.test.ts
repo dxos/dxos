@@ -11,7 +11,7 @@ import { afterAll, afterTest, beforeAll, beforeEach, describe, test } from '@dxo
 import { range } from '@dxos/util';
 
 import { Filter } from './filter';
-import { type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../proxy-db';
 import { Contact, EchoTestBuilder, TestBuilder } from '../testing';
 
 const createTestObject = (idx: number, label?: string) => {

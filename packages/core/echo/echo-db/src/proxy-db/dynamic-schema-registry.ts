@@ -10,9 +10,9 @@ import { DynamicEchoSchema, StoredEchoSchema, create, effectToJsonSchema } from 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { getObjectCore } from './core-db';
 import { type EchoDatabase } from './database';
-import { Filter } from './query';
+import { getObjectCore } from '../core-db';
+import { Filter } from '../query';
 
 type OnSchemaListChangedFn = (schemaList: DynamicEchoSchema[]) => void;
 

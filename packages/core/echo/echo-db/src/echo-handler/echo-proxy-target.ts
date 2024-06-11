@@ -11,7 +11,7 @@ import type { ComplexMap } from '@dxos/util';
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
 import type { ObjectCore, KeyPath } from '../core-db';
-import { type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../proxy-db';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');

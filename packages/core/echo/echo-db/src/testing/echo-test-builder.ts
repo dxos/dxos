@@ -12,7 +12,7 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 
 import { EchoClient } from '../client';
-import { type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../proxy-db';
 import { EchoHost } from '../host';
 
 export class EchoTestBuilder extends Resource {
