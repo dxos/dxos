@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
 import { createSpaceObjectGenerator } from '@dxos/echo-generator';
-import { create, type DynamicEchoSchema } from '@dxos/echo-schema';
+import { create, type DynamicSchema } from '@dxos/echo-schema';
 import { useClient } from '@dxos/react-client';
 import { type Hypergraph, useSpaces } from '@dxos/react-client/echo';
 import { ClientRepeater } from '@dxos/react-client/testing';
@@ -22,7 +22,7 @@ const Story = () => {
   const client = useClient();
   const [open, setOpen] = useState(true);
   const [table, setTable] = useState<TableType>();
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
 
   useEffect(() => {
     const generator = createSpaceObjectGenerator(space);
@@ -32,11 +32,11 @@ const Story = () => {
     // TODO(zan): This can be moved to `onCreateSpace` on `clientRepeater` after client is made available
     // TODO(zan): Currently we need to cast as any since `_graph` is marked @internal.
     if (!graph.schemaRegistry.hasSchema(TableType)) {
-      graph.schemaRegistry.registerSchema(TableType);
+      graph.schemaRegistry.addSchema(TableType);
     }
 
     setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
-    void space.db.schema.listDynamic().then(setSchemas).catch();
+    void space.db.schema.list().then(setSchemas).catch();
   }, []);
 
   const handleClose = (success: boolean) => {

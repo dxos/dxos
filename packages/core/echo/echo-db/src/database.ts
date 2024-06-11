@@ -216,7 +216,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       const schema = getSchema(obj);
 
       if (schema != null) {
-        if (!this.schema.isRegistered(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
+        if (!this.schema.hasSchema(schema) && !this.graph.schemaRegistry.hasSchema(schema)) {
           throw createSchemaNotRegisteredError(schema);
         }
       }

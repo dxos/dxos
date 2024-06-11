@@ -34,8 +34,8 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation == null) {
     return undefined;
   }
-  if (annotation.storedSchemaId) {
-    return new Reference(annotation.storedSchemaId);
+  if (annotation.schemaId) {
+    return new Reference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);

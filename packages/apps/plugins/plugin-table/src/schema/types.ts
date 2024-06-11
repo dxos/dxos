@@ -67,7 +67,7 @@ export const schemaPropMapper =
       id: String(id)!,
       prop: String(id)!,
       type: getPropType(type),
-      refTable: refAnnotation?.storedSchemaId,
+      refTable: refAnnotation?.schemaId,
       refProp: refProp ?? undefined,
       label: label ?? undefined,
       digits,
