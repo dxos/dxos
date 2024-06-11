@@ -10,8 +10,7 @@ import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
-import type { ObjectCore } from '../core';
-import type { KeyPath } from '../core/key-path';
+import type { ObjectCore, KeyPath } from '../core';
 import { type EchoDatabase } from '../database';
 
 export const symbolPath = Symbol('path');
