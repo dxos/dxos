@@ -1,5 +1,5 @@
 # Type `MetadataResolver`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/metadata.ts:15](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/app-framework/src/plugins/common/metadata.ts#L15)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/metadata.ts:15](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/common/metadata.ts#L15)</sub>
 
 
 
