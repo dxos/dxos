@@ -158,7 +158,7 @@ export class SignalRPCClient {
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('join', { topic, peerId });
+    log('join', { topic, peerId, metadata: this._callbacks?.getMetadata?.() });
     await this._connectTrigger.wait();
     invariant(!this._closed, 'SignalRPCClient is closed');
     invariant(this._rpc, 'Rpc is not initialized');
@@ -184,7 +184,7 @@ export class SignalRPCClient {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
-    log('sendMessage', { author, recipient, payload });
+    log('sendMessage', { author, recipient, payload, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
     invariant(this._rpc, 'Rpc is not initialized');

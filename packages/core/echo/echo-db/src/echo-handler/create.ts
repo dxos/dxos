@@ -15,7 +15,9 @@ import {
   DynamicEchoSchema,
 } from '@dxos/echo-schema';
 import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
-import { ComplexMap } from '@dxos/util';
+import { compositeRuntime } from '@dxos/echo-signals/runtime';
+import { invariant } from '@dxos/invariant';
+import { ComplexMap, deepMapValues } from '@dxos/util';
 
 import { DATA_NAMESPACE, EchoReactiveHandler, PROPERTY_ID, throwIfCustomClass } from './echo-handler';
 import {
@@ -25,12 +27,14 @@ import {
   symbolNamespace,
   symbolPath,
 } from './echo-proxy-target';
-import { AutomergeObjectCore } from '../automerge';
+import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
 
 export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> => {
+  invariant(!isEchoObject(init));
+
   const schema = getSchema(init);
   if (schema != null) {
     validateSchema(schema);
@@ -52,7 +56,12 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolInternals] = {
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+      signal: compositeRuntime.createSignal(),
     };
+
+    // TODO(dmaretskyi): Does this need to be disposed?
+    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
@@ -71,11 +80,16 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
       [symbolInternals]: {
         core,
         targetsMap: new ComplexMap((key) => JSON.stringify(key)),
-      },
+        signal: compositeRuntime.createSignal(),
+      } satisfies ObjectInternals,
       [symbolPath]: [],
       [symbolNamespace]: DATA_NAMESPACE,
       ...(init as any),
     };
+
+    // TODO(dmaretskyi): Does this need to be disposed?
+    core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
     initCore(core, target);
     const proxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
     core.rootProxy = proxy;
@@ -90,7 +104,7 @@ const initCore = (core: AutomergeObjectCore, target: any) => {
     target[symbolInternals].core.id = target[PROPERTY_ID];
     delete target[PROPERTY_ID];
   }
-  core.initNewObject(target);
+  core.initNewObject(linkAllNestedProperties(core, target));
 };
 
 export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
@@ -98,10 +112,15 @@ export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore) => {
     [symbolInternals]: {
       core,
       targetsMap: new ComplexMap((key) => JSON.stringify(key)),
+      signal: compositeRuntime.createSignal(),
     },
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
+
+  // TODO(dmaretskyi): Does this need to be disposed?
+  core.updates.on(() => target[symbolInternals].signal.notifyWrite());
+
   core.rootProxy = createReactiveProxy<ProxyTarget>(target, EchoReactiveHandler.instance) as any;
 };
 
@@ -136,3 +155,11 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     }
   }
 };
+
+const linkAllNestedProperties = (core: AutomergeObjectCore, data: any): DecodedAutomergePrimaryValue =>
+  deepMapValues(data, (value, recurse) => {
+    if (isReactiveObject(value) as boolean) {
+      return core.linkObject(value);
+    }
+    return recurse(value);
+  });

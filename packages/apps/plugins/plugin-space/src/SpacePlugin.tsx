@@ -26,7 +26,13 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
+import {
+  type EchoReactiveObject,
+  type Identifiable,
+  isReactiveObject,
+  type ReactiveObject,
+  Expando,
+} from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -40,6 +46,7 @@ import {
   isSpace,
   isEchoObject,
   fullyQualifiedId,
+  Filter,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
@@ -50,6 +57,7 @@ import {
   EmptySpace,
   EmptyTree,
   FolderMain,
+  MenuFooter,
   MissingObject,
   PopoverRemoveObject,
   PopoverRenameObject,
@@ -397,6 +405,12 @@ export const SpacePlugin = ({
             }
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
+            case 'menu-footer':
+              if (!isEchoObject(data.object)) {
+                return null;
+              } else {
+                return <MenuFooter object={data.object} />;
+              }
             default:
               return null;
           }
@@ -501,7 +515,7 @@ export const SpacePlugin = ({
 
             graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
           };
-          const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
+          const spacesOrderQuery = client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED }));
           graphSubscriptions.set(
             SHARED,
             spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),

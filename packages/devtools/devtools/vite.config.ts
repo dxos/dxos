@@ -16,7 +16,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 
 const PACKAGE_VERSION = require('./package.json').version;
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   base: '', // Ensures relative path to assets.
   server: {
@@ -59,10 +59,10 @@ export default defineConfig({
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './*.html'),
+        resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
-      extensions: []
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),

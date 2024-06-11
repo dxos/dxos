@@ -1,11 +1,11 @@
 # Class `Shell`
-<sub>Declared in [packages/sdk/client/src/services/shell.ts:46](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L46)</sub>
+<sub>Declared in [packages/sdk/client/src/services/shell.ts:46](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L46)</sub>
 
 
 Interface for controlling the shell.
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L52)
+### [constructor(options)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L52)
 
 
 
@@ -22,7 +22,7 @@ Arguments:
 
 
 ## Methods
-### [initializeIdentity(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L82)
+### [initializeIdentity(options)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L82)
 
 
 Create a new identity.
@@ -35,7 +35,7 @@ Arguments:
 `options`: <code>object</code>
 
 
-### [joinSpace(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L168)
+### [joinSpace(options)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L168)
 
 
 Join an existing space.
@@ -48,7 +48,7 @@ Arguments:
 `options`: <code>object</code>
 
 
-### [open(layout, options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L70)
+### [open(layout, options)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L70)
 
 
 Open the shell with the given layout.
@@ -62,7 +62,7 @@ Arguments:
 `options`: <code>Omit&lt;[LayoutRequest](/api/@dxos/client/interfaces/LayoutRequest), "layout"&gt;</code>
 
 
-### [setInvitationUrl(request)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L59)
+### [setInvitationUrl(request)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L59)
 
 
 
@@ -74,7 +74,7 @@ Arguments:
 `request`: <code>object</code>
 
 
-### [shareIdentity()](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L105)
+### [shareIdentity()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L105)
 
 
 Invite a new device to join the current identity.
@@ -87,7 +87,7 @@ Arguments: none
 
 
 
-### [shareSpace(options)](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/client/src/services/shell.ts#L134)
+### [shareSpace(options)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/shell.ts#L134)
 
 
 Invite new members to join the current space.

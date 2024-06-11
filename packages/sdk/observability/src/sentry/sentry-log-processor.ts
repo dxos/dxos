@@ -7,7 +7,7 @@ import type { Breadcrumb, SeverityLevel, Event } from '@sentry/types';
 import { type LogConfig, type LogEntry, LogLevel, type LogProcessor, shouldLog } from '@dxos/log';
 import { CircularBuffer, getDebugName } from '@dxos/util';
 
-import { withScope, captureException, captureMessage } from './';
+import { withScope, captureException, captureMessage } from './node';
 
 const MAX_LOG_BREADCRUMBS = 80;
 
@@ -16,7 +16,8 @@ export class SentryLogProcessor {
 
   public readonly logProcessor: LogProcessor = (config: LogConfig, entry: LogEntry) => {
     const { level, meta, error } = entry;
-    if (!shouldLog(entry, config.captureFilters)) {
+    // Don't forward logs from remote sessions.
+    if (!shouldLog(entry, config.captureFilters) || meta?.S?.remoteSessionId) {
       return;
     }
     if (entry.level !== LogLevel.WARN && entry.level !== LogLevel.ERROR) {

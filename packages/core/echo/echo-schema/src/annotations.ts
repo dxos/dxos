@@ -14,12 +14,13 @@ import { type Identifiable, type Ref } from './types';
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
+// TODO(burdon): Rename ECHO?
 // TODO(burdon): Make private to this file?
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
   storedSchemaId?: string;
   typename: string;
-  version: string;
+  version: string; // TODO(burdon): Semvar.
 };
 
 export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
@@ -29,7 +30,6 @@ export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
   );
 
 /**
- *
  * @param typename
  * @param version
  */
@@ -39,13 +39,13 @@ export const echoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('echoObject can only be applied to S.struct instances.');
+      throw new Error('echoObject can only be applied to S.Struct instances.');
     }
 
     checkIdNotPresentOnSchema(self);
 
     // TODO(dmaretskyi): Does `S.mutable` work for deep mutability here?
-    const schemaWithId = S.extend(S.mutable(self), S.struct({ id: S.string }));
+    const schemaWithId = S.extend(S.mutable(self), S.Struct({ id: S.String }));
     return S.make(AST.annotations(schemaWithId.ast, { [EchoObjectAnnotationId]: { typename, version } })) as S.Schema<
       Simplify<Identifiable & ToMutable<A>>
     >;

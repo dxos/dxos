@@ -75,7 +75,8 @@ export class QueryState extends Resource {
     return this._results;
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes
+  @trace.span({ showInBrowserTimeline: true, op: 'db.query', attributes: { 'db.system': 'echo' } })
   async execQuery(): Promise<QueryRunResult> {
     const filter = Filter.fromProto(this._params.request.filter);
     const beginQuery = performance.now();
