@@ -59,7 +59,6 @@ describe('DynamicSchema', () => {
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
     const schema = db.schema.addSchema(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
-
     const schemaWithId = GeneratedSchema.annotations({
       [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
     });

@@ -73,7 +73,7 @@ export class DynamicSchemaRegistry {
     return this._register(typeObject);
   }
 
-  // TODO(burdon): Remove.
+  // TODO(burdon): Remove?
   public async list(): Promise<DynamicSchema[]> {
     const { objects } = await this.db.query(Filter.schema(StoredSchema)).run();
     return objects.map((stored) => {

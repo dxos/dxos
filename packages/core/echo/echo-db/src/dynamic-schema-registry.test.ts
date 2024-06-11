@@ -125,7 +125,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
     db.graph.schemaRegistry.addSchema(TestSchemaClass);
-    const listed = await db.schema.list();
+    const listed = await db.schema.listAll();
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaClass)]);
     expect(listed[2]).to.deep.contain({

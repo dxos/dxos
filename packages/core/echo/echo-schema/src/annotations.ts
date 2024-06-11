@@ -18,6 +18,7 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 // TODO(burdon): EchoObjectAnnotation should be teh actual annotation.
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
+  // TODO(burdon): id?
   storedSchemaId?: string;
   typename: string;
   version: string;
