@@ -188,16 +188,30 @@ export class Filter<T extends {} = any> {
 }
 
 // TODO(burdon): Move logic into Filter.
-export const filterMatch = (filter: Filter, core: AutomergeObjectCore | undefined): boolean => {
+/**
+ * Query logic that checks if object complaint with a filter.
+ * @param echoObject used for predicate filters only.
+ * @returns
+ */
+export const filterMatch = (
+  filter: Filter,
+  core: AutomergeObjectCore | undefined,
+  // TODO(mykola): Remove predicate filters from this level query. Move it to higher proxy level.
+  echoObject?: EchoReactiveObject<any> | undefined,
+): boolean => {
   if (!core) {
     return false;
   }
-  const result = filterMatchInner(filter, core);
+  const result = filterMatchInner(filter, core, echoObject);
   // don't apply filter negation to deleted object handling, as it's part of filter options
   return filter.not && !core.isDeleted() ? !result : result;
 };
 
-const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean => {
+const filterMatchInner = (
+  filter: Filter,
+  core: AutomergeObjectCore,
+  echoObject?: EchoReactiveObject<any> | undefined,
+): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
   if (core.isDeleted()) {
     if (deleted === QueryOptions.ShowDeletedOption.HIDE_DELETED) {
@@ -211,7 +225,7 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
 
   if (filter.or.length) {
     for (const orFilter of filter.or) {
-      if (filterMatch(orFilter, core)) {
+      if (filterMatch(orFilter, core, echoObject)) {
         return true;
       }
     }
@@ -265,17 +279,12 @@ const filterMatchInner = (filter: Filter, core: AutomergeObjectCore): boolean =>
   }
 
   // Untracked will prevent signals in the callback from being subscribed to.
-  if (
-    filter.predicate &&
-    !compositeRuntime.untracked(() =>
-      filter.predicate!(core.database?._dbApi.getObjectById(core.id, { deleted: true })),
-    )
-  ) {
+  if (filter.predicate && !compositeRuntime.untracked(() => filter.predicate!(echoObject))) {
     return false;
   }
 
   for (const andFilter of filter.and) {
-    if (!filterMatch(andFilter, core)) {
+    if (!filterMatch(andFilter, core, echoObject)) {
       return false;
     }
   }

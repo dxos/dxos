@@ -31,7 +31,6 @@ import { type AutomergeContext } from './automerge-context';
 import { getAutomergeObjectCore } from './automerge-object';
 import { AutomergeObjectCore } from './automerge-object-core';
 import { getInlineAndLinkChanges } from './utils';
-import { type EchoDatabase } from '../database';
 import { type Hypergraph } from '../hypergraph';
 
 export type InitRootProxyFn = (core: AutomergeObjectCore) => void;
@@ -63,19 +62,12 @@ export class AutomergeDb {
 
   readonly rootChanged = new Event<void>();
 
-  /**
-   * @deprecated TODO: Remove
-   */
-  _dbApi: EchoDatabase;
-
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
     public readonly spaceKey: PublicKey,
-    dbApi: EchoDatabase, // TODO(dmaretskyi): Remove.
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
-    this._dbApi = dbApi;
   }
 
   @synchronized

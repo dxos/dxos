@@ -28,6 +28,7 @@ import {
   symbolPath,
 } from './echo-proxy-target';
 import { AutomergeObjectCore, type DecodedAutomergePrimaryValue } from '../automerge';
+import { type EchoDatabase } from '../database';
 
 export const isEchoObject = (value: unknown): value is EchoReactiveObject<any> =>
   isReactiveObject(value) && getProxyHandlerSlot(value).handler instanceof EchoReactiveHandler;
@@ -97,9 +98,12 @@ const initCore = (core: AutomergeObjectCore, target: ProxyTarget) => {
   core.initNewObject(linkAllNestedProperties(target));
 };
 
-export const initEchoReactiveObjectRootProxy = (core: AutomergeObjectCore): EchoReactiveObject<any> => {
+export const initEchoReactiveObjectRootProxy = (
+  core: AutomergeObjectCore,
+  database?: EchoDatabase,
+): EchoReactiveObject<any> => {
   const target: ProxyTarget = {
-    [symbolInternals]: initInternals(core),
+    [symbolInternals]: initInternals(core, database),
     [symbolPath]: [],
     [symbolNamespace]: DATA_NAMESPACE,
   };
@@ -151,9 +155,10 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
   });
 };
 
-const initInternals = (core: AutomergeObjectCore): ObjectInternals => ({
+const initInternals = (core: AutomergeObjectCore, database?: EchoDatabase): ObjectInternals => ({
   core,
   targetsMap: new ComplexMap((key) => JSON.stringify(key)),
   signal: compositeRuntime.createSignal(),
   linkCache: new Map<string, EchoReactiveObject<any>>(),
+  database,
 });

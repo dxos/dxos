@@ -268,7 +268,11 @@ class SpaceQuerySource implements QuerySource {
           this._results.find((result) => result.id === object.id) ||
           (this._database.automerge._objects.has(object.id) &&
             !this._database.automerge.getObjectCoreById(object.id)!.isDeleted() &&
-            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)))
+            filterMatch(
+              this._filter!, //
+              this._database.automerge.getObjectCoreById(object.id),
+              object,
+            ))
         );
       });
 
@@ -332,7 +336,7 @@ class SpaceQuerySource implements QuerySource {
       this._database.automerge
         .allObjectCores()
         // TODO(dmaretskyi): Cleanup proxy <-> core.
-        .filter((core) => filterMatch(filter, core))
+        .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })))
         .map((core) => ({
           id: core.id,
           spaceKey: this.spaceKey,
