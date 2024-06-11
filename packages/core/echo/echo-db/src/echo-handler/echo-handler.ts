@@ -170,6 +170,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       );
       return createReactiveProxy(newTarget, this);
     }
+
     return decoded;
   }
 
@@ -177,8 +178,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // object instanceof StoredEchoSchema requires database to lookup schema
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
-      return database.schema.register(object);
+      return database.schema.registerSchema(object);
     }
+
     return object;
   }
 

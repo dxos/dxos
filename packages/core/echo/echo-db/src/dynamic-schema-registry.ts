@@ -73,9 +73,18 @@ export class DynamicSchemaRegistry {
     return this._register(typeObject);
   }
 
-  public async list(): Promise<StaticSchema[]> {
-    const { objects: storedSchemas } = await this.db.query(Filter.schema(StoredSchema)).run();
-    const storedSnapshots = storedSchemas.map((storedSchema) => {
+  // TODO(burdon): Remove.
+  public async list(): Promise<DynamicSchema[]> {
+    const { objects } = await this.db.query(Filter.schema(StoredSchema)).run();
+    return objects.map((stored) => {
+      return this._register(stored);
+    });
+  }
+
+  // TODO(burdon): Reconcile with list.
+  public async listAll(): Promise<StaticSchema[]> {
+    const { objects } = await this.db.query(Filter.schema(StoredSchema)).run();
+    const storedSchemas = objects.map((storedSchema) => {
       const schema = new DynamicSchema(storedSchema);
       return {
         id: storedSchema.id,
@@ -85,14 +94,8 @@ export class DynamicSchemaRegistry {
       } satisfies StaticSchema;
     });
 
-    const runtimeSnapshots = this.db.graph.schemaRegistry.schemas.map(makeStaticSchema);
-    return runtimeSnapshots.concat(storedSnapshots);
-  }
-
-  public async listDynamic(): Promise<DynamicSchema[]> {
-    return (await this.db.query(Filter.schema(StoredSchema)).run()).objects.map((stored) => {
-      return this._register(stored);
-    });
+    const runtimeSchemas = this.db.graph.schemaRegistry.schemas.map(makeStaticSchema);
+    return [...runtimeSchemas, ...storedSchemas];
   }
 
   public subscribe(callback: SchemaListChangedCallback): UnsubscribeCallback {

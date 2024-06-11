@@ -73,7 +73,7 @@ describe('schema registry', () => {
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = await registry.listDynamic();
+    const retrieved = await registry.list();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -125,7 +125,7 @@ describe('schema registry', () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
     db.graph.schemaRegistry.addSchema(TestSchemaClass);
-    const listed = await db.schema.listDynamic();
+    const listed = await db.schema.list();
     expect(listed.length).to.eq(3);
     expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaClass)]);
     expect(listed[2]).to.deep.contain({

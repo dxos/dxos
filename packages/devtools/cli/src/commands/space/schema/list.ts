@@ -31,7 +31,7 @@ export default class List extends BaseCommand<typeof List> {
     return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, key);
       const typenameFilter = createTypenameFilter(this.flags.typename);
-      const schemas = (await space.db.schema.list()).filter(typenameFilter);
+      const schemas = (await space.db.schema.listAll()).filter(typenameFilter);
       printSchema(schemas, this.flags);
     });
   }
@@ -41,6 +41,7 @@ const createTypenameFilter = (typenameFilter?: string) => {
   if (!typenameFilter) {
     return () => true;
   }
+
   return (schema: StaticSchema) => schema.typename.toLowerCase().includes(typenameFilter.toLowerCase());
 };
 
@@ -53,6 +54,7 @@ const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
     typename: {},
     version: {},
   };
+
   if (flags.extended) {
     for (const schema of schemas) {
       ux.stdout(table([schema], format, flags));
