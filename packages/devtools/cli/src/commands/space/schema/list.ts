@@ -45,10 +45,10 @@ const createTypenameFilter = (typenameFilter?: string) => {
   return (schema: StaticSchema) => schema.typename.toLowerCase().includes(typenameFilter.toLowerCase());
 };
 
+// TODO(burdon): Static vs. dynamic.
 const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
   const format = {
     id: {
-      header: 'echoId',
       truncate: true,
     },
     typename: {},
