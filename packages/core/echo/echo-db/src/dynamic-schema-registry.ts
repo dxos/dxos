@@ -45,9 +45,8 @@ export class DynamicSchemaRegistry {
   }
 
   public hasSchema(schema: S.Schema<any>): boolean {
-    const storedSchemaId =
-      schema instanceof DynamicSchema ? schema.id : getEchoObjectAnnotation(schema)?.storedSchemaId;
-    return storedSchemaId != null && this.getSchemaById(storedSchemaId) != null;
+    const schemaId = schema instanceof DynamicSchema ? schema.id : getEchoObjectAnnotation(schema)?.schemaId;
+    return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
   public getSchemaByTypename(typename: string): DynamicSchema | undefined {
@@ -119,7 +118,7 @@ export class DynamicSchemaRegistry {
     });
 
     const updatedSchema = schema.annotations({
-      [EchoObjectAnnotationId]: { ...typeAnnotation, storedSchemaId: schemaToStore.id } satisfies EchoObjectAnnotation,
+      [EchoObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id } satisfies EchoObjectAnnotation,
     });
 
     schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);

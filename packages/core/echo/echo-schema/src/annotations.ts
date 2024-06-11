@@ -15,11 +15,11 @@ export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
 // TODO(burdon): Make private to this file?
-// TODO(burdon): EchoObjectAnnotation should be teh actual annotation.
-export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
+// TODO(burdon): EchoObjectAnnotation should be the actual annotation.
+export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/EchoObject');
+
 export type EchoObjectAnnotation = {
-  // TODO(burdon): id?
-  storedSchemaId?: string;
+  schemaId?: string;
   typename: string;
   version: string;
 };
@@ -39,7 +39,7 @@ export const EchoObject =
   (typename: string, version: string) =>
   <A, I, R>(self: S.Schema<A, I, R>): S.Schema<Simplify<Identifiable & ToMutable<A>>> => {
     if (!AST.isTypeLiteral(self.ast)) {
-      throw new Error('echoObject can only be applied to S.Struct instances.');
+      throw new Error('EchoObject can only be applied to S.Struct instances.');
     }
 
     checkIdNotPresentOnSchema(self);
