@@ -240,6 +240,7 @@ export class Messenger {
       messageId: reliablePayload.messageId,
     });
 
+    // Ignore message if it was already received, i.e. from multiple signal servers.
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
       return;
     }

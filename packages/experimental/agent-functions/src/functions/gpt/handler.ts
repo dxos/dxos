@@ -2,7 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ChainPromptType, DocumentType, MessageType, SectionType, TextV0Type, ThreadType } from '@braneframe/types';
+import {
+  ChainPromptType,
+  DocumentType,
+  MessageType,
+  SectionType,
+  StackType,
+  TextV0Type,
+  ThreadType,
+} from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -16,14 +24,14 @@ import { ModelInvokerFactory } from '../../chain/model-invoker';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-const types = [DocumentType, SectionType, TextV0Type, ChainPromptType, MessageType, ThreadType];
+const types = [ChainPromptType, DocumentType, MessageType, SectionType, StackType, TextV0Type, ThreadType];
 
 /**
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    model: S.optional(S.string),
+  S.Struct({
+    model: S.optional(S.String),
     prompt: ChainPromptType,
   }),
 );

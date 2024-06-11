@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { getRandomPort } from 'get-port-please';
 import path from 'node:path';
 
 import { waitForCondition } from '@dxos/async';
@@ -16,8 +17,6 @@ import { DevServer, type DevServerOptions, Scheduler } from '../runtime';
 import { TriggerRegistry } from '../trigger';
 import { FunctionDef, FunctionTrigger } from '../types';
 
-let functionsPort = 8081;
-
 export type FunctionsPluginInitializer = (client: Client) => Promise<{ close: () => Promise<void> }>;
 
 // TODO(burdon): Extend/wrap TestBuilder.
@@ -29,6 +28,7 @@ export const createInitializedClients = async (testBuilder: TestBuilder, count: 
     clients.map(async (client, index) => {
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
+      await client.spaces.isReady;
       client.addSchema(FunctionDef, FunctionTrigger, TestType);
       return client;
     }),
@@ -39,10 +39,11 @@ export const createFunctionRuntime = async (
   testBuilder: TestBuilder,
   pluginInitializer: FunctionsPluginInitializer,
 ): Promise<Client> => {
+  const functionsPort = await getRandomPort('127.0.0.1');
   const config = new Config({
     runtime: {
       agent: {
-        plugins: [{ id: 'dxos.org/agent/plugin/functions', config: { port: functionsPort++ } }],
+        plugins: [{ id: 'dxos.org/agent/plugin/functions', config: { port: functionsPort } }],
       },
     },
   });
@@ -92,6 +93,7 @@ const startDevServer = async (
 ) => {
   const server = new DevServer(client, functionRegistry, {
     baseDir: path.join(__dirname, '../testing'),
+    port: await getRandomPort('127.0.0.1'),
     ...options,
   });
   await server.start();

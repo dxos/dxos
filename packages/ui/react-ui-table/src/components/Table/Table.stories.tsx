@@ -119,7 +119,7 @@ const makeColumns = (onUpdate?: ValueUpdater<Item, any>): TableColumnDef<Item, a
 const MinimalTable = (props: any) => {
   return (
     <Table.Root>
-      <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+      <Table.Viewport classNames='fixed inset-0'>
         <Table.Main<any> {...props} />
       </Table.Viewport>
     </Table.Root>
@@ -215,7 +215,7 @@ export const Dynamic = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
@@ -246,7 +246,7 @@ export const Editable = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
@@ -277,7 +277,7 @@ export const PinnedLastRow = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
@@ -331,7 +331,7 @@ export const InsertDelete = {
           <Button onClick={onDeleteLast}>Delete last</Button>
         </div>
         <Table.Root>
-          <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+          <Table.Viewport classNames='fixed inset-0'>
             <Table.Main<Item>
               role='grid'
               rowsSelectable='multi'
@@ -361,7 +361,7 @@ export const Resizable = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             rowsSelectable='multi'
             keyAccessor={(row) => row.publicKey.toHex()}
@@ -389,7 +389,7 @@ export const TenThousandRows = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'
@@ -491,7 +491,7 @@ export const RealTimeUpdates = {
 
     return (
       <Table.Root>
-        <Table.Viewport classNames='fixed inset-0 overflow-auto'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<Item>
             role='grid'
             rowsSelectable='multi'

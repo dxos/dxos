@@ -2,15 +2,45 @@
 <html lang="en" style="font-size: 14px">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,interactive-widget=resizes-content,viewport-fit=cover" />
     <title>DXOS Devtools</title>
-    <meta name="description" content="DXOS HALO App" />
-
-    <link rel="icon" href="/favicon.ico" />
-    <!-- TODO(wittjosiah): Icons. -->
-    <!-- <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
-    <link rel="mask-icon" href="/mask-icon.svg" color="#FFFFFF"> -->
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="DXOS Devtools" />
+    <meta name="msapplication-TileColor" content="#003E70" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f8f9" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#252529" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        connect-src https: file: ipc: socket: wss://*.dxos.org ws://localhost:* http://localhost:*;
+        script-src https: socket: http://localhost:* 'unsafe-eval' 'unsafe-inline';
+        frame-src https: socket: http://localhost:* composer:;
+        worker-src https: socket: http://localhost:* blob:;
+        img-src https: data: file: http://localhost:* blob:;
+        child-src 'none';
+        object-src 'none';
+      "
+    />
+    <!-- TODO(wittjosiah): Add hash/nonce and remove unsafe-inline from content security policy. -->
+    <!-- TODO(nf): blob in worker-src needed for Sentry replay -->
+    <script>
+      function setTheme(darkMode) {
+        document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
+      }
+      setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+        setTheme(event.matches);
+      });
+    </script>
+    <style>
+      html {
+        font-size: 18px;
+      }
+      @media (min-width: 768px) {
+        html {
+          font-size: 16px;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

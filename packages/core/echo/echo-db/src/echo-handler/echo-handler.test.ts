@@ -47,7 +47,7 @@ registerSignalRuntime();
 const TypedObjectSchema = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
-  const invalidSchema = S.struct({ id: S.number });
+  const invalidSchema = S.Struct({ id: S.Number });
   expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
@@ -132,7 +132,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('existing proxy objects can be passed to create', async () => {
     const { db, graph } = await builder.createDatabase();
-    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.any }) {}
+    class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Any }) {}
     graph.runtimeSchemaRegistry.registerSchema(Schema);
     const objectHost = db.add(create(Schema, { field: [] }));
     const object = db.add(create(Schema, { field: 'foo' }));
@@ -292,14 +292,14 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   describe('references', () => {
-    const Org = S.struct({
-      name: S.string,
+    const Org = S.Struct({
+      name: S.String,
     }).pipe(echoObject('example.Org', '1.0.0'));
 
-    const Person = S.struct({
-      name: S.string,
+    const Person = S.Struct({
+      name: S.String,
       worksAt: ref(Org),
-      previousEmployment: S.optional(S.array(ref(Org))),
+      previousEmployment: S.optional(S.Array(ref(Org))),
     }).pipe(echoObject('example.Person', '1.0.0'));
 
     test('references', async () => {
@@ -439,10 +439,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('object with meta pushed to array', async () => {
       class NestedType extends TypedObject({ ...TEST_SCHEMA_TYPE, typename: TEST_SCHEMA_TYPE.typename + '2' })({
-        field: S.number,
+        field: S.Number,
       }) {}
       class TestType extends TypedObject(TEST_SCHEMA_TYPE)({
-        objects: S.mutable(S.array(ref(NestedType))),
+        objects: S.mutable(S.Array(ref(NestedType))),
       }) {}
 
       const key = foreignKey('example.com', '123');
@@ -455,7 +455,7 @@ describe('Reactive Object with ECHO database', () => {
     });
 
     test('push key to object created with', async () => {
-      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.number }) {}
+      class TestType extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Number }) {}
       const { db, graph } = await builder.createDatabase();
       graph.runtimeSchemaRegistry.registerSchema(TestType);
       const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
@@ -540,5 +540,19 @@ describe('Reactive Object with ECHO database', () => {
 
     expect(updateCount).to.eq(2);
     expect(obj2.title).to.eq('Object 1');
+  });
+
+  test('assign a non-echo reactive object', async () => {
+    registerSignalRuntime();
+
+    const { db } = await builder.createDatabase();
+
+    const obj = db.add(create(Expando, { title: 'Object 1' }));
+
+    obj.ref = create(Expando, { title: 'Object 2' });
+
+    obj.refs = [create(Expando, { title: 'Object 2' })];
+
+    obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
   });
 });

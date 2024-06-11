@@ -20,7 +20,7 @@ const TableMain: FC<Omit<ObjectTableProps, 'getScrollElement'>> = ({ table }) =>
   >
     <DensityProvider density='fine'>
       <Table.Root>
-        <Table.Viewport classNames='flex flex-col h-full overflow-auto'>
+        <Table.Viewport classNames='flex flex-col h-full'>
           <ObjectTable
             key={table.id} // New component instance per table.
             table={table}

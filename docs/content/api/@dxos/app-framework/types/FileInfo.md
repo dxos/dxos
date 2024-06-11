@@ -1,17 +1,17 @@
 # Type `FileInfo`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/file.ts:15](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/app-framework/src/plugins/common/file.ts#L15)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/file.ts:17](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/common/file.ts#L17)</sub>
 
 
 
 
 ## Properties
-### [cid](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/app-framework/src/plugins/common/file.ts#L17)
+### [cid](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/common/file.ts#L19)
 Type: <code>string</code>
 
 
 
 
-### [url](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/app-framework/src/plugins/common/file.ts#L16)
+### [url](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/common/file.ts#L18)
 Type: <code>string</code>
 
 

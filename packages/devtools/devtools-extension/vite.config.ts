@@ -17,7 +17,7 @@ import { ThemePlugin } from '@dxos/react-ui-theme/plugin';
 import packageJson from './package.json';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
-// https://vitejs.dev/config/
+// https://vitejs.dev/config
 export default defineConfig({
   build: {
     rollupOptions: {

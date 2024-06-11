@@ -314,7 +314,7 @@ type MetaExtension<T> = {
 
 // TODO(burdon): Possible to build form from function meta schema.
 
-type ChessMeta = { level?: number; side?: string };
+type ChessMeta = { level?: number };
 
 const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
   return (
@@ -324,7 +324,7 @@ const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
           type='number'
           value={meta.level ?? 1}
           onChange={(event) => (meta.level = safeParseInt(event.target.value))}
-          placeholder='AI level.'
+          placeholder='Engine strength.'
         />
       </InputRow>
     </>
