@@ -61,7 +61,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
           this._objects = objects;
           this._graph.nodes = objects.map((object) => {
             if (object instanceof StoredEchoSchema) {
-              const effectSchema = space.db.schemaRegistry.getById(object.id)!;
+              const effectSchema = space.db.schema.getById(object.id)!;
               return { type: 'schema', id: object.id, schema: effectSchema.schema };
             }
             return { type: 'echo-object', id: object.id, object };

@@ -190,17 +190,9 @@ export const SpacePlugin = ({
             return;
           }
 
-          // TODO(y): Remove after the demo.
-          const migrateSpaceParam = 'migrateSpace';
-          if (searchParams.get(migrateSpaceParam) === 'true') {
-            await space.waitUntilReady();
-            await Migrations.migrate(space);
-          }
-
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
           const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
-          url.searchParams.delete(migrateSpaceParam);
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
