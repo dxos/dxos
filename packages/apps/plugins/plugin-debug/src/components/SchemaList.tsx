@@ -22,8 +22,8 @@ export const SchemaList: FC<{ space: Space; onCreate?: (schema: any /* Schema */
 }) => {
   const [schemaCount, setSchemaCount] = useState<Record<string, number>>({});
   const [data, setData] = useState<SchemaRecord[]>([]);
-  void space.db.schemaRegistry
-    .getAll()
+  void space.db.schema
+    .listDynamic()
     .then((objects) => {
       setData(
         objects

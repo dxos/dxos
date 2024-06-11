@@ -52,7 +52,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
   const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
   useEffect(() => {
     if (space) {
-      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+      void space.db.schema.listDynamic().then(setSchemas).catch();
     }
   }, [showSettings, space]);
 

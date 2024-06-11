@@ -28,19 +28,11 @@ export default class List extends BaseCommand<typeof List> {
     await this.execWithClient(async ({ client }) => {
       // TODO(burdon): Registered by plugin?
       client.addSchema(FunctionDef, FunctionTrigger);
-
-      // TODO(burdon): Doesn't stringify (just returns "null").
-      // TODO(burdon): Reconcile addType with schema.
-      //  space.db.schema.get/list()
-      //  rename runtimeSchemaRegistry
-      const schemas = client.experimental.graph.schemaRegistry.schemas;
-      console.log(schemas.map((s2) => s2));
-      printSchema(schemas, this.flags);
     });
 
     return await this.execWithSpace(
       async ({ space }) => {
-        const schemas = await space.db.schemaRegistry.getAll();
+        const schemas = await space.db.schema.list();
         printSchema(schemas, this.flags);
       },
       { spaceKeys },

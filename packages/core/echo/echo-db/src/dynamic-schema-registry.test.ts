@@ -13,7 +13,9 @@ import {
   create,
   effectToJsonSchema,
   type EchoObjectAnnotation,
+  makeStaticSchema,
 } from '@dxos/echo-schema';
+import { TestSchemaClass } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from './query';
@@ -45,7 +47,7 @@ describe('schema registry', () => {
 
   const setupTest = async () => {
     const { db } = await builder.createDatabase();
-    return { db, registry: db.schemaRegistry };
+    return { db, registry: db.schema };
   };
 
   test('add new schema', async () => {
@@ -71,7 +73,7 @@ describe('schema registry', () => {
   test('get all dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = createTestSchemas().map((s) => db.add(s));
-    const retrieved = await registry.getAll();
+    const retrieved = await registry.listDynamic();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -117,5 +119,17 @@ describe('schema registry', () => {
     expect(dynamicSchema.getProperties().length).to.eq(1);
     dynamicSchema.addColumns({ newField: S.Number });
     expect(dynamicSchema.getProperties().length).to.eq(2);
+  });
+
+  test('list returns static and dynamic schemas', async () => {
+    const { db, registry } = await setupTest();
+    const storedSchema = db.add(createTestSchemas()[0]);
+    db.graph.schemaRegistry.registerSchema(TestSchemaClass);
+    const listed = await db.schema.list();
+    expect(listed.length).to.eq(3);
+    expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredEchoSchema), makeStaticSchema(TestSchemaClass)]);
+    expect(listed[2]).to.deep.contain({ typename: storedSchema.typename, version: storedSchema.version });
+    const dynamicSchema = registry.getById(storedSchema.id)!;
+    expect(listed[2].schema.ast).to.deep.eq(dynamicSchema.schema.ast);
   });
 });
