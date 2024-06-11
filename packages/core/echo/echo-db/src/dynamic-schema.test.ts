@@ -43,7 +43,7 @@ describe('DynamicSchema', () => {
       field: S.String,
     }) {}
 
-    instanceWithSchemaRef.schema = db.schemaRegistry.add(GeneratedSchema);
+    instanceWithSchemaRef.schema = db.schema.add(GeneratedSchema);
     const schemaWithId = GeneratedSchema.annotations({
       [EchoObjectAnnotationId]: { ...TEST_SCHEMA_TYPE, storedSchemaId: instanceWithSchemaRef.schema?.id },
     });
@@ -57,7 +57,7 @@ describe('DynamicSchema', () => {
   test('create echo object with DynamicSchema', async () => {
     const { db } = await setupTest();
     class GeneratedSchema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
-    const schema = db.schemaRegistry.add(GeneratedSchema);
+    const schema = db.schema.add(GeneratedSchema);
     const instanceWithSchemaRef = db.add(create(ClassWithSchemaField, { schema }));
 
     const schemaWithId = GeneratedSchema.annotations({
@@ -68,7 +68,7 @@ describe('DynamicSchema', () => {
 
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.add(GeneratedEmptySchema);
+    const schema = db.schema.add(GeneratedEmptySchema);
     const object = create(schema, {});
     schema.addColumns({ field1: S.String });
     object.field1 = 'works';
@@ -91,7 +91,7 @@ describe('DynamicSchema', () => {
 
   test('getTypeReference', async () => {
     const { db } = await setupTest();
-    const schema = db.schemaRegistry.add(GeneratedEmptySchema);
+    const schema = db.schema.add(GeneratedEmptySchema);
     expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
   });
 
