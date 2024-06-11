@@ -7,7 +7,7 @@ import { Buffer } from 'buffer/';
 import { process } from './process';
 
 (() => {
-  // NOTE(Zan): When running in socket context (safari?) `globalThis.global` is immutable.
+  // NOTE(Zan): When running in socket context `globalThis.global` is an immutable property.
   // I suspect they might polyfill `globalThis.global` already.
 
   // Check if `globalThis` is defined and if `global` can be assigned.
