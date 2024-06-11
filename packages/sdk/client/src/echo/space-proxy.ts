@@ -12,7 +12,7 @@ import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
@@ -116,6 +116,10 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+  }
+
+  get id(): SpaceId {
+    return this._data.id as SpaceId;
   }
 
   @trace.info()

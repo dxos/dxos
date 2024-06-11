@@ -12,6 +12,7 @@ import { Context } from '@dxos/context';
 import { getAutomergeObjectCore } from '@dxos/echo-db';
 import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -56,7 +57,14 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await testSpaceAutomerge(space.db);
 
+    expect(SpaceId.isValid(space.id)).to.be.true;
     expect(space.members.get()).to.be.length(1);
+
+    // Get by id.
+    expect(client.spaces.get(space.id) === space).to.be.true;
+
+    // Get by key.
+    expect(client.spaces.get(space.key) === space).to.be.true;
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
@@ -116,6 +124,8 @@ describe('Spaces', () => {
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
+
+      expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
       const obj = await space.db.loadObjectById(objectId)!;
