@@ -12,7 +12,7 @@ import {
   createReactiveProxy,
   getProxyHandlerSlot,
   isReactiveObject,
-  DynamicEchoSchema,
+  DynamicSchema,
 } from '@dxos/echo-schema';
 import type { EchoReactiveObject, ObjectMeta } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
@@ -135,7 +135,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     if (value === undefined) {
       delete target[key];
     } else if (typeof value === 'object') {
-      if (value instanceof DynamicEchoSchema) {
+      if (value instanceof DynamicSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
       } else {
