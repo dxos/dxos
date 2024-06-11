@@ -1,6 +1,6 @@
 {
   "name": "@dxos/node-std",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "description": "Simple wrapper for browser replacements of node stdlib modules within the DXOS codebase.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
