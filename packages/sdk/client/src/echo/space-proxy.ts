@@ -233,7 +233,7 @@ export class SpaceProxy implements Space {
       // Transition onto new automerge root.
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
-        log('set space root', { automergeRoot });
+        log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
         await this._db.setSpaceRoot(automergeRoot);
         this._databaseInitialized.wake();
@@ -415,10 +415,12 @@ export class SpaceProxy implements Space {
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
     if (automergeRootUrl) {
+      log('applying new root', { automergeRootUrl });
       this._databaseInitialized.reset();
     }
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
     while (this._db.rootUrl !== automergeRootUrl) {
+      await this._databaseInitialized.reset();
       await this._databaseInitialized.wait();
     }
   }

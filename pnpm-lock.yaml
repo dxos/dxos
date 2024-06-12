@@ -8760,6 +8760,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols

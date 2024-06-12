@@ -26,6 +26,7 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
   },
