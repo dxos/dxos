@@ -44,7 +44,7 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider
     onInitialized={async (client) => {
-      client.addType(types);
+      client.addTypes(types);
     }}
   >
     <App />

@@ -107,9 +107,7 @@ const main = async () => {
       });
     }
 
-    // TODO(burdon): [API]: Pass array.
-    // TODO(burdon): [API]: Get array of registered schema.
-    client.addType(ItemType, DocumentType);
+    client.addTypes([ItemType, DocumentType]);
     await client.spaces.isReady.wait();
   };
 

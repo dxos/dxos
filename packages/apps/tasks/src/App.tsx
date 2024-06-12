@@ -113,7 +113,7 @@ export const App = () => {
       shell='./shell.html'
       onInitialized={async (client) => {
         // TODO(wittjosiah): ClientProvider should support adding schemas.
-        client.addType(TaskType);
+        client.addTypes([TaskType]);
 
         const searchParams = new URLSearchParams(location.search);
         if (!client.halo.identity.get() && !searchParams.has('deviceInvitationCode')) {

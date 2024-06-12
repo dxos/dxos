@@ -16,12 +16,12 @@ import {
   PropertiesType,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
-import type { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getEchoObjectTypename } from '@dxos/echo-schema';
+import { getEchoObjectTypename, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -33,8 +33,7 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { type RuntimeSchemaRegistry } from '../echo';
-import type { MeshProxy } from '../mesh/mesh-proxy';
+import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
@@ -124,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema(PropertiesType);
+    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
   }
 
   [inspect.custom]() {
@@ -213,8 +212,9 @@ export class Client {
   /**
    * Add schema types to the client.
    */
-  addType(...type: Parameters<RuntimeSchemaRegistry['addSchema']>) {
-    log.info('addSchema', { schema: type.map((schema) => getEchoObjectTypename(schema)).join() });
+  // TODO(burdon): Check if already registered (and remove downstream checks).
+  addTypes(types: S.Schema<any>[]) {
+    log.info('addSchema', { schema: types.map((type) => getEchoObjectTypename(type)).join() });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -222,9 +222,9 @@ export class Client {
     // }
 
     // TODO(burdon): Find?
-    const exists = type.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
+    const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.schemaRegistry.addSchema(...exists);
+      this._echoClient.graph.schemaRegistry.addSchema(exists);
     }
 
     return this;

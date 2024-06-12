@@ -29,7 +29,7 @@ export const createInitializedClients = async (testBuilder: TestBuilder, count: 
       await client.initialize();
       await client.halo.createIdentity({ displayName: `Peer ${index}` });
       await client.spaces.isReady.wait();
-      client.addType(FunctionDef, FunctionTrigger, TestType);
+      client.addTypes([FunctionDef, FunctionTrigger, TestType]);
       return client;
     }),
   );

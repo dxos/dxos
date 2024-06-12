@@ -32,7 +32,6 @@ import {
   type Identifiable,
   type ReactiveObject,
   Expando,
-  getTypename,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -124,7 +123,6 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
@@ -155,20 +153,17 @@ export const SpacePlugin = ({
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
         const defaultSpaceRoot = create(FolderType, { objects: [] });
-        console.log(222, getTypename(defaultSpaceRoot), defaultSpaceRoot.objects, defaultSpaceRoot.objects.length);
         setSpaceProperty(defaultSpace, FolderType.typename, defaultSpaceRoot);
         if (Migrations.versionProperty) {
           setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
         }
 
-        console.log(444);
         await onFirstRun?.({
           client,
           defaultSpace,
           defaultSpaceRoot,
           dispatch,
         });
-        console.log(555);
       }
 
       // Enable spaces.

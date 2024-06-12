@@ -57,7 +57,7 @@ export abstract class BaseCommand<T extends typeof Command = any> extends Abstra
       //   this.log(`- ${typename}`);
       // }
 
-      client.addType(schema as any);
+      client.addTypes(schema as any);
       schemaMap.set(typename, schema);
     }
 

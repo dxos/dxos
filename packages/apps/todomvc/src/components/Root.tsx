@@ -25,7 +25,7 @@ export const Root = () => {
       createWorker={createWorker}
       shell='./shell.html'
       onInitialized={async (client) => {
-        client.addType(TodoListType, TodoType);
+        client.addTypes([TodoListType, TodoType]);
 
         const searchParams = new URLSearchParams(location.search);
         const deviceInvitationCode = searchParams.get('deviceInvitationCode');

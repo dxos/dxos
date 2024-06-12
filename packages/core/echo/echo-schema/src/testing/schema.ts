@@ -42,6 +42,7 @@ const fields = {
   other: S.Any,
 };
 
+// TODO(burdon): Rename TestType.
 export class TestSchemaClass extends TypedObject<TestSchemaClass>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
 
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));

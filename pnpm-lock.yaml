@@ -1073,6 +1073,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
@@ -9268,6 +9271,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -9290,9 +9296,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.14
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*

@@ -4,7 +4,7 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { MailboxType, MessageType } from '@braneframe/types';
+import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
 import { getSpace, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { getMeta } from '@dxos/echo-schema';
@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ImapProcessor } from './imap-processor';
 import { getKey } from '../../util';
 
-const types = [MailboxType, MessageType];
+const types = [TextV0Type, MailboxType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client } = context;

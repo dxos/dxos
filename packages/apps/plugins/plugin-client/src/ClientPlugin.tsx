@@ -17,6 +17,7 @@ import {
   filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
@@ -65,7 +66,7 @@ export const parseClientPlugin = (plugin?: Plugin) =>
 
 export type SchemaProvides = {
   echo: {
-    schema: Parameters<Client['addType']>;
+    schema: S.Schema<any>[];
   };
 };
 
@@ -173,7 +174,7 @@ export const ClientPlugin = ({
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
         log.info('ready', { id: plugin.meta.id });
-        client.addType(...plugin.provides.echo.schema);
+        client.addTypes(plugin.provides.echo.schema);
       });
     },
     unload: async () => {

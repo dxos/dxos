@@ -31,9 +31,8 @@ export class RuntimeSchemaRegistry {
     return this._schemaMap.get(typename);
   }
 
-  // TODO(burdon): Change to array?
-  addSchema(...schemaList: S.Schema<any>[]) {
-    schemaList.forEach((schema) => {
+  addSchema(types: S.Schema<any>[]) {
+    types.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._schemaMap.has(typename)) {
         throw new Error(`Schema was already registered: ${typename}`);

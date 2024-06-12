@@ -37,7 +37,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-  context.client.addType(MailboxType, MessageType, TextV0Type);
+  context.client.addTypes([MailboxType, MessageType, TextV0Type]);
 
   // Create mailbox if doesn't exist.
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
