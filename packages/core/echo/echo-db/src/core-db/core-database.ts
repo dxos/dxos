@@ -28,7 +28,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
-import { getObjectCore } from './object-accessor';
+import { getObjectCore } from './doc-accessor';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './utils';
 import { type Hypergraph } from '../hypergraph';

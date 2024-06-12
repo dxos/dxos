@@ -16,7 +16,7 @@ import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { loadObjectReferences } from './core-database';
-import { getObjectCore } from './object-accessor';
+import { getObjectCore } from './doc-accessor';
 import { TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {

@@ -19,14 +19,10 @@ import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
 import { type CoreDatabase } from './core-database';
+import { type DocAccessor } from './doc-accessor';
 import { docChangeSemaphore } from './doc-semaphore';
-import {
-  isValidKeyPath,
-  type KeyPath,
-  type DocAccessor,
-  type DecodedAutomergePrimaryValue,
-  type DecodedAutomergeValue,
-} from './types';
+import { isValidKeyPath, type KeyPath } from './key-path';
+import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 // TODO(dmaretskyi): Remove in favour of explicitly specifying this in the API/Schema.
