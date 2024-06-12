@@ -285,7 +285,6 @@ export const DeckPlugin = ({
       },
       intent: {
         resolver: (intent) => {
-          console.log('intent', intent);
           switch (intent.action) {
             case LayoutAction.SET_LAYOUT: {
               return intent.data && handleSetLayout(intent.data as LayoutAction.SetLayout);
