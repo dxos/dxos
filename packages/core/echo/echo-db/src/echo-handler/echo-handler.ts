@@ -176,7 +176,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
-    // object instanceof StoredEchoSchema requires database to lookup schema
+    // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
       return database.schema.registerSchema(object);
@@ -273,7 +273,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
     const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
-
     const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
 
     const objectId = echoObject.id;
@@ -339,7 +338,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return ObjectMetaSchema;
     }
+
     // TODO(?): Make reactive.
+    // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
       return undefined;
     }
@@ -622,8 +623,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getReified(target: ProxyTarget): any {
     const dataPath = [...target[symbolPath]];
     const fullPath = [getNamespace(target), ...dataPath];
-    const value = target[symbolInternals].core.getDecoded(fullPath);
-    return value;
+    return target[symbolInternals].core.getDecoded(fullPath);
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
