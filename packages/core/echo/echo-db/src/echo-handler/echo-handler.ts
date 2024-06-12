@@ -339,7 +339,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return ObjectMetaSchema;
     }
 
-    // TODO(?): Make reactive.
+    // TODO(y): Make reactive.
     // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
       return undefined;
