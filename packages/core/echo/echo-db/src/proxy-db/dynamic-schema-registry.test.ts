@@ -18,8 +18,8 @@ import {
 import { TestSchemaClass } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
-import { Filter } from './query';
-import { EchoTestBuilder } from './testing';
+import { Filter } from '../query';
+import { EchoTestBuilder } from '../testing';
 
 const TestType: EchoObjectAnnotation = { typename: 'TestType', version: '1.0.0' };
 const createTestSchemas = () => [

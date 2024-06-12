@@ -12,8 +12,8 @@ import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 
 import { EchoClient } from '../client';
-import { type EchoDatabase } from '../database';
 import { EchoHost } from '../host';
+import { type EchoDatabase } from '../proxy-db';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];

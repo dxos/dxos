@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type AutomergeObjectCore } from '../automerge';
+import { type ObjectCore } from '../core-db';
 import { getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
@@ -195,7 +195,7 @@ export class Filter<T extends {} = any> {
  */
 export const filterMatch = (
   filter: Filter,
-  core: AutomergeObjectCore | undefined,
+  core: ObjectCore | undefined,
   // TODO(mykola): Remove predicate filters from this level query. Move it to higher proxy level.
   echoObject?: EchoReactiveObject<any> | undefined,
 ): boolean => {
@@ -209,7 +209,7 @@ export const filterMatch = (
 
 const filterMatchInner = (
   filter: Filter,
-  core: AutomergeObjectCore,
+  core: ObjectCore,
   echoObject?: EchoReactiveObject<any> | undefined,
 ): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
@@ -312,7 +312,7 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
  * @deprecated
  */
 // TODO(dmaretskyi): Cleanup.
-const legacyGetTextForMatch = (core: AutomergeObjectCore): string => '';
+const legacyGetTextForMatch = (core: ObjectCore): string => '';
 // compositeRuntime.untracked(() => {
 //   if (!isTypedObject(core.rootProxy)) {
 //     return '';

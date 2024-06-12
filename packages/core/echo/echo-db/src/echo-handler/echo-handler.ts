@@ -36,9 +36,8 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
-import { type KeyPath } from '../automerge/key-path';
-import { type EchoDatabase } from '../database';
+import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
 
@@ -661,7 +660,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-export const getObjectCoreFromEchoTarget = (target: ProxyTarget): AutomergeObjectCore => target[symbolInternals].core;
+export const getObjectCoreFromEchoTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 

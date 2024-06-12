@@ -16,9 +16,9 @@ import { DynamicSchema, StoredSchema, create, effectToJsonSchema } from '@dxos/e
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
-import { Filter } from './query';
+import { getObjectCore } from '../core-db';
+import { Filter } from '../query';
 
 type SchemaListChangedCallback = (schema: DynamicSchema[]) => void;
 
@@ -149,7 +149,7 @@ export class DynamicSchemaRegistry {
     }
 
     const dynamicSchema = new DynamicSchema(schema);
-    const subscription = getAutomergeObjectCore(schema).updates.on(() => {
+    const subscription = getObjectCore(schema).updates.on(() => {
       dynamicSchema.invalidate();
     });
 
