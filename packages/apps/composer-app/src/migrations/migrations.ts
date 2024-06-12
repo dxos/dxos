@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CollectionType } from '@braneframe/types';
+import { CollectionType, SketchType } from '@braneframe/types';
 import { loadObjectReferences } from '@dxos/echo-db';
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration, type ObjectStructure } from '@dxos/migrations';
@@ -92,6 +92,23 @@ export const migrations: Migration[] = [
       await builder.changeProperties((propertiesStructure) => {
         propertiesStructure.data[CollectionType.typename] = rootCollection ? { ...rootCollection } : null;
       });
+    },
+  },
+  {
+    version: '2024-06-12-tldraw2',
+    next: async ({ space, builder }) => {
+      const { objects: sketches } = await space.db.query(Filter.schema(SketchType)).run();
+
+      for (const sketch of sketches) {
+        await builder.migrateObject(sketch.id, ({ data }) => ({
+          schema: SketchType,
+          props: {
+            name: data.name,
+            // TODO(wittjosiah): Migrate sketch data to new format as well as CanvasType.
+            data: data.data,
+          },
+        }));
+      }
     },
   },
 ];
