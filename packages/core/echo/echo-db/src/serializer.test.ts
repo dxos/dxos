@@ -186,7 +186,7 @@ describe('Serializer', () => {
     const doc = automergeContext.repo.create<SpaceDoc>();
     {
       const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
       for (let i = 0; i < totalObjects; i++) {
         db.add(create({ value: i }));
       }
@@ -194,7 +194,7 @@ describe('Serializer', () => {
     }
     {
       const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
       data = await serializer.export(db);
       expect(data.objects.length).to.eq(totalObjects);
     }

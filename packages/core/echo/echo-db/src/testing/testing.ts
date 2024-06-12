@@ -30,7 +30,7 @@ export class TestBuilder {
   ): Promise<TestPeer> {
     const peer = new TestPeer(this, PublicKey.random(), spaceKey, automergeDocUrl);
     this.peers.set(peer.key, peer);
-    await peer.db.automerge.open({
+    await peer.db.coreDatabase.open({
       rootUrl: peer.automergeDocId,
     });
     this.graph._register(spaceKey, peer.db);
@@ -67,7 +67,7 @@ export class TestPeer {
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,
     });
-    await this.db.automerge.open({
+    await this.db.coreDatabase.open({
       rootUrl: this.automergeDocId,
     });
     this.builder.graph._register(this.spaceKey, this.db);

@@ -91,7 +91,7 @@ export class Serializer {
   static version = 1;
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const ids = database.automerge.getAllObjectIds();
+    const ids = database.coreDatabase.getAllObjectIds();
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
@@ -174,7 +174,7 @@ export class Serializer {
       core.setDeleted(deleted);
     }
 
-    database.automerge.addCore(core);
+    database.coreDatabase.addCore(core);
   }
 }
 
