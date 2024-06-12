@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-chess",
-  "version": "0.5.4",
+  "version": "0.5.6",
   "description": "Chess for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

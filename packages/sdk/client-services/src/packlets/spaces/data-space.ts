@@ -143,6 +143,11 @@ export class DataSpace {
   }
 
   @trace.info()
+  get id() {
+    return this._inner.id;
+  }
+
+  @trace.info()
   get key() {
     return this._inner.key;
   }

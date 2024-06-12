@@ -43,7 +43,7 @@ export const IpfsPlugin = (): PluginDefinition<IpfsPluginProvides> => {
       },
       // TODO(burdon): Add intent to upload file.
       file: {
-        upload: async (file) => {
+        upload: async (file, space) => {
           try {
             // TODO(burdon): Set via config or IPFS_API_SECRET in dev.
             const config = clientPlugin?.provides.client.config;

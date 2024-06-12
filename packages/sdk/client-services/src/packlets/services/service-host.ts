@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
@@ -13,7 +13,7 @@ import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { WebsocketSignalManager, type SignalManager } from '@dxos/messaging';
-import { NetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
+import { SwarmNetworkManager, createSimplePeerTransportFactory, type TransportFactory } from '@dxos/network-manager';
 import { trace } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
@@ -79,7 +79,7 @@ export class ClientServicesHost {
   private _config?: Config;
   private readonly _statusUpdate = new Event<void>();
   private _signalManager?: SignalManager;
-  private _networkManager?: NetworkManager;
+  private _networkManager?: SwarmNetworkManager;
   private _storage?: Storage;
   private _level?: LevelDB;
   private _callbacks?: ClientServicesHostCallbacks;
@@ -210,7 +210,7 @@ export class ClientServicesHost {
     this._signalManager = signalManager;
 
     invariant(!this._networkManager, 'network manager already set');
-    this._networkManager = new NetworkManager({
+    this._networkManager = new SwarmNetworkManager({
       log: connectionLog,
       transportFactory,
       signalManager,
@@ -356,13 +356,13 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(Properties)!),
+        type: encodeReference(getTypeReference(PropertiesSchema)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),
@@ -377,7 +377,6 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.echoHost.flush();
-
     return identity;
   }
 }

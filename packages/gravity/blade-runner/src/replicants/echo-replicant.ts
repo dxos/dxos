@@ -15,6 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 import { DEFAULT_REDIS_OPTIONS, createRedisReadableStream, createRedisWritableStream } from '../redis';
@@ -23,6 +24,7 @@ export class Text extends TypedObject({ typename: 'dxos.blade-runner.Text', vers
   content: S.String,
 }) {}
 
+@trace.resource()
 export class EchoReplicant {
   private readonly _ctx = new Context();
 
@@ -34,21 +36,24 @@ export class EchoReplicant {
 
   constructor(private readonly env: ReplicantEnv) {}
 
+  @trace.span()
   async open() {
     log.trace('dxos.echo-replicant.open');
     this._testPeer = new EchoTestPeer(createTestLevel(this.env.params.planRunDir));
     await this._testPeer.open();
   }
 
+  @trace.span()
   async close(): Promise<void> {
     log.trace('dxos.echo-replicant.close');
     void this._ctx.dispose();
     await this._testPeer!.close();
   }
 
+  @trace.span()
   async createDatabase({ spaceKey = PublicKey.random().toHex() }: { spaceKey?: string } = {}) {
     this._db = await this._testPeer!.createDatabase(PublicKey.fromHex(spaceKey));
-    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+    this._db.graph.schemaRegistry.addSchema(Text);
 
     log.trace('dxos.echo-replicant.createDatabase', { spaceKey });
     return {
@@ -57,9 +62,10 @@ export class EchoReplicant {
     };
   }
 
+  @trace.span()
   async openDatabase({ spaceKey, rootUrl }: { spaceKey: string; rootUrl: AutomergeUrl }) {
     this._db = await this._testPeer!.openDatabase(PublicKey.fromHex(spaceKey), rootUrl);
-    this._db.graph.runtimeSchemaRegistry.registerSchema(Text);
+    this._db.graph.schemaRegistry.addSchema(Text);
 
     log.trace('dxos.echo-replicant.openDatabase', { spaceKey });
     return {
@@ -68,6 +74,7 @@ export class EchoReplicant {
     };
   }
 
+  @trace.span()
   async createDocuments({
     amount,
     size,
@@ -120,6 +127,7 @@ export class EchoReplicant {
     });
   }
 
+  @trace.span()
   async queryDocuments({
     expectedAmount,
     queryResolution,
@@ -165,6 +173,7 @@ export class EchoReplicant {
   /**
    * Initialize stack for ECHO replication.
    */
+  @trace.span()
   async initializeNetwork() {
     log.trace('dxos.echo-replicant.initializeNetwork');
     this._replicator = new TestReplicator({
@@ -189,6 +198,7 @@ export class EchoReplicant {
   /**
    * It will create a connection, and advertize everything to the other peer.
    */
+  @trace.span()
   async connect({
     otherPeerId,
     readQueue,
@@ -216,6 +226,7 @@ export class EchoReplicant {
     this._replicator.context.onConnectionOpen(connection);
   }
 
+  @trace.span()
   async disconnect({ otherPeerId }: { otherPeerId: string }) {
     log.trace('dxos.echo-replicant.disconnect', { otherPeerId });
     invariant(this._replicator?.context, 'Replicator not connected.');

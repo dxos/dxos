@@ -1,11 +1,13 @@
 //
 // Copyright 2024 DXOS.org
 //
-import React, { useCallback, useState } from 'react';
+import { FilePlus } from '@phosphor-icons/react';
+import React, { useCallback, useRef, useState } from 'react';
 
-import { StackView, type CollectionType } from '@braneframe/types';
-import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { FileType, StackView, type CollectionType } from '@braneframe/types';
+import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
+import { type EchoReactiveObject, create } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -32,7 +34,10 @@ export const dataHasAddSectionDialogProps = (data: any): data is { subject: AddS
 export const AddSectionDialog = ({ path, position, collection }: AddSectionDialogProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
+  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+  const fileRef = useRef<HTMLInputElement | null>(null);
   const { dispatch } = useIntent();
+  const space = getSpace(collection);
   const [pending, setPending] = useState<boolean>(false);
 
   const handleAdd = useCallback(
@@ -54,6 +59,18 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
     },
     [collection, path, position, dispatch],
   );
+
+  const handleFileUpload =
+    fileManagerPlugin?.provides.file.upload && space
+      ? async (file: File) => {
+          const filename = file.name.split('.')[0];
+          const info = await fileManagerPlugin.provides.file.upload?.(file, space);
+          if (info) {
+            const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
+            handleAdd(obj);
+          }
+        }
+      : undefined;
 
   return (
     <Dialog.Content>
@@ -80,8 +97,26 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
               </SearchList.Item>
             );
           })}
+          {handleFileUpload && (
+            <SearchList.Item
+              value={t('upload file label')}
+              classNames='flex items-center gap-2 pli-2'
+              onSelect={() => fileRef.current?.click()}
+            >
+              <FilePlus />
+              <span className='grow truncate'>{t('upload file label')}</span>
+            </SearchList.Item>
+          )}
         </SearchList.Content>
       </SearchList.Root>
+      {handleFileUpload && (
+        <input
+          type='file'
+          className='sr-only'
+          ref={fileRef}
+          onChange={({ target: { files } }) => files && handleFileUpload(files[0])}
+        />
+      )}
     </Dialog.Content>
   );
 };

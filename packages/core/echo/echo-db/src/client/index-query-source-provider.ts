@@ -16,8 +16,8 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { getAutomergeObjectCore } from '../automerge';
-import { type QuerySourceProvider } from '../hypergraph';
+import { getObjectCore } from '../core-db';
+import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult, type QuerySource } from '../query';
 
 export interface ObjectLoader {
@@ -46,6 +46,8 @@ export type IndexQuerySourceParams = {
 
 export class IndexQuerySource implements QuerySource {
   changed = new Event<void>();
+
+  private _filter?: Filter = undefined;
   private _results?: QueryResult[] = [];
   private _stream?: Stream<QueryResponse>;
 
@@ -56,6 +58,7 @@ export class IndexQuerySource implements QuerySource {
   }
 
   async run(filter: Filter): Promise<QueryResult[]> {
+    this._filter = filter;
     return new Promise((resolve, reject) => {
       this._queryIndex(
         filter,
@@ -72,6 +75,8 @@ export class IndexQuerySource implements QuerySource {
     if (filter.options?.dataLocation === QueryOptions.DataLocation.LOCAL) {
       return;
     }
+
+    this._filter = filter;
 
     this._closeStream();
     this._results = [];
@@ -134,6 +139,15 @@ export class IndexQuerySource implements QuerySource {
     queryStartTimestamp: number,
     result: RemoteQueryResult,
   ): Promise<QueryResult | null> {
+    if (!OBJECT_DIAGNOSTICS.has(result.id)) {
+      OBJECT_DIAGNOSTICS.set(result.id, {
+        objectId: result.id,
+        spaceKey: result.spaceKey.toHex(),
+        loadReason: 'query',
+        query: JSON.stringify(this._filter?.toProto() ?? null),
+      });
+    }
+
     const object = await this._params.objectLoader.loadObject(result.spaceKey, result.id);
     if (!object) {
       return null;
@@ -143,7 +157,7 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
-    const core = getAutomergeObjectCore(object);
+    const core = getObjectCore(object);
     const queryResult: QueryResult = {
       id: object.id,
       spaceKey: core.database!.spaceKey,

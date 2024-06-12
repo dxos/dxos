@@ -1,6 +1,6 @@
 {
   "name": "@dxos/timeframe",
-  "version": "0.5.4",
+  "version": "0.5.6",
   "description": "Timeframe vector clock.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

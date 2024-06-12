@@ -12,19 +12,19 @@ import { isGraphNode } from '@braneframe/plugin-graph';
 import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
-  type PluginDefinition,
-  type Plugin,
-  NavigationAction,
-  resolvePlugin,
-  parseIntentPlugin,
   type IntentPluginProvides,
-  type LocationProvides,
-  parseNavigationPlugin,
-  parseMetadataResolverPlugin,
   LayoutAction,
   Surface,
+  type LocationProvides,
+  NavigationAction,
+  type Plugin,
+  type PluginDefinition,
   activeIds,
   firstMainId,
+  parseIntentPlugin,
+  parseNavigationPlugin,
+  parseMetadataResolverPlugin,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
 import { type Identifiable, isReactiveObject } from '@dxos/echo-schema';
@@ -57,6 +57,7 @@ import {
   CollectionSection,
   EmptySpace,
   EmptyTree,
+  MenuFooter,
   MissingObject,
   PopoverRemoveObject,
   PopoverRenameObject,
@@ -157,6 +158,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
+            // TODO(burdon): NPE when closing planks.
             const [key] = part.split(':');
             const spaceKey = PublicKey.safeFrom(key);
             const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
@@ -176,17 +178,9 @@ export const SpacePlugin = ({
             return;
           }
 
-          // TODO(y): Remove after the demo.
-          const migrateSpaceParam = 'migrateSpace';
-          if (searchParams.get(migrateSpaceParam) === 'true') {
-            await space.waitUntilReady();
-            await Migrations.migrate(space);
-          }
-
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
           const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
-          url.searchParams.delete(migrateSpaceParam);
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
@@ -216,8 +210,9 @@ export const SpacePlugin = ({
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
+                    // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                     .catch((err) => {
-                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                      log.warn('Failed to broadcast active node for presence.', { err: err.message });
                     });
                 }
               });
@@ -398,6 +393,12 @@ export const SpacePlugin = ({
               return data.object instanceof CollectionType ? <CollectionSection collection={data.object} /> : null;
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
+            case 'menu-footer':
+              if (!isEchoObject(data.object)) {
+                return null;
+              } else {
+                return <MenuFooter object={data.object} />;
+              }
             default:
               return null;
           }
@@ -502,7 +503,7 @@ export const SpacePlugin = ({
 
             graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
           };
-          const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
+          const spacesOrderQuery = client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED }));
           graphSubscriptions.set(
             SHARED,
             spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),
@@ -553,6 +554,7 @@ export const SpacePlugin = ({
               if (!client) {
                 return;
               }
+
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesCollection],

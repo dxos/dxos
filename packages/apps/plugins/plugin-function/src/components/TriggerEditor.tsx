@@ -53,8 +53,8 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const fn = useMemo(() => query.find((fn) => fn.uri === trigger.function), [trigger.function, query]);
 
   useEffect(() => {
-    void space.db.schemaRegistry
-      .getAll()
+    void space.db.schema
+      .list()
       .then((schemas) => {
         // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
         state.schemas = distinctBy([...state.schemas, ...schemas], (schema) => schema.typename).sort((a, b) =>

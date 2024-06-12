@@ -1,5 +1,5 @@
 # Class `MessageType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L38)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:38](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L38)</sub>
 
 
 
@@ -19,17 +19,17 @@ Arguments: none
 
 
 ## Properties
-### [blocks](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L42)
+### [blocks](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L42)
 Type: <code>object[]</code>
 
 
 
-### [context](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L45)
+### [context](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L45)
 Type: <code>object</code>
 
 
 
-### [date](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L40)
+### [date](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L40)
 Type: <code>string</code>
 
 
@@ -39,23 +39,33 @@ Type: <code>string</code>
 
 
 
-### [links](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L43)
+### [links](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L43)
 Type: <code>readonly Ref&lt;[Expando](/api/@dxos/client/interfaces/Expando)&gt;[]</code>
 
 
 
-### [read](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L44)
+### [read](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L44)
 Type: <code>boolean</code>
 
 
 
-### [subject](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L41)
+### [subject](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L41)
 Type: <code>string</code>
 
 
 
-### [type](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L39)
+### [type](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L39)
 Type: <code>string</code>
+
+
+
+### [Encoded]()
+Type: <code>object & object</code>
+
+
+
+### [Type]()
+Type: <code>object & object</code>
 
 
 

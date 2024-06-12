@@ -99,7 +99,11 @@ const config: UserConfig = defineUserConfig({
       },
     }),
     // Config: https://vuepress.github.io/reference/plugin/search.html
-    searchPlugin(),
+    searchPlugin({
+      // Search currently doesn't give any kind of "there are more results than you're seeing" indicator,
+      // so set this high:
+      maxSuggestions: 20,
+    }),
     telemetryPlugin(),
   ],
   bundler: viteBundler({

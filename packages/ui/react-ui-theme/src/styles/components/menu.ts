@@ -35,7 +35,7 @@ export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   );
 
 export const menuSeparator: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('mlb-1 mli-2 bs-px surface-separator', ...etc);
+  mx('mlb-1 mli-2 bs-px bg-neutral-75 dark:bg-neutral-700', ...etc);
 
 export const menuGroupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(descriptionText, 'select-none pli-2 plb-2', ...etc);

@@ -6,7 +6,7 @@ import { getHeads, type Doc } from '@dxos/automerge/automerge';
 import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type AutomergeContext, AutomergeObjectCore } from '@dxos/echo-db';
+import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
 import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -25,10 +25,10 @@ export class MigrationBuilder {
   private _newRoot?: DocHandle<SpaceDoc> = undefined;
 
   constructor(private readonly _space: Space) {
-    this._repo = this._space.db.automerge.automerge.repo;
-    this._automergeContext = this._space.db.automerge.automerge;
+    this._repo = this._space.db.coreDatabase.automerge.repo;
+    this._automergeContext = this._space.db.coreDatabase.automerge;
     // TODO(wittjosiah): Accessing private API.
-    this._rootDoc = (this._space.db.automerge as any)._automergeDocLoader
+    this._rootDoc = (this._space.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle()
       .docSync() as Doc<SpaceDoc>;
   }
@@ -127,7 +127,7 @@ export class MigrationBuilder {
   }
 
   private async _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
-    const core = new AutomergeObjectCore();
+    const core = new ObjectCore();
     if (id) {
       core.id = id;
     }

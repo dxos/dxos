@@ -6,20 +6,18 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { type CollectionType, FileType, StackView } from '@braneframe/types';
+import { type CollectionType, StackView } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
   Surface,
-  defaultFileTypes,
   parseMetadataResolverPlugin,
-  parseFileManagerPlugin,
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
+import { create, isReactiveObject, getType } from '@dxos/echo-schema';
 import { fullyQualifiedId } from '@dxos/react-client/echo';
-import { Button, ButtonGroup, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
   Stack,
@@ -28,10 +26,8 @@ import {
   type AddSectionPosition,
   type StackSectionItem,
 } from '@dxos/react-ui-stack';
-import { getSize, surfaceElevation, staticDefaultButtonColors } from '@dxos/react-ui-theme';
 import { nonNullable } from '@dxos/util';
 
-import { FileUpload } from './FileUpload';
 import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
@@ -49,7 +45,6 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
   const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
@@ -126,22 +121,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
     }
   };
 
-  const handleAdd = (sectionObject: EchoReactiveObject<any>) => {
-    collection.objects.push(sectionObject);
-    stack.sections[sectionObject.id] = {};
-  };
-
   // TODO(wittjosiah): Factor out.
-  const handleFileUpload = fileManagerPlugin?.provides.file.upload
-    ? async (file: File) => {
-        const filename = file.name.split('.')[0];
-        const info = await fileManagerPlugin.provides.file.upload?.(file);
-        if (info) {
-          const obj = create(FileType, { type: file.type, title: filename, filename, cid: info.cid });
-          handleAdd(obj);
-        }
-      }
-    : undefined;
 
   const handleNavigate = async (object: MosaicDataItem) => {
     const toId = fullyQualifiedId(object);
@@ -192,31 +172,24 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         onCollapseSection={handleCollapseSection}
       />
 
-      <div role='none' className='flex justify-center mbs-4 pbe-4'>
-        <ButtonGroup classNames={[surfaceElevation({ elevation: 'group' }), staticDefaultButtonColors]}>
-          <Button
-            variant='ghost'
-            data-testid='stack.createSection'
-            onClick={() =>
-              dispatch?.({
-                action: LayoutAction.SET_LAYOUT,
-                data: {
-                  element: 'dialog',
-                  component: 'dxos.org/plugin/stack/AddSectionDialog',
-                  subject: { position: 'afterAll', collection },
-                },
-              })
-            }
-          >
-            <Plus className={getSize(6)} />
-          </Button>
-          {handleFileUpload && (
-            <FileUpload
-              fileTypes={[...defaultFileTypes.images, ...defaultFileTypes.media, ...defaultFileTypes.text]}
-              onUpload={handleFileUpload}
-            />
-          )}
-        </ButtonGroup>
+      <div role='none' className='mlb-2 pli-2'>
+        <Button
+          data-testid='stack.createSection'
+          classNames='is-full gap-2'
+          onClick={() =>
+            dispatch?.({
+              action: LayoutAction.SET_LAYOUT,
+              data: {
+                element: 'dialog',
+                component: 'dxos.org/plugin/stack/AddSectionDialog',
+                subject: { position: 'afterAll', stack },
+              },
+            })
+          }
+        >
+          <Plus />
+          <span className='sr-only'>{t('add section label')}</span>
+        </Button>
       </div>
     </>
   );

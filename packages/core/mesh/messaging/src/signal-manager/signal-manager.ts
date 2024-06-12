@@ -15,7 +15,6 @@ import { type Message, type SignalMethods, type SignalStatus } from '../signal-m
 export interface SignalManager extends SignalMethods {
   open(): Promise<void>;
   close(): Promise<void>;
-
   getStatus(): SignalStatus[];
 
   statusChanged: Event<SignalStatus[]>;

@@ -5,14 +5,14 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space, type SpaceInternal, Properties } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesSchema } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
@@ -116,6 +116,10 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+  }
+
+  get id(): SpaceId {
+    return this._data.id as SpaceId;
   }
 
   @trace.info()
@@ -297,7 +301,7 @@ export class SpaceProxy implements Space {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.schema(PropertiesSchema), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {

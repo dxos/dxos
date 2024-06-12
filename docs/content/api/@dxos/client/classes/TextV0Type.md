@@ -1,5 +1,5 @@
 # Class `TextV0Type`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:10](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L10)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:10](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L10)</sub>
 
 
 
@@ -19,13 +19,23 @@ Arguments: none
 
 
 ## Properties
-### [content](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/client/src/testing/data.ts#L11)
+### [content](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L11)
 Type: <code>string</code>
 
 
 
 ### [id]()
 Type: <code>string</code>
+
+
+
+### [Encoded]()
+Type: <code>object & object</code>
+
+
+
+### [Type]()
+Type: <code>object & object</code>
 
 
 

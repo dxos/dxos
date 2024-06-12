@@ -73,6 +73,8 @@ export default [
         'more actions label': 'More actions',
         'invitations heading': 'Invitations',
         'keyshortcuts label': 'Keyboard shortcuts',
+        'menu footer label': 'Details',
+        'location label': 'Located in',
       },
     },
   },

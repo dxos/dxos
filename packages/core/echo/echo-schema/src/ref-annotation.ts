@@ -5,7 +5,7 @@
 import * as S from '@effect/schema/Schema';
 
 import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotation } from './annotations';
-import { DynamicEchoSchema, StoredEchoSchema } from './dynamic';
+import { DynamicSchema, StoredSchema } from './dynamic';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
@@ -28,8 +28,8 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
           // unresolved reference
           return true;
         }
-        if (obj instanceof DynamicEchoSchema) {
-          return annotation.typename === StoredEchoSchema.typename;
+        if (obj instanceof DynamicSchema) {
+          return annotation.typename === StoredSchema.typename;
         }
         return isReactiveObject(obj) && typePredicate(obj);
       },

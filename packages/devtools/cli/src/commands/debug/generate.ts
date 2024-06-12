@@ -5,11 +5,11 @@
 import { Flags } from '@oclif/core';
 
 import { sleep } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { ARG_SPACE_KEYS } from '@dxos/cli-base';
 import { create } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
+import { BaseCommand } from '../../base';
 
 // TODO(burdon): Testing plugin (vs. debug)?
 // TODO(burdon): Disable unless NODE_ENV=development?
@@ -51,7 +51,7 @@ export default class Generate extends BaseCommand<typeof Generate> {
     };
 
     const type = 'test';
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
       for (let i = 0; i < this.flags.objects; i++) {
         space?.db.add(create({ type, title: faker.lorem.word() }));

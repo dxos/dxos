@@ -299,6 +299,7 @@ message Space {
     optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
   }
 
+  string id = 5;
   dxos.keys.PublicKey space_key = 1;
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
