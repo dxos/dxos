@@ -55,11 +55,11 @@ export class MigrationBuilder {
     }
 
     const { schema, props } = migrate(objectStructure);
-    this._createObject({ id, schema, props });
+    await this._createObject({ id, schema, props });
   }
 
-  addObject(schema: S.Schema<any>, props: any) {
-    const core = this._createObject({ schema, props });
+  async addObject(schema: S.Schema<any>, props: any) {
+    const core = await this._createObject({ schema, props });
     return core.id;
   }
 
@@ -67,19 +67,19 @@ export class MigrationBuilder {
     this._deleteObjects.push(id);
   }
 
-  changeProperties(changeFn: (properties: ObjectStructure) => void) {
+  async changeProperties(changeFn: (properties: ObjectStructure) => void) {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
     this._newRoot.change((doc: SpaceDoc) => {
-      const propertiesStructure = doc.objects![this._space.properties.id];
-      changeFn(propertiesStructure);
+      const propertiesStructure = doc.objects?.[this._space.properties.id];
+      propertiesStructure && changeFn(propertiesStructure);
     });
     this._flushStates.push({
       documentId: this._newRoot.documentId,
-      heads: getHeads(this._newRoot.docSync()!),
+      heads: getHeads(this._newRoot.docSync()),
     });
   }
 
@@ -88,7 +88,7 @@ export class MigrationBuilder {
    */
   async _commit() {
     if (!this._newRoot) {
-      this._buildNewRoot();
+      await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -103,7 +103,7 @@ export class MigrationBuilder {
     });
   }
 
-  private _buildNewRoot() {
+  private async _buildNewRoot() {
     const previousLinks = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete previousLinks[id];
@@ -119,13 +119,14 @@ export class MigrationBuilder {
         ...this._newLinks,
       },
     });
+    await this._newRoot.whenReady();
     this._flushStates.push({
       documentId: this._newRoot.documentId,
-      heads: getHeads(this._newRoot.docSync()!),
+      heads: getHeads(this._newRoot.docSync()),
     });
   }
 
-  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
+  private async _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
     const core = new AutomergeObjectCore();
     if (id) {
       core.id = id;
@@ -142,9 +143,10 @@ export class MigrationBuilder {
       },
     });
     this._newLinks[core.id] = newHandle.url;
+    await newHandle.whenReady();
     this._flushStates.push({
       documentId: newHandle.documentId,
-      heads: getHeads(newHandle.docSync()!),
+      heads: getHeads(newHandle.docSync()),
     });
 
     return core;

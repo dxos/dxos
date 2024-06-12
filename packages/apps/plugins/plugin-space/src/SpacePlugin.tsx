@@ -701,9 +701,8 @@ export const SpacePlugin = ({
                 if (collection instanceof Collection) {
                   collection.objects.push(object as Identifiable);
                 } else {
-                  const echoObject = space.db.add(object);
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(Collection, { objects: [echoObject], views: {} });
+                  const collection = create(Collection, { objects: [object as Identifiable], views: {} });
                   space.properties[Collection.typename] = collection;
                 }
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };

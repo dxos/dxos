@@ -75,6 +75,7 @@ export const migrations: Migration[] = [
 
       // Update root folder reference to collection.
       builder.changeProperties((propertiesStructure) => {
+        // TODO(wittjosiah): This doesn't work.
         const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
         propertiesStructure.data[Collection.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
@@ -87,7 +88,7 @@ export const migrations: Migration[] = [
         return;
       }
 
-      const rootId = builder.addObject(Collection, { objects: [], views: {} });
+      const rootId = await builder.addObject(Collection, { objects: [], views: {} });
       const rootCollection = await builder.findObject(rootId);
       builder.changeProperties((propertiesStructure) => {
         propertiesStructure.data[Collection.typename] = rootCollection ? { ...rootCollection } : null;
