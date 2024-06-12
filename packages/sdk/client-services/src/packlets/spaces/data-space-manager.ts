@@ -169,6 +169,7 @@ export class DataSpaceManager {
     for (const space of this._spaces.values()) {
       await space.close();
     }
+    this._spaces.clear();
   }
 
   /**
