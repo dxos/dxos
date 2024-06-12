@@ -20,6 +20,7 @@ import {
   Surface,
   type Toast as ToastSchema,
   useIntent,
+  usePlugin,
 } from '@dxos/app-framework';
 import { Button, Dialog, Main, Popover, Status, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
@@ -278,6 +279,7 @@ export const DeckLayout = ({
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
+  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
   const { dispatch } = useIntent();
   const navigationData = {
     popoverAnchorId,
@@ -451,29 +453,33 @@ export const DeckLayout = ({
                             <PlankError part={part} slug={id} />
                           )}
                         </Plank.Content>
-                        <div role='none' className='grid grid-rows-subgrid row-span-3'>
-                          <Button
-                            variant='ghost'
-                            classNames='p-1'
-                            onClick={() =>
-                              dispatch([
-                                {
-                                  action: LayoutAction.SET_LAYOUT,
-                                  data: {
-                                    element: 'dialog',
-                                    component: 'dxos.org/plugin/search/Dialog',
-                                    dialogBlockAlign: 'start',
-                                    subject: { action: NavigationAction.SET, position: 'add-after', part },
+                        {searchEnabled ? (
+                          <div role='none' className='grid grid-rows-subgrid row-span-3'>
+                            <Button
+                              variant='ghost'
+                              classNames='p-1'
+                              onClick={() =>
+                                dispatch([
+                                  {
+                                    action: LayoutAction.SET_LAYOUT,
+                                    data: {
+                                      element: 'dialog',
+                                      component: 'dxos.org/plugin/search/Dialog',
+                                      dialogBlockAlign: 'start',
+                                      subject: { action: NavigationAction.SET, position: 'add-after', part },
+                                    },
                                   },
-                                },
-                              ])
-                            }
-                          >
-                            <span className='sr-only'>{t('insert plank label')}</span>
-                            <Plus />
-                          </Button>
-                          <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
-                        </div>
+                                ])
+                              }
+                            >
+                              <span className='sr-only'>{t('insert plank label')}</span>
+                              <Plus />
+                            </Button>
+                            <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
+                          </div>
+                        ) : (
+                          <Plank.ResizeHandle classNames='row-span-3' />
+                        )}
                       </Plank.Root>
                     );
                   })}
