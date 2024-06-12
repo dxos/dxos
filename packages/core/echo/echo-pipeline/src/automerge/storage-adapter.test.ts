@@ -9,7 +9,7 @@ import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
-import { afterTest, describe, openAndClose, test } from '@dxos/test';
+import { afterTest, describe, test } from '@dxos/test';
 import { arrayToBuffer, bufferToArray, type MaybePromise } from '@dxos/util';
 
 import { AutomergeStorageAdapter } from './automerge-storage-adapter';
@@ -18,7 +18,11 @@ import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 const runTests = (
   testNamespace: string,
   /** Run per test. Expects automatic clean-up with `afterTest`. */
-  createAdapter: (root?: string) => MaybePromise<{ adapter: StorageAdapterInterface; close: () => MaybePromise<void> }>,
+  createAdapter: (root?: string) => MaybePromise<{
+    adapter: StorageAdapterInterface;
+    /** Would be called automatically with `afterTest`. Exposed for mid-test clean-up. */
+    close: () => MaybePromise<void>;
+  }>,
 ) => {
   describe(testNamespace, () => {
     const chunks = [
@@ -116,16 +120,18 @@ const runTests = (
  */
 runTests('AutomergeStorageAdapter', (root?: string) => {
   const storage = createStorage({ type: root ? StorageType.NODE : StorageType.RAM, root });
-  afterTest(() => storage.close());
   const dir = storage.createDirectory('automerge');
   const adapter = new AutomergeStorageAdapter(dir);
-  afterTest(() => adapter.close());
+
+  const close = async () => {
+    await adapter.close();
+    await storage.close();
+  };
+  afterTest(close);
+
   return {
     adapter,
-    close: async () => {
-      await adapter.close();
-      await storage.close();
-    },
+    close,
   };
 });
 
@@ -136,12 +142,15 @@ runTests('LevelDBStorageAdapter', async (root?: string) => {
   const level = createTestLevel(root);
   await level.open();
   const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-  await openAndClose(level, adapter as any);
+  await adapter.open?.();
+
+  const close = async () => {
+    await adapter.close();
+    await level.close();
+  };
+  afterTest(close);
   return {
     adapter,
-    close: async () => {
-      await adapter.close();
-      await level.close();
-    },
+    close,
   };
 });
