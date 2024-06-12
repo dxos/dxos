@@ -6,22 +6,22 @@ export { Config, Defaults, Dynamics, Envs, Local, Remote, Storage } from '@dxos/
 export { PublicKey, type PublicKeyLike } from '@dxos/keys';
 // TODO(wittjosiah): Should all api errors be exported here?
 export {
+  AlreadyJoinedError,
   ApiError,
-  SystemError,
-  DatabaseError,
-  RpcClosedError,
-  RpcNotOpenError,
   CancelledError,
+  DataCorruptionError,
+  DatabaseError,
+  EntityNotFoundError,
   InvalidConfigError,
   InvalidInvitationError,
   InvalidInvitationExtensionRoleError,
-  AlreadyJoinedError,
   IdentityNotInitializedError,
   InvalidStorageVersionError,
   RemoteServiceConnectionError,
   RemoteServiceConnectionTimeout,
-  DataCorruptionError,
-  EntityNotFoundError,
+  RpcClosedError,
+  RpcNotOpenError,
+  SystemError,
   UnknownModelError,
 } from '@dxos/protocols';
 
