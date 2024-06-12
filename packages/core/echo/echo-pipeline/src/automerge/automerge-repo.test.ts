@@ -13,7 +13,6 @@ import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
-import { arrayToBuffer, bufferToArray } from '@dxos/util';
 
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
@@ -513,64 +512,6 @@ describe('AutomergeRepo', () => {
         adapter2.peerCandidate(adapter1.peerId!);
 
         await asyncTimeout(docB.whenReady(), 1_000);
-      }
-    });
-  });
-
-  describe('storage', () => {
-    test('loadRange', async () => {
-      const root = `/tmp/${randomBytes(16).toString('hex')}`;
-      {
-        const level = createTestLevel(root);
-        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-        await level.open();
-        await adapter.open();
-
-        await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
-        await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
-        await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
-        await adapter.close();
-        await level.close();
-      }
-
-      {
-        const level = createTestLevel(root);
-        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-        await openAndClose(level, adapter);
-
-        const range = await adapter.loadRange(['test']);
-        expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).to.eq(['one', 'two']);
-        expect(range.map((chunk) => chunk.key)).to.eq([
-          ['test', '1'],
-          ['test', '2'],
-        ]);
-      }
-    });
-
-    test('removeRange', async () => {
-      const root = `/tmp/${randomBytes(16).toString('hex')}`;
-      {
-        const level = createTestLevel(root);
-        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-        await level.open();
-        await adapter.open();
-        await adapter.save(['test', '1'], bufferToArray(Buffer.from('one')));
-        await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));
-        await adapter.save(['bar', '1'], bufferToArray(Buffer.from('bar')));
-        await adapter.close();
-        await level.close();
-      }
-
-      {
-        const level = createTestLevel(root);
-        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-        await openAndClose(level, adapter);
-        await adapter.removeRange(['test']);
-        const range = await adapter.loadRange(['test']);
-        expect(range.map((chunk) => arrayToBuffer(chunk.data!).toString())).to.eq([]);
-        const range2 = await adapter.loadRange(['bar']);
-        expect(range2.map((chunk) => arrayToBuffer(chunk.data!).toString())).to.eq(['bar']);
-        expect(range2.map((chunk) => chunk.key)).to.eq([['bar', '1']]);
       }
     });
   });
