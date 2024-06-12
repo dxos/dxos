@@ -110,12 +110,12 @@ Arguments:
 `object`: <code>[ReactiveObject](/api/@dxos/client/types/ReactiveObject)&lt;any&gt;</code>
 
 
-### [getObjectCore(obj)]()
+### [getAutomergeObjectCore(obj)]()
 
 
 
 
-Returns: <code>ObjectCore</code>
+Returns: <code>AutomergeObjectCore</code>
 
 Arguments: 
 

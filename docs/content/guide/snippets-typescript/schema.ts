@@ -24,7 +24,7 @@ export class Task extends dxos_echo_schema.TypedObject<TaskProps> {
 
   constructor(
     initValues?: Partial<TaskProps>,
-    opts?: dxos_echo_schema.ObjectCoreOptions,
+    opts?: dxos_echo_schema.TypedObjectOptions,
   ) {
     super({ ...initValues }, { schema: Task.schema, ...opts });
   }

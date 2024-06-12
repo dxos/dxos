@@ -4,7 +4,7 @@
 
 ## Properties
 ### [automerge]()
-Type: <code>CoreDatabase</code>
+Type: <code>AutomergeDb</code>
 
 
 
