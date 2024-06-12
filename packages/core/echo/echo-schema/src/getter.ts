@@ -10,6 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { getEchoObjectAnnotation } from './annotations';
 import { getProxyHandlerSlot, isReactiveObject } from './proxy';
 import { type ObjectMeta } from './types';
+import { DXN } from '@dxos/keys';
 
 /**
  * Returns the schema for the given object if one is defined.
@@ -35,7 +36,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return undefined;
   }
   if (annotation.schemaId) {
-    return new Reference(annotation.schemaId);
+    return new Reference(DXN.parse(annotation.schemaId));
   }
 
   return Reference.forType(annotation.typename);

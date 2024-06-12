@@ -92,7 +92,7 @@ describe('dynamic schema', () => {
   const createDynamicSchema = (schema: S.Schema<any>): DynamicSchema => {
     const dynamicSchema = new DynamicSchema(
       create(StoredSchema, {
-        typename: getTypeReference(schema)!.itemId,
+        typename: getTypeReference(schema)!.dxn.toString(),
         version: TEST_SCHEMA_TYPE.version,
         jsonSchema: effectToJsonSchema(schema),
       }),

@@ -162,7 +162,12 @@ describe('Reactive Object with ECHO database', () => {
 
     let id: string;
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
@@ -171,7 +176,12 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
@@ -192,7 +202,12 @@ describe('Reactive Object with ECHO database', () => {
     {
       const graph = new Hypergraph();
       graph.schemaRegistry.addSchema(TypedObjectSchema);
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
@@ -202,7 +217,12 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const graph = new Hypergraph();
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
@@ -490,7 +510,12 @@ describe('Reactive Object with ECHO database', () => {
 
       let id: string;
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+        const db = new EchoDatabaseImpl({
+          spaceId: await createIdFromSpaceKey(spaceKey),
+          automergeContext,
+          graph,
+          spaceKey,
+        });
         await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.add({ string: 'foo' });
         id = obj.id;
@@ -498,7 +523,12 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+        const db = new EchoDatabaseImpl({
+          spaceId: await createIdFromSpaceKey(spaceKey),
+          automergeContext,
+          graph,
+          spaceKey,
+        });
         await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
