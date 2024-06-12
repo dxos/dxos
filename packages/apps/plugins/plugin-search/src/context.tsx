@@ -6,7 +6,7 @@ import React, { createContext, type PropsWithChildren, useContext, useState } fr
 
 import { raise } from '@dxos/debug';
 
-import { filterObjects, type SearchResult } from './search';
+import { filterObjectsSync, queryStringToMatch, type SearchResult } from './search-sync';
 
 type SearchContextType = {
   match?: RegExp;
@@ -17,29 +17,25 @@ const SearchContext = createContext<SearchContextType>({});
 
 export const SearchContextProvider = ({ children }: PropsWithChildren) => {
   const [match, setMatch] = useState<RegExp>();
-  const handleMatch = (text?: string) => {
-    const trimmed = text?.trim();
-    setMatch(trimmed ? new RegExp(trimmed, 'i') : undefined);
-  };
-
+  const handleMatch = (text?: string) => setMatch(queryStringToMatch(text));
   return <SearchContext.Provider value={{ match, setMatch: handleMatch }}>{children}</SearchContext.Provider>;
 };
 
-export const useSearch = () => {
+export const useGlobalSearch = () => {
   return useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
 };
 
-export const useSearchResults = <T extends Record<string, any>>(objects?: T[]): SearchResult[] => {
-  const { match } = useSearch();
-  return objects && match ? filterObjects(objects, match) : [];
+export const useGlobalSearchResults = <T extends Record<string, any>>(objects?: T[]): SearchResult[] => {
+  const { match } = useGlobalSearch();
+  return objects && match ? filterObjectsSync(objects, match) : [];
 };
 
-export const useFilteredObjects = <T extends Record<string, any>>(objects?: T[]): T[] => {
-  const { match } = useSearch();
+export const useGlobalFilteredObjects = <T extends Record<string, any>>(objects?: T[]): T[] => {
+  const { match } = useGlobalSearch();
   if (!match || !objects) {
     return objects ?? [];
   }
 
-  const matching = filterObjects(objects, match);
+  const matching = filterObjectsSync(objects, match);
   return matching.map((result) => result.object);
 };
