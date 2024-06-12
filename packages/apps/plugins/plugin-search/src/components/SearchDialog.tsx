@@ -25,6 +25,9 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
 
+// TODO(Zan): Move to common if this is found to be useful.
+type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
+
 type SearchListResultProps = {
   node: Node;
 } & Pick<SearchListItemProps, 'onSelect'>;
@@ -46,11 +49,6 @@ const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ no
     </SearchList.Item>
   );
 });
-
-const spliceFp = <A extends Array<any>>(arr: A, ...params: Parameters<typeof Array.prototype.splice>): A => {
-  arr.splice(...params);
-  return arr;
-};
 
 export const SearchDialog = ({
   subject,
@@ -85,6 +83,12 @@ export const SearchDialog = ({
         }
       }
 
+      const spliceMainParts = (active: GuardedType<typeof isActiveParts>) => {
+        const main = Array.isArray(active.main) ? active.main : [active.main];
+        main.splice(subject.part[1] + (subject.position === 'add-after' ? 1 : 0), 0, nodeId);
+        return main;
+      };
+
       return dispatch([
         {
           action: NavigationAction.SET,
@@ -92,12 +96,7 @@ export const SearchDialog = ({
             activeParts: isActiveParts(active)
               ? {
                   ...active,
-                  main: spliceFp(
-                    Array.isArray(active.main) ? active.main : [active.main],
-                    subject.part[1] + (subject.position === 'add-after' ? 1 : 0),
-                    0,
-                    nodeId,
-                  ),
+                  main: spliceMainParts(active),
                 }
               : { main: nodeId },
           },
