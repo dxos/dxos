@@ -11,7 +11,6 @@ import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
-import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
   private readonly _repo: Repo;
@@ -68,15 +67,15 @@ export class MigrationBuilder {
     this._deleteObjects.push(id);
   }
 
-  async changeProperties(changeFn: (properties: ObjectStructure) => MaybePromise<void>) {
+  async changeProperties(changeFn: (properties: ObjectStructure) => void) {
     if (!this._newRoot) {
       await this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
-    this._newRoot.change(async (doc: SpaceDoc) => {
+    this._newRoot.change((doc: SpaceDoc) => {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
-      propertiesStructure && (await changeFn(propertiesStructure));
+      propertiesStructure && changeFn(propertiesStructure);
     });
     this._flushStates.push({
       documentId: this._newRoot.documentId,
