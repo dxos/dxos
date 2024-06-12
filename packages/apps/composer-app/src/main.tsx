@@ -267,12 +267,9 @@ const main = async () => {
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
-          const { DocumentType, TextV0Type, Collection, getSpaceProperty } = await import('@braneframe/types');
+          const { DocumentType, TextV0Type, Collection } = await import('@braneframe/types');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-          const personalSpaceCollection = getSpaceProperty<Collection | undefined>(
-            client.spaces.default,
-            Collection.typename,
-          );
+          const personalSpaceCollection = client.spaces.default.properties[Collection.typename] as Collection;
           const content = create(TextV0Type, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceCollection?.objects.push(document);
