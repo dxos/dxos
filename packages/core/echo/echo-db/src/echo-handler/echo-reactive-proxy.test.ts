@@ -6,7 +6,7 @@ import { create, EchoObject } from '@dxos/echo-schema';
 import { TestSchema } from '@dxos/echo-schema/testing';
 
 import { reactiveProxyTests } from './proxy.blueprint-test';
-import { type EchoDatabase } from '../database';
+import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder } from '../testing';
 
 describe('Echo reactive proxy', () => {

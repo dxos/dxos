@@ -16,13 +16,13 @@ import { type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
-import { type AutomergeContext, AutomergeDb, type AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
 import { DynamicSchemaRegistry } from './dynamic-schema-registry';
-import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from './echo-handler';
-import { EchoReactiveHandler } from './echo-handler/echo-handler';
-import { type ProxyTarget } from './echo-handler/echo-proxy-target';
-import { type Hypergraph } from './hypergraph';
-import { type Filter, type FilterSource, type Query } from './query';
+import { type AutomergeContext, CoreDatabase, type ObjectCore, getObjectCore } from '../core-db';
+import { createEchoObject, initEchoReactiveObjectRootProxy, isEchoObject } from '../echo-handler';
+import { EchoReactiveHandler } from '../echo-handler/echo-handler';
+import { type ProxyTarget } from '../echo-handler/echo-proxy-target';
+import { type Hypergraph } from '../hypergraph';
+import { type Filter, type FilterSource, type Query } from '../query';
 
 export type GetObjectByIdOptions = {
   deleted?: boolean;
@@ -89,7 +89,7 @@ export interface EchoDatabase {
   /**
    * @deprecated
    */
-  readonly automerge: AutomergeDb;
+  readonly coreDatabase: CoreDatabase;
 }
 
 export type EchoDatabaseParams = {
@@ -106,7 +106,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @internal
    */
-  _automerge: AutomergeDb;
+  _coreDatabase: CoreDatabase;
 
   public readonly schema: DynamicSchemaRegistry;
 
@@ -116,21 +116,21 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Mapping `object core` -> `root proxy` (User facing proxies).
    * @internal
    */
-  readonly _rootProxies = new Map<AutomergeObjectCore, EchoReactiveObject<any>>();
+  readonly _rootProxies = new Map<ObjectCore, EchoReactiveObject<any>>();
 
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey);
+    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceKey);
     this.schema = new DynamicSchemaRegistry(this);
   }
 
   get graph(): Hypergraph {
-    return this._automerge.graph;
+    return this._coreDatabase.graph;
   }
 
   get spaceKey(): PublicKey {
-    return this._automerge.spaceKey;
+    return this._coreDatabase.spaceKey;
   }
 
   get rootUrl(): string | undefined {
@@ -140,7 +140,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(ctx: Context): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._automerge.open({ rootUrl: this._rootUrl });
+      await this._coreDatabase.open({ rootUrl: this._rootUrl });
     }
   }
 
@@ -153,15 +153,15 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._automerge.open({ rootUrl });
+        await this._coreDatabase.open({ rootUrl });
       } else {
-        await this._automerge.update({ rootUrl });
+        await this._coreDatabase.update({ rootUrl });
       }
     }
   }
 
   getObjectById(id: string, { deleted = false } = {}): EchoReactiveObject<any> | undefined {
-    const core = this._automerge.getObjectCoreById(id);
+    const core = this._coreDatabase.getObjectCoreById(id);
     if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
@@ -179,7 +179,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     objectId: string,
     { timeout }: { timeout?: number } = {},
   ): Promise<EchoReactiveObject<T> | undefined> {
-    const core = await this._automerge.loadObjectCoreById(objectId, { timeout });
+    const core = await this._coreDatabase.loadObjectCoreById(objectId, { timeout });
 
     if (!core || core?.isDeleted()) {
       return undefined;
@@ -197,7 +197,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     objectIds: string[],
     { inactivityTimeout = 30000 }: { inactivityTimeout?: number } = {},
   ): Promise<Array<EchoReactiveObject<any> | undefined>> {
-    const cores = await this._automerge.batchLoadObjectCores(objectIds, { inactivityTimeout });
+    const cores = await this._coreDatabase.batchLoadObjectCores(objectIds, { inactivityTimeout });
     const objects = cores.map((core) => {
       if (!core || core.isDeleted()) {
         return undefined;
@@ -223,19 +223,19 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
       echoObject = createEchoObject(obj);
     }
     invariant(isEchoObject(echoObject));
-    this._rootProxies.set(getAutomergeObjectCore(echoObject), echoObject);
+    this._rootProxies.set(getObjectCore(echoObject), echoObject);
 
     const target = getProxyHandlerSlot(echoObject).target as ProxyTarget;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveLinkedObjects(target);
-    this._automerge.add(echoObject);
+    this._coreDatabase.add(echoObject);
 
     return echoObject as any;
   }
 
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
     invariant(isEchoObject(obj));
-    return this._automerge.remove(obj);
+    return this._coreDatabase.remove(obj);
   }
 
   query(): Query<EchoReactiveObject<any>>;
@@ -249,14 +249,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     filter?: FilterSource<T> | undefined,
     options?: QueryOptions | undefined,
   ): Query<T> {
-    return this._automerge.graph.query(filter, {
+    return this._coreDatabase.graph.query(filter, {
       ...options,
       spaces: [this.spaceKey],
     });
   }
 
   async flush(): Promise<void> {
-    await this._automerge.flush();
+    await this._coreDatabase.flush();
   }
 
   /**
@@ -264,7 +264,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   get objects(): EchoReactiveObject<any>[] {
     // Initialize all proxies.
-    for (const core of this._automerge.allObjectCores()) {
+    for (const core of this._coreDatabase.allObjectCores()) {
       defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this));
     }
     return Array.from(this._rootProxies.values());
@@ -278,8 +278,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   /**
    * @deprecated
    */
-  get automerge(): AutomergeDb {
-    return this._automerge;
+  get coreDatabase(): CoreDatabase {
+    return this._coreDatabase;
   }
 }
 

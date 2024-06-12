@@ -18,8 +18,8 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
-import { type AutomergeDb } from './automerge-db';
-import { type DocAccessor } from './automerge-types';
+import { type CoreDatabase } from './core-database';
+import { type DocAccessor } from './doc-accessor';
 import { docChangeSemaphore } from './doc-semaphore';
 import { isValidKeyPath, type KeyPath } from './key-path';
 import { type DecodedAutomergePrimaryValue, type DecodedAutomergeValue } from './types';
@@ -31,15 +31,13 @@ const STRING_CRDT_LIMIT = 300_000;
 export const META_NAMESPACE = 'meta';
 const SYSTEM_NAMESPACE = 'system';
 
-// TODO(dmaretskyi): Rename.
-export type TypedObjectOptions = {
+export type ObjectCoreOptions = {
   type?: Reference;
   meta?: ObjectMeta;
   immutable?: boolean;
 };
 
-// TODO(dmaretskyi): Rename to `AutomergeObject`.
-export class AutomergeObjectCore {
+export class ObjectCore {
   // TODO(dmaretskyi): Start making some of those fields private.
 
   /**
@@ -52,7 +50,7 @@ export class AutomergeObjectCore {
   /**
    * Set if when the object is bound to a database.
    */
-  public database?: AutomergeDb | undefined;
+  public database?: CoreDatabase | undefined;
 
   /**
    * Set if when the object is not bound to a database.
@@ -78,7 +76,7 @@ export class AutomergeObjectCore {
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(initialProps?: unknown, opts?: TypedObjectOptions) {
+  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions) {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
@@ -366,7 +364,7 @@ export class AutomergeObjectCore {
 }
 
 export type BindOptions = {
-  db: AutomergeDb;
+  db: CoreDatabase;
   docHandle: DocHandle<SpaceDoc>;
   path: KeyPath;
 

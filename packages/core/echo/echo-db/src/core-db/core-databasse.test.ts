@@ -15,11 +15,11 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { loadObjectReferences } from './automerge-db';
-import { getAutomergeObjectCore } from './automerge-object';
+import { loadObjectReferences } from './core-database';
+import { getObjectCore } from './doc-accessor';
 import { TestBuilder, TestPeer } from '../testing';
 
-describe('AutomergeDb', () => {
+describe('CoreDatabase', () => {
   describe('space fragmentation', () => {
     const createSpaceFragmentationTestBuilder = () => new TestBuilder({ spaceFragmentationEnabled: true });
 
@@ -90,7 +90,7 @@ describe('AutomergeDb', () => {
       // The second peer treats text as inline right after opening the document
       const peer = await createPeerInSpaceWithObject(object, (handles) => {
         const textHandle = handles.linkedDocHandles[0]!;
-        expect(getAutomergeObjectCore(object).docHandle?.url).to.eq(textHandle.url);
+        expect(getObjectCore(object).docHandle?.url).to.eq(textHandle.url);
         handles.spaceRootHandle.change((newDocument: SpaceDoc) => {
           newDocument.objects = textHandle.docSync()?.objects;
         });
@@ -98,18 +98,18 @@ describe('AutomergeDb', () => {
       const peerText = peer.db.getObjectById(object.id)!;
       expect(peerText).not.to.be.undefined;
       const spaceRootHandle = getDocHandles(peer).spaceRootHandle;
-      expect(getAutomergeObjectCore(peerText).docHandle?.url).to.eq(spaceRootHandle.url);
+      expect(getObjectCore(peerText).docHandle?.url).to.eq(spaceRootHandle.url);
       // The first peer rebinds its object to space root too
-      expect(getAutomergeObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
+      expect(getObjectCore(object).docHandle?.url).to.eq(spaceRootHandle.url);
     });
   });
 
   describe('space root document change', () => {
     test('new inline objects are loaded', async () => {
       const peer = await createPeerInSpaceWithObject(createTextObject());
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       const newObject = addObjectToDoc(newRootDocHandle, { id: '123', title: 'title ' });
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       const retrievedObject = peer.db.getObjectById(newObject.id);
       expect((retrievedObject as any).title).to.eq(newObject.title);
     });
@@ -117,10 +117,10 @@ describe('AutomergeDb', () => {
     test('objects are removed if not present in the new document', async () => {
       const oldObject = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(oldObject);
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       const beforeUpdate = await peer.db.loadObjectById(oldObject.id);
       expect(beforeUpdate).not.to.be.undefined;
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       const afterUpdate = peer.db.getObjectById(oldObject.id);
       expect(afterUpdate).to.be.undefined;
     });
@@ -128,7 +128,7 @@ describe('AutomergeDb', () => {
     test('preserved objects are rebound to the new root', async () => {
       const originalObj = createExpando({ title: 'Hello' });
       const peer = await createPeerInSpaceWithObject(originalObj);
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
       });
@@ -136,7 +136,7 @@ describe('AutomergeDb', () => {
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(peer).spaceRootHandle.docSync().links[beforeUpdate.id],
       );
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.docSync().links[beforeUpdate.id]);
     });
 
@@ -147,7 +147,7 @@ describe('AutomergeDb', () => {
         partiallyLoadedDocument: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(stack).docSync().objects;
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
@@ -157,7 +157,7 @@ describe('AutomergeDb', () => {
       // trigger loading but don't wait for it to finish
       peer.db.getObjectById(stack.partiallyLoadedDocument.id);
 
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       await waitObjectLoaded(peer, stack.partiallyLoadedDocument, { triggerLoading: false });
       expect(peer.db.getObjectById(stack.loadedDocument.id)).not.to.be.undefined;
       expect(peer.db.getObjectById(stack.notLoadedDocument.id)).to.be.undefined;
@@ -170,7 +170,7 @@ describe('AutomergeDb', () => {
         text3: createTextObject('text3'),
       });
       const peer = await createPeerInSpaceWithObject(stack);
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = getDocHandles(peer).spaceRootHandle.docSync().links;
         newDoc.links[stack.text2.id] = newDoc.links[stack.text1.id];
@@ -184,7 +184,7 @@ describe('AutomergeDb', () => {
         await waitObjectLoaded(peer, obj, { triggerLoading: true });
       }
 
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
       expect((peer.db.getObjectById(stack.text1.id) as any).content).to.eq(stack.text1.content);
       for (const obj of [stack.text1, stack.text2, stack.text3]) {
         const dbObject: any = peer.db.getObjectById(obj.id);
@@ -200,11 +200,11 @@ describe('AutomergeDb', () => {
       const beforeUpdate = addObjectToDoc(oldRootDocHandle, { id: '1', title: 'test' });
       expect((await (peer.db.loadObjectById(beforeUpdate.id) as any)).title).to.eq(beforeUpdate.title);
 
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).docSync().objects;
       });
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
 
       const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: '2', title: 'test2' });
       expect(peer.db.getObjectById(afterUpdate.id)).to.be.undefined;
@@ -214,7 +214,7 @@ describe('AutomergeDb', () => {
       const obj = createTextObject('Hello, world');
       const peer = await createPeerInSpaceWithObject(obj);
       const oldRootDocHandle = getDocHandles(peer).spaceRootHandle;
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       console.log(oldRootDocHandle.docSync());
       newRootDocHandle.change((newDoc: any) => {
         newDoc.links = oldRootDocHandle.docSync()?.links;
@@ -226,7 +226,7 @@ describe('AutomergeDb', () => {
       const beforeUpdate = peer.db.getObjectById(obj.id);
       expect(beforeUpdate).to.be.undefined;
 
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
 
       await waitObjectLoaded(peer, obj, { triggerLoading: false });
     });
@@ -247,7 +247,7 @@ describe('AutomergeDb', () => {
       const peer = await createPeerInSpaceWithObject(rootObject);
 
       const oldDoc = getDocHandles(peer).spaceRootHandle.docSync();
-      const newRootDocHandle = peer.db._automerge.automerge.repo.create<SpaceDoc>();
+      const newRootDocHandle = peer.db.coreDatabase.automerge.repo.create<SpaceDoc>();
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = oldDoc.objects ?? {};
         newDoc.links = oldDoc.links;
@@ -261,7 +261,7 @@ describe('AutomergeDb', () => {
         peer.db.getObjectById(obj.id);
       }
 
-      await peer.db._automerge.update({ rootUrl: newRootDocHandle.url });
+      await peer.db.coreDatabase.update({ rootUrl: newRootDocHandle.url });
 
       for (const obj of objectsToRemove) {
         expect(peer.db.getObjectById(obj.id)).to.be.undefined;
@@ -327,7 +327,7 @@ describe('AutomergeDb', () => {
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
         const peer = new TestPeer(testBuilder, PublicKey.random(), testBuilder.defaultSpaceKey, fakeUrl);
-        const automergeDb = peer.db.automerge;
+        const automergeDb = peer.db.coreDatabase;
         expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
         void automergeDb.open({ rootUrl: fakeUrl });
         const barrier = new Trigger();
@@ -448,13 +448,13 @@ describe('AutomergeDb', () => {
 });
 
 const getDocHandles = (peer: TestPeer): DocumentHandles => {
-  const handles = Object.values(peer.db.automerge.automerge.repo.handles) as DocHandle<SpaceDoc>[];
+  const handles = Object.values(peer.db.coreDatabase.automerge.repo.handles) as DocHandle<SpaceDoc>[];
   const spaceRootHandle = handles.find((h) => h.url === peer.automergeDocId)!;
   const linkedDocHandles = handles.filter((h) => h.url !== peer.automergeDocId);
   return { spaceRootHandle, linkedDocHandles };
 };
 
-const getObjectDocHandle = (obj: any) => getAutomergeObjectCore(obj).docHandle!;
+const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;
 
 const createPeerInSpaceWithObject = async (
   object: EchoReactiveObject<any>,
