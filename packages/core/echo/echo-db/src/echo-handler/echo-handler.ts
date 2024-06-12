@@ -298,6 +298,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
+    // TODO(burdon): Remove.
     try {
       console.log(getTypename(target));
       if (getTypename(target) === 'braneframe.Folder') {

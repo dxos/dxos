@@ -11,19 +11,19 @@ import { groupSurface, mx } from '@dxos/react-ui-theme';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { useSearch, useSearchResults } from '../context';
+import { useGlobalSearch, useGlobalSearchResults } from '../context';
 import { SEARCH_PLUGIN } from '../meta';
 
 export const SearchMain: FC<{ space: Space }> = ({ space }) => {
   const { t } = useTranslation(SEARCH_PLUGIN);
   const client = useClient();
-  const { setMatch } = useSearch();
+  const { setMatch } = useGlobalSearch();
   // TODO(burdon): UX to select all spaces.
   const allSpaces = false;
 
   // TODO(burdon): Returns ALL objects (e.g., incl. Text objects that are fields of parent objects).
   const objects = useQuery(allSpaces ? client.spaces : space);
-  const results = useSearchResults(objects);
+  const results = useGlobalSearchResults(objects);
 
   const [selected, setSelected] = useState<string>();
 

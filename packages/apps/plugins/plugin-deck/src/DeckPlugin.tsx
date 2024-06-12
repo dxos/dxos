@@ -26,6 +26,7 @@ import {
   type PluginDefinition,
   resolvePlugin,
   Toast as ToastSchema,
+  activeIds,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
@@ -412,6 +413,9 @@ export const DeckPlugin = ({
                       return acc;
                     },
                     { ...location.active },
+                  );
+                  location.closed = Array.from(
+                    new Set([...Array.from(activeIds(intent.data.activeParts)), ...(location.closed ?? [])]),
                   );
                 }
               });
