@@ -15,11 +15,10 @@ type EchoClassOptions = {
 
 export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   new (): Fields;
-
   readonly typename: string;
 }
 
-// TODO(burdon): Not a good name for schema.
+// TODO(burdon): Rename ObjectType.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
     Options extends EchoClassOptions,
@@ -32,8 +31,8 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     fields: SchemaFields,
     options?: Options,
   ): EchoSchemaClass<Fields> => {
-    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
-    const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
+    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.Struct(fields)) : S.Struct(fields));
+    const typeSchema = S.extend(fieldsSchema, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
     });

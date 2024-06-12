@@ -5,33 +5,34 @@
 import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
-import { useGraph, type Node, type Graph } from '@braneframe/plugin-graph';
+import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
 import {
+  activeIds as getActiveIds,
+  type ActiveParts,
+  type Attention,
+  isActiveParts,
+  LayoutAction,
+  type Location,
+  NavigationAction,
+  type PartIdentifier,
+  SLUG_COLLECTION_INDICATOR,
+  SLUG_PATH_SEPARATOR,
   Surface,
   type Toast as ToastSchema,
-  type Location,
-  isActiveParts,
-  type ActiveParts,
-  type PartIdentifier,
-  type Attention,
-  NavigationAction,
-  LayoutAction,
   useIntent,
-  activeIds as getActiveIds,
-  SLUG_PATH_SEPARATOR,
-  SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
 import {
   Button,
-  Main,
-  Dialog,
-  useTranslation,
   DensityProvider,
+  Dialog,
+  Main,
   Popover,
   Status,
   toLocalizedString,
+  useTranslation,
 } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -41,18 +42,31 @@ import { Toast } from './Toast';
 import { DECK_PLUGIN } from '../meta';
 
 export type DeckLayoutProps = {
-  fullscreen: boolean;
   showHintsFooter: boolean;
   toasts: ToastSchema[];
   onDismissToast: (id: string) => void;
   location: Location;
   attention: Attention;
+  slots?: {
+    wallpaper?: {
+      classNames?: string;
+    };
+    deck?: {
+      classNames?: string;
+    };
+    plank?: {
+      classNames?: string;
+    };
+  };
 };
 
 export const NAV_ID = 'NavTree';
 
 export const firstSidebarId = (active: Location['active']): string | undefined =>
   isActiveParts(active) ? (Array.isArray(active.sidebar) ? active.sidebar[0] : active.sidebar) : undefined;
+
+export const firstFullscreenId = (active: Location['active']): string | undefined =>
+  isActiveParts(active) ? (Array.isArray(active.fullScreen) ? active.fullScreen[0] : active.fullScreen) : undefined;
 
 export const firstComplementaryId = (active: Location['active']): string | undefined =>
   isActiveParts(active)
@@ -101,13 +115,11 @@ const PlankError = ({
   useEffect(() => {
     setTimeout(() => setTimedOut(true), 5e3);
   }, []);
-  return timedOut ? (
+  return (
     <>
-      <NodePlankHeading node={node} part={part} slug={slug} />
-      <PlankContentError error={error} />
+      <NodePlankHeading node={node} part={part} slug={slug} pending={!timedOut} />
+      {timedOut ? <PlankContentError error={error} /> : <PlankLoading />}
     </>
-  ) : (
-    <PlankLoading />
   );
 };
 
@@ -119,32 +131,35 @@ const NodePlankHeading = ({
   part,
   slug,
   popoverAnchorId,
+  pending,
 }: {
   node?: Node;
   part: PartIdentifier;
   slug: string;
   popoverAnchorId?: string;
+  pending?: boolean;
 }) => {
   const { t } = useTranslation(DECK_PLUGIN);
   const Icon = node?.properties?.icon ?? Placeholder;
-  const label = toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
+  const label = pending
+    ? t('pending heading')
+    : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
   const { dispatch } = useIntent();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
-    <PlankHeading.Root>
+    <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
+            Icon={Icon}
+            attendableId={node.id}
             triggerLabel={t('actions menu label')}
             actions={node.actions()}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
           >
-            <PlankHeading.Button attendableId={node.id}>
-              <span className='sr-only'>{label}</span>
-              <Icon {...plankHeadingIconProps} />
-            </PlankHeading.Button>
+            <Surface role='menu-footer' data={{ object: node.data }} />
           </PlankHeading.ActionsMenu>
         ) : (
           <PlankHeading.Button>
@@ -153,7 +168,11 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label classNames='grow'>{label}</PlankHeading.Label>
+      <TextTooltip text={label} onlyWhenTruncating>
+        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
+          {label}
+        </PlankHeading.Label>
+      </TextTooltip>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}
@@ -165,19 +184,27 @@ const NodePlankHeading = ({
         onClick={({ type, part }) =>
           dispatch(
             type === 'close'
-              ? {
-                  action: NavigationAction.CLOSE,
-                  data: {
-                    activeParts: {
-                      complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                      [part[0]]: slug,
+              ? part[0] === 'complementary'
+                ? {
+                    action: LayoutAction.SET_LAYOUT,
+                    data: {
+                      element: 'complementary',
+                      state: false,
                     },
-                  },
-                }
+                  }
+                : {
+                    action: NavigationAction.CLOSE,
+                    data: {
+                      activeParts: {
+                        complementary: `${slug}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
+                        [part[0]]: slug,
+                      },
+                    },
+                  }
               : { action: NavigationAction.ADJUST, data: { type, part } },
           )
         }
-        close
+        close={part[0] === 'complementary' ? 'minify-end' : true}
       >
         {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
         {node && !!node.data?.comments && !slug?.endsWith('comments') && (
@@ -223,12 +250,12 @@ const resolveNodeFromSlug = (graph: Graph, slug?: string): { node: Node; path?: 
 };
 
 export const DeckLayout = ({
-  fullscreen,
   showHintsFooter,
   toasts,
   onDismissToast,
   attention,
   location,
+  slots,
 }: DeckLayoutProps) => {
   const context = useLayout();
   const {
@@ -252,6 +279,9 @@ export const DeckLayout = ({
   const sidebarSlug = firstSidebarId(activeParts);
   const sidebarNode = resolveNodeFromSlug(graph, sidebarSlug);
   const sidebarAvailable = sidebarSlug === NAV_ID || !!sidebarNode;
+  const fullScreenSlug = firstFullscreenId(activeParts);
+  const fullScreenNode = resolveNodeFromSlug(graph, fullScreenSlug);
+  const fullScreenAvailable = fullScreenSlug === NAV_ID || !!fullScreenNode;
   const complementarySlug = firstComplementaryId(activeParts);
   const complementaryNode = resolveNodeFromSlug(graph, complementarySlug);
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
@@ -264,9 +294,9 @@ export const DeckLayout = ({
     attended: attention.attended,
   };
 
-  return fullscreen ? (
-    <div className={fixedInsetFlexLayout}>
-      <Surface role='main' limit={1} fallback={Fallback} />
+  return fullScreenAvailable ? (
+    <div role='none' className={fixedInsetFlexLayout}>
+      <Surface role='main' limit={1} fallback={Fallback} data={{ active: fullScreenNode?.node.data }} />
     </div>
   ) : (
     <Popover.Root
@@ -384,7 +414,10 @@ export const DeckLayout = ({
         {(Array.isArray(activeParts.main) ? activeParts.main.filter(Boolean).length > 0 : activeParts.main) ? (
           <Main.Content bounce classNames={['grid', 'block-end-[--statusbar-size]']}>
             <div role='none' className='relative'>
-              <Deck.Root classNames='absolute inset-0'>
+              {slots?.wallpaper?.classNames && (
+                <div className={mx('absolute inset-0 z-0', slots.wallpaper.classNames)} />
+              )}
+              <Deck.Root classNames={mx('absolute inset-0', slots?.deck?.classNames)}>
                 {(Array.isArray(activeParts.main) ? activeParts.main : [activeParts.main])
                   .filter(Boolean)
                   .map((id, index, main) => {
@@ -395,6 +428,7 @@ export const DeckLayout = ({
                       <Deck.Plank
                         key={id}
                         {...attendableAttrs}
+                        classNames={slots?.plank?.classNames}
                         scrollIntoViewOnMount={id === scrollIntoView}
                         suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
                       >

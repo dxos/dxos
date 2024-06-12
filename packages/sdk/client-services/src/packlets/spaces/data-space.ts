@@ -142,6 +142,11 @@ export class DataSpace {
   }
 
   @trace.info()
+  get id() {
+    return this._inner.id;
+  }
+
+  @trace.info()
   get key() {
     return this._inner.key;
   }
@@ -383,6 +388,14 @@ export class DataSpace {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };
           });
+        }
+
+        // TODO(dmaretskyi): Close roots.
+        // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
+        if (!this._echoHost.roots.has(handle.documentId)) {
+          await this._echoHost.openSpaceRoot(handle.url);
+        } else {
+          log.warn('echo database root already exists', { space: this.key, rootUrl });
         }
       } catch (err) {
         if (err instanceof ContextDisposedError) {

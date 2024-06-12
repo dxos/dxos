@@ -1,5 +1,5 @@
 # Type `ClientServices`
-<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:12]()</sub>
+<sub>Declared in [packages/sdk/client-protocol/dist/types/src/service-definitions.d.ts:11]()</sub>
 
 
 

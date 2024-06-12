@@ -73,7 +73,7 @@ export class Swarm {
 
   // TODO(burdon): Swarm => Peer.create/destroy =< Connection.open/close
 
-  // TODO(burdon): Split up properties.
+  // TODO(burdon): Pass in object.
   constructor(
     private readonly _topic: PublicKey,
     // usually the deviceKey

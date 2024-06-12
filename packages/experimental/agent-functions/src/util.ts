@@ -7,22 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as process from 'node:process';
 
-import {
-  ContactType,
-  DocumentType,
-  EventType,
-  FileType,
-  MailboxType,
-  MessageType,
-  SectionType,
-  StackType,
-  TextV0Type,
-  ThreadType,
-} from '@braneframe/types';
-import { GameType } from '@dxos/chess-app/types';
-import { type Space } from '@dxos/client/echo';
 import { Config } from '@dxos/config';
-import type { S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 
 export const str = (...text: (string | undefined | boolean)[]): string => text.filter(Boolean).flat().join('\n');
@@ -63,34 +48,3 @@ export const getKey = (config: Config, name: string) => {
 };
 
 export const multiline = (...parts: string[]): string => parts.filter(Boolean).join('\n');
-
-/**
- * @deprecated
- */
-// TODO(burdon): Register types via function metadata. Export default meta.
-export const registerTypes = (space: Space | undefined) => {
-  if (!space) {
-    return;
-  }
-
-  const registry = space.db.graph.runtimeSchemaRegistry;
-  const schemaList: S.Schema<any>[] = [
-    MessageType,
-    MailboxType,
-    GameType,
-    SectionType,
-    StackType,
-    DocumentType,
-    ThreadType,
-    EventType,
-    FileType,
-    ContactType,
-    TextV0Type,
-  ];
-
-  for (const type of schemaList) {
-    if (!registry.hasSchema(type)) {
-      registry.registerSchema(type);
-    }
-  }
-};

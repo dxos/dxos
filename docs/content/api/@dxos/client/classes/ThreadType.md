@@ -1,5 +1,5 @@
 # Class `ThreadType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:54](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/testing/data.ts#L54)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:54](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L54)</sub>
 
 
 
@@ -19,8 +19,8 @@ Arguments: none
 
 
 ## Properties
-### [context]()
-Type: <code>undefined | object</code>
+### [context](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L57)
+Type: <code>object</code>
 
 
 
@@ -29,13 +29,23 @@ Type: <code>string</code>
 
 
 
-### [messages]()
+### [messages](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L56)
 Type: <code>Ref&lt;object & object&gt;[]</code>
 
 
 
-### [title]()
-Type: <code>undefined | string</code>
+### [title](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/testing/data.ts#L55)
+Type: <code>string</code>
+
+
+
+### [Encoded]()
+Type: <code>object & object</code>
+
+
+
+### [Type]()
+Type: <code>object & object</code>
 
 
 

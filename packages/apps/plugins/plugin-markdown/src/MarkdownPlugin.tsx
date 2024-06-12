@@ -10,12 +10,15 @@ import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { DocumentType, TextV0Type } from '@braneframe/types';
 import {
+  LayoutAction,
   isObject,
   parseIntentPlugin,
   resolvePlugin,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  useResolvePlugin,
+  parseFileManagerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create, type ReactiveObject } from '@dxos/echo-schema';
@@ -244,6 +247,21 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
+          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+          const onFileUpload = useMemo(() => {
+            if (space === undefined) {
+              return undefined;
+            }
+
+            if (fileManagerPlugin?.provides.file.upload === undefined) {
+              return undefined;
+            }
+
+            return async (file: File) => {
+              return await fileManagerPlugin?.provides?.file?.upload?.(file, space);
+            };
+          }, [fileManagerPlugin, space]);
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'article': {
@@ -254,6 +272,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
+                    onFileUpload={onFileUpload}
                   />
                 );
               } else {
@@ -270,6 +289,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
+                      onFileUpload={onFileUpload}
                     />
                   </MainLayout>
                 );
@@ -334,11 +354,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
+              const doc = create(DocumentType, {
+                content: create(TextV0Type, { content: '' }), // TODO(burdon): Simplify.
+                comments: [],
+              }) satisfies ReactiveObject<DocumentType>;
+
               return {
-                data: create(DocumentType, {
-                  content: create(TextV0Type, { content: '' }),
-                  comments: [],
-                }) satisfies ReactiveObject<DocumentType>,
+                data: doc,
+                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
               };
             }
 

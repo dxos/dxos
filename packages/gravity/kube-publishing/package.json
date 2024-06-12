@@ -1,6 +1,6 @@
 {
   "name": "@dxos/kube-publishing",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "private": true,
   "description": "KUBE Publishing Testing.",
   "homepage": "https://dxos.org",
@@ -25,7 +25,7 @@
     "@dxos/cli": "workspace:*",
     "@types/node": "^18.11.9",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "restricted"

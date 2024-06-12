@@ -63,7 +63,7 @@ describe('tracing', () => {
     await feed2.close().catch(() => {});
 
     expect([...TRACE_PROCESSOR.resources.values()].map((r) => r.instance.deref())).to.deep.eq([store, feed1, feed2]);
-    log.info('spans', TRACE_PROCESSOR.spans);
+    log.info('spans', { spans: TRACE_PROCESSOR.spans });
   });
 
   test('findByAnnotation', async () => {

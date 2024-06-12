@@ -14,11 +14,14 @@ import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider, Config, Defaults } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui-theme';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { AppContainer, Main, Error, Connector } from './components';
 import { getConfig } from './config';
 import { ItemType, DocumentType } from './data';
 import translations from './translations';
+
+TRACE_PROCESSOR.setInstanceTag('app');
 
 void initializeAppObservability({
   namespace: 'testbench.dxos.org',
@@ -41,7 +44,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-// TODO(burdon): Factor out.
+// TODO(burdon): Factor out. See copy paste in devtools
 const useThemeWatcher = () => {
   const [themeMode, setThemeMode] = React.useState<ThemeMode>('dark');
   const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
@@ -76,7 +79,7 @@ const main = async () => {
   const createWorker = config.values.runtime?.app?.env?.DX_HOST
     ? undefined
     : () =>
-        new SharedWorker(new URL('@dxos/client/shared-worker', import.meta.url), {
+        new SharedWorker(new URL('./shared-worker', import.meta.url), {
           type: 'module',
           name: 'dxos-client-worker',
         });

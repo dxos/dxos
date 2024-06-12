@@ -1,6 +1,6 @@
 {
   "name": "@dxos/blade-runner",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "private": true,
   "description": "DXOS simulation tests runner.",
   "homepage": "https://dxos.org",
@@ -45,6 +45,7 @@
     "@dxos/signal": "workspace:*",
     "@dxos/teleport-extension-replicator": "workspace:*",
     "@dxos/timeframe": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "chartjs-node-canvas": "^4.1.6",
     "danfojs-node": "^1.1.2",
@@ -71,7 +72,7 @@
     "chart.js": "^3.9.1",
     "js-yaml": "^4.1.0",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "yargs": "~16.2.0"
   },
   "publishConfig": {

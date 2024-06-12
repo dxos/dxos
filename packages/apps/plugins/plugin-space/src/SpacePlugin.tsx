@@ -9,22 +9,30 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
 import {
   type IntentDispatcher,
-  type PluginDefinition,
-  type Plugin,
+  type IntentPluginProvides,
+  LayoutAction,
+  type LocationProvides,
   NavigationAction,
-  resolvePlugin,
+  type Plugin,
+  type PluginDefinition,
+  activeIds,
+  firstMainId,
   parseIntentPlugin,
   parseNavigationPlugin,
   parseMetadataResolverPlugin,
-  LayoutAction,
-  activeIds,
-  firstMainId,
+  resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject } from '@dxos/echo-schema';
+import {
+  isReactiveObject,
+  type EchoReactiveObject,
+  type Identifiable,
+  type ReactiveObject,
+  Expando,
+} from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -38,6 +46,7 @@ import {
   isSpace,
   isEchoObject,
   fullyQualifiedId,
+  Filter,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
@@ -48,8 +57,8 @@ import {
   EmptySpace,
   EmptyTree,
   FolderMain,
+  MenuFooter,
   MissingObject,
-  PersistenceStatus,
   PopoverRemoveObject,
   PopoverRenameObject,
   PopoverRenameSpace,
@@ -118,6 +127,8 @@ export const SpacePlugin = ({
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
+  let intentPlugin: Plugin<IntentPluginProvides> | undefined;
+  let navigationPlugin: Plugin<LocationProvides> | undefined;
 
   return {
     meta,
@@ -128,8 +139,8 @@ export const SpacePlugin = ({
         type: LocalStorageStore.bool({ allowUndefined: true }),
       });
 
-      const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
-      const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
+      intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
+      navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
       clientPlugin = resolvePlugin(plugins, parseClientPlugin);
       if (!clientPlugin || !navigationPlugin || !intentPlugin) {
         return;
@@ -160,6 +171,7 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
+            // TODO(burdon): NPE when closing planks.
             const [key] = part.split(':');
             const spaceKey = PublicKey.safeFrom(key);
             const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
@@ -179,17 +191,9 @@ export const SpacePlugin = ({
             return;
           }
 
-          // TODO: remove after the demo
-          const migrateSpaceParam = 'migrateSpace';
-          if (searchParams.get(migrateSpaceParam) === 'true') {
-            prepareSpaceForMigration(space);
-            await Migrations.migrate(space);
-          }
-
           const url = new URL(window.location.href);
           const params = Array.from(url.searchParams.entries());
           const [name] = params.find(([_, value]) => value === spaceInvitationCode) ?? [null, null];
-          url.searchParams.delete(migrateSpaceParam);
           if (name) {
             url.searchParams.delete(name);
             history.replaceState({}, document.title, url.href);
@@ -219,8 +223,9 @@ export const SpacePlugin = ({
                       added: [id],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
+                    // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
                     .catch((err) => {
-                      log.warn('Failed to broadcast active node for presence', { err: err.message });
+                      log.warn('Failed to broadcast active node for presence.', { err: err.message });
                     });
                 }
               });
@@ -355,17 +360,22 @@ export const SpacePlugin = ({
               }
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
-                <SmallPresenceLive viewers={state.viewersByObject[data.object.id]} />
+                <SmallPresenceLive
+                  viewers={state.viewersByObject[data.object.id]}
+                  onCloseClick={() => {
+                    const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
+                    return intentPlugin?.provides.intent.dispatch({
+                      action: NavigationAction.CLOSE,
+                      data: { activeParts: { main: [objectId], sidebar: [objectId], complementary: [objectId] } },
+                    });
+                  }}
+                />
               ) : (
                 <SmallPresence count={0} />
               );
             }
             case 'navbar-start': {
-              const space =
-                isGraphNode(data.activeNode) && isEchoObject(data.activeNode.data)
-                  ? getSpace(data.activeNode.data)
-                  : undefined;
-              return space ? <PersistenceStatus db={space.db} /> : null;
+              return null;
             }
             case 'navbar-end': {
               if (!isEchoObject(data.object)) {
@@ -389,6 +399,12 @@ export const SpacePlugin = ({
             }
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
+            case 'menu-footer':
+              if (!isEchoObject(data.object)) {
+                return null;
+              } else {
+                return <MenuFooter object={data.object} />;
+              }
             default:
               return null;
           }
@@ -396,7 +412,6 @@ export const SpacePlugin = ({
       },
       graph: {
         builder: (plugins, graph) => {
-          const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
           const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
           const metadataPlugin = resolvePlugin(plugins, parseMetadataResolverPlugin);
 
@@ -494,7 +509,7 @@ export const SpacePlugin = ({
 
             graph.sortEdges(groupNode.id, 'outbound', orderObject.order);
           };
-          const spacesOrderQuery = client.spaces.default.db.query({ key: SHARED });
+          const spacesOrderQuery = client.spaces.default.db.query(Filter.schema(Expando, { key: SHARED }));
           graphSubscriptions.set(
             SHARED,
             spacesOrderQuery.subscribe(({ objects }) => updateSpacesOrder(objects[0]), { fire: true }),
@@ -545,6 +560,7 @@ export const SpacePlugin = ({
               if (!client) {
                 return;
               }
+
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesFolder],
@@ -578,7 +594,6 @@ export const SpacePlugin = ({
             }
 
             case SpaceAction.SHARE: {
-              const navigationPlugin = resolvePlugin(plugins, parseNavigationPlugin);
               const spaceKey = intent.data?.spaceKey && PublicKey.from(intent.data.spaceKey);
               if (clientPlugin && spaceKey) {
                 const target = firstMainId(navigationPlugin?.provides.location.active);
@@ -648,8 +663,6 @@ export const SpacePlugin = ({
               const space = intent.data?.space;
               let rootDir: FileSystemDirectoryHandle | null = await localforage.getItem(SPACE_DIRECTORY_HANDLE);
               if (!rootDir) {
-                // TODO(wittjosiah): Consider implementing this as an intent chain by returning other intents.
-                const intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
                 const result = await intentPlugin?.provides.intent.dispatch({
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.SELECT_DIRECTORY,

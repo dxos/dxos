@@ -2,34 +2,49 @@
 // Copyright 2023 DXOS.org
 //
 
+import { GameType } from '@dxos/chess-app/types';
+import { S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
 
 import { Engine } from './engine';
-import { registerTypes } from '../../util';
 
-type Meta = { level?: number };
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.Struct({
+    level: S.optional(S.Number.pipe(S.description('Engine strength.'))),
+  }),
+);
 
-export const handler = subscriptionHandler<Meta>(async ({ event }) => {
-  const {
-    meta: { level = 1 },
-    space,
-    objects,
-  } = event.data;
-  invariant(space);
-  registerTypes(space);
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
+/**
+ * Runtime types.
+ */
+export const types = [GameType];
+
+/**
+ * Chess function handler.
+ */
+export const handler = subscriptionHandler<Meta>(async ({ event, context: { client } }) => {
+  const identity = client.halo.identity.get();
+  const identityKey = identity!.identityKey.toHex();
+
+  const { meta: { level = 1 } = {}, objects } = event.data;
   for (const game of objects ?? []) {
     const engine = new Engine({ pgn: game.pgn, level });
+    if (!engine.state.isGameOver()) {
+      if (
+        (engine.state.turn() === 'w' && identityKey === game.playerWhite) ||
+        (engine.state.turn() === 'b' && identityKey === game.playerBlack)
+      ) {
+        await engine.move();
+        engine.print();
 
-    // TODO(burdon): Only trigger if has player credential (identity from context).
-    const side = 'b';
-    if (!engine.state.isGameOver() && engine.state.turn() === side) {
-      engine.move();
-      engine.print();
-
-      // Update object.
-      game.pgn = engine.state.pgn();
+        // Update object.
+        game.pgn = engine.state.pgn();
+      }
     }
   }
-});
+}, types);

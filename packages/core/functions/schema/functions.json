@@ -51,6 +51,11 @@
             "description": "Function URI.",
             "title": "string"
           },
+          "enabled": {
+            "type": "boolean",
+            "description": "a boolean",
+            "title": "boolean"
+          },
           "meta": {
             "$ref": "#/$defs/object"
           },

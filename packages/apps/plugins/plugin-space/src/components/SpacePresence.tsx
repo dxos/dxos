@@ -24,7 +24,7 @@ import {
   ListItem,
   useDefaultValue,
 } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui-deck';
+import { AttentionGlyphCloseButton } from '@dxos/react-ui-deck';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
 import { SPACE_PLUGIN } from '../meta';
@@ -214,7 +214,13 @@ const PrensenceAvatar = ({ identity, showName, match, group, index, onClick }: P
   );
 };
 
-export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey, ObjectViewerProps> }) => {
+export const SmallPresenceLive = ({
+  viewers,
+  onCloseClick,
+}: {
+  viewers?: ComplexMap<PublicKey, ObjectViewerProps>;
+  onCloseClick?: () => void;
+}) => {
   const [moment, setMoment] = useState(Date.now());
 
   // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
@@ -227,15 +233,19 @@ export const SmallPresenceLive = ({ viewers }: { viewers?: ComplexMap<PublicKey,
     ? Array.from(viewers.values()).filter(({ lastSeen }) => moment - lastSeen < ACTIVITY_DURATION)
     : [];
 
-  return <SmallPresence count={activeViewers.length} />;
+  return <SmallPresence count={activeViewers.length} onCloseClick={onCloseClick} />;
 };
 
-export const SmallPresence = ({ count }: { count: number }) => {
+export const SmallPresence = ({ count, onCloseClick }: { count: number; onCloseClick?: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   return (
     <Tooltip.Root>
       <Tooltip.Trigger asChild>
-        <AttentionGlyph presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'} classNames='self-center mie-1' />
+        <AttentionGlyphCloseButton
+          presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+          classNames='self-center mie-1'
+          onClick={onCloseClick}
+        />
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content side='bottom' classNames='z-[70]'>

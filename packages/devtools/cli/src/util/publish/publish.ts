@@ -6,10 +6,10 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
+import { createIpfsClient } from '@dxos/cli-base';
 import type { Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 
@@ -22,29 +22,21 @@ const getFolderSize = promisify(folderSize);
 
 /**
  * Encodes DXN string to fs path.
- *
  * Example: `example:app/braneframe` => `example/app/braneframe`
  */
 const encodeName = (name: string) => name.replaceAll(':', '/');
 
-export interface PublishParams {
-  config?: Config;
+interface PublishOptions {
+  config: Config;
   log: Logger;
   module: PackageModule;
-}
-
-interface PublishArgs {
   verbose?: boolean;
-  pin?: boolean;
   timeout?: string | number;
   path?: string;
-  config?: string;
+  pin?: boolean;
 }
 
-export const publish = async (
-  { verbose, timeout, path, pin }: PublishArgs,
-  { log, config, module }: PublishParams,
-): Promise<CID> => {
+export const publish = async ({ verbose, timeout, path, pin, log, config, module }: PublishOptions): Promise<any> => {
   invariant(module.name, 'Module name is required to publish.');
   log(`Publishing module ${chalk.bold(module.name)} ...`);
   const moduleOut = `out/${encodeName(module.name)}`;
@@ -54,52 +46,26 @@ export const publish = async (
     throw new Error(`Publish failed. Build output folder does not exist: ${publishFolder}.`);
   }
 
-  const ipfsServer = config?.get('runtime.services.ipfs.server');
-  invariant(ipfsServer, 'Missing IPFS Server.');
-
   const total = await getFolderSize(publishFolder);
-  if (verbose) {
-    log(`Publishing from: ${publishFolder} to: ${ipfsServer}`);
-  }
-
-  let authorizationHeader;
-  // TODO(nf): make CLI support dx-env.yml
-  const serverAuthSecret = process.env.IPFS_API_SECRET ?? config?.get('runtime.services.ipfs.serverAuthSecret');
-  if (serverAuthSecret) {
-    const splitSecret = serverAuthSecret.split(':');
-    switch (splitSecret[0]) {
-      case 'basic':
-        authorizationHeader = 'Basic ' + Buffer.from(splitSecret[1] + ':' + splitSecret[2]).toString('base64');
-        break;
-      case 'bearer':
-        authorizationHeader = 'Bearer ' + splitSecret[1];
-        break;
-      default:
-        throw new Error(`Unsupported authType: ${splitSecret[0]}`);
-    }
-    log(`using server authorization ${splitSecret[0]}`);
-  }
-
-  log('Uploading...');
-  const bar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-  verbose && bar.start(total, 0);
+  const progress = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+  verbose && progress.start(total, 0);
 
   let cid;
   try {
-    cid = await uploadToIPFS(publishFolder, ipfsServer, {
-      timeout: timeout || '10m',
+    const ipfsClient = await createIpfsClient(config!, timeout);
+    log('Uploading...', { folder: publishFolder, server: ipfsClient.getEndpointConfig().host });
+    cid = await uploadToIPFS(ipfsClient, publishFolder, {
+      progress: verbose ? (bytes: any) => progress.update(bytes) : undefined,
       pin,
-      progress: verbose ? (bytes: any) => bar.update(bytes) : undefined,
-      ...(authorizationHeader ? { authorizationHeader } : {}),
     });
   } catch (err: any) {
     // Avoid leaving user's terminal in a bad state.
-    bar.stop();
+    progress.stop();
     throw new Error(`Publish failed. ${err.message}` + (err.cause ? ` (${err.cause})` : ''));
   }
 
-  verbose && bar.update(total);
-  verbose && bar.stop();
+  verbose && progress.update(total);
+  verbose && progress.stop();
 
   log(`Published module ${chalk.bold(module.name)}. IPFS cid: ${cid.toString()}`);
   return cid;

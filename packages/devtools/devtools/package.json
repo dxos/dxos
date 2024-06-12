@@ -1,6 +1,6 @@
 {
   "name": "@dxos/devtools",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "private": true,
   "description": "Standalone devtool app used to inspect DXOS client state",
   "homepage": "https://dxos.org",
@@ -16,11 +16,10 @@
     "proxy": "ts-node scripts/proxy.ts"
   },
   "dependencies": {
-    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/gem-core": "workspace:*",
@@ -73,7 +72,6 @@
     "@dxos/config": "workspace:*",
     "@dxos/gem-spore": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@dxos/shell": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/lodash.defaultsdeep": "^4.6.6",
     "@types/lodash.get": "^4.4.7",
@@ -84,7 +82,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "postcss": "^8.4.21",
     "tailwindcss": "~3.4.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "vite": "^5.2.9",
     "vite-plugin-fonts": "^0.7.0",
     "vite-plugin-pwa": "^0.18.2",

@@ -145,6 +145,7 @@ jobs:
     resource_class: xlarge
     environment:
       DX_ENVIRONMENT: circleci
+      DX_PWA: false
     steps:
       - checkout
       - *cache_restore

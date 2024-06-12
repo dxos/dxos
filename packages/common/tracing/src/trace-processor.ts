@@ -14,6 +14,7 @@ import type { AddLinkOptions } from './api';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
+import { RemoteMetrics, RemoteTracing } from './remote';
 import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
 import { TraceSender } from './trace-sender';
 
@@ -31,9 +32,12 @@ export type TraceResourceConstructorParams = {
 
 export type TraceSpanParams = {
   instance: any;
+  // TODO(wittjosiah): Rename to `name`.
   methodName: string;
   parentCtx: Context | null;
   showInBrowserTimeline: boolean;
+  op?: string;
+  attributes?: Record<string, any>;
 };
 
 export class ResourceEntry {
@@ -76,6 +80,8 @@ const MAX_INFO_OBJECT_DEPTH = 8;
 export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
   public readonly diagnosticsChannel = new DiagnosticsChannel();
+  public readonly remoteMetrics = new RemoteMetrics();
+  public readonly remoteTracing = new RemoteTracing();
 
   readonly subscriptions: Set<TraceSubscription> = new Set();
 
@@ -88,6 +94,8 @@ export class TraceProcessor {
 
   readonly logs: LogEntry[] = [];
 
+  private _instanceTag: string | null = null;
+
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
 
@@ -96,6 +104,11 @@ export class TraceProcessor {
 
     this.diagnosticsChannel.serve(this.diagnostics);
     this.diagnosticsChannel.unref();
+  }
+
+  setInstanceTag(tag: string) {
+    this._instanceTag = tag;
+    this.diagnostics.setInstanceTag(tag);
   }
 
   /**
@@ -265,6 +278,7 @@ export class TraceProcessor {
       this._clearSpans();
     }
     this._markSpanDirty(span.id);
+    this.remoteTracing.flushSpan(runtimeSpan);
   }
 
   private _markResourceDirty(id: number) {
@@ -348,6 +362,8 @@ export class TracingSpan {
   readonly parentId: number | null = null;
   readonly methodName: string;
   readonly resourceId: number | null = null;
+  readonly op: string | undefined;
+  readonly attributes: Record<string, any>;
   startTs: number;
   endTs: number | null = null;
   error: SerializedError | null = null;
@@ -364,6 +380,8 @@ export class TracingSpan {
     this.resourceId = _traceProcessor.getResourceId(params.instance);
     this.startTs = performance.now();
     this._showInBrowserTimeline = params.showInBrowserTimeline;
+    this.op = params.op;
+    this.attributes = params.attributes ?? {};
 
     if (params.parentCtx) {
       this._ctx = params.parentCtx.derive({
@@ -376,6 +394,11 @@ export class TracingSpan {
         this.parentId = parentId;
       }
     }
+  }
+
+  get name() {
+    const resource = this._traceProcessor.resources.get(this.resourceId!);
+    return resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
   }
 
   get ctx(): Context | null {
@@ -414,11 +437,7 @@ export class TracingSpan {
   }
 
   private _markInBrowserTimeline() {
-    const resource = this._traceProcessor.resources.get(this.resourceId!);
-    const name = resource
-      ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}`
-      : this.methodName;
-    performance.measure(name, { start: this.startTs, end: this.endTs! });
+    performance.measure(this.name, { start: this.startTs, end: this.endTs! });
   }
 }
 

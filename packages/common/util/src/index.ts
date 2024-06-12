@@ -2,6 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
+export * from './array';
 export * from './assign';
 export * from './binder';
 export * from './bitfield';
@@ -33,3 +34,4 @@ export * from './map-values';
 export * from './defer';
 export * from './circular-buffer';
 export * from './join-tables';
+export * from './throw-unhandled-error';

@@ -16,12 +16,12 @@ import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, WebsocketSignalManager } from '@dxos/messaging';
 import {
-  MemoryTransportFactory,
-  TcpTransportFactory,
-  TransportKind,
   createLibDataChannelTransportFactory,
   createSimplePeerTransportFactory,
+  MemoryTransportFactory,
+  TcpTransportFactory,
   type TransportFactory,
+  TransportKind,
 } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
@@ -57,6 +57,7 @@ export class TestBuilder {
 
   _transport: TransportKind;
 
+  // TODO(burdon): Pass in params as object.
   constructor(
     config?: Config,
     public signalManagerContext = new MemorySignalManagerContext(),
@@ -180,7 +181,7 @@ export class TestBuilder {
 export const testSpaceAutomerge = async (createDb: EchoDatabase, checkDb: EchoDatabase = createDb) => {
   const object = create(Expando, {});
   createDb.add(object);
-  await checkDb.automerge.loadObjectById(object.id, { timeout: 1000 });
+  await checkDb.loadObjectById(object.id, { timeout: 1000 });
 
   return { objectId: object.id };
 };

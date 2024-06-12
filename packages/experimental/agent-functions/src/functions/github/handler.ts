@@ -10,14 +10,11 @@ import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { registerTypes } from '../../util';
-
 type GithubContributors = RestEndpointMethodTypes['repos']['listContributors']['response']['data'];
 
-export const handler = subscriptionHandler(async ({ event, context }) => {
+export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
   invariant(space);
-  registerTypes(space);
 
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   for (const project of objects ?? []) {
@@ -36,23 +33,21 @@ export const handler = subscriptionHandler(async ({ event, context }) => {
       // Try to query organization.
       if (!project.org && repoData.organization?.id) {
         const foreignKey: ForeignKey = { source: 'github.com', id: String(repoData.organization.id) };
-        project.org = (
-          await space.db.query((object: EchoReactiveObject<any>) =>
-            getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
-          )
+        project.org = space.db.query((object: EchoReactiveObject<any>) =>
+          getMeta(object).keys.some((key) => key.source === foreignKey.source && key.id === foreignKey.id),
         ).objects[0];
       }
 
       // Create organization if failed to query.
       if (!project.org && repoData.organization) {
-        const orgSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.organization);
+        const orgSchema = space.db.schema.getSchemaByTypename(TestSchemaType.organization);
         invariant(orgSchema, 'Missing organization schema.');
         project.org = create(orgSchema, { name: repoData.organization?.login });
         getMeta(project.org).keys.push({ source: 'github.com', id: String(repoData.organization?.id) });
       }
     }
 
-    const contactSchema = space.db.schemaRegistry.getRegisteredByTypename(TestSchemaType.contact);
+    const contactSchema = space.db.schema.getSchemaByTypename(TestSchemaType.contact);
     invariant(contactSchema);
 
     //

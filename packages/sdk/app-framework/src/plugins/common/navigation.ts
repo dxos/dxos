@@ -8,7 +8,7 @@ import type { IntentData } from '../IntentPlugin';
 import type { Plugin } from '../PluginHost';
 
 // NOTE(thure): These are chosen from RFC 1738’s `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
-export const SLUG_LIST_SEPARATOR = '.';
+export const SLUG_LIST_SEPARATOR = '+';
 export const SLUG_ENTRY_SEPARATOR = '_';
 export const SLUG_KEY_VALUE_SEPARATOR = '-';
 export const SLUG_PATH_SEPARATOR = '~';

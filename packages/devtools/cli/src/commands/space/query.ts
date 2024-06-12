@@ -2,39 +2,56 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ux } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 
-import { type Client } from '@dxos/client';
+import { table, TABLE_FLAGS, type TableFlags } from '@dxos/cli-base';
+import { ARG_SPACE_KEYS } from '@dxos/cli-base';
+import { Filter } from '@dxos/client/echo';
 import { getTypename } from '@dxos/echo-schema';
 
-import { ARG_SPACE_KEYS, BaseCommand } from '../../base';
+import { BaseCommand } from '../../base';
 
 export default class Query extends BaseCommand<typeof Query> {
   static override enableJsonFlag = true;
   static override description = 'Query database.';
 
+  static override flags = {
+    ...BaseCommand.flags,
+    ...TABLE_FLAGS,
+    typename: Flags.string({ default: undefined, description: 'Filter objects by typename.' }),
+  };
+
   static override args = ARG_SPACE_KEYS;
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const space = await this.getSpace(client, this.args.key);
-      const { objects } = await space.db.query().run();
+      const filter = this.flags.typename?.length ? Filter.typename(this.flags.typename) : undefined;
+      const { objects } = await space.db.query(filter).run();
       this.log('Objects:', objects.length);
-      printObjects(objects);
+      this._printObjects(objects, { extended: this.flags.extended });
       return { objects };
     });
   }
-}
 
-const printObjects = (objects: any[]) => {
-  ux.table(objects, {
-    id: {
-      header: 'id',
-      get: (row) => row.id.slice(0, 8),
-    },
-    type: {
-      header: 'type',
-      get: (row) => getTypename(row),
-    },
-  });
-};
+  private _printObjects(objects: any[], flags: TableFlags = {}) {
+    ux.stdout(
+      table(
+        objects,
+        {
+          id: {
+            truncate: true,
+          },
+          type: {
+            get: (row) => getTypename(row),
+          },
+          data: {
+            extended: true,
+            get: (row) => row.toJSON(),
+          },
+        },
+        flags,
+      ),
+    );
+  }
+}

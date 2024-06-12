@@ -1,6 +1,6 @@
 {
   "name": "@dxos/discord-bot",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "private": true,
   "description": "Experimental Discord bot.",
   "homepage": "https://github.com/dxos",

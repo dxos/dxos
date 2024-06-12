@@ -7,7 +7,7 @@ order: 0
 
 # About
 
-ECHO (The **E**ventually **C**onsistent **H**ierarhical **O**bject store) is a peer-to-peer graph database written in TypeScript.
+ECHO (The **E**ventually **C**onsistent **H**ierarchical **O**bject store) is a peer-to-peer graph database written in TypeScript.
 
 * Secure, P2P data replication based on [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
 * No servers or central authority, all the data is with the clients.
@@ -49,11 +49,17 @@ If you're using `react`, DXOS provides a simple [UI flow](./react/#joining-space
 
 ## Objects
 
-Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. Objects can have fields with values, and weak references to other objects to form trees or graphs.
+Units of data are referred to as `objects` (like documents or rows in other databases). `Objects` always belong to a space. `Objects` can have fields with values, and weak references to other objects to form trees or graphs.
+
+## Values
+
+Values within an `object` are JS strings, numbers, booleans, and null, as well as objects and arrays of the same.
+
+The top-level of a DXOS `object` is always a JS object, never a number, string, etc. Its fields starting with `@` are reserved, for example `@id` and `@meta`.
 
 ## How to use ECHO
 
-* Install the appropriate npm package [`@dxos/client`](./typescript/) or [`@dxos/react-client`](./react/)
+* Install the appropriate npm package [`@dxos/client`](./installation/) or [`@dxos/react-client`](./installation/react.md)
 * Create a [Client](./typescript#configuration) (or a [ClientProvider](./react#cofiguration) in react)
 * Set up an identity with [HALO](../halo/)
 * Create or Join a [Space](#spaces)

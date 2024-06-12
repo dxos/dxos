@@ -7,11 +7,10 @@ import chalk from 'chalk';
 import { write as copy } from 'node-clipboardy';
 import { spawn } from 'node:child_process';
 
-import { type Client } from '@dxos/client';
+import { hostInvitation } from '@dxos/cli-base';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 
 import { BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
 
 export default class Share extends BaseCommand<typeof Share> {
   static override enableJsonFlag = true;
@@ -21,7 +20,7 @@ export default class Share extends BaseCommand<typeof Share> {
     ...BaseCommand.flags,
     lifetime: Flags.integer({
       description: 'Lifetime of the invitation in seconds',
-      default: 86400,
+      default: 12 * 60 * 60,
     }),
     persistent: Flags.boolean({
       description: 'Invitation should resume if client restarts',
@@ -34,22 +33,16 @@ export default class Share extends BaseCommand<typeof Share> {
       description: 'Application Host URL.',
       default: 'https://composer.space',
     }),
-    'no-auth': Flags.boolean({
+    auth: Flags.boolean({
       description: 'Skip authentication challenge.',
-    }),
-    'no-wait': Flags.boolean({
-      description: "Don't wait for a peer to connect before exiting CLI.",
+      default: true,
+      allowNo: true,
     }),
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
-      if (!client.halo.identity.get()) {
-        this.log(chalk`{red Profile not initialized.}`);
-        return {};
-      }
-
-      const authMethod = this.flags['no-auth'] ? Invitation.AuthMethod.NONE : undefined;
+    return await this.execWithClient(async ({ client }) => {
+      const authMethod = this.flags.auth ? Invitation.AuthMethod.SHARED_SECRET : Invitation.AuthMethod.NONE;
       const observable = client.halo.share({
         authMethod,
         timeout: this.flags.timeout,
@@ -57,10 +50,12 @@ export default class Share extends BaseCommand<typeof Share> {
         lifetime: this.flags.lifetime,
       });
 
-      const invitationSuccess = hostInvitation({
+      ux.action.start('Waiting for peer to connect');
+      await hostInvitation({
         observable,
         callbacks: {
           onConnecting: async () => {
+            ux.action.stop();
             const invitation = observable.get();
             const invitationCode = InvitationEncoder.encode(invitation);
             if (authMethod !== Invitation.AuthMethod.NONE) {
@@ -77,17 +72,9 @@ export default class Share extends BaseCommand<typeof Share> {
             }
           },
         },
-        waitForSuccess: false,
       });
 
-      if (!this.flags['no-wait']) {
-        ux.action.start('Waiting for peer to connect');
-        await invitationSuccess;
-        ux.action.stop();
-        ux.log(chalk`{green Joined successfully.}`);
-      } else {
-        await invitationSuccess;
-      }
+      ux.stdout(chalk`{green OK}`);
     });
   }
 }

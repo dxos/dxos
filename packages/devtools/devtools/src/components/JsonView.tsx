@@ -4,79 +4,23 @@
 
 import React, { type FC } from 'react';
 // eslint-disable-next-line no-restricted-imports
-import { JSONTree } from 'react-json-tree';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 // eslint-disable-next-line no-restricted-imports
-import style from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
+import styleDark from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-dark';
+// eslint-disable-next-line no-restricted-imports
+import styleLight from 'react-syntax-highlighter/dist/esm/styles/hljs/a11y-light';
 
 import { PublicKey } from '@dxos/keys';
 import { schema } from '@dxos/protocols';
-import { mx } from '@dxos/react-ui-theme';
+import { useThemeContext } from '@dxos/react-ui';
 import { arrayToBuffer } from '@dxos/util';
 
 export const JsonView: FC<{ data?: Object; truncate?: boolean }> = ({ data, truncate = true }) => {
+  const { themeMode } = useThemeContext();
   return (
-    <SyntaxHighlighter language='json' style={style} className='w-full'>
+    <SyntaxHighlighter language='json' style={themeMode === 'dark' ? styleDark : styleLight} className='w-full'>
       {JSON.stringify(data, replacer(truncate), 2)}
     </SyntaxHighlighter>
-  );
-};
-
-// TODO(burdon): Light/dark mode.
-// https://github.com/gaearon/base16-js/tree/master/src
-const theme = {
-  scheme: 'dxos',
-  author: 'DXOS',
-  base00: '#ffffff',
-  base01: '#302e00',
-  base02: '#5f5b17',
-  base03: '#6c6823',
-  base04: '#86813b',
-  base05: '#948e48',
-  base06: '#ccc37a',
-  base07: '#faf0a5',
-  base08: '#c35359',
-  base09: '#b36144',
-  base0A: '#a88339',
-  base0B: '#18974e',
-  base0C: '#75a738',
-  base0D: '#477ca1',
-  base0E: '#8868b3',
-  base0F: '#b3588e',
-};
-
-export const JsonTreeView: FC<{
-  data?: Object;
-  className?: string;
-  level?: number;
-  showRoot?: boolean;
-  showMeta?: boolean;
-}> = ({ data, className, level = 3, showRoot = false, showMeta = false }) => {
-  const replaced = JSON.parse(JSON.stringify(data ?? {}, replacer()));
-
-  return (
-    <div className={mx('m-2', className)}>
-      <JSONTree
-        data={replaced}
-        hideRoot={!showRoot}
-        getItemString={showMeta ? undefined : () => null}
-        shouldExpandNodeInitially={(_, __, _level) => _level < level}
-        labelRenderer={([key]) => key}
-        // TODO(burdon): Fix.
-        /*
-        valueRenderer={(key, value) => {
-          return replacer('', value);
-        }}
-        */
-
-        theme={{
-          extend: theme,
-          valueLabel: {
-            textDecoration: 'underline',
-          },
-        }}
-      />
-    </div>
   );
 };
 

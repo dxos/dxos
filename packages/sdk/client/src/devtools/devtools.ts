@@ -8,7 +8,8 @@ import { importModule } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { createBundledRpcServer, type RpcPeer, type RpcPort } from '@dxos/rpc';
-import { TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
+import { TRACE_PROCESSOR, type TraceProcessor, type DiagnosticMetadata } from '@dxos/tracing';
+import { joinTables } from '@dxos/util';
 
 import { type Client } from '../client';
 
@@ -40,6 +41,15 @@ export interface DevtoolsHook {
    * Import modules exposed by `exposeModule` from @dxos/debug.
    */
   importModule: (module: string) => unknown;
+
+  listDiagnostics: () => Promise<void>;
+
+  fetchDiagnostics: (id: string, instanceTag?: string) => Promise<void>;
+
+  /**
+   * Utility function.
+   */
+  joinTables: any;
 }
 
 export type MountOptions = {
@@ -49,6 +59,8 @@ export type MountOptions = {
 
 export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
   let server: RpcPeer;
+
+  let diagnostics: DiagnosticMetadata[] = [];
 
   const hook: DevtoolsHook = {
     // To debug client from console using 'window.__DXOS__.client'.
@@ -87,6 +99,58 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     reset,
 
     importModule,
+
+    listDiagnostics: async () => {
+      diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      // eslint-disable-next-line no-console
+      console.table(
+        diagnostics.map((diagnostic) => ({
+          ...diagnostic,
+          get fetch() {
+            queueMicrotask(async () => {
+              // eslint-disable-next-line no-console
+              const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+              if (error) {
+                log.error(`Error fetching diagnostic ${diagnostic.id}: ${error}`);
+                return;
+              }
+
+              // eslint-disable-next-line no-console
+              console.table(data);
+            });
+            return undefined;
+          },
+        })),
+      );
+    },
+
+    // TODO(dmaretskyi): Joins across multiple diagnostics.
+    fetchDiagnostics: async (id, instanceTag) => {
+      if (diagnostics.length === 0) {
+        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      }
+
+      let diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
+      if (!diagnostic) {
+        diagnostics = await TRACE_PROCESSOR.diagnosticsChannel.discover();
+      }
+
+      diagnostic = diagnostics.find((d) => d.id === id && (instanceTag ? d.instanceTag === instanceTag : true));
+      if (!diagnostic) {
+        log.error(`Diagnostic ${id} not found.`);
+        return;
+      }
+
+      const { data, error } = await TRACE_PROCESSOR.diagnosticsChannel.fetch(diagnostic);
+      if (error) {
+        log.error(`Error fetching diagnostic ${id}: ${error}`);
+        return;
+      }
+
+      return data;
+    },
+
+    joinTables,
   };
 
   if (client) {

@@ -2,20 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Flags, ux } from '@oclif/core';
+import { Flags } from '@oclif/core';
 
 import { sleep, Trigger } from '@dxos/async';
-import { type Client } from '@dxos/client';
+import { printCredentials, mapCredentials, TABLE_FLAGS } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../../base';
-import { printCredentials, mapCredentials } from '../../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List HALO credentials.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags(),
+    ...TABLE_FLAGS,
     type: Flags.string({
       description: 'Type',
     }),
@@ -30,7 +29,7 @@ export default class List extends BaseCommand<typeof List> {
   };
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const identity = client.halo.identity;
       if (!identity) {
         this.catch('Profile not initialized.');

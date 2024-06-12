@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-stack",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,8 +35,6 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "node-fetch": "^2.6.0",
-    "react-drag-drop-files": "^2.3.8",
-    "react-dropzone": "^14.2.3",
     "react-is": "^18.2.0"
   },
   "devDependencies": {

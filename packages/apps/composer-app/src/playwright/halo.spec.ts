@@ -12,8 +12,6 @@ import { AppManager } from './app-manager';
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
-  test.setTimeout(60_000);
-
   let host: AppManager;
   let guest: AppManager;
 
@@ -50,10 +48,11 @@ test.describe('HALO tests', () => {
       expect(await guest.getSpaceItemsCount()).to.equal(2);
     }, 30_000);
 
-    await host.openIdentityManager();
-    await guest.openIdentityManager();
-    await waitForExpect(async () => {
-      expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
-    });
+    // TODO(wittjosiah): Display name is not currently set in this test.
+    // await host.openIdentityManager();
+    // await guest.openIdentityManager();
+    // await waitForExpect(async () => {
+    //   expect(await host.shell.getDisplayName()).to.equal(await guest.shell.getDisplayName());
+    // });
   });
 });

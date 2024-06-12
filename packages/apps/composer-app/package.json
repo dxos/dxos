@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -10,8 +10,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "socket": "bundle"
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
     "@braneframe/plugin-chain": "workspace:*",
@@ -21,6 +20,7 @@
     "@braneframe/plugin-deck": "workspace:*",
     "@braneframe/plugin-explorer": "workspace:*",
     "@braneframe/plugin-files": "workspace:*",
+    "@braneframe/plugin-function": "workspace:*",
     "@braneframe/plugin-github": "workspace:*",
     "@braneframe/plugin-gpt": "workspace:*",
     "@braneframe/plugin-graph": "workspace:*",
@@ -68,8 +68,9 @@
     "@dxos/react-ui-theme": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/shell": "workspace:*",
+    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.62",
+    "@dxos/web-auth": "^0.4.72",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",

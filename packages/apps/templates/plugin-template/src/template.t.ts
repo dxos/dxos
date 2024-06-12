@@ -28,7 +28,7 @@ export default interactiveDirectory({
     Run the app:
     ${!!relative && `$ cd ${relative}`}
     $ npm install
-    $ npm run dev
+    $ npm run serve
 
     See also:
     - ${path.join(relative, 'README.md')}

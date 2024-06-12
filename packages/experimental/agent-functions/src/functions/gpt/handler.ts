@@ -2,12 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { join } from 'node:path';
-
-import { type ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
-import { sleep } from '@dxos/async';
+import {
+  ChainPromptType,
+  DocumentType,
+  MessageType,
+  SectionType,
+  StackType,
+  TextV0Type,
+  ThreadType,
+} from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
-import { create, foreignKey, getMeta, getTypename } from '@dxos/echo-schema';
+import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -15,25 +20,32 @@ import { nonNullable } from '@dxos/util';
 
 import { RequestProcessor } from './processor';
 import { createResolvers } from './resolvers';
-import { type ChainVariant, createChainResources } from '../../chain';
-import { getKey, registerTypes } from '../../util';
+import { ModelInvokerFactory } from '../../chain/model-invoker';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-type Meta = { prompt?: ChainPromptType };
+const types = [ChainPromptType, DocumentType, MessageType, SectionType, StackType, TextV0Type, ThreadType];
+
+/**
+ * Trigger configuration.
+ */
+export const MetaSchema = S.mutable(
+  S.Struct({
+    model: S.optional(S.String),
+    prompt: ChainPromptType,
+  }),
+);
+
+export type Meta = S.Schema.Type<typeof MetaSchema>;
 
 // TODO(burdon): Create test.
 export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   const { client, dataDir } = context;
   const { space, objects, meta } = event.data;
   invariant(space);
-  registerTypes(space);
   if (!objects) {
     return;
   }
-
-  // TODO(burdon): The handler is called before the mutation is processed?
-  await sleep(500);
 
   // Get threads for queried objects.
   // TODO(burdon): Handle batches with multiple block mutations per thread?
@@ -41,6 +53,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
   await loadObjectReferences(threads, (thread: ThreadType) => thread.messages ?? []);
 
   // Filter messages to process.
+  // TODO(burdon): Generalize to other object types.
   const messages = objects
     .map((message) => {
       if (!(message instanceof MessageType)) {
@@ -48,18 +61,24 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
         return null;
       }
 
-      // Check the message wasn't already processed / sent by the AI.
+      // Skip messages older than one hour.
+      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1_000) {
+        return null;
+      }
+
+      // Check the message wasn't already processed/created by the AI.
       if (getMeta(message).keys.find((key) => key.source === AI_SOURCE)) {
         return null;
       }
 
-      // Skip messages that don't belong to an active thread.
+      // Separate messages that don't belong to an active thread.
       const thread = threads.find((thread: ThreadType) => thread.messages.some((msg) => msg?.id === message.id));
       if (!thread) {
         return [message, undefined] as [MessageType, ThreadType | undefined];
       }
 
       // Only react to the last message in the thread.
+      // TODO(burdon): Need better marker.
       if (thread.messages[thread.messages.length - 1]?.id !== message.id) {
         return null;
       }
@@ -76,22 +95,20 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
   // Process messages.
   if (messages.length > 0) {
-    const resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'openai', {
-      baseDir: dataDir ? join(dataDir, 'agent/functions/embedding') : undefined,
-      apiKey: getKey(client.config, 'openai.com/api_key'),
-    });
+    const resources = ModelInvokerFactory.createChainResources(client, { dataDir, model: meta.model });
+    await resources.init();
 
-    await resources.store.initialize();
     const resolvers = await createResolvers(client.config);
-    const processor = new RequestProcessor(resources, resolvers);
+    const modelInvoker = ModelInvokerFactory.createModelInvoker(resources);
+    const processor = new RequestProcessor(modelInvoker, resources, resolvers);
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {
-        const blocks = await processor.processThread({
+        const { success, blocks } = await processor.processThread({
           space,
           thread,
           message,
-          defaultPrompt: meta.prompt,
+          prompt: meta.prompt,
         });
 
         if (blocks?.length) {
@@ -109,7 +126,8 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
             );
 
             thread.messages.push(response);
-          } else {
+          } else if (success) {
+            // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".
             getMeta(message).keys.push(metaKey);
             message.blocks.push(...blocks);
@@ -118,4 +136,4 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }),
     );
   }
-});
+}, types);

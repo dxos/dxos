@@ -59,6 +59,11 @@
         },
         {
           "type": "json",
+          "path": "packages/apps/plugins/plugin-function/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/apps/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },
@@ -539,6 +544,11 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/cli-base/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/cli-composer/package.json",
           "jsonpath": "$.version"
         },
@@ -559,12 +569,12 @@
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create-app-plugin/package.json",
+          "path": "packages/devtools/initializers/create-bare/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/devtools/initializers/create-bare/package.json",
+          "path": "packages/devtools/initializers/create-composer-plugin/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -760,6 +770,11 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-table/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/ui/react-ui-text-tooltip/package.json",
           "jsonpath": "$.version"
         },
         {

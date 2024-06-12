@@ -78,7 +78,7 @@ export type StackContextValue<TData extends StackSectionContent = StackSectionCo
   transform?: (item: MosaicDataItem, type?: string) => StackSectionItem;
   onDeleteSection?: (path: string) => void;
   onAddSection?: (path: string, position: AddSectionPosition) => void;
-  onNavigateToSection?: (id: string) => void;
+  onNavigateToSection?: (object: MosaicDataItem) => void;
   collapsedSections?: CollapsedSections;
   // TODO(thure): Sections only need to know about and modify their own collapsed state. This should be improved when
   //  refactored to implement longer persistence.
@@ -182,10 +182,10 @@ export const Section: ForwardRefExoticComponent<SectionProps & RefAttributes<HTM
           <div
             role='none'
             className={mx(
-              'grid col-span-2 grid-cols-subgrid outline outline-1 outline-transparent mlb-px surface-base focus-within:s-outline-separator focus-within:surface-attention',
+              'grid col-span-2 grid-cols-subgrid border border-transparent mlb-px surface-base focus-within:separator-separator focus-within:surface-attention',
               hoverableControls,
               hoverableFocusedWithinControls,
-              active && 'surface-attention after:separator-separator s-outline-separator',
+              active && 'surface-attention separator-separator',
               (active === 'origin' || active === 'rearrange' || active === 'destination') && 'opacity-0',
             )}
           >
@@ -393,7 +393,7 @@ export const SectionTile: MosaicTileComponent<StackSectionItemWithContext, HTMLL
         onCollapseSection={onCollapseSection}
         isResizable={isResizable}
         onDelete={() => onDeleteSection?.(path)}
-        onNavigate={() => onNavigateToSection?.(itemObject.id)}
+        onNavigate={() => onNavigateToSection?.(itemObject)}
         onAddAfter={() => onAddSection?.(path, 'after')}
         onAddBefore={() => onAddSection?.(path, 'before')}
       >

@@ -99,7 +99,7 @@ describe.skip('ModelFusion', () => {
   test('objects', async () => {
     const model = ollama
       .ChatTextGenerator({
-        model: 'llama2',
+        model: 'llama3',
         maxGenerationTokens: 1024,
         temperature: 0,
       })

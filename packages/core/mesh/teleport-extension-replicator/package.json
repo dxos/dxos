@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-replicator",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "description": "Replicator extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -36,8 +36,8 @@
     "@dxos/keyring": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
     "add": "^2.0.6",
-    "fast-check": "^3.15.1",
-    "typescript": "^5.2.2"
+    "fast-check": "^3.19.0",
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

@@ -3,7 +3,14 @@
 //
 
 import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, X } from '@phosphor-icons/react';
-import React, { type ComponentPropsWithRef, forwardRef, type PropsWithChildren, useRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type FC,
+  forwardRef,
+  type PropsWithChildren,
+  useRef,
+  useState,
+} from 'react';
 
 import { keySymbols } from '@dxos/keyboard';
 import {
@@ -90,13 +97,15 @@ const PlankHeadingButton = forwardRef<HTMLButtonElement, PlankHeadingButtonProps
 );
 
 type PlankHeadingActionsMenuProps = PropsWithChildren<{
+  attendableId?: string;
   triggerLabel: string;
   actions?: PlankHeadingAction[];
+  Icon: FC<IconProps>;
   onAction?: (action: PlankHeadingAction) => void;
 }>;
 
 const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingActionsMenuProps>(
-  ({ actions, onAction, triggerLabel, children }, forwardedRef) => {
+  ({ actions, onAction, triggerLabel, attendableId, Icon, children }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const suppressNextTooltip = useRef(false);
 
@@ -128,7 +137,10 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
         >
           <Tooltip.Trigger asChild>
             <DropdownMenu.Trigger asChild ref={forwardedRef}>
-              {children}
+              <PlankHeadingButton attendableId={attendableId}>
+                <span className='sr-only'>{triggerLabel}</span>
+                <Icon {...plankHeadingIconProps} />
+              </PlankHeadingButton>
             </DropdownMenu.Trigger>
           </Tooltip.Trigger>
           <DropdownMenu.Portal>
@@ -164,13 +176,14 @@ const PlankHeadingActionsMenu = forwardRef<HTMLButtonElement, PlankHeadingAction
                     </DropdownMenu.Item>
                   );
                 })}
+                {children}
               </DropdownMenu.Viewport>
               <DropdownMenu.Arrow />
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
         <Tooltip.Portal>
-          <Tooltip.Content style={{ zIndex: 70 }} side='left'>
+          <Tooltip.Content style={{ zIndex: 70 }} side='bottom'>
             {triggerLabel}
             <Tooltip.Arrow />
           </Tooltip.Content>
@@ -189,7 +202,10 @@ const PlankHeadingLabel = forwardRef<HTMLHeadingElement, PlankHeadingLabelProps>
       <h1
         {...props}
         data-attention={hasAttention.toString()}
-        className={mx('pli-1 min-is-0 shrink truncate font-medium fg-base data-[attention=true]:fg-accent', classNames)}
+        className={mx(
+          'pli-1 min-is-0 is-0 grow truncate font-medium fg-base data-[attention=true]:fg-accent',
+          classNames,
+        )}
         ref={forwardedRef}
       />
     );
@@ -206,9 +222,27 @@ type PlankHeadingControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   part: [string, number, number];
   onClick?: PlankControlHandler;
   variant?: 'hide-disabled' | 'default';
-  close?: boolean;
+  close?: boolean | 'minify-start' | 'minify-end';
   increment?: boolean;
   pin?: 'start' | 'end' | 'both';
+};
+
+const PlankHeadingControl = ({ children, label, ...props }: ButtonProps & { label: string }) => {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <Button variant='ghost' {...props}>
+          <span className='sr-only'>{label}</span>
+          {children}
+        </Button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content side='bottom' classNames='z-[70]'>
+          {label}
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
 };
 
 const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProps>(
@@ -219,44 +253,52 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
       <ButtonGroup {...props} ref={forwardedRef}>
         {children}
         {pin && ['both', 'start'].includes(pin) && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-start', part })}>
-            <span className='sr-only'>{t('pin start label')}</span>
+          <PlankHeadingControl
+            label={t('pin start label')}
+            variant='ghost'
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'pin-start', part })}
+          >
             <CaretLineLeft />
-          </Button>
+          </PlankHeadingControl>
         )}
         {increment && (
           <>
-            <Button
+            <PlankHeadingControl
+              label={t('increment start label')}
               disabled={part[1] < 1}
-              variant='ghost'
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-start', part })}
             >
-              <span className='sr-only'>{t('increment start label')}</span>
               <CaretLeft />
-            </Button>
-            <Button
+            </PlankHeadingControl>
+            <PlankHeadingControl
+              label={t('increment end label')}
               disabled={part[1] > part[2] - 2}
-              variant='ghost'
               classNames={buttonClassNames}
               onClick={() => onClick?.({ type: 'increment-end', part })}
             >
-              <span className='sr-only'>{t('increment end label')}</span>
               <CaretRight />
-            </Button>
+            </PlankHeadingControl>
           </>
         )}
         {pin && ['both', 'end'].includes(pin) && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'pin-end', part })}>
-            <span className='sr-only'>{t('pin end label')}</span>
+          <PlankHeadingControl
+            label={t('pin end label')}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'pin-end', part })}
+          >
             <CaretLineRight />
-          </Button>
+          </PlankHeadingControl>
         )}
         {close && (
-          <Button variant='ghost' classNames={buttonClassNames} onClick={() => onClick?.({ type: 'close', part })}>
-            <span className='sr-only'>{t('close label')}</span>
-            <X />
-          </Button>
+          <PlankHeadingControl
+            label={t(`${typeof close === 'string' ? 'minify' : 'close'} label`)}
+            classNames={buttonClassNames}
+            onClick={() => onClick?.({ type: 'close', part })}
+          >
+            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <X />}
+          </PlankHeadingControl>
         )}
       </ButtonGroup>
     );

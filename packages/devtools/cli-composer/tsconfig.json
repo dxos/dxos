@@ -23,6 +23,9 @@
   ],
   "references": [
     {
+      "path": "../../apps/templates/bare-template"
+    },
+    {
       "path": "../../apps/templates/hello-template"
     },
     {
@@ -62,6 +65,9 @@
       "path": "../../core/agent"
     },
     {
+      "path": "../../core/echo/echo-schema"
+    },
+    {
       "path": "../../core/functions"
     },
     {
@@ -87,6 +93,9 @@
     },
     {
       "path": "../../sdk/observability"
+    },
+    {
+      "path": "../cli-base"
     }
   ],
   "ts-node": {

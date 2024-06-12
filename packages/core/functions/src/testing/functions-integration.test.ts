@@ -3,20 +3,15 @@
 //
 
 import { expect } from 'chai';
-import path from 'path';
 
-import { Trigger, waitForCondition } from '@dxos/async';
-import { type Client } from '@dxos/client';
-import { create, type Space } from '@dxos/client/echo';
-import { performInvitation, TestBuilder } from '@dxos/client/testing';
-import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
+import { Trigger } from '@dxos/async';
+import { create } from '@dxos/client/echo';
+import { TestBuilder } from '@dxos/client/testing';
 import { describe, test } from '@dxos/test';
 
+import { initFunctionsPlugin } from './plugin-init';
 import { setTestCallHandler } from './test/handler';
-import { FunctionRegistry } from '../function';
-import { DevServer, Scheduler } from '../runtime';
-import { createFunctionRuntime, createInitializedClients, TestType } from '../testing';
-import { TriggerRegistry } from '../trigger';
+import { createInitializedClients, inviteMember, startFunctionsHost, TestType } from '../testing';
 import { FunctionDef, FunctionTrigger } from '../types';
 
 describe('functions e2e', () => {
@@ -30,13 +25,11 @@ describe('functions e2e', () => {
 
   test('a function gets triggered in response to another peer object creations', async () => {
     // TODO(burdon): Create builder pattern.
-    const functionRuntime = await createFunctionRuntime(testBuilder);
-    const devServer = await startDevServer(functionRuntime);
-    const scheduler = await startScheduler(functionRuntime, devServer);
+    const functionRuntime = await startFunctionsHost(testBuilder, initFunctionsPlugin);
 
     const app = (await createInitializedClients(testBuilder, 1))[0];
     const space = await app.spaces.create();
-    await inviteMember(space, functionRuntime);
+    await inviteMember(space, functionRuntime.client);
 
     const uri = 'example.com/function/test';
     space.db.add(create(FunctionDef, { uri, route: '/test', handler: 'test' }));
@@ -44,6 +37,7 @@ describe('functions e2e', () => {
     space.db.add(
       create(FunctionTrigger, {
         function: uri,
+        enabled: true,
         meta: triggerMeta,
         spec: {
           type: 'subscription',
@@ -58,7 +52,7 @@ describe('functions e2e', () => {
       return args.response.status(200);
     });
 
-    await waitTriggersReplicated(space, scheduler);
+    await functionRuntime.waitHasActiveTriggers(space);
     const addedObject = space.db.add(create(TestType, { title: '42' }));
 
     const callArgs = await called.wait();
@@ -66,34 +60,4 @@ describe('functions e2e', () => {
     expect(callArgs.objects).to.deep.eq([addedObject.id]);
     expect(callArgs.spaceKey).to.eq(space.key.toHex());
   });
-
-  const waitTriggersReplicated = async (space: Space, scheduler: Scheduler) => {
-    await waitForCondition({ condition: () => scheduler.triggers.getActiveTriggers(space).length > 0 });
-  };
-
-  // TODO(burdon): Factor out utils to builder pattern.
-
-  const startScheduler = async (client: Client, devServer: DevServer) => {
-    const functionRegistry = new FunctionRegistry(client);
-    const triggerRegistry = new TriggerRegistry(client);
-    const scheduler = new Scheduler(functionRegistry, triggerRegistry, { endpoint: devServer.endpoint });
-    await scheduler.start();
-    testBuilder.ctx.onDispose(() => scheduler.stop());
-    return scheduler;
-  };
-
-  const startDevServer = async (client: Client) => {
-    const functionRegistry = new FunctionRegistry(client);
-    const server = new DevServer(client, functionRegistry, {
-      baseDir: path.join(__dirname, '../testing'),
-    });
-    await server.start();
-    testBuilder.ctx.onDispose(() => server.stop());
-    return server;
-  };
-
-  const inviteMember = async (host: Space, guest: Client) => {
-    const [{ invitation: hostInvitation }] = await Promise.all(performInvitation({ host, guest: guest.spaces }));
-    expect(hostInvitation?.state).to.eq(Invitation.State.SUCCESS);
-  };
 });

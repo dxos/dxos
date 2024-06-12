@@ -1,6 +1,6 @@
 {
   "name": "@dxos/tasks-template",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "description": "An application sample implementing a shared list with DXOS",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -21,7 +21,7 @@
     "@types/node": "^18.11.9",
     "tmp-promise": "^3.0.3",
     "ts-node": "10.9.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.4.5"
   },
   "publishConfig": {
     "access": "public"

@@ -11,7 +11,8 @@
     "module": "ESNext",
     "outDir": "dist",
     "types": [
-      "node"
+      "node",
+      "sharedworker"
     ]
   },
   "exclude": [
@@ -30,6 +31,9 @@
     },
     {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/tracing"
     },
     {
       "path": "../../common/util"
@@ -114,6 +118,9 @@
     },
     {
       "path": "../plugins/plugin-files"
+    },
+    {
+      "path": "../plugins/plugin-function"
     },
     {
       "path": "../plugins/plugin-github"

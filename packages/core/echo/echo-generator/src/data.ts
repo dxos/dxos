@@ -6,7 +6,7 @@
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 import { type Space } from '@dxos/client/echo';
-import { create, DynamicEchoSchema, echoObject, effectToJsonSchema, ref, S, StoredEchoSchema } from '@dxos/echo-schema';
+import { create, DynamicSchema, EchoObject, effectToJsonSchema, ref, S, StoredSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -23,10 +23,10 @@ export enum TestSchemaType {
   project = 'example.com/type/project',
 }
 
-const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicEchoSchema => {
-  const typeSchema = S.partial(S.struct(fields)).pipe(echoObject(typename, '1.0.0'));
-  return new DynamicEchoSchema(
-    create(StoredEchoSchema, {
+const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicSchema => {
+  const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
+  return new DynamicSchema(
+    create(StoredSchema, {
       typename,
       version: '1.0.0',
       jsonSchema: effectToJsonSchema(typeSchema),
@@ -36,32 +36,32 @@ const createDynamicSchema = (typename: string, fields: S.Struct.Fields): Dynamic
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {
   const document = createDynamicSchema(TestSchemaType.document, {
-    title: S.string.pipe(S.description('title of the document')),
-    content: S.string,
+    title: S.String.pipe(S.description('title of the document')),
+    content: S.String,
   });
 
   const organization = createDynamicSchema(TestSchemaType.organization, {
-    name: S.string.pipe(S.description('name of the company or organization')),
-    website: S.string.pipe(S.description('public website URL')),
-    description: S.string.pipe(S.description('short summary of the company')),
+    name: S.String.pipe(S.description('name of the company or organization')),
+    website: S.String.pipe(S.description('public website URL')),
+    description: S.String.pipe(S.description('short summary of the company')),
   });
 
   const contact = createDynamicSchema(TestSchemaType.contact, {
-    name: S.string.pipe(S.description('name of the person')),
-    email: S.string,
+    name: S.String.pipe(S.description('name of the person')),
+    email: S.String,
     org: ref(organization),
-    lat: S.number,
-    lng: S.number,
+    lat: S.Number,
+    lng: S.Number,
   });
 
   const project = createDynamicSchema(TestSchemaType.project, {
-    name: S.string.pipe(S.description('name of the project')),
-    description: S.string,
-    website: S.string,
-    repo: S.string,
-    status: S.string,
-    priority: S.number,
-    active: S.boolean,
+    name: S.String.pipe(S.description('name of the project')),
+    description: S.String,
+    website: S.String,
+    repo: S.String,
+    status: S.String,
+    priority: S.Number,
+    active: S.Boolean,
     org: ref(organization),
   });
 

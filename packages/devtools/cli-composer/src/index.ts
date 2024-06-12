@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2022 DXOS.org
 //
 
-export default {};
+export { run } from '@oclif/core';

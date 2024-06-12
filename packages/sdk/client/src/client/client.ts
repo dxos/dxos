@@ -9,10 +9,10 @@ import {
   clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  Properties,
+  PropertiesSchema,
+  DEFAULT_CLIENT_CHANNEL,
   STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.schemaRegistry.addSchema(PropertiesSchema);
   }
 
   [inspect.custom]() {
@@ -216,15 +216,16 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
     //   throw new ApiError('Client not open.');
     // }
 
-    const notRegistered = schemaList.filter((s) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(s));
-    if (notRegistered.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...notRegistered);
+    // TODO(burdon): Find?
+    const exists = schemaList.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
+    if (exists.length > 0) {
+      this._echoClient.graph.schemaRegistry.addSchema(...exists);
     }
 
     return this;
@@ -374,7 +375,6 @@ export class Client {
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
-      this._config,
       this._services,
       this._echoClient,
       () => halo.identity.get()?.identityKey,
@@ -462,6 +462,7 @@ export class Client {
       return;
     }
 
+    // TODO(burdon): Call flush?
     await this._close();
     this._statusUpdate.emit(null);
     await this._ctx.dispose();

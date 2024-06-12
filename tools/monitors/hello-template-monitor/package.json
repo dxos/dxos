@@ -16,7 +16,7 @@
     "@dxos/async": "main",
     "@dxos/cli": "main",
     "@playwright/test": "^1.42.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.5",
     "wait-for-expect": "^3.0.2"
   }
 }

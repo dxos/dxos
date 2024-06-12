@@ -9,12 +9,12 @@ import React from 'react';
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
 import { SketchType } from '@braneframe/types';
-import { resolvePlugin, type PluginDefinition, parseIntentPlugin } from '@dxos/app-framework';
+import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create, Expando } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { SketchMain, SketchComponent } from './components';
+import { SketchComponent, SketchMain } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
 import { SketchAction, type SketchPluginProvides } from './types';
@@ -112,16 +112,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             testId: 'sketchPlugin.createSectionSpaceSketch',
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: [
-              {
-                plugin: SKETCH_PLUGIN,
-                action: SketchAction.CREATE,
-              },
-              // TODO(burdon): Navigate directly (but return result to caller).
-              // {
-              //   action: NavigationAction.ACTIVATE,
-              // },
-            ],
+            intent: {
+              plugin: SKETCH_PLUGIN,
+              action: SketchAction.CREATE,
+            },
           },
         ],
       },

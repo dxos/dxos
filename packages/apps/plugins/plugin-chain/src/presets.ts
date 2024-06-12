@@ -17,7 +17,7 @@ export type Preset = {
   prompt: () => ChainPromptType;
 };
 
-export const presets = [
+export const chainPresets = [
   {
     id: 'dxos.org/prompt/translate',
     title: 'Translate',
@@ -42,6 +42,12 @@ export const presets = [
             type: ChainInputType.PASS_THROUGH,
             name: 'input',
           },
+          // TODO(burdon): Message.
+          // {
+          //   type: ChainInputType.CONTEXT,
+          //   name: 'input',
+          //   value: 'object.blocks[0].content',
+          // },
         ],
       }),
   },
@@ -63,7 +69,6 @@ export const presets = [
           {
             type: ChainInputType.CONTEXT,
             name: 'history',
-            // TODO(burdon): Get from Deck?
             value: 'object.pgn',
           },
         ],
@@ -147,8 +152,9 @@ export const presets = [
             name: 'context',
           },
           {
-            type: ChainInputType.PASS_THROUGH,
+            type: ChainInputType.CONTEXT,
             name: 'question',
+            value: 'object.blocks[0].content',
           },
         ],
       }),

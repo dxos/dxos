@@ -7,7 +7,7 @@ import { getPort } from 'get-port-please';
 import type http from 'http';
 import { join } from 'node:path';
 
-import { Event, Trigger } from '@dxos/async';
+import { asyncTimeout, Event, Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -45,13 +45,7 @@ export class DevServer {
     private readonly _client: Client,
     private readonly _functionsRegistry: FunctionRegistry,
     private readonly _options: DevServerOptions,
-  ) {
-    this._functionsRegistry.registered.on(async ({ added }) => {
-      added.forEach((def) => this._load(def));
-      await this._safeUpdateRegistration();
-      log('new functions loaded', { added });
-    });
-  }
+  ) {}
 
   get stats() {
     return {
@@ -91,7 +85,7 @@ export class DevServer {
         }
 
         // TODO(burdon): Get function context.
-        res.statusCode = await this.invoke('/' + path, req.body);
+        res.statusCode = await asyncTimeout(this.invoke('/' + path, req.body), 20_000);
         res.end();
       } catch (err: any) {
         log.catch(err);
@@ -100,7 +94,7 @@ export class DevServer {
       }
     });
 
-    this._port = await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] });
+    this._port = this._options.port ?? (await getPort({ host: 'localhost', port: 7200, portRange: [7200, 7299] }));
     this._server = app.listen(this._port);
 
     try {
@@ -114,7 +108,8 @@ export class DevServer {
       this._functionServiceRegistration = registrationId;
 
       // Open after registration, so that it can be updated with the list of function definitions.
-      await this._functionsRegistry.open(this._ctx);
+      await this._handleNewFunctions(this._functionsRegistry.getUniqueByUri());
+      this._ctx.onDispose(this._functionsRegistry.registered.on(({ added }) => this._handleNewFunctions(added)));
     } catch (err: any) {
       await this.stop();
       throw new Error('FunctionRegistryService not available (check plugin is configured).');
@@ -124,8 +119,12 @@ export class DevServer {
   }
 
   async stop() {
-    invariant(this._server);
+    if (!this._server) {
+      return;
+    }
+
     log.info('stopping...');
+    await this._ctx.dispose();
 
     const trigger = new Trigger();
     this._server.close(async () => {
@@ -152,6 +151,12 @@ export class DevServer {
     this._port = undefined;
     this._server = undefined;
     log.info('stopped');
+  }
+
+  private async _handleNewFunctions(newFunctions: FunctionDef[]) {
+    newFunctions.forEach((def) => this._load(def));
+    await this._safeUpdateRegistration();
+    log('new functions loaded', { newFunctions });
   }
 
   /**
@@ -188,8 +193,8 @@ export class DevServer {
         registrationId: this._functionServiceRegistration,
         functions: this.functions.map(({ def: { id, route } }) => ({ id, route })),
       });
-    } catch (e) {
-      log.catch(e);
+    } catch (err) {
+      log.catch(err);
     }
   }
 
@@ -211,7 +216,6 @@ export class DevServer {
   private async _invoke(path: string, event: FunctionEvent) {
     const { handler } = this._handlers[path] ?? {};
     invariant(handler, `invalid path: ${path}`);
-
     const context: FunctionContext = {
       client: this._client,
       dataDir: this._options.dataDir,

@@ -1,11 +1,11 @@
 # Class `AgentManagerClient`
-<sub>Declared in [packages/sdk/client/src/services/agent-hosting-provider.ts:59](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L59)</sub>
+<sub>Declared in [packages/sdk/client/src/services/agent-hosting-provider.ts:59](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L59)</sub>
 
 
 
 
 ## Constructors
-### [constructor(_clientConfig, _halo)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L68)
+### [constructor(_clientConfig, _halo)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L68)
 
 
 
@@ -24,7 +24,7 @@ Arguments:
 
 
 ## Methods
-### [_agentManagerAuth(authDeviceCreds)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L213)
+### [_agentManagerAuth(authDeviceCreds)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L213)
 
 
 
@@ -36,7 +36,7 @@ Arguments:
 `authDeviceCreds`: <code>[Credential](/api/@dxos/client/interfaces/Credential)</code>
 
 
-### [_checkAuthorization(authToken)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L106)
+### [_checkAuthorization(authToken)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L106)
 
 
 Check auth token from CF worker whether identity is allowed to create agent.
@@ -51,7 +51,7 @@ Arguments:
 `authToken`: <code>any</code>
 
 
-### [_decodeComposerBetaJwt()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L125)
+### [_decodeComposerBetaJwt()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L125)
 
 
 
@@ -63,7 +63,7 @@ Arguments: none
 
 
 
-### [_ensureAuthenticated()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L167)
+### [_ensureAuthenticated()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L167)
 
 
 
@@ -75,7 +75,7 @@ Arguments: none
 
 
 
-### [_getComposerBetaCookie()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L130)
+### [_getComposerBetaCookie()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L130)
 
 
 
@@ -87,7 +87,7 @@ Arguments: none
 
 
 
-### [_openRpc()](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L182)
+### [_openRpc()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L182)
 
 
 
@@ -99,7 +99,7 @@ Arguments: none
 
 
 
-### [_queryCredentials(\[type\], \[predicate\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L251)
+### [_queryCredentials(\[type\], \[predicate\])](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L270)
 
 
 
@@ -113,7 +113,19 @@ Arguments:
 `predicate`: <code>function</code>
 
 
-### [checkEligibility(authToken)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L161)
+### [_validAuthToken()](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L254)
+
+
+
+
+Returns: <code>"null" | JwtPayload</code>
+
+Arguments: none
+
+
+
+
+### [checkEligibility(authToken)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L161)
 
 
 
@@ -125,7 +137,7 @@ Arguments:
 `authToken`: <code>any</code>
 
 
-### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L266)
+### [createAgent(invitationCode, identityKey)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L285)
 
 
 
@@ -139,7 +151,7 @@ Arguments:
 `identityKey`: <code>string</code>
 
 
-### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L337)
+### [destroyAgent(agentID)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L356)
 
 
 
@@ -151,7 +163,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [getAgent(agentID)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L295)
+### [getAgent(agentID)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L314)
 
 
 
@@ -163,7 +175,7 @@ Arguments:
 `agentID`: <code>string</code>
 
 
-### [init(\[authToken\])](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L88)
+### [init(\[authToken\])](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L88)
 
 
 Initialize the client, potentially using the authToken to check authorization.
@@ -175,7 +187,7 @@ Arguments:
 `authToken`: <code>any</code>
 
 
-### [requestInitWithAuthToken(req)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L151)
+### [requestInitWithAuthToken(req)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L151)
 
 
 
@@ -187,7 +199,7 @@ Arguments:
 `req`: <code>RequestInit</code>
 
 
-### [requestInitWithCredentials(req)](https://github.com/dxos/dxos/blob/7194736719/packages/sdk/client/src/services/agent-hosting-provider.ts#L141)
+### [requestInitWithCredentials(req)](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/client/src/services/agent-hosting-provider.ts#L141)
 
 
 
