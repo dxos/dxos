@@ -11,7 +11,7 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSerializer } from './object-serializer';
 import { type SerializedSpace } from './types';
-import { DocumentType, CollectionType, TextV0Type } from '../schema';
+import { DocumentType, CollectionType, TextType } from '../schema';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
@@ -28,7 +28,7 @@ describe('Serialization', () => {
 
     const client = new Client({ services: builder.createLocalClientServices() });
     await client.initialize();
-    client.addTypes([CollectionType, DocumentType, TextV0Type]);
+    client.addTypes([CollectionType, DocumentType, TextType]);
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 
@@ -39,7 +39,7 @@ describe('Serialization', () => {
     {
       const space1 = await createSpace(client, 'test-1');
       const { objects } = space1.properties[CollectionType.typename] as CollectionType;
-      objects.push(create(DocumentType, { content: create(TextV0Type, { content }) }));
+      objects.push(create(DocumentType, { content: create(TextType, { content }) }));
 
       serialized = await serializer.serializeSpace(space1);
       expect(serialized.metadata.name).to.equal('test-1');

@@ -6,7 +6,7 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
 export class KanbanItemType extends TypedObject({ typename: 'dxos.org/type/KanbanItem', version: '0.1.0' })({
   object: S.optional(ref(Expando)),
-  name: S.String,
+  name: S.optional(S.String),
   index: S.optional(S.String),
 }) {}
 
