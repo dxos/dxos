@@ -448,7 +448,7 @@ describe('CoreDatabase', () => {
 });
 
 const getDocHandles = (peer: TestPeer): DocumentHandles => {
-  const handles = Object.values(peer.db.coreDatabase.coreDatabase.repo.handles) as DocHandle<SpaceDoc>[];
+  const handles = Object.values(peer.db.coreDatabase.automerge.repo.handles) as DocHandle<SpaceDoc>[];
   const spaceRootHandle = handles.find((h) => h.url === peer.automergeDocId)!;
   const linkedDocHandles = handles.filter((h) => h.url !== peer.automergeDocId);
   return { spaceRootHandle, linkedDocHandles };
