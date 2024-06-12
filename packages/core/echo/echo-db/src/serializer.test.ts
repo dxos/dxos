@@ -10,8 +10,8 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
 import { AutomergeContext } from './core-db';
-import { EchoDatabaseImpl } from './proxy-db';
 import { Hypergraph } from './hypergraph';
+import { EchoDatabaseImpl } from './proxy-db';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
