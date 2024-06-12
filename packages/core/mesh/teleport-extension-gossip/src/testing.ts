@@ -32,6 +32,7 @@ export class TestAgent extends TestPeerBase {
       identityKey: peerId,
       gossip: this.gossip,
     });
+    void this.presence.open();
   }
 
   override async onOpen(connection: TestConnection) {

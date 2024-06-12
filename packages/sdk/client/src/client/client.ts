@@ -375,6 +375,7 @@ export class Client {
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
     const spaces = new SpaceList(
+      this._config,
       this._services,
       this._echoClient,
       () => halo.identity.get()?.identityKey,

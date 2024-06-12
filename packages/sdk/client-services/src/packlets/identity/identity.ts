@@ -90,6 +90,7 @@ export class Identity {
 
   @trace.span()
   async open(ctx: Context) {
+    await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
     await this.space.open(ctx);
