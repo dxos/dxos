@@ -8,6 +8,6 @@ export class FileType extends TypedObject({ typename: 'dxos.org/type/File', vers
   filename: S.String,
   type: S.String,
   timestamp: S.optional(S.String),
-  title: S.optional(S.String),
+  name: S.optional(S.String),
   cid: S.optional(S.String),
 }) {}

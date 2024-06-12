@@ -16,6 +16,6 @@ export class GridItemType extends TypedObject({ typename: 'dxos.org/type/GridIte
 }) {}
 
 export class GridType extends TypedObject({ typename: 'dxos.org/type/Grid', version: '0.1.0' })({
-  title: S.String,
+  name: S.String,
   items: S.mutable(S.Array(ref(GridItemType))),
 }) {}

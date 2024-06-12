@@ -19,8 +19,8 @@ const TableTypePropSchema = S.partial(
 
 export type TableTypeProp = S.Schema.Type<typeof TableTypePropSchema>;
 
-export class TableType extends TypedObject({ typename: 'braneframe.Table', version: '0.1.0' })({
-  title: S.String,
+export class TableType extends TypedObject({ typename: 'dxos.org/type/Table', version: '0.1.0' })({
+  name: S.optional(S.String),
   schema: S.optional(ref(DynamicSchema)),
   props: S.mutable(S.Array(TableTypePropSchema)),
 }) {}

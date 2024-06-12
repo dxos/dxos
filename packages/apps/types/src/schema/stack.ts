@@ -16,6 +16,6 @@ export const Section = S.Struct({
   custom: S.optional(S.Record(S.String, S.Any)),
 });
 
-export class StackView extends TypedObject({ typename: 'dxos.StackView', version: '0.1.0' })({
+export class StackView extends TypedObject({ typename: 'dxos.org/type/StackView', version: '0.1.0' })({
   sections: S.mutable(S.Record(S.String, Section)),
 }) {}
