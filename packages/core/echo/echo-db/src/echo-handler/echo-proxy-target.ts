@@ -10,8 +10,8 @@ import type { ComplexMap } from '@dxos/util';
 
 import { type EchoArray } from './echo-array';
 import { type EchoReactiveHandler } from './echo-handler';
-import type { AutomergeObjectCore } from '../automerge';
-import type { KeyPath } from '../automerge/key-path';
+import type { ObjectCore, KeyPath } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const symbolPath = Symbol('path');
 export const symbolNamespace = Symbol('namespace');
@@ -41,7 +41,7 @@ export const TargetKey = {
 };
 
 export type ObjectInternals = {
-  core: AutomergeObjectCore;
+  core: ObjectCore;
 
   /**
    * Caching targets based on key path.
@@ -56,6 +56,12 @@ export type ObjectInternals = {
    * Set only when the object is not bound to a database.
    */
   linkCache: Map<string, EchoReactiveObject<any>> | undefined;
+
+  /**
+   * Database.
+   * Is set on object adding to database.
+   */
+  database: EchoDatabase | undefined;
 };
 
 /**

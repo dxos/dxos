@@ -9,9 +9,10 @@ import { Trigger, asyncTimeout, latch } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
-import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { getObjectCore } from '@dxos/echo-db';
 import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
+import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { StorageType, createStorage } from '@dxos/random-access-storage';
@@ -56,7 +57,14 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await testSpaceAutomerge(space.db);
 
+    expect(SpaceId.isValid(space.id)).to.be.true;
     expect(space.members.get()).to.be.length(1);
+
+    // Get by id.
+    expect(client.spaces.get(space.id) === space).to.be.true;
+
+    // Get by key.
+    expect(client.spaces.get(space.key) === space).to.be.true;
   });
 
   // TODO(dmaretskyi): Test suit for different conditions/storages.
@@ -116,6 +124,8 @@ describe('Spaces', () => {
         }
       });
       const space = await spaceTrigger.wait({ timeout: 500 });
+
+      expect(SpaceId.isValid(space.id)).to.be.true;
       await space.waitUntilReady();
 
       const obj = await space.db.loadObjectById(objectId)!;
@@ -246,7 +256,7 @@ describe('Spaces', () => {
     const space = await client.spaces.create();
     await space.waitUntilReady();
     const trigger = new Trigger();
-    getAutomergeObjectCore(space.properties).updates.on(() => {
+    getObjectCore(space.properties).updates.on(() => {
       trigger.wake();
     });
 
@@ -461,7 +471,7 @@ describe('Spaces', () => {
     spaceA.db.query().subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
         expect(objects.some((obj) => obj === objA)).to.be.true;
         inc();
       },
@@ -471,7 +481,7 @@ describe('Spaces', () => {
     spaceB.db.query().subscribe(
       ({ objects }) => {
         expect(objects).to.have.length(2);
-        expect(objects.some((obj) => getAutomergeObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
+        expect(objects.some((obj) => getObjectCore(obj).getType()?.itemId === TYPE_PROPERTIES)).to.be.true;
         expect(objects.some((obj) => obj === objB)).to.be.true;
         inc();
       },
@@ -513,7 +523,7 @@ describe('Spaces', () => {
       });
       const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
-      const unsub = getAutomergeObjectCore(guestRoot).updates.on(() => {
+      const unsub = getObjectCore(guestRoot).updates.on(() => {
         if (guestRoot.entries.length === 2) {
           done.wake();
         }

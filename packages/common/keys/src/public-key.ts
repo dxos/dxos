@@ -2,10 +2,14 @@
 // Copyright 2020 DXOS.org
 //
 
+import base32Decode from 'base32-decode';
+import base32Encode from 'base32-encode';
 import { inspect, type InspectOptionsStylized } from 'node:util';
 
 import { truncateKey, devtoolsFormatter, type DevtoolsFormatter, equalsSymbol, type Equatable } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+
+import { randomBytes } from './random-bytes';
 
 export const PUBLIC_KEY_LENGTH = 32;
 export const SECRET_KEY_LENGTH = 64;
@@ -89,6 +93,10 @@ export class PublicKey implements Equatable {
     return PublicKey.from(randomBytes(PUBLIC_KEY_LENGTH));
   }
 
+  static randomOfLength(length: number): PublicKey {
+    return PublicKey.from(randomBytes(length));
+  }
+
   static *randomSequence(): Generator<PublicKey> {
     for (let i = 0; i < 1_0000; i++) {
       // Counter just to protect against infinite loops.
@@ -157,6 +165,12 @@ export class PublicKey implements Equatable {
     return key.toHex();
   }
 
+  static fromMultibase32(encoded: string): PublicKey {
+    invariant(encoded.startsWith('B'), 'Invalid multibase32 encoding');
+
+    return new PublicKey(new Uint8Array(base32Decode(encoded.slice(1), 'RFC4648')));
+  }
+
   constructor(private readonly _value: Uint8Array) {
     if (!(_value instanceof Uint8Array)) {
       throw new TypeError(`Expected Uint8Array, got: ${_value}`);
@@ -181,6 +195,10 @@ export class PublicKey implements Equatable {
 
   toHex(): string {
     return this.asBuffer().toString('hex');
+  }
+
+  toMultibase32(): string {
+    return 'B' + base32Encode(this._value, 'RFC4648');
   }
 
   truncate(length = undefined) {
@@ -291,13 +309,3 @@ export class PublicKey implements Equatable {
     return this.equals(other);
   }
 }
-
-const randomBytes = (length: number) => {
-  // globalThis.crypto is not available in Node.js when running in vitest even though the documentation says it should be.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const webCrypto = globalThis.crypto ?? require('node:crypto').webcrypto;
-
-  const bytes = new Uint8Array(length);
-  webCrypto.getRandomValues(bytes);
-  return bytes;
-};

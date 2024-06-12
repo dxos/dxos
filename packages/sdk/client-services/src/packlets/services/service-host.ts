@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, Properties } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
@@ -356,13 +356,13 @@ export class ClientServicesHost {
 
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    const document = this._serviceContext.echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
     await document.whenReady();
 
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(Properties)!),
+        type: encodeReference(getTypeReference(PropertiesSchema)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),
@@ -377,7 +377,6 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.echoHost.flush();
-
     return identity;
   }
 }

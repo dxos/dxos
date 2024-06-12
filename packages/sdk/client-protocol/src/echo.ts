@@ -4,7 +4,7 @@
 
 import type { MulticastObservable } from '@dxos/async';
 import type { FilterSource, Query } from '@dxos/echo-db';
-import type { PublicKey } from '@dxos/keys';
+import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
@@ -35,7 +35,13 @@ export interface Echo extends MulticastObservable<Space[]> {
   get(): Space[];
 
   /**
+   * Returns the space with the given id.
+   */
+  get(id: SpaceId): Space | undefined;
+
+  /**
    * Returns the space with the given key.
+   * @deprecated Use `get(id: SpaceId)`.
    */
   get(spaceKey: PublicKey): Space | undefined;
 

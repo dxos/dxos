@@ -6,7 +6,7 @@
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 import { type Space } from '@dxos/client/echo';
-import { create, DynamicEchoSchema, echoObject, effectToJsonSchema, ref, S, StoredEchoSchema } from '@dxos/echo-schema';
+import { create, DynamicSchema, EchoObject, effectToJsonSchema, ref, S, StoredSchema } from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -23,10 +23,10 @@ export enum TestSchemaType {
   project = 'example.com/type/project',
 }
 
-const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicEchoSchema => {
-  const typeSchema = S.partial(S.Struct(fields)).pipe(echoObject(typename, '1.0.0'));
-  return new DynamicEchoSchema(
-    create(StoredEchoSchema, {
+const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicSchema => {
+  const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
+  return new DynamicSchema(
+    create(StoredSchema, {
       typename,
       version: '1.0.0',
       jsonSchema: effectToJsonSchema(typeSchema),

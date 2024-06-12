@@ -2,32 +2,32 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type Echo, type Space, defaultKey, Properties, type PropertiesProps } from '@dxos/client-protocol';
+export { defaultKey, type Echo, type Space, type PropertiesProps, PropertiesSchema } from '@dxos/client-protocol';
 export {
+  create,
   getMeta,
   getSchema,
   getType,
   Expando,
-  create,
   type EchoReactiveObject,
   type ReactiveObject,
   type ObjectMeta,
 } from '@dxos/echo-schema';
 export {
-  createSubscription,
+  createDocAccessor,
   createEchoObject,
+  createSubscription,
+  fromCursor,
   getRangeFromCursor,
   getTypeRef,
-  getAutomergeObjectCore,
-  hasType,
-  Filter,
-  Query,
-  createDocAccessor,
+  getObjectCore,
   getTextInRange,
-  fromCursor,
+  hasType,
+  isEchoObject,
   toCursor,
   DocAccessor,
-  isEchoObject,
+  Filter,
+  Query,
   RuntimeSchemaRegistry,
   type IDocHandle,
   type EchoDatabase,
