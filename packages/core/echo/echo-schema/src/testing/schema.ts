@@ -4,6 +4,7 @@
 
 import * as S from '@effect/schema/Schema';
 
+import { EchoObject } from '../annotations';
 import { TypedObject } from '../typed-object-class';
 
 export const TEST_SCHEMA_TYPE = {
@@ -45,6 +46,7 @@ export class TestSchemaClass extends TypedObject<TestSchemaClass>(TEST_SCHEMA_TY
 
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
+export const TestType = TestSchema.pipe(EchoObject('TestSchema', '1.0.0'));
 
 // TODO(dmaretskyi): Another top-level S.mutable call as a workaround for the regression in the last minor.
 export const TestSchemaWithClass = S.mutable(

@@ -8,19 +8,5 @@ export class PropertiesType extends TypedObject({ typename: 'dxos.sdk.client.Pro
   name: S.optional(S.String),
 }) {}
 
-// TODO(burdon): Is this only used for Space properties?
-// export const PropertiesSchema = S.Struct(
-//   {
-//     name: S.optional(S.String),
-//   },
-//   // TODO(burdon): Expando schema?
-//   {
-//     key: S.String,
-//     value: S.Any,
-//   },
-// ).pipe(EchoObject('dxos.sdk.client.Properties', '0.1.0'));
-
-// export interface Properties extends S.Schema.Type<typeof PropertiesSchema> {}
-
-// TODO(burdon): Rename?
-// export type PropertiesProps = Pick<Properties, 'name'>;
+// TODO(burdon): Rename.
+export type PropertiesTypeProps = Pick<PropertiesType, 'name'>;

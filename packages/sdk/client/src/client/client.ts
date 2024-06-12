@@ -6,13 +6,13 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
+  DEFAULT_CLIENT_CHANNEL,
+  STATUS_TIMEOUT,
   clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
   type Echo,
   type Halo,
-  DEFAULT_CLIENT_CHANNEL,
-  STATUS_TIMEOUT,
   PropertiesType,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
@@ -21,6 +21,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
+import { getTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -217,7 +218,7 @@ export class Client {
 
   // TODO(dmaretskyi): Expose `graph` directly?
   addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
-    log.info('addSchema', { schema: schemaList.map((s) => s.typename) });
+    log.info('addSchema', { schema: schemaList.map((s) => getTypename(s)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {

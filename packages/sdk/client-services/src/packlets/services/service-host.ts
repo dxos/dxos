@@ -3,7 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
-import { clientServiceBundle, defaultKey, type ClientServices, PropertiesSchema } from '@dxos/client-protocol';
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesType } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { type ObjectStructure, encodeReference, type SpaceDoc } from '@dxos/echo-protocol';
@@ -362,7 +362,7 @@ export class ClientServicesHost {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(PropertiesSchema)!),
+        type: encodeReference(getTypeReference(PropertiesType)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),

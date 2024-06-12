@@ -2,37 +2,37 @@
 // Copyright 2022 DXOS.org
 //
 
-import { requireTypeReference, StoredSchema, type AbstractTypedObject } from '@dxos/echo-schema';
+import { type S, StoredSchema, requireTypeReference } from '@dxos/echo-schema';
 
-const getTypenameOrThrow = (schema: AbstractTypedObject<any>): string => requireTypeReference(schema).itemId;
-
-// TODO(burdon): Reconcile type vs. schema.
+const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
 
 /**
  *
  */
+// TODO(burdon): Reconcile type vs. schema.
+// TODO(burdon): Tighten S.Schema to AbstractTypedObject
 export class RuntimeSchemaRegistry {
-  private readonly _schemaMap = new Map<string, AbstractTypedObject<any>>();
+  private readonly _schemaMap = new Map<string, S.Schema<any>>();
 
   constructor() {
     this._schemaMap.set(StoredSchema.typename, StoredSchema);
   }
 
-  get schemas(): AbstractTypedObject<any>[] {
+  get schemas(): S.Schema<any>[] {
     return Array.from(this._schemaMap.values());
   }
 
-  hasSchema<T>(schema: AbstractTypedObject<T>): boolean {
+  hasSchema<T>(schema: S.Schema<T>): boolean {
     const typename = getTypenameOrThrow(schema);
     return this._schemaMap.has(typename);
   }
 
-  getSchema(typename: string): AbstractTypedObject<any> | undefined {
+  getSchema(typename: string): S.Schema<any> | undefined {
     return this._schemaMap.get(typename);
   }
 
   // TODO(burdon): Change to array?
-  addSchema(...schemaList: AbstractTypedObject<any>[]) {
+  addSchema(...schemaList: S.Schema<any>[]) {
     schemaList.forEach((schema) => {
       const typename = getTypenameOrThrow(schema);
       if (this._schemaMap.has(typename)) {

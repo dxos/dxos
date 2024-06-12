@@ -49,11 +49,11 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type Space,
   getSpace,
-  type PropertiesProps,
   isSpace,
   isEchoObject,
   fullyQualifiedId,
   Filter,
+  type PropertiesTypeProps,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
@@ -573,7 +573,7 @@ export const SpacePlugin = ({
               const {
                 objects: [sharedSpacesFolder],
               } = await defaultSpace.db.query({ key: SHARED }).run();
-              const space = await client.spaces.create(intent.data as PropertiesProps);
+              const space = await client.spaces.create(intent.data as PropertiesTypeProps);
 
               const folder = create(FolderType, { objects: [] });
               setSpaceProperty(space, FolderType.typename, folder);
