@@ -14,14 +14,14 @@ import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults } from './SearchResults';
 import { Searchbar } from './Searchbar';
-import { SearchContextProvider, useSearch, useSearchResults } from '../context';
+import { SearchContextProvider, useGlobalSearch, useGlobalSearchResults } from '../context';
 
 faker.seed(1);
 
 const Story: FC<{ objects: any[] }> = ({ objects }) => {
   const [selected, setSelected] = useState<string>();
-  const { setMatch } = useSearch();
-  const filteredItems = useSearchResults(objects);
+  const { setMatch } = useGlobalSearch();
+  const filteredItems = useGlobalSearchResults(objects);
 
   return (
     <DensityProvider density='fine'>

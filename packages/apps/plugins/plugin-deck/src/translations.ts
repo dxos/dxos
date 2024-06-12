@@ -31,6 +31,7 @@ export default [
         'settings deck label': 'Enable Deck',
         'reload required message': 'Reload required.',
         'pending heading': 'Loading…',
+        'insert plank label': 'Open',
       },
     },
   },
