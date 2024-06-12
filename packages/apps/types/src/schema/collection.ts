@@ -4,7 +4,7 @@
 
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 
-export class CollectionType extends TypedObject({ typename: 'dxos.Collection', version: '0.1.0' })({
+export class CollectionType extends TypedObject({ typename: 'dxos.org/type/Collection', version: '0.1.0' })({
   name: S.optional(S.String),
   objects: S.mutable(S.Array(ref(Expando))),
   // Key is schema typename and value is reference to a view object of the associated schema.

@@ -33,6 +33,6 @@ export class ChainPromptType extends TypedObject({ typename: 'dxos.org/type/Chai
 }) {}
 
 export class ChainType extends TypedObject({ typename: 'dxos.org/type/Chain', version: '0.1.0' })({
-  title: S.optional(S.String),
+  name: S.optional(S.String),
   prompts: S.optional(S.mutable(S.Array(ref(ChainPromptType)))),
 }) {}
