@@ -140,7 +140,7 @@ export const ClientPlugin = ({
           }
           const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
-          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          //   There's no guarantee that the default space will be fully synced by the time this is called.
           // firstRun = !getSpaceProperty(client.spaces.default, key);
           setSpaceProperty(client.spaces.default, key, Date.now());
         }
