@@ -65,7 +65,7 @@ export const parseClientPlugin = (plugin?: Plugin) =>
 
 export type SchemaProvides = {
   echo: {
-    schema: Parameters<Client['addSchema']>;
+    schema: Parameters<Client['addType']>;
   };
 };
 
@@ -173,7 +173,7 @@ export const ClientPlugin = ({
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
         log.info('ready', { id: plugin.meta.id });
-        client.addSchema(...plugin.provides.echo.schema);
+        client.addType(...plugin.provides.echo.schema);
       });
     },
     unload: async () => {

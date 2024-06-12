@@ -206,19 +206,15 @@ export class Client {
   /**
    * @deprecated Temporary.
    */
-  get experimental() {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-    return {
-      get graph() {
-        return self._echoClient.graph;
-      },
-    };
+  get graph() {
+    return this._echoClient.graph;
   }
 
-  // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schema: Parameters<RuntimeSchemaRegistry['addSchema']>) {
-    log.info('addSchema', { schema: schema.map((s) => getEchoObjectTypename(s)).join() });
+  /**
+   * Add schema types to the client.
+   */
+  addType(...type: Parameters<RuntimeSchemaRegistry['addSchema']>) {
+    log.info('addSchema', { schema: type.map((schema) => getEchoObjectTypename(schema)).join() });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -226,7 +222,7 @@ export class Client {
     // }
 
     // TODO(burdon): Find?
-    const exists = schema.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
+    const exists = type.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
     if (exists.length > 0) {
       this._echoClient.graph.schemaRegistry.addSchema(...exists);
     }
@@ -237,7 +233,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  // TODO(burdon): Type?
+  // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);

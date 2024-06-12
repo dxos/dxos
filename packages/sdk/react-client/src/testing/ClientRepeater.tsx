@@ -24,7 +24,7 @@ export type ClientRepeaterProps<P extends RepeatedComponentProps> = {
   clients?: Client[];
   count?: number;
   registerSignalFactory?: boolean;
-  schema?: Parameters<Client['addSchema']>;
+  schema?: Parameters<Client['addType']>;
   createIdentity?: boolean;
   createSpace?: boolean;
   onCreateSpace?: (space: Space) => MaybePromise<void>;
@@ -62,7 +62,7 @@ export const ClientRepeater = <P extends RepeatedComponentProps>(props: ClientRe
     const timeout = setTimeout(async () => {
       const clients = [...Array(count)].map((_) => new Client({ services: testBuilder.createLocalClientServices() }));
       await Promise.all(clients.map((client) => client.initialize()));
-      schema && clients.map((client) => client.addSchema(...schema));
+      schema && clients.map((client) => client.addType(...schema));
 
       if (createIdentity || createSpace) {
         await Promise.all(clients.map((client) => client.halo.createIdentity()));

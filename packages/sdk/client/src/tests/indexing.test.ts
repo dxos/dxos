@@ -61,7 +61,7 @@ describe('Index queries', () => {
     const client = new Client({ services });
     await client.initialize();
     for (const schema of [ContactType, DocumentType, TextV0Type]) {
-      client.addSchema(schema);
+      client.addType(schema);
     }
 
     return client;

@@ -42,7 +42,8 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
   try {
     const mailboxes: MailboxType[] = objects?.filter(hasType(MailboxType)) ?? [];
     if (!space) {
-      const { objects } = await client.experimental.graph.query(Filter.schema(MailboxType)).run();
+      // Query across all spaces.
+      const { objects } = await client.graph.query(Filter.schema(MailboxType)).run();
       mailboxes.push(...objects);
     }
 

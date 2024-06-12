@@ -144,7 +144,7 @@ describe('Client', () => {
     await client1.halo.createIdentity();
     await client2.halo.createIdentity();
     for (const client of [client1, client2]) {
-      client.addSchema(ThreadType, MessageType, TextV0Type);
+      client.addType(ThreadType, MessageType, TextV0Type);
     }
 
     const threadQueried = new Trigger<ThreadType>();

@@ -242,7 +242,7 @@ const setupTest = async (testBuilder: TestBuilder) => {
   });
   const app = (await createInitializedClients(testBuilder))[0];
   const space = await app.spaces.create();
-  app.addSchema(TextV0Type, MessageType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger);
+  app.addType(TextV0Type, MessageType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger);
   await inviteMember(space, functions.client);
   const trigger = triggerGptOnMessage(space);
   return { functions, app, space, trigger };

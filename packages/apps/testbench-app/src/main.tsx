@@ -109,7 +109,7 @@ const main = async () => {
 
     // TODO(burdon): [API]: Pass array.
     // TODO(burdon): [API]: Get array of registered schema.
-    client.addSchema(ItemType, DocumentType);
+    client.addType(ItemType, DocumentType);
     await client.spaces.isReady.wait();
   };
 

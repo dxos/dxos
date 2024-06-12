@@ -29,7 +29,7 @@ describe('Serialization', () => {
 
     const client = new Client({ services: builder.createLocalClientServices() });
     await client.initialize();
-    client.addSchema(FolderType, DocumentType, TextV0Type);
+    client.addType(FolderType, DocumentType, TextV0Type);
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 

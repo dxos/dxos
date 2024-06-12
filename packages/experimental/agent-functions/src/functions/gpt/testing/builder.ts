@@ -29,7 +29,7 @@ export class TestProcessorBuilder {
     await this._client.halo.createIdentity();
 
     this._space = await this._client.spaces.create();
-    this._client.addSchema(TextV0Type, MessageType, ThreadType, ChainPromptType, ChainType);
+    this._client.addType(TextV0Type, MessageType, ThreadType, ChainPromptType, ChainType);
 
     this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: '/tmp/dxos/testing/agent/functions/embedding',
