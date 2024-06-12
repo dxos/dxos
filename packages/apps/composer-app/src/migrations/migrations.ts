@@ -2,33 +2,29 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CollectionType } from '@braneframe/types';
+import {
+  ChannelType,
+  CollectionType,
+  DocumentType,
+  FileType,
+  MessageType,
+  TableType,
+  TextType,
+  ThreadType,
+} from '@braneframe/types';
 import { loadObjectReferences } from '@dxos/echo-db';
-import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration, type ObjectStructure } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
-import { getDeep } from '@dxos/util';
+import { getDeep, nonNullable } from '@dxos/util';
 
-export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
-  name: S.optional(S.String),
-  objects: S.mutable(S.Array(ref(Expando))),
-}) {}
-
-export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
-  object: ref(Expando),
-}) {}
-
-export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
-  title: S.optional(S.String),
-  sections: S.mutable(S.Array(ref(SectionType))),
-}) {}
+import * as LegacyTypes from './legacy-types';
 
 export const migrations: Migration[] = [
   {
     version: '2024-06-10-collections',
     next: async ({ space, builder }) => {
-      const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
-      const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
+      const { objects: folders } = await space.db.query(Filter.schema(LegacyTypes.FolderType)).run();
+      const { objects: stacks } = await space.db.query(Filter.schema(LegacyTypes.StackType)).run();
       const { objects: collections } = await space.db.query(Filter.schema(CollectionType)).run();
 
       // Delete any existing collections from failed migrations.
@@ -76,9 +72,149 @@ export const migrations: Migration[] = [
       // Update root folder reference to collection.
       await builder.changeProperties((propertiesStructure) => {
         // `getDeep` because the root folder property used to be nested.
-        const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
+        const prevRootFolder = getDeep(propertiesStructure.data, LegacyTypes.FolderType.typename.split('.'));
         propertiesStructure.data[CollectionType.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
+    },
+  },
+  {
+    version: '2024-06-12-fully-qualified-typenames',
+    next: async ({ space, builder }) => {
+      //
+      // Documents
+      //
+
+      const { objects: docs } = await space.db.query(Filter.schema(LegacyTypes.DocumentType)).run();
+
+      for (const doc of docs) {
+        const content = await loadObjectReferences(doc, (d) => d.content);
+        await builder.migrateObject(content.id, ({ data }) => ({
+          schema: TextType,
+          props: {
+            content: data.content,
+          },
+        }));
+
+        await loadObjectReferences(doc, (d) => d.comments?.map((comment) => comment.thread));
+        const threads: ThreadType[] = [];
+        for (const comment of doc.comments ?? []) {
+          const thread = comment.thread;
+          if (!thread) {
+            continue;
+          }
+
+          const messages = await loadObjectReferences(thread, (t) => t.messages);
+          for (const message of messages) {
+            const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content)) ?? { content: '' };
+            await builder.migrateObject(message.id, ({ data }) => ({
+              schema: MessageType,
+              props: {
+                from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
+                date: data.blocks[0].timestamp,
+                content,
+              },
+            }));
+          }
+
+          await builder.migrateObject(thread.id, ({ data }) => ({
+            schema: ThreadType,
+            props: {
+              name: data.title,
+              anchor: comment.cursor,
+              messages: data.messages,
+            },
+          }));
+          // TODO(wittjosiah): Is this cast okay? Object is migrated above.
+          threads.push(thread as ThreadType);
+        }
+
+        await builder.migrateObject(doc.id, ({ data }) => ({
+          schema: DocumentType,
+          props: {
+            name: data.title,
+            content: data.content,
+            threads,
+          },
+        }));
+      }
+
+      //
+      // Files
+      //
+
+      const { objects: files } = await space.db.query(Filter.schema(LegacyTypes.FileType)).run();
+
+      for (const file of files) {
+        await builder.migrateObject(file.id, ({ data }) => ({
+          schema: FileType,
+          props: {
+            filename: data.filename,
+            type: data.type,
+            timestamp: data.timestamp,
+            name: data.title,
+            cid: data.cid,
+          },
+        }));
+      }
+
+      //
+      // Sketches
+      //
+
+      // TODO
+
+      //
+      // Tables
+      //
+
+      const { objects: tables } = await space.db.query(Filter.schema(LegacyTypes.TableType)).run();
+
+      for (const table of tables) {
+        await builder.migrateObject(table.id, ({ data }) => ({
+          schema: TableType,
+          props: {
+            name: data.title,
+            schema: data.schema,
+            props: data.props,
+          },
+        }));
+      }
+
+      //
+      // Threads
+      //
+
+      const { objects: threads } = await space.db.query(Filter.schema(LegacyTypes.ThreadType)).run();
+      const documentThreads = docs
+        .flatMap((doc) => doc.comments?.map((comment) => comment.thread?.id))
+        .filter(nonNullable);
+      const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread.id));
+
+      for (const thread of standaloneThreads) {
+        const messages = await loadObjectReferences(thread, (t) => t.messages);
+        for (const message of messages) {
+          const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content)) ?? { content: '' };
+          await builder.migrateObject(message.id, ({ data }) => ({
+            schema: MessageType,
+            props: {
+              from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
+              date: data.blocks[0].timestamp,
+              content,
+            },
+          }));
+        }
+
+        await builder.migrateObject(thread.id, ({ data }) => ({
+          schema: ThreadType,
+          props: {
+            name: data.title,
+            anchor: undefined,
+            messages: data.messages,
+          },
+        }));
+
+        await builder.addObject(ChannelType, { name: thread.title, threads: [thread] });
+      }
     },
   },
 ];
