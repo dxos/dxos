@@ -184,7 +184,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: collection instanceof Collection && space.state.get() === SpaceState.READY && !hasPendingMigration,
+        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -206,7 +206,7 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
-        condition: collection instanceof Collection && space.state.get() === SpaceState.READY && !hasPendingMigration,
+        condition: space.state.get() === SpaceState.READY && !hasPendingMigration,
         removeEdges: true,
         nodes: [
           {
@@ -404,8 +404,6 @@ const updateGraphWithSpaceObjects = ({
         const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
 
         // When object is a collection but not the root collection.
-        // TODO(wittjosiah): Not adding nodes for any collections until the root collection is available.
-        //  Not clear why it it's not immediately available.
         if (object instanceof Collection && collection && object !== collection) {
           const partials = getFolderGraphNodePartials({ graph, collection: object, space });
 

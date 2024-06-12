@@ -27,20 +27,24 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import { type EchoReactiveObject, type Identifiable, isReactiveObject, type ReactiveObject } from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { type Identifiable, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type Space,
-  getSpace,
+  type EchoReactiveObject,
   type PropertiesProps,
-  isSpace,
-  isEchoObject,
+  type ReactiveObject,
+  type Space,
+  create,
+  Expando,
+  Filter,
   fullyQualifiedId,
+  getSpace,
+  isEchoObject,
+  isSpace,
   SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -552,12 +556,12 @@ export const SpacePlugin = ({
               const defaultSpace = client.spaces.default;
               const {
                 objects: [sharedSpacesCollection],
-              } = await defaultSpace.db.query({ key: SHARED }).run();
+              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
               const space = await client.spaces.create(intent.data as PropertiesProps);
+              await space.waitUntilReady();
 
               const collection = create(Collection, { objects: [], views: {} });
               space.properties[Collection.typename] = collection;
-              await space.waitUntilReady();
               state.enabled.push(space.key);
 
               sharedSpacesCollection?.objects.push(collection);
@@ -697,7 +701,10 @@ export const SpacePlugin = ({
                 if (collection instanceof Collection) {
                   collection.objects.push(object as Identifiable);
                 } else {
-                  space.db.add(object);
+                  const echoObject = space.db.add(object);
+                  // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
+                  const collection = create(Collection, { objects: [echoObject], views: {} });
+                  space.properties[Collection.typename] = collection;
                 }
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
