@@ -20,7 +20,7 @@ export {
   fromCursor,
   getRangeFromCursor,
   getTypeRef,
-  getAutomergeObjectCore,
+  getObjectCore,
   getTextInRange,
   hasType,
   isEchoObject,

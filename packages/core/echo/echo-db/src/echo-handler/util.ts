@@ -13,7 +13,7 @@ import {
 
 import { isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
-import type { EchoDatabase } from '../database';
+import type { EchoDatabase } from '../proxy-db';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (isEchoObject(obj)) {

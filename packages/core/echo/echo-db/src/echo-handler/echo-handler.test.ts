@@ -36,9 +36,9 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
-import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
-import { EchoDatabaseImpl } from '../database';
+import { AutomergeContext, getObjectCore } from '../core-db';
 import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
@@ -161,7 +161,7 @@ describe('Reactive Object with ECHO database', () => {
     let id: string;
     {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
       id = obj.id;
@@ -170,7 +170,7 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
@@ -191,7 +191,7 @@ describe('Reactive Object with ECHO database', () => {
       const graph = new Hypergraph();
       graph.schemaRegistry.addSchema(TypedObjectSchema);
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
       id = obj.id;
@@ -201,7 +201,7 @@ describe('Reactive Object with ECHO database', () => {
     {
       const graph = new Hypergraph();
       const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
@@ -475,7 +475,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(create({ field: 1 }));
       const typeReference = getTypeReference(TestSchema)!;
-      getAutomergeObjectCore(obj).setType(typeReference);
+      getObjectCore(obj).setType(typeReference);
       expect(getType(obj)).to.deep.eq(typeReference);
     });
 
@@ -489,7 +489,7 @@ describe('Reactive Object with ECHO database', () => {
       let id: string;
       {
         const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-        await db._automerge.open({ rootUrl: doc.url });
+        await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.add({ string: 'foo' });
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
@@ -497,7 +497,7 @@ describe('Reactive Object with ECHO database', () => {
 
       {
         const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-        await db._automerge.open({ rootUrl: doc.url });
+        await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
@@ -539,10 +539,10 @@ describe('Reactive Object with ECHO database', () => {
     expect(updateCount).to.eq(1);
 
     // Rebind obj2 to obj1
-    getAutomergeObjectCore(obj2).bind({
-      db: getAutomergeObjectCore(obj1).database!,
-      docHandle: getAutomergeObjectCore(obj1).docHandle!,
-      path: getAutomergeObjectCore(obj1).mountPath,
+    getObjectCore(obj2).bind({
+      db: getObjectCore(obj1).database!,
+      docHandle: getObjectCore(obj1).docHandle!,
+      path: getObjectCore(obj1).mountPath,
       assignFromLocalState: false,
     });
 

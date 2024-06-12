@@ -4,7 +4,7 @@
 
 import { type UnsubscribeCallback } from '@dxos/async';
 
-import { getAutomergeObjectCore } from '../automerge';
+import { getObjectCore } from '../core-db';
 import { isEchoObject } from '../echo-handler';
 
 export type Selection = any[];
@@ -55,7 +55,7 @@ export const createSubscription = (onUpdate: (info: UpdateInfo) => void): Subscr
         added.forEach((obj) => {
           subscriptions.set(
             obj,
-            getAutomergeObjectCore(obj).updates.on(() => {
+            getObjectCore(obj).updates.on(() => {
               onUpdate({
                 added: [],
                 removed: [],

@@ -14,7 +14,7 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
-import { getAutomergeObjectCore } from '../automerge';
+import { getObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 
 // TODO(burdon): Multi-sort option.
@@ -260,7 +260,7 @@ export class Query<T extends {} = any> {
 
   private _filterResults(filter: Filter, results: QueryResult[]): QueryResult<T>[] {
     return results.filter(
-      (result) => result.object && filterMatch(filter, getAutomergeObjectCore(result.object), result.object),
+      (result) => result.object && filterMatch(filter, getObjectCore(result.object), result.object),
     );
   }
 
