@@ -92,7 +92,7 @@ describe('Composer migrations', () => {
       }),
     );
     expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
-    assignDeep(space, FolderType.typename.split('.'), folder1);
+    assignDeep(space.properties, FolderType.typename.split('.'), folder1);
 
     const folderQuery = space.db.query(Filter.schema(FolderType));
     const stackQuery = space.db.query(Filter.schema(StackType));
