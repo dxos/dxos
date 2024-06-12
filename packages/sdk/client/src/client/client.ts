@@ -9,10 +9,10 @@ import {
   clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  Properties,
+  PropertiesSchema,
+  DEFAULT_CLIENT_CHANNEL,
   STATUS_TIMEOUT,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.schemaRegistry.addSchema(PropertiesSchema);
   }
 
   [inspect.custom]() {
@@ -216,16 +216,16 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
     //   throw new ApiError('Client not open.');
     // }
 
     // TODO(burdon): Find?
-    const exists = schemaList.filter((schema) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(schema));
+    const exists = schemaList.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
     if (exists.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...exists);
+      this._echoClient.graph.schemaRegistry.addSchema(...exists);
     }
 
     return this;

@@ -17,7 +17,7 @@ import { createLinkedPorts, createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/
 import { ComplexMap } from '@dxos/util';
 
 import { type TestTeleportExtensionFactory, TestWireProtocol } from './test-wire-protocol';
-import { NetworkManager } from '../network-manager';
+import { SwarmNetworkManager } from '../network-manager';
 import { FullyConnectedTopology } from '../topology';
 import {
   createLibDataChannelTransportFactory,
@@ -77,7 +77,7 @@ export class TestPeer {
   /**
    * @internal
    */
-  readonly _networkManager: NetworkManager;
+  readonly _networkManager: SwarmNetworkManager;
 
   private _proxy?: ProtoRpcPeer<any>;
   private _service?: ProtoRpcPeer<any>;
@@ -158,7 +158,7 @@ export class TestPeer {
       transportFactory = MemoryTransportFactory;
     }
 
-    return new NetworkManager({
+    return new SwarmNetworkManager({
       signalManager: this._signalManager,
       transportFactory,
     });

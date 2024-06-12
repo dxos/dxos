@@ -6,7 +6,7 @@ import { Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type SignalManager } from '@dxos/messaging';
-import { type NetworkManager } from '@dxos/network-manager';
+import { type SwarmNetworkManager } from '@dxos/network-manager';
 import {
   type GetNetworkPeersRequest,
   type GetNetworkPeersResponse,
@@ -56,7 +56,7 @@ export const subscribeToSignal = ({ signalManager }: { signalManager: SignalMana
     };
   });
 
-export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: NetworkManager }) =>
+export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
   new Stream<SubscribeToNetworkTopicsResponse>(({ next, close }) => {
     const update = () => {
       try {
@@ -75,7 +75,7 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: N
     update();
   });
 
-export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: NetworkManager }) =>
+export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: SwarmNetworkManager }) =>
   new Stream<SubscribeToSwarmInfoResponse>(({ next }) => {
     const update = () => {
       const info = networkManager.connectionLog?.swarms;
@@ -88,7 +88,7 @@ export const subscribeToSwarmInfo = ({ networkManager }: { networkManager: Netwo
   });
 
 export const getNetworkPeers = (
-  { networkManager }: { networkManager: NetworkManager },
+  { networkManager }: { networkManager: SwarmNetworkManager },
   request: GetNetworkPeersRequest,
 ): GetNetworkPeersResponse => {
   if (!request.topic) {

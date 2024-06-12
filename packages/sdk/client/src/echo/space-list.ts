@@ -10,7 +10,7 @@ import {
   CREATE_SPACE_TIMEOUT,
   defaultKey,
   type Echo,
-  Properties,
+  PropertiesSchema,
   type PropertiesProps,
   type Space,
 } from '@dxos/client-protocol';
@@ -19,7 +19,7 @@ import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -194,13 +194,21 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   override get(): Space[];
-  override get(spaceKey: PublicKey): Space | undefined;
-  override get(spaceKey?: PublicKey) {
-    if (!spaceKey) {
+  override get(spaceIdOrKey: SpaceId | PublicKey): Space | undefined;
+  override get(spaceIdOrKey?: SpaceId | PublicKey) {
+    if (!spaceIdOrKey) {
       return this._value;
     }
 
-    return this._value?.find(({ key }) => key.equals(spaceKey));
+    if (spaceIdOrKey instanceof PublicKey) {
+      return this._value?.find(({ key }) => key.equals(spaceIdOrKey));
+    } else {
+      if (!SpaceId.isValid(spaceIdOrKey)) {
+        throw new ApiError('Invalid space id.');
+      }
+
+      return this._value?.find(({ id }) => id === spaceIdOrKey);
+    }
   }
 
   @trace.info()
@@ -231,7 +239,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
-    spaceProxy.db.add(create(Properties, meta ?? {}));
+    spaceProxy.db.add(create(PropertiesSchema, meta ?? {}));
     await spaceProxy.db.flush();
     await spaceProxy._initializationComplete.wait();
 

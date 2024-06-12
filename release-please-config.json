@@ -24,11 +24,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/composer-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
@@ -545,6 +540,16 @@
         {
           "type": "json",
           "path": "packages/devtools/cli/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli-base/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli-composer/package.json",
           "jsonpath": "$.version"
         },
         {

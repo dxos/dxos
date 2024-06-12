@@ -1,5 +1,5 @@
 # Type `ConfigKey`
-<sub>Declared in [sdk/config/src/types.ts:57](https://github.com/dxos/dxos/blob/4d6eae504/packages/sdk/config/src/types.ts#L57)</sub>
+<sub>Declared in [sdk/config/src/types.ts:57](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/config/src/types.ts#L57)</sub>
 
 
 Any nested dot separated key that can be in config.

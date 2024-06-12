@@ -23,7 +23,6 @@ export const createClientServices = (
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
-
   if (remote) {
     const url = new URL(remote);
     const protocol = url.protocol.slice(0, -1);

@@ -5,9 +5,8 @@
 import Table from 'ink-table';
 import React, { useEffect, type FC, useState } from 'react';
 
+import { mapSpaces } from '@dxos/cli-base';
 import { type Client } from '@dxos/client';
-
-import { mapSpaces } from '../util';
 
 /**
  * Spaces list table.

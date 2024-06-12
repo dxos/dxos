@@ -18,7 +18,6 @@ describe('complex schema validations', () => {
 
   test('any', () => {
     const schema = S.Struct({ field: S.Any });
-
     const object = create(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
@@ -32,14 +31,12 @@ describe('complex schema validations', () => {
 
   test('object', () => {
     const schema = S.Struct({ field: S.optional(S.Object) });
-
     const object = create(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
   });
 
   test('index signatures', () => {
     const schema = S.Struct({}, { key: S.String, value: S.Number });
-
     const object = create(schema, { unknownField: 1 });
     expect(() => setValue(object, 'field', '42')).to.throw();
     expect(() => setValue(object, 'unknownField', 42)).not.to.throw();

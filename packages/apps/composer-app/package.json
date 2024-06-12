@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -10,8 +10,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "socket": "bundle"
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
     "@braneframe/plugin-chain": "workspace:*",

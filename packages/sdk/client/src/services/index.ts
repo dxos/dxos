@@ -2,13 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-export {
-  DEFAULT_VAULT_ORIGIN,
-  DEFAULT_VAULT_URL,
-  type ClientServices,
-  type ClientServicesProvider,
-  type ShellRuntime,
-} from '@dxos/client-protocol';
+export { type ClientServices, type ClientServicesProvider, type ShellRuntime } from '@dxos/client-protocol';
 export { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 export {
   type AppContextRequest,

@@ -7,6 +7,7 @@ import expect from 'expect';
 import { Context } from '@dxos/context';
 import { CredentialGenerator, verifyCredential } from '@dxos/credentials';
 import {
+  createIdFromSpaceKey,
   MetadataStore,
   MOCK_AUTH_PROVIDER,
   MOCK_AUTH_VERIFIER,
@@ -20,7 +21,7 @@ import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { AdmittedFeed } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { createStorage, StorageType } from '@dxos/random-access-storage';
@@ -78,7 +79,7 @@ describe('identity/identity', () => {
         credentialAuthenticator: MOCK_AUTH_VERIFIER,
       },
       blobStore,
-      networkManager: new NetworkManager({
+      networkManager: new SwarmNetworkManager({
         signalManager: new MemorySignalManager(new MemorySignalManagerContext()),
         transportFactory: MemoryTransportFactory,
       }),
@@ -86,6 +87,7 @@ describe('identity/identity', () => {
 
     await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
     const space: Space = new Space({
+      id: await createIdFromSpaceKey(spaceKey),
       spaceKey,
       protocol,
       genesisFeed: controlFeed,
@@ -193,7 +195,7 @@ describe('identity/identity', () => {
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         blobStore,
-        networkManager: new NetworkManager({
+        networkManager: new SwarmNetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
@@ -201,6 +203,7 @@ describe('identity/identity', () => {
 
       await metadataStore.setIdentityRecord({ haloSpace: { key: spaceKey }, identityKey, deviceKey });
       const space = new Space({
+        id: await createIdFromSpaceKey(spaceKey),
         spaceKey,
         protocol,
         genesisFeed: controlFeed,
@@ -281,7 +284,7 @@ describe('identity/identity', () => {
           credentialAuthenticator: MOCK_AUTH_VERIFIER, // createHaloAuthVerifier(() => identity.authorizedDeviceKeys),
         },
         blobStore,
-        networkManager: new NetworkManager({
+        networkManager: new SwarmNetworkManager({
           signalManager: new MemorySignalManager(signalContext),
           transportFactory: MemoryTransportFactory,
         }),
@@ -293,6 +296,7 @@ describe('identity/identity', () => {
         deviceKey,
       });
       const space = new Space({
+        id: await createIdFromSpaceKey(spaceKey),
         spaceKey,
         protocol,
         genesisFeed: await feedStore.openFeed(genesisFeedKey),

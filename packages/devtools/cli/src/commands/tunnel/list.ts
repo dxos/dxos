@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { TABLE_FLAGS } from '@dxos/cli-base';
+
 import { BaseCommand } from '../../base';
 import { printTunnels, type TunnelRpcPeer } from '../../util';
 
@@ -14,6 +16,11 @@ export default class List extends BaseCommand<typeof List> {
     this.enableJsonFlag = true;
     this.description = 'List tunnels.';
   }
+
+  static override flags = {
+    ...BaseCommand.flags,
+    ...TABLE_FLAGS,
+  };
 
   async run(): Promise<any> {
     return await this.execWithTunneling(async (tunnel: TunnelRpcPeer) => {

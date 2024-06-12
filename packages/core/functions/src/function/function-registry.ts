@@ -49,8 +49,8 @@ export class FunctionRegistry extends Resource {
     if (!functions?.length) {
       return;
     }
-    if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionDef)) {
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
+    if (!space.db.graph.schemaRegistry.hasSchema(FunctionDef)) {
+      space.db.graph.schemaRegistry.addSchema(FunctionDef);
     }
 
     // Sync definitions.

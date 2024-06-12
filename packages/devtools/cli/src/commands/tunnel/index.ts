@@ -4,6 +4,7 @@
 
 import { Args, Flags } from '@oclif/core';
 
+import { TABLE_FLAGS } from '@dxos/cli-base';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { humanize } from '@dxos/util';
@@ -26,6 +27,7 @@ export default class Tunnel extends BaseCommand<typeof Tunnel> {
 
   static override flags = {
     ...BaseCommand.flags,
+    ...TABLE_FLAGS,
     name: Flags.string({
       description: 'Tunnel name',
       async default() {
