@@ -76,6 +76,7 @@ export type AcceptSpaceOptions = {
 export type DataSpaceManagerRuntimeParams = {
   spaceMemberPresenceAnnounceInterval?: number;
   spaceMemberPresenceOfflineTimeout?: number;
+  lazySpaceOpen?: boolean;
 };
 
 @trackLeaks('open', 'close')
@@ -88,8 +89,6 @@ export class DataSpaceManager {
 
   private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
-  private readonly _spaceMemberPresenceAnnounceInterval: number;
-  private readonly _spaceMemberPresenceOfflineTimeout: number;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -99,15 +98,8 @@ export class DataSpaceManager {
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
-    params?: DataSpaceManagerRuntimeParams,
+    private readonly _params?: DataSpaceManagerRuntimeParams,
   ) {
-    const {
-      spaceMemberPresenceAnnounceInterval = PRESENCE_ANNOUNCE_INTERVAL,
-      spaceMemberPresenceOfflineTimeout = PRESENCE_OFFLINE_TIMEOUT,
-    } = params ?? {};
-    this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
-    this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
-
     trace.diagnostic({
       id: 'spaces',
       name: 'Spaces',
@@ -145,10 +137,11 @@ export class DataSpaceManager {
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    const openSpacesOnConstruction = !this._params?.lazySpaceOpen;
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        await this._constructSpace(spaceMetadata);
+        await this._constructSpace(spaceMetadata, { open: openSpacesOnConstruction });
       } catch (err) {
         log.error('Error loading space', { spaceMetadata, err });
       }
@@ -196,7 +189,7 @@ export class DataSpaceManager {
     log('creating space...', { spaceKey });
 
     const root = await this._echoHost.createSpaceRoot(spaceKey);
-    const space = await this._constructSpace(metadata);
+    const space = await this._constructSpace(metadata, { open: true });
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -225,7 +218,7 @@ export class DataSpaceManager {
       dataTimeframe: opts.dataTimeframe,
     };
 
-    const space = await this._constructSpace(metadata);
+    const space = await this._constructSpace(metadata, { open: true });
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
 
@@ -248,14 +241,14 @@ export class DataSpaceManager {
     );
   }
 
-  private async _constructSpace(metadata: SpaceMetadata) {
+  private async _constructSpace(metadata: SpaceMetadata, options: { open: boolean }) {
     log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._spaceMemberPresenceAnnounceInterval,
-      offlineTimeout: this._spaceMemberPresenceOfflineTimeout,
+      announceInterval: this._params?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._params?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -336,7 +329,7 @@ export class DataSpaceManager {
       }
     });
 
-    if (metadata.state !== SpaceState.INACTIVE) {
+    if (options.open && metadata.state !== SpaceState.INACTIVE) {
       await dataSpace.open();
     }
 

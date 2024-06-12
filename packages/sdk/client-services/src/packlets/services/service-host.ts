@@ -86,7 +86,7 @@ export class ClientServicesHost {
   private _devtoolsProxy?: WebsocketRpcClient<{}, ClientServices>;
 
   private _serviceContext!: ServiceContext;
-  private readonly _runtimeParams?: ServiceContextRuntimeParams;
+  private readonly _runtimeParams: ServiceContextRuntimeParams;
   private diagnosticsBroadcastHandler: CollectDiagnosticsBroadcastHandler;
 
   @Trace.info()
@@ -109,7 +109,7 @@ export class ClientServicesHost {
     this._storage = storage;
     this._level = level;
     this._callbacks = callbacks;
-    this._runtimeParams = runtimeParams;
+    this._runtimeParams = runtimeParams ?? {};
 
     if (config) {
       this.initialize({ config, transportFactory, signalManager });
@@ -188,6 +188,8 @@ export class ClientServicesHost {
   initialize({ config, ...options }: InitializeOptions) {
     invariant(!this._open, 'service host is open');
     log('initializing...');
+
+    this._runtimeParams.lazySpaceOpen = config?.values?.runtime?.client?.lazySpaceOpen;
 
     if (config) {
       invariant(!this._config, 'config already set');

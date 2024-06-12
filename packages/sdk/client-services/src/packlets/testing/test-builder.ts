@@ -19,7 +19,7 @@ import { createStorage, StorageType, type Storage } from '@dxos/random-access-st
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
 
 import { InvitationsHandler, InvitationsManager, SpaceInvitationProtocol } from '../invitations';
-import { ClientServicesHost, ServiceContext } from '../services';
+import { ClientServicesHost, ServiceContext, type ServiceContextRuntimeParams } from '../services';
 import { DataSpaceManager, type SigningContext } from '../spaces';
 
 //
@@ -37,9 +37,11 @@ export const createServiceHost = (config: Config, signalManagerContext: MemorySi
 export const createServiceContext = async ({
   signalContext = new MemorySignalManagerContext(),
   storage = createStorage({ type: StorageType.RAM }),
+  runtimeParams,
 }: {
   signalContext?: MemorySignalManagerContext;
   storage?: Storage;
+  runtimeParams?: ServiceContextRuntimeParams;
 } = {}) => {
   const signalManager = new MemorySignalManager(signalContext);
   const networkManager = new SwarmNetworkManager({
@@ -51,6 +53,7 @@ export const createServiceContext = async ({
 
   return new ServiceContext(storage, level, networkManager, signalManager, {
     invitationConnectionDefaultParams: { controlHeartbeatInterval: 200 },
+    ...runtimeParams,
   });
 };
 
