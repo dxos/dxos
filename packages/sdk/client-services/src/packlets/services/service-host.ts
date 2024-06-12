@@ -189,8 +189,6 @@ export class ClientServicesHost {
     invariant(!this._open, 'service host is open');
     log('initializing...');
 
-    this._runtimeParams.lazySpaceOpen = config?.values?.runtime?.client?.lazySpaceOpen;
-
     if (config) {
       invariant(!this._config, 'config already set');
       this._config = config;

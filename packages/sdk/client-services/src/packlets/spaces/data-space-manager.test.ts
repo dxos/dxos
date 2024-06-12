@@ -172,7 +172,7 @@ describe('DataSpaceManager', () => {
     test('activate opens a lazily loaded space', async () => {
       const builder = new TestBuilder();
 
-      const peer = builder.createPeer({ dataSpaceParams: { lazySpaceOpen: true } });
+      const peer = builder.createPeer();
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
@@ -191,7 +191,7 @@ describe('DataSpaceManager', () => {
     test('deactivate lazily loaded space ', async () => {
       const builder = new TestBuilder();
 
-      const peer = builder.createPeer({ dataSpaceParams: { lazySpaceOpen: true } });
+      const peer = builder.createPeer();
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 

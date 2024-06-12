@@ -14,6 +14,7 @@ import {
   type PropertiesProps,
   type Space,
 } from '@dxos/client-protocol';
+import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query } from '@dxos/echo-db';
@@ -49,6 +50,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   constructor(
+    private readonly _config: Config,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
     private readonly _getIdentityKey: () => PublicKey | undefined,
@@ -113,6 +115,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         let spaceProxy = newSpaces.find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy | undefined;
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
+
+          if (space.state !== SpaceState.INACTIVE && !this._config.values.runtime?.client?.lazySpaceOpen) {
+            void spaceProxy.open().catch();
+          }
 
           // Propagate space state updates to the space list observable.
           spaceProxy._stateUpdate.on(this._ctx, () => {
