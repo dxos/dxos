@@ -62,9 +62,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
       for (const object of objects) {
         const content = object.content;
         if (content instanceof TextV0Type) {
-          subscriptions.push(
-            getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)),
-          );
+          subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
         }
       }
     }

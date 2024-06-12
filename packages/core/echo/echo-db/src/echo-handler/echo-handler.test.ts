@@ -37,8 +37,8 @@ import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
 import { AutomergeContext, getObjectCore } from '../core-db';
-import { EchoDatabaseImpl } from '../proxy-db';
 import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
