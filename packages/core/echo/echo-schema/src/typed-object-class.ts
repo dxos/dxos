@@ -9,19 +9,27 @@ import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations
 import { schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
 
-type EchoClassOptions = {
+type TypedObjectOptions = {
   partial?: true;
 };
 
-export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
+/**
+ * Marker interface for typed objects (for type inference).
+ */
+export interface AbstractTypedObject<Fields> extends S.Schema<Fields> {
+  // Type constructor.
   new (): Fields;
+  // Fully qualified type name.
   readonly typename: string;
 }
 
+/**
+ * Base class factory for typed objects.
+ */
 // TODO(burdon): Rename ObjectType.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
-    Options extends EchoClassOptions,
+    Options extends TypedObjectOptions,
     SchemaFields extends Struct.Fields,
     SimplifiedFields = Options['partial'] extends boolean
       ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
@@ -30,7 +38,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   >(
     fields: SchemaFields,
     options?: Options,
-  ): EchoSchemaClass<Fields> => {
+  ): AbstractTypedObject<Fields> => {
     const fieldsSchema = S.mutable(options?.partial ? S.partial(S.Struct(fields)) : S.Struct(fields));
     const typeSchema = S.extend(fieldsSchema, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
@@ -49,7 +57,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('use create(MyClass, fields) to instantiate an object');
+        throw new Error('Use create(MyClass, fields) to instantiate an object.');
       }
     } as any;
   };

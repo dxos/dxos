@@ -9,7 +9,14 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
+import {
+  cloneObject,
+  getSpaceProperty,
+  setSpaceProperty,
+  FolderType,
+  SpaceSerializer,
+  TextV0Type,
+} from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -297,7 +304,8 @@ export const SpacePlugin = ({
         },
       },
       echo: {
-        schema: [FolderType],
+        // TODO(burdon): System types.
+        schema: [FolderType, TextV0Type],
       },
       surface: {
         component: ({ data, role }) => {

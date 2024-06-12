@@ -6,8 +6,12 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import {
+  requireTypeReference,
+  EXPANDO_TYPENAME,
+  type AbstractTypedObject,
+  type EchoReactiveObject,
+} from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
@@ -80,11 +84,11 @@ export class Filter<T extends {} = any> {
   }
 
   static schema<T extends {} = any>(
-    schema: S.Schema<T>,
+    schema: AbstractTypedObject<T>,
     filter?: Record<string, any> | OperatorFilter<T>,
   ): Filter<Mutable<T>>;
 
-  static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
+  static schema(schema: AbstractTypedObject<any>, filter?: Record<string, any> | OperatorFilter): Filter {
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
     return this._fromTypeWithPredicate(typeReference, filter);

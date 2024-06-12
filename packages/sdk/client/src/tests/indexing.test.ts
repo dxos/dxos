@@ -61,16 +61,16 @@ describe('Index queries', () => {
     const client = new Client({ services });
     await client.initialize();
     for (const schema of [ContactType, DocumentType, TextV0Type]) {
-      client.experimental.graph.schemaRegistry.addSchema(schema);
+      client.addSchema(schema);
     }
+
     return client;
   };
 
   const addObjects = async <T extends {}>(space: Space, objects: EchoReactiveObject<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
-      const results = space.db.add(object);
-      return results;
+      return space.db.add(object);
     });
 
     await space.db.flush();

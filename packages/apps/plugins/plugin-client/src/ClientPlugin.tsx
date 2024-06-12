@@ -5,7 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -18,6 +18,7 @@ import {
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN } from './meta';
@@ -96,8 +97,6 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
-        // TODO(wittjosiah): Why is this here? Remove?
-        client.addSchema(TextV0Type);
         await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -173,6 +172,7 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
+        log.info('>>>>>>>>>>>>>>', plugin.meta);
         client.addSchema(...plugin.provides.echo.schema);
       });
     },

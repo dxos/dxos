@@ -11,9 +11,9 @@ import {
   type ClientServicesProvider,
   type Echo,
   type Halo,
-  PropertiesSchema,
   DEFAULT_CLIENT_CHANNEL,
   STATUS_TIMEOUT,
+  PropertiesType,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
 import type { Stream } from '@dxos/codec-protobuf';
@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.schemaRegistry.addSchema(PropertiesSchema);
+    this._echoClient.graph.schemaRegistry.addSchema(PropertiesType);
   }
 
   [inspect.custom]() {
@@ -217,6 +217,8 @@ export class Client {
 
   // TODO(dmaretskyi): Expose `graph` directly?
   addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
+    log.info('addSchema', { schema: schemaList.map((s) => s.typename) });
+
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
     //   throw new ApiError('Client not open.');
