@@ -7,14 +7,14 @@ import { expect } from 'chai';
 import { waitForCondition } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { Context } from '@dxos/context';
 import { AlreadyJoinedError, AuthorizationError } from '@dxos/protocols';
 import { ConnectionState, Invitation, SpaceMember } from '@dxos/protocols/proto/dxos/client/services';
 import { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { afterTest, describe, test } from '@dxos/test';
-import { range } from '@dxos/util';
 
-import { Client } from '../client';
-import { TestBuilder } from '../testing';
+import { type Client } from '../client';
+import { createInitializedClientsWithContext } from '../testing';
 
 describe('Spaces/member-management', () => {
   test('admins can remove members', async () => {
@@ -101,25 +101,9 @@ describe('Spaces/member-management', () => {
   });
 
   const createInitializedClients = async (count: number): Promise<Client[]> => {
-    const testBuilder = new TestBuilder();
-
-    const clients = range(
-      count,
-      () => new Client({ services: testBuilder.createLocalClientServices({ fastPeerPresenceUpdate: true }) }),
-    );
-    const initialized = await Promise.all(
-      clients.map(async (c, index) => {
-        await c.initialize();
-        await c.halo.createIdentity({ displayName: `Peer ${index}` });
-        return c;
-      }),
-    );
-    afterTest(() => destroyClients(initialized));
-    return initialized;
-  };
-
-  const destroyClients = async (clients: Client[]): Promise<void> => {
-    await Promise.all(clients.map((c) => c.destroy()));
+    const context = new Context();
+    afterTest(() => context.dispose());
+    return createInitializedClientsWithContext(context, count, { serviceConfig: { fastPeerPresenceUpdate: true } });
   };
 });
 
