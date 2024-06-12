@@ -8,6 +8,7 @@ import { getDatabaseFromObject } from '@dxos/echo-db';
 import { type ReactiveObject } from '@dxos/echo-schema';
 
 import { SpaceProxy } from './space-proxy';
+import { DXN } from '@dxos/keys';
 
 export const getSpace = (object: ReactiveObject<any>): Space | undefined => {
   const db = getDatabaseFromObject(object);
@@ -28,6 +29,8 @@ export const isSpace = (object: unknown): object is Space => object instanceof S
  * Fully qualified id of a reactive object is a combination of the space key and the object id.
  *
  * @returns Fully qualified id of a reactive object.
+ *
+ * @deprecated Use {@link getObjectDXN}.
  */
 export const fullyQualifiedId = (object: ReactiveObject<any>): string => {
   const space = getSpace(object);

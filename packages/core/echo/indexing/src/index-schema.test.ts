@@ -18,7 +18,7 @@ describe('IndexSchema', () => {
       },
       // Complaint structure with automerge storage
       system: {
-        type: encodeReference(new Reference(schemaURI)),
+        type: encodeReference(Reference.forType(schemaURI)),
       },
     },
     {
@@ -26,7 +26,7 @@ describe('IndexSchema', () => {
         title: 'first document',
       },
       system: {
-        type: encodeReference(new Reference('@example.org/schema/Document')),
+        type: encodeReference(Reference.forType('@example.org/schema/Document')),
       },
     },
   ];

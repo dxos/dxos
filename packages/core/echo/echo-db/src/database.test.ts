@@ -102,7 +102,7 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getAutomergeObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Task.ast);
-    expect(getType(task)?.itemId).to.eq('example.test.Task');
+    expect(getType(task)?.dxn.isTypeDXNOf('example.test.Task')).to.be.true;
 
     database.add(task);
     await database.flush();
@@ -166,8 +166,8 @@ describe('Database', () => {
       const { objects } = await database.query(Filter.schema(Container)).run();
       const [container] = objects;
       expect(container.objects).to.have.length(2);
-      expect(getType(container.objects![0]!)?.itemId).to.equal(Task.typename);
-      expect(getType(container.objects![1]!)?.itemId).to.equal(Contact.typename);
+      expect(getType(container.objects![0]!)?.dxn.isTypeDXNOf(Task.typename)).to.be.true;
+      expect(getType(container.objects![1]!)?.dxn.isTypeDXNOf(Contact.typename)).to.be.true;
     }
   });
 
@@ -256,8 +256,8 @@ describe('Database', () => {
     database.add(task);
 
     console.log(task.todos![0]);
-    expect(getType(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
-    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
+    expect(getType(task.todos![0] as any)?.dxn.isTypeDXNOf('example.test.Task.Todo')).to.be.true;
+    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].dxn.isTypeDXNOf('example.test.Task.Todo')).to.be.true;
   });
 
   describe('object collections', () => {

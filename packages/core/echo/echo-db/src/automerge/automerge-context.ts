@@ -76,7 +76,7 @@ export class AutomergeContext {
               objectId,
               docId,
               spaceKey,
-              type: object.system?.type?.itemId,
+              type: object.system?.type?.['/'],
             };
           });
         }),

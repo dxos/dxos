@@ -41,6 +41,8 @@ import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { getObjectDXN } from './util';
 
 registerSignalRuntime();
 
@@ -160,7 +162,12 @@ describe('Reactive Object with ECHO database', () => {
 
     let id: string;
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
@@ -169,7 +176,12 @@ describe('Reactive Object with ECHO database', () => {
 
     // Create a new DB instance to simulate a restart
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
@@ -190,7 +202,12 @@ describe('Reactive Object with ECHO database', () => {
     {
       const graph = new Hypergraph();
       graph.schemaRegistry.registerSchema(TypedObjectSchema);
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
@@ -200,7 +217,12 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const graph = new Hypergraph();
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+      const db = new EchoDatabaseImpl({
+        spaceId: await createIdFromSpaceKey(spaceKey),
+        automergeContext,
+        graph,
+        spaceKey,
+      });
       await db._automerge.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
@@ -488,7 +510,12 @@ describe('Reactive Object with ECHO database', () => {
 
       let id: string;
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+        const db = new EchoDatabaseImpl({
+          spaceId: await createIdFromSpaceKey(spaceKey),
+          automergeContext,
+          graph,
+          spaceKey,
+        });
         await db._automerge.open({ rootUrl: doc.url });
         const obj = db.add({ string: 'foo' });
         id = obj.id;
@@ -496,7 +523,12 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
+        const db = new EchoDatabaseImpl({
+          spaceId: await createIdFromSpaceKey(spaceKey),
+          automergeContext,
+          graph,
+          spaceKey,
+        });
         await db._automerge.open({ rootUrl: doc.url });
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
@@ -514,7 +546,7 @@ describe('Reactive Object with ECHO database', () => {
         '@id': employee.id,
         '@meta': { keys: [] },
         name: 'John',
-        worksAt: encodeReference(new Reference(org.id)),
+        worksAt: encodeReference(new Reference(getObjectDXN(org))),
       });
     });
   });

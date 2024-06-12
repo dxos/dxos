@@ -10,6 +10,7 @@ import { type Simplify } from 'effect/Types';
 
 import { checkIdNotPresentOnSchema } from './ast';
 import { type Identifiable, type Ref } from './types';
+import type { DXN } from '@dxos/keys';
 
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
@@ -18,7 +19,7 @@ export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 // TODO(burdon): Make private to this file?
 export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/NamedSchema');
 export type EchoObjectAnnotation = {
-  storedSchemaId?: string;
+  storedSchemaId?: DXN;
   typename: string;
   version: string; // TODO(burdon): Semvar.
 };

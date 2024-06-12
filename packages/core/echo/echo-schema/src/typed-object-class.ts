@@ -8,6 +8,7 @@ import * as S from '@effect/schema/Schema';
 import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
 import { schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
+import { DXN } from '@dxos/keys';
 
 type EchoClassOptions = {
   partial?: true;
@@ -40,7 +41,8 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     return class {
       static readonly typename = args.typename;
       static [Symbol.hasInstance](obj: unknown): obj is Klass {
-        return obj != null && getTypeReference(getSchema(obj))?.itemId === args.typename;
+        const typeDxn = obj != null && getTypeReference(getSchema(obj))?.dxn;
+        return !!typeDxn && typeDxn.isTypeDXNOf(this.typename);
       }
 
       static readonly ast = annotatedSchema.ast;

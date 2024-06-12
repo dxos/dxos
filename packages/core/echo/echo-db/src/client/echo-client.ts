@@ -4,7 +4,7 @@
 
 import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
@@ -13,6 +13,7 @@ import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { AutomergeContext } from '../automerge';
 import { EchoDatabaseImpl } from '../database';
 import { Hypergraph } from '../hypergraph';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 
 export type EchoClientParams = {};
 
@@ -22,7 +23,9 @@ export type ConnectToServiceParams = {
 };
 
 export type ConstructDatabaseParams = {
-  // TODO(dmaretskyi): Consider changing to string id.
+  spaceId: SpaceId;
+
+  // TODO(dmaretskyi): Remove.
   spaceKey: PublicKey;
 
   /**
@@ -100,13 +103,14 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceKey, owningObject }: ConstructDatabaseParams) {
+  constructDatabase({ spaceId, spaceKey, owningObject }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceKey), 'Database already exists.');
     const db = new EchoDatabaseImpl({
+      spaceId,
+      spaceKey,
       automergeContext: this._automergeContext!,
       graph: this._graph,
-      spaceKey,
     });
     this._graph._register(spaceKey, db, owningObject);
     this._databases.set(spaceKey, db);

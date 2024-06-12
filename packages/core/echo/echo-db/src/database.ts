@@ -6,7 +6,7 @@ import { Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { type EchoReactiveObject, getSchema, type ReactiveObject, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
@@ -22,6 +22,11 @@ export type GetObjectByIdOptions = {
 };
 
 export interface EchoDatabase {
+  get spaceId(): SpaceId;
+
+  /**
+   * @deprecated
+   */
   get spaceKey(): PublicKey;
 
   // TODO(burdon): Should this be public?
@@ -87,6 +92,7 @@ export interface EchoDatabase {
 }
 
 export type EchoDatabaseParams = {
+  spaceId: SpaceId;
   graph: Hypergraph;
   automergeContext: AutomergeContext;
   spaceKey: PublicKey;
@@ -104,6 +110,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   public readonly schemaRegistry: DynamicSchemaRegistry;
 
+  private _spaceId: SpaceId;
+
   private _rootUrl: string | undefined = undefined;
 
   /**
@@ -115,8 +123,13 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
+    this._spaceId = params.spaceId;
     this._automerge = new AutomergeDb(params.graph, params.automergeContext, params.spaceKey, this);
     this.schemaRegistry = new DynamicSchemaRegistry(this);
+  }
+
+  get spaceId() {
+    return this._spaceId;
   }
 
   get graph(): Hypergraph {

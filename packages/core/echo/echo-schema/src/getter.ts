@@ -38,7 +38,7 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
     return new Reference(annotation.storedSchemaId);
   }
 
-  return Reference.fromLegacyTypename(annotation.typename);
+  return Reference.forType(annotation.typename);
 };
 
 export const getMeta = <T extends {}>(obj: T): ObjectMeta => {
@@ -53,7 +53,7 @@ export const isDeleted = <T extends {}>(obj: T): boolean => {
   return proxyHandlerSlot.handler?.isDeleted(obj) ?? false;
 };
 
-// TODO(burdon): Replace most uses with getTypename (and rename itemId property).
+// TODO(burdon): Return DXN.
 export const getType = <T extends {}>(obj: T | undefined): Reference | undefined => {
   if (obj == null) {
     return undefined;
@@ -67,7 +67,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
-export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.itemId;
+export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.dxn.toString();
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);

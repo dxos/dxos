@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import { getAutomergeObjectCore } from './automerge';
 import { type EchoDatabase } from './database';
 import { Filter } from './query';
+import { getObjectDXN } from './echo-handler';
+import type { DXN } from '@dxos/keys';
 
 type OnSchemaListChangedFn = (schemaList: DynamicEchoSchema[]) => void;
 
@@ -41,7 +43,7 @@ export class DynamicSchemaRegistry {
     return storedSchemaId != null && this.getById(storedSchemaId) != null;
   }
 
-  public getById(id: string): DynamicEchoSchema | undefined {
+  public getById(id: DXN): DynamicEchoSchema | undefined {
     const existing = this._schemaById.get(id);
     if (existing != null) {
       return existing;
@@ -87,7 +89,10 @@ export class DynamicSchemaRegistry {
       jsonSchema: {},
     });
     const updatedSchema = schema.annotations({
-      [EchoObjectAnnotationId]: { ...typeAnnotation, storedSchemaId: schemaToStore.id } satisfies EchoObjectAnnotation,
+      [EchoObjectAnnotationId]: {
+        ...typeAnnotation,
+        storedSchemaId: getObjectDXN(schemaToStore),
+      } satisfies EchoObjectAnnotation,
     });
     schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
     const storedSchema = this.db.add(schemaToStore);

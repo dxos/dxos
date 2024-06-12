@@ -511,7 +511,7 @@ export interface ItemsUpdatedEvent {
 export const shouldObjectGoIntoFragmentedSpace = (core: AutomergeObjectCore) => {
   // NOTE: We need to store properties in the root document since space-list initialization
   //  expects it to be loaded as space become available.
-  return core.getType()?.itemId !== TYPE_PROPERTIES;
+  return core.getType()?.dxn.isTypeDXNOf(TYPE_PROPERTIES);
 };
 
 /**

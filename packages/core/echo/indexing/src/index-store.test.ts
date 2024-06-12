@@ -23,10 +23,10 @@ describe('IndexStore', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      { data: { name: 'John' }, system: { type: encodeReference(Reference.forType(schemaURI)) } },
       {
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+        system: { type: encodeReference(Reference.forType('@example.org/schema/Document')) },
       },
     ];
 
@@ -60,10 +60,10 @@ describe('IndexStore', () => {
 
     const schemaURI = '@example.org/schema/Contact';
     const objects: Partial<ObjectStructure>[] = [
-      { data: { name: 'John' }, system: { type: encodeReference(new Reference(schemaURI)) } },
+      { data: { name: 'John' }, system: { type: encodeReference(Reference.forType(schemaURI)) } },
       {
         data: { title: 'first document' },
-        system: { type: encodeReference(new Reference('@example.org/schema/Document')) },
+        system: { type: encodeReference(Reference.forType('@example.org/schema/Document')) },
       },
     ];
 
@@ -85,7 +85,7 @@ describe('IndexStore', () => {
 
       await loadedIndex.update('3', {
         data: { name: 'John' },
-        system: { type: encodeReference(new Reference(schemaURI)) },
+        system: { type: encodeReference(Reference.forType(schemaURI)) },
       });
       await store.save(loadedIndex);
     }

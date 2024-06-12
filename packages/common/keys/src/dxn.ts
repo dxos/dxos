@@ -1,6 +1,14 @@
 import { invariant } from '@dxos/invariant';
 
 export class DXN {
+  /**
+   * Kind constants.
+   */
+  static kind = Object.freeze({
+    ECHO: 'echo',
+    TYPE: 'type',
+  });
+
   static parse(dxn: string): DXN {
     const [prefix, kind, ...parts] = dxn.split(':');
     if (!(prefix === 'dxn')) throw new Error('Invalid DXN');
@@ -24,5 +32,9 @@ export class DXN {
 
   get parts() {
     return this.#parts;
+  }
+
+  isTypeDXNOf(typename: string) {
+    return this.#kind == DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 }

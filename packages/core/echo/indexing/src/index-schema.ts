@@ -4,9 +4,9 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { Reference, decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
 import { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { trace } from '@dxos/tracing';
@@ -105,4 +105,17 @@ export class IndexSchema extends Resource implements Index {
   }
 }
 
-const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => object.system?.type?.itemId ?? null;
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => {
+  if (!object.system?.type) {
+    return null;
+  }
+
+  const dxn = decodeReference(object.system?.type).dxn;
+
+  // TODO(dmaretskyi): Handle dynamic schema.
+  if (dxn.kind !== DXN.kind.TYPE) {
+    return null;
+  }
+
+  return dxn.parts[0];
+};

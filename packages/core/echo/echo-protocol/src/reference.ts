@@ -2,33 +2,30 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ItemID } from '@dxos/protocols';
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { DXN, type SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Comment.
 export class Reference {
   static fromValue(value: ReferenceValue): Reference {
-    return new Reference(value.itemId, value.protocol, value.host);
+    return new Reference(DXN.parse(value.dxn));
   }
 
-  /**
-   * @deprecated
-   */
-  // TODO(burdon): Document/remove?
-  static fromLegacyTypename(type: string): Reference {
-    return new Reference(type, 'protobuf', 'dxos.org');
+  static forType(typename: string): Reference {
+    return new Reference(new DXN(DXN.kind.TYPE, [typename]));
+  }
+
+  static forEchoObject(spaceId: SpaceId, objectId: string): Reference {
+    return new Reference(new DXN(DXN.kind.ECHO, [spaceId, objectId]));
   }
 
   // prettier-ignore
   constructor(
-    // TODO(burdon): Change to objectId (and typename).
-    public readonly itemId: ItemID,
-    public readonly protocol?: string,
-    public readonly host?: string
+    public readonly dxn: DXN,
   ) {}
 
   encode(): ReferenceValue {
-    return { itemId: this.itemId, host: this.host, protocol: this.protocol };
+    return { dxn: this.dxn.toString() };
   }
 }
 
@@ -38,22 +35,19 @@ export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
  * Reference as it is stored in Automerge document.
  */
 export type EncodedReferenceObject = {
-  '@type': typeof REFERENCE_TYPE_TAG;
-  itemId: string | null;
-  protocol: string | null;
-  host: string | null;
+  /**
+   * Stringified DXN.
+   */
+  '/': string;
 };
 
-export const encodeReference = (reference: Reference): EncodedReferenceObject => ({
-  '@type': REFERENCE_TYPE_TAG,
-  // NOTE: Automerge do not support undefined values, so we need to use null instead.
-  itemId: reference.itemId ?? null,
-  protocol: reference.protocol ?? null,
-  host: reference.host ?? null,
-});
+export const encodeReference = (reference: Reference): EncodedReferenceObject => ({ '/': reference.dxn.toString() });
 
-export const decodeReference = (value: any) =>
-  new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
+export const decodeReference = (value: any) => new Reference(DXN.parse(value['/']));
 
 export const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
-  typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
+  typeof value === 'object' &&
+  value !== null &&
+  Object.keys(value).length === 1 &&
+  '/' in value &&
+  typeof value['/'] === 'string';

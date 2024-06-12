@@ -1,18 +1,20 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/types",
+    "outDir": "dist/types"
   },
-  "include": ["src"],
+  "include": [
+    "src"
+  ],
   "references": [
     {
-      "path": "../debug",
+      "path": "../debug"
     },
     {
-      "path": "../invariant",
+      "path": "../invariant"
     },
     {
-      "path": "../node-std",
-    },
-  ],
+      "path": "../node-std"
+    }
+  ]
 }
