@@ -325,27 +325,38 @@ export const DeckPlugin = ({
             case NavigationAction.OPEN: {
               // TODO(wittjosiah): Factor out.
               batch(() => {
+                const newPlankPositioning = settings.values.newPlankPositioning;
+
                 if (intent.data) {
                   location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
                           (acc: ActiveParts, [part, ids]) => {
-                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
                             if (part === 'main') {
                               const partMembers = new Set<string>();
                               const prev = new Set(
-                                // TODO(burdon): Explain why this can be an array or string.
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
-                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
-                              //   the current `main` part newly opened slugs are added.
-                              Array.from(prev).forEach((id) => partMembers.add(id));
-                              // Add to end.
-                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
+
+                              const newIds = Array.isArray(ids) ? ids : [ids];
+
+                              switch (newPlankPositioning) {
+                                case 'start':
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  prev.forEach((id) => partMembers.add(id));
+                                  break;
+
+                                case 'end':
+                                  prev.forEach((id) => partMembers.add(id));
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  break;
+
+                                default:
+                                  throw new Error(`Unhandled Case of NewPlankPosition: ${newPlankPositioning}`);
+                              }
+
                               acc[part] = Array.from(partMembers).filter(Boolean);
                             } else {
-                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
-                              //   that position.
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
 
