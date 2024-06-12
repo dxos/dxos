@@ -75,6 +75,7 @@ export const migrations: Migration[] = [
 
       // Update root folder reference to collection.
       await builder.changeProperties((propertiesStructure) => {
+        // `getDeep` because the root folder property used to be nested.
         const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
         propertiesStructure.data[CollectionType.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
