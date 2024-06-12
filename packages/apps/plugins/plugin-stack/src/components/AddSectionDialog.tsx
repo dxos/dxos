@@ -3,7 +3,7 @@
 //
 import React, { useCallback, useState } from 'react';
 
-import { StackView, type Collection } from '@braneframe/types';
+import { StackView, type CollectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction } from '@dxos/app-framework';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -16,7 +16,7 @@ import { nonNullable } from '@dxos/util';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides } from '../types';
 
-type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: Collection };
+type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 
 export const dataHasAddSectionDialogProps = (data: any): data is { subject: AddSectionDialogProps } => {
   return (

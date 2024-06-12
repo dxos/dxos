@@ -4,7 +4,7 @@
 
 import React, { type FC, useContext, useState } from 'react';
 
-import { Collection } from '@braneframe/types';
+import { type CollectionType } from '@braneframe/types';
 import {
   Surface,
   useIntentDispatcher,
@@ -26,7 +26,7 @@ import { Layout, PageNumber, Pager, StartButton } from './Presenter';
 import { PRESENTER_PLUGIN } from '../meta';
 import { PresenterContext, TOGGLE_PRESENTATION } from '../types';
 
-const PresenterMain: FC<{ collection: Collection }> = ({ collection }) => {
+const PresenterMain: FC<{ collection: CollectionType }> = ({ collection }) => {
   const [slide, setSlide] = useState(0);
 
   // TODO(burdon): Should not depend on split screen.

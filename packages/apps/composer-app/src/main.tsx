@@ -46,7 +46,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { type Collection } from '@braneframe/types';
+import { DocumentType, TextV0Type, CollectionType } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -267,9 +267,8 @@ const main = async () => {
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
         onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
-          const { DocumentType, TextV0Type, Collection } = await import('@braneframe/types');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-          const personalSpaceCollection = client.spaces.default.properties[Collection.typename] as Collection;
+          const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
           const content = create(TextV0Type, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
           personalSpaceCollection?.objects.push(document);

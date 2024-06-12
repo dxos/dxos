@@ -11,12 +11,12 @@ import { afterTest, describe, test } from '@dxos/test';
 
 import { ObjectSerializer } from './object-serializer';
 import { type SerializedSpace } from './types';
-import { DocumentType, Collection, TextV0Type } from '../schema';
+import { DocumentType, CollectionType, TextV0Type } from '../schema';
 
 const createSpace = async (client: Client, name: string | undefined = undefined) => {
   const space = await client.spaces.create(name ? { name } : undefined);
   await space.waitUntilReady();
-  space.properties[Collection.typename] = create(Collection, { objects: [], views: {} });
+  space.properties[CollectionType.typename] = create(CollectionType, { objects: [], views: {} });
   await space.db.flush();
   return space;
 };
@@ -28,7 +28,7 @@ describe('Serialization', () => {
 
     const client = new Client({ services: builder.createLocalClientServices() });
     await client.initialize();
-    client.addSchema(Collection, DocumentType, TextV0Type);
+    client.addSchema(CollectionType, DocumentType, TextV0Type);
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 
@@ -38,7 +38,7 @@ describe('Serialization', () => {
     let serialized: SerializedSpace;
     {
       const space1 = await createSpace(client, 'test-1');
-      const { objects } = space1.properties[Collection.typename] as Collection;
+      const { objects } = space1.properties[CollectionType.typename] as CollectionType;
       objects.push(create(DocumentType, { content: create(TextV0Type, { content }) }));
 
       serialized = await serializer.serializeSpace(space1);
@@ -50,7 +50,7 @@ describe('Serialization', () => {
     {
       const space2 = await createSpace(client, 'test-2');
       const space3 = await serializer.deserializeObjects(space2, serialized);
-      const { objects } = space3.properties[Collection.typename] as Collection;
+      const { objects } = space3.properties[CollectionType.typename] as CollectionType;
 
       const object = objects[0]!;
       expect(object instanceof DocumentType).to.be.true;

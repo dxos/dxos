@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { Collection, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -144,8 +144,8 @@ export const SpacePlugin = ({
       // Create root collection structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceCollection = create(Collection, { objects: [], views: {} });
-        defaultSpace.properties[Collection.typename] = personalSpaceCollection;
+        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
+        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -282,14 +282,14 @@ export const SpacePlugin = ({
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
-          [Collection.typename]: {
+          [CollectionType.typename]: {
             placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
             icon: (props: IconProps) => <CardsThree {...props} />,
           },
         },
       },
       echo: {
-        schema: [Collection],
+        schema: [CollectionType],
       },
       surface: {
         component: ({ data, role, ...rest }) => {
@@ -299,8 +299,8 @@ export const SpacePlugin = ({
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(primary) ? (
-                <Surface data={{ active: primary.properties[Collection.typename] }} role={role} {...rest} />
-              ) : primary instanceof Collection ? (
+                <Surface data={{ active: primary.properties[CollectionType.typename] }} role={role} {...rest} />
+              ) : primary instanceof CollectionType ? (
                 { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
@@ -379,7 +379,7 @@ export const SpacePlugin = ({
               const space = isSpace(data.object) ? data.object : getSpace(data.object);
               const object = isSpace(data.object)
                 ? data.object.state.get() === SpaceState.READY
-                  ? (space?.properties[Collection.typename] as Collection)
+                  ? (space?.properties[CollectionType.typename] as CollectionType)
                   : undefined
                 : data.object;
               return space && space !== defaultSpace && object
@@ -395,7 +395,7 @@ export const SpacePlugin = ({
                 : null;
             }
             case 'section':
-              return data.object instanceof Collection ? <CollectionSection collection={data.object} /> : null;
+              return data.object instanceof CollectionType ? <CollectionSection collection={data.object} /> : null;
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             default:
@@ -560,8 +560,8 @@ export const SpacePlugin = ({
               const space = await client.spaces.create(intent.data as PropertiesProps);
               await space.waitUntilReady();
 
-              const collection = create(Collection, { objects: [], views: {} });
-              space.properties[Collection.typename] = collection;
+              const collection = create(CollectionType, { objects: [], views: {} });
+              space.properties[CollectionType.typename] = collection;
               state.enabled.push(space.key);
 
               sharedSpacesCollection?.objects.push(collection);
@@ -690,20 +690,20 @@ export const SpacePlugin = ({
                 return;
               }
 
-              if (intent.data?.target instanceof Collection) {
+              if (intent.data?.target instanceof CollectionType) {
                 intent.data?.target.objects.push(object as Identifiable);
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
 
               const space = intent.data?.target;
               if (isSpace(space)) {
-                const collection = space.properties[Collection.typename];
-                if (collection instanceof Collection) {
+                const collection = space.properties[CollectionType.typename];
+                if (collection instanceof CollectionType) {
                   collection.objects.push(object as Identifiable);
                 } else {
                   // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
-                  const collection = create(Collection, { objects: [object as Identifiable], views: {} });
-                  space.properties[Collection.typename] = collection;
+                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  space.properties[CollectionType.typename] = collection;
                 }
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }

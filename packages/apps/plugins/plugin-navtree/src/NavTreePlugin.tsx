@@ -6,7 +6,7 @@ import { MagnifyingGlass, type IconProps } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import React from 'react';
 
-import { Collection } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import {
   type GraphBuilderProvides,
   resolvePlugin,
@@ -57,7 +57,7 @@ export const NavTreePlugin = (): PluginDefinition<NavTreePluginProvides> => {
   const filterLongestPath: NodeFilter = (node, connectedNode): node is Node => {
     // Omit children of collections from the longest path filter.
     // Since objects can be in multiple collections we want all their children to be shown.
-    if (connectedNode.data instanceof Collection) {
+    if (connectedNode.data instanceof CollectionType) {
       return true;
     }
 

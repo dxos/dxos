@@ -5,9 +5,9 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { Collection, StackView } from '@braneframe/types';
+import { CollectionType, StackView } from '@braneframe/types';
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { UnsubscribeCallback } from '@dxos/async';
+import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -77,13 +77,13 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           }
           switch (role) {
             case 'main':
-              return data.active instanceof Collection ? (
+              return data.active instanceof CollectionType ? (
                 <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
                   <StackMain collection={data.active} separation={settings.values.separation} />
                 </Main.Content>
               ) : null;
             case 'article':
-              return data.object instanceof Collection ? (
+              return data.object instanceof CollectionType ? (
                 <div role='none' className='row-span-2 overflow-auto'>
                   <StackMain collection={data.object} separation={settings.values.separation} />
                 </div>

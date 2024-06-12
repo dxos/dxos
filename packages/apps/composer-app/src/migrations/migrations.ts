@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Collection } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import { loadObjectReferences } from '@dxos/echo-db';
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration, type ObjectStructure } from '@dxos/migrations';
@@ -29,7 +29,7 @@ export const migrations: Migration[] = [
     next: async ({ space, builder }) => {
       const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
       const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
-      const { objects: collections } = await space.db.query(Filter.schema(Collection)).run();
+      const { objects: collections } = await space.db.query(Filter.schema(CollectionType)).run();
 
       // Delete any existing collections from failed migrations.
       for (const collection of collections) {
@@ -39,7 +39,7 @@ export const migrations: Migration[] = [
       // Migrate folders to collections.
       for (const folder of folders) {
         await builder.migrateObject(folder.id, ({ data }) => ({
-          schema: Collection,
+          schema: CollectionType,
           props: {
             name: data.name,
             objects: data.objects,
@@ -63,7 +63,7 @@ export const migrations: Migration[] = [
 
         await builder.migrateObject(stack.id, ({ data }) => {
           return {
-            schema: Collection,
+            schema: CollectionType,
             props: {
               name: data.title,
               objects: sectionStructures.map((section) => section.data.object),
@@ -77,21 +77,21 @@ export const migrations: Migration[] = [
       await builder.changeProperties((propertiesStructure) => {
         // TODO(wittjosiah): This doesn't work.
         const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
-        propertiesStructure.data[Collection.typename] = prevRootFolder ? { ...prevRootFolder } : null;
+        propertiesStructure.data[CollectionType.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
     },
   },
   {
     version: '2024-06-10-root-collection',
     next: async ({ space, builder }) => {
-      if (space.properties[Collection.typename]) {
+      if (space.properties[CollectionType.typename]) {
         return;
       }
 
-      const rootId = await builder.addObject(Collection, { objects: [], views: {} });
+      const rootId = await builder.addObject(CollectionType, { objects: [], views: {} });
       const rootCollection = await builder.findObject(rootId);
       await builder.changeProperties((propertiesStructure) => {
-        propertiesStructure.data[Collection.typename] = rootCollection ? { ...rootCollection } : null;
+        propertiesStructure.data[CollectionType.typename] = rootCollection ? { ...rootCollection } : null;
       });
     },
   },

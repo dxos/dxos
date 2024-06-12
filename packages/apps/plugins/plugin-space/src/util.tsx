@@ -20,7 +20,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, Collection, TextV0Type } from '@braneframe/types';
+import { cloneObject, CollectionType, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject } from '@dxos/echo-schema';
@@ -51,7 +51,7 @@ const getFolderGraphNodePartials = ({
   space,
 }: {
   graph: Graph;
-  collection: Collection;
+  collection: CollectionType;
   space: Space;
 }) => {
   return {
@@ -135,9 +135,9 @@ export const updateGraphWithSpace = ({
       space.state.get() === SpaceState.READY &&
       !!Migrations.versionProperty &&
       space.properties[Migrations.versionProperty] !== Migrations.targetVersion;
-    const collection = space.state.get() === SpaceState.READY && space.properties[Collection.typename];
+    const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
     const partials =
-      space.state.get() === SpaceState.READY && collection instanceof Collection
+      space.state.get() === SpaceState.READY && collection instanceof CollectionType
         ? getFolderGraphNodePartials({ graph, collection, space })
         : {};
 
@@ -216,7 +216,7 @@ export const updateGraphWithSpace = ({
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: collection, object: create(Collection, { objects: [], views: {} }) },
+                  data: { target: collection, object: create(CollectionType, { objects: [], views: {} }) },
                 },
                 {
                   action: NavigationAction.OPEN,
@@ -375,7 +375,7 @@ const updateGraphWithSpaceObjects = ({
 
   const unsubscribeQueryHandler = effect(() => {
     const collection =
-      space.state.get() === SpaceState.READY ? (space.properties[Collection.typename] as Collection) : null;
+      space.state.get() === SpaceState.READY ? (space.properties[CollectionType.typename] as CollectionType) : null;
     const collectionObjects = collection?.objects ?? [];
     const removedObjects =
       previousObjects
@@ -389,7 +389,7 @@ const updateGraphWithSpaceObjects = ({
       // Cleanup when objects removed from space.
       removedObjects.filter(nonNullable).forEach((object) => {
         const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
-        if (object instanceof Collection) {
+        if (object instanceof CollectionType) {
           graph.removeNode(getId());
           graph.removeNode(getId(SpaceAction.ADD_OBJECT));
           graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')));
@@ -404,7 +404,7 @@ const updateGraphWithSpaceObjects = ({
         const getId = (id?: string) => (id ? `${id}/${fullyQualifiedId(object)}` : fullyQualifiedId(object));
 
         // When object is a collection but not the root collection.
-        if (object instanceof Collection && collection && object !== collection) {
+        if (object instanceof CollectionType && collection && object !== collection) {
           const partials = getFolderGraphNodePartials({ graph, collection: object, space });
 
           graph.addNodes({
@@ -463,7 +463,7 @@ const updateGraphWithSpaceObjects = ({
                 {
                   plugin: SPACE_PLUGIN,
                   action: SpaceAction.ADD_OBJECT,
-                  data: { target: object, object: create(Collection, { objects: [], views: {} }) },
+                  data: { target: object, object: create(CollectionType, { objects: [], views: {} }) },
                 },
                 {
                   action: NavigationAction.OPEN,
@@ -494,7 +494,7 @@ const updateGraphWithSpaceObjects = ({
               }),
             properties: {
               label: [
-                object instanceof Collection ? 'rename collection label' : 'rename object label',
+                object instanceof CollectionType ? 'rename collection label' : 'rename object label',
                 { ns: SPACE_PLUGIN },
               ],
               icon: (props: IconProps) => <PencilSimpleLine {...props} />,
@@ -509,7 +509,7 @@ const updateGraphWithSpaceObjects = ({
             data: ({ node, caller }) => {
               const collection = node
                 .nodes({ direction: 'inbound' })
-                .find(({ data }) => data instanceof Collection)?.data;
+                .find(({ data }) => data instanceof CollectionType)?.data;
               return dispatch([
                 {
                   action: SpaceAction.REMOVE_OBJECT,
@@ -519,11 +519,11 @@ const updateGraphWithSpaceObjects = ({
             },
             properties: {
               label: [
-                object instanceof Collection ? 'delete collection label' : 'delete object label',
+                object instanceof CollectionType ? 'delete collection label' : 'delete object label',
                 { ns: SPACE_PLUGIN },
               ],
               icon: (props) => <Trash {...props} />,
-              keyBinding: object instanceof Collection ? undefined : 'shift+meta+Backspace',
+              keyBinding: object instanceof CollectionType ? undefined : 'shift+meta+Backspace',
               testId: 'spacePlugin.deleteObject',
             },
             edges: [[getId(), 'inbound']],
@@ -572,8 +572,8 @@ export const updateGraphWithAddObjectAction = ({
   dispatch: IntentDispatcher;
 }) => {
   // Include the create document action on all collections.
-  const collectionQuery = space.db.query(Filter.schema(Collection));
-  let previousCollections: Collection[] = [];
+  const collectionQuery = space.db.query(Filter.schema(CollectionType));
+  let previousCollections: CollectionType[] = [];
   const unsubscribeQuery = collectionQuery.subscribe();
   const unsubscribeQueryHandler = effect(() => {
     const removedCollections = previousCollections.filter(

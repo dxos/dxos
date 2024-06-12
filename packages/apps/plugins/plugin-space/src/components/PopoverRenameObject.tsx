@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Collection } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import { type ReactiveObject } from '@dxos/echo-schema';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
@@ -19,7 +19,7 @@ export const PopoverRenameObject = ({ object: obj }: { object: ReactiveObject<an
   const [name, setName] = useState(object.title || object.name || '');
 
   const handleDone = useCallback(() => {
-    if (object instanceof Collection) {
+    if (object instanceof CollectionType) {
       object.name = name;
     } else {
       object.title = name;

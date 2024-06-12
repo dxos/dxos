@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { Collection } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import {
   NavigationAction,
   parseIntentPlugin,
@@ -23,7 +23,7 @@ export const PopoverRemoveObject = ({
   collection: propsCollection,
 }: {
   object: Expando;
-  collection?: Collection;
+  collection?: CollectionType;
 }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
   const deleteButton = useRef<HTMLButtonElement>(null);
@@ -48,14 +48,14 @@ export const PopoverRemoveObject = ({
     const space = getSpace(object);
 
     // Remove object from collection it's in.
-    const collection = propsCollection ?? space?.properties[Collection.typename];
-    if (collection instanceof Collection) {
+    const collection = propsCollection ?? space?.properties[CollectionType.typename];
+    if (collection instanceof CollectionType) {
       const index = collection.objects.indexOf(object);
       index !== -1 && collection.objects.splice(index, 1);
     }
 
     // If the object is a collection, move the objects inside of it to the collection above it.
-    if (object instanceof Collection && collection instanceof Collection) {
+    if (object instanceof CollectionType && collection instanceof CollectionType) {
       object.objects.forEach((obj) => {
         collection.objects.push(obj);
       });

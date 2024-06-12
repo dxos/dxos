@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { type Collection, FileType, StackView } from '@braneframe/types';
+import { type CollectionType, FileType, StackView } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -17,8 +17,8 @@ import {
   useIntent,
   useResolvePlugin,
 } from '@dxos/app-framework';
-import { create, isReactiveObject, getType, EchoReactiveObject } from '@dxos/echo-schema';
-import { getSpace, useQuery, Filter, fullyQualifiedId } from '@dxos/react-client/echo';
+import { create, isReactiveObject, getType, type EchoReactiveObject } from '@dxos/echo-schema';
+import { fullyQualifiedId } from '@dxos/react-client/echo';
 import { Button, ButtonGroup, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import {
@@ -40,7 +40,7 @@ const SectionContent: StackProps['SectionContent'] = ({ data }) => {
 };
 
 type StackMainProps = {
-  collection: Collection;
+  collection: CollectionType;
   separation?: boolean;
 };
 

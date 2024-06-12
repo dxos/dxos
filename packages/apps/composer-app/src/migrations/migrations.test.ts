@@ -4,7 +4,7 @@
 
 import { expect } from 'chai';
 
-import { Collection, DocumentType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
+import { CollectionType, DocumentType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -28,7 +28,7 @@ describe('Composer migrations', () => {
       Expando,
       SectionType,
       StackType,
-      Collection,
+      CollectionType,
       DocumentType,
       TextV0Type,
       ThreadType,
@@ -102,31 +102,31 @@ describe('Composer migrations', () => {
     const builder = new MigrationBuilder(space);
     await migrations[0].next({ space, builder });
 
-    const collectionQuery = space.db.query(Filter.schema(Collection));
+    const collectionQuery = space.db.query(Filter.schema(CollectionType));
     expect((await collectionQuery.run()).objects).to.have.lengthOf(4);
-    const rootCollection = space.properties[Collection.typename] as Collection;
-    expect(rootCollection instanceof Collection).to.be.true;
-    expect(rootCollection.objects[0] instanceof Collection).to.be.true;
-    expect(rootCollection.objects[0]?.objects[0] instanceof Collection).to.be.true;
-    expect(rootCollection.objects[0]?.objects[1] instanceof Collection).to.be.true;
+    const rootCollection = space.properties[CollectionType.typename] as CollectionType;
+    expect(rootCollection instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0] instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[0] instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1] instanceof CollectionType).to.be.true;
     expect(rootCollection.objects[0]?.objects[1]?.objects).to.have.lengthOf(2);
     expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof DocumentType).to.be.true;
     expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
 
   test(migrations[1].version.toString() + ' without root', async () => {
-    expect(space.properties[Collection.typename] instanceof Collection).to.be.false;
+    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.false;
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
-    expect(space.properties[Collection.typename] instanceof Collection).to.be.true;
+    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
   });
 
   test(migrations[1].version.toString() + ' with root', async () => {
-    const root = create(Collection, { objects: [], views: {} });
-    space.properties[Collection.typename] = root;
-    expect(space.properties[Collection.typename] instanceof Collection).to.be.true;
+    const root = create(CollectionType, { objects: [], views: {} });
+    space.properties[CollectionType.typename] = root;
+    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
-    expect(space.properties[Collection.typename]).to.equal(root);
+    expect(space.properties[CollectionType.typename]).to.equal(root);
   });
 });

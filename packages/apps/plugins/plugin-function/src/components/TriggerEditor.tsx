@@ -5,7 +5,14 @@
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { type ChainPromptType, DocumentType, FileType, MessageType, SketchType, Collection } from '@braneframe/types';
+import {
+  type ChainPromptType,
+  DocumentType,
+  FileType,
+  MessageType,
+  SketchType,
+  CollectionType,
+} from '@braneframe/types';
 import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {
@@ -32,7 +39,7 @@ const stateInitialValues = {
     GameType,
     MessageType,
     SketchType,
-    Collection,
+    CollectionType,
   ] as any[],
   selectedSchema: {} as Record<TriggerId, any>,
 };

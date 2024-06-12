@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, type BlockType, TextV0Type, Collection } from '@braneframe/types';
+import { DocumentType, type BlockType, TextV0Type, CollectionType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { AST, create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
@@ -46,7 +46,7 @@ export class ResponseBuilder {
     //
     // Add to collection.
     //
-    if (this._context.object instanceof Collection) {
+    if (this._context.object instanceof CollectionType) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding to collection', { collection: this._context.object.id });
 

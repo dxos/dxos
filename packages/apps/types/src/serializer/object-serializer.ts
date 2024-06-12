@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { serializers } from './serializers';
 import { type SerializedObject, type SerializedSpace, TypeOfExpando } from './types';
 import { UniqueNames } from './util';
-import { Collection } from '../schema';
+import { CollectionType } from '../schema';
 
 export class ObjectSerializer {
   private readonly _uniqueNames = new UniqueNames();
@@ -33,7 +33,7 @@ export class ObjectSerializer {
   }
 
   async serializeObjects(space: Space): Promise<SerializedObject[]> {
-    const spaceRoot = space.properties[Collection.typename] as Collection;
+    const spaceRoot = space.properties[CollectionType.typename] as CollectionType;
     if (!spaceRoot) {
       throw new Error('No root collection.');
     }
@@ -45,7 +45,7 @@ export class ObjectSerializer {
   }
 
   async deserializeObjects(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
-    const spaceRoot = space.properties[Collection.typename] as Collection;
+    const spaceRoot = space.properties[CollectionType.typename] as CollectionType;
     if (!spaceRoot) {
       throw new Error('No root collection.');
     }
@@ -55,14 +55,14 @@ export class ObjectSerializer {
     return space;
   }
 
-  private async _serializeFolder(collection: Collection): Promise<SerializedObject & { type: 'folder' }> {
+  private async _serializeFolder(collection: CollectionType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
     for (const object of collection.objects) {
       if (!object) {
         continue;
       }
 
-      if (object instanceof Collection) {
+      if (object instanceof CollectionType) {
         files.push(await this._serializeFolder(object));
         continue;
       }
@@ -98,18 +98,18 @@ export class ObjectSerializer {
     };
   }
 
-  private async _deserializeFolder(collection: Collection, data: SerializedObject[]): Promise<void> {
+  private async _deserializeFolder(collection: CollectionType, data: SerializedObject[]): Promise<void> {
     for (const file of data) {
       try {
         let object = collection.objects.find((item) => item?.id === file.id);
         switch (file.type) {
           case 'folder': {
             if (!object) {
-              object = create(Collection, { name: file.name, objects: [], views: {} });
+              object = create(CollectionType, { name: file.name, objects: [], views: {} });
               collection.objects.push(object);
             }
 
-            await this._deserializeFolder(object as Collection, file.children);
+            await this._deserializeFolder(object as CollectionType, file.children);
             break;
           }
 
