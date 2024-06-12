@@ -17,10 +17,10 @@ import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 
 const runTests = (
   testNamespace: string,
-  /** Run per test. Expects automatic clean-up with `afterTest`. */
+  /** Run per test. Cleanup-ed automatically. */
   createAdapter: (root?: string) => MaybePromise<{
     adapter: StorageAdapterInterface;
-    /** Would be called automatically with `afterTest`. Exposed for mid-test clean-up. */
+    /** Would be called automatically with `afterTest`. Exposed for mid-test cleanup-s. */
     close: () => MaybePromise<void>;
   }>,
 ) => {
