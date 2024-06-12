@@ -19,10 +19,10 @@ import {
   SLUG_PATH_SEPARATOR,
   Surface,
   type Toast as ToastSchema,
-  useIntent,
   usePlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
-import { Button, Dialog, Main, Popover, Status, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
@@ -136,7 +136,7 @@ const NodePlankHeading = ({
   const label = pending
     ? t('pending heading')
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
     <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
@@ -280,7 +280,7 @@ export const DeckLayout = ({
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
   const searchEnabled = !!usePlugin('dxos.org/plugin/search');
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const navigationData = {
     popoverAnchorId,
     activeIds,
@@ -455,26 +455,35 @@ export const DeckLayout = ({
                         </Plank.Content>
                         {searchEnabled ? (
                           <div role='none' className='grid grid-rows-subgrid row-span-3'>
-                            <Button
-                              variant='ghost'
-                              classNames='p-1'
-                              onClick={() =>
-                                dispatch([
-                                  {
-                                    action: LayoutAction.SET_LAYOUT,
-                                    data: {
-                                      element: 'dialog',
-                                      component: 'dxos.org/plugin/search/Dialog',
-                                      dialogBlockAlign: 'start',
-                                      subject: { action: NavigationAction.SET, position: 'add-after', part },
-                                    },
-                                  },
-                                ])
-                              }
-                            >
-                              <span className='sr-only'>{t('insert plank label')}</span>
-                              <Plus />
-                            </Button>
+                            <Tooltip.Root>
+                              <Tooltip.Trigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  classNames='p-1'
+                                  onClick={() =>
+                                    dispatch([
+                                      {
+                                        action: LayoutAction.SET_LAYOUT,
+                                        data: {
+                                          element: 'dialog',
+                                          component: 'dxos.org/plugin/search/Dialog',
+                                          dialogBlockAlign: 'start',
+                                          subject: { action: NavigationAction.SET, position: 'add-after', part },
+                                        },
+                                      },
+                                    ])
+                                  }
+                                >
+                                  <span className='sr-only'>{t('insert plank label')}</span>
+                                  <Plus />
+                                </Button>
+                              </Tooltip.Trigger>
+                              <Tooltip.Portal>
+                                <Tooltip.Content side='bottom' classNames='z-[70]'>
+                                  {t('insert plank label')}
+                                </Tooltip.Content>
+                              </Tooltip.Portal>
+                            </Tooltip.Root>
                             <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
                           </div>
                         ) : (
