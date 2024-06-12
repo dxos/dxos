@@ -37,7 +37,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -76,6 +76,7 @@ export const DeckPlugin = ({
     customSlots: false,
     enableNativeRedirect: false,
     deck: true,
+    newPlankPositioning: 'start',
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -162,7 +163,8 @@ export const DeckPlugin = ({
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() })
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
