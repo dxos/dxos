@@ -78,19 +78,24 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       transact(() => {
         store.clear();
         const currentVersion = accessor.handle.docSync()?.schema;
-        const version = maybeMigrateSnapshot(
-          store,
-          Object.values(contentRecords ?? {}).map((record) => decode(record)),
-          currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-        );
-
-        if (version !== undefined) {
-          if (version === -1) {
-            this._readonly = true;
-          } else {
-            saveStore(store, accessor);
-          }
+        if (currentVersion === undefined) {
+          saveStore(store, accessor);
         }
+
+        // TODO(wittjosiah): Automatic migrations are disabled for now.
+        // const version = maybeMigrateSnapshot(
+        //   store,
+        //   Object.values(contentRecords ?? {}).map((record) => decode(record)),
+        //   currentVersion !== undefined ? parseInt(currentVersion) : undefined,
+        // );
+
+        // if (version !== undefined) {
+        //   if (version === -1) {
+        //     this._readonly = true;
+        //   } else {
+        //     saveStore(store, accessor);
+        //   }
+        // }
       });
     }
 
@@ -158,17 +163,18 @@ export class AutomergeStoreAdapter implements StoreAdapter {
           store.remove(Array.from(removed));
         }
 
-        if (updated.size) {
-          const currentVersion = accessor.handle.docSync()?.schema;
-          const version = maybeMigrateSnapshot(
-            store,
-            Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
-            currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-          );
-          if (version === -1) {
-            this._readonly = true;
-          }
-        }
+        // TODO(wittjosiah): Automatic migrations are disabled for now.
+        // if (updated.size) {
+        //   const currentVersion = accessor.handle.docSync()?.schema;
+        //   const version = maybeMigrateSnapshot(
+        //     store,
+        //     Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
+        //     currentVersion !== undefined ? parseInt(currentVersion) : undefined,
+        //   );
+        //   if (version === -1) {
+        //     this._readonly = true;
+        //   }
+        // }
       });
 
       this._lastHeads = currentHeads;
@@ -294,15 +300,15 @@ const encode = (value: any): any => {
 };
 
 // Automerge -> TLDraw
-const decode = (value: any): any => {
+const _decode = (value: any): any => {
   if (Array.isArray(value)) {
-    return value.map(decode);
+    return value.map(_decode);
   }
   if (value instanceof A.RawString) {
     return value.toString();
   }
   if (typeof value === 'object' && value !== null) {
-    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, _decode(value)]));
   }
 
   return value;
@@ -313,7 +319,7 @@ const decode = (value: any): any => {
  * @returns The new schema version; undefined if no migration was needed; -1 if error.
  */
 // TODO(burdon): Make readonly if we are behind the records. Need to inform user.
-const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | undefined => {
+const _maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | undefined => {
   try {
     log('loading', { records: records.length, schema: version });
     store.put(records);
