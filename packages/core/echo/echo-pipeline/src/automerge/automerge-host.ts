@@ -76,6 +76,9 @@ export class AutomergeHost {
   }
 
   async open() {
+    // TODO(burdon): Should this be stable?
+    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
+
     // TODO(mykola): remove this before 0.6 release.
     this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
     this._storage = new LevelDBStorageAdapter({
@@ -86,20 +89,24 @@ export class AutomergeHost {
       },
     });
     await this._storage.open?.();
-    this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
     this._clientNetwork = new LocalHostNetworkAdapter();
 
+    // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      network: [this._clientNetwork, this._echoNetworkAdapter],
-      storage: this._storage,
-
       sharePolicy: this._sharePolicy.bind(this),
+      storage: this._storage,
+      network: [
+        // Downstream client.
+        this._clientNetwork,
+        // Upstream swarm.
+        this._echoNetworkAdapter,
+      ],
     });
+
     this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
-
     await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
   }

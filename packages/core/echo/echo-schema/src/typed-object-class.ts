@@ -19,7 +19,7 @@ export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
   readonly typename: string;
 }
 
-// TODO(burdon): Not a good name for schema.
+// TODO(burdon): Rename ObjectType.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
     Options extends EchoClassOptions,

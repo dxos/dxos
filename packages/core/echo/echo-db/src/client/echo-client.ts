@@ -10,10 +10,9 @@ import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
 import { ComplexMap } from '@dxos/util';
 
 import { IndexQuerySourceProvider } from './index-query-source-provider';
-import { AutomergeContext } from '../automerge';
-import { EchoDatabaseImpl } from '../database';
+import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
-import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { EchoDatabaseImpl } from '../proxy-db';
 
 export type EchoClientParams = {};
 
@@ -126,7 +125,7 @@ export class EchoClient extends Resource {
     // Waiting for the database to open since the query can run before the database is ready.
     // TODO(dmaretskyi): Refactor this.
     try {
-      await db.automerge.opened.wait();
+      await db.coreDatabase.opened.wait();
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return undefined;

@@ -16,7 +16,7 @@ import {
 } from '@dxos/protocols/proto/dxos/echo/query';
 import { nonNullable } from '@dxos/util';
 
-import { getAutomergeObjectCore } from '../automerge';
+import { getObjectCore } from '../core-db';
 import { OBJECT_DIAGNOSTICS, type QuerySourceProvider } from '../hypergraph';
 import { type Filter, type QueryResult, type QuerySource } from '../query';
 
@@ -157,7 +157,7 @@ export class IndexQuerySource implements QuerySource {
       return null;
     }
 
-    const core = getAutomergeObjectCore(object);
+    const core = getObjectCore(object);
     const queryResult: QueryResult = {
       id: object.id,
       spaceKey: core.database!.spaceKey,

@@ -15,9 +15,9 @@ import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from './automerge';
-import { type EchoDatabase, type EchoDatabaseImpl } from './database';
+import { type ItemsUpdatedEvent } from './core-db';
 import { prohibitSignalActions } from './guarded-scope';
+import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   Filter,
   filterMatch,
@@ -59,7 +59,7 @@ export class Hypergraph {
   _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
     this._databases.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
-    database.automerge._updateEvent.on(this._onUpdate.bind(this));
+    database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
 
     const map = this._resolveEvents.get(spaceKey);
     if (map) {
@@ -266,9 +266,13 @@ class SpaceQuerySource implements QuerySource {
         return (
           !this._results ||
           this._results.find((result) => result.id === object.id) ||
-          (this._database.automerge._objects.has(object.id) &&
-            !this._database.automerge.getObjectCoreById(object.id)!.isDeleted() &&
-            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)))
+          (this._database.coreDatabase._objects.has(object.id) &&
+            !this._database.coreDatabase.getObjectCoreById(object.id)!.isDeleted() &&
+            filterMatch(
+              this._filter!, //
+              this._database.coreDatabase.getObjectCoreById(object.id),
+              object,
+            ))
         );
       });
 
@@ -315,7 +319,7 @@ class SpaceQuerySource implements QuerySource {
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.automerge._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
+    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();
@@ -329,10 +333,10 @@ class SpaceQuerySource implements QuerySource {
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
     return (
-      this._database.automerge
+      this._database.coreDatabase
         .allObjectCores()
         // TODO(dmaretskyi): Cleanup proxy <-> core.
-        .filter((core) => filterMatch(filter, core))
+        .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })))
         .map((core) => ({
           id: core.id,
           spaceKey: this.spaceKey,

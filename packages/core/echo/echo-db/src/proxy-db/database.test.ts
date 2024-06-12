@@ -18,10 +18,10 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { getAutomergeObjectCore } from './automerge';
-import { clone } from './echo-handler';
-import { Filter } from './query';
-import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from './testing';
+import { getObjectCore } from '../core-db';
+import { clone } from '../echo-handler';
+import { Filter } from '../query';
+import { Contact, Container, EchoTestBuilder, RecordType, Task, TestBuilder, Todo } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
 
@@ -100,13 +100,13 @@ describe('Database', () => {
     const task = create(Task, { title: 'test' });
     expect(task.title).to.eq('test');
     expect(task.id).to.exist;
-    expect(() => getAutomergeObjectCore(task)).to.throw();
+    expect(() => getObjectCore(task)).to.throw();
     expect(getSchema(task)?.ast).to.eq(Task.ast);
     expect(getType(task)?.dxn.isTypeDXNOf('example.test.Task')).to.be.true;
 
     database.add(task);
     await database.flush();
-    expect(getAutomergeObjectCore(task).database).to.exist;
+    expect(getObjectCore(task).database).to.exist;
 
     const { objects: tasks } = await database.query(Filter.schema(Task)).run();
     expect(tasks).to.have.length(1);
@@ -325,7 +325,7 @@ describe('Database', () => {
 
   const createDbWithTypes = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.schemaRegistry.registerSchema(Task, Contact, Container, Todo);
+    graph.schemaRegistry.addSchema(Task, Contact, Container, Todo);
     return { db, graph };
   };
 

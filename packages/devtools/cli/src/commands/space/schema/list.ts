@@ -2,17 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ux } from '@oclif/core';
+import { Flags, ux } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { table, type TableFlags, TABLE_FLAGS } from '@dxos/cli-base';
-import { FunctionDef, FunctionTrigger } from '@dxos/functions';
+import { effectToJsonSchema, type StaticSchema } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';
 
 // TODO(burdon): Option to output JSON schema.
 
 export default class List extends BaseCommand<typeof List> {
+  static override enableJsonFlag = true;
+
   static {
     this.description = 'List schema.';
   }
@@ -21,43 +23,44 @@ export default class List extends BaseCommand<typeof List> {
     ...BaseCommand.flags,
     ...TABLE_FLAGS,
     ...FLAG_SPACE_KEYS,
+    typename: Flags.string({ default: undefined, description: 'Filter objects by typename.' }),
   };
 
   async run(): Promise<any> {
-    const { space: spaceKeys } = this.flags;
-    await this.execWithClient(async ({ client }) => {
-      // TODO(burdon): Registered by plugin?
-      client.addSchema(FunctionDef, FunctionTrigger);
-
-      // TODO(burdon): Doesn't stringify (just returns "null").
-      // TODO(burdon): Reconcile addType with schema.
-      //  space.db.schema.get/list()
-      //  rename runtimeSchemaRegistry
-      const schemas = client.experimental.graph.schemaRegistry.schemas;
-      console.log(schemas.map((s2) => s2));
+    const { key } = this.args;
+    return await this.execWithClient(async ({ client }) => {
+      const space = await this.getSpace(client, key);
+      const typenameFilter = createTypenameFilter(this.flags.typename);
+      const schemas = (await space.db.schema.listAll()).filter(typenameFilter);
       printSchema(schemas, this.flags);
     });
-
-    return await this.execWithSpace(
-      async ({ space }) => {
-        const schemas = await space.db.schemaRegistry.getAll();
-        printSchema(schemas, this.flags);
-      },
-      { spaceKeys },
-    );
   }
 }
 
-const printSchema = (schema: any[], flags: TableFlags = {}) => {
-  return ux.stdout(
-    table(
-      schema,
-      {
-        id: {}, // TODO(burdon): undefined.
-        typename: {}, // TODO(burdon): Sometimes undefined.
-        version: {}, // TODO(burdon): undefined.
-      },
-      flags,
-    ),
-  );
+const createTypenameFilter = (typenameFilter?: string) => {
+  if (!typenameFilter) {
+    return () => true;
+  }
+
+  return (schema: StaticSchema) => schema.typename.toLowerCase().includes(typenameFilter.toLowerCase());
+};
+
+// TODO(burdon): Static vs. dynamic.
+const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
+  const format = {
+    id: {
+      truncate: true,
+    },
+    typename: {},
+    version: {},
+  };
+
+  if (flags.extended) {
+    for (const schema of schemas) {
+      ux.stdout(table([schema], format, flags));
+      console.log(effectToJsonSchema(schema.schema));
+    }
+  } else {
+    ux.stdout(table(schemas, format, flags));
+  }
 };

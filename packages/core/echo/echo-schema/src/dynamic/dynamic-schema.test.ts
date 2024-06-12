@@ -10,8 +10,8 @@ import { expect } from 'chai';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { describe, test } from '@dxos/test';
 
-import { DynamicEchoSchema } from './dynamic-schema';
-import { StoredEchoSchema } from './stored-schema';
+import { DynamicSchema } from './dynamic-schema';
+import { StoredSchema } from './stored-schema';
 import { fieldMeta, getEchoObjectAnnotation, getFieldMetaAnnotation } from '../annotations';
 import { getTypeReference } from '../getter';
 import { create } from '../handler';
@@ -89,10 +89,10 @@ describe('dynamic schema', () => {
     expect(getFieldMetaAnnotation(registered.getProperties()[0], meteNamespace)).to.deep.eq(metaInfo);
   });
 
-  const createDynamicSchema = (schema: S.Schema<any>): DynamicEchoSchema => {
-    const dynamicSchema = new DynamicEchoSchema(
-      create(StoredEchoSchema, {
-        typename: getTypeReference(schema)!.dxn.toString(),
+  const createDynamicSchema = (schema: S.Schema<any>): DynamicSchema => {
+    const dynamicSchema = new DynamicSchema(
+      create(StoredSchema, {
+        typename: getTypeReference(schema)!.itemId,
         version: TEST_SCHEMA_TYPE.version,
         jsonSchema: effectToJsonSchema(schema),
       }),

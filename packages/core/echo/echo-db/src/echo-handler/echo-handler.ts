@@ -8,15 +8,16 @@ import { inspect, type InspectOptionsStylized } from 'node:util';
 import { devtoolsFormatter, type DevtoolsFormatter } from '@dxos/debug';
 import { Reference, encodeReference } from '@dxos/echo-protocol';
 import {
-  DynamicEchoSchema,
+  createReactiveProxy,
+  defineHiddenProperty,
+  getProxyHandlerSlot,
+  isReactiveObject,
+  symbolIsProxy,
+  DynamicSchema,
   type EchoReactiveObject,
   ObjectMetaSchema,
   SchemaValidator,
-  StoredEchoSchema,
-  createReactiveProxy,
-  defineHiddenProperty,
-  isReactiveObject,
-  symbolIsProxy,
+  StoredSchema,
   type ObjectMeta,
   type ReactiveHandler,
 } from '@dxos/echo-schema';
@@ -35,9 +36,8 @@ import {
   type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
-import { getAutomergeObjectCore } from '../automerge';
-import { META_NAMESPACE, type AutomergeObjectCore } from '../automerge/automerge-object-core';
-import { type KeyPath } from '../automerge/key-path';
+import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
+import { type EchoDatabase } from '../proxy-db';
 
 export const PROPERTY_ID = 'id';
 
@@ -169,15 +169,17 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       );
       return createReactiveProxy(newTarget, this);
     }
+
     return decoded;
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
     // object instanceof StoredEchoSchema requires database to lookup schema
-    const database = target[symbolInternals].core.database;
-    if (object != null && database && object instanceof StoredEchoSchema) {
-      return database._dbApi.schemaRegistry.register(object);
+    const database = target[symbolInternals].database;
+    if (object != null && database && object instanceof StoredSchema) {
+      return database.schema.registerSchema(object);
     }
+
     return object;
   }
 
@@ -306,7 +308,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof DynamicEchoSchema ? value.serializedSchema : value;
+    const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
       target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
     );
@@ -322,7 +324,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return ObjectMetaSchema;
     }
     // TODO(?): Make reactive.
-    if (!target[symbolInternals].core.database) {
+    if (!target[symbolInternals].database) {
       return undefined;
     }
 
@@ -331,7 +333,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].core.database.graph.schemaRegistry.getSchema(typeReference.itemId);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.itemId);
     if (staticSchema != null) {
       return staticSchema;
     }
@@ -340,7 +342,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    return target[symbolInternals].core.database._dbApi.schemaRegistry.getById(typeReference.itemId);
+    return target[symbolInternals].database.schema.getSchemaById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
@@ -461,26 +463,30 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return createReactiveProxy(metaTarget, this) as any;
   }
 
+  setDatabase(target: ProxyTarget, database: EchoDatabase): void {
+    target[symbolInternals].database = database;
+  }
+
   /**
    * Store referenced object.
    */
   linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
-    const database = target[symbolInternals].core.database;
+    const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Fix this.
       if (isReactiveObject(obj) && !isEchoObject(obj)) {
-        database._dbApi.add(obj);
+        database.add(obj);
       }
 
-      const core = getAutomergeObjectCore(obj);
-      if (!core.database) {
-        database._dbApi.add(obj);
-        return new Reference(core.id);
+      const foreignDatabase = (getProxyHandlerSlot(obj).target as ProxyTarget)[symbolInternals].database;
+      if (!foreignDatabase) {
+        database.add(obj);
+        return new Reference(obj.id);
       } else {
-        if (core.database !== database) {
-          return new Reference(core.id, undefined, core.database.spaceKey.toHex());
+        if (foreignDatabase !== database) {
+          return new Reference(obj.id, undefined, foreignDatabase.spaceKey.toHex());
         } else {
-          return new Reference(core.id);
+          return new Reference(obj.id);
         }
       }
     } else {
@@ -499,10 +505,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Lookup referenced object.
    */
   lookupLink(target: ProxyTarget, ref: Reference): EchoReactiveObject<any> | undefined {
-    const database = target[symbolInternals].core.database;
+    const database = target[symbolInternals].database;
     if (database) {
       // This doesn't clean-up properly if the ref at key gets changed, but it doesn't matter since `_onLinkResolved` is idempotent.
-      return database.graph._lookupLink(ref, database._dbApi, () => target[symbolInternals].core.notifyUpdate());
+      return database.graph._lookupLink(ref, database, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
       return target[symbolInternals].linkCache.get(ref.itemId);
@@ -645,7 +651,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   if (value == null || Array.isArray(value)) {
     return;
   }
-  if (value instanceof DynamicEchoSchema) {
+  if (value instanceof DynamicSchema) {
     return;
   }
   const proto = Object.getPrototypeOf(value);
@@ -654,7 +660,7 @@ export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
   }
 };
 
-export const getObjectCoreFromEchoTarget = (target: ProxyTarget): AutomergeObjectCore => target[symbolInternals].core;
+export const getObjectCoreFromEchoTarget = (target: ProxyTarget): ObjectCore => target[symbolInternals].core;
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
 
