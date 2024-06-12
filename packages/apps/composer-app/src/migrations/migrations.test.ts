@@ -6,9 +6,8 @@ import { expect } from 'chai';
 
 import { Collection, DocumentType, MessageType, TextV0Type, ThreadType, setSpaceProperty } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
-import { type Space, Filter, toCursorRange, createDocAccessor } from '@dxos/client/echo';
+import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { create, Expando } from '@dxos/echo-schema';
 import { MigrationBuilder } from '@dxos/migrations';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
 
@@ -114,7 +113,19 @@ describe('Composer migrations', () => {
     expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
 
-  test(migrations[1].version.toString(), async () => {
-    // TODO(wittjosiah): Implement test.
+  test(migrations[1].version.toString() + ' without root', async () => {
+    expect(space.properties[Collection.typename] instanceof Collection).to.be.false;
+    const builder = new MigrationBuilder(space);
+    await migrations[1].next({ space, builder });
+    expect(space.properties[Collection.typename] instanceof Collection).to.be.true;
+  });
+
+  test(migrations[1].version.toString() + ' with root', async () => {
+    const root = create(Collection, { objects: [], views: {} });
+    space.properties[Collection.typename] = root;
+    expect(space.properties[Collection.typename] instanceof Collection).to.be.true;
+    const builder = new MigrationBuilder(space);
+    await migrations[1].next({ space, builder });
+    expect(space.properties[Collection.typename]).to.equal(root);
   });
 });
