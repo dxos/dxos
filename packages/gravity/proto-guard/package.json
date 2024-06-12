@@ -1,6 +1,6 @@
 {
   "name": "@dxos/proto-guard",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "private": true,
   "description": "Test to detect breaking change in DXOS protocols and version them.",
   "homepage": "https://dxos.org",
