@@ -150,9 +150,11 @@ export class DataSpaceManager {
     this._isOpen = true;
     this.updated.emit();
 
-    for (const space of this._spaces.values()) {
-      if (space.state !== SpaceState.INACTIVE) {
-        space.initializeDataPipelineAsync();
+    if (openSpacesOnConstruction) {
+      for (const space of this._spaces.values()) {
+        if (space.state !== SpaceState.INACTIVE) {
+          space.initializeDataPipelineAsync();
+        }
       }
     }
 

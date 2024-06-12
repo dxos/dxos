@@ -528,7 +528,7 @@ export class DataSpace {
 
   @synchronized
   async activate() {
-    if (this._state !== SpaceState.INACTIVE) {
+    if (![SpaceState.CLOSED, SpaceState.INACTIVE].includes(this._state)) {
       return;
     }
 
@@ -542,10 +542,11 @@ export class DataSpace {
     if (this._state === SpaceState.INACTIVE) {
       return;
     }
-
     // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
-    await this._close();
+    if (this._state !== SpaceState.CLOSED) {
+      await this._close();
+    }
     this._state = SpaceState.INACTIVE;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
