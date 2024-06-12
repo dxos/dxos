@@ -11,6 +11,7 @@ import { getSchema, getTypeReference } from './getter';
 
 type TypedObjectOptions = {
   partial?: true;
+  record?: true;
 };
 
 /**
@@ -34,13 +35,16 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
     SimplifiedFields = Options['partial'] extends boolean
       ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
       : SimplifyMutable<Struct.Type<SchemaFields>>,
-    Fields = SimplifiedFields & { id: string },
+    Fields = SimplifiedFields & { id: string } & (Options['record'] extends boolean
+        ? SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
+        : {}),
   >(
     fields: SchemaFields,
     options?: Options,
   ): AbstractTypedObject<Fields> => {
-    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.Struct(fields)) : S.Struct(fields));
-    const typeSchema = S.extend(fieldsSchema, S.Struct({ id: S.String }));
+    const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema) : fieldsSchema);
+    const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
     });
