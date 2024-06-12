@@ -20,7 +20,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, Collection, TextV0Type } from '@braneframe/types';
+import { cloneObject, Collection, TextV0Type } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject } from '@dxos/echo-schema';
@@ -660,12 +660,4 @@ export const getActiveSpace = (graph: Graph, active?: string) => {
   }
 
   return getSpace(node.data);
-};
-
-export const prepareSpaceForMigration = (space: Space) => {
-  // migrations class doesn't know about key splitting using (get|set)SpaceProperty functions
-  // ensure the version set using keySplitting is accessible without key splitting
-  if (Migrations.namespace && !space.properties[Migrations.namespace]) {
-    space.properties[Migrations.namespace] = getSpaceProperty(space, Migrations.namespace);
-  }
 };

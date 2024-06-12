@@ -9,7 +9,6 @@ import { create, getEchoObjectAnnotation, getSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { serializers } from './serializers';
-import { getSpaceProperty } from './space-properties';
 import { type SerializedObject, type SerializedSpace, TypeOfExpando } from './types';
 import { UniqueNames } from './util';
 import { Collection } from '../schema';
@@ -34,9 +33,9 @@ export class ObjectSerializer {
   }
 
   async serializeObjects(space: Space): Promise<SerializedObject[]> {
-    const spaceRoot = getSpaceProperty<Collection>(space, Collection.typename);
+    const spaceRoot = space.properties[Collection.typename] as Collection;
     if (!spaceRoot) {
-      throw new Error('No root folder.');
+      throw new Error('No root collection.');
     }
 
     // Skip root collection.
@@ -46,9 +45,9 @@ export class ObjectSerializer {
   }
 
   async deserializeObjects(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
-    const spaceRoot = getSpaceProperty<Collection>(space, Collection.typename);
+    const spaceRoot = space.properties[Collection.typename] as Collection;
     if (!spaceRoot) {
-      throw new Error('No root folder.');
+      throw new Error('No root collection.');
     }
 
     await this._deserializeFolder(spaceRoot, serializedSpace.objects);

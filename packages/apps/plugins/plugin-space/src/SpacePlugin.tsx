@@ -9,7 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { setSpaceProperty, Collection, SpaceSerializer, cloneObject } from '@braneframe/types';
+import { Collection, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type PluginDefinition,
@@ -72,7 +72,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace, prepareSpaceForMigration } from './util';
+import { SHARED, updateGraphWithSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
@@ -141,7 +141,7 @@ export const SpacePlugin = ({
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
         const personalSpaceCollection = create(Collection, { objects: [], views: {} });
-        setSpaceProperty(defaultSpace, Collection.typename, personalSpaceCollection);
+        defaultSpace.properties[Collection.typename] = personalSpaceCollection;
         if (Migrations.versionProperty) {
           defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
@@ -556,7 +556,7 @@ export const SpacePlugin = ({
               const space = await client.spaces.create(intent.data as PropertiesProps);
 
               const collection = create(Collection, { objects: [], views: {} });
-              setSpaceProperty(space, Collection.typename, collection);
+              space.properties[Collection.typename] = collection;
               await space.waitUntilReady();
               state.enabled.push(space.key);
 
@@ -634,7 +634,6 @@ export const SpacePlugin = ({
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
               }

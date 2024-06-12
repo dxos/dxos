@@ -4,12 +4,13 @@
 
 import { expect } from 'chai';
 
-import { Collection, DocumentType, MessageType, TextV0Type, ThreadType, setSpaceProperty } from '@braneframe/types';
+import { Collection, DocumentType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
 import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { MigrationBuilder } from '@dxos/migrations';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
+import { assignDeep } from '@dxos/util';
 
 import { FolderType, SectionType, StackType, migrations } from './migrations';
 
@@ -91,7 +92,7 @@ describe('Composer migrations', () => {
       }),
     );
     expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
-    setSpaceProperty(space, FolderType.typename, folder1);
+    assignDeep(space, FolderType.typename.split('.'), folder1);
 
     const folderQuery = space.db.query(Filter.schema(FolderType));
     const stackQuery = space.db.query(Filter.schema(StackType));
