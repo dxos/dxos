@@ -418,7 +418,9 @@ export class SpaceProxy implements Space {
       this._databaseInitialized.reset();
     }
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
-    await this._databaseInitialized.wait();
+    while (this._db.rootUrl !== automergeRootUrl) {
+      await this._databaseInitialized.wait();
+    }
   }
 
   private async _removeMember(memberKey: PublicKey) {
