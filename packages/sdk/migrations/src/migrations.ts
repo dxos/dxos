@@ -58,7 +58,7 @@ export class Migrations {
       for (const migration of migrations) {
         const builder = new MigrationBuilder(space);
         await migration.next({ space, builder });
-        builder.changeProperties((propertiesStructure) => {
+        await builder.changeProperties((propertiesStructure) => {
           invariant(this.versionProperty, 'Migrations namespace not set');
           propertiesStructure.data[this.versionProperty] = migration.version;
         });

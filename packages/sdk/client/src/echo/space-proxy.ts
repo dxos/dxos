@@ -236,6 +236,7 @@ export class SpaceProxy implements Space {
         log('set space root', { automergeRoot });
         // NOOP if the root is the same.
         await this._db.setSpaceRoot(automergeRoot);
+        this._databaseInitialized.wake();
       }
     }
 
@@ -413,7 +414,11 @@ export class SpaceProxy implements Space {
     migration,
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
+    if (automergeRootUrl) {
+      this._databaseInitialized.reset();
+    }
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
+    await this._databaseInitialized.wait();
   }
 
   private async _removeMember(memberKey: PublicKey) {
