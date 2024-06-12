@@ -304,6 +304,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (getTypename(target) === 'braneframe.Folder') {
         debugger;
       }
+
       throw new Error();
     } catch (err) {
       log.catch(err);
@@ -324,9 +325,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
-    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
-      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
-    );
+    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
+      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
+    });
     if (propertySchema == null) {
       return unwrappedValue;
     }
@@ -375,7 +376,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, items);
-
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
@@ -409,7 +409,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
-
     const encodedItems = this._encodeForArray(target, items);
 
     let newLength: number = -1;
@@ -427,7 +426,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
-
     const encodedItems = this._encodeForArray(target, items);
 
     let deletedElements: any[] | undefined;
@@ -440,8 +438,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         deletedElements = array.splice(start);
       }
     });
-    invariant(deletedElements);
 
+    invariant(deletedElements);
     return deletedElements;
   }
 
@@ -478,6 +476,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolPath]: [],
       [symbolNamespace]: META_NAMESPACE,
     };
+
     return createReactiveProxy(metaTarget, this) as any;
   }
 
