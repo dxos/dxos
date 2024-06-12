@@ -38,11 +38,15 @@ export type EchoObjectAnnotation = {
   version: string;
 };
 
-export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
+export const getEchoObjectAnnotation = (schema: S.Schema<any>): EchoObjectAnnotation | undefined =>
   pipe(
     AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
+
+// TODO(burdon): Rename.
+export const getEchoObjectTypename = (schema: S.Schema<any>): string | undefined =>
+  getEchoObjectAnnotation(schema)?.typename;
 
 /**
  * Echo object annotation.

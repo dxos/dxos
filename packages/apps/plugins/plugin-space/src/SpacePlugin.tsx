@@ -9,14 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import {
-  cloneObject,
-  getSpaceProperty,
-  setSpaceProperty,
-  FolderType,
-  SpaceSerializer,
-  TextV0Type,
-} from '@braneframe/types';
+import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
@@ -39,6 +32,7 @@ import {
   type Identifiable,
   type ReactiveObject,
   Expando,
+  getTypename,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -100,13 +94,13 @@ export type SpacePluginOptions = {
    *
    * @param params.client DXOS Client
    * @param params.defaultSpace Default space
-   * @param params.personalSpaceFolder Folder representing the contents of the default space
+   * @param params.defaultSpaceRoot Folder representing the contents of the default space
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
-    personalSpaceFolder: FolderType;
+    defaultSpaceRoot: FolderType;
     dispatch: IntentDispatcher;
   }) => Promise<void>;
 
@@ -160,17 +154,21 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = create(FolderType, { objects: [] });
-        setSpaceProperty(defaultSpace, FolderType.typename, personalSpaceFolder);
+        const defaultSpaceRoot = create(FolderType, { objects: [] });
+        console.log(222, getTypename(defaultSpaceRoot), defaultSpaceRoot.objects, defaultSpaceRoot.objects.length);
+        setSpaceProperty(defaultSpace, FolderType.typename, defaultSpaceRoot);
         if (Migrations.versionProperty) {
           setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
         }
+
+        console.log(444);
         await onFirstRun?.({
           client,
           defaultSpace,
-          personalSpaceFolder,
+          defaultSpaceRoot,
           dispatch,
         });
+        console.log(555);
       }
 
       // Enable spaces.
@@ -304,8 +302,7 @@ export const SpacePlugin = ({
         },
       },
       echo: {
-        // TODO(burdon): System types.
-        schema: [FolderType, TextV0Type],
+        schema: [FolderType],
       },
       surface: {
         component: ({ data, role }) => {

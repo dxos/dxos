@@ -21,7 +21,7 @@ import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
-import { getTypename } from '@dxos/echo-schema';
+import { getEchoObjectTypename } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -217,8 +217,8 @@ export class Client {
   }
 
   // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['addSchema']>) {
-    log.info('addSchema', { schema: schemaList.map((s) => getTypename(s)) });
+  addSchema(...schema: Parameters<RuntimeSchemaRegistry['addSchema']>) {
+    log.info('addSchema', { schema: schema.map((s) => getEchoObjectTypename(s)).join() });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
@@ -226,7 +226,7 @@ export class Client {
     // }
 
     // TODO(burdon): Find?
-    const exists = schemaList.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
+    const exists = schema.filter((schema) => !this._echoClient.graph.schemaRegistry.hasSchema(schema));
     if (exists.length > 0) {
       this._echoClient.graph.schemaRegistry.addSchema(...exists);
     }

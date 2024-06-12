@@ -20,8 +20,10 @@ import {
   StoredSchema,
   type ObjectMeta,
   type ReactiveHandler,
+  getTypename,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
@@ -297,16 +299,29 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
+    try {
+      console.log(getTypename(target));
+      if (getTypename(target) === 'braneframe.Folder') {
+        debugger;
+      }
+      throw new Error();
+    } catch (err) {
+      log.catch(err);
+    }
+
     invariant(path.length > 0);
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
     if (rootObjectSchema == null) {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
+        // TODO(burdon): Why throw if exists?
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
+
       return value;
     }
+
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
@@ -315,6 +330,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (propertySchema == null) {
       return unwrappedValue;
     }
+
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }

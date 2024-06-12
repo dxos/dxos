@@ -261,17 +261,23 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
-        onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
+        onFirstRun: async ({ defaultSpaceRoot, dispatch }) => {
           const { DocumentType, TextV0Type } = await import('@braneframe/types');
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const content = create(TextV0Type, { content: INITIAL_CONTENT });
           const document = create(DocumentType, { title: INITIAL_TITLE, content });
-          personalSpaceFolder.objects.push(document);
-          void dispatch({
-            action: NavigationAction.OPEN,
-            data: { activeParts: { main: [fullyQualifiedId(document)] } },
-          });
+          try {
+            // TODO(burdon): Throws here.
+            console.log('c', defaultSpaceRoot, defaultSpaceRoot.objects);
+            defaultSpaceRoot.objects.push(document);
+            void dispatch({
+              action: NavigationAction.OPEN,
+              data: { activeParts: { main: [fullyQualifiedId(document)] } },
+            });
+          } catch (err) {
+            log.catch(err);
+          }
         },
       }),
       [StatusBarMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-status-bar')),
