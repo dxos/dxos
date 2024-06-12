@@ -12,8 +12,8 @@ import {
   NavigationAction,
   LayoutAction,
   type PartIdentifier,
-  useIntent,
   isActiveParts,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { useClient } from '@dxos/react-client';
@@ -71,9 +71,20 @@ export const SearchDialog = ({
   const dangerouslyLoadAllObjects = useQuery(client.spaces);
   const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
   const resultObjects = Array.from(results.keys());
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const handleSelect = useCallback(
     (nodeId: string) => {
+      // If node is already present in the active parts, scroll to it and close the dialog.
+      if (isActiveParts(active)) {
+        const index = Array.isArray(active.main) ? active.main.indexOf(nodeId) : active.main === nodeId ? 0 : -1;
+        if (index !== -1) {
+          return dispatch([
+            { action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } },
+            { action: LayoutAction.SCROLL_INTO_VIEW, data: { id: nodeId } },
+          ]);
+        }
+      }
+
       return dispatch([
         {
           action: NavigationAction.SET,
@@ -96,6 +107,7 @@ export const SearchDialog = ({
     },
     [subject, dispatch, active],
   );
+
   return (
     <Dialog.Content classNames={['md:max-is-[24rem] overflow-hidden mbs-12']}>
       <Dialog.Title>{t('search dialog title')}</Dialog.Title>
