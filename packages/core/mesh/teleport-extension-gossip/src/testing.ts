@@ -54,6 +54,6 @@ export class TestAgent extends TestPeerBase {
   override async destroy() {
     await super.destroy();
     await this.gossip.close();
-    await this.presence.destroy();
+    await this.presence.close();
   }
 }
