@@ -18,7 +18,7 @@ export const serializer: TypedObjectSerializer<ThreadType> = {
     return (
       object.messages
         .filter(nonNullable)
-        .map((message) => message.blocks.map((block) => `${(block.content as any)?.text}`).join(' - '))
+        .map((message) => message.content)
         .join(' | ') ?? ''
     );
   },
