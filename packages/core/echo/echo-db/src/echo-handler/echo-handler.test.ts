@@ -553,18 +553,15 @@ describe('Reactive Object with ECHO database', () => {
     const { db } = await builder.createDatabase();
 
     const obj = db.add(create(Expando, { title: 'Object 1' }));
-
     obj.ref = create(Expando, { title: 'Object 2' });
-
     obj.refs = [create(Expando, { title: 'Object 2' })];
-
     obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
   });
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
 
-    // graph.schemaRegistry.addSchema(TestSchema);
+    graph.schemaRegistry.addSchema([TestSchemaType]);
 
     const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));
     const another = create(TestSchemaType, { string: 'Object 2' });

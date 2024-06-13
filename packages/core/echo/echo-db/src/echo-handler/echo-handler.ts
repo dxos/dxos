@@ -20,10 +20,8 @@ import {
   StoredSchema,
   type ObjectMeta,
   type ReactiveHandler,
-  getTypename,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
@@ -298,18 +296,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
-    // TODO(burdon): Remove.
-    try {
-      console.log(getTypename(target));
-      if (getTypename(target) === 'braneframe.Folder') {
-        debugger;
-      }
-
-      throw new Error();
-    } catch (err) {
-      log.catch(err);
-    }
-
     invariant(path.length > 0);
     throwIfCustomClass(path[path.length - 1], value);
     const rootObjectSchema = this.getSchema(target);
