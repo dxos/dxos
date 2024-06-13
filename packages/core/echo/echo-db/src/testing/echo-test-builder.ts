@@ -147,7 +147,11 @@ export const createDataAssertion = ({
 
       invariant(
         isEqual({ ...received }, { ...seedObject }),
-        `Objects are not equal\nReceived: ${JSON.stringify(received, null, 2)}\nExpected: ${JSON.stringify(seedObject, null, 2)}`,
+        [
+          'Objects are not equal',
+          `Received: ${JSON.stringify(received, null, 2)}`,
+          `Expected: ${JSON.stringify(seedObject, null, 2)}`,
+        ].join('\n'),
       );
       if (referenceEquality) {
         invariant(received === seedObject);

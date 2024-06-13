@@ -262,6 +262,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph.query(filter, {
       ...options,
       spaceIds: [this.spaceId],
+      spaces: [this.spaceKey],
     });
   }
 
