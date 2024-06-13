@@ -118,26 +118,4 @@ describe('Composer migrations', () => {
     expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof DocumentType).to.be.true;
     expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
-
-  test(migrations[1].version.toString() + ' without root', async () => {
-    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.false;
-
-    const builder = new MigrationBuilder(space);
-    await migrations[1].next({ space, builder });
-    await builder._commit();
-
-    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
-  });
-
-  test(migrations[1].version.toString() + ' with root', async () => {
-    const root = create(CollectionType, { objects: [], views: {} });
-    space.properties[CollectionType.typename] = root;
-    expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
-
-    const builder = new MigrationBuilder(space);
-    await migrations[1].next({ space, builder });
-    await builder._commit();
-
-    expect(space.properties[CollectionType.typename].id).to.equal(root.id);
-  });
 });

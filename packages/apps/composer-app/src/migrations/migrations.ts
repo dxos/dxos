@@ -81,18 +81,4 @@ export const migrations: Migration[] = [
       });
     },
   },
-  {
-    version: '2024-06-10-root-collection',
-    next: async ({ space, builder }) => {
-      if (space.properties[CollectionType.typename]) {
-        return;
-      }
-
-      const rootId = await builder.addObject(CollectionType, { objects: [], views: {} });
-      const rootCollection = await builder.findObject(rootId);
-      await builder.changeProperties((propertiesStructure) => {
-        propertiesStructure.data[CollectionType.typename] = rootCollection ? { ...rootCollection } : null;
-      });
-    },
-  },
 ];
