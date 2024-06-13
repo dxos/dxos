@@ -4,6 +4,7 @@
 
 import { type ItemID } from '@dxos/protocols';
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 
 // TODO(burdon): Comment.
 export class Reference {
@@ -19,6 +20,21 @@ export class Reference {
     return new Reference(type, 'protobuf', 'dxos.org');
   }
 
+  static fromDXN(dxn: DXN): Reference {
+    switch (dxn.kind) {
+      case DXN.kind.TYPE:
+        return Reference.fromLegacyTypename(dxn.parts[0]);
+      case DXN.kind.ECHO:
+        if (dxn.parts[0] === LOCAL_SPACE_TAG) {
+          return new Reference(dxn.parts[1]);
+        } else {
+          return new Reference(dxn.parts[1], undefined, dxn.parts[0]);
+        }
+      default:
+        throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+    }
+  }
+
   // prettier-ignore
   constructor(
     // TODO(burdon): Change to objectId (and typename).
@@ -30,6 +46,21 @@ export class Reference {
   encode(): ReferenceValue {
     return { itemId: this.itemId, host: this.host, protocol: this.protocol };
   }
+
+  toDXN(): DXN {
+    if (this.protocol === 'protobuf') {
+      return new DXN(DXN.kind.TYPE, [this.itemId]);
+    } else {
+      if (this.host) {
+        // Host is assumed to be the space key.
+        // The DXN should actually have the space ID.
+        // TODO(dmaretskyi): Migrate to space id.
+        return new DXN(DXN.kind.ECHO, [this.host, this.itemId]);
+      } else {
+        return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, this.itemId]);
+      }
+    }
+  }
 }
 
 export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
@@ -38,22 +69,14 @@ export const REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
  * Reference as it is stored in Automerge document.
  */
 export type EncodedReferenceObject = {
-  '@type': typeof REFERENCE_TYPE_TAG;
-  itemId: string | null;
-  protocol: string | null;
-  host: string | null;
+  '/': string;
 };
 
 export const encodeReference = (reference: Reference): EncodedReferenceObject => ({
-  '@type': REFERENCE_TYPE_TAG,
-  // NOTE: Automerge do not support undefined values, so we need to use null instead.
-  itemId: reference.itemId ?? null,
-  protocol: reference.protocol ?? null,
-  host: reference.host ?? null,
+  '/': reference.toDXN().toString(),
 });
 
-export const decodeReference = (value: any) =>
-  new Reference(value.itemId, value.protocol ?? undefined, value.host ?? undefined);
+export const decodeReference = (value: any) => Reference.fromDXN(DXN.parse(value['/']));
 
 export const isEncodedReferenceObject = (value: any): value is EncodedReferenceObject =>
-  typeof value === 'object' && value !== null && value['@type'] === REFERENCE_TYPE_TAG;
+  typeof value === 'object' && value !== null && Object.keys(value).length === 1 && typeof value['/'] === 'string';

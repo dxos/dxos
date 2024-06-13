@@ -22,7 +22,8 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/protocols": "workspace:*"
+    "@dxos/protocols": "workspace:*",
+    "@dxos/keys": "workspace:*"
   },
   "publishConfig": {
     "access": "public"
