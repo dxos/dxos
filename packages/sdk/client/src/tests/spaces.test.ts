@@ -541,7 +541,7 @@ describe('Spaces', () => {
   };
 
   const registerTypes = (client: Client) => {
-    client.addSchema(DocumentType, TextV0Type);
+    client.addTypes([DocumentType, TextV0Type]);
   };
 
   const createDocument = (): ReactiveObject<DocumentType> => {

@@ -5,7 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { getSpaceProperty, setSpaceProperty, TextV0Type } from '@braneframe/types';
+import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -17,7 +17,9 @@ import {
   filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN } from './meta';
@@ -64,7 +66,7 @@ export const parseClientPlugin = (plugin?: Plugin) =>
 
 export type SchemaProvides = {
   echo: {
-    schema: Parameters<Client['addSchema']>;
+    schema: S.Schema<any>[];
   };
 };
 
@@ -96,8 +98,6 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
-        // TODO(wittjosiah): Why is this here? Remove?
-        client.addSchema(TextV0Type);
         await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -141,7 +141,7 @@ export const ClientPlugin = ({
           }
           const key = `${appKey}.opened`;
           // TODO(wittjosiah): This doesn't work currently.
-          //   There's no guaruntee that the default space will be fully synced by the time this is called.
+          //   There's no guarantee that the default space will be fully synced by the time this is called.
           // firstRun = !getSpaceProperty(client.spaces.default, key);
           setSpaceProperty(client.spaces.default, key, Date.now());
         }
@@ -173,7 +173,8 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        client.addSchema(...plugin.provides.echo.schema);
+        log('ready', { id: plugin.meta.id });
+        client.addTypes(plugin.provides.echo.schema);
       });
     },
     unload: async () => {

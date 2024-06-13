@@ -44,6 +44,7 @@
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/local-storage": "workspace:*",

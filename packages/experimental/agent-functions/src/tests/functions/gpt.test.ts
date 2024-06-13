@@ -240,9 +240,9 @@ const setupTest = async (testBuilder: TestBuilder) => {
   const functions = await startFunctionsHost(testBuilder, initFunctionsPlugin, {
     baseDir: join(__dirname, '../../functions'),
   });
-  const app = (await createInitializedClients(testBuilder))[0];
+  const [app] = await createInitializedClients(testBuilder);
   const space = await app.spaces.create();
-  app.addSchema(TextV0Type, MessageType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger);
+  app.addTypes([TextV0Type, MessageType, ThreadType, ChainPromptType, FunctionDef, FunctionTrigger]);
   await inviteMember(space, functions.client);
   const trigger = triggerGptOnMessage(space);
   return { functions, app, space, trigger };
