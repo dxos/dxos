@@ -96,14 +96,18 @@ describe('Composer migrations', () => {
 
     const folderQuery = space.db.query(Filter.schema(FolderType));
     const stackQuery = space.db.query(Filter.schema(StackType));
+    const collectionQuery = space.db.query(Filter.schema(CollectionType));
     expect((await folderQuery.run()).objects).to.have.lengthOf(3);
     expect((await stackQuery.run()).objects).to.have.lengthOf(1);
+    expect((await collectionQuery.run()).objects).to.have.lengthOf(0);
 
     const builder = new MigrationBuilder(space);
     await migrations[0].next({ space, builder });
 
-    const collectionQuery = space.db.query(Filter.schema(CollectionType));
+    expect((await folderQuery.run()).objects).to.have.lengthOf(0);
+    expect((await stackQuery.run()).objects).to.have.lengthOf(0);
     expect((await collectionQuery.run()).objects).to.have.lengthOf(4);
+
     const rootCollection = space.properties[CollectionType.typename] as CollectionType;
     expect(rootCollection instanceof CollectionType).to.be.true;
     expect(rootCollection.objects[0] instanceof CollectionType).to.be.true;
@@ -127,6 +131,6 @@ describe('Composer migrations', () => {
     expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
-    expect(space.properties[CollectionType.typename]).to.equal(root);
+    expect(space.properties[CollectionType.typename].id).to.equal(root.id);
   });
 });

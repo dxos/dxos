@@ -16,8 +16,7 @@ Migrations.define('test', [
   {
     version: '1970-01-01',
     next: async ({ builder }) => {
-      const id = await builder.addObject(Expando, { namespace: 'test', count: 1 });
-      console.log({ id });
+      await builder.addObject(Expando, { namespace: 'test', count: 1 });
     },
   },
   {
