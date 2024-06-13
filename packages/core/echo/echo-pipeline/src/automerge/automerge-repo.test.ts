@@ -5,12 +5,13 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncTimeout, sleep } from '@dxos/async';
+import { asyncTimeout, sleep, Event } from '@dxos/async';
 import { type Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
 import { type Message, Repo, type PeerId, type DocumentId, type HandleState } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
@@ -93,7 +94,7 @@ describe('AutomergeRepo', () => {
   });
 
   describe('network', () => {
-    test('basic networking', async () => {
+    test.only('basic networking', async () => {
       const hostAdapter: TestAdapter = new TestAdapter({
         send: (message: Message) => clientAdapter.receive(message),
       });
@@ -513,6 +514,28 @@ describe('AutomergeRepo', () => {
 
         await asyncTimeout(docB.whenReady(), 1_000);
       }
+    });
+  });
+});
+
+describe.only('Syncing Repo with docs collection', () => {
+  test('sync doc outside of repo', async () => {
+    const messageEvent = new Event<Message>();
+    messageEvent.on((message) => {
+      log.info('message', { message });
+    });
+    const dumbNetwork = new TestAdapter({
+      send: (message: Message) => messageEvent.emit(message),
+    });
+
+    const repo = new Repo({ network: [dumbNetwork] });
+    const handle = repo.create<{ field?: string }>();
+
+    dumbNetwork.ready();
+    dumbNetwork.peerCandidate('peer' as PeerId);
+
+    handle.change((doc: any) => {
+      doc.field = 'value';
     });
   });
 });
