@@ -8,7 +8,7 @@ import jestExpect from 'expect';
 import { describe, test } from 'mocha';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '@dxos/echo-schema/testing';
+import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaType } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { beforeAll, afterAll } from '@dxos/test';
 
@@ -25,11 +25,12 @@ export interface TestConfiguration {
 export type TestConfigurationFactory = (schema: S.Schema<any> | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, TestSchema, TestSchemaClass]) {
+  for (const schema of [undefined, TestSchema, TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;
     }
+
     const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
 
     beforeAll(async () => {
@@ -102,7 +103,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can work with complex types', async () => {
         const circle: any = { type: 'circle', radius: 42 };
         const obj = await createObject({ nullableShapeArray: [circle] });
-
         expect(obj.nullableShapeArray![0]).to.deep.eq(circle);
 
         obj.nullableShapeArray?.push(null);
@@ -120,6 +120,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         if (schema == null) {
           return;
         }
+
         const obj = await createObject({ objectArray: [{ field: 'foo' }] });
         expect(() => (obj.string = 1 as any)).to.throw();
         expect(() => (obj.object = { field: 1 } as any)).to.throw();
@@ -316,7 +317,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const obj = await createObject({ object: { field: 'bar' } });
 
           using updates = updateCounter(() => {
-            obj.object!.field;
+            obj.object!.field; // TODO(burdon): Better way to demonstrate this? E.g., log?
           });
           expect(updates.count, 'update count').to.eq(0);
 
