@@ -61,15 +61,15 @@ export default {
   render: () => (
     <ClientRepeater
       component={TriggerEditorStory}
-      schema={[FunctionTrigger, FunctionDef, ChainPromptType]}
+      registerSignalFactory
+      createIdentity
+      createSpace
+      types={[FunctionTrigger, FunctionDef, ChainPromptType]}
       onCreateSpace={(space) => {
         for (const fn of functions) {
           space.db.add(create(FunctionDef, fn));
         }
       }}
-      registerSignalFactory
-      createIdentity
-      createSpace
     />
   ),
   decorators: [withTheme],

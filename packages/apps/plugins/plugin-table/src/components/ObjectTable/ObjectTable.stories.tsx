@@ -29,7 +29,7 @@ const useTable = () => {
     generator.addSchemas();
     void generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
-    client.addSchema(TableType);
+    client.addTypes([TableType]);
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.

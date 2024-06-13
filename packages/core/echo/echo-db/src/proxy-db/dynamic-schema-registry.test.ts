@@ -15,7 +15,7 @@ import {
   StoredSchema,
   TypedObject,
 } from '@dxos/echo-schema';
-import { TestSchemaClass } from '@dxos/echo-schema/testing';
+import { TestSchemaType } from '@dxos/echo-schema/testing';
 import { describe, test } from '@dxos/test';
 
 import { Filter } from '../query';
@@ -126,10 +126,10 @@ describe('schema registry', () => {
   test('list returns static and dynamic schemas', async () => {
     const { db, registry } = await setupTest();
     const storedSchema = db.add(createTestSchemas()[0]);
-    db.graph.schemaRegistry.addSchema(TestSchemaClass);
+    db.graph.schemaRegistry.addSchema([TestSchemaType]);
     const listed = await db.schema.listAll();
     expect(listed.length).to.eq(3);
-    expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaClass)]);
+    expect(listed.slice(0, 2)).to.deep.eq([makeStaticSchema(StoredSchema), makeStaticSchema(TestSchemaType)]);
     expect(listed[2]).to.deep.contain({
       id: storedSchema.id,
       typename: storedSchema.typename,
