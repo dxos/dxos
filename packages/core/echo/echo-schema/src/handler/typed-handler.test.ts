@@ -8,10 +8,10 @@ import { expect } from 'chai';
 import { describe, test } from '@dxos/test';
 
 import { create } from './object';
+import { getMeta } from '../getter';
 import { ref } from '../ref-annotation';
 import { TEST_SCHEMA_TYPE } from '../testing';
 import { TypedObject } from '../typed-object-class';
-import { getMeta } from '../getter';
 import { foreignKey } from '../types';
 
 describe('complex schema validations', () => {
