@@ -116,7 +116,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       echo: {
-        schema: [DocumentType],
+        schema: [DocumentType, TextV0Type],
       },
       graph: {
         builder: (plugins, graph) => {

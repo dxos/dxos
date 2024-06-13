@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, X } from '@phosphor-icons/react';
+import { CaretLeft, CaretLineLeft, CaretLineRight, CaretRight, type IconProps, Minus } from '@phosphor-icons/react';
 import React, {
   type ComponentPropsWithRef,
   type FC,
@@ -297,7 +297,7 @@ const PlankHeadingControls = forwardRef<HTMLDivElement, PlankHeadingControlsProp
             classNames={buttonClassNames}
             onClick={() => onClick?.({ type: 'close', part })}
           >
-            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <X />}
+            {close === 'minify-start' ? <CaretLineLeft /> : close === 'minify-end' ? <CaretLineRight /> : <Minus />}
           </PlankHeadingControl>
         )}
       </ButtonGroup>

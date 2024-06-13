@@ -19,10 +19,10 @@ import {
   firstMainId,
 } from '@dxos/app-framework';
 
-import { SearchMain } from './components';
+import { SearchDialog, SearchMain } from './components';
 import { SearchContextProvider } from './context';
 import meta, { SEARCH_PLUGIN, SEARCH_RESULT } from './meta';
-import type { SearchResult } from './search';
+import type { SearchResult } from './search-sync';
 import translations from './translations';
 import { SearchAction, type SearchPluginProvides } from './types';
 
@@ -79,11 +79,16 @@ export const SearchPlugin = (): PluginDefinition<SearchPluginProvides> => {
       },
       context: ({ children }) => <SearchContextProvider>{children}</SearchContextProvider>,
       surface: {
-        component: ({ role }) => {
+        component: ({ data, role }) => {
           const location = navigationPlugin?.provides.location;
           const graph = graphPlugin?.provides.graph;
           const space = graph && location ? getActiveSpace(graph, firstMainId(location.active)) : undefined;
+
           switch (role) {
+            case 'dialog':
+              return data.component === `${SEARCH_PLUGIN}/Dialog` ? (
+                <SearchDialog subject={data.subject as any} />
+              ) : null;
             case 'search-input':
               return space ? <SearchMain space={space} /> : null;
           }

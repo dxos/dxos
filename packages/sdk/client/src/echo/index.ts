@@ -2,7 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-export { defaultKey, type Echo, type Space, type PropertiesProps, PropertiesSchema } from '@dxos/client-protocol';
+export {
+  defaultKey,
+  type Echo,
+  type Space,
+  type PropertiesType,
+  type PropertiesTypeProps,
+} from '@dxos/client-protocol';
 export {
   create,
   getMeta,
@@ -20,7 +26,7 @@ export {
   fromCursor,
   getRangeFromCursor,
   getTypeRef,
-  getAutomergeObjectCore,
+  getObjectCore,
   getTextInRange,
   hasType,
   isEchoObject,

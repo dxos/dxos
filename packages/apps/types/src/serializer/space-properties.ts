@@ -27,6 +27,7 @@ export const getSpaceProperty = <T>(space: Space | undefined, key: string): T | 
   for (const keySegment of keySegments) {
     result = result?.[keySegment];
   }
+
   return result as T;
 };
 
@@ -37,6 +38,7 @@ export const setSpaceProperty = (space: Space, key: string, value: any) => {
     valueContainer[keySegment] ??= {};
     valueContainer = valueContainer[keySegment];
   }
+
   valueContainer[keySegments[keySegments.length - 1]] = value;
 };
 

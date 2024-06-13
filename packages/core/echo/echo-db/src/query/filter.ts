@@ -6,14 +6,13 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { requireTypeReference, EXPANDO_TYPENAME, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
-import { type AutomergeObjectCore } from '../automerge';
+import { type ObjectCore } from '../core-db';
 import { getReferenceWithSpaceKey } from '../echo-handler';
 
 export const hasType =
@@ -79,11 +78,13 @@ export class Filter<T extends {} = any> {
     }
   }
 
+  // TODO(burdon): Tighten to AbstractTypedObject.
   static schema<T extends {} = any>(
     schema: S.Schema<T>,
     filter?: Record<string, any> | OperatorFilter<T>,
   ): Filter<Mutable<T>>;
 
+  // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
@@ -195,7 +196,7 @@ export class Filter<T extends {} = any> {
  */
 export const filterMatch = (
   filter: Filter,
-  core: AutomergeObjectCore | undefined,
+  core: ObjectCore | undefined,
   // TODO(mykola): Remove predicate filters from this level query. Move it to higher proxy level.
   echoObject?: EchoReactiveObject<any> | undefined,
 ): boolean => {
@@ -209,7 +210,7 @@ export const filterMatch = (
 
 const filterMatchInner = (
   filter: Filter,
-  core: AutomergeObjectCore,
+  core: ObjectCore,
   echoObject?: EchoReactiveObject<any> | undefined,
 ): boolean => {
   const deleted = filter.options.deleted ?? QueryOptions.ShowDeletedOption.HIDE_DELETED;
@@ -312,7 +313,7 @@ export const compareType = (expected: Reference, actual: Reference, spaceKey?: P
  * @deprecated
  */
 // TODO(dmaretskyi): Cleanup.
-const legacyGetTextForMatch = (core: AutomergeObjectCore): string => '';
+const legacyGetTextForMatch = (core: ObjectCore): string => '';
 // compositeRuntime.untracked(() => {
 //   if (!isTypedObject(core.rootProxy)) {
 //     return '';
