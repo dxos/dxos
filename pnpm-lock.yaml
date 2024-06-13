@@ -385,6 +385,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../packages/sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../packages/sdk/client-protocol
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../packages/sdk/client-services
