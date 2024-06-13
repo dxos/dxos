@@ -13,23 +13,6 @@
   "author": "info@dxos.org",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
-  "bin": {
-    "dx": "./bin/dx"
-  },
-  "files": [
-    "/bin",
-    "/config",
-    "/dist",
-    "/oclif.manifest.json"
-  ],
-  "scripts": {
-    "bin": "./bin/dx",
-    "manifest": "oclif manifest",
-    "prepack": "oclif manifest && oclif readme --multi",
-    "postpack": "shx rm -f oclif.manifest.json",
-    "prepublishOnly": "scripts/patch_dx_environment.sh",
-    "readme": "oclif readme --multi"
-  },
   "dependencies": {
     "@braneframe/types": "workspace:*",
     "@dxos/agent": "workspace:*",
