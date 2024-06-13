@@ -88,7 +88,7 @@ const acceptInvitation = async (
 
 ::: tip
 
-* Your [client](../../api/@dxos/client) instance needs to be [configured](../echo/typescript/config.md) correctly to talk to a [signalling service](../glossary.md#signaling-service).
+* Your [client](../../api/@dxos/client) instance needs to be [configured](../echo/typescript/config.md) correctly to talk to a [signaling service](../glossary.md#signaling-service).
 * If accepting a device join invitation from a UI application using the [shell](../dxos-ui/shell/) (e.g. [Composer](../../composer/)), you will only be presented with the `authCode` after the call to `halo.join` has been made.
   :::
 
