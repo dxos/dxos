@@ -1,0 +1,60 @@
+{
+  "author": "Iconizer",
+  "version": "2020.11.0",
+  "images": [
+    {
+      "scale": "2x",
+      "filename": "AppIcon-40.png",
+      "idiom": "iphone",
+      "size": "20x20"
+    },
+    {
+      "size": "20x20",
+      "scale": "3x",
+      "idiom": "iphone",
+      "filename": "AppIcon-60.png"
+    },
+    {
+      "idiom": "iphone",
+      "scale": "2x",
+      "size": "29x29",
+      "filename": "AppIcon-58.png"
+    },
+    {
+      "scale": "3x",
+      "idiom": "iphone",
+      "filename": "AppIcon-87.png",
+      "size": "29x29"
+    },
+    {
+      "idiom": "iphone",
+      "size": "40x40",
+      "scale": "2x",
+      "filename": "AppIcon-80.png"
+    },
+    {
+      "size": "40x40",
+      "filename": "AppIcon-120.png",
+      "scale": "3x",
+      "idiom": "iphone"
+    },
+    {
+      "size": "60x60",
+      "idiom": "iphone",
+      "scale": "2x",
+      "filename": "AppIcon-120.png"
+    },
+    {
+      "idiom": "iphone",
+      "filename": "AppIcon-180.png",
+      "size": "60x60",
+      "scale": "3x"
+    },
+    {
+      "size": "1024x1024",
+      "filename": "AppIcon-1024.png",
+      "scale": "1x",
+      "idiom": "ios-marketing"
+    }
+  ]
+}
