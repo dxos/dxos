@@ -9,7 +9,7 @@ import type { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import type { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import type { AuthenticatingInvitation } from './invitations';
-import type { PropertiesProps } from './schema';
+import type { PropertiesTypeProps } from './schema';
 import type { Space } from './space';
 
 // Space properties key for default metadata.
@@ -53,7 +53,7 @@ export interface Echo extends MulticastObservable<Space[]> {
   /**
    * Creates a new space.
    */
-  create(meta?: PropertiesProps): Promise<Space>;
+  create(meta?: PropertiesTypeProps): Promise<Space>;
 
   /**
    * Creates a space from the given snapshot.

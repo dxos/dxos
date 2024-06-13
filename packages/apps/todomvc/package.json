@@ -1,6 +1,6 @@
 {
   "name": "@dxos/todomvc",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "private": true,
   "description": "Collaborative TodoMVC using DXOS",
   "homepage": "https://dxos.org",

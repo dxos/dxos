@@ -10,7 +10,7 @@ const client = new Client();
 
 async () => {
   await client.initialize();
-  client.addSchema(types);
+  client.addTypes(types);
   // get a list of all spaces
   const spaces = client.spaces.get();
   // grab a space

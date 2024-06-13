@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ContactType, MessageType, type RecipientType } from '@braneframe/types';
+import { ContactType, MessageType, type RecipientType, TextV0Type } from '@braneframe/types';
 import { Filter, hasType } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-const types = [ContactType, MessageType];
+const types = [TextV0Type, ContactType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event }) => {
   const { space, objects } = event.data;
