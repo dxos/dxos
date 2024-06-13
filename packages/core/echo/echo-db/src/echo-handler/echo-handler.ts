@@ -278,13 +278,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const objectId = echoObject.id;
     invariant(typeof objectId === 'string' && objectId.length > 0);
 
-    if (target[symbolInternals].core.database) {
-      const anotherDb = otherInternals?.core.database;
+    if (target[symbolInternals].database) {
+      const anotherDb = otherInternals?.database;
       if (!anotherDb) {
-        target[symbolInternals].core.database.add(echoObject);
+        target[symbolInternals].database.add(echoObject);
         return new Reference(objectId);
       } else {
-        if (anotherDb !== target[symbolInternals].core.database) {
+        if (anotherDb !== target[symbolInternals].database) {
           return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
         } else {
           return new Reference(objectId);

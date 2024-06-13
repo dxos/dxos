@@ -37,6 +37,7 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
+import { getDatabaseFromObject } from './util';
 import { AutomergeContext, getObjectCore } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
@@ -519,8 +520,6 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('rebind', async () => {
-    registerSignalRuntime();
-
     const { db } = await builder.createDatabase();
 
     const obj1 = db.add(create(Expando, { title: 'Object 1' }));
@@ -550,8 +549,6 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('assign a non-echo reactive object', async () => {
-    registerSignalRuntime();
-
     const { db } = await builder.createDatabase();
 
     const obj = db.add(create(Expando, { title: 'Object 1' }));
@@ -561,5 +558,17 @@ describe('Reactive Object with ECHO database', () => {
     obj.refs = [create(Expando, { title: 'Object 2' })];
 
     obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
+  });
+
+  test('typed object is linked with the database on assignment to another db-linked object', async () => {
+    const { db, graph } = await builder.createDatabase();
+
+    graph.schemaRegistry.addSchema(TestSchemaClass);
+
+    const obj = db.add(create(TestSchemaClass, { string: 'Object 1' }));
+    const another = create(TestSchemaClass, { string: 'Object 2' });
+    obj.other = another;
+
+    expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });
 });
