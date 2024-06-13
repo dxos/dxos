@@ -341,18 +341,17 @@ export const DeckPlugin = ({
                               const newIds = Array.isArray(ids) ? ids : [ids];
 
                               switch (newPlankPositioning) {
-                                case 'start':
+                                case 'start': {
                                   newIds.forEach((id) => partMembers.add(id));
                                   prev.forEach((id) => partMembers.add(id));
                                   break;
-
+                                }
                                 case 'end':
+                                default: {
                                   prev.forEach((id) => partMembers.add(id));
                                   newIds.forEach((id) => partMembers.add(id));
                                   break;
-
-                                default:
-                                  throw new Error(`Unhandled Case of NewPlankPosition: ${newPlankPositioning}`);
+                                }
                               }
 
                               acc[part] = Array.from(partMembers).filter(Boolean);
