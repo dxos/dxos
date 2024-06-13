@@ -317,7 +317,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const obj = await createObject({ object: { field: 'bar' } });
 
           using updates = updateCounter(() => {
-            obj.object!.field;
+            obj.object!.field; // TODO(burdon): Better way to demonstrate this? E.g., log?
           });
           expect(updates.count, 'update count').to.eq(0);
 
@@ -521,7 +521,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const obj = await createObject({ twoDimNumberArray: [[1], [2, 3]] });
           const array = obj.twoDimNumberArray!;
           using updates = updateCounter(() => {
-            array[0]; // TODO(burdon): ???
+            array[0];
           });
 
           const result = array.flat();
