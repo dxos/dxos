@@ -10,7 +10,7 @@ import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type ObjectCore } from '../core-db';
@@ -172,6 +172,10 @@ export class Filter<T extends {} = any> {
 
   get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces;
+  }
+
+  get spaceIds(): SpaceId[] | undefined {
+    return this.options.spaceIds as SpaceId[] | undefined;
   }
 
   toProto(): FilterProto {

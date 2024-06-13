@@ -5,11 +5,13 @@
 import isEqual from 'lodash.isequal';
 
 import { type Context, Resource } from '@dxos/context';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { log } from '@dxos/log';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
@@ -108,7 +110,8 @@ export class EchoTestPeer extends Resource {
   async createDatabase(spaceKey: PublicKey, { client = this.client }: { client?: EchoClient } = {}) {
     const root = await this.host.createSpaceRoot(spaceKey);
     // NOTE: Client closes the database when it is closed.
-    const db = client.constructDatabase({ spaceKey });
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(root.url);
     await db.open();
     return db;
@@ -116,7 +119,8 @@ export class EchoTestPeer extends Resource {
 
   async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
     // NOTE: Client closes the database when it is closed.
-    const db = client.constructDatabase({ spaceKey });
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;
@@ -140,7 +144,11 @@ export const createDataAssertion = ({
       if (onlyObject) {
         invariant(objects.length === 1);
       }
-      invariant(isEqual({ ...received }, { ...seedObject }));
+
+      invariant(
+        isEqual({ ...received }, { ...seedObject }),
+        `Objects are not equal\nReceived: ${JSON.stringify(received, null, 2)}\nExpected: ${JSON.stringify(seedObject, null, 2)}`,
+      );
       if (referenceEquality) {
         invariant(received === seedObject);
       }

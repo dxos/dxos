@@ -8,7 +8,7 @@ import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
 import { type SpaceState, type SpaceDoc } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 
@@ -51,8 +51,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
 
   constructor(
-    private readonly _spaceKey: PublicKey,
+    private readonly _spaceId: SpaceId,
     private readonly _repo: Repo,
+    /** Legacy Id */
+    private readonly _spaceKey: PublicKey,
   ) {}
 
   getAllHandles(): DocHandle<SpaceDoc>[] {
@@ -67,7 +69,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       return;
     }
     if (!spaceState.rootUrl) {
-      log.error('Database opened with no rootUrl', { spaceKey: this._spaceKey });
+      log.error('Database opened with no rootUrl', { spaceId: this._spaceId });
       this._createContextBoundSpaceRootDocument(ctx);
     } else {
       const existingDocHandle = await this._initDocHandle(ctx, spaceState.rootUrl);

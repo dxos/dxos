@@ -98,7 +98,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;

@@ -12,7 +12,7 @@ import {
   getProxyHandlerSlot,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
@@ -30,6 +30,8 @@ export type GetObjectByIdOptions = {
 
 export interface EchoDatabase {
   get spaceKey(): PublicKey;
+
+  get spaceId(): SpaceId;
 
   get schema(): DynamicSchemaRegistry;
 
@@ -95,6 +97,10 @@ export interface EchoDatabase {
 export type EchoDatabaseParams = {
   graph: Hypergraph;
   automergeContext: AutomergeContext;
+
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 };
 
@@ -121,7 +127,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceKey);
+    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceId, params.spaceKey);
     this.schema = new DynamicSchemaRegistry(this);
   }
 
@@ -131,6 +137,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   get spaceKey(): PublicKey {
     return this._coreDatabase.spaceKey;
+  }
+
+  get spaceId(): SpaceId {
+    return this._coreDatabase.spaceId;
   }
 
   get rootUrl(): string | undefined {
@@ -251,7 +261,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   ): Query<T> {
     return this._coreDatabase.graph.query(filter, {
       ...options,
-      spaces: [this.spaceKey],
+      spaceIds: [this.spaceId],
     });
   }
 

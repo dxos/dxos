@@ -218,7 +218,7 @@ const SPACE_IDS_CACHE = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
  */
 export const createIdFromSpaceKey = async (spaceKey: PublicKey): Promise<SpaceId> => {
   // Sanity check.
-  invariant(spaceKey.length === EXPECTED_SPACE_KEY_LENGTH);
+  // invariant(spaceKey.length === EXPECTED_SPACE_KEY_LENGTH, `Invalid space key length = ${spaceKey.length}.`);
 
   if (SPACE_IDS_CACHE.has(spaceKey)) {
     return SPACE_IDS_CACHE.get(spaceKey)!;

@@ -8,6 +8,7 @@ import { expect } from 'chai';
 
 import { Trigger } from '@dxos/async';
 import { type DocHandle } from '@dxos/automerge/automerge-repo';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type SpaceDoc } from '@dxos/echo-protocol';
 import { create, type EchoReactiveObject, Expando, ref, TypedObject } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -326,7 +327,13 @@ describe('CoreDatabase', () => {
       test('returns empty array when closed', async () => {
         const testBuilder = new TestBuilder({ spaceFragmentationEnabled: true });
         const fakeUrl = '3DXhC1rjp3niGHfM76tNP56URi8H';
-        const peer = new TestPeer(testBuilder, PublicKey.random(), testBuilder.defaultSpaceKey, fakeUrl);
+        const peer = new TestPeer(
+          testBuilder,
+          PublicKey.random(),
+          await createIdFromSpaceKey(testBuilder.defaultSpaceKey),
+          testBuilder.defaultSpaceKey,
+          fakeUrl,
+        );
         const automergeDb = peer.db.coreDatabase;
         expect(automergeDb.getAllObjectIds()).to.deep.eq([]);
         void automergeDb.open({ rootUrl: fakeUrl });
