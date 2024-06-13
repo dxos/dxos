@@ -24,7 +24,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(TableType);
+      clientPlugin?.provides.client.addTypes([TableType]);
     },
     provides: {
       metadata: {

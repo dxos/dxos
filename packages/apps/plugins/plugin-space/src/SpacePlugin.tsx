@@ -42,11 +42,11 @@ import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type Space,
   getSpace,
-  type PropertiesProps,
   isSpace,
   isEchoObject,
   fullyQualifiedId,
   Filter,
+  type PropertiesTypeProps,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
@@ -93,13 +93,13 @@ export type SpacePluginOptions = {
    *
    * @param params.client DXOS Client
    * @param params.defaultSpace Default space
-   * @param params.personalSpaceFolder Folder representing the contents of the default space
+   * @param params.defaultSpaceRoot Folder representing the contents of the default space
    * @param params.dispatch Function to dispatch intents
    */
   onFirstRun?: (params: {
     client: Client;
     defaultSpace: Space;
-    personalSpaceFolder: FolderType;
+    defaultSpaceRoot: FolderType;
     dispatch: IntentDispatcher;
   }) => Promise<void>;
 
@@ -123,7 +123,6 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
@@ -153,15 +152,16 @@ export const SpacePlugin = ({
       // Create root folder structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const personalSpaceFolder = create(FolderType, { objects: [] });
-        setSpaceProperty(defaultSpace, FolderType.typename, personalSpaceFolder);
+        const defaultSpaceRoot = create(FolderType, { objects: [] });
+        setSpaceProperty(defaultSpace, FolderType.typename, defaultSpaceRoot);
         if (Migrations.versionProperty) {
           setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
         }
+
         await onFirstRun?.({
           client,
           defaultSpace,
-          personalSpaceFolder,
+          defaultSpaceRoot,
           dispatch,
         });
       }
@@ -565,7 +565,7 @@ export const SpacePlugin = ({
               const {
                 objects: [sharedSpacesFolder],
               } = await defaultSpace.db.query({ key: SHARED }).run();
-              const space = await client.spaces.create(intent.data as PropertiesProps);
+              const space = await client.spaces.create(intent.data as PropertiesTypeProps);
 
               const folder = create(FolderType, { objects: [] });
               setSpaceProperty(space, FolderType.typename, folder);
