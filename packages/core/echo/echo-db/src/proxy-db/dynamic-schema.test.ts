@@ -80,7 +80,7 @@ describe('DynamicSchema', () => {
     }).to.throw();
 
     expect(getSchema(object)?.ast).to.deep.eq(schema.ast);
-    expect(getType(object)?.itemId).to.be.eq(schema.id);
+    expect(getType(object)?.getObjectID()).to.be.eq(schema.id);
 
     db.add(object);
     const queried = (await db.query(Filter.schema(schema)).run()).objects;
@@ -91,7 +91,7 @@ describe('DynamicSchema', () => {
   test('getTypeReference', async () => {
     const { db } = await setupTest();
     const schema = db.schema.addSchema(GeneratedEmptySchema);
-    expect(getTypeReference(schema)?.itemId).to.eq(schema.id);
+    expect(getTypeReference(schema)?.getObjectID()).to.eq(schema.id);
   });
 
   const setupTest = async () => {

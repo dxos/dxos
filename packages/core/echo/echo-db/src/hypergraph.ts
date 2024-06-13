@@ -6,10 +6,10 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Reference } from '@dxos/echo-protocol';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { data, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
@@ -33,7 +33,8 @@ import { RuntimeSchemaRegistry } from './runtime-schema-registry';
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
+  private readonly _databasesByKey = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
+  private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
@@ -57,7 +58,8 @@ export class Hypergraph {
    */
   // TODO(burdon): When is the owner not a space?
   _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
-    this._databases.set(spaceKey, database);
+    this._databases.set(database.spaceId, database);
+    this._databasesByKey.set(spaceKey, database);
     this._owningObjects.set(spaceKey, owningObject);
     database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
 
@@ -78,9 +80,11 @@ export class Hypergraph {
     }
   }
 
-  _unregister(spaceKey: PublicKey) {
+  _unregister(database: EchoDatabaseImpl) {
     // TODO(dmaretskyi): Remove db from query contexts.
-    this._databases.delete(spaceKey);
+    // TODO(dmaretskyi): Refactor this.
+    this._databases.delete(database.spaceId);
+    this._databasesByKey.delete(database.spaceKey);
   }
 
   _getOwningObject(spaceKey: PublicKey): unknown | undefined {
@@ -105,30 +109,36 @@ export class Hypergraph {
     from: EchoDatabase,
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
-    if (ref.host === undefined) {
-      const local = from.getObjectById(ref.itemId);
+    if (ref.dxn.kind !== DXN.kind.ECHO) {
+      throw new Error('Only ECHO DXNs are supported.');
+    }
+    const [spaceId, objectId] = ref.dxn.parts;
+
+    if (spaceId === LOCAL_SPACE_TAG) {
+      const local = from.getObjectById(objectId);
       if (local) {
         return local;
       }
     }
 
-    const spaceKey = ref.host ? PublicKey.from(ref.host) : from?.spaceKey;
+    const resolvedSpaceId = spaceId !== LOCAL_SPACE_TAG ? spaceId : from?.spaceId;
 
-    if (ref.host) {
-      const remoteDb = this._databases.get(spaceKey);
+    if (spaceId !== LOCAL_SPACE_TAG) {
+      invariant(SpaceId.isValid(spaceId));
+      const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
         // Resolve remote reference.
-        const remote = remoteDb.getObjectById(ref.itemId);
+        const remote = remoteDb.getObjectById(objectId);
         if (remote) {
           return remote;
         }
       }
     }
 
-    if (!OBJECT_DIAGNOSTICS.has(ref.itemId)) {
-      OBJECT_DIAGNOSTICS.set(ref.itemId, {
-        objectId: ref.itemId,
-        spaceKey: spaceKey.toHex(),
+    if (!OBJECT_DIAGNOSTICS.has(objectId)) {
+      OBJECT_DIAGNOSTICS.set(objectId, {
+        objectId,
+        spaceId: resolvedSpaceId,
         loadReason: 'reference access',
         loadedStack: new StackTrace(),
       });
@@ -364,7 +374,7 @@ class SpaceQuerySource implements QuerySource {
 
 type ObjectDiagnostic = {
   objectId: string;
-  spaceKey: string;
+  spaceId: SpaceId;
   loadReason: string;
   loadedStack?: StackTrace;
   query?: string;
@@ -379,7 +389,7 @@ trace.diagnostic({
     return Array.from(OBJECT_DIAGNOSTICS.values()).map((object) => {
       return {
         objectId: object.objectId,
-        spaceKey: object.spaceKey,
+        spaceId: object.spaceId,
         loadReason: object.loadReason,
         creationStack: object.loadedStack?.getStack(),
         query: object.query,

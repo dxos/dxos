@@ -93,7 +93,7 @@ export class EchoClient extends Resource {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
     for (const db of this._databases.values()) {
-      this._graph._unregister(db.spaceKey);
+      this._graph._unregister(db);
       await db.close();
     }
     this._databases.clear();

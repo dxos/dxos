@@ -74,7 +74,7 @@ export class TestPeer {
   }
 
   async unload() {
-    this.builder.graph._unregister(this.spaceKey);
+    this.builder.graph._unregister(this.db);
   }
 
   async flush() {

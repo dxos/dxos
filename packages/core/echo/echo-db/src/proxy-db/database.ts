@@ -129,7 +129,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   constructor(params: EchoDatabaseParams) {
     super();
 
-    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceKey);
+    this._spaceId = params.spaceId;
+    this._coreDatabase = new CoreDatabase(params.graph, params.automergeContext, params.spaceId, params.spaceKey);
     this.schema = new DynamicSchemaRegistry(this);
   }
 
