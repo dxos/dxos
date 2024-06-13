@@ -21,7 +21,7 @@ export class DXN {
   #parts: string[];
 
   constructor(kind: string, parts: string[]) {
-    invariant(parts.length > 1);
+    invariant(parts.length > 0);
     this.#kind = kind;
     this.#parts = parts;
   }
@@ -36,6 +36,10 @@ export class DXN {
 
   isTypeDXNOf(typename: string) {
     return this.#kind == DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+  }
+
+  toString() {
+    return `dxn:${this.#kind}:${this.#parts.join(':')}`;
   }
 }
 
