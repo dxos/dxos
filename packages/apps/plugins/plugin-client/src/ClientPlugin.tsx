@@ -173,7 +173,7 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        log.info('ready', { id: plugin.meta.id });
+        log('ready', { id: plugin.meta.id });
         client.addTypes(plugin.provides.echo.schema);
       });
     },

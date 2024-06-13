@@ -214,7 +214,7 @@ export class Client {
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
   addTypes(types: S.Schema<any>[]) {
-    log.info('addSchema', { schema: types.map((type) => getEchoObjectTypename(type)).join() });
+    log('addTypes', { schema: types.map((type) => getEchoObjectTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
