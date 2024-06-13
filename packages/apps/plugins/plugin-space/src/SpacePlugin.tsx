@@ -9,6 +9,7 @@ import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
 import {
   type IntentDispatcher,
@@ -32,6 +33,7 @@ import {
   type Identifiable,
   type ReactiveObject,
   Expando,
+  getTypename,
 } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -578,7 +580,22 @@ export const SpacePlugin = ({
               }
 
               const spaceHex = space.key.toHex();
-              return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
+              return {
+                data: { space, id: spaceHex, activeParts: { main: [spaceHex] } },
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        event: 'space.create',
+                        properties: {
+                          spaceKey: space.key.toHex(),
+                        },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
 
             case SpaceAction.JOIN: {
@@ -587,7 +604,22 @@ export const SpacePlugin = ({
                 if (space) {
                   state.enabled.push(space.key);
                   const spaceHex = space.key.toHex();
-                  return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
+                  return {
+                    data: { space, id: spaceHex, activeParts: { main: [spaceHex] } },
+                    intents: [
+                      [
+                        {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            event: 'space.join',
+                            properties: {
+                              spaceKey: space.key.toHex(),
+                            },
+                          },
+                        },
+                      ],
+                    ],
+                  };
                 }
               }
               break;
@@ -598,7 +630,22 @@ export const SpacePlugin = ({
               if (clientPlugin && spaceKey) {
                 const target = firstMainId(navigationPlugin?.provides.location.active);
                 const result = await clientPlugin.provides.client.shell.shareSpace({ spaceKey, target });
-                return { data: result };
+                return {
+                  data: result,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          event: 'space.share',
+                          properties: {
+                            spaceKey: spaceKey.toHex(),
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
               }
               break;
             }
@@ -648,7 +695,23 @@ export const SpacePlugin = ({
               if (isSpace(space)) {
                 prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
-                return { data: result };
+                return {
+                  data: result,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          event: 'space.migrate',
+                          properties: {
+                            spaceKey: space.key.toHex(),
+                            version: intent.data?.version,
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
               }
               break;
             }
@@ -680,7 +743,22 @@ export const SpacePlugin = ({
                 void localforage.removeItem(SPACE_DIRECTORY_HANDLE);
                 log.catch(err);
               });
-              return { data: true };
+              return {
+                data: true,
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        event: 'space.save',
+                        properties: {
+                          spaceKey: space.key.toHex(),
+                        },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
 
             case SpaceAction.LOAD: {
@@ -688,7 +766,22 @@ export const SpacePlugin = ({
               if (isSpace(space)) {
                 const directory = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
                 await serializer.load({ space, directory }).catch(log.catch);
-                return { data: true };
+                return {
+                  data: true,
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          event: 'space.load',
+                          properties: {
+                            spaceKey: space.key.toHex(),
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
               }
               break;
             }
@@ -712,7 +805,24 @@ export const SpacePlugin = ({
                 } else {
                   space.db.add(object);
                 }
-                return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
+                return {
+                  data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } },
+                  intents: [
+                    [
+                      {
+                        action: ObservabilityAction.SEND_EVENT,
+                        data: {
+                          event: 'space.addObject',
+                          properties: {
+                            spaceKey: space.key.toHex(),
+                            objectId: object.id,
+                            typename: getTypename(object),
+                          },
+                        },
+                      },
+                    ],
+                  ],
+                };
               }
               break;
             }

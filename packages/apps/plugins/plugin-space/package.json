@@ -23,6 +23,7 @@
     "src"
   ],
   "dependencies": {
+    "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/plugin-settings": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
