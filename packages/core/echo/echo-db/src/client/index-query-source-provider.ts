@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import {
@@ -142,7 +142,7 @@ export class IndexQuerySource implements QuerySource {
     if (!OBJECT_DIAGNOSTICS.has(result.id)) {
       OBJECT_DIAGNOSTICS.set(result.id, {
         objectId: result.id,
-        spaceKey: result.spaceKey.toHex(),
+        spaceId: result.spaceKey.toHex() as SpaceId, // TODO(dmaretskyi): Fix me.
         loadReason: 'query',
         query: JSON.stringify(this._filter?.toProto() ?? null),
       });

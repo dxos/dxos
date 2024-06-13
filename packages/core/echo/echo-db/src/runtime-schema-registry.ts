@@ -5,10 +5,11 @@
 import type * as S from '@effect/schema/Schema';
 
 import { requireTypeReference, StoredSchema } from '@dxos/echo-schema';
+import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { invariant } from '@dxos/invariant';
 
-const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
+const getTypenameOrThrow = (schema: S.Schema<any>): string =>
+  requireTypeReference(schema).getTypename() ?? failedInvariant();
 
 // TODO(burdon): Reconcile type vs. schema.
 

@@ -10,11 +10,12 @@ import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, SpaceId, type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type ObjectCore } from '../core-db';
 import { getReferenceWithSpaceKey } from '../echo-handler';
+import { log } from '@dxos/log';
 
 export const hasType =
   <T extends EchoReactiveObject<T>>(type: { new (): T }) =>
@@ -91,7 +92,7 @@ export class Filter<T extends {} = any> {
   }
 
   static typename(typename: string, filter?: Record<string, any> | OperatorFilter<any>): Filter<any> {
-    const type = Reference.fromLegacyTypename(typename);
+    const type = Reference.forType(typename);
     return this._fromTypeWithPredicate(type, filter);
   }
 
@@ -236,22 +237,11 @@ const filterMatchInner = (
   if (filter.type) {
     const type = core.getType();
 
-    /** @deprecated TODO(mykola): Remove */
-    const dynamicSchemaTypename = type?.itemId;
-
-    // Separate branch for objects with dynamic schema and typename filters.
-    // TODO(dmaretskyi): Better way to check if schema is dynamic.
-    if (filter.type.protocol === 'protobuf' && dynamicSchemaTypename) {
-      if (dynamicSchemaTypename !== filter.type.itemId) {
-        return false;
-      }
+    if (type) {
+      if (!compareType(filter.type, type, core.database?.spaceId)) return false;
     } else {
-      if (!type && filter.type.itemId !== EXPANDO_TYPENAME) {
-        return false;
-      } else if (type && !compareType(filter.type, type, core.database?.spaceKey)) {
-        // Compare if types are equal.
-        return false;
-      }
+      log.warn('expando type comparison is not implemented');
+      // TODO(dmaretskyi): Fix me.
     }
   }
 
@@ -294,18 +284,24 @@ const filterMatchInner = (
 
 // Type comparison is a bit weird due to backwards compatibility requirements.
 // TODO(dmaretskyi): Deprecate `protobuf` protocol to clean this up.
-export const compareType = (expected: Reference, actual: Reference, spaceKey?: PublicKey) => {
-  const host = actual.protocol !== 'protobuf' ? actual?.host ?? spaceKey?.toHex() : actual.host ?? 'dxos.org';
-
-  if (
-    actual.itemId !== expected.itemId ||
-    actual.protocol !== expected.protocol ||
-    (host !== expected.host && actual.host !== expected.host)
-  ) {
-    return false;
-  } else {
-    return true;
+export const compareType = (expected: Reference, actual: Reference, spaceId?: SpaceId) => {
+  if (expected.dxn.kind === DXN.kind.TYPE && actual.dxn.kind === DXN.kind.TYPE) {
+    invariant(expected.dxn.parts.length === 1 && actual.dxn.parts.length === 1);
+    return expected.dxn.parts[0] === actual.dxn.parts[0];
   }
+
+  if (expected.dxn.kind === DXN.kind.ECHO && actual.dxn.kind === DXN.kind.ECHO) {
+    const resolvedSpaceId = actual.dxn.parts[0] === LOCAL_SPACE_TAG ? spaceId : (actual.dxn.parts[0] as SpaceId);
+    if (!resolvedSpaceId || !SpaceId.isValid(resolvedSpaceId)) {
+      log.warn('unable to compare types: invalid space id');
+      return false;
+    }
+
+    return expected.dxn.parts[0] === actual.dxn.parts[0] && expected.dxn.parts[1] === actual.dxn.parts[1];
+  }
+
+  log.warn('unable to compare types: unsupported dxn kind');
+  return false;
 };
 
 /**

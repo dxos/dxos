@@ -39,9 +39,7 @@ export class Hypergraph {
   private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoReactiveObject<any>>>>(
-    PublicKey.hash,
-  );
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<EchoReactiveObject<any>>>>();
 
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
@@ -63,7 +61,7 @@ export class Hypergraph {
     this._owningObjects.set(spaceKey, owningObject);
     database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
 
-    const map = this._resolveEvents.get(spaceKey);
+    const map = this._resolveEvents.get(database.spaceId);
     if (map) {
       for (const [id, event] of map) {
         const obj = database.getObjectById(id);
@@ -115,15 +113,15 @@ export class Hypergraph {
     const [spaceId, objectId] = ref.dxn.parts;
 
     if (spaceId === LOCAL_SPACE_TAG) {
+      // Resolving locally from the space space.
+
       const local = from.getObjectById(objectId);
       if (local) {
         return local;
       }
-    }
+    } else {
+      // Resolving from a remote space.
 
-    const resolvedSpaceId = spaceId !== LOCAL_SPACE_TAG ? spaceId : from?.spaceId;
-
-    if (spaceId !== LOCAL_SPACE_TAG) {
       invariant(SpaceId.isValid(spaceId));
       const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
@@ -135,6 +133,9 @@ export class Hypergraph {
       }
     }
 
+    const resolvedSpaceId = spaceId !== LOCAL_SPACE_TAG ? spaceId : from.spaceId;
+    invariant(SpaceId.isValid(resolvedSpaceId));
+
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
       OBJECT_DIAGNOSTICS.set(objectId, {
         objectId,
@@ -144,10 +145,10 @@ export class Hypergraph {
       });
     }
 
-    log('trap', { spaceKey, itemId: ref.itemId });
-    entry(this._resolveEvents, spaceKey)
+    log('trap', { spaceId: resolvedSpaceId, objectId });
+    entry(this._resolveEvents, resolvedSpaceId)
       .orInsert(new Map())
-      .deep(ref.itemId)
+      .deep(objectId)
       .orInsert(new Event())
       .value.on(new Context(), onResolve, { weak: true });
   }
@@ -170,7 +171,7 @@ export class Hypergraph {
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent) {
-    const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
+    const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       compositeRuntime.batch(() => {
         // TODO(dmaretskyi): We only care about created items.
@@ -179,7 +180,7 @@ export class Hypergraph {
           if (!listeners) {
             continue;
           }
-          const db = this._databases.get(updateEvent.spaceKey);
+          const db = this._databases.get(updateEvent.spaceId);
           if (!db) {
             continue;
           }

@@ -2,12 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { AutomergeContext, type AutomergeContextConfig } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 
 /**
  * @deprecated Remove in favour of the new EchoTestBuilder
@@ -28,7 +29,8 @@ export class TestBuilder {
     spaceKey = this.defaultSpaceKey,
     automergeDocUrl: string = this.automergeContext.repo.create().url,
   ): Promise<TestPeer> {
-    const peer = new TestPeer(this, PublicKey.random(), spaceKey, automergeDocUrl);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const peer = new TestPeer(this, PublicKey.random(), spaceId, spaceKey, automergeDocUrl);
     this.peers.set(peer.key, peer);
     await peer.db.coreDatabase.open({
       rootUrl: peer.automergeDocId,
@@ -49,6 +51,7 @@ export class TestBuilder {
  */
 export class TestPeer {
   public db = new EchoDatabaseImpl({
+    spaceId: this.spaceId,
     spaceKey: this.spaceKey,
     graph: this.builder.graph,
     automergeContext: this.builder.automergeContext,
@@ -57,12 +60,14 @@ export class TestPeer {
   constructor(
     public readonly builder: TestBuilder,
     public readonly key: PublicKey,
+    public readonly spaceId: SpaceId,
     public readonly spaceKey: PublicKey,
     public readonly automergeDocId: string,
   ) {}
 
   async reload() {
     this.db = new EchoDatabaseImpl({
+      spaceId: this.spaceId,
       spaceKey: this.spaceKey,
       graph: this.builder.graph,
       automergeContext: this.builder.automergeContext,

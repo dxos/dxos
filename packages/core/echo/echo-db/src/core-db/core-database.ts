@@ -372,6 +372,7 @@ export class CoreDatabase {
 
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
+        spaceId: this.spaceId,
         spaceKey: this.spaceKey,
         itemsUpdated: itemsUpdated.map((id) => ({ id })),
       });
@@ -494,6 +495,11 @@ export class CoreDatabase {
 }
 
 export interface ItemsUpdatedEvent {
+  spaceId: SpaceId;
+
+  /**
+   * @deprecated
+   */
   spaceKey: PublicKey;
   itemsUpdated: Array<{ id: string }>;
 }

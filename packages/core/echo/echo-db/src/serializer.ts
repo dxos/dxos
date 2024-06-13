@@ -11,78 +11,9 @@ import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 import { ObjectCore, getObjectCore } from './core-db';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
+import type { SerializedObjectData, SerializedSpaceData } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
-
-/**
- * Archive of echo objects.
- *
- * ## Encoding and file format
- *
- * The data is serialized to JSON.
- * Preferred file extensions are `.dx.json`.
- * The file might be compressed with gzip (`.dx.json.gz`).
- */
-export type SerializedSpace = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  version: number;
-
-  /**
-   * Human-readable date of creation.
-   */
-  timestamp?: string;
-
-  /**
-   * Space key.
-   */
-  // TODO(mykola): Maybe remove this?
-  spaceKey?: string;
-
-  /**
-   * List of objects included in the archive.
-   */
-  objects: SerializedObject[];
-};
-
-export type SerializedObject = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  '@version': number;
-
-  /**
-   * Human-readable date of creation.
-   */
-  '@timestamp'?: string;
-
-  /**
-   * Unique object identifier.
-   */
-  '@id': string;
-
-  /**
-   * Reference to a type.
-   */
-  '@type'?: EncodedReferenceObject | string;
-
-  /**
-   * Flag to indicate soft-deleted objects.
-   */
-  '@deleted'?: boolean;
-
-  /**
-   * @deprecated
-   *
-   * Model name for the objects backed by a legacy ECHO model.
-   */
-  '@model'?: string;
-} & Record<string, any>;
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
@@ -90,7 +21,7 @@ export type SerializedObject = {
 export class Serializer {
   static version = 1;
 
-  async export(database: EchoDatabase): Promise<SerializedSpace> {
+  async export(database: EchoDatabase): Promise<SerializedSpaceData> {
     const ids = database.coreDatabase.getAllObjectIds();
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
@@ -111,7 +42,7 @@ export class Serializer {
     return data;
   }
 
-  async import(database: EchoDatabase, data: SerializedSpace) {
+  async import(database: EchoDatabase, data: SerializedSpaceData) {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
     const {
       objects: [properties],
@@ -140,7 +71,7 @@ export class Serializer {
     await database.flush();
   }
 
-  private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
+  private _exportObject(object: EchoReactiveObject<any>): SerializedObjectData {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
@@ -159,7 +90,7 @@ export class Serializer {
     });
   }
 
-  private _importObject(database: EchoDatabase, object: SerializedObject) {
+  private _importObject(database: EchoDatabase, object: SerializedObjectData) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 

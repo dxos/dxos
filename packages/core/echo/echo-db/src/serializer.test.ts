@@ -15,6 +15,7 @@ import { EchoDatabaseImpl } from './proxy-db';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -181,11 +182,12 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     const graph = new Hypergraph();
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
     {
-      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceId, spaceKey });
       await db.coreDatabase.open({ rootUrl: doc.url });
       for (let i = 0; i < totalObjects; i++) {
         db.add(create({ value: i }));
@@ -193,7 +195,7 @@ describe('Serializer', () => {
       await db.flush();
     }
     {
-      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceId, spaceKey });
       await db.coreDatabase.open({ rootUrl: doc.url });
       data = await serializer.export(db);
       expect(data.objects.length).to.eq(totalObjects);

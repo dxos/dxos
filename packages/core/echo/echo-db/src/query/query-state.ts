@@ -181,7 +181,11 @@ const filterToIndexQuery = (filter: Filter): IndexQuery => {
   );
   if (filter.type || (filter.or.length > 0 && filter.or.every((subFilter) => !subFilter.not && subFilter.type))) {
     return {
-      typenames: filter.type?.itemId ? [filter.type.itemId] : filter.or.map((f) => f.type?.itemId).filter(nonNullable),
+      // TODO(dmaretskyi): Fix me.
+      typenames: (filter.type?.getTypename()
+        ? [filter.type.getTypename()]
+        : filter.or.map((f) => f.type?.getTypename())
+      ).filter(nonNullable),
       inverted: filter.not,
     };
   } else {

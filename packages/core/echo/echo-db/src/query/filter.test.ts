@@ -7,7 +7,7 @@ import { expect } from 'chai';
 
 import { Reference } from '@dxos/echo-protocol';
 import { TypedObject, create, generateEchoId } from '@dxos/echo-schema';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { describe, test } from '@dxos/test';
 
@@ -87,36 +87,25 @@ describe('Filter', () => {
   // TODO(burdon): Test schema.
 
   test('compare types', () => {
-    const spaceKey = PublicKey.random();
-    const itemId = generateEchoId();
+    const spaceId = SpaceId.random();
+    const objectId = generateEchoId();
 
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), spaceKey)).to.be.true;
-    expect(compareType(new Reference(itemId, undefined, spaceKey.toHex()), new Reference(itemId), PublicKey.random()))
-      .to.be.false;
-
+    expect(compareType(Reference.forEchoObject(spaceId, objectId), Reference.forLocalEchoObject(objectId), spaceId)).to
+      .be.true;
     expect(
-      compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        spaceKey,
-      ),
-    ).to.be.true;
-    expect(
-      compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        Reference.fromLegacyTypename('dxos.sdk.client.Test'),
-        spaceKey,
-      ),
+      compareType(Reference.forEchoObject(spaceId, objectId), Reference.forLocalEchoObject(objectId), SpaceId.random()),
     ).to.be.false;
 
-    // Missing host on items created on some versions.
     expect(
       compareType(
-        Reference.fromLegacyTypename('dxos.sdk.client.Properties'),
-        new Reference('dxos.sdk.client.Properties', 'protobuf', undefined),
-        spaceKey,
+        Reference.forType('dxos.sdk.client.Properties'),
+        Reference.forType('dxos.sdk.client.Properties'),
+        spaceId,
       ),
     ).to.be.true;
+    expect(
+      compareType(Reference.forType('dxos.sdk.client.Properties'), Reference.forType('dxos.sdk.client.Test'), spaceId),
+    ).to.be.false;
   });
 
   test('dynamic schema', async () => {
