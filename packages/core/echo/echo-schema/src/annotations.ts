@@ -11,12 +11,26 @@ import { type Simplify } from 'effect/Types';
 import { checkIdNotPresentOnSchema } from './ast';
 import { type Identifiable } from './types';
 
+export type ToMutable<T> = T extends {}
+  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
+  : T;
+
+// TODO(burdon): Check follows effect patterns.
+
+//
+// Index
+//
+
 export const IndexAnnotation = Symbol.for('@dxos/schema/annotation/Index');
 export const getIndexAnnotation = AST.getAnnotation<boolean>(IndexAnnotation);
 
+//
+// Object
+//
+
 // TODO(burdon): Make private to this file?
 // TODO(burdon): EchoObjectAnnotation should be the actual annotation.
-export const EchoObjectAnnotationId = Symbol.for('@dxos/echo-schema/annotation/EchoObject');
+export const EchoObjectAnnotationId = Symbol.for('@dxos/schema/annotation/EchoObject');
 
 export type EchoObjectAnnotation = {
   schemaId?: string;
@@ -24,13 +38,18 @@ export type EchoObjectAnnotation = {
   version: string;
 };
 
-export const getEchoObjectAnnotation = (schema: S.Schema<any>) =>
+export const getEchoObjectAnnotation = (schema: S.Schema<any>): EchoObjectAnnotation | undefined =>
   pipe(
     AST.getAnnotation<EchoObjectAnnotation>(EchoObjectAnnotationId)(schema.ast),
     Option.getOrElse(() => undefined),
   );
 
+// TODO(burdon): Rename.
+export const getEchoObjectTypename = (schema: S.Schema<any>): string | undefined =>
+  getEchoObjectAnnotation(schema)?.typename;
+
 /**
+ * Echo object annotation.
  * @param typename
  * @param version
  */
@@ -51,6 +70,10 @@ export const EchoObject =
     >;
   };
 
+//
+// Reference
+//
+
 export const ReferenceAnnotation = Symbol.for('@dxos/schema/annotation/Reference');
 export type ReferenceAnnotationValue = EchoObjectAnnotation;
 export const getRefAnnotation = (schema: S.Schema<any>) =>
@@ -59,17 +82,15 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
     Option.getOrElse(() => undefined),
   );
 
-export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/echo-schema/annotation/FieldMeta');
+export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/schema/annotation/FieldMeta');
 type FieldMetaValue = Record<string, string | number | boolean | undefined>;
 export type EchoObjectFieldMetaAnnotation = {
   [namespace: string]: FieldMetaValue;
 };
-export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
-  pipe(
-    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
-    Option.map((meta) => meta[namespace] as T),
-    Option.getOrElse(() => undefined),
-  );
+
+//
+// Meta
+//
 
 export const fieldMeta =
   (namespace: string, meta: FieldMetaValue) =>
@@ -83,6 +104,9 @@ export const fieldMeta =
     });
   };
 
-export type ToMutable<T> = T extends {}
-  ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
-  : T;
+export const getFieldMetaAnnotation = <T>(field: AST.PropertySignature, namespace: string) =>
+  pipe(
+    AST.getAnnotation<EchoObjectFieldMetaAnnotation>(EchoObjectFieldMetaAnnotationId)(field.type),
+    Option.map((meta) => meta[namespace] as T),
+    Option.getOrElse(() => undefined),
+  );

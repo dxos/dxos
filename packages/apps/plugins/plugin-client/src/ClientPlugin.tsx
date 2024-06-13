@@ -5,7 +5,6 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { TextV0Type } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -17,7 +16,9 @@ import {
   filterPlugins,
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+import { type S } from '@dxos/echo-schema';
 import { registerSignalRuntime } from '@dxos/echo-signals/react';
+import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
 import meta, { CLIENT_PLUGIN } from './meta';
@@ -64,7 +65,7 @@ export const parseClientPlugin = (plugin?: Plugin) =>
 
 export type SchemaProvides = {
   echo: {
-    schema: Parameters<Client['addSchema']>;
+    schema: S.Schema<any>[];
   };
 };
 
@@ -95,8 +96,6 @@ export const ClientPlugin = ({
 
       try {
         await client.initialize();
-        // TODO(wittjosiah): Why is this here? Remove?
-        client.addSchema(TextV0Type);
         await onClientInitialized?.(client);
 
         // TODO(wittjosiah): Remove. This is a hack to get the app to boot with the new identity after a reset.
@@ -163,7 +162,8 @@ export const ClientPlugin = ({
       }
 
       filterPlugins(plugins, parseSchemaPlugin).forEach((plugin) => {
-        client.addSchema(...plugin.provides.echo.schema);
+        log('ready', { id: plugin.meta.id });
+        client.addTypes(plugin.provides.echo.schema);
       });
     },
     unload: async () => {

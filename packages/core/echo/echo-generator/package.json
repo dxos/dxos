@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-generator",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "ECHO data generator for testing.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

@@ -10,7 +10,7 @@ const client = new Client();
 
 void (async () => {
   await client.initialize();
-  client.addSchema(types);
+  client.addTypes(types);
   if (!client.halo.identity.get()) {
     await client.halo.createIdentity();
   }

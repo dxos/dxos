@@ -28,7 +28,7 @@ describe('Serialization', () => {
 
     const client = new Client({ services: builder.createLocalClientServices() });
     await client.initialize();
-    client.addSchema(CollectionType, DocumentType, TextV0Type);
+    client.addTypes([CollectionType, DocumentType, TextV0Type]);
     afterTest(() => client.destroy());
     await client.halo.createIdentity();
 

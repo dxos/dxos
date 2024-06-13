@@ -5,7 +5,7 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesSchema } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
@@ -301,7 +301,7 @@ export class SpaceProxy implements Space {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.schema(PropertiesSchema), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.schema(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {

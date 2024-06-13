@@ -23,7 +23,7 @@ describe('Composer migrations', () => {
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    client.addSchema(
+    client.addTypes([
       FolderType,
       Expando,
       SectionType,
@@ -33,7 +33,7 @@ describe('Composer migrations', () => {
       TextV0Type,
       ThreadType,
       MessageType,
-    );
+    ]);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;
@@ -103,7 +103,7 @@ describe('Composer migrations', () => {
 
     const builder = new MigrationBuilder(space);
     await migrations[0].next({ space, builder });
-    await builder._commit();
+    await (builder as any)._commit();
 
     expect((await folderQuery.run()).objects).to.have.lengthOf(0);
     expect((await stackQuery.run()).objects).to.have.lengthOf(0);

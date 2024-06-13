@@ -190,7 +190,7 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          client.addSchema(FolderType, StackType, SectionType);
+          client.addTypes([FolderType, StackType, SectionType]);
 
           const url = new URL(window.location.href);
           // Match CF only.

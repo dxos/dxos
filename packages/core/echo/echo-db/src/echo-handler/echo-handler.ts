@@ -174,7 +174,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
-    // object instanceof StoredEchoSchema requires database to lookup schema
+    // Object instanceof StoredEchoSchema requires database to lookup schema.
     const database = target[symbolInternals].database;
     if (object != null && database && object instanceof StoredSchema) {
       return database.schema.registerSchema(object);
@@ -271,19 +271,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
     const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
-
     const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
 
     const objectId = echoObject.id;
     invariant(typeof objectId === 'string' && objectId.length > 0);
 
-    if (target[symbolInternals].core.database) {
-      const anotherDb = otherInternals?.core.database;
+    if (target[symbolInternals].database) {
+      const anotherDb = otherInternals?.database;
       if (!anotherDb) {
-        target[symbolInternals].core.database.add(echoObject);
+        target[symbolInternals].database.add(echoObject);
         return new Reference(objectId);
       } else {
-        if (anotherDb !== target[symbolInternals].core.database) {
+        if (anotherDb !== target[symbolInternals].database) {
           return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
         } else {
           return new Reference(objectId);
@@ -303,18 +302,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (rootObjectSchema == null) {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
+        // The object has schema, but we can't access it to validate the value being set.
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
+
       return value;
     }
+
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
-    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) =>
-      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]),
-    );
+    const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
+      return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
+    });
     if (propertySchema == null) {
       return unwrappedValue;
     }
+
     const _ = S.asserts(propertySchema)(unwrappedValue);
     return unwrappedValue;
   }
@@ -323,7 +326,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return ObjectMetaSchema;
     }
-    // TODO(?): Make reactive.
+
+    // TODO(y): Make reactive.
+    // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
       return undefined;
     }
@@ -357,7 +362,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, target.length);
 
     const encodedItems = this._encodeForArray(target, items);
-
     return target[symbolInternals].core.arrayPush([getNamespace(target), ...path], encodedItems);
   }
 
@@ -391,7 +395,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, 0);
 
     const fullPath = this._getPropertyMountPath(target, path);
-
     const encodedItems = this._encodeForArray(target, items);
 
     let newLength: number = -1;
@@ -409,7 +412,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
-
     const encodedItems = this._encodeForArray(target, items);
 
     let deletedElements: any[] | undefined;
@@ -422,8 +424,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         deletedElements = array.splice(start);
       }
     });
-    invariant(deletedElements);
 
+    invariant(deletedElements);
     return deletedElements;
   }
 
@@ -460,6 +462,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       [symbolPath]: [],
       [symbolNamespace]: META_NAMESPACE,
     };
+
     return createReactiveProxy(metaTarget, this) as any;
   }
 
@@ -606,8 +609,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getReified(target: ProxyTarget): any {
     const dataPath = [...target[symbolPath]];
     const fullPath = [getNamespace(target), ...dataPath];
-    const value = target[symbolInternals].core.getDecoded(fullPath);
-    return value;
+    return target[symbolInternals].core.getDecoded(fullPath);
   }
 
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {

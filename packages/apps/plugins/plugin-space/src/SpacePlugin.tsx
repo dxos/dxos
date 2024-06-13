@@ -35,7 +35,7 @@ import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
   type EchoReactiveObject,
-  type PropertiesProps,
+  type PropertiesTypeProps,
   type ReactiveObject,
   type Space,
   create,
@@ -115,7 +115,6 @@ export const SpacePlugin = ({
   const subscriptions = new EventSubscriptions();
   const spaceSubscriptions = new EventSubscriptions();
   const graphSubscriptions = new Map<string, UnsubscribeCallback>();
-
   const serializer = new SpaceSerializer();
 
   let clientPlugin: Plugin<ClientPluginProvides> | undefined;
@@ -559,7 +558,7 @@ export const SpacePlugin = ({
               const {
                 objects: [sharedSpacesCollection],
               } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
-              const space = await client.spaces.create(intent.data as PropertiesProps);
+              const space = await client.spaces.create(intent.data as PropertiesTypeProps);
               await space.waitUntilReady();
 
               const collection = create(CollectionType, { objects: [], views: {} });

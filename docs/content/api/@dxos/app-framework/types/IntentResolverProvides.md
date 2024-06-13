@@ -1,11 +1,11 @@
 # Type `IntentResolverProvides`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts:9](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L9)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts:9](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L9)</sub>
 
 
 
 
 ## Properties
-### [intent](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L10)
+### [intent](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L10)
 Type: <code>object</code>
 
 
