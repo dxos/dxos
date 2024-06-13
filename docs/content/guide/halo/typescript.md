@@ -92,7 +92,7 @@ const acceptInvitation = async (
 * If accepting a device join invitation from a UI application using the [shell](../dxos-ui/shell/) (e.g. [Composer](../../composer/)), you will only be presented with the `authCode` after the call to `halo.join` has been made.
   :::
 
-::: details Retrieving a device invitation code from a URL
+::: details Retrieving a device invitation code from an invitation URL
 
 ```ts file=./snippets-typescript/device-join.ts#L26-L37
 /** Extracts device invitation code from a URL or string. */
