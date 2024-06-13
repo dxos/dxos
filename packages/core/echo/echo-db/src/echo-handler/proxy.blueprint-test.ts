@@ -30,6 +30,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
     if (testConfig == null) {
       continue;
     }
+
     const { objectsHaveId, beforeAllCb, afterAllCb, createObjectFn: createObject } = testConfig;
 
     beforeAll(async () => {
@@ -102,7 +103,6 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('can work with complex types', async () => {
         const circle: any = { type: 'circle', radius: 42 };
         const obj = await createObject({ nullableShapeArray: [circle] });
-
         expect(obj.nullableShapeArray![0]).to.deep.eq(circle);
 
         obj.nullableShapeArray?.push(null);
@@ -120,6 +120,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         if (schema == null) {
           return;
         }
+
         const obj = await createObject({ objectArray: [{ field: 'foo' }] });
         expect(() => (obj.string = 1 as any)).to.throw();
         expect(() => (obj.object = { field: 1 } as any)).to.throw();
@@ -520,7 +521,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
           const obj = await createObject({ twoDimNumberArray: [[1], [2, 3]] });
           const array = obj.twoDimNumberArray!;
           using updates = updateCounter(() => {
-            array[0];
+            array[0]; // TODO(burdon): ???
           });
 
           const result = array.flat();
