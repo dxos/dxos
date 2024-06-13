@@ -14,6 +14,7 @@ import { createTestLevel } from '@dxos/kv-store/testing';
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
 import { type EchoDatabase } from '../proxy-db';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -107,16 +108,18 @@ export class EchoTestPeer extends Resource {
 
   async createDatabase(spaceKey: PublicKey, { client = this.client }: { client?: EchoClient } = {}) {
     const root = await this.host.createSpaceRoot(spaceKey);
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     // NOTE: Client closes the database when it is closed.
-    const db = client.constructDatabase({ spaceKey });
+    const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(root.url);
     await db.open();
     return db;
   }
 
   async openDatabase(spaceKey: PublicKey, rootUrl: string, { client = this.client }: { client?: EchoClient } = {}) {
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     // NOTE: Client closes the database when it is closed.
-    const db = client.constructDatabase({ spaceKey });
+    const db = client.constructDatabase({ spaceId, spaceKey });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;

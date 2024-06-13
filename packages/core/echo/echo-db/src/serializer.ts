@@ -39,36 +39,38 @@ export class Serializer {
       spaceKey: database.spaceKey.toHex(),
     };
 
-    return data;
+    // TODO(dmaretskyi): Fix me.
+    return data as any;
   }
 
   async import(database: EchoDatabase, data: SerializedSpaceData) {
-    invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
-    const {
-      objects: [properties],
-    } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
+    // invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
+    // const {
+    //   objects: [properties],
+    // } = await database.query(Filter.typename(TYPE_PROPERTIES)).run();
 
-    const { objects } = data;
+    // const { objects } = data;
 
-    for (const object of objects) {
-      const { '@type': type, ...data } = object;
+    // for (const object of objects) {
+    //   // const { '@type': type, ...data } = object;
 
-      // Handle Space Properties
-      if (
-        properties &&
-        (type === TYPE_PROPERTIES || (typeof type === 'object' && type !== null && type.itemId === TYPE_PROPERTIES))
-      ) {
-        Object.entries(data).forEach(([name, value]) => {
-          if (!name.startsWith('@')) {
-            properties[name] = value;
-          }
-        });
-        continue;
-      }
+    //   // Handle Space Properties
+    //   if (
+    //     properties &&
+    //     (type === TYPE_PROPERTIES || (typeof type === 'object' && type !== null && type.itemId === TYPE_PROPERTIES))
+    //   ) {
+    //     Object.entries(data).forEach(([name, value]) => {
+    //       if (!name.startsWith('@')) {
+    //         properties[name] = value;
+    //       }
+    //     });
+    //     continue;
+    //   }
 
-      this._importObject(database, object);
-    }
-    await database.flush();
+    //   this._importObject(database, object);
+    // }
+    // await database.flush();
+    throw new Error('Not implemented');
   }
 
   private _exportObject(object: EchoReactiveObject<any>): SerializedObjectData {
@@ -91,31 +93,33 @@ export class Serializer {
   }
 
   private _importObject(database: EchoDatabase, object: SerializedObjectData) {
-    const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
-    const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
+    // const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
+    // const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
-    const core = new ObjectCore();
-    core.id = id;
-    // TODO(dmaretskyi): Can't pass type in opts.
-    core.initNewObject(dataProperties, {
-      meta,
-    });
-    core.setType(getTypeRef(type)!);
-    if (deleted) {
-      core.setDeleted(deleted);
-    }
+    // const core = new ObjectCore();
+    // core.id = id;
+    // // TODO(dmaretskyi): Can't pass type in opts.
+    // core.initNewObject(dataProperties, {
+    //   meta,
+    // });
+    // core.setType(getTypeRef(type)!);
+    // if (deleted) {
+    //   core.setDeleted(deleted);
+    // }
 
-    database.coreDatabase.addCore(core);
+    // database.coreDatabase.addCore(core);
+    throw new Error('Not implemented');
   }
 }
 
 export const getTypeRef = (type?: EncodedReferenceObject | string): Reference | undefined => {
-  if (typeof type === 'object' && type !== null) {
-    return new Reference(type.itemId!, type.protocol!, type.host!);
-  } else if (typeof type === 'string') {
-    // TODO(mykola): Never reached?
-    return Reference.fromLegacyTypename(type);
-  }
+  // if (typeof type === 'object' && type !== null) {
+  //   return new Reference(type.itemId!, type.protocol!, type.host!);
+  // } else if (typeof type === 'string') {
+  //   // TODO(mykola): Never reached?
+  //   return Reference.fromLegacyTypename(type);
+  // }
+  throw new Error('Not implemented');
 };
 
 const chunkArray = <T>(arr: T[], chunkSize: number): T[][] => {
