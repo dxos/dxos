@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EncodedReferenceObject, encodeReference, Reference } from '@dxos/echo-protocol';
+import { type EncodedReferenceObject, encodeReference, Reference, decodeReference } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -69,7 +69,7 @@ export type SerializedObject = {
   /**
    * Reference to a type.
    */
-  '@type'?: EncodedReferenceObject | string;
+  '@type'?: EncodedReferenceObject | LegacyEncodedReferenceObject | string;
 
   /**
    * Flag to indicate soft-deleted objects.
@@ -83,6 +83,18 @@ export type SerializedObject = {
    */
   '@model'?: string;
 } & Record<string, any>;
+
+const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
+
+/**
+ * Reference as it is stored in Automerge document.
+ */
+type LegacyEncodedReferenceObject = {
+  '@type': typeof LEGACY_REFERENCE_TYPE_TAG;
+  itemId: string | null;
+  protocol: string | null;
+  host: string | null;
+};
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
@@ -120,13 +132,12 @@ export class Serializer {
     const { objects } = data;
 
     for (const object of objects) {
-      const { '@type': type, ...data } = object;
+      const { '@type': typeEncoded, ...data } = object;
+
+      const type = decodeSerializedReference(typeEncoded);
 
       // Handle Space Properties
-      if (
-        properties &&
-        (type === TYPE_PROPERTIES || (typeof type === 'object' && type !== null && type.itemId === TYPE_PROPERTIES))
-      ) {
+      if (properties && type?.itemId === TYPE_PROPERTIES) {
         Object.entries(data).forEach(([name, value]) => {
           if (!name.startsWith('@')) {
             properties[name] = value;
@@ -169,7 +180,7 @@ export class Serializer {
     core.initNewObject(dataProperties, {
       meta,
     });
-    core.setType(getTypeRef(type)!);
+    core.setType(decodeSerializedReference(type)!);
     if (deleted) {
       core.setDeleted(deleted);
     }
@@ -178,12 +189,20 @@ export class Serializer {
   }
 }
 
-export const getTypeRef = (type?: EncodedReferenceObject | string): Reference | undefined => {
-  if (typeof type === 'object' && type !== null) {
-    return new Reference(type.itemId!, type.protocol!, type.host!);
-  } else if (typeof type === 'string') {
+export const decodeSerializedReference = (
+  encoded?: EncodedReferenceObject | LegacyEncodedReferenceObject | string,
+): Reference | undefined => {
+  if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
+    return decodeReference(encoded);
+  } else if (
+    typeof encoded === 'object' &&
+    encoded !== null &&
+    (encoded as any)['@type'] === LEGACY_REFERENCE_TYPE_TAG
+  ) {
+    return new Reference((encoded as any).itemId, (encoded as any).protocol, (encoded as any).host);
+  } else if (typeof encoded === 'string') {
     // TODO(mykola): Never reached?
-    return Reference.fromLegacyTypename(type);
+    return Reference.fromLegacyTypename(encoded);
   }
 };
 

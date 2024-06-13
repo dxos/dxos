@@ -279,7 +279,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },
-        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(TestType) },
+        '@type': { '/': 'dxn:type:example.com/type/TestSchema' },
         ...TEST_OBJECT,
       });
     }

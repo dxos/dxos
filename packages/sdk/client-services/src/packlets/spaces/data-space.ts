@@ -13,7 +13,7 @@ import {
   type MetadataStore,
   type Space,
 } from '@dxos/echo-pipeline';
-import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { decodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -555,7 +555,7 @@ export class DataSpace {
 export const findPropertiesObject = (spaceDoc: SpaceDoc): [string, ObjectStructure] | undefined => {
   for (const id in spaceDoc.objects ?? {}) {
     const obj = spaceDoc.objects![id];
-    if (obj.system.type?.itemId === TYPE_PROPERTIES) {
+    if (obj.system.type && decodeReference(obj.system.type).itemId === TYPE_PROPERTIES) {
       return [id, obj];
     }
   }
