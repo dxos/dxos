@@ -13,9 +13,10 @@ import { AutomergeContext } from './core-db';
 import { Hypergraph } from './hypergraph';
 import { EchoDatabaseImpl } from './proxy-db';
 import { Filter } from './query';
-import { type SerializedSpace, Serializer } from './serializer';
+import { Serializer } from './serializer';
 import { Contact, EchoTestBuilder } from './testing';
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import type { SerializedSpaceData } from './serialized-space';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -32,7 +33,7 @@ describe('Serializer', () => {
   test('Basic', async () => {
     const serializer = new Serializer();
 
-    let data: SerializedSpace;
+    let data: SerializedSpaceData;
 
     {
       const { db } = await builder.createDatabase();
@@ -67,7 +68,7 @@ describe('Serializer', () => {
   test('Deleted objects', async () => {
     const serializer = new Serializer();
     const objValue = { value: 42 };
-    let data: SerializedSpace;
+    let data: SerializedSpaceData;
 
     {
       const { db } = await builder.createDatabase();
@@ -101,7 +102,7 @@ describe('Serializer', () => {
   test('Nested objects', async () => {
     const serializer = new Serializer();
 
-    let data: SerializedSpace;
+    let data: SerializedSpaceData;
 
     {
       const { db } = await builder.createDatabase();
@@ -145,7 +146,7 @@ describe('Serializer', () => {
   });
 
   test('Serialize object with schema', async () => {
-    let data: SerializedSpace;
+    let data: SerializedSpaceData;
     const name = 'Rich Burton';
 
     {
@@ -179,7 +180,7 @@ describe('Serializer', () => {
   test('Loading many objects on db restart chunk load', async () => {
     const totalObjects = 123;
     const serializer = new Serializer();
-    let data: SerializedSpace;
+    let data: SerializedSpaceData;
 
     const spaceKey = PublicKey.random();
     const spaceId = await createIdFromSpaceKey(spaceKey);
