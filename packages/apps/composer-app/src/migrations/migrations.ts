@@ -13,7 +13,7 @@ import {
   ThreadType,
 } from '@braneframe/types';
 import { loadObjectReferences } from '@dxos/echo-db';
-import { type Migration, type ObjectStructure } from '@dxos/migrations';
+import { type MigrationBuilder, type Migration, type ObjectStructure } from '@dxos/migrations';
 import { Filter } from '@dxos/react-client/echo';
 import { getDeep, nonNullable } from '@dxos/util';
 
@@ -96,7 +96,7 @@ export const migrations: Migration[] = [
         }));
 
         await loadObjectReferences(doc, (d) => d.comments?.map((comment) => comment.thread));
-        const threads: ThreadType[] = [];
+        const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
         for (const comment of doc.comments ?? []) {
           const thread = comment.thread;
           if (!thread) {
@@ -124,8 +124,7 @@ export const migrations: Migration[] = [
               messages: data.messages,
             },
           }));
-          // TODO(wittjosiah): Is this cast okay? Object is migrated above.
-          threads.push(thread as ThreadType);
+          threads.push(builder.createReference(thread.id));
         }
 
         await builder.migrateObject(doc.id, ({ data }) => ({
@@ -213,7 +212,9 @@ export const migrations: Migration[] = [
           },
         }));
 
-        await builder.addObject(ChannelType, { name: thread.title, threads: [thread] });
+        const threadRef = builder.createReference(thread.id);
+
+        await builder.addObject(ChannelType, { name: thread.title, threads: [threadRef] });
       }
     },
   },

@@ -7,6 +7,7 @@ import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/a
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
+import { Reference, encodeReference } from '@dxos/echo-protocol';
 import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -61,6 +62,10 @@ export class MigrationBuilder {
   async addObject(schema: S.Schema<any>, props: any) {
     const core = await this._createObject({ schema, props });
     return core.id;
+  }
+
+  createReference(id: string) {
+    return encodeReference(new Reference(id));
   }
 
   deleteObject(id: string) {
