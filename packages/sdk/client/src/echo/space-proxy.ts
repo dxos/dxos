@@ -418,13 +418,10 @@ export class SpaceProxy implements Space {
     migration,
     automergeRootUrl,
   }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
-    if (automergeRootUrl) {
-      log('applying new root', { automergeRootUrl });
-      this._databaseInitialized.reset();
-    }
+    log('create epoch', { migration, automergeRootUrl });
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
-    while (this._db.rootUrl !== automergeRootUrl) {
-      await this._databaseInitialized.reset();
+    if (this._db.rootUrl !== automergeRootUrl) {
+      this._databaseInitialized.reset();
       await this._databaseInitialized.wait();
     }
   }

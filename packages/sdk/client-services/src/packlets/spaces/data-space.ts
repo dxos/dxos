@@ -534,6 +534,7 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this._echoHost.updateIndexes();
   }
 
   @synchronized
