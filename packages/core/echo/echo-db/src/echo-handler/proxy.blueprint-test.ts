@@ -8,7 +8,7 @@ import jestExpect from 'expect';
 import { describe, test } from 'mocha';
 
 import { getProxyHandlerSlot, getSchema, getType, getTypeReference } from '@dxos/echo-schema';
-import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaClass } from '@dxos/echo-schema/testing';
+import { updateCounter, TEST_OBJECT, TestSchema, TestSchemaType } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
 import { beforeAll, afterAll } from '@dxos/test';
 
@@ -25,7 +25,7 @@ export interface TestConfiguration {
 export type TestConfigurationFactory = (schema: S.Schema<any> | undefined) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
-  for (const schema of [undefined, TestSchema, TestSchemaClass]) {
+  for (const schema of [undefined, TestSchema, TestSchemaType]) {
     const testConfig = testConfigFactory(schema);
     if (testConfig == null) {
       continue;

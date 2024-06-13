@@ -27,7 +27,7 @@ import {
   TEST_SCHEMA_TYPE,
   TestClass,
   TestSchema,
-  TestSchemaClass,
+  TestSchemaType,
   TestType,
   type TestSchemaWithClass,
 } from '@dxos/echo-schema/testing';
@@ -51,7 +51,8 @@ test('id property name is reserved', () => {
   expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
-for (const schema of [undefined, TestType, TestSchemaClass]) {
+// TODO(burdon): Why undefined?
+for (const schema of [undefined, TestType, TestSchemaType]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoObject(schema ? create(schema as any, props) : create(props));
   };
@@ -239,7 +240,7 @@ describe('Reactive Object with ECHO database', () => {
       }
 
       {
-        const queryResult = await db.query(Filter.schema(TestSchemaClass)).run();
+        const queryResult = await db.query(Filter.schema(TestSchemaType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
     });
@@ -272,7 +273,7 @@ describe('Reactive Object with ECHO database', () => {
   test('data symbol', async () => {
     const { db, graph } = await builder.createDatabase();
     graph.schemaRegistry.addSchema([TestType]);
-    const objects = [db.add(create(TestType, TEST_OBJECT)), db.add(create(TestSchemaClass, TEST_OBJECT))];
+    const objects = [db.add(create(TestType, TEST_OBJECT)), db.add(create(TestSchemaType, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
@@ -563,10 +564,10 @@ describe('Reactive Object with ECHO database', () => {
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
 
-    graph.schemaRegistry.addSchema(TestSchemaClass);
+    // graph.schemaRegistry.addSchema(TestSchema);
 
-    const obj = db.add(create(TestSchemaClass, { string: 'Object 1' }));
-    const another = create(TestSchemaClass, { string: 'Object 2' });
+    const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));
+    const another = create(TestSchemaType, { string: 'Object 2' });
     obj.other = another;
 
     expect(getDatabaseFromObject(another)).not.to.be.undefined;
