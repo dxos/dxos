@@ -1,5 +1,5 @@
 # Type `DeepIndex`
-<sub>Declared in [sdk/config/src/types.ts:45](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/config/src/types.ts#L45)</sub>
+<sub>Declared in [sdk/config/src/types.ts:45](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/config/src/types.ts#L45)</sub>
 
 
 Retrieves a property type in a series of nested objects.
