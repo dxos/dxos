@@ -103,6 +103,7 @@ describe('Composer migrations', () => {
 
     const builder = new MigrationBuilder(space);
     await migrations[0].next({ space, builder });
+    await builder._commit();
 
     expect((await folderQuery.run()).objects).to.have.lengthOf(0);
     expect((await stackQuery.run()).objects).to.have.lengthOf(0);
@@ -120,8 +121,11 @@ describe('Composer migrations', () => {
 
   test(migrations[1].version.toString() + ' without root', async () => {
     expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.false;
+
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
+    await builder._commit();
+
     expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
   });
 
@@ -129,8 +133,11 @@ describe('Composer migrations', () => {
     const root = create(CollectionType, { objects: [], views: {} });
     space.properties[CollectionType.typename] = root;
     expect(space.properties[CollectionType.typename] instanceof CollectionType).to.be.true;
+
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
+    await builder._commit();
+
     expect(space.properties[CollectionType.typename].id).to.equal(root.id);
   });
 });

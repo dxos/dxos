@@ -34,7 +34,7 @@ export class MigrationBuilder {
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
-    const documentId = this._rootDoc.links?.[id] as AnyDocumentId | undefined;
+    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
     const docHandle = documentId && this._repo.find(documentId);
     if (!docHandle) {
       return undefined;
