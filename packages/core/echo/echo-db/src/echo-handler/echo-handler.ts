@@ -38,6 +38,7 @@ import {
 } from './echo-proxy-target';
 import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 
 export const PROPERTY_ID = 'id';
 
@@ -281,18 +282,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const anotherDb = otherInternals?.core.database;
       if (!anotherDb) {
         target[symbolInternals].core.database.add(echoObject);
-        return new Reference(objectId);
+        return Reference.forLocalEchoObject(objectId);
       } else {
         if (anotherDb !== target[symbolInternals].core.database) {
-          return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
+          return Reference.forEchoObject(anotherDb.spaceId, objectId);
         } else {
-          return new Reference(objectId);
+          return Reference.forLocalEchoObject(objectId);
         }
       }
     } else {
       invariant(target[symbolInternals].linkCache);
       target[symbolInternals].linkCache.set(objectId, echoObject);
-      return new Reference(objectId);
+      return Reference.forLocalEchoObject(objectId);
     }
   }
 
@@ -303,7 +304,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (rootObjectSchema == null) {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
-        throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
+        throw new Error(`Schema not found in schema registry: ${typeReference.dxn.toString()}`);
       }
       return value;
     }
@@ -333,16 +334,22 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchema(typeReference.itemId);
-    if (staticSchema != null) {
-      return staticSchema;
-    }
+    switch (typeReference.dxn.kind) {
+      case DXN.kind.TYPE: {
+        const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDxn(typeReference.dxn);
+        if (staticSchema != null) {
+          return staticSchema;
+        }
+      }
+      case DXN.kind.ECHO: {
+        const [spaceId, objetId] = typeReference.dxn.parts;
+        invariant(spaceId === LOCAL_SPACE_TAG, 'Schema reference to another space not supported');
 
-    if (typeReference.protocol === 'protobuf') {
-      return undefined;
+        return target[symbolInternals].database.schema.getSchemaById(objetId);
+      }
+      default:
+        throw new Error(`Invalid type reference kind: ${typeReference.dxn.kind}`);
     }
-
-    return target[symbolInternals].database.schema.getSchemaById(typeReference.itemId);
   }
 
   getTypeReference(target: ProxyTarget): Reference | undefined {
@@ -481,12 +488,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const foreignDatabase = (getProxyHandlerSlot(obj).target as ProxyTarget)[symbolInternals].database;
       if (!foreignDatabase) {
         database.add(obj);
-        return new Reference(obj.id);
+        return Reference.forLocalEchoObject(obj.id);
       } else {
         if (foreignDatabase !== database) {
-          return new Reference(obj.id, undefined, foreignDatabase.spaceKey.toHex());
+          return Reference.forEchoObject(foreignDatabase.spaceId, obj.id);
         } else {
-          return new Reference(obj.id);
+          return Reference.forLocalEchoObject(obj.id);
         }
       }
     } else {
@@ -497,7 +504,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(obj.id != null);
 
       target[symbolInternals].linkCache.set(obj.id, obj as EchoReactiveObject<any>);
-      return new Reference(obj.id);
+      return Reference.forLocalEchoObject(obj.id);
     }
   }
 
@@ -511,7 +518,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return database.graph._lookupLink(ref, database, () => target[symbolInternals].core.notifyUpdate());
     } else {
       invariant(target[symbolInternals].linkCache);
-      return target[symbolInternals].linkCache.get(ref.itemId);
+      invariant(ref.dxn.kind === DXN.kind.ECHO);
+      const [spaceId, objectId] = ref.dxn.parts;
+      invariant(spaceId === LOCAL_SPACE_TAG);
+
+      return target[symbolInternals].linkCache.get(objectId);
     }
   }
 
@@ -613,7 +624,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getDevtoolsFormatter(target: ProxyTarget): DevtoolsFormatter {
     return {
       header: (config?: any) =>
-        getHeader(this.getTypeReference(target)?.itemId ?? 'EchoObject', target[symbolInternals].core.id, config),
+        getHeader(
+          this.getTypeReference(target)?.getTypename() ?? 'EchoObject',
+          target[symbolInternals].core.id,
+          config,
+        ),
       hasBody: () => true,
       body: () => {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
@@ -633,7 +648,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
           data = {
             id: target[symbolInternals].core.id,
-            '@type': this.getTypeReference(target)?.itemId,
+            '@type': this.getTypeReference(target)?.getTypename(),
             '@meta': metaReified,
             ...data,
             '[[Schema]]': this.getSchema(target),

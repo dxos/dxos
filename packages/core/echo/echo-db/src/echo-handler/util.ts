@@ -14,6 +14,7 @@ import {
 import { isEchoObject } from './create';
 import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
 import type { EchoDatabase } from '../proxy-db';
+import { DXN } from '@dxos/keys';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (isEchoObject(obj)) {

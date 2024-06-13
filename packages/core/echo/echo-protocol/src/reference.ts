@@ -3,7 +3,7 @@
 //
 
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
-import { DXN, type SpaceId } from '@dxos/keys';
+import { DXN, LOCAL_SPACE_TAG, type SpaceId } from '@dxos/keys';
 
 // TODO(burdon): Comment.
 export class Reference {
@@ -19,10 +19,26 @@ export class Reference {
     return new Reference(new DXN(DXN.kind.ECHO, [spaceId, objectId]));
   }
 
+  static forLocalEchoObject(objectId: string): Reference {
+    return new Reference(new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, objectId]));
+  }
+
   // prettier-ignore
   constructor(
     public readonly dxn: DXN,
   ) {}
+
+  getTypename(): string | undefined {
+    if (this.dxn.kind === DXN.kind.TYPE) {
+      return this.dxn.parts[0];
+    }
+  }
+
+  getObjectID(): string | undefined {
+    if (this.dxn.kind === DXN.kind.ECHO) {
+      return this.dxn.parts[1];
+    }
+  }
 
   encode(): ReferenceValue {
     return { dxn: this.dxn.toString() };

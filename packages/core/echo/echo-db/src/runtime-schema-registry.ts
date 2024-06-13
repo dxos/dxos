@@ -5,6 +5,8 @@
 import type * as S from '@effect/schema/Schema';
 
 import { requireTypeReference, StoredSchema } from '@dxos/echo-schema';
+import { DXN } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
 
 const getTypenameOrThrow = (schema: S.Schema<any>): string => requireTypeReference(schema).itemId;
 
@@ -31,6 +33,13 @@ export class RuntimeSchemaRegistry {
 
   getSchema(typename: string): S.Schema<any> | undefined {
     return this._schemaMap.get(typename);
+  }
+
+  getSchemaByDxn(dxn: DXN): S.Schema<any> | undefined {
+    invariant(dxn.kind === DXN.kind.TYPE);
+
+    const typename = dxn.parts[0];
+    return this.getSchema(typename);
   }
 
   // TODO(burdon): Change to array.

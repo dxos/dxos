@@ -24,7 +24,7 @@ import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
@@ -65,6 +65,7 @@ export class CoreDatabase {
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
+    public readonly spaceId: SpaceId,
     public readonly spaceKey: PublicKey,
   ) {
     this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);

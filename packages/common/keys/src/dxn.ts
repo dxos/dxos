@@ -38,3 +38,8 @@ export class DXN {
     return this.#kind == DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 }
+
+/**
+ * Tags for ECHO DXNs that should resolve the object ID in the local space.
+ */
+export const LOCAL_SPACE_TAG = '@';
