@@ -230,7 +230,7 @@ describe('Reactive Object with ECHO database', () => {
       db.add(create(TestType, { string: 'foo' }));
 
       {
-        const queryResult = await db.query(Filter.typename('TestSchema')).run();
+        const queryResult = await db.query(Filter.typename(TEST_SCHEMA_TYPE.typename)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
