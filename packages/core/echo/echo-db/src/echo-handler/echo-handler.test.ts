@@ -51,7 +51,7 @@ test('id property name is reserved', () => {
   expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
-// TODO(burdon): Why undefined?
+// Pass undefined to test untyped proxy.
 for (const schema of [undefined, TestType, TestSchemaType]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoObject(schema ? create(schema as any, props) : create(props));

@@ -302,7 +302,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (rootObjectSchema == null) {
       const typeReference = target[symbolInternals].core.getType();
       if (typeReference) {
-        // TODO(burdon): Why throw if exists?
+        // The object has schema, but we can't access it to validate the value being set.
         throw new Error(`Schema not found in schema registry: ${typeReference.itemId}`);
       }
 
@@ -312,7 +312,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
     const unwrappedValue = value instanceof DynamicSchema ? value.serializedSchema : value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
-      target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
+      return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
     if (propertySchema == null) {
       return unwrappedValue;
