@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
