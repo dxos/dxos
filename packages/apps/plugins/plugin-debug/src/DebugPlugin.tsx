@@ -153,13 +153,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       removeEdges: true,
                       nodes: [
                         {
-                          id: `${space.key.toHex()}-debug`,
+                          id: `${space.id}-debug`,
                           data: { space },
                           properties: {
                             label: ['debug label', { ns: DEBUG_PLUGIN }],
                             icon: (props: IconProps) => <Bug {...props} />,
                           },
-                          edges: [[space.key.toHex(), 'inbound']],
+                          edges: [[space.id, 'inbound']],
                         },
                       ],
                     });
