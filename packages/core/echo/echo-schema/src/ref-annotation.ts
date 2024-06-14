@@ -22,7 +22,7 @@ export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.S
   const typePredicate =
     annotation.typename === 'Expando'
       ? () => true
-      : (obj: object) => getTypename(obj) === annotation.schemaId ?? annotation.typename;
+      : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
   return S.Any.pipe(
     S.filter(
       (obj) => {
