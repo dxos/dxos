@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
+import { type AutomergeHost, getSpaceKeyFromDoc, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -138,6 +138,7 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
           };

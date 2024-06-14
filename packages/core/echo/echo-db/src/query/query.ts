@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
@@ -25,6 +25,10 @@ export type Subscription = () => void;
 
 export type QueryResult<T extends {} = any> = {
   id: string;
+
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
   /**

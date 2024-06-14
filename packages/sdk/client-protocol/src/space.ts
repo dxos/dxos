@@ -19,11 +19,16 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { type CancellableInvitation } from './invitations';
 
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+  automergeRootUrl?: string;
+};
+
 export interface SpaceInternal {
   get data(): SpaceData;
 
   // TODO(dmaretskyi): Return epoch info.
-  createEpoch(options?: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string }): Promise<void>;
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
 }

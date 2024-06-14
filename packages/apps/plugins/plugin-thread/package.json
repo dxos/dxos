@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-thread",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

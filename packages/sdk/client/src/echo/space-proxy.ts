@@ -78,6 +78,8 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private readonly _dbSpaceRootSet = new Event();
+
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: EchoReactiveObject<any> = undefined;
@@ -98,7 +100,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -240,7 +242,7 @@ export class SpaceProxy implements Space {
         log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
         await this._db.setSpaceRoot(automergeRoot);
-        this._databaseInitialized.wake();
+        this._dbSpaceRootSet.emit();
       }
     }
 
@@ -421,8 +423,7 @@ export class SpaceProxy implements Space {
     log('create epoch', { migration, automergeRootUrl });
     await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
     if (this._db.rootUrl !== automergeRootUrl) {
-      this._databaseInitialized.reset();
-      await this._databaseInitialized.wait();
+      await this._dbSpaceRootSet.waitForCount(1);
     }
   }
 

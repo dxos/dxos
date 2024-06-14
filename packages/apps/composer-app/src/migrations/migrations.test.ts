@@ -136,7 +136,7 @@ describe('Composer migrations', () => {
     expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
 
-  test.only(migrations[1].version.toString(), async () => {
+  test(migrations[1].version.toString(), async () => {
     const doc1 = space.db.add(
       create(LegacyTypes.DocumentType, {
         content: create(LegacyTypes.TextType, { content: 'object1' }),
