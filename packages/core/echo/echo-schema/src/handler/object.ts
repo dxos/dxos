@@ -3,7 +3,7 @@
 //
 
 import type * as S from '@effect/schema/Schema';
-import { ulidFactory } from 'ulid-workers';
+import { ulid } from 'ulidx';
 
 import { invariant } from '@dxos/invariant';
 
@@ -62,7 +62,6 @@ const _create = <T extends {}>(
   }
 };
 
-const ulid = ulidFactory({ monotonic: false });
 export const generateEchoId = () => ulid();
 
 /**
