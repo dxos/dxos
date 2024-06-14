@@ -32,7 +32,7 @@ import {
   firstMainId,
   activeIds,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -391,7 +391,8 @@ export const LayoutPlugin = ({
                 location.active = id;
               });
 
-              const schema = location.activeNode?.data?.__typename;
+              const active = location.activeNode?.data;
+              const typename = isReactiveObject(active) ? getTypename(active) : undefined;
 
               return {
                 data: {
@@ -408,7 +409,7 @@ export const LayoutPlugin = ({
                             name: 'navigation.activate',
                             properties: {
                               id,
-                              schema,
+                              typename,
                             },
                           },
                         },

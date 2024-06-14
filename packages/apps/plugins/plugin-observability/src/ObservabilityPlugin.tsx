@@ -155,6 +155,15 @@ export const ObservabilityPlugin = (options: {
           observability.startNetworkMetrics(client),
           observability.startSpacesMetrics(client, options.namespace),
         ]);
+
+        if (clientPlugin.provides.firstRun) {
+          await dispatch({
+            action: ObservabilityAction.SEND_EVENT,
+            data: {
+              name: 'identity.created',
+            },
+          });
+        }
       });
     },
     unload: async () => {

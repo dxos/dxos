@@ -24,6 +24,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
   private _appRpc?: ProtoRpcPeer<AppServiceBundle>;
   private _layout = ShellLayout.DEFAULT;
   private _spaceKey?: PublicKey;
+  private _spaceId?: string;
 
   private _invitationCode?: string;
   private _invitationUrl? = typeof window !== 'undefined' ? window.location.origin : undefined;
@@ -42,8 +43,13 @@ export class ShellRuntimeImpl implements ShellRuntime {
     return this._invitationCode;
   }
 
+  /** @deprecated Use spaceId. */
   get spaceKey() {
     return this._spaceKey;
+  }
+
+  get spaceId() {
+    return this._spaceId;
   }
 
   get invitationUrl() {
@@ -58,11 +64,12 @@ export class ShellRuntimeImpl implements ShellRuntime {
     return this._spaceInvitationParam;
   }
 
-  setLayout({ layout, invitationCode, spaceKey }: LayoutRequest) {
+  setLayout({ layout, invitationCode, spaceKey, spaceId }: LayoutRequest) {
     this._layout = layout;
     this._invitationCode = invitationCode;
     this._spaceKey = spaceKey;
-    this.layoutUpdate.emit({ layout, invitationCode, spaceKey });
+    this._spaceId = spaceId;
+    this.layoutUpdate.emit({ layout, invitationCode, spaceKey, spaceId });
   }
 
   setInvitationUrl({ invitationUrl, deviceInvitationParam, spaceInvitationParam }: InvitationUrlRequest) {
@@ -88,6 +95,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
             this._layout = request.layout;
             this._invitationCode = request.invitationCode;
             this._spaceKey = request.spaceKey;
+            this._spaceId = request.spaceId;
             this.layoutUpdate.emit(request);
           },
           setInvitationUrl: async (request) => {
