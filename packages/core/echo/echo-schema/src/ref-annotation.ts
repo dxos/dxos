@@ -20,7 +20,9 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 
 export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.Schema<any> => {
   const typePredicate =
-    annotation.typename === 'Expando' ? () => true : (obj: object) => getTypename(obj) === annotation.typename;
+    annotation.typename === 'Expando'
+      ? () => true
+      : (obj: object) => getTypename(obj) === annotation.schemaId ?? annotation.typename;
   return S.Any.pipe(
     S.filter(
       (obj) => {
