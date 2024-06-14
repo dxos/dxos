@@ -7,7 +7,7 @@ import { type SketchType } from '../../schema';
 
 export const serializer: TypedObjectSerializer<SketchType> = {
   filename: (object) => ({
-    name: validFilename(object.title),
+    name: validFilename(object.name),
     extension: 'json',
   }),
 
