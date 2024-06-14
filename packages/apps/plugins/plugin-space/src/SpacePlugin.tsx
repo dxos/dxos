@@ -587,7 +587,7 @@ export const SpacePlugin = ({
                     {
                       action: ObservabilityAction.SEND_EVENT,
                       data: {
-                        event: 'space.create',
+                        name: 'space.create',
                         properties: {
                           spaceKey: space.key.toHex(),
                         },
@@ -611,7 +611,7 @@ export const SpacePlugin = ({
                         {
                           action: ObservabilityAction.SEND_EVENT,
                           data: {
-                            event: 'space.join',
+                            name: 'space.join',
                             properties: {
                               spaceKey: space.key.toHex(),
                             },
@@ -637,7 +637,7 @@ export const SpacePlugin = ({
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
-                          event: 'space.share',
+                          name: 'space.share',
                           properties: {
                             spaceKey: spaceKey.toHex(),
                           },
@@ -702,7 +702,7 @@ export const SpacePlugin = ({
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
-                          event: 'space.migrate',
+                          name: 'space.migrate',
                           properties: {
                             spaceKey: space.key.toHex(),
                             version: intent.data?.version,
@@ -750,7 +750,7 @@ export const SpacePlugin = ({
                     {
                       action: ObservabilityAction.SEND_EVENT,
                       data: {
-                        event: 'space.save',
+                        name: 'space.save',
                         properties: {
                           spaceKey: space.key.toHex(),
                         },
@@ -773,7 +773,7 @@ export const SpacePlugin = ({
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
-                          event: 'space.load',
+                          name: 'space.load',
                           properties: {
                             spaceKey: space.key.toHex(),
                           },
@@ -812,7 +812,7 @@ export const SpacePlugin = ({
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
-                          event: 'space.addObject',
+                          name: 'space.addObject',
                           properties: {
                             spaceKey: space.key.toHex(),
                             objectId: object.id,

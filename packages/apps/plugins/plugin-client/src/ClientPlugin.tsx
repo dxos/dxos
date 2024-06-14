@@ -5,6 +5,7 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
+import { ObservabilityAction } from '@braneframe/plugin-observability/meta';
 import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import {
   parseIntentPlugin,
@@ -214,7 +215,20 @@ export const ClientPlugin = ({
 
             case ClientAction.SHARE_IDENTITY: {
               const data = await client.shell.shareIdentity();
-              return { data };
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      action: ObservabilityAction.SEND_EVENT,
+                      data: {
+                        name: 'identity.shared',
+                        properties: { deviceKey: data.device?.deviceKey.truncate() },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
           }
         },
