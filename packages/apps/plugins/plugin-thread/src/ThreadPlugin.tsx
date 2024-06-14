@@ -217,7 +217,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all threads not linked to documents to the graph.
                 const query = space.db.query(Filter.schema(ThreadType));
@@ -248,7 +248,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             icon: (props: IconProps) => <Chat {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

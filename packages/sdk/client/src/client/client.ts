@@ -348,7 +348,7 @@ export class Client {
     const { SpaceList } = await import('../echo/space-list');
     const { HaloProxy } = await import('../halo/halo-proxy');
     const { MeshProxy } = await import('../mesh/mesh-proxy');
-    const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
+    const { Shell } = await import('../services');
 
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
@@ -380,13 +380,9 @@ export class Client {
       this._instanceId,
     );
 
-    const shellManager =
-      this._services instanceof IFrameClientServicesProxy || this._services instanceof IFrameClientServicesHost
-        ? this._services._shellManager
-        : this._shellManager;
-    const shell = shellManager
+    const shell = this._shellManager
       ? new Shell({
-          shellManager,
+          shellManager: this._shellManager,
           identity: halo.identity,
           devices: halo.devices,
           spaces,

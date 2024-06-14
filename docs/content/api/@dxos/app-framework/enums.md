@@ -2,7 +2,7 @@
 title: Enumerations
 ---
 # Enumerations
-### [`IntentAction`](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L30)
+### [`IntentAction`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/IntentPlugin/provides.ts#L30)
 
 
 
@@ -10,7 +10,7 @@ Values:
 - `SHOW_UNDO` Fired after an intent is dispatched if the intent is undoable.
 
 
-### [`LayoutAction`](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/common/layout.ts#L89)
+### [`LayoutAction`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/layout.ts#L89)
 
 
 
@@ -20,7 +20,7 @@ Values:
 - `SET_LAYOUT` 
 
 
-### [`NavigationAction`](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/common/navigation.ts#L102)
+### [`NavigationAction`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/navigation.ts#L102)
 
 
 
@@ -34,7 +34,7 @@ Values:
 - `SET` 
 
 
-### [`SettingsAction`](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/common/settings.ts#L20)
+### [`SettingsAction`](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/settings.ts#L20)
 
 
 

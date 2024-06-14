@@ -1,6 +1,6 @@
 {
   "name": "@dxos/migrations",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,9 +20,14 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/automerge": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {},

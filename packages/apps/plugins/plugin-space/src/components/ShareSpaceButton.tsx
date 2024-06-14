@@ -20,7 +20,7 @@ export const ShareSpaceButtonImpl = ({ onClick }: { onClick: () => void }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
-    <Button onClick={onClick} classNames='mli-1'>
+    <Button data-testid='spacePlugin.shareSpaceButton' onClick={onClick} classNames='mli-1'>
       {t('share space label')}
     </Button>
   );

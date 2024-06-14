@@ -5,7 +5,6 @@
 import { AddressBook, type IconProps } from '@phosphor-icons/react';
 import React, { useEffect, useState } from 'react';
 
-import { getSpaceProperty, setSpaceProperty } from '@braneframe/types';
 import {
   parseIntentPlugin,
   resolvePlugin,
@@ -18,7 +17,7 @@ import {
 } from '@dxos/app-framework';
 import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
 import { type S } from '@dxos/echo-schema';
-import { registerSignalFactory } from '@dxos/echo-signals/react';
+import { registerSignalRuntime } from '@dxos/echo-signals/react';
 import { log } from '@dxos/log';
 import { Client, ClientContext, type ClientOptions, type SystemStatus } from '@dxos/react-client';
 
@@ -82,8 +81,7 @@ export const ClientPlugin = ({
   Omit<ClientPluginProvides, 'client' | 'firstRun'>,
   Pick<ClientPluginProvides, 'client' | 'firstRun'>
 > => {
-  // TODO(burdon): Document.
-  registerSignalFactory();
+  registerSignalRuntime();
 
   let client: Client;
   let error: unknown = null;
@@ -135,15 +133,6 @@ export const ClientPlugin = ({
 
         if (client.halo.identity.get()) {
           await client.spaces.isReady.wait({ timeout: WAIT_FOR_DEFAULT_SPACE_TIMEOUT });
-          // TODO(wittjosiah): Remove. This is a cleanup for the old way of tracking first run.
-          if (typeof getSpaceProperty(client.spaces.default, appKey) === 'boolean') {
-            setSpaceProperty(client.spaces.default, appKey, {});
-          }
-          const key = `${appKey}.opened`;
-          // TODO(wittjosiah): This doesn't work currently.
-          //   There's no guarantee that the default space will be fully synced by the time this is called.
-          // firstRun = !getSpaceProperty(client.spaces.default, key);
-          setSpaceProperty(client.spaces.default, key, Date.now());
         }
       } catch (err) {
         error = err;

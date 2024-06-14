@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { parseClientPlugin, type ClientPluginProvides } from '@braneframe/plugin-client';
 import { Graph, manageNodes } from '@braneframe/plugin-graph';
 import { SpaceAction } from '@braneframe/plugin-space';
-import { FolderType, getSpaceProperty } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import {
   getPlugin,
   parseGraphPlugin,
@@ -153,13 +153,13 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                       removeEdges: true,
                       nodes: [
                         {
-                          id: `${space.key.toHex()}-debug`,
+                          id: `${space.id}-debug`,
                           data: { space },
                           properties: {
                             label: ['debug label', { ns: DEBUG_PLUGIN }],
                             icon: (props: IconProps) => <Bug {...props} />,
                           },
-                          edges: [[space.key.toHex(), 'inbound']],
+                          edges: [[space.id, 'inbound']],
                         },
                       ],
                     });
@@ -230,17 +230,17 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                         return;
                       }
 
-                      const folder =
+                      const collection =
                         active.space.state.get() === SpaceState.READY &&
-                        getSpaceProperty(active.space, FolderType.typename);
-                      if (!(folder instanceof FolderType)) {
+                        active.space.properties[CollectionType.typename];
+                      if (!(collection instanceof CollectionType)) {
                         return;
                       }
 
                       void intentPlugin?.provides.intent.dispatch(
                         objects.map((object) => ({
                           action: SpaceAction.ADD_OBJECT,
-                          data: { target: folder, object },
+                          data: { target: collection, object },
                         })),
                       );
                     }}
