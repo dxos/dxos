@@ -385,6 +385,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../packages/sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../packages/sdk/client-protocol
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../packages/sdk/client-services
@@ -695,8 +698,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: ^0.4.75
-        version: 0.4.75
+        specifier: ^0.4.77
+        version: 0.4.77
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -5659,7 +5662,7 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      ulid:
+      ulidx:
         specifier: ^2.3.0
         version: 2.3.0
     devDependencies:
@@ -9260,6 +9263,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -9269,6 +9275,9 @@ importers:
       '@dxos/react-ui-types':
         specifier: workspace:*
         version: link:../../ui/react-ui-types
+      '@dxos/rpc':
+        specifier: workspace:*
+        version: link:../../core/mesh/rpc
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
@@ -9321,9 +9330,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../config
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
@@ -15601,8 +15607,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.75:
-    resolution: {integrity: sha512-LktVC7M3V2xboK1NRHjKhqpmxGhu4s7rDNzwABU0TpYdlH8Op8PxS5ZeKKXrq3TSDIxIR1saxP5lWi36cV4NrA==}
+  /@dxos/web-auth@0.4.77:
+    resolution: {integrity: sha512-GNiTqYInlyRjfLEhy8+fPBZ8z+M0/EmHvluZuv+Ko2vVgOM+2a1TM9X2W0nHznfdDKaib1HjwTQxfX7Y4trSoA==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
@@ -39261,6 +39267,10 @@ packages:
     resolution: {integrity: sha512-t+KLJFkHPQk8lfN6WBOiGkiUXoub+gnb2XTYI2P3aiISL+94xgZ1vgz1SXN/N4hthuOoLXarXfBZPUruyjQtfA==}
     dev: true
 
+  /layerr@2.1.0:
+    resolution: {integrity: sha512-xDD9suWxfBYeXgqffRVH/Wqh+mqZrQcqPRn0I0ijl7iJQ7vu8gMGPt1Qop59pEW/jaIDNUN7+PX1Qk40+vuflg==}
+    dev: false
+
   /layout-base@1.0.2:
     resolution: {integrity: sha512-8h2oVEZNktL4BH2JCOI90iD1yXwL6iNW7KcCKT2QZgQJR2vbqDsldCTPRU9NifTCqHZci57XvQQ15YTu+sTYPg==}
     dev: false
@@ -47861,9 +47871,11 @@ packages:
       multiformats: 13.1.0
     dev: false
 
-  /ulid@2.3.0:
-    resolution: {integrity: sha512-keqHubrlpvT6G2wH0OEfSW4mquYRcbe/J8NMmveoQOjUqmo+hXtO+ORCpWhdbZ7k72UtY61BL7haGxW6enBnjw==}
-    hasBin: true
+  /ulidx@2.3.0:
+    resolution: {integrity: sha512-36piWNqcdp9hKlQewyeehCaALy4lyx3FodsCxHuV6i0YdexSkjDOubwxEVr2yi4kh62L/0MgyrxqG4K+qtovnw==}
+    engines: {node: '>=16'}
+    dependencies:
+      layerr: 2.1.0
     dev: false
 
   /ultron@1.1.1:

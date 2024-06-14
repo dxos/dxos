@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-mermaid",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "Mermaid markdown plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

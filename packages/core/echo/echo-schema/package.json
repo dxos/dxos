@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -44,7 +44,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2",
-    "ulid": "^2.3.0"
+    "ulidx": "^2.3.0"
   },
   "devDependencies": {
     "@effect/schema": "^0.67.16",
