@@ -1,11 +1,11 @@
 # Class `AgentClientServiceProvider`
-<sub>Declared in [packages/sdk/client/src/services/agent.ts:38](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L38)</sub>
+<sub>Declared in [packages/sdk/client/src/services/agent.ts:38](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L38)</sub>
 
 
 Provide access to client services definitions and service handler.
 
 ## Constructors
-### [constructor(_profile)](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L43)
+### [constructor(_profile)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L43)
 
 
 
@@ -19,25 +19,25 @@ Arguments:
 
 
 ## Properties
-### [closed](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L40)
+### [closed](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L40)
 Type: <code>Event&lt;undefined | Error&gt;</code>
 
 The connection to the services provider was terminated.
 This should fire if the services disconnect unexpectedly or during a client reset.
 
-### [descriptors](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L45)
+### [descriptors](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L45)
 Type: <code>ServiceBundle&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
-### [services](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L49)
+### [services](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L49)
 Type: <code>Partial&lt;[ClientServices](/api/@dxos/client/types/ClientServices)&gt;</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L68)
+### [close()](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L68)
 
 
 
@@ -49,7 +49,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/client/src/services/agent.ts#L53)
+### [open()](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/agent.ts#L53)
 
 
 
