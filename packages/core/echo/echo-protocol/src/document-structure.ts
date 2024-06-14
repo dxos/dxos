@@ -3,6 +3,7 @@
 //
 
 import { type EncodedReferenceObject } from './reference';
+import type { SpaceDocVersion } from './space-doc-version';
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -11,6 +12,8 @@ export type SpaceState = {
 
 // TODO(dmaretskyi): Rename DatabaseRootDoc.
 export interface SpaceDoc {
+  version?: SpaceDocVersion,
+  
   access?: {
     spaceKey: string;
   };
