@@ -116,7 +116,7 @@ export class Serializer {
       }),
 
       version: Serializer.version,
-      timestamp: new Date().toUTCString(),
+      timestamp: new Date().toISOString(),
       spaceKey: database.spaceKey.toHex(),
     };
 
@@ -166,7 +166,7 @@ export class Serializer {
       ...data,
       '@version': Serializer.version,
       '@meta': meta,
-      '@timestamp': new Date().toUTCString(),
+      '@timestamp': new Date().toISOString(),
     });
   }
 
