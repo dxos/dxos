@@ -16,16 +16,16 @@ import { useClient } from '../client';
  * Returns the default space if no key is provided.
  * Requires a ClientProvider somewhere in the parent tree.
  *
- * @param spaceKey the key of the space to look for
+ * @param spaceKeyLike the key of the space to look for
  */
-export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
+export const useSpace = (spaceKeyLike?: PublicKeyLike): Space | undefined => {
   const client = useClient();
   const spaces = useMulticastObservable<Space[]>(client.spaces);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     // Only wait for ready if looking for the default space.
-    if (spaceKey) {
+    if (spaceKeyLike) {
       return;
     }
 
@@ -35,10 +35,10 @@ export const useSpace = (spaceKey?: PublicKeyLike): Space | undefined => {
     });
 
     return () => clearTimeout(timeout);
-  }, [client, spaceKey]);
+  }, [client, spaceKeyLike]);
 
-  if (spaceKey) {
-    return spaces.find((space) => space.key.equals(spaceKey));
+  if (spaceKeyLike) {
+    return spaces.find((space) => space.key.equals(spaceKeyLike) || space.id === spaceKeyLike);
   }
 
   if (ready && client.halo.identity.get()) {

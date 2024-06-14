@@ -44,6 +44,7 @@ import {
   Filter,
   fullyQualifiedId,
   getSpace,
+  getTypename,
   isEchoObject,
   isSpace,
   SpaceState,
