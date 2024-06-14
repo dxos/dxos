@@ -217,8 +217,9 @@ const SPACE_IDS_CACHE = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
  * Inspired by how ethereum addresses are derived.
  */
 export const createIdFromSpaceKey = async (spaceKey: PublicKey): Promise<SpaceId> => {
-  if (SPACE_IDS_CACHE.has(spaceKey)) {
-    return SPACE_IDS_CACHE.get(spaceKey)!;
+  const cachedValue = SPACE_IDS_CACHE.get(spaceKey);
+  if (cachedValue !== undefined) {
+    return cachedValue;
   }
 
   const digest = await subtleCrypto.digest('SHA-256', spaceKey.asUint8Array());
