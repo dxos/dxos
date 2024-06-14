@@ -25,11 +25,11 @@ export const getSpace = (object: ReactiveObject<any>): Space | undefined => {
 export const isSpace = (object: unknown): object is Space => object instanceof SpaceProxy;
 
 /**
- * Fully qualified id of a reactive object is a combination of the space key and the object id.
+ * Fully qualified id of a reactive object is a combination of the space id and the object id.
  *
  * @returns Fully qualified id of a reactive object.
  */
 export const fullyQualifiedId = (object: ReactiveObject<any>): string => {
   const space = getSpace(object);
-  return space ? `${space.key.toHex()}:${object.id}` : object.id;
+  return space ? `${space.id}:${object.id}` : object.id;
 };
