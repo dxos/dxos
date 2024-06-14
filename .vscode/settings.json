@@ -50,5 +50,6 @@
   "debug.javascript.terminalOptions": {
     "skipFiles": ["<node_internals>/**", "internal/*", "**/stream.ts", "**/events.ts", "**/wtfnode.js", "**/context.ts"]
   },
-  "circleci.persistedProjectSelection": []
+  "circleci.persistedProjectSelection": [],
+  "vitest.disableWorkspaceWarning": true
 }

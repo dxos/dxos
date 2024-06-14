@@ -1,5 +1,3 @@
-import type { EncodedReferenceObject } from './reference';
-
 export const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
 /**

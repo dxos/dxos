@@ -26,14 +26,22 @@ const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): 
   return encodeReference(new Reference(reference.itemId, reference.protocol ?? undefined, spaceId));
 };
 
-export const convertLegacySpaceDoc = async (root: SpaceDoc): Promise<SpaceDoc> => {
-  // Convert references.
-  const newDoc: SpaceDoc = await deepMapValuesAsync(root, async (value, recurse) => {
+export const convertLegacyReferences = async (doc: SpaceDoc): Promise<SpaceDoc> => {
+  const newDoc = await deepMapValuesAsync(doc, async (value, recurse) => {
     if (isLegacyReference(value)) {
       return convertLegacyReference(value);
     }
     return recurse(value);
   });
+
+  newDoc.version = SpaceDocVersion.CURRENT;
+
+  return newDoc;
+};
+
+export const convertLegacySpaceRootDoc = async (root: SpaceDoc): Promise<SpaceDoc> => {
+  // Convert references.
+  const newDoc: SpaceDoc = await convertLegacyReferences(root);
 
   // Update properties type.
   const properties = findInlineObjectOfType(newDoc, LEGACY_TYPE_PROPERTIES);
@@ -41,8 +49,6 @@ export const convertLegacySpaceDoc = async (root: SpaceDoc): Promise<SpaceDoc> =
     throw new Error('Properties object not found');
   }
   properties[1].system.type = encodeReference(new Reference(TYPE_PROPERTIES));
-
-  newDoc.version = SpaceDocVersion.CURRENT;
 
   return newDoc;
 };

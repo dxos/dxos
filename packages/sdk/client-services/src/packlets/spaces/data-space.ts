@@ -6,7 +6,7 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { findPropertiesObject, type EchoHost } from '@dxos/echo-db';
+import { convertLegacyReferences, convertLegacySpaceRootDoc, findPropertiesObject, type EchoHost } from '@dxos/echo-db';
 import {
   AutomergeDocumentLoaderImpl,
   createIdFromSpaceKey,
@@ -396,13 +396,10 @@ export class DataSpace {
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         const root = await this._echoHost.openSpaceRoot(handle.url);
-        switch (root.getVersion()) {
-          case SpaceDocVersion.LEGACY:
-            // migration required state
-            break;
-          case SpaceDocVersion.CURRENT:
-            // ready state
-            break;
+        if (root.getVersion() !== SpaceDocVersion.CURRENT) {
+          // TODO(dmaretskyi): go to migration required state
+        } else {
+          // TODO(dmaretskyi): go to ready state
         }
       } catch (err) {
         if (err instanceof ContextDisposedError) {
@@ -503,6 +500,37 @@ export class DataSpace {
           });
 
           // TODO(mykola): Delete old root.
+
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: newRoot.url,
+          };
+        }
+        break;
+      case CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN:
+        {
+          const currentRootUrl = this._automergeSpaceState.rootUrl;
+          const rootHandle = this._echoHost.automergeRepo.find<SpaceDoc>(currentRootUrl as any);
+          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
+          invariant(rootHandle.docSync(), 'Root doc not found');
+
+          const newRootContent = await convertLegacySpaceRootDoc(structuredClone(rootHandle.docSync()!));
+
+          for (const [id, url] of Object.entries(newRootContent.links ?? {})) {
+            const handle = this._echoHost.automergeRepo.find(url as any);
+            await cancelWithContext(this._ctx, asyncTimeout(handle.whenReady(), 10_000));
+            invariant(handle.docSync(), 'Doc not found');
+            const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
+            const newHandle = this._echoHost.automergeRepo.create(newDoc);
+            newRootContent.links![id] = newHandle.url;
+          }
+
+          const newRoot = this._echoHost.automergeRepo.create(newRootContent);
+
+          // TODO(dmaretskyi): Flush.
 
           // TODO(dmaretskyi): Unify epoch construction.
           epoch = {

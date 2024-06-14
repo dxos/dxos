@@ -358,6 +358,8 @@ message CreateEpochRequest {
 
     /// Create a new space root and move objects from the current space root to separate automerge documents and.
     FRAGMENT_AUTOMERGE_ROOT = 3;
+
+    MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
   dxos.keys.PublicKey space_key = 1;
