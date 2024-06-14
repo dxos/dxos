@@ -48,8 +48,7 @@ export class CoreDatabase {
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
-  private _isOpen = false;
-  private _isInitialized = false;
+  private _state = CoreDatabaseState.CLOSED;
 
   private _ctx = new Context();
 
@@ -74,11 +73,11 @@ export class CoreDatabase {
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
-    if (this._isOpen) {
+    if (this._state !== CoreDatabaseState.CLOSED) {
       log.info('Already open');
       return;
     }
-    this._isOpen = true;
+    this._state = CoreDatabaseState.OPENING;
     this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
@@ -103,18 +102,17 @@ export class CoreDatabase {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
-    this._isInitialized = true;
+    this._state = CoreDatabaseState.OPEN;
     this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
-    if (!this._isOpen) {
+    if (this._state === CoreDatabaseState.CLOSED) {
       return;
     }
-    this._isOpen = false;
-    this._isInitialized = false;
+    this._state = CoreDatabaseState.CLOSED;
 
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
@@ -135,7 +133,7 @@ export class CoreDatabase {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
-    if (!this._isInitialized) {
+    if (this._state !== CoreDatabaseState.OPEN) {
       return [];
     }
 
@@ -548,3 +546,9 @@ export const loadObjectReferences = async <
   const result = await Promise.all(tasks);
   return (Array.isArray(objOrArray) ? result : result[0]) as any;
 };
+
+enum CoreDatabaseState {
+  CLOSED,
+  OPENING,
+  OPEN,
+}
