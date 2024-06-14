@@ -698,8 +698,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: ^0.4.75
-        version: 0.4.75
+        specifier: ^0.4.77
+        version: 0.4.77
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -16488,8 +16488,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.75:
-    resolution: {integrity: sha512-LktVC7M3V2xboK1NRHjKhqpmxGhu4s7rDNzwABU0TpYdlH8Op8PxS5ZeKKXrq3TSDIxIR1saxP5lWi36cV4NrA==}
+  /@dxos/web-auth@0.4.77:
+    resolution: {integrity: sha512-GNiTqYInlyRjfLEhy8+fPBZ8z+M0/EmHvluZuv+Ko2vVgOM+2a1TM9X2W0nHznfdDKaib1HjwTQxfX7Y4trSoA==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
