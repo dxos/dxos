@@ -85,7 +85,7 @@ When multiple plugins provide components for the same data, the `<Surface />` el
 :::apidoc[@dxos/app-framework.SurfaceProps]{level="3"}
 ### Type `SurfaceProps`
 
-<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx:29](https://github.com/dxos/dxos/blob/516b7546a/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L29)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx:29](https://github.com/dxos/dxos/blob/d7adf231c/packages/sdk/app-framework/src/plugins/SurfacePlugin/Surface.tsx#L29)</sub>
 
 SurfaceProps are the props that are passed to the Surface component.
 :::

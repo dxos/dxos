@@ -8,7 +8,7 @@ import { todo } from '@dxos/debug';
 import { type Filter, type QueryResult, type QuerySource, type QuerySourceProvider } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QUERY_CHANNEL } from '@dxos/protocols';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -136,6 +136,7 @@ export class AgentQuerySource implements QuerySource {
             return {
               id: result.id,
               spaceKey: result.spaceKey,
+              spaceId: result.spaceId as SpaceId,
               object: objSnapshot && getEchoObjectFromSnapshot(objSnapshot),
               match: {
                 rank: result.rank,
