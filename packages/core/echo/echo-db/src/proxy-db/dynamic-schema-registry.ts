@@ -128,10 +128,7 @@ export class DynamicSchemaRegistry {
     return result;
   }
 
-  /**
-   * @internal
-   */
-  registerSchema(schema: StoredSchema): DynamicSchema {
+  public registerSchema(schema: StoredSchema): DynamicSchema {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;

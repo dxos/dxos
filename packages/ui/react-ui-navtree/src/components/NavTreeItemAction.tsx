@@ -327,6 +327,7 @@ export const NavTreeItemAction = ({
               hoverableOpenControlItem,
               active === 'overlay' && 'invisible',
             ]}
+            disabled={action.properties.disabled}
             onClick={(event) => {
               if (action.properties.disabled) {
                 return;

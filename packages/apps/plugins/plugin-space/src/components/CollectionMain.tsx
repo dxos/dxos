@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import type { FolderType } from '@braneframe/types';
+import type { CollectionType } from '@braneframe/types';
 import { useTranslation } from '@dxos/react-ui';
 import { baseSurface, descriptionText, mx } from '@dxos/react-ui-theme';
 
 import { SPACE_PLUGIN } from '../meta';
 
-export const FolderMain = ({ folder }: { folder: FolderType }) => {
+export const CollectionMain = ({ collection }: { collection: CollectionType }) => {
   const { t } = useTranslation(SPACE_PLUGIN);
 
   return (
@@ -26,7 +26,7 @@ export const FolderMain = ({ folder }: { folder: FolderType }) => {
           'border border-dashed border-neutral-400/50 rounded-lg p-8 font-normal text-lg max-is-[24rem] break-words',
         )}
       >
-        {folder.name ?? t('unnamed folder label')}
+        {collection.name ?? t('unnamed collection label')}
       </p>
     </div>
   );
