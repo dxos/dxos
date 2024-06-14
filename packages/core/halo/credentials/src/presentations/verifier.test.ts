@@ -78,6 +78,7 @@ describe('presentation verifier', () => {
           subject: device,
           issuer: identity,
           signer: keyring,
+          parentCredentialIds: [],
         }),
       };
 
