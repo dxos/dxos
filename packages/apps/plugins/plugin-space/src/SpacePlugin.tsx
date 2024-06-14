@@ -812,7 +812,7 @@ export const SpacePlugin = ({
                       {
                         action: ObservabilityAction.SEND_EVENT,
                         data: {
-                          name: 'space.addObject',
+                          name: 'space.object.add',
                           properties: {
                             spaceKey: space.key.toHex(),
                             objectId: object.id,
