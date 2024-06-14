@@ -11,6 +11,7 @@ import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 import { ObjectCore, getObjectCore } from './core-db';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
+import { log } from '@dxos/log';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
@@ -134,7 +135,7 @@ export class Serializer {
     for (const object of objects) {
       const { '@type': typeEncoded, ...data } = object;
 
-      const type = decodeSerializedReference(typeEncoded);
+      const type = decodeReferenceJSON(typeEncoded);
 
       // Handle Space Properties
       if (properties && type?.itemId === TYPE_PROPERTIES) {
@@ -173,14 +174,21 @@ export class Serializer {
   private _importObject(database: EchoDatabase, object: SerializedObject) {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
+    const decodedData = deepMapValues(dataProperties, (value, recurse) => {
+      if (isEncodedReferenceJSON(value)) {
+        return decodeReferenceJSON(value);
+      } else {
+        return recurse(value);
+      }
+    });
 
     const core = new ObjectCore();
     core.id = id;
     // TODO(dmaretskyi): Can't pass type in opts.
-    core.initNewObject(dataProperties, {
+    core.initNewObject(decodedData, {
       meta,
     });
-    core.setType(decodeSerializedReference(type)!);
+    core.setType(decodeReferenceJSON(type)!);
     if (deleted) {
       core.setDeleted(deleted);
     }
@@ -189,7 +197,10 @@ export class Serializer {
   }
 }
 
-export const decodeSerializedReference = (
+const isEncodedReferenceJSON = (value: any): boolean =>
+  typeof value === 'object' && value !== null && ('/' in value || value['@type'] === LEGACY_REFERENCE_TYPE_TAG);
+
+export const decodeReferenceJSON = (
   encoded?: EncodedReferenceObject | LegacyEncodedReferenceObject | string,
 ): Reference | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
