@@ -248,7 +248,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                             icon: (props: IconProps) => <Chat {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

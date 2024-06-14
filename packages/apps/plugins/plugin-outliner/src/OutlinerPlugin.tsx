@@ -89,7 +89,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                             icon: (props: IconProps) => <TreeStructure {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                           nodes: [
                             {

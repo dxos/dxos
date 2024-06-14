@@ -89,7 +89,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                             icon: (props: IconProps) => <Compass {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

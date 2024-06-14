@@ -89,7 +89,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                             icon: (props: IconProps) => <CompassTool {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

@@ -88,7 +88,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                             icon: (props: IconProps) => <Graph {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

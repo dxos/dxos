@@ -91,7 +91,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                             icon: (props: IconProps) => <Table {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

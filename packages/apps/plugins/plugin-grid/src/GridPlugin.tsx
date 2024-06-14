@@ -100,7 +100,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                             icon: (props: IconProps) => <SquaresFour {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

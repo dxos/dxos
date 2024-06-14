@@ -86,7 +86,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                             icon: (props: IconProps) => <Kanban {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

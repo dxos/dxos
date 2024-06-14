@@ -179,11 +179,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                             icon: (props: IconProps) => <TextAa {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                           nodes: [
                             {
-                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.key.toHex()}/${object.id}`,
+                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.id}/${object.id}`,
                               data: () =>
                                 intentPlugin?.provides.intent.dispatch([
                                   {

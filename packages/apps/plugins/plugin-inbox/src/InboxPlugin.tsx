@@ -145,7 +145,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <Envelope {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -159,7 +159,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <AddressBook {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -173,7 +173,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <Calendar {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

@@ -88,7 +88,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                             icon: (props: IconProps) => <ShieldChevron {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
