@@ -11,9 +11,9 @@ import { SpaceProxy } from './space-proxy';
 
 export const getSpace = (object: ReactiveObject<any>): Space | undefined => {
   const db = getDatabaseFromObject(object);
-  const key = db?.spaceKey;
-  if (key) {
-    const owner = db.graph._getOwningObject(key);
+  const id = db?.spaceId;
+  if (id) {
+    const owner = db.graph._getOwningObject(id);
     if (owner instanceof SpaceProxy) {
       return owner;
     }
