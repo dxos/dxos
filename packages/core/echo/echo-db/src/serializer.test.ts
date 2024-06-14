@@ -196,7 +196,7 @@ describe('Serializer', () => {
     }
   });
 
-  test.only('loads v1 pre-dxn data', async () => {
+  test('loads v1 pre-dxn data', async () => {
     const serializer = new Serializer();
 
     const { db } = await builder.createDatabase();

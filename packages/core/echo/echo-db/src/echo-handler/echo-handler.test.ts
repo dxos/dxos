@@ -344,7 +344,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.worksAt?.name).to.eq(orgName);
     });
 
-    test('circular references', async () => {
+    test.only('circular references', async () => {
       const { db } = await builder.createDatabase();
       const task = create(Expando, { title: 'test' });
       task.previous = create(Expando, { title: 'another' });

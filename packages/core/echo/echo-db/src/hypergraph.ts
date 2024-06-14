@@ -117,6 +117,8 @@ export class Hypergraph {
     from: EchoDatabase,
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
+    log.info('lookupLink', { ref, from: from.spaceKey });
+
     if (ref.host === undefined) {
       const local = from.getObjectById(ref.itemId);
       if (local) {

@@ -6,6 +6,7 @@ import { PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { describe, test } from '@dxos/test';
 import { deferAsync } from '@dxos/util';
+import expect from 'expect';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 import { TestReplicationNetwork } from './test-replicator';
@@ -174,5 +175,20 @@ describe('Integration tests', () => {
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
     await dataAssertion.verify(db2);
+  });
+
+  test('cross-space-references', async () => {
+    const [spaceKey1, spaceKey2] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer();
+
+    await using db1 = await peer.createDatabase(spaceKey1);
+    await using db2 = await peer.createDatabase(spaceKey2);
+
+    const obj1 = db1.add({ type: 'task', title: 'A' });
+    const obj2 = db2.add({ references: obj1 });
+    await db1.flush();
+    await db2.flush();
+
+    expect(obj2.references).toBe(obj1);
   });
 });
