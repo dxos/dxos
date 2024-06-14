@@ -11,7 +11,6 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { log } from '@dxos/log';
 
 import { EchoClient } from '../client';
 import { EchoHost } from '../host';
