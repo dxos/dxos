@@ -28,7 +28,7 @@ import {
   Toast as ToastSchema,
   activeIds,
 } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
+import { create, getTypename, isReactiveObject } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { AttentionProvider, translations as deckTranslations } from '@dxos/react-ui-deck';
@@ -323,6 +323,13 @@ export const DeckPlugin = ({
             }
 
             case NavigationAction.OPEN: {
+              const prevIds = location.active
+                ? Object.values(location.active).reduce((acc, ids) => {
+                    Array.isArray(ids) ? ids.forEach((id) => acc.add(id)) : acc.add(ids);
+                    return acc;
+                  }, new Set<string>())
+                : new Set<string>();
+
               // TODO(wittjosiah): Factor out.
               batch(() => {
                 const newPlankPositioning = settings.values.newPlankPositioning;
@@ -387,23 +394,28 @@ export const DeckPlugin = ({
                   : new Set<string>(),
               );
 
+              const newIds = openIds.filter((id) => !prevIds.has(id));
+
               return {
                 data: {
                   ids: openIds,
                 },
                 intents: [
                   observability
-                    ? openIds.map((id) => ({
-                        // TODO(thure): Can this handle Deck’s multifariousness?
-                        action: ObservabilityAction.SEND_EVENT,
-                        data: {
-                          name: 'navigation.activate',
-                          properties: {
-                            id,
-                            schema: graphPlugin?.provides.graph.findNode(id)?.data?.__typename,
+                    ? newIds.map((id) => {
+                        const active = graphPlugin?.provides.graph.findNode(id)?.data;
+                        const typename = isReactiveObject(active) ? getTypename(active) : undefined;
+                        return {
+                          action: ObservabilityAction.SEND_EVENT,
+                          data: {
+                            name: 'navigation.activate',
+                            properties: {
+                              id,
+                              typename,
+                            },
                           },
-                        },
-                      }))
+                        };
+                      })
                     : [],
                 ],
               };
