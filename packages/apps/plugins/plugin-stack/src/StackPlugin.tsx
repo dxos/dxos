@@ -5,9 +5,8 @@
 import { StackSimple, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
-import { CollectionType, StackView } from '@braneframe/types';
+import { CollectionType, StackViewType } from '@braneframe/types';
 import { type Plugin, type PluginDefinition } from '@dxos/app-framework';
-import { type UnsubscribeCallback } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
@@ -22,7 +21,6 @@ import { type StackPluginProvides, type StackProvides, type StackState, type Sta
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState = create<StackState>({ creators: [] });
-  let subscription: UnsubscribeCallback;
 
   return {
     meta,
@@ -39,14 +37,11 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
         }
       }
     },
-    unload: async () => {
-      subscription?.();
-    },
     provides: {
       settings: settings.values,
       metadata: {
         records: {
-          [StackView.typename]: {
+          [StackViewType.typename]: {
             placeholder: ['stack title placeholder', { ns: STACK_PLUGIN }],
             icon: (props: IconProps) => <StackSimple {...props} />,
           },
@@ -67,7 +62,7 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [StackView],
+        schema: [StackViewType],
       },
       surface: {
         component: ({ data, role }) => {

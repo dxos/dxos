@@ -55,11 +55,11 @@ export class MigrationBuilder {
     }
 
     const { schema, props } = migrate(objectStructure);
-    await this._createObject({ id, schema, props });
+    this._createObject({ id, schema, props });
   }
 
-  async addObject(schema: S.Schema<any>, props: any) {
-    const core = await this._createObject({ schema, props });
+  addObject(schema: S.Schema<any>, props: any) {
+    const core = this._createObject({ schema, props });
     return core.id;
   }
 
@@ -67,9 +67,9 @@ export class MigrationBuilder {
     this._deleteObjects.push(id);
   }
 
-  async changeProperties(changeFn: (properties: ObjectStructure) => void) {
+  changeProperties(changeFn: (properties: ObjectStructure) => void) {
     if (!this._newRoot) {
-      await this._buildNewRoot();
+      this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -88,7 +88,7 @@ export class MigrationBuilder {
    */
   async _commit() {
     if (!this._newRoot) {
-      await this._buildNewRoot();
+      this._buildNewRoot();
     }
     invariant(this._newRoot, 'New root not created');
 
@@ -103,7 +103,7 @@ export class MigrationBuilder {
     });
   }
 
-  private async _buildNewRoot() {
+  private _buildNewRoot() {
     const previousLinks = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
       delete previousLinks[id];
@@ -119,14 +119,13 @@ export class MigrationBuilder {
         ...this._newLinks,
       },
     });
-    await this._newRoot.whenReady();
     this._flushStates.push({
       documentId: this._newRoot.documentId,
       heads: getHeads(this._newRoot.docSync()),
     });
   }
 
-  private async _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
+  private _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
     const core = new ObjectCore();
     if (id) {
       core.id = id;
@@ -143,7 +142,6 @@ export class MigrationBuilder {
       },
     });
     this._newLinks[core.id] = newHandle.url;
-    await newHandle.whenReady();
     this._flushStates.push({
       documentId: newHandle.documentId,
       heads: getHeads(newHandle.docSync()),

@@ -4,7 +4,7 @@
 import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { FileType, StackView, type CollectionType } from '@braneframe/types';
+import { FileType, StackViewType, type CollectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
 import { type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
@@ -50,7 +50,7 @@ export const AddSectionDialog = ({ path, position, collection }: AddSectionDialo
             : collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
       collection.objects.splice(index + (position === 'after' ? 1 : 0), 0, sectionObject);
-      const stack = collection.views[StackView.typename];
+      const stack = collection.views[StackViewType.typename];
       if (stack) {
         stack.sections[sectionObject.id] = {};
       }

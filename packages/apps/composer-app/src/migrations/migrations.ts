@@ -3,10 +3,9 @@
 //
 
 import { CollectionType } from '@braneframe/types';
-import { loadObjectReferences } from '@dxos/echo-db';
 import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 import { type Migration, type ObjectStructure } from '@dxos/migrations';
-import { Filter } from '@dxos/react-client/echo';
+import { Filter, loadObjectReferences } from '@dxos/react-client/echo';
 import { getDeep } from '@dxos/util';
 
 export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
@@ -74,7 +73,7 @@ export const migrations: Migration[] = [
       }
 
       // Update root folder reference to collection.
-      await builder.changeProperties((propertiesStructure) => {
+      builder.changeProperties((propertiesStructure) => {
         // `getDeep` because the root folder property used to be nested.
         const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
         propertiesStructure.data[CollectionType.typename] = prevRootFolder ? { ...prevRootFolder } : null;

@@ -45,7 +45,7 @@ export const getSpaceDisplayName = (space: Space): string | [string, { ns: strin
         : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
-const getFolderGraphNodePartials = ({
+const getCollectionGraphNodePartials = ({
   graph,
   collection,
   space,
@@ -138,7 +138,7 @@ export const updateGraphWithSpace = ({
     const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
     const partials =
       space.state.get() === SpaceState.READY && collection instanceof CollectionType
-        ? getFolderGraphNodePartials({ graph, collection, space })
+        ? getCollectionGraphNodePartials({ graph, collection, space })
         : {};
 
     batch(() => {
@@ -406,7 +406,7 @@ const updateGraphWithSpaceObjects = ({
 
         // When object is a collection but not the root collection.
         if (object instanceof CollectionType && collection && object !== collection) {
-          const partials = getFolderGraphNodePartials({ graph, collection: object, space });
+          const partials = getCollectionGraphNodePartials({ graph, collection: object, space });
 
           graph.addNodes({
             id: getId(),

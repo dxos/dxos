@@ -6,7 +6,7 @@ import { Plus } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { useGraph } from '@braneframe/plugin-graph';
-import { type CollectionType, StackView } from '@braneframe/types';
+import { type CollectionType, StackViewType } from '@braneframe/types';
 import {
   LayoutAction,
   NavigationAction,
@@ -45,13 +45,13 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
-  const defaultStack = useMemo(() => create(StackView, { sections: {} }), [collection]);
-  const stack = (collection.views[StackView.typename] as StackView) ?? defaultStack;
+  const defaultStack = useMemo(() => create(StackViewType, { sections: {} }), [collection]);
+  const stack = (collection.views[StackViewType.typename] as StackViewType) ?? defaultStack;
   const [collapsedSections, setCollapsedSections] = useState<CollapsedSections>({});
 
   useEffect(() => {
-    if (!collection.views[StackView.typename]) {
-      collection.views[StackView.typename] = stack;
+    if (!collection.views[StackViewType.typename]) {
+      collection.views[StackViewType.typename] = stack;
     }
   }, [collection, stack]);
 

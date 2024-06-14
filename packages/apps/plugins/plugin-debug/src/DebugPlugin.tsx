@@ -230,17 +230,17 @@ export const DebugPlugin = (): PluginDefinition<DebugPluginProvides> => {
                         return;
                       }
 
-                      const folder =
+                      const collection =
                         active.space.state.get() === SpaceState.READY &&
                         active.space.properties[CollectionType.typename];
-                      if (!(folder instanceof CollectionType)) {
+                      if (!(collection instanceof CollectionType)) {
                         return;
                       }
 
                       void intentPlugin?.provides.intent.dispatch(
                         objects.map((object) => ({
                           action: SpaceAction.ADD_OBJECT,
-                          data: { target: folder, object },
+                          data: { target: collection, object },
                         })),
                       );
                     }}

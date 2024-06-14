@@ -658,9 +658,6 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
