@@ -38,7 +38,7 @@ export class Hypergraph {
    * @deprecated use SpaceId.
    * TODO(mykola): Delete on References migration.
    */
-  private readonly _spaceKeyVsId = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
+  private readonly _spaceKeyToId = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   // TODO(burdon): Comment/rename?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
@@ -68,7 +68,7 @@ export class Hypergraph {
     database: EchoDatabaseImpl,
     owningObject?: unknown,
   ) {
-    this._spaceKeyVsId.set(spaceKey, spaceId);
+    this._spaceKeyToId.set(spaceKey, spaceId);
     this._databases.set(spaceId, database);
     this._owningObjects.set(spaceId, owningObject);
     database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
@@ -125,7 +125,7 @@ export class Hypergraph {
     }
 
     const spaceKey = ref.host ? PublicKey.from(ref.host) : from?.spaceKey;
-    const spaceId = this._spaceKeyVsId.get(spaceKey);
+    const spaceId = this._spaceKeyToId.get(spaceKey);
     invariant(spaceId, 'No spaceId for spaceKey.');
     if (ref.host) {
       const remoteDb = this._databases.get(spaceId);
