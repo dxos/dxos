@@ -369,7 +369,7 @@ class SpaceQuerySource implements QuerySource {
 
   private _isValidSourceForFilter(filter: Filter<EchoReactiveObject<any>>): boolean {
     // Disabled by spaces filter.
-    if (filter.spaceIds !== undefined && !filter.spaceIds.some((key) => key === this.spaceId)) {
+    if (filter.spaceKeys !== undefined && !filter.spaceKeys.some((key) => key.equals(this.spaceKey))) {
       return false;
     }
     // Disabled by dataLocation filter.
