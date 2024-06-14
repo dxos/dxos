@@ -7,7 +7,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
-import { StackType, DocumentType } from '@braneframe/types';
+import { DocumentType, CollectionType } from '@braneframe/types';
 import {
   resolvePlugin,
   type PluginDefinition,
@@ -60,9 +60,9 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           const { unsubscribe } = client.spaces.subscribe((spaces) => {
             spaces.forEach((space) => {
               // Add all documents to the graph.
-              const query = space.db.query(Filter.or(Filter.schema(StackType), Filter.schema(DocumentType)));
+              const query = space.db.query(Filter.or(Filter.schema(CollectionType), Filter.schema(DocumentType)));
               subscriptions.add(query.subscribe());
-              let previousObjects: StackType[] = [];
+              let previousObjects: CollectionType[] = [];
               subscriptions.add(
                 effect(() => {
                   const removedObjects = previousObjects.filter((object) => !query.objects.includes(object));
@@ -135,8 +135,8 @@ export const PresenterPlugin = (): PluginDefinition<PresenterPluginProvides> => 
           switch (role) {
             case 'main': {
               if (state.presenting) {
-                if (data.active instanceof StackType) {
-                  return { node: <PresenterMain stack={data.active} />, disposition: 'hoist' };
+                if (data.active instanceof CollectionType) {
+                  return { node: <PresenterMain collection={data.active} />, disposition: 'hoist' };
                 } else if (data.active instanceof DocumentType) {
                   return { node: <RevealMain document={data.active} />, disposition: 'hoist' };
                 }

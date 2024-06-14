@@ -48,6 +48,6 @@
     "workbox-window": "^7.0.0"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5"
+    "@phosphor-icons/react": "^2.1.5"
   }
 }

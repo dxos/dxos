@@ -6,7 +6,17 @@
 // TODO(burdon): Bug when adding stale objects to space (e.g., static objects already added in previous story invocation).
 
 import { type Space } from '@dxos/client/echo';
-import { create, DynamicSchema, EchoObject, effectToJsonSchema, ref, S, StoredSchema } from '@dxos/echo-schema';
+import {
+  create,
+  DynamicSchema,
+  EchoObject,
+  EchoObjectAnnotationId,
+  effectToJsonSchema,
+  getEchoObjectAnnotation,
+  ref,
+  S,
+  StoredSchema,
+} from '@dxos/echo-schema';
 import { faker } from '@dxos/random';
 
 import { SpaceObjectGenerator, TestObjectGenerator } from './generator';
@@ -25,13 +35,17 @@ export enum TestSchemaType {
 
 const createDynamicSchema = (typename: string, fields: S.Struct.Fields): DynamicSchema => {
   const typeSchema = S.partial(S.Struct(fields)).pipe(EchoObject(typename, '1.0.0'));
-  return new DynamicSchema(
-    create(StoredSchema, {
-      typename,
-      version: '1.0.0',
-      jsonSchema: effectToJsonSchema(typeSchema),
-    }),
-  );
+  const typeAnnotation = getEchoObjectAnnotation(typeSchema);
+  const schemaToStore = create(StoredSchema, {
+    typename,
+    version: '1.0.0',
+    jsonSchema: {},
+  });
+  const updatedSchema = typeSchema.annotations({
+    [EchoObjectAnnotationId]: { ...typeAnnotation, schemaId: schemaToStore.id },
+  });
+  schemaToStore.jsonSchema = effectToJsonSchema(updatedSchema);
+  return new DynamicSchema(schemaToStore);
 };
 
 const testSchemas = (): TestSchemaMap<TestSchemaType> => {

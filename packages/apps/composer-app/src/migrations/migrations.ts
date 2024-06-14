@@ -2,45 +2,82 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
-import { create } from '@dxos/echo-schema';
-import { type Migration } from '@dxos/migrations';
-import { Filter } from '@dxos/react-client/echo';
+import { CollectionType } from '@braneframe/types';
+import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
+import { type Migration, type ObjectStructure } from '@dxos/migrations';
+import { Filter, loadObjectReferences } from '@dxos/react-client/echo';
+import { getDeep } from '@dxos/util';
+
+export class FolderType extends TypedObject({ typename: 'braneframe.Folder', version: '0.1.0' })({
+  name: S.optional(S.String),
+  objects: S.mutable(S.Array(ref(Expando))),
+}) {}
+
+export class SectionType extends TypedObject({ typename: 'braneframe.Stack.Section', version: '0.1.0' })({
+  object: ref(Expando),
+}) {}
+
+export class StackType extends TypedObject({ typename: 'braneframe.Stack', version: '0.1.0' })({
+  title: S.optional(S.String),
+  sections: S.mutable(S.Array(ref(SectionType))),
+}) {}
 
 export const migrations: Migration[] = [
   {
-    version: 1,
-    up: async ({ space }) => {
-      const rootFolder = getSpaceProperty(space, FolderType.typename);
-      if (rootFolder instanceof FolderType) {
-        return;
+    version: '2024-06-10-collections',
+    next: async ({ space, builder }) => {
+      const { objects: folders } = await space.db.query(Filter.schema(FolderType)).run();
+      const { objects: stacks } = await space.db.query(Filter.schema(StackType)).run();
+      const { objects: collections } = await space.db.query(Filter.schema(CollectionType)).run();
+
+      // Delete any existing collections from failed migrations.
+      for (const collection of collections) {
+        builder.deleteObject(collection.id);
       }
 
-      const { objects } = await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run();
-      if (objects.length > 0) {
-        setSpaceProperty(space, FolderType.typename, objects[0]);
-      } else {
-        setSpaceProperty(space, FolderType.typename, create(FolderType, { name: space.key.toHex(), objects: [] }));
+      // Migrate folders to collections.
+      for (const folder of folders) {
+        await builder.migrateObject(folder.id, ({ data }) => ({
+          schema: CollectionType,
+          props: {
+            name: data.name,
+            objects: data.objects,
+            views: {},
+          },
+        }));
       }
-    },
-    down: () => {},
-  },
-  {
-    version: 2,
-    up: async ({ space }) => {
-      const rootFolder = getSpaceProperty<FolderType>(space, FolderType.typename)!;
-      const { objects } = await space.db.query(Filter.schema(FolderType, { name: space.key.toHex() })).run();
-      if (objects.length <= 1) {
-        return;
-      }
-      rootFolder.name = '';
-      rootFolder.objects = objects.flatMap(({ objects }) => Array.from(objects));
-      objects.forEach((object) => {
-        if (object !== rootFolder) {
-          space.db.remove(object);
+
+      // Migrate stacks to collections.
+      for (const stack of stacks) {
+        const sections = await loadObjectReferences(stack, (s) => s.sections);
+        const sectionStructures: ObjectStructure[] = [];
+        for (const section of sections) {
+          builder.deleteObject(section.id);
+
+          const object = await builder.findObject(section.id);
+          if (object) {
+            sectionStructures.push(object);
+          }
         }
+
+        await builder.migrateObject(stack.id, ({ data }) => {
+          return {
+            schema: CollectionType,
+            props: {
+              name: data.title,
+              objects: sectionStructures.map((section) => section.data.object),
+              views: {},
+            },
+          };
+        });
+      }
+
+      // Update root folder reference to collection.
+      builder.changeProperties((propertiesStructure) => {
+        // `getDeep` because the root folder property used to be nested.
+        const prevRootFolder = getDeep(propertiesStructure.data, FolderType.typename.split('.'));
+        propertiesStructure.data[CollectionType.typename] = prevRootFolder ? { ...prevRootFolder } : null;
       });
     },
-    down: () => {},
   },
 ];

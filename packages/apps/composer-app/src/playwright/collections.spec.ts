@@ -10,7 +10,7 @@ import { AppManager } from './app-manager';
 
 // NOTE: Object 0 is the README.
 // NOTE: Reduce flakiness in CI by using waitForExpect.
-test.describe('Folder tests', () => {
+test.describe('Collection tests', () => {
   let host: AppManager;
 
   test.beforeEach(async ({ browser }) => {
@@ -18,86 +18,86 @@ test.describe('Folder tests', () => {
     await host.init();
   });
 
-  test('create folder', async () => {
+  test('create collection', async () => {
     await host.createSpace();
-    await host.createFolder();
+    await host.createCollection();
     await waitForExpect(async () => {
-      expect((await host.getObject(1).innerText()).trim()).to.equal('New folder');
+      expect((await host.getObject(1).innerText()).trim()).to.equal('New collection');
     });
   });
 
-  test('re-order folders', async () => {
+  test('re-order collections', async () => {
     await host.createSpace();
-    await host.createFolder(1);
-    await host.createFolder(1);
-    await host.renameObject('Folder 1', 1);
-    await host.renameObject('Folder 2', 2);
-    await host.toggleFolderCollapsed(1);
-    await host.toggleFolderCollapsed(2);
+    await host.createCollection(1);
+    await host.createCollection(1);
+    await host.renameObject('Collection 1', 1);
+    await host.renameObject('Collection 2', 2);
+    await host.toggleCollectionCollapsed(1);
+    await host.toggleCollectionCollapsed(2);
 
     // TODO(wittjosiah): Navtree dnd helpers.
-    await host.getObjectByName('Folder 2').hover();
+    await host.getObjectByName('Collection 2').hover();
     await host.page.mouse.down();
     await host.page.mouse.move(0, 0);
-    await host.getObjectByName('Folder 1').hover();
+    await host.getObjectByName('Collection 1').hover();
     await host.page.mouse.up();
 
     // Folders are now in reverse order.
     await waitForExpect(async () => {
-      expect((await host.getObject(1).innerText()).trim()).to.equal('Folder 2');
-      expect((await host.getObject(2).innerText()).trim()).to.equal('Folder 1');
+      expect((await host.getObject(1).innerText()).trim()).to.equal('Collection 2');
+      expect((await host.getObject(2).innerText()).trim()).to.equal('Collection 1');
     });
   });
 
-  test('drag object into folder', async () => {
+  test('drag object into collection', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin', 1);
-    await host.createFolder(1);
+    await host.createCollection(1);
 
     // TODO(wittjosiah): Navtree dnd helpers.
     await host.getObjectByName('New document').hover();
     await host.page.mouse.down();
     await host.page.mouse.move(0, 0);
-    await host.getObjectByName('New folder').hover();
+    await host.getObjectByName('New collection').hover();
     await host.page.mouse.up();
 
-    // Document is now inside the folder.
+    // Document is now inside the collection.
     await waitForExpect(async () => {
-      const folder = await host.getObjectByName('New folder');
-      expect((await folder.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
+      const collection = await host.getObjectByName('New collection');
+      expect((await collection.getByTestId('spacePlugin.object').innerText()).trim()).to.equal('New document');
     });
   });
 
-  test.describe('deleting folder', () => {
-    test('moves item out of folder', async () => {
+  test.describe('deleting collection', () => {
+    test('moves item out of collection', async () => {
       await host.createSpace();
-      await host.createFolder();
-      // Create an item inside the folder.
+      await host.createCollection();
+      // Create an item inside the collection.
       await host.createObject('markdownPlugin');
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
       });
 
-      // Delete the containing folder.
+      // Delete the containing collection.
       await host.deleteObject(1);
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(2);
       });
     });
 
-    test('moves folder with item out of folder', async () => {
+    test('moves collection with item out of collection', async () => {
       await host.createSpace();
-      await host.createFolder();
-      // Create a folder inside the folder.
-      await host.createFolder();
-      // Create an item inside the contained folder.
+      await host.createCollection();
+      // Create a collection inside the collection.
+      await host.createCollection();
+      // Create an item inside the contained collection.
       await host.createObject('markdownPlugin');
       // Reduce flakiness in CI by waiting.
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(4);
       });
 
-      // Delete the containing folder.
+      // Delete the containing collection.
       await host.deleteObject(1);
       await waitForExpect(async () => {
         expect(await host.getObjectsCount()).to.equal(3);
