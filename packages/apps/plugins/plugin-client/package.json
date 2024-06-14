@@ -42,7 +42,6 @@
     "src"
   ],
   "dependencies": {
-    "@braneframe/plugin-observability": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-schema": "workspace:*",

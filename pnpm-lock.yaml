@@ -949,9 +949,6 @@ importers:
 
   packages/apps/plugins/plugin-client:
     dependencies:
-      '@braneframe/plugin-observability':
-        specifier: workspace:*
-        version: link:../plugin-observability
       '@braneframe/types':
         specifier: workspace:*
         version: link:../../types
