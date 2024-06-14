@@ -6,7 +6,7 @@ import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } fr
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-db';
+import { findPropertiesObject, type EchoHost } from '@dxos/echo-db';
 import {
   AutomergeDocumentLoaderImpl,
   createIdFromSpaceKey,
@@ -14,7 +14,7 @@ import {
   type MetadataStore,
   type Space,
 } from '@dxos/echo-pipeline';
-import { decodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, decodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant, invariant } from '@dxos/invariant';
@@ -375,6 +375,7 @@ export class DataSpace {
     this._echoHost.replicateDocument(rootUrl);
     const handle = this._echoHost.automergeRepo.find(rootUrl as any);
 
+    // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
       try {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
@@ -384,6 +385,7 @@ export class DataSpace {
           return;
         }
 
+        // Attaching space keys to legacy documents.
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
@@ -393,10 +395,14 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        if (!this._echoHost.roots.has(handle.documentId)) {
-          await this._echoHost.openSpaceRoot(handle.url);
-        } else {
-          log.warn('echo database root already exists', { space: this.key, rootUrl });
+        const root = await this._echoHost.openSpaceRoot(handle.url);
+        switch (root.getVersion()) {
+          case SpaceDocVersion.LEGACY:
+            // migration required state
+            break;
+          case SpaceDocVersion.CURRENT:
+            // ready state
+            break;
         }
       } catch (err) {
         if (err instanceof ContextDisposedError) {
@@ -472,7 +478,7 @@ export class DataSpace {
 
           // Find properties object.
           const objects = Object.entries((rootHandle.docSync() as SpaceDoc).objects!);
-          const properties = findPropertiesObject(rootHandle.docSync() as SpaceDoc);
+          const properties = findPropertiesObject(rootHandle.docSync() as SpaceDoc, TYPE_PROPERTIES);
           const otherObjects = objects.filter(([key]) => key !== properties?.[0]);
           invariant(properties, 'Properties not found');
 
@@ -553,16 +559,3 @@ export class DataSpace {
     this.stateUpdate.emit();
   }
 }
-
-/**
- * Assumes properties are at root.
- */
-export const findPropertiesObject = (spaceDoc: SpaceDoc): [string, ObjectStructure] | undefined => {
-  for (const id in spaceDoc.objects ?? {}) {
-    const obj = spaceDoc.objects![id];
-    if (obj.system.type && decodeReference(obj.system.type).itemId === TYPE_PROPERTIES) {
-      return [id, obj];
-    }
-  }
-  return undefined;
-};

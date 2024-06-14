@@ -5,7 +5,7 @@
 import type * as A from '@dxos/automerge/automerge';
 import type { DocHandle } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
-import type { SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
 
@@ -18,6 +18,15 @@ export class DatabaseRoot {
 
   get isLoaded(): boolean {
     return !!this._rootHandle.docSync();
+  }
+
+  getVersion(): SpaceDocVersion | null {
+    const doc = this._docSync();
+    if (!doc) {
+      return null;
+    }
+
+    return doc.version ?? SpaceDocVersion.LEGACY;
   }
 
   getSpaceKey(): string | null {

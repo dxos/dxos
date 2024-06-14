@@ -3,3 +3,4 @@
 //
 
 export * from './echo-host';
+export * from './migration';

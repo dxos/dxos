@@ -170,7 +170,12 @@ export class EchoHost extends Resource {
   async openSpaceRoot(automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const handle = this._automergeHost.repo.find(automergeUrl);
-    invariant(!this._roots.has(handle.documentId), 'Root document already exists.');
+
+    const existingRoot = this._roots.get(handle.documentId);
+    if (existingRoot) {
+      return existingRoot;
+    }
+
     const root = new DatabaseRoot(handle);
     this._roots.set(handle.documentId, root);
     return root;
