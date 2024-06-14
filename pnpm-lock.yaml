@@ -385,6 +385,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../packages/sdk/client
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../packages/sdk/client-protocol
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../packages/sdk/client-services
@@ -695,8 +698,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@dxos/web-auth':
-        specifier: ^0.4.72
-        version: 0.4.72
+        specifier: ^0.4.77
+        version: 0.4.77
       isomorphic-fetch:
         specifier: ^3.0.0
         version: 3.0.0
@@ -952,6 +955,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../../sdk/config
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../../core/echo/echo-signals
@@ -3004,6 +3010,12 @@ importers:
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../../sdk/react-client
+      '@dxos/react-ui-searchlist':
+        specifier: workspace:*
+        version: link:../../../ui/react-ui-searchlist
+      main-thread-scheduling:
+        specifier: ^14.1.1
+        version: 14.1.1
     devDependencies:
       '@braneframe/plugin-space':
         specifier: workspace:*
@@ -3014,6 +3026,9 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/app-graph':
+        specifier: workspace:*
+        version: link:../../../sdk/app-graph
       '@dxos/random':
         specifier: workspace:*
         version: link:../../../common/random
@@ -6601,19 +6616,19 @@ importers:
         version: link:../../common/util
       '@oclif/core':
         specifier: ^4.0.3
-        version: 4.0.6
+        version: 4.0.3(typescript@5.4.5)
       '@oclif/plugin-autocomplete':
         specifier: ^3.1.2
-        version: 3.1.2
+        version: 3.1.2(typescript@5.4.5)
       '@oclif/plugin-help':
         specifier: ^6.2.0
-        version: 6.2.1
+        version: 6.2.1(typescript@5.4.5)
       '@oclif/plugin-plugins':
         specifier: ^5.2.3
-        version: 5.2.4
+        version: 5.2.4(typescript@5.4.5)
       '@oclif/plugin-update':
         specifier: ^4.3.3
-        version: 4.3.6
+        version: 4.3.4(typescript@5.4.5)
       '@octokit/core':
         specifier: ^4.0.4
         version: 4.1.0
@@ -6692,7 +6707,7 @@ importers:
         version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
-        version: 4.0.3(@oclif/core@4.0.6)
+        version: 4.0.3(@oclif/core@4.0.3)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
@@ -6731,7 +6746,7 @@ importers:
         version: 3.19.0
       oclif:
         specifier: ^4.13.0
-        version: 4.13.5
+        version: 4.13.5(typescript@5.4.5)
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
@@ -6788,19 +6803,19 @@ importers:
         version: link:../../common/util
       '@oclif/core':
         specifier: ^4.0.3
-        version: 4.0.6
+        version: 4.0.3(typescript@5.4.5)
       '@oclif/plugin-autocomplete':
         specifier: ^3.1.2
-        version: 3.1.2
+        version: 3.1.2(typescript@5.4.5)
       '@oclif/plugin-help':
         specifier: ^6.2.0
-        version: 6.2.1
+        version: 6.2.1(typescript@5.4.5)
       '@oclif/plugin-plugins':
         specifier: ^5.2.3
-        version: 5.2.4
+        version: 5.2.4(typescript@5.4.5)
       '@oclif/plugin-update':
         specifier: ^4.3.3
-        version: 4.3.6
+        version: 4.3.4(typescript@5.4.5)
       '@octokit/core':
         specifier: ^4.0.4
         version: 4.1.0
@@ -6873,7 +6888,7 @@ importers:
         version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
-        version: 4.0.3(@oclif/core@4.0.6)
+        version: 4.0.3(@oclif/core@4.0.3)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
@@ -6912,7 +6927,7 @@ importers:
         version: 3.19.0
       oclif:
         specifier: ^4.13.0
-        version: 4.13.5
+        version: 4.13.5(typescript@5.4.5)
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
@@ -7002,19 +7017,19 @@ importers:
         version: link:../../common/util
       '@oclif/core':
         specifier: ^4.0.3
-        version: 4.0.6
+        version: 4.0.3(typescript@5.4.5)
       '@oclif/plugin-autocomplete':
         specifier: ^3.1.2
-        version: 3.1.2
+        version: 3.1.2(typescript@5.4.5)
       '@oclif/plugin-help':
         specifier: ^6.2.0
-        version: 6.2.1
+        version: 6.2.1(typescript@5.4.5)
       '@oclif/plugin-plugins':
         specifier: ^5.2.3
-        version: 5.2.4
+        version: 5.2.4(typescript@5.4.5)
       '@oclif/plugin-update':
         specifier: ^4.3.3
-        version: 4.3.6
+        version: 4.3.4(typescript@5.4.5)
       '@octokit/core':
         specifier: ^4.0.4
         version: 4.1.0
@@ -7093,7 +7108,7 @@ importers:
         version: 0.67.16(effect@3.2.7)
       '@oclif/test':
         specifier: ^4.0.3
-        version: 4.0.3(@oclif/core@4.0.6)
+        version: 4.0.3(@oclif/core@4.0.3)
       '@phosphor-icons/react':
         specifier: ^2.1.5
         version: 2.1.5(react-dom@18.2.0)(react@18.2.0)
@@ -7132,7 +7147,7 @@ importers:
         version: 3.19.0
       oclif:
         specifier: ^4.13.0
-        version: 4.13.5
+        version: 4.13.5(typescript@5.4.5)
       prettier:
         specifier: ^3.2.4
         version: 3.2.4
@@ -9147,6 +9162,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/echo-signals':
         specifier: workspace:*
         version: link:../../core/echo/echo-signals
@@ -9169,9 +9187,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      yjs:
-        specifier: ^13.6.10
-        version: 13.6.14
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -16476,8 +16491,8 @@ packages:
       '@dxos/node-std': 0.4.9
     dev: false
 
-  /@dxos/web-auth@0.4.72:
-    resolution: {integrity: sha512-1X4siQVCOsIQX57zG7nSc9d2j+qFjHJUZLncHfmtFxnnFsNC+uFGZHKuK9KAHkOEPDHh+X27k5MPY9NxZSnPig==}
+  /@dxos/web-auth@0.4.77:
+    resolution: {integrity: sha512-GNiTqYInlyRjfLEhy8+fPBZ8z+M0/EmHvluZuv+Ko2vVgOM+2a1TM9X2W0nHznfdDKaib1HjwTQxfX7Y4trSoA==}
     dependencies:
       '@baselime/edge-logger': 0.3.2
       '@dxos/async': 0.4.9
@@ -17835,7 +17850,7 @@ packages:
       '@inquirer/figures': 1.0.2
       '@inquirer/type': 1.3.2
       '@types/mute-stream': 0.0.4
-      '@types/node': 20.12.12
+      '@types/node': 20.14.2
       '@types/wrap-ansi': 3.0.0
       ansi-escapes: 4.3.2
       chalk: 4.1.2
@@ -20098,61 +20113,68 @@ packages:
       wrap-ansi: 7.0.0
     dev: true
 
-  /@oclif/core@4.0.6:
-    resolution: {integrity: sha512-z/4YUVQsf2pHsXRze5etbmvAYDhoUhIzpM6oJGEdsdWfvQJ6YQBogH7TdX/ItuGda6+vpfXg/4U1CtPexSF+bA==}
+  /@oclif/core@4.0.3(typescript@5.4.5):
+    resolution: {integrity: sha512-yM8R/M2WfSNfL9eF8clS/SbQvanvHZJgoij5bLs3ro7uAFCkL/LYcagyj0UVGbysx5AI+SNIof6OHQUXYZpOZw==}
     engines: {node: '>=18.0.0'}
     dependencies:
       ansi-escapes: 4.3.2
       ansis: 3.2.0
       clean-stack: 3.0.1
       cli-spinners: 2.9.2
+      cosmiconfig: 9.0.0(typescript@5.4.5)
       debug: 4.3.5(supports-color@8.1.1)
       ejs: 3.1.10
       get-package-type: 0.1.0
       globby: 11.1.0
       indent-string: 4.0.0
       is-wsl: 2.2.0
-      lilconfig: 3.1.2
       minimatch: 9.0.4
       string-width: 4.2.3
       supports-color: 8.1.1
       widest-line: 3.1.0
       wordwrap: 1.0.0
       wrap-ansi: 7.0.0
+    transitivePeerDependencies:
+      - typescript
 
-  /@oclif/plugin-autocomplete@3.1.2:
+  /@oclif/plugin-autocomplete@3.1.2(typescript@5.4.5):
     resolution: {integrity: sha512-QcTi3TYwRVCBWPFa5AVwzsQQPjHceMXyekCcIcoZ7X6gZhRKyZy6+n0WR7GSj1HfENh65fL9JHveN0VJbfbR2w==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@oclif/core': 4.0.6
+      '@oclif/core': 4.0.3(typescript@5.4.5)
       ansis: 3.2.0
       debug: 4.3.5(supports-color@8.1.1)
       ejs: 3.1.10
     transitivePeerDependencies:
       - supports-color
+      - typescript
     dev: false
 
-  /@oclif/plugin-help@6.2.1:
+  /@oclif/plugin-help@6.2.1(typescript@5.4.5):
     resolution: {integrity: sha512-ipWBN2eYr3jnac5ruRjsVfcoXyuzpjNKc/9qnL8a366vZ9b+Kdb0Z+6nFkfL7hiPI9Yo0DD+OqEjBKhETGHjRA==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@oclif/core': 4.0.6
+      '@oclif/core': 4.0.3(typescript@5.4.5)
+    transitivePeerDependencies:
+      - typescript
 
-  /@oclif/plugin-not-found@3.2.3:
+  /@oclif/plugin-not-found@3.2.3(typescript@5.4.5):
     resolution: {integrity: sha512-hDHuvMFl7CfJ+GdtDVkLDAMc9J+9Tk1ZRSuFQT7vw4eBtv0EmiXtlTafQqCW9kXypQHgw6UigC3Dz1HXkPpwNQ==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@inquirer/confirm': 3.1.9
-      '@oclif/core': 4.0.6
+      '@oclif/core': 4.0.3(typescript@5.4.5)
       ansis: 3.2.0
       fast-levenshtein: 3.0.0
+    transitivePeerDependencies:
+      - typescript
     dev: true
 
-  /@oclif/plugin-plugins@5.2.4:
+  /@oclif/plugin-plugins@5.2.4(typescript@5.4.5):
     resolution: {integrity: sha512-ILkQGUq9DJpFYL52x8tHcJc4ZVxIL27tTTxkBGrnoHE7IcP8nFlK3S3unoADAHCTtbcp2vRPglkBUJMwnKarlQ==}
     engines: {node: '>=18.0.0'}
     dependencies:
-      '@oclif/core': 4.0.6
+      '@oclif/core': 4.0.3(typescript@5.4.5)
       ansis: 3.2.0
       debug: 4.3.4(supports-color@8.1.1)
       npm: 10.8.1
@@ -20165,15 +20187,16 @@ packages:
       yarn: 1.22.22
     transitivePeerDependencies:
       - supports-color
+      - typescript
     dev: false
 
-  /@oclif/plugin-update@4.3.6:
-    resolution: {integrity: sha512-vLKsrekT18/zmp7yOP3HF2gOrP6DpGSiixgbw7WbE5opb9+8I+tXqIZPgpbmut/T5RKplcHulYTQ1quyT6f+iQ==}
+  /@oclif/plugin-update@4.3.4(typescript@5.4.5):
+    resolution: {integrity: sha512-By80TBhMBDTaaklyzunnQj8FHntac1RkX4gUMbzd4RWV6d38J67VC9cxt94w8VDWT2Hh/ymJj0W9ugIlHrVmhg==}
     engines: {node: '>=18.0.0'}
     dependencies:
       '@inquirer/select': 2.3.5
-      '@oclif/core': 4.0.6
-      ansis: 3.2.0
+      '@oclif/core': 4.0.3(typescript@5.4.5)
+      chalk: 5.3.0
       debug: 4.3.5(supports-color@8.1.1)
       filesize: 6.4.0
       got: 13.0.0
@@ -20182,6 +20205,7 @@ packages:
       tty-table: 4.2.3
     transitivePeerDependencies:
       - supports-color
+      - typescript
     dev: false
 
   /@oclif/plugin-warn-if-update-available@3.0.19:
@@ -20197,13 +20221,13 @@ packages:
       - supports-color
     dev: true
 
-  /@oclif/test@4.0.3(@oclif/core@4.0.6):
+  /@oclif/test@4.0.3(@oclif/core@4.0.3):
     resolution: {integrity: sha512-LxcRYVFTUHoOW2Koo1lmbEwl/4HRFIdNWXuUY1/PHEawjwLvp3xwVe2rOWGqYD+vlHr+TYUw2QDQc8e2vUTDrw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@oclif/core': '>= 3.0.0'
     dependencies:
-      '@oclif/core': 4.0.6
+      '@oclif/core': 4.0.3(typescript@5.4.5)
       ansis: 3.2.0
       debug: 4.3.5(supports-color@8.1.1)
     transitivePeerDependencies:
@@ -31396,7 +31420,6 @@ packages:
   /chalk@5.3.0:
     resolution: {integrity: sha512-dLitG79d+GV1Nb/VYcCDFivJeK1hiukt9QjRNVOsUtTy1rR1YJsmpGGTZ3qJos+uw7WmWF4wUwBd9jxjocFC2w==}
     engines: {node: ^12.17.0 || ^14.13 || >=16.0.0}
-    dev: true
 
   /change-case@4.1.2:
     resolution: {integrity: sha512-bSxY2ws9OtviILG1EiY5K7NNxkqg/JnRnFxLtKQ96JaviiIxi7djMrSd0ECT9AC+lttClmYwKw53BWpOMblo7A==}
@@ -32267,6 +32290,21 @@ packages:
       parse-json: 5.2.0
       path-type: 4.0.0
     dev: false
+
+  /cosmiconfig@9.0.0(typescript@5.4.5):
+    resolution: {integrity: sha512-itvL5h8RETACmOTFc4UfIyB2RfEHi71Ax6E/PivVxq9NseKbOWpeyHEOIbmAw1rs8Ak0VursQNww7lf7YtUwzg==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      typescript: '>=4.9.5'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      env-paths: 2.2.1
+      import-fresh: 3.3.0
+      js-yaml: 4.1.0
+      parse-json: 5.2.0
+      typescript: 5.4.5
 
   /count-trailing-zeros@1.0.1:
     resolution: {integrity: sha512-ZnX7MMZDpu7R1aMwQRe0P1RGvfnXHibhTE+Oe/BHOCAZ/Mrp0Nv8VwaZ3G5cfFHMl5RrZ9s3HxnYoaVNB2gzgA==}
@@ -33914,6 +33952,10 @@ packages:
   /entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
     engines: {node: '>=0.12'}
+
+  /env-paths@2.2.1:
+    resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
+    engines: {node: '>=6'}
 
   /envinfo@7.11.0:
     resolution: {integrity: sha512-G9/6xF1FPbIw0TtalAMaVPpiq2aDEuKLXM314jPVAO9r2fo2a4BLqMNkmRS7O/xPPZ+COAhGIz3ETvHEV3eUcg==}
@@ -35891,6 +35933,7 @@ packages:
 
   /gar@1.0.4:
     resolution: {integrity: sha512-w4n9cPWyP7aHxKxYHFQMegj7WIAsL/YX/C4Bs5Rr8s1H9M1rNtRWRsw+ovYMkXDQ5S4ZbYHsHAPmevPjPgw44w==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     dev: false
 
   /gauge@3.0.2:
@@ -40315,10 +40358,6 @@ packages:
     resolution: {integrity: sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==}
     engines: {node: '>=10'}
 
-  /lilconfig@3.1.2:
-    resolution: {integrity: sha512-eop+wDAvpItUys0FWkHIKeC9ybYrTGbU41U5K7+bttZZeohvnY7M9dZ5kB21GNWiFT2q1OoPTvncPCgSOVO5ow==}
-    engines: {node: '>=14'}
-
   /lines-and-columns@1.2.4:
     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
 
@@ -40746,6 +40785,13 @@ packages:
       libbase64: 1.2.1
       libmime: 5.2.0
       libqp: 2.0.1
+    dev: false
+
+  /main-thread-scheduling@14.1.1:
+    resolution: {integrity: sha512-ETo4mBK6M+gO45yU109t/V/ZS1r1fE7ZI1ohizD1/6jGEqqLT1QB3QcKxa2rCWMYGipvI8WIbbyFx38lUspsWw==}
+    engines: {node: '>=10'}
+    dependencies:
+      p-is-promise: 4.0.0
     dev: false
 
   /make-dir@2.1.0:
@@ -43032,7 +43078,7 @@ packages:
       es-abstract: 1.22.2
     dev: false
 
-  /oclif@4.13.5:
+  /oclif@4.13.5(typescript@5.4.5):
     resolution: {integrity: sha512-7HIXQC0ID+N2mrzVILe4ou1IMwq+i8eg6IeGI8HjcE7Csqt7hYMgfXC9R8+Yezn12zqtzyaZzReV07C3t4cqFA==}
     engines: {node: '>=18.0.0'}
     hasBin: true
@@ -43042,9 +43088,9 @@ packages:
       '@inquirer/confirm': 3.1.7
       '@inquirer/input': 2.1.9
       '@inquirer/select': 2.3.5
-      '@oclif/core': 4.0.6
-      '@oclif/plugin-help': 6.2.1
-      '@oclif/plugin-not-found': 3.2.3
+      '@oclif/core': 4.0.3(typescript@5.4.5)
+      '@oclif/plugin-help': 6.2.1(typescript@5.4.5)
+      '@oclif/plugin-not-found': 3.2.3(typescript@5.4.5)
       '@oclif/plugin-warn-if-update-available': 3.0.19
       async-retry: 1.3.3
       chalk: 4.1.2
@@ -43064,6 +43110,7 @@ packages:
     transitivePeerDependencies:
       - aws-crt
       - supports-color
+      - typescript
     dev: true
 
   /octokit@2.0.14:
@@ -43284,6 +43331,11 @@ packages:
   /p-finally@1.0.0:
     resolution: {integrity: sha512-LICb2p9CB7FS+0eR1oqWnHhp0FljGLZCWBE9aix0Uye9W8LTQPwMTYVGWQWIw9RdQiDg4+epXQODwIYJtSJaow==}
     engines: {node: '>=4'}
+
+  /p-is-promise@4.0.0:
+    resolution: {integrity: sha512-4G3B+86qsIAX/+ip/yhHX9WUcyFKYkQYtE5bGkjpZyGK0Re53RbHky2UKt6RQVkDbUXb8EJRb4iga2SaI360nQ==}
+    engines: {node: '>=12'}
+    dev: false
 
   /p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}

@@ -26,6 +26,7 @@ import {
   type PluginDefinition,
   resolvePlugin,
   Toast as ToastSchema,
+  activeIds,
 } from '@dxos/app-framework';
 import { create } from '@dxos/echo-schema';
 import { Keyboard } from '@dxos/keyboard';
@@ -36,7 +37,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 import { DeckLayout, type DeckLayoutProps, LayoutContext, LayoutSettings, NAV_ID } from './components';
 import meta, { DECK_PLUGIN } from './meta';
 import translations from './translations';
-import { type DeckPluginProvides, type DeckSettingsProps } from './types';
+import { type NewPlankPositioning, type DeckPluginProvides, type DeckSettingsProps } from './types';
 import { activeToUri, checkAppScheme, uriToActive } from './util';
 import { applyActiveAdjustment } from './util/apply-active-adjustment';
 
@@ -75,6 +76,7 @@ export const DeckPlugin = ({
     customSlots: false,
     enableNativeRedirect: false,
     deck: true,
+    newPlankPositioning: 'start',
   });
 
   const layout = new LocalStorageStore<Layout>('dxos.org/settings/layout', {
@@ -161,7 +163,8 @@ export const DeckPlugin = ({
         .prop({ key: 'showFooter', storageKey: 'show-footer', type: LocalStorageStore.bool() })
         .prop({ key: 'customSlots', storageKey: 'customSlots', type: LocalStorageStore.bool() })
         .prop({ key: 'enableNativeRedirect', storageKey: 'enable-native-redirect', type: LocalStorageStore.bool() })
-        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() });
+        .prop({ key: 'deck', storageKey: 'deck', type: LocalStorageStore.bool() })
+        .prop({ key: 'newPlankPositioning', storageKey: 'newPlankPositioning', type: LocalStorageStore.enum<NewPlankPositioning>() });
 
       if (!isSocket && settings.values.enableNativeRedirect) {
         checkAppScheme(appScheme);
@@ -322,27 +325,37 @@ export const DeckPlugin = ({
             case NavigationAction.OPEN: {
               // TODO(wittjosiah): Factor out.
               batch(() => {
+                const newPlankPositioning = settings.values.newPlankPositioning;
+
                 if (intent.data) {
                   location.active =
                     isActiveParts(location.active) && Object.keys(location.active).length > 0
                       ? Object.entries(intent.data.activeParts).reduce<Record<string, string | string[]>>(
                           (acc: ActiveParts, [part, ids]) => {
-                            // NOTE(thure): Only `main` is an ordered collection, others are currently monolithic
                             if (part === 'main') {
                               const partMembers = new Set<string>();
                               const prev = new Set(
-                                // TODO(burdon): Explain why this can be an array or string.
                                 Array.isArray(acc[part]) ? (acc[part] as string[]) : [acc[part] as string],
                               );
-                              // NOTE(thure): The order of the following `forEach` calls will determine to which end of
-                              //   the current `main` part newly opened slugs are added.
-                              Array.from(prev).forEach((id) => partMembers.add(id));
-                              // Add to end.
-                              (Array.isArray(ids) ? ids : [ids]).forEach((id) => !prev.has(id) && partMembers.add(id));
+
+                              const newIds = Array.isArray(ids) ? ids : [ids];
+
+                              switch (newPlankPositioning) {
+                                case 'start': {
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  prev.forEach((id) => partMembers.add(id));
+                                  break;
+                                }
+                                case 'end':
+                                default: {
+                                  prev.forEach((id) => partMembers.add(id));
+                                  newIds.forEach((id) => partMembers.add(id));
+                                  break;
+                                }
+                              }
+
                               acc[part] = Array.from(partMembers).filter(Boolean);
                             } else {
-                              // NOTE(thure): An open action for a monolithic part will overwrite any slug currently in
-                              //   that position.
                               acc[part] = Array.isArray(ids) ? ids[0] : ids;
                             }
 
@@ -412,6 +425,9 @@ export const DeckPlugin = ({
                       return acc;
                     },
                     { ...location.active },
+                  );
+                  location.closed = Array.from(
+                    new Set([...Array.from(activeIds(intent.data.activeParts)), ...(location.closed ?? [])]),
                   );
                 }
               });

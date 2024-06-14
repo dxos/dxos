@@ -67,6 +67,7 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
+// TODO(burdon): AbstractTypedObject?
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.itemId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
