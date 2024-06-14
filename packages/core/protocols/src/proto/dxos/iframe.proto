@@ -35,8 +35,12 @@ message AppContextRequest {
   /// The display mode that shell should use.
   optional ShellDisplay display = 1;
 
+  // TODO(wittjosiah): Remove.
   /// The key of the joined space.
   optional dxos.keys.PublicKey space_key = 2;
+
+  /// The id of the joined space.
+  optional string space_id = 5;
   
   /// Target to redirect to after a successful invitation.
   optional string target = 3;
@@ -71,8 +75,12 @@ message LayoutRequest {
   /// Invitation code to join a space.
   optional string invitation_code = 2;
 
+  // TODO(wittjosiah): Remove.
   /// Key of the space to share.
   optional dxos.keys.PublicKey space_key = 3;
+
+  /// Id of the space to share.
+  optional string space_id = 5;
 
   /// Target to include in an invitation for redirecting after a successful invitation.
   optional string target = 4;

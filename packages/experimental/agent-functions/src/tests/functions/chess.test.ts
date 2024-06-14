@@ -50,7 +50,7 @@ describe.only('Chess', () => {
     };
 
     const space = await functions.client.spaces.create();
-    functions.client.addSchema(GameType, FunctionDef, FunctionTrigger);
+    functions.client.addTypes([GameType, FunctionDef, FunctionTrigger]);
     const game = space.db.add(create(GameType, {}));
     await space.db.flush();
 

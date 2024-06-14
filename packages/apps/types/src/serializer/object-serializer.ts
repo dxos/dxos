@@ -9,10 +9,9 @@ import { create, getEchoObjectAnnotation, getSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { serializers } from './serializers';
-import { getSpaceProperty } from './space-properties';
 import { type SerializedObject, type SerializedSpace, TypeOfExpando } from './types';
 import { UniqueNames } from './util';
-import { FolderType } from '../schema';
+import { CollectionType } from '../schema';
 
 export class ObjectSerializer {
   private readonly _uniqueNames = new UniqueNames();
@@ -34,21 +33,21 @@ export class ObjectSerializer {
   }
 
   async serializeObjects(space: Space): Promise<SerializedObject[]> {
-    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
+    const spaceRoot = space.properties[CollectionType.typename] as CollectionType;
     if (!spaceRoot) {
-      throw new Error('No root folder.');
+      throw new Error('No root collection.');
     }
 
-    // Skip root folder.
+    // Skip root collection.
     const objects: SerializedObject[] = [];
     objects.push(...(await this._serializeFolder(spaceRoot)).children);
     return objects;
   }
 
   async deserializeObjects(space: Space, serializedSpace: SerializedSpace): Promise<Space> {
-    const spaceRoot = getSpaceProperty<FolderType>(space, FolderType.typename);
+    const spaceRoot = space.properties[CollectionType.typename] as CollectionType;
     if (!spaceRoot) {
-      throw new Error('No root folder.');
+      throw new Error('No root collection.');
     }
 
     await this._deserializeFolder(spaceRoot, serializedSpace.objects);
@@ -56,14 +55,14 @@ export class ObjectSerializer {
     return space;
   }
 
-  private async _serializeFolder(folder: FolderType): Promise<SerializedObject & { type: 'folder' }> {
+  private async _serializeFolder(collection: CollectionType): Promise<SerializedObject & { type: 'folder' }> {
     const files: SerializedObject[] = [];
-    for (const object of folder.objects) {
+    for (const object of collection.objects) {
       if (!object) {
         continue;
       }
 
-      if (object instanceof FolderType) {
+      if (object instanceof CollectionType) {
         files.push(await this._serializeFolder(object));
         continue;
       }
@@ -93,30 +92,29 @@ export class ObjectSerializer {
 
     return {
       type: 'folder',
-      id: folder.id,
-      // TODO(mykola): Use folder.name instead of folder.title.
-      name: this._uniqueNames.unique(folder.name ?? (folder as any).title),
+      id: collection.id,
+      name: this._uniqueNames.unique(collection.name),
       children: files,
     };
   }
 
-  private async _deserializeFolder(folder: FolderType, data: SerializedObject[]): Promise<void> {
+  private async _deserializeFolder(collection: CollectionType, data: SerializedObject[]): Promise<void> {
     for (const file of data) {
       try {
-        let child = folder.objects.find((item) => item?.id === file.id);
+        let object = collection.objects.find((item) => item?.id === file.id);
         switch (file.type) {
           case 'folder': {
-            if (!child) {
-              child = create(FolderType, { name: file.name, objects: [] });
-              folder.objects.push(child);
+            if (!object) {
+              object = create(CollectionType, { name: file.name, objects: [], views: {} });
+              collection.objects.push(object);
             }
 
-            await this._deserializeFolder(child as FolderType, file.children);
+            await this._deserializeFolder(object as CollectionType, file.children);
             break;
           }
 
           case 'file': {
-            const object = folder.objects.find((item) => item?.id === file.id);
+            const object = collection.objects.find((item) => item?.id === file.id);
             const serializer = serializers[file.typename] ?? serializers.default;
             const deserialized = await serializer.deserialize({
               content: file.content!,
@@ -126,7 +124,7 @@ export class ObjectSerializer {
             });
 
             if (!object) {
-              folder.objects.push(deserialized);
+              collection.objects.push(deserialized);
             }
             break;
           }

@@ -25,7 +25,7 @@ export default {
   component: Main,
   render: () => (
     <AppContainer>
-      <ClientRepeater component={Story} count={2} createSpace schema={[ItemType]} />
+      <ClientRepeater component={Story} count={2} types={[ItemType]} createSpace />
     </AppContainer>
   ),
   decorators: [withTheme],

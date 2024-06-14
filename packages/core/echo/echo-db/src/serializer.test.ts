@@ -4,6 +4,7 @@
 
 import { expect } from 'chai';
 
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -149,7 +150,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema(Contact);
+      graph.schemaRegistry.addSchema([Contact]);
       const contact = create(Contact, { name });
       db.add(contact);
       await db.flush();
@@ -161,7 +162,7 @@ describe('Serializer', () => {
 
     {
       const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema(Contact);
+      graph.schemaRegistry.addSchema([Contact]);
 
       await new Serializer().import(db, data);
       expect((await db.query().run()).objects).to.have.length(1);
@@ -181,11 +182,12 @@ describe('Serializer', () => {
     let data: SerializedSpace;
 
     const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
     const graph = new Hypergraph();
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
     {
-      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
       await db.coreDatabase.open({ rootUrl: doc.url });
       for (let i = 0; i < totalObjects; i++) {
         db.add(create({ value: i }));
@@ -193,7 +195,7 @@ describe('Serializer', () => {
       await db.flush();
     }
     {
-      const db = new EchoDatabaseImpl({ graph, automergeContext, spaceKey });
+      const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
       await db.coreDatabase.open({ rootUrl: doc.url });
       data = await serializer.export(db);
       expect(data.objects.length).to.eq(totalObjects);
