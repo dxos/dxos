@@ -182,7 +182,7 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
               data: {
                 element: 'dialog',
                 component: 'dxos.org/plugin/stack/AddSectionDialog',
-                subject: { position: 'afterAll', stack },
+                subject: { position: 'afterAll', collection },
               },
             })
           }
