@@ -46,6 +46,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/mesh/rpc-tunnel"
     },
     {

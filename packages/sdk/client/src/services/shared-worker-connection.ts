@@ -3,12 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import {
-  iframeServiceBundle,
-  type ShellRuntime,
-  workerServiceBundle,
-  type WorkerServiceBundle,
-} from '@dxos/client-protocol';
+import { iframeServiceBundle, workerServiceBundle, type WorkerServiceBundle } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 import { SimplePeerTransportService } from '@dxos/network-manager';
@@ -16,8 +11,6 @@ import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { createProtoRpcPeer, type ProtoRpcPeer, type RpcPort } from '@dxos/rpc';
 import { getAsyncValue, type MaybePromise, type Provider } from '@dxos/util';
-
-import { ShellRuntimeImpl } from './shell-runtime';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
 export type SharedWorkerConnectionOptions = {
@@ -36,25 +29,14 @@ export class SharedWorkerConnection {
   private readonly _id = String(Math.floor(Math.random() * 1000000));
   private readonly _configProvider: SharedWorkerConnectionOptions['config'];
   private readonly _systemPort: RpcPort;
-  private readonly _shellPort?: RpcPort;
   private _release = new Trigger();
   private _config!: Config;
   private _transportService!: BridgeService;
   private _systemRpc!: ProtoRpcPeer<WorkerServiceBundle>;
-  private _shellRuntime?: ShellRuntimeImpl;
 
-  constructor({ config, systemPort, shellPort }: SharedWorkerConnectionOptions) {
+  constructor({ config, systemPort }: SharedWorkerConnectionOptions) {
     this._configProvider = config;
     this._systemPort = systemPort;
-    this._shellPort = shellPort;
-
-    if (this._shellPort) {
-      this._shellRuntime = new ShellRuntimeImpl(this._shellPort);
-    }
-  }
-
-  get shell(): ShellRuntime | undefined {
-    return this._shellRuntime;
   }
 
   async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }) {
@@ -95,12 +77,10 @@ export class SharedWorkerConnection {
       log.catch(err);
       throw new RemoteServiceConnectionError('Failed to connect to worker');
     }
-    await this._shellRuntime?.open();
   }
 
   async close() {
     this._release.wake();
-    await this._shellRuntime?.close();
     try {
       await this._systemRpc.rpc.WorkerService.stop();
     } catch {
