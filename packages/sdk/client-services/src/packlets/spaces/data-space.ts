@@ -9,6 +9,7 @@ import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-db';
 import {
   AutomergeDocumentLoaderImpl,
+  createIdFromSpaceKey,
   createMappedFeedWriter,
   type MetadataStore,
   type Space,
@@ -481,7 +482,11 @@ export class DataSpace {
           invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
 
           // Create new automerge documents for all objects.
-          const docLoader = new AutomergeDocumentLoaderImpl(this.key, this._echoHost.automergeRepo);
+          const docLoader = new AutomergeDocumentLoaderImpl(
+            await createIdFromSpaceKey(this.key),
+            this._echoHost.automergeRepo,
+            this.key,
+          );
           await docLoader.loadSpaceRootDocHandle(this._ctx, { rootUrl: newRoot.url });
 
           otherObjects.forEach(([key, value]) => {
