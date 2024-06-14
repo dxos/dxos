@@ -65,7 +65,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => space.id === id))
               .forEach((space) => {
                 // Add all views to the graph.
                 const query = space.db.query(Filter.schema(ViewType));

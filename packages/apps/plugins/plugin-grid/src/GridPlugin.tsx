@@ -77,7 +77,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all grids to the graph.
                 const query = space.db.query(Filter.schema(GridType));

@@ -101,7 +101,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all documents to the graph.
                 // TODO(burdon): Factor out common action.

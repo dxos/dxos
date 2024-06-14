@@ -153,16 +153,15 @@ export const SpacePlugin = ({
       }
 
       // Enable spaces.
-      state.enabled.push(client.spaces.default.key);
+      state.enabled.push(client.spaces.default.id);
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
             // TODO(burdon): NPE when closing planks.
-            const [key] = part.split(':');
-            const spaceKey = PublicKey.safeFrom(key);
-            const index = state.enabled.findIndex((key) => spaceKey?.equals(key));
-            if (spaceKey && index === -1) {
-              state.enabled.push(spaceKey);
+            const [spaceId] = part.split(':');
+            const index = state.enabled.findIndex((id) => spaceId === id);
+            if (spaceId && index === -1) {
+              state.enabled.push(spaceId);
             }
           });
         }),
@@ -229,7 +228,7 @@ export const SpacePlugin = ({
           spaceSubscriptions.clear();
           client.spaces
             .get()
-            .filter((space) => !!state.enabled.find((key) => key.equals(space.key)))
+            .filter((space) => !!state.enabled.find((id) => id === space.id))
             .forEach((space) => {
               spaceSubscriptions.add(
                 space.listen('viewing', (message) => {
@@ -516,7 +515,7 @@ export const SpacePlugin = ({
                 updateGraphWithSpace({
                   graph,
                   space,
-                  enabled: !!state.enabled.find((key) => key.equals(space.key)),
+                  enabled: !!state.enabled.find((id) => id === space.id),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
                   dispatch,
@@ -563,24 +562,22 @@ export const SpacePlugin = ({
 
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
-              state.enabled.push(space.key);
+              state.enabled.push(space.id);
 
               sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
                 space.properties[Migrations.versionProperty] = Migrations.targetVersion;
               }
 
-              const spaceHex = space.key.toHex();
-              return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
+              return { data: { space, id: space.id, activeParts: { main: [space.id] } } };
             }
 
             case SpaceAction.JOIN: {
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  state.enabled.push(space.key);
-                  const spaceHex = space.key.toHex();
-                  return { data: { space, id: spaceHex, activeParts: { main: [spaceHex] } } };
+                  state.enabled.push(space.id);
+                  return { data: { space, id: space.id, activeParts: { main: [space.id] } } };
                 }
               }
               break;
@@ -782,7 +779,7 @@ export const SpacePlugin = ({
             case SpaceAction.ENABLE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                state.enabled.push(space.key);
+                state.enabled.push(space.id);
                 return { data: true };
               }
               break;

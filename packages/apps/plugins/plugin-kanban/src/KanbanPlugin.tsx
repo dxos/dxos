@@ -63,7 +63,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all kanbans to the graph.
                 const query = space.db.query(Filter.schema(KanbanType));

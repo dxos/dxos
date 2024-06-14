@@ -66,7 +66,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all outlines to the graph.
                 const query = space.db.query(Filter.schema(TreeType));
