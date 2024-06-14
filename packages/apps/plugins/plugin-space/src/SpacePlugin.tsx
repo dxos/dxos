@@ -157,7 +157,11 @@ export const SpacePlugin = ({
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
-            // TODO(burdon): NPE when closing planks.
+            // TODO(Zan): Don't allow undefined in activeIds.
+            if (part === undefined) {
+              return;
+            }
+
             const [spaceId] = part.split(':');
             const index = state.enabled.findIndex((id) => spaceId === id);
             if (spaceId && index === -1) {
@@ -198,14 +202,20 @@ export const SpacePlugin = ({
             const identity = client.halo.identity.get();
             if (identity && location.active) {
               // TODO(wittjosiah): Group by space.
-              Array.from(activeIds(location.active)).forEach((id) => {
-                const [spaceKey] = id.split(':');
-                const space = client.spaces.get(PublicKey.from(spaceKey));
+              Array.from(activeIds(location.active)).forEach((part) => {
+                // TODO(Zan): Don't allow undefined in activeIds.
+                if (part === undefined) {
+                  return;
+                }
+
+                const [spaceId] = part.split(':');
+                const spaces = client.spaces.get();
+                const space = spaces.find((space) => space.id === spaceId);
                 if (space) {
                   void space
                     .postMessage('viewing', {
                       identityKey: identity.identityKey.toHex(),
-                      added: [id],
+                      added: [part],
                       removed: location.closed ? [location.closed].flat() : [],
                     })
                     // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
