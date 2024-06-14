@@ -126,17 +126,26 @@ export class Shell {
    * Invite new members to join the current space.
    * Opens the shell to the specified space, showing current members and allowing new members to be invited.
    *
-   * @param options.spaceKey The space to share.
+   * @param options.spaceKey The space to share. @deprecated Use spaceId instead.
+   * @param options.spaceId The space to share.
    * @param options.target The target location to share with new members.
    *
    * @returns Shell result with any new members that join while the shell is open.
    */
-  async shareSpace({ spaceKey, target }: { spaceKey: PublicKey; target?: string }): Promise<ShareSpaceResult> {
+  async shareSpace({
+    spaceKey,
+    spaceId,
+    target,
+  }: {
+    spaceKey?: PublicKey;
+    spaceId?: string;
+    target?: string;
+  }): Promise<ShareSpaceResult> {
     if (!this._identity.get()) {
       return { error: new Error('Identity does not exist'), cancelled: false };
     }
 
-    const space = this._spaces.get().find((space) => space.key.equals(spaceKey));
+    const space = this._spaces.get().find((space) => spaceKey?.equals(space.key) || space.id === spaceId);
     if (!space) {
       return { error: new Error('Space does not exist'), cancelled: false };
     }
@@ -145,7 +154,7 @@ export class Shell {
       (key) => key.toHex(),
       space.members.get().map((member) => member.identity.identityKey),
     );
-    await this._shellManager.setLayout({ layout: ShellLayout.SPACE, spaceKey, target });
+    await this._shellManager.setLayout({ layout: ShellLayout.SPACE, spaceKey, spaceId, target });
     return new Promise((resolve) => {
       this._shellManager.contextUpdate.on((context) => {
         if (context.display === ShellDisplay.NONE) {

@@ -203,7 +203,21 @@ export const ClientPlugin = ({
 
             case ClientAction.SHARE_IDENTITY: {
               const data = await client.shell.shareIdentity();
-              return { data };
+              return {
+                data,
+                intents: [
+                  [
+                    {
+                      // NOTE: This action is hardcoded to avoid circular dependency with observability plugin.
+                      action: 'dxos.org/plugin/observability/send-event',
+                      data: {
+                        name: 'identity.shared',
+                        properties: { deviceKey: data.device?.deviceKey.truncate() },
+                      },
+                    },
+                  ],
+                ],
+              };
             }
           }
         },
