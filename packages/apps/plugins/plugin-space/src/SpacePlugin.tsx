@@ -2,18 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type IconProps, Folder as FolderIcon, Plus, SignIn } from '@phosphor-icons/react';
+import { type IconProps, Plus, SignIn, CardsThree } from '@phosphor-icons/react';
 import { effect } from '@preact/signals-core';
 import localforage from 'localforage';
 import React from 'react';
 
 import { type ClientPluginProvides, parseClientPlugin } from '@braneframe/plugin-client';
 import { isGraphNode } from '@braneframe/plugin-graph';
-import { cloneObject, getSpaceProperty, setSpaceProperty, FolderType, SpaceSerializer } from '@braneframe/types';
+import { CollectionType, SpaceSerializer, cloneObject } from '@braneframe/types';
 import {
   type IntentDispatcher,
   type IntentPluginProvides,
   LayoutAction,
+  Surface,
   type LocationProvides,
   NavigationAction,
   type Plugin,
@@ -26,27 +27,25 @@ import {
   resolvePlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions, type UnsubscribeCallback } from '@dxos/async';
-import {
-  isReactiveObject,
-  type EchoReactiveObject,
-  type Identifiable,
-  type ReactiveObject,
-  Expando,
-} from '@dxos/echo-schema';
-import { create } from '@dxos/echo-schema';
+import { type Identifiable, isReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 import { type Client, PublicKey } from '@dxos/react-client';
 import {
-  type Space,
-  getSpace,
-  isSpace,
-  isEchoObject,
-  fullyQualifiedId,
-  Filter,
+  type EchoReactiveObject,
   type PropertiesTypeProps,
+  type ReactiveObject,
+  type Space,
+  create,
+  Expando,
+  Filter,
+  fullyQualifiedId,
+  getSpace,
+  isEchoObject,
+  isSpace,
+  SpaceState,
 } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
 import { InvitationManager, type InvitationManagerProps, osTranslations, ClipboardProvider } from '@dxos/shell/react';
@@ -54,9 +53,10 @@ import { ComplexMap } from '@dxos/util';
 
 import {
   AwaitingObject,
+  CollectionMain,
+  CollectionSection,
   EmptySpace,
   EmptyTree,
-  FolderMain,
   MenuFooter,
   MissingObject,
   PopoverRemoveObject,
@@ -65,7 +65,6 @@ import {
   ShareSpaceButton,
   SmallPresence,
   SmallPresenceLive,
-  SpaceMain,
   SpacePresence,
   SpaceSettings,
 } from './components';
@@ -78,7 +77,7 @@ import {
   type PluginState,
   SPACE_DIRECTORY_HANDLE,
 } from './types';
-import { SHARED, updateGraphWithSpace, prepareSpaceForMigration } from './util';
+import { SHARED, updateGraphWithSpace } from './util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const OBJECT_ID_LENGTH = 195; // 130 (space key) + 64 (object id) + 1 (separator).
@@ -88,20 +87,13 @@ export const parseSpacePlugin = (plugin?: Plugin) =>
 
 export type SpacePluginOptions = {
   /**
-   * Root folder structure is created on application first run if it does not yet exist.
-   * This callback is invoked immediately following the creation of the root folder structure.
+   * Root collection structure is created on application first run if it does not yet exist.
+   * This callback is invoked immediately following the creation of the root collection structure.
    *
    * @param params.client DXOS Client
-   * @param params.defaultSpace Default space
-   * @param params.defaultSpaceRoot Folder representing the contents of the default space
    * @param params.dispatch Function to dispatch intents
    */
-  onFirstRun?: (params: {
-    client: Client;
-    defaultSpace: Space;
-    defaultSpaceRoot: FolderType;
-    dispatch: IntentDispatcher;
-  }) => Promise<void>;
+  onFirstRun?: (params: { client: Client; dispatch: IntentDispatcher }) => Promise<void>;
 
   /**
    * Query string parameter to look for space invitation codes.
@@ -149,21 +141,15 @@ export const SpacePlugin = ({
       const location = navigationPlugin.provides.location;
       const dispatch = intentPlugin.provides.intent.dispatch;
 
-      // Create root folder structure.
+      // Create root collection structure.
       if (clientPlugin.provides.firstRun) {
         const defaultSpace = client.spaces.default;
-        const defaultSpaceRoot = create(FolderType, { objects: [] });
-        setSpaceProperty(defaultSpace, FolderType.typename, defaultSpaceRoot);
+        const personalSpaceCollection = create(CollectionType, { objects: [], views: {} });
+        defaultSpace.properties[CollectionType.typename] = personalSpaceCollection;
         if (Migrations.versionProperty) {
-          setSpaceProperty(defaultSpace, Migrations.versionProperty, Migrations.targetVersion);
+          defaultSpace.properties[Migrations.versionProperty] = Migrations.targetVersion;
         }
-
-        await onFirstRun?.({
-          client,
-          defaultSpace,
-          defaultSpaceRoot,
-          dispatch,
-        });
+        await onFirstRun?.({ client, dispatch });
       }
 
       // Enable spaces.
@@ -290,26 +276,26 @@ export const SpacePlugin = ({
       root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
       metadata: {
         records: {
-          [FolderType.typename]: {
-            placeholder: ['unnamed folder label', { ns: SPACE_PLUGIN }],
-            icon: (props: IconProps) => <FolderIcon {...props} />,
+          [CollectionType.typename]: {
+            placeholder: ['unnamed collection label', { ns: SPACE_PLUGIN }],
+            icon: (props: IconProps) => <CardsThree {...props} />,
           },
         },
       },
       echo: {
-        schema: [FolderType],
+        schema: [CollectionType],
       },
       surface: {
-        component: ({ data, role }) => {
+        component: ({ data, role, ...rest }) => {
           const primary = data.active ?? data.object;
           switch (role) {
             case 'article':
             case 'main':
               // TODO(wittjosiah): ItemID length constant.
               return isSpace(primary) ? (
-                <SpaceMain space={primary} role={role} />
-              ) : primary instanceof FolderType ? (
-                <FolderMain folder={primary} />
+                <Surface data={{ active: primary.properties[CollectionType.typename] }} role={role} {...rest} />
+              ) : primary instanceof CollectionType ? (
+                { node: <CollectionMain collection={primary} />, disposition: 'fallback' }
               ) : typeof primary === 'string' && primary.length === OBJECT_ID_LENGTH ? (
                 <MissingObject id={primary} />
               ) : null;
@@ -352,7 +338,7 @@ export const SpacePlugin = ({
                 return (
                   <PopoverRemoveObject
                     object={(data.subject as Record<string, any>)?.object}
-                    folder={(data.subject as Record<string, any>)?.folder}
+                    collection={(data.subject as Record<string, any>)?.collection}
                   />
                 );
               } else {
@@ -378,18 +364,23 @@ export const SpacePlugin = ({
               return null;
             }
             case 'navbar-end': {
-              if (!isEchoObject(data.object)) {
+              if (!isEchoObject(data.object) && !isSpace(data.object)) {
                 return null;
               }
 
               const client = clientPlugin?.provides.client;
               const defaultSpace = client?.halo.identity.get() && client?.spaces.default;
-              const space = getSpace(data.object);
-              return space && space !== defaultSpace
+              const space = isSpace(data.object) ? data.object : getSpace(data.object);
+              const object = isSpace(data.object)
+                ? data.object.state.get() === SpaceState.READY
+                  ? (space?.properties[CollectionType.typename] as CollectionType)
+                  : undefined
+                : data.object;
+              return space && space !== defaultSpace && object
                 ? {
                     node: (
                       <>
-                        <SpacePresence object={data.object} />
+                        <SpacePresence object={object} />
                         <ShareSpaceButton spaceKey={space.key} />
                       </>
                     ),
@@ -397,6 +388,8 @@ export const SpacePlugin = ({
                   }
                 : null;
             }
+            case 'section':
+              return data.object instanceof CollectionType ? <CollectionSection collection={data.object} /> : null;
             case 'settings':
               return data.plugin === meta.id ? <SpaceSettings settings={settings.values} /> : null;
             case 'menu-footer':
@@ -563,18 +556,18 @@ export const SpacePlugin = ({
 
               const defaultSpace = client.spaces.default;
               const {
-                objects: [sharedSpacesFolder],
-              } = await defaultSpace.db.query({ key: SHARED }).run();
+                objects: [sharedSpacesCollection],
+              } = await defaultSpace.db.query(Filter.schema(Expando, { key: SHARED })).run();
               const space = await client.spaces.create(intent.data as PropertiesTypeProps);
-
-              const folder = create(FolderType, { objects: [] });
-              setSpaceProperty(space, FolderType.typename, folder);
               await space.waitUntilReady();
+
+              const collection = create(CollectionType, { objects: [], views: {} });
+              space.properties[CollectionType.typename] = collection;
               state.enabled.push(space.key);
 
-              sharedSpacesFolder?.objects.push(folder);
+              sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
-                setSpaceProperty(space, Migrations.versionProperty, Migrations.targetVersion);
+                space.properties[Migrations.versionProperty] = Migrations.targetVersion;
               }
 
               const spaceHex = space.key.toHex();
@@ -646,7 +639,6 @@ export const SpacePlugin = ({
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                prepareSpaceForMigration(space);
                 const result = Migrations.migrate(space, intent.data?.version);
                 return { data: result };
               }
@@ -699,18 +691,20 @@ export const SpacePlugin = ({
                 return;
               }
 
-              if (intent.data?.target instanceof FolderType) {
+              if (intent.data?.target instanceof CollectionType) {
                 intent.data?.target.objects.push(object as Identifiable);
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
 
               const space = intent.data?.target;
               if (isSpace(space)) {
-                const folder = getSpaceProperty(space, FolderType.typename);
-                if (folder instanceof FolderType) {
-                  folder.objects.push(object as Identifiable);
+                const collection = space.properties[CollectionType.typename];
+                if (collection instanceof CollectionType) {
+                  collection.objects.push(object as Identifiable);
                 } else {
-                  space.db.add(object);
+                  // TODO(wittjosiah): Can't add non-echo objects by including in a collection because of types.
+                  const collection = create(CollectionType, { objects: [object as Identifiable], views: {} });
+                  space.properties[CollectionType.typename] = collection;
                 }
                 return { data: { ...object, activeParts: { main: [fullyQualifiedId(object)] } } };
               }
@@ -732,7 +726,7 @@ export const SpacePlugin = ({
                           component: 'dxos.org/plugin/space/RemoveObjectPopover',
                           subject: {
                             object,
-                            folder: intent.data?.folder?.data,
+                            collection: intent.data?.collection,
                           },
                         },
                       },

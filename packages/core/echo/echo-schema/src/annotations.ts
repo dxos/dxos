@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { type Simplify } from 'effect/Types';
 
 import { checkIdNotPresentOnSchema } from './ast';
-import { type Identifiable, type Ref } from './types';
+import { type Identifiable } from './types';
 
 export type ToMutable<T> = T extends {}
   ? { -readonly [K in keyof T]: T[K] extends readonly (infer U)[] ? U[] : T[K] }
@@ -81,15 +81,6 @@ export const getRefAnnotation = (schema: S.Schema<any>) =>
     AST.getAnnotation<ReferenceAnnotationValue>(ReferenceAnnotation)(schema.ast),
     Option.getOrElse(() => undefined),
   );
-export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
-  const annotation = getEchoObjectAnnotation(schema);
-  if (annotation == null) {
-    throw new Error('Reference target must be an ECHO object.');
-  }
-
-  // TODO(dmaretskyi): Casting here doesn't seem valid. Maybe there's a way to express optionality in the schema?
-  return schema.annotations({ [ReferenceAnnotation]: annotation }) as S.Schema<Ref<T>>;
-};
 
 export const EchoObjectFieldMetaAnnotationId = Symbol.for('@dxos/schema/annotation/FieldMeta');
 type FieldMetaValue = Record<string, string | number | boolean | undefined>;

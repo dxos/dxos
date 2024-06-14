@@ -74,7 +74,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     Object.entries<DynamicSchema>(schemaMap).forEach(([type, dynamicSchema]) => {
       let schema = this._space.db.schema.getSchemaByTypename(type);
       if (schema == null) {
-        schema = this._space.db.schema.addSchema(dynamicSchema.schema);
+        schema = this._registerSchema(dynamicSchema);
       }
       this.setSchema(type as T, schema);
     });
@@ -85,7 +85,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     this.schemas.forEach((schema) => {
       const existing = this._space.db.schema.getSchemaByTypename(schema.typename);
       if (existing == null) {
-        result.push(this._space.db.schema.addSchema(schema.schema));
+        result.push(this._registerSchema(schema));
       } else {
         result.push(existing);
       }
@@ -96,5 +96,10 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   override async createObject({ types }: { types?: T[] } = {}): Promise<ReactiveObject<any>> {
     return this._space.db.add(await super.createObject({ types }));
+  }
+
+  private _registerSchema(schema: DynamicSchema): DynamicSchema {
+    this._space.db.add(schema.serializedSchema);
+    return this._space.db.schema.registerSchema(schema.serializedSchema);
   }
 }
