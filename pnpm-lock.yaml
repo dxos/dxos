@@ -5656,9 +5656,9 @@ importers:
       lodash.get:
         specifier: ^4.4.2
         version: 4.4.2
-      ulid:
-        specifier: ^2.3.0
-        version: 2.3.0
+      ulid-workers:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@effect/schema':
         specifier: ^0.67.16
@@ -48731,9 +48731,8 @@ packages:
       multiformats: 13.1.0
     dev: false
 
-  /ulid@2.3.0:
-    resolution: {integrity: sha512-keqHubrlpvT6G2wH0OEfSW4mquYRcbe/J8NMmveoQOjUqmo+hXtO+ORCpWhdbZ7k72UtY61BL7haGxW6enBnjw==}
-    hasBin: true
+  /ulid-workers@2.1.0:
+    resolution: {integrity: sha512-D4+5fwPt5FEoGdMQtx5YwRHUZ4SDWSypraDZiXT3Y8U7T0C6h99dXhpWJQScNckoVRU+zi+BDuoBKHAffrn9vg==}
     dev: false
 
   /ultron@1.1.1:

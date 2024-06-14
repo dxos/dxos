@@ -44,7 +44,7 @@
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
     "lodash.get": "^4.4.2",
-    "ulid": "^2.3.0"
+    "ulid-workers": "^2.1.0"
   },
   "devDependencies": {
     "@effect/schema": "^0.67.16",
