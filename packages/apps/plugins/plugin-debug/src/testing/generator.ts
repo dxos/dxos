@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, TextV0Type, TableType } from '@braneframe/types';
+import { DocumentType, TextType, TableType } from '@braneframe/types';
 import { next as A } from '@dxos/automerge/automerge';
 import { createSpaceObjectGenerator, type SpaceObjectGenerator, TestSchemaType } from '@dxos/echo-generator';
 import { create } from '@dxos/echo-schema';
@@ -11,18 +11,18 @@ import { faker } from '@dxos/random';
 import { type Space, Filter, createDocAccessor } from '@dxos/react-client/echo';
 import { range } from '@dxos/util';
 
-const tableDefs: { type: TestSchemaType; title: string; props?: TableType['props'] }[] = [
+const tableDefs: { type: TestSchemaType; name: string; props?: TableType['props'] }[] = [
   {
     type: TestSchemaType.organization,
-    title: 'Organizations',
+    name: 'Organizations',
   },
   {
     type: TestSchemaType.project,
-    title: 'Projects',
+    name: 'Projects',
   },
   {
     type: TestSchemaType.contact,
-    title: 'Contacts',
+    name: 'Contacts',
     props: [
       {
         id: 'org',
@@ -48,9 +48,9 @@ export class Generator {
   }
 
   createTables() {
-    return tableDefs.map(({ type, title, props }) => {
+    return tableDefs.map(({ type, name, props }) => {
       const schema = this._generator.getSchema(type);
-      return this._space.db.add(create(TableType, { title, schema, props: props ?? [] }));
+      return this._space.db.add(create(TableType, { name, schema, props: props ?? [] }));
     });
   }
 
@@ -59,12 +59,12 @@ export class Generator {
   }
 
   createDocument() {
-    const title = faker.lorem.sentence();
+    const name = faker.lorem.sentence();
     const content = range(faker.number.int({ min: 2, max: 8 }))
       .map(() => faker.lorem.sentences(faker.number.int({ min: 2, max: 16 })))
       .join('\n\n');
 
-    return this._space.db.add(create(DocumentType, { title, content: create(TextV0Type, { content }) }));
+    return this._space.db.add(create(DocumentType, { name, content: create(TextType, { content }), threads: [] }));
   }
 
   async updateDocument() {

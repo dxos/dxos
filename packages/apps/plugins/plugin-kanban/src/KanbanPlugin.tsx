@@ -82,7 +82,7 @@ export const KanbanPlugin = (): PluginDefinition<KanbanPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: KANBAN_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: KANBAN_PLUGIN }],
                             icon: (props: IconProps) => <Kanban {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',

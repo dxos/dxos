@@ -8,10 +8,10 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { SketchType } from '@braneframe/types';
+import { CanvasType, SketchType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, Expando } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
 import { SketchComponent, SketchMain } from './components';
@@ -33,7 +33,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
       },
       translations,
       echo: {
-        schema: [SketchType],
+        schema: [SketchType, CanvasType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -85,7 +85,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: SKETCH_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: SKETCH_PLUGIN }],
                             icon: (props: IconProps) => <CompassTool {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
@@ -149,7 +149,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(SketchType, {
-                  data: create(Expando, {}),
+                  data: create(CanvasType, { content: '' }),
                 }),
               };
             }

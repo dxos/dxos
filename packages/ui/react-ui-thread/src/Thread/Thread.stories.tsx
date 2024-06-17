@@ -11,8 +11,8 @@ import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter } from './Thread';
 import { Message, MessageTextbox } from '../Message';
+import { DefaultMessageText, type MessageEntity } from '../testing';
 import translations from '../translations';
-import { type MessageEntity } from '../types';
 
 const Story = () => {
   const [pending, setPending] = useState(false);
@@ -21,25 +21,15 @@ const Story = () => {
   const [messages, setMesssages] = useState<MessageEntity<{ id: string; text: string }>[]>([
     {
       id: 'm1',
+      timestamp: new Date().toISOString(),
       authorId: identityKey1.toHex(),
-      blocks: [
-        {
-          id: 'b1',
-          timestamp: new Date().toISOString(),
-          text: 'hello',
-        },
-      ],
+      text: 'hello',
     },
     {
       id: 'm2',
+      timestamp: new Date().toISOString(),
       authorId: identityKey2.toHex(),
-      blocks: [
-        {
-          id: 'b2',
-          timestamp: new Date().toISOString(),
-          text: 'hi there',
-        },
-      ],
+      text: 'hi there',
     },
   ]);
 
@@ -58,14 +48,9 @@ const Story = () => {
         ...messages,
         {
           id: `m${_count}`,
+          timestamp: new Date().toISOString(),
           authorId: identityKey1.toHex(),
-          blocks: [
-            {
-              id: `b${_count}`,
-              timestamp: new Date().toISOString(),
-              text: messageRef.current,
-            },
-          ],
+          text: messageRef.current,
         },
       ]);
       messageRef.current = '';
@@ -77,7 +62,9 @@ const Story = () => {
   return (
     <Thread id='t1'>
       {messages.map((message) => (
-        <Message key={message.id} {...message} />
+        <Message key={message.id} {...message}>
+          <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
+        </Message>
       ))}
       <MessageTextbox
         id={String(_count)}

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-import { type MailboxType, MessageState, type MessageType } from '@braneframe/types';
+import { type ChannelType, EmailState, type MessageType } from '@braneframe/types';
 import { nonNullable } from '@dxos/util';
 
 import { type ActionType, MessageList } from './MessageList';
@@ -13,8 +13,16 @@ const DEFAULT_READ_TIMEOUT = 3_000;
 
 const byDate =
   (direction = -1) =>
-  ({ date: a = '' }: MessageType, { date: b = '' }: MessageType) =>
+  ({ timestamp: a = '' }: MessageType, { timestamp: b = '' }: MessageType) =>
     a < b ? -direction : a > b ? direction : 0;
+
+const setMessageProperty = (message: MessageType, property: string, value: any) => {
+  if (!message.properties) {
+    message.properties = {};
+  }
+
+  message.properties[property] = value;
+};
 
 export type MailboxOptions = { readTimout?: number };
 
@@ -24,7 +32,7 @@ export type MailboxOptions = { readTimout?: number };
 // TODO(burdon): Create outline/kanban.
 // TODO(burdon): Address book/cards.
 
-export type MailboxProps = { mailbox: MailboxType; options?: MailboxOptions };
+export type MailboxProps = { mailbox: ChannelType; options?: MailboxOptions };
 
 export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
   const [selected, setSelected] = useState<string>();
@@ -33,9 +41,9 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     clearTimeout(tRef.current);
     if (selected) {
       tRef.current = setTimeout(() => {
-        const object = mailbox?.messages?.filter(nonNullable).find((message) => message.id === selected);
-        if (object) {
-          object.read = true;
+        const object = mailbox?.threads[0]?.messages?.filter(nonNullable).find((message) => message.id === selected);
+        if (object?.properties) {
+          setMessageProperty(object, 'read', true);
         }
       }, options?.readTimout ?? DEFAULT_READ_TIMEOUT);
     }
@@ -43,25 +51,28 @@ export const Mailbox = ({ mailbox, options = {} }: MailboxProps) => {
     return () => clearTimeout(tRef.current);
   }, [selected]);
 
-  const messages = [...(mailbox.messages ?? [])]
+  const messages = [...(mailbox.threads[0]?.messages ?? [])]
     .filter(nonNullable) // TODO(burdon): API issue.
-    .filter((message) => message.state !== MessageState.ARCHIVED && message.state !== MessageState.DELETED)
+    .filter(
+      (message) =>
+        message.properties?.state !== EmailState.ARCHIVED && message.properties?.state !== EmailState.DELETED,
+    )
     .sort(byDate());
 
   const handleAction = (message: MessageType, action: ActionType) => {
     switch (action) {
       case 'archive': {
-        message.state = MessageState.ARCHIVED;
+        setMessageProperty(message, 'state', EmailState.ARCHIVED);
         setSelected(undefined);
         break;
       }
       case 'delete': {
-        message.state = MessageState.DELETED;
+        setMessageProperty(message, 'state', EmailState.DELETED);
         setSelected(undefined);
         break;
       }
       case 'unread': {
-        message.read = false;
+        setMessageProperty(message, 'read', false);
         break;
       }
     }

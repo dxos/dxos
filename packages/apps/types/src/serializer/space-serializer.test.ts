@@ -39,7 +39,7 @@ describe('Serialization', () => {
     {
       const space1 = await createSpace(client, 'test-1');
       const { objects } = space1.properties[CollectionType.typename] as CollectionType;
-      objects.push(create(DocumentType, { content: create(TextType, { content }) }));
+      objects.push(create(DocumentType, { content: create(TextType, { content }), threads: [] }));
 
       serialized = await serializer.serializeSpace(space1);
       expect(serialized.metadata.name).to.equal('test-1');

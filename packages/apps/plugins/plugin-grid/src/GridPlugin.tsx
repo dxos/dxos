@@ -96,7 +96,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['grid title placeholder', { ns: GRID_PLUGIN }],
+                            label: object.name || ['grid title placeholder', { ns: GRID_PLUGIN }],
                             icon: (props: IconProps) => <SquaresFour {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',

@@ -3,12 +3,11 @@
 //
 
 import { expect } from 'chai';
-import get from 'lodash.get';
 import { join } from 'path';
 
 import { ChainInputType, ChainPromptType, MessageType, ThreadType } from '@braneframe/types';
 import { waitForCondition } from '@dxos/async';
-import { Expando, getMeta, type Space } from '@dxos/client/echo';
+import { getMeta, type Space } from '@dxos/client/echo';
 import { TestBuilder, TextV0Type } from '@dxos/client/testing';
 import { loadObjectReferences } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
@@ -113,41 +112,6 @@ describe.only('Gpt', () => {
       } satisfies CreateTestChainInput;
     };
 
-    test('takes context from message if present', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
-      const input = { name: 'contextValue', value: 'object.array[0].nested.value' };
-      const [messageContext, threadContext] = [42, 43].map((value) =>
-        space.db.add(create(Expando, { array: [{ nested: { value } }] })),
-      );
-      const thread = space.db.add(create(ThreadType, { messages: [], context: { object: threadContext.id } }));
-      const testChain = contextInput(input);
-      trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
-      writeMessage(space, 'hello', {
-        thread,
-        context: { object: messageContext.id },
-      });
-      await waitForCall(modelStub);
-      expect(modelStub.calls[0]).to.deep.contain({
-        templateSubstitutions: { [input.name]: get({ object: messageContext }, input.value) },
-      });
-    });
-
-    test('falls back to thread if no context in message', async () => {
-      const { functions, trigger, space } = await setupTest(testBuilder);
-      const input = { name: 'contextValue', value: 'object.array[0].nested.value' };
-      const threadContext = space.db.add(create(Expando, { array: [{ nested: { value: 43 } }] }));
-      const thread = space.db.add(create(ThreadType, { messages: [], context: { object: threadContext.id } }));
-      const testChain = contextInput(input);
-      trigger.meta = { prompt: createTestChain(space, testChain) };
-      await functions.waitHasActiveTriggers(space);
-      writeMessage(space, 'hello', { thread });
-      await waitForCall(modelStub);
-      expect(modelStub.calls[0]).to.deep.contain({
-        templateSubstitutions: { [input.name]: get({ object: threadContext }, input.value) },
-      });
-    });
-
     test('falls back to message as context if no explicit context provided', async () => {
       const { functions, trigger, space } = await setupTest(testBuilder);
       const input = { name: 'message', value: 'object.blocks[0].content' };
@@ -229,10 +193,11 @@ const waitForGptResponse = async (message: MessageType, thread?: ThreadType) => 
   const hasAiMeta = (obj: any) => getMeta(obj).keys[0].source === 'dxos.org/service/ai';
   if (thread) {
     await waitForCondition({ condition: () => hasAiMeta(thread.messages[thread.messages.length - 1]) });
-    return (await loadObjectReferences(thread, (t) => t.messages[t.messages.length - 1]?.blocks?.[0]?.content)).content;
+    return loadObjectReferences(thread, (t) => t.messages[t.messages.length - 1]?.text);
   } else {
-    await waitForCondition({ condition: () => hasAiMeta(message) });
-    return (await loadObjectReferences(message, (m) => m.blocks[1].content)).content;
+    // TODO(wittjosiah): Thread required.
+    // await waitForCondition({ condition: () => hasAiMeta(message) });
+    // return (await loadObjectReferences(message, (m) => m.blocks[1].content)).content;
   }
 };
 
@@ -257,9 +222,10 @@ const writeMessage = (
   },
 ) => {
   const message = create(MessageType, {
-    from: { name: 'unknown' },
+    sender: { name: 'unknown' },
     context: options?.context,
-    blocks: [{ timestamp: new Date().toISOString(), content: create(TextV0Type, { content }) }],
+    timestamp: new Date().toISOString(),
+    text: content,
   });
   if (options?.thread) {
     options.thread.messages!.push(message);

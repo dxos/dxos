@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { useThemeContext } from '@dxos/react-ui';
 import {
@@ -26,7 +26,7 @@ import type { StackSectionContent } from '../components/Section';
 
 export const EditorContent = ({ data: { content = '' } }: { data: StackSectionContent & { content?: string } }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(create(TextV0Type, { content }));
+  const [text] = useState(create(TextType, { content }));
   const id = text.id;
   const doc = text.content;
   const [formattingState, formattingObserver] = useFormattingState();

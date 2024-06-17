@@ -35,7 +35,7 @@ const Story = () => {
       graph.schemaRegistry.addSchema([TableType]);
     }
 
-    setTable(space.db.add(create(TableType, { title: 'Table', props: [] })));
+    setTable(space.db.add(create(TableType, { name: 'Table', props: [] })));
     void space.db.schema.list().then(setSchemas).catch();
   }, []);
 

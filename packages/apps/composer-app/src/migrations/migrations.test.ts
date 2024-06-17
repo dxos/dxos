@@ -199,7 +199,7 @@ describe('Composer migrations', () => {
 
     const builder = new MigrationBuilder(space);
     await migrations[1].next({ space, builder });
-    await builder._commit();
+    await (builder as any)._commit();
 
     const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);
     expect(migratedDoc1 instanceof DocumentType).to.be.true;
@@ -207,7 +207,7 @@ describe('Composer migrations', () => {
     expect(migratedDoc1?.threads?.[0].id).to.equal(thread1.id);
     expect(migratedDoc1?.threads?.[0]?.anchor).to.equal(cursor);
     expect(migratedDoc1?.threads?.[0]?.messages?.[0] instanceof MessageType).to.be.true;
-    expect(migratedDoc1?.threads?.[0]?.messages?.[0]?.content).to.equal('comment1');
+    expect(migratedDoc1?.threads?.[0]?.messages?.[0]?.text).to.equal('comment1');
 
     const { objects: channels } = await space.db.query(Filter.schema(ChannelType)).run();
     expect(channels).to.have.lengthOf(1);
@@ -216,7 +216,7 @@ describe('Composer migrations', () => {
     expect(migratedThread2?.id).to.equal(thread2.id);
     expect(migratedThread2?.name).to.equal('My Thread');
     expect(migratedThread2?.messages?.[0] instanceof MessageType).to.be.true;
-    expect(migratedThread2?.messages?.[0]?.content).to.equal('hello world');
+    expect(migratedThread2?.messages?.[0]?.text).to.equal('hello world');
 
     const migratedFile1 = space.db.getObjectById<FileType>(file1.id);
     expect(migratedFile1 instanceof FileType).to.be.true;

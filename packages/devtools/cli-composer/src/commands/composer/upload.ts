@@ -31,7 +31,7 @@ export default class Upload extends BaseCommand<typeof Upload> {
     }
 
     const upload = async (space: Space) => {
-      const obj = space.db.add(create(FileType, { type, title: path, filename: path, cid: cid.toString() }));
+      const obj = space.db.add(create(FileType, { type, name: path, filename: path, cid: cid.toString() }));
       if (this.flags.verbose) {
         this.log(`Created object: ${obj.id}`);
       }

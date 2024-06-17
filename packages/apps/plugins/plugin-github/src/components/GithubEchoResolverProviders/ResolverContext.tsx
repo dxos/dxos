@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { DocumentType, TextV0Type } from '@braneframe/types';
+import { DocumentType, TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { useMulticastObservable } from '@dxos/react-client';
@@ -96,8 +96,9 @@ const DocumentResolverProviderImpl = ({
           create(
             DocumentType,
             {
-              content: create(TextV0Type, { content: event.data.content }),
-              title: defaultDisplayName,
+              name: defaultDisplayName,
+              content: create(TextType, { content: event.data.content }),
+              threads: [],
             },
             {
               keys: [{ source, id }],

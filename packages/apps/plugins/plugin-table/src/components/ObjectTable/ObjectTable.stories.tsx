@@ -33,9 +33,9 @@ const useTable = () => {
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.
-    space.db.add(create(TableType, { title: 'Other table', props: [], schema: generator.schemas[3] }));
+    space.db.add(create(TableType, { name: 'Other table', props: [], schema: generator.schemas[3] }));
 
-    const table = space.db.add(create(TableType, { title: '', props: [] }));
+    const table = space.db.add(create(TableType, { name: '', props: [] }));
     setTable(table);
   }, []);
 

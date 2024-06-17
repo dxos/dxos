@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { MessageType, ThreadType, TextV0Type, type BlockType } from '@braneframe/types';
+import { MessageType, ThreadType } from '@braneframe/types';
 import { create, Expando } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -12,20 +12,16 @@ export const createChatThread = (identity: Identity) => {
   return create(ThreadType, {
     messages: Array.from({ length: 8 }).map(() =>
       create(MessageType, {
-        from: {
+        sender: {
           identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
         },
-        blocks: faker.helpers.multiple(
+        timestamp: faker.date.recent().toISOString(),
+        text: faker.lorem.sentences(3),
+        parts: faker.helpers.multiple(
           () =>
             faker.datatype.boolean({ probability: 0.8 })
-              ? ({
-                  timestamp: new Date().toISOString(),
-                  content: create(TextV0Type, { content: faker.lorem.sentences(3) }),
-                } satisfies BlockType)
-              : ({
-                  timestamp: new Date().toISOString(),
-                  object: create(Expando, { title: faker.lorem.sentence() }),
-                } satisfies BlockType),
+              ? undefined
+              : create(Expando, { name: faker.lorem.sentence() }),
           { count: { min: 1, max: 3 } },
         ),
       }),
@@ -38,16 +34,11 @@ export const createCommentThread = (identity: Identity) => {
     messages: faker.helpers.multiple(
       () =>
         create(MessageType, {
-          from: {
+          sender: {
             identityKey: faker.datatype.boolean() ? identity.identityKey.toHex() : PublicKey.random().toHex(),
           },
-          blocks: faker.helpers.multiple(
-            () => ({
-              timestamp: new Date().toISOString(),
-              content: create(TextV0Type, { content: faker.lorem.sentences(3) }),
-            }),
-            { count: { min: 1, max: 2 } },
-          ),
+          timestamp: new Date().toISOString(),
+          text: faker.lorem.sentences(3),
         }),
       { count: { min: 2, max: 3 } },
     ),

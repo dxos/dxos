@@ -85,7 +85,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: MAP_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: MAP_PLUGIN }],
                             icon: (props: IconProps) => <Compass {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',

@@ -3,7 +3,7 @@
 //
 
 import { Archive, ArrowClockwise, Trash } from '@phosphor-icons/react';
-import React, { Fragment, type MouseEvent, useState } from 'react';
+import React, { type MouseEvent, useState } from 'react';
 
 import { type MessageType } from '@braneframe/types';
 import { Button, DensityProvider, useTranslation } from '@dxos/react-ui';
@@ -59,9 +59,9 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
     onAction?.(action);
   };
 
-  const date = message.date ? new Date(message.date) : new Date();
-  const from = message.from?.name ?? message.from?.email;
-  const subject = message.subject ?? message.blocks[0].content?.content;
+  const date = message.timestamp ? new Date(message.timestamp) : new Date();
+  const from = message.sender?.name ?? message.sender?.email;
+  const subject = message.properties?.subject ?? message.text;
   const now = new Date();
 
   return (
@@ -87,7 +87,7 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
             <div className='grow overflow-hidden truncate py-2'>{from}</div>
             {onAction && (
               <div className='hidden group-hover:flex flex shrink-0'>
-                {message.read && (
+                {message.properties?.read && (
                   <Button
                     variant='ghost'
                     title={t('action mark read')}
@@ -110,7 +110,10 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
           </div>
 
           <div
-            className={mx('mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer', message.read && 'fg-description')}
+            className={mx(
+              'mb-1 mr-2 overflow-hidden line-clamp-3 cursor-pointer',
+              message.properties?.read && 'fg-description',
+            )}
             onClick={() => setExpanded((event) => !event)}
           >
             {subject}
@@ -118,15 +121,10 @@ export const MessageItem = ({ message, selected, onSelect, onAction }: MessageIt
 
           {expanded && (
             <div className='flex flex-col gap-2 pbs-2 pb-4 mt-2 border-bs-2 separator-separator'>
-              {message.blocks.map((block, index) => (
-                <Fragment key={index}>
-                  <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
-                    <div>{block.content?.content}</div>
-                    <div className='px-2 text-right text-sm'>{formatDate(now, new Date(block.timestamp))}</div>
-                  </div>
-                  {index !== message.blocks.length - 1 && <div role='none' className='border-bs separator-separator' />}
-                </Fragment>
-              ))}
+              <div className='grid grid-cols-[1fr,9rem] gap-2 fg-description'>
+                <div>{message.text}</div>
+                <div className='px-2 text-right text-sm'>{formatDate(now, new Date(message.timestamp))}</div>
+              </div>
             </div>
           )}
         </div>

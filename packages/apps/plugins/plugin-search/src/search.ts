@@ -5,7 +5,7 @@
 import { yieldOrContinue } from 'main-thread-scheduling';
 import { useEffect, useState } from 'react';
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 
 // TODO(thure): Deprecate search-sync, move still-relevant utilities elsewhere (here, probably).
 import { mapObjectToTextFields, queryStringToMatch } from './search-sync';
@@ -20,7 +20,7 @@ export const filterObjects = async <T extends Record<string, any>>(
   }
   await Promise.all(
     objects
-      .filter((object) => !(object instanceof TextV0Type))
+      .filter((object) => !(object instanceof TextType))
       .map(async (object) => {
         await yieldOrContinue('interactive');
         const fields = mapObjectToTextFields<T>(object);

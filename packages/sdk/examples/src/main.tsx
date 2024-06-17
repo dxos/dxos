@@ -8,7 +8,7 @@ import { Airplane, Stack } from '@phosphor-icons/react';
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextV0Type, DocumentType } from '@braneframe/types';
+import { TextType, DocumentType } from '@braneframe/types';
 import type { S } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { registerSignalFactory } from '@dxos/echo-signals';
@@ -52,11 +52,12 @@ const setupPeersInSpace = async (options: PeersInSpaceProps = {}) => {
 const main = async () => {
   const { clients, spaceKey } = await setupPeersInSpace({
     count: 2,
-    types: [DocumentType, TextV0Type],
+    types: [DocumentType, TextType],
     onCreateSpace: (space) => {
       space.db.add(
         create(DocumentType, {
-          content: create(TextV0Type, { content: '## Type here...\n\ntry the airplane mode switch.' }),
+          content: create(TextType, { content: '## Type here...\n\ntry the airplane mode switch.' }),
+          threads: [],
         }),
       );
     },

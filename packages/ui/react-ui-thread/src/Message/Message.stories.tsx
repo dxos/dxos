@@ -10,26 +10,23 @@ import { PublicKey } from '@dxos/keys';
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Message } from './Message';
+import { DefaultMessageText, type MessageEntity } from '../testing';
 import translations from '../translations';
-import { type MessageEntity } from '../types';
 
 const Story = () => {
   const [identityKey] = useState(PublicKey.random());
-  const [message] = useState<MessageEntity<{ id: string; text: string }>>({
+  const [message] = useState<MessageEntity>({
     id: 'm1',
+    timestamp: new Date().toISOString(),
     authorId: identityKey.toHex(),
-    blocks: [
-      {
-        id: 'b1',
-        timestamp: new Date().toISOString(),
-        text: 'hello',
-      },
-    ],
+    text: 'hello',
   });
 
   return (
     <div className='grid grid-cols-[var(--rail-size)_1fr]'>
-      <Message {...message} />
+      <Message {...message}>
+        <DefaultMessageText text={message.text} onDelete={() => console.log('delete')} />
+      </Message>
     </div>
   );
 };

@@ -110,8 +110,8 @@ export const KanbanColumnComponent: FC<{
               variant='subdued'
               classNames='px-2'
               placeholder={t('column title placeholder')}
-              defaultValue={column.title}
-              onChange={({ target: { value } }) => (column.title = value)}
+              defaultValue={column.name}
+              onChange={({ target: { value } }) => (column.name = value)}
             />
           </Input.Root>
 

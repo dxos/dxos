@@ -2,14 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { MailboxType, MessageType, TextV0Type } from '@braneframe/types';
+import { ChannelType, MessageType, TextType, ThreadType } from '@braneframe/types';
 import { Filter, findObjectWithForeignKey } from '@dxos/echo-db';
 import { create, foreignKey, S } from '@dxos/echo-schema';
 import { type FunctionHandler } from '@dxos/functions';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type EmailMessage, SOURCE_ID, text } from './types';
+import { type EmailMessage, SOURCE_ID } from './types';
 
 /**
  * Trigger configuration.
@@ -37,18 +37,18 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-  context.client.addTypes([MailboxType, MessageType, TextV0Type]);
+  context.client.addTypes([ChannelType, MessageType, TextType]);
 
   // Create mailbox if doesn't exist.
-  const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();
+  const { objects: mailboxes } = await space.db.query(Filter.schema(ChannelType)).run();
   let mailbox = findObjectWithForeignKey(mailboxes, { source: SOURCE_ID, id: account });
   if (!mailbox) {
     mailbox = space.db.add(
       create(
-        MailboxType,
+        ChannelType,
         {
-          title: account,
-          messages: [],
+          name: account,
+          threads: [create(ThreadType, { name: 'Inbox', messages: [] })],
         },
         {
           keys: [
@@ -70,16 +70,13 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         create(
           MessageType,
           {
-            to: [{ email: message.to }],
-            from: { email: message.from },
-            subject: message.subject,
-            date: new Date(message.created).toISOString(),
-            blocks: [
-              {
-                timestamp: new Date(message.created).toISOString(),
-                content: text(message.body),
-              },
-            ],
+            sender: { email: message.from },
+            timestamp: new Date(message.created).toISOString(),
+            text: message.body,
+            properties: {
+              subject: message.subject,
+              to: [{ email: message.to }],
+            },
           },
           {
             keys: [foreignKey(SOURCE_ID, String(message.id))],
@@ -87,7 +84,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
         ),
       );
 
-      mailbox.messages?.push(object);
+      mailbox.threads[0]?.messages?.push(object);
     }
   }
 

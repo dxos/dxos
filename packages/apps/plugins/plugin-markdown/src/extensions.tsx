@@ -81,11 +81,11 @@ export const getExtensions = ({ dispatch, settings, document, query }: Extension
           // TODO(burdon): Specify filter (e.g., stack).
           return query.objects
             .map<AutocompleteResult | undefined>((object) =>
-              object.title?.length && object.id !== document?.id
+              object.name?.length && object.id !== document?.id
                 ? {
-                    label: object.title,
+                    label: object.name,
                     // TODO(burdon): Factor out URL builder.
-                    apply: `[${object.title}](/${object.id})`,
+                    apply: `[${object.name}](/${object.id})`,
                   }
                 : undefined,
             )

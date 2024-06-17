@@ -13,5 +13,5 @@ export class TextType extends TypedObject({ typename: 'dxos.org/type/Text', vers
 export class DocumentType extends TypedObject({ typename: 'dxos.org/type/Document', version: '0.1.0' })({
   name: S.optional(S.String),
   content: ref(TextType),
-  threads: S.optional(S.mutable(S.Array(ThreadType))),
+  threads: S.mutable(S.Array(ThreadType)),
 }) {}

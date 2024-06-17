@@ -20,7 +20,7 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, CollectionType, TextV0Type } from '@braneframe/types';
+import { cloneObject, CollectionType, TextType } from '@braneframe/types';
 import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject, Expando } from '@dxos/echo-schema';
@@ -369,8 +369,8 @@ const updateGraphWithSpaceObjects = ({
 }) => {
   // TODO(burdon): HACK: Skip loading sketches (filter Expandos also?)
   // TODO(wittjosiah): Option not to trigger queries if content of document updates (otherwise each keystroke triggers change).
-  // const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
-  const query = space.db.query(Filter.not(Filter.or(Filter.schema(TextV0Type), Filter.schema(Expando))));
+  // const query = space.db.query(Filter.not(Filter.schema(TextType)));
+  const query = space.db.query(Filter.not(Filter.or(Filter.schema(TextType), Filter.schema(Expando))));
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
   const unsubscribeQuery = query.subscribe();
 

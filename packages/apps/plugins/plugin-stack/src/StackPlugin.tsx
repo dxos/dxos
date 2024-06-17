@@ -21,7 +21,6 @@ import { type StackPluginProvides, type StackProvides, type StackState, type Sta
 export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
   const settings = new LocalStorageStore<StackSettingsProps>(STACK_PLUGIN, { separation: true });
   const stackState = create<StackState>({ creators: [] });
-  let subscription: UnsubscribeCallback;
 
   return {
     meta,
@@ -37,9 +36,6 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
           stackState.creators.push(...((plugin as Plugin<StackProvides>).provides.stack.creators ?? []));
         }
       }
-    },
-    unload: async () => {
-      subscription?.();
     },
     provides: {
       settings: settings.values,

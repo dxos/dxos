@@ -46,7 +46,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { DocumentType, TextV0Type, CollectionType } from '@braneframe/types';
+import { DocumentType, TextType, CollectionType } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -64,7 +64,7 @@ import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
-import { FolderType, SectionType, StackType } from './migrations';
+import { LegacyTypes } from './migrations';
 import translations from './translations';
 
 import './globals';
@@ -190,7 +190,17 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
-          client.addTypes([FolderType, StackType, SectionType]);
+          client.addTypes([
+            LegacyTypes.DocumentType,
+            LegacyTypes.FileType,
+            LegacyTypes.FolderType,
+            LegacyTypes.MessageType,
+            LegacyTypes.SectionType,
+            LegacyTypes.StackType,
+            LegacyTypes.TableType,
+            LegacyTypes.TextType,
+            LegacyTypes.ThreadType,
+          ]);
 
           const url = new URL(window.location.href);
           // Match CF only.
@@ -269,8 +279,8 @@ const main = async () => {
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
           const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
-          const content = create(TextV0Type, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { title: INITIAL_TITLE, content });
+          const content = create(TextType, { content: INITIAL_CONTENT });
+          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
           personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,

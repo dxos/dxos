@@ -7,7 +7,7 @@ import '@dxosTheme';
 import { Check, Trash } from '@phosphor-icons/react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType, TextV0Type } from '@braneframe/types';
+import { MessageType, TextType } from '@braneframe/types';
 import { createDocAccessor, createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
@@ -30,9 +30,9 @@ import {
 import { withTheme } from '@dxos/storybook-utils';
 
 import { Thread, ThreadFooter, ThreadHeading } from './Thread';
-import { Message, type MessageBlockProps, MessageTextbox } from '../Message';
+import { Message, MessageTextbox } from '../Message';
+import { type MessageEntity } from '../testing';
 import translations from '../translations';
-import { type MessageEntity } from '../types';
 
 faker.seed(101);
 
@@ -44,7 +44,7 @@ const authorId = PublicKey.random().toHex();
 
 const Editor: FC<{
   id?: string;
-  item: TextV0Type;
+  item: TextType;
   comments: Comment[];
   selected?: string;
   onCreateComment: CommentsOptions['onCreate'];
@@ -105,18 +105,22 @@ type StoryCommentThread = {
   cursor?: string;
   range?: Range;
   yPos?: number;
-  messages: MessageEntity<{ content?: TextV0Type }>[];
+  messages: MessageEntity[];
 };
 
-const StoryMessageBlock = (props: MessageBlockProps<{ content?: TextV0Type }>) => {
+type MessageTextProps = {
+  message: MessageEntity;
+};
+
+const StoryMessageText = ({ message }: MessageTextProps) => {
   const { themeMode } = useThemeContext();
-  const doc = props.block.content?.content;
-  const accessor = createDocAccessor(props.block.content!, ['content']);
+  const doc = message.text;
+  const accessor = createDocAccessor(message, ['text']);
   const { parentRef } = useTextEditor(
     () => ({
       doc,
       extensions: [
-        //
+        // prettier-ignore
         createBasicExtensions(),
         createThemeExtensions({ themeMode }),
         automerge(accessor),
@@ -163,13 +167,9 @@ const StoryThread: FC<{
   const handleCreateMessage = () => {
     if (messageRef.current?.length) {
       const message = create(MessageType, {
-        from: { identityKey: authorId },
-        blocks: [
-          {
-            timestamp: new Date().toISOString(),
-            content: create(TextV0Type, { content: messageRef.current }),
-          },
-        ],
+        timestamp: new Date().toISOString(),
+        sender: { identityKey: authorId },
+        text: messageRef.current,
       });
       thread.messages.push(message);
 
@@ -193,7 +193,9 @@ const StoryThread: FC<{
       </ThreadHeading>
 
       {thread.messages.map((message) => (
-        <Message<{ content?: TextV0Type }> key={message.id} {...message} MessageBlockComponent={StoryMessageBlock} />
+        <Message key={message.id} {...message}>
+          <StoryMessageText message={message} />
+        </Message>
       ))}
 
       <div ref={containerRef} className='contents'>
@@ -253,7 +255,7 @@ type StoryProps = {
 };
 
 const Story = ({ text, autoCreate }: StoryProps) => {
-  const [item] = useState(createEchoObject(create(TextV0Type, { content: text ?? '' })));
+  const [item] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();
 
@@ -275,13 +277,9 @@ const Story = ({ text, autoCreate }: StoryProps) => {
           ? faker.helpers.multiple(
               () => ({
                 id: PublicKey.random().toHex(),
+                timestamp: new Date().toISOString(),
                 authorId: PublicKey.random().toHex(),
-                blocks: [
-                  {
-                    timestamp: new Date().toISOString(),
-                    content: create(TextV0Type, { content: faker.lorem.sentence() }),
-                  },
-                ],
+                text: faker.lorem.sentence(),
               }),
               { count: { min: 1, max: 3 } },
             )

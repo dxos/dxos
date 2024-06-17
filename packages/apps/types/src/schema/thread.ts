@@ -17,6 +17,8 @@ export const ActorSchema = S.mutable(
   }),
 );
 
+export type ActorType = S.Schema.Type<typeof ActorSchema>;
+
 export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message', version: '0.1.0' })({
   /** ISO date string when the message was sent. */
   timestamp: S.String,
@@ -25,12 +27,12 @@ export class MessageType extends TypedObject({ typename: 'dxos.org/type/Message'
   /** Text content of the message. */
   text: S.String,
   /** Non-text content sent with a message (e.g. files, polls, etc.) */
-  parts: S.optional(S.Array(ref(Expando))),
+  parts: S.optional(S.mutable(S.Array(ref(Expando)))),
   /** Context of the application when message was created. */
   // TODO(burdon): Evolve "attention object" to be current UX state? E.g., of Deck?
   context: S.optional(ref(Expando)),
   /** Custom properties for specific message types (e.g. email subject or cc fields). */
-  properties: S.optional(S.Record(S.String, S.Any)),
+  properties: S.optional(S.mutable(S.Record(S.String, S.Any))),
   // TODO(wittjosiah): Add read status:
   //  - Read reciepts need to be per space member.
   //  - Read reciepts don't need to be added to schema until they being implemented.

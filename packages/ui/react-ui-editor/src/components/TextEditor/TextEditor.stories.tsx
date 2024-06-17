@@ -10,7 +10,7 @@ import defaultsDeep from 'lodash.defaultsdeep';
 import React, { type FC, type KeyboardEvent, StrictMode, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { keySymbols, parseShortcut } from '@dxos/keyboard';
 import { PublicKey } from '@dxos/keys';
@@ -256,7 +256,7 @@ const Story = ({
   placeholder = 'New document.',
   ...props
 }: StoryProps) => {
-  const [object] = useState(createEchoObject(create(TextV0Type, { content: text ?? '' })));
+  const [object] = useState(createEchoObject(create(TextType, { content: text ?? '' })));
 
   const viewRef = useRef<EditorView>(null);
   useComments(viewRef.current, id, comments);

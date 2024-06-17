@@ -3,3 +3,4 @@
 //
 
 export * from './migrations';
+export * as LegacyTypes from './legacy-types';

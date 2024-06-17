@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { ScriptType, TextV0Type } from '@braneframe/types';
+import { ScriptType, TextType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -96,7 +96,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: SCRIPT_PLUGIN }],
                             icon: (props: IconProps) => <Code {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
@@ -175,7 +175,7 @@ export const ScriptPlugin = ({ containerUrl }: ScriptPluginProps): PluginDefinit
         resolver: (intent, plugins) => {
           switch (intent.action) {
             case ScriptAction.CREATE: {
-              return { data: create(ScriptType, { source: create(TextV0Type, { content: example }) }) };
+              return { data: create(ScriptType, { source: create(TextType, { content: example }) }) };
             }
           }
         },
