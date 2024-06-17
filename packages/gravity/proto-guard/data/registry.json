@@ -15,6 +15,6 @@
     "version": 2,
     "dataRoot": "snapshots/levelDB/snapshot",
     "jsonDataPath": "snapshots/levelDB/expected.json",
-    "timestamp": "2024-06-17T16:03:28.979Z"
+    "timestamp": "2024-06-17T16:18:30.632Z"
   }
 ]

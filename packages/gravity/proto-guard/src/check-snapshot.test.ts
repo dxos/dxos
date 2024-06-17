@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { expect } from 'chai';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -46,7 +47,7 @@ describe('Tests against storage', () => {
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    await checkIfSpacesMatchDump(client, spacesDump);
+    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
   });
 
   test('check if space loads for Automerge on nodeFS snapshot', async () => {
@@ -66,6 +67,6 @@ describe('Tests against storage', () => {
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    await checkIfSpacesMatchDump(client, spacesDump);
+    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
   });
 });
