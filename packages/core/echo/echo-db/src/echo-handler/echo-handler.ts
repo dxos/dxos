@@ -269,6 +269,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    * @param internals - internals of the proxy
    */
+  // TODO(dmaretskyi): Reconcile _linkReactiveHandler and linkObject.
   private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
     const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
     const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
@@ -473,6 +474,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * Store referenced object.
    */
+  // TODO(dmaretskyi): Reconcile _linkReactiveHandler and linkObject.
   linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
     const database = target[symbolInternals].database;
     if (database) {
