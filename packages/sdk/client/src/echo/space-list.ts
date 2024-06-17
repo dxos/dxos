@@ -16,6 +16,7 @@ import {
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject, todo } from '@dxos/debug';
 import { type EchoClient, type FilterSource, type Query } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
@@ -23,21 +24,24 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ApiError, trace as Trace } from '@dxos/protocols';
-import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
+import { Invitation, SpaceState, type Space as SerializedSpace } from '@dxos/protocols/proto/dxos/client/services';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
 import { AgentQuerySourceProvider } from './agent-query-source-provider';
 import { SpaceProxy } from './space-proxy';
 import { RPC_TIMEOUT } from '../common';
+import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
+  private _defaultSpaceKey?: PublicKey;
   private readonly _defaultSpaceAvailable = new PushStream<boolean>();
   private _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
@@ -50,10 +54,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   constructor(
-    private readonly _config: Config,
+    private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
-    private readonly _getIdentityKey: () => PublicKey | undefined,
+    private readonly _halo: HaloProxy,
     /**
      * @internal
      */
@@ -87,6 +91,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       },
     });
 
+    const credentialsSubscription = this._halo.credentials.subscribe(() => {
+      if (this._updateAndOpenDefaultSpace()) {
+        credentialsSubscription.unsubscribe();
+      }
+    });
+    this._ctx.onDispose(() => credentialsSubscription.unsubscribe());
+
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     invariant(this._serviceProvider.services.InvitationsService, 'InvitationsService is not available.');
     this._invitationProxy = new InvitationsProxy(
@@ -116,8 +127,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         if (!spaceProxy) {
           spaceProxy = new SpaceProxy(this._serviceProvider, space, this._echoClient);
 
-          if (space.state !== SpaceState.INACTIVE && !this._config.values.runtime?.client?.lazySpaceOpen) {
-            void spaceProxy.open().catch();
+          if (this._shouldOpenSpace(space)) {
+            this._openSpaceAsync(spaceProxy);
           }
 
           // Propagate space state updates to the space list observable.
@@ -127,11 +138,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           void spaceProxy
             .waitUntilReady()
             .then(() => {
+              const identityKeyHex = this._getIdentityKey()?.toHex();
               if (
                 spaceProxy &&
                 spaceProxy.state.get() === SpaceState.READY &&
-                this._getIdentityKey() &&
-                spaceProxy.properties[defaultKey] === this._getIdentityKey()!.toHex()
+                identityKeyHex &&
+                spaceProxy.properties[defaultKey] === identityKeyHex
               ) {
                 this._defaultSpaceAvailable.next(true);
                 this._defaultSpaceAvailable.complete();
@@ -178,6 +190,44 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log.trace('dxos.sdk.echo-proxy.open', Trace.end({ id: this._instanceId }));
   }
 
+  private _updateAndOpenDefaultSpace(): boolean {
+    const defaultSpaceCredential: Credential | undefined = this._halo.queryCredentials({
+      type: 'dxos.halo.credentials.DefaultSpace',
+    })[0];
+    const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential);
+    if (defaultSpaceAssertion?.['@type'] !== 'dxos.halo.credentials.DefaultSpace') {
+      return false;
+    }
+    this._defaultSpaceKey = defaultSpaceAssertion.spaceKey;
+    const defaultSpace = this._spaces.find((s) => s.key.equals(defaultSpaceAssertion.spaceKey));
+    log('defaultSpaceKey read from a credential', {
+      openSpace: defaultSpace?.isOpen,
+      key: this._defaultSpaceKey?.truncate(),
+    });
+    if (defaultSpace && defaultSpace.state.get() === SpaceState.CLOSED) {
+      this._openSpaceAsync(defaultSpace);
+    }
+    return true;
+  }
+
+  private _openSpaceAsync(spaceProxy: Space) {
+    void spaceProxy.open().catch((err) => log.catch(err));
+  }
+
+  private _shouldOpenSpace(space: SerializedSpace): boolean {
+    if (this._ctx.disposed) {
+      return false;
+    }
+    if (space.state === SpaceState.INACTIVE) {
+      return false;
+    }
+    if (!this._config?.values?.runtime?.client?.lazySpaceOpen) {
+      return true;
+    }
+    // Only open the default space if lazySpaceOpen is set.
+    return this._defaultSpaceKey ? space.spaceKey.equals(this._defaultSpaceKey) : false;
+  }
+
   async setConfig(config: IndexConfig) {
     await this._serviceProvider.services.QueryService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
   }
@@ -193,6 +243,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
+    this._defaultSpaceKey = undefined;
   }
 
   get isReady() {
@@ -290,5 +341,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    */
   query<T extends {} = any>(filter?: FilterSource<T>, options?: QueryOptions): Query<T> {
     return this._echoClient.graph.query(filter, options);
+  }
+
+  private _getIdentityKey() {
+    return this._halo.identity.get()?.identityKey;
   }
 }
