@@ -241,6 +241,9 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
+
+  /// Data migration is required.
+  REQUIRES_MIGRATION = 8;
 }
 
 // TODO(burdon): Rename SpaceInfo?

@@ -2,16 +2,12 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
 import { type EchoHost } from '@dxos/echo-db';
-import {
-  createMappedFeedWriter,
-  type MetadataStore,
-  type Space
-} from '@dxos/echo-pipeline';
+import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
 import { type FeedStore } from '@dxos/feed-store';
 import { failedInvariant } from '@dxos/invariant';
@@ -97,6 +93,8 @@ export class DataSpace {
 
   // TODO(dmaretskyi): Move into Space?
   private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
+
+  private readonly _epochProcessingMutex = new Mutex();
 
   private _state = SpaceState.CLOSED;
 
@@ -198,6 +196,7 @@ export class DataSpace {
     await this._gossip.open();
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
+    await this._automergeSpaceState.open();
     await this._inner.spaceState.addCredentialProcessor(this._automergeSpaceState);
     await this._inner.open(new Context());
     this._state = SpaceState.CONTROL_ONLY;
@@ -223,6 +222,7 @@ export class DataSpace {
 
     await this._inner.close();
     await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
+    await this._automergeSpaceState.close();
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
     await this._notarizationPlugin.close();
 
@@ -277,12 +277,14 @@ export class DataSpace {
     // Allow other tasks to run before loading the data pipeline.
     await sleep(1);
 
+    const ready = this.stateUpdate.waitForCondition(() => this._state === SpaceState.READY);
+
     this._automergeSpaceState.startProcessingRootDocs();
 
-    // Wait for the first epoch.
-    await cancelWithContext(this._ctx, this.automergeSpaceState.ensureEpochInitialized());
+    await ready;
+  }
 
-    log('data pipeline ready');
+  private async _enterReadyState() {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.READY;
@@ -384,6 +386,9 @@ export class DataSpace {
           return;
         }
 
+        // Ensure only one root is processed at a time.
+        using _guard = await this._epochProcessingMutex.acquire();
+
         // Attaching space keys to legacy documents.
         const doc = handle.docSync() ?? failedInvariant();
         if (!doc.access?.spaceKey) {
@@ -396,9 +401,12 @@ export class DataSpace {
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         const root = await this._echoHost.openSpaceRoot(handle.url);
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
-          // TODO(dmaretskyi): go to migration required state
+          this._state = SpaceState.REQUIRES_MIGRATION;
+          this.stateUpdate.emit();
         } else {
-          // TODO(dmaretskyi): go to ready state
+          if (this._state !== SpaceState.READY) {
+            await this._enterReadyState();
+          }
         }
       } catch (err) {
         if (err instanceof ContextDisposedError) {

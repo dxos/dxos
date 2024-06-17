@@ -19,6 +19,7 @@ import { trace } from '@dxos/tracing';
 import { DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -157,7 +158,8 @@ export class EchoHost extends Resource {
   async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const automergeRoot = this._automergeHost.repo.create();
-    automergeRoot.change((doc: any) => {
+    automergeRoot.change((doc: SpaceDoc) => {
+      doc.version = SpaceDocVersion.CURRENT;
       doc.access = { spaceKey: spaceKey.toHex() };
     });
 
