@@ -2,11 +2,18 @@
   {
     "name": "hypergraph",
     "version": "1",
-    "dataRoot": "data/snapshots/1"
+    "dataRoot": "snapshots/1"
   },
   {
     "name": "automerge",
     "version": "2",
-    "dataRoot": "data/snapshots/2"
+    "dataRoot": "snapshots/2"
+  },
+  {
+    "name": "levelDB",
+    "version": 2,
+    "dataRoot": "snapshots/levelDB/snapshot",
+    "jsonDataPath": "snapshots/levelDB/expected.json",
+    "timestamp": "2024-06-17T15:59:33.789Z"
   }
 ]

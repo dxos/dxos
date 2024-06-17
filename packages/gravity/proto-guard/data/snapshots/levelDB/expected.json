@@ -1,0 +1,90 @@
+{
+  "BGNEO4ABHP6M5NBGB23BY532YTCXKEOES": {
+    "098269a5b447066748b1d8d764e137eec45e26d4d3b806649b9b9c9fc5a58ea8": {
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "@meta": {
+        "keys": []
+      },
+      "@id": "098269a5b447066748b1d8d764e137eec45e26d4d3b806649b9b9c9fc5a58ea8",
+      "__DEFAULT__": "0470da1d95b0825a51c5d610b0ca043e61261aa2425ba02d138ece6a54a8e6cf1edcfedb99a02cbeded3ec011ced23927f686fa3f3fa7efdcec8e46ed0fde43c77"
+    }
+  },
+  "BQBDCIGO3VD6ZND5DSRJ5JWFHQCB4IPVC": {
+    "01J0KESPFCSCE6T199NK1HH5NV": {
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "@meta": {
+        "keys": []
+      },
+      "@id": "01J0KESPFCSCE6T199NK1HH5NV",
+      "name": "first-space"
+    },
+    "01J0KESPJKZYCN85Q0044EN09J": {
+      "@meta": {
+        "keys": []
+      },
+      "@id": "01J0KESPJKZYCN85Q0044EN09J",
+      "array": [
+        "one",
+        "two",
+        "three"
+      ],
+      "string": "hello world!",
+      "value": 100
+    },
+    "01J0KESPYWH5EE50KCEAYGPWVW": {
+      "@meta": {
+        "keys": []
+      },
+      "@id": "01J0KESPYWH5EE50KCEAYGPWVW",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "@type": "dxos.echo.model.document.Reference",
+          "itemId": "01J0KESPZBKXHC1KNJPJFJ4TG8",
+          "protocol": null,
+          "host": null
+        }
+      ]
+    },
+    "01J0KESPZBKXHC1KNJPJFJ4TG8": {
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "example.test.Task.Todo",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "@meta": {
+        "keys": []
+      },
+      "@id": "01J0KESPZBKXHC1KNJPJFJ4TG8",
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  },
+  "BUJ3XIJ3U5EDPHQDG3AQHGY2ODHZSVPC2": {
+    "01J0KESQEJBXN20TX4HNMTFDF9": {
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "@meta": {
+        "keys": []
+      },
+      "@id": "01J0KESQEJBXN20TX4HNMTFDF9",
+      "name": "first-space"
+    }
+  }
+}
