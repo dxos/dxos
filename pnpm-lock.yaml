@@ -63,7 +63,7 @@ importers:
         version: link:tools/eslint-plugin
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:tools/eslint-rules
+        version: link:tools/eslint-plugin-rules
       '@dxos/keys':
         specifier: workspace:*
         version: link:packages/common/keys
@@ -10749,7 +10749,7 @@ importers:
     dependencies:
       '@dxos/eslint-plugin-rules':
         specifier: workspace:*
-        version: link:../eslint-rules
+        version: link:../eslint-plugin-rules
       '@rushstack/eslint-plugin-packlets':
         specifier: ^0.7.0
         version: 0.7.0(eslint@8.57.0)(typescript@5.4.5)
@@ -10803,7 +10803,7 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  tools/eslint-rules: {}
+  tools/eslint-plugin-rules: {}
 
   tools/executors/esbuild: {}
 
