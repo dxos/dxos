@@ -7,7 +7,8 @@
   {
     "name": "automerge",
     "version": "2",
-    "dataRoot": "snapshots/2"
+    "dataRoot": "snapshots/2/snapshot",
+    "jsonDataPath": "snapshots/2/expected.json"
   },
   {
     "name": "levelDB",
