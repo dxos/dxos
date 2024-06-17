@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/composer-app",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -10,8 +10,7 @@
   "author": "DXOS.org",
   "scripts": {
     "build:functions": "esbuild ./src/functions/_worker.ts --bundle --format=esm --outfile=./out/composer/_worker.js",
-    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts",
-    "socket": "bundle"
+    "demo": "node -r ts-node/register/transpile-only ./playwright/demos/grid.ts"
   },
   "dependencies": {
     "@braneframe/plugin-chain": "workspace:*",
@@ -71,7 +70,7 @@
     "@dxos/shell": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@dxos/web-auth": "^0.4.72",
+    "@dxos/web-auth": "^0.4.77",
     "isomorphic-fetch": "^3.0.0",
     "micromark": "^4.0.0",
     "micromark-extension-directive": "^3.0.0",

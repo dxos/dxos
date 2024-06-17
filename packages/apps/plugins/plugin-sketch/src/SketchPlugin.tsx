@@ -66,7 +66,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all sketches to the graph.
                 const query = space.db.query(Filter.schema(SketchType));
@@ -89,7 +89,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                             icon: (props: IconProps) => <CompassTool {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -112,12 +112,10 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             testId: 'sketchPlugin.createSectionSpaceSketch',
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: [
-              {
-                plugin: SKETCH_PLUGIN,
-                action: SketchAction.CREATE,
-              },
-            ],
+            intent: {
+              plugin: SKETCH_PLUGIN,
+              action: SketchAction.CREATE,
+            },
           },
         ],
       },

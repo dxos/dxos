@@ -11,7 +11,7 @@ import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { DensityProvider } from '@dxos/react-ui';
 
 import { SearchResults, type SearchResultsProps } from './SearchResults';
-import { filterObjects } from '../../search';
+import { filterObjectsSync } from '../../search-sync';
 
 faker.seed(1);
 
@@ -51,7 +51,7 @@ const match = new RegExp(word, 'i');
 
 export const Default = {
   args: {
-    items: filterObjects(objects, match),
+    items: filterObjectsSync(objects, match),
     match,
   },
 };

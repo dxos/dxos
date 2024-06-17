@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Placeholder, Sidebar as MenuIcon } from '@phosphor-icons/react';
+import { Placeholder, Plus, Sidebar as MenuIcon } from '@phosphor-icons/react';
 import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Graph, type Node, useGraph } from '@braneframe/plugin-graph';
@@ -19,19 +19,12 @@ import {
   SLUG_PATH_SEPARATOR,
   Surface,
   type Toast as ToastSchema,
-  useIntent,
+  usePlugin,
+  useIntentDispatcher,
 } from '@dxos/app-framework';
-import {
-  Button,
-  DensityProvider,
-  Dialog,
-  Main,
-  Popover,
-  Status,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
-import { Deck, deckGrid, PlankHeading, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { Button, Dialog, Main, Popover, Status, Tooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Deck, deckGrid, PlankHeading, Plank, plankHeadingIconProps, useAttendable } from '@dxos/react-ui-deck';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { descriptionText, fixedInsetFlexLayout, getSize, mx } from '@dxos/react-ui-theme';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -143,23 +136,22 @@ const NodePlankHeading = ({
   const label = pending
     ? t('pending heading')
     : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: DECK_PLUGIN }], t);
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${DECK_PLUGIN}/${node.id}` ? Popover.Anchor : Fragment;
   return (
     <PlankHeading.Root {...(part[0] !== 'main' && { classNames: 'pie-1' })}>
       <ActionRoot>
         {node ? (
           <PlankHeading.ActionsMenu
+            Icon={Icon}
+            attendableId={node.id}
             triggerLabel={t('actions menu label')}
             actions={node.actions()}
             onAction={(action) =>
               typeof action.data === 'function' && action.data?.({ node: action as Node, caller: DECK_PLUGIN })
             }
           >
-            <PlankHeading.Button attendableId={node.id}>
-              <span className='sr-only'>{label}</span>
-              <Icon {...plankHeadingIconProps} />
-            </PlankHeading.Button>
+            <Surface role='menu-footer' data={{ object: node.data }} />
           </PlankHeading.ActionsMenu>
         ) : (
           <PlankHeading.Button>
@@ -168,9 +160,11 @@ const NodePlankHeading = ({
           </PlankHeading.Button>
         )}
       </ActionRoot>
-      <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
-        {label}
-      </PlankHeading.Label>
+      <TextTooltip text={label} onlyWhenTruncating>
+        <PlankHeading.Label attendableId={node?.id} {...(pending && { classNames: 'fg-description' })}>
+          {label}
+        </PlankHeading.Label>
+      </TextTooltip>
       {node && part[0] !== 'complementary' && (
         <Surface role='navbar-end' direction='inline-reverse' data={{ object: node.data, part }} />
       )}
@@ -203,31 +197,7 @@ const NodePlankHeading = ({
           )
         }
         close={part[0] === 'complementary' ? 'minify-end' : true}
-      >
-        {/* TODO(thure): This, and all other hardcoded `comments` references, needs to be refactored. */}
-        {node && !!node.data?.comments && !slug?.endsWith('comments') && (
-          <Button
-            variant='ghost'
-            classNames='p-1'
-            onClick={() =>
-              dispatch([
-                {
-                  action: NavigationAction.OPEN,
-                  data: {
-                    activeParts: {
-                      complementary: `${node.id}${SLUG_PATH_SEPARATOR}comments${SLUG_COLLECTION_INDICATOR}`,
-                    },
-                  },
-                },
-                { action: LayoutAction.SET_LAYOUT, data: { element: 'complementary', state: true } },
-              ])
-            }
-          >
-            <span className='sr-only'>{t('open comments label')}</span>
-            <Chat />
-          </Button>
-        )}
-      </PlankHeading.Controls>
+      />
     </PlankHeading.Root>
   );
 };
@@ -285,7 +255,8 @@ export const DeckLayout = ({
   const complementaryAvailable = complementarySlug === NAV_ID || !!complementaryNode;
   const complementaryAttrs = useAttendable(complementarySlug?.split(SLUG_PATH_SEPARATOR)[0] ?? 'never');
   const activeIds = getActiveIds(location.active);
-
+  const searchEnabled = !!usePlugin('dxos.org/plugin/search');
+  const dispatch = useIntentDispatcher();
   const navigationData = {
     popoverAnchorId,
     activeIds,
@@ -423,41 +394,78 @@ export const DeckLayout = ({
                     const part = ['main', index, main.length] satisfies PartIdentifier;
                     const attendableAttrs = useAttendable(id);
                     return (
-                      <Deck.Plank
-                        key={id}
-                        {...attendableAttrs}
-                        classNames={slots?.plank?.classNames}
-                        scrollIntoViewOnMount={id === scrollIntoView}
-                        suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
-                      >
-                        {id === NAV_ID ? (
-                          <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
-                        ) : node ? (
-                          <>
-                            <NodePlankHeading
-                              node={node.node}
-                              slug={id}
-                              part={part}
-                              popoverAnchorId={popoverAnchorId}
-                            />
-                            <Surface
-                              role='article'
-                              data={{
-                                ...(node.path
-                                  ? { subject: node.node.data, path: node.path }
-                                  : { object: node.node.data }),
-                                part,
-                                popoverAnchorId,
-                              }}
-                              limit={1}
-                              fallback={PlankContentError}
-                              placeholder={<PlankLoading />}
-                            />
-                          </>
+                      <Plank.Root key={id}>
+                        <Plank.Content
+                          {...attendableAttrs}
+                          classNames={slots?.plank?.classNames}
+                          scrollIntoViewOnMount={id === scrollIntoView}
+                          suppressAutofocus={id === NAV_ID || !!node?.node?.properties?.managesAutofocus}
+                        >
+                          {id === NAV_ID ? (
+                            <Surface role='navigation' data={{ part, ...navigationData }} limit={1} />
+                          ) : node ? (
+                            <>
+                              <NodePlankHeading
+                                node={node.node}
+                                slug={id}
+                                part={part}
+                                popoverAnchorId={popoverAnchorId}
+                              />
+                              <Surface
+                                role='article'
+                                data={{
+                                  ...(node.path
+                                    ? { subject: node.node.data, path: node.path }
+                                    : { object: node.node.data }),
+                                  part,
+                                  popoverAnchorId,
+                                }}
+                                limit={1}
+                                fallback={PlankContentError}
+                                placeholder={<PlankLoading />}
+                              />
+                            </>
+                          ) : (
+                            <PlankError part={part} slug={id} />
+                          )}
+                        </Plank.Content>
+                        {searchEnabled ? (
+                          <div role='none' className='grid grid-rows-subgrid row-span-3'>
+                            <Tooltip.Root>
+                              <Tooltip.Trigger asChild>
+                                <Button
+                                  variant='ghost'
+                                  classNames='p-1'
+                                  onClick={() =>
+                                    dispatch([
+                                      {
+                                        action: LayoutAction.SET_LAYOUT,
+                                        data: {
+                                          element: 'dialog',
+                                          component: 'dxos.org/plugin/search/Dialog',
+                                          dialogBlockAlign: 'start',
+                                          subject: { action: NavigationAction.SET, position: 'add-after', part },
+                                        },
+                                      },
+                                    ])
+                                  }
+                                >
+                                  <span className='sr-only'>{t('insert plank label')}</span>
+                                  <Plus />
+                                </Button>
+                              </Tooltip.Trigger>
+                              <Tooltip.Portal>
+                                <Tooltip.Content side='bottom' classNames='z-[70]'>
+                                  {t('insert plank label')}
+                                </Tooltip.Content>
+                              </Tooltip.Portal>
+                            </Tooltip.Root>
+                            <Plank.ResizeHandle classNames='row-start-[toolbar-start] row-end-[content-end]' />
+                          </div>
                         ) : (
-                          <PlankError part={part} slug={id} />
+                          <Plank.ResizeHandle classNames='row-span-3' />
                         )}
-                      </Deck.Plank>
+                      </Plank.Root>
                     );
                   })}
               </Deck.Root>
@@ -500,11 +508,9 @@ export const DeckLayout = ({
 
         {/* Global dialog. */}
         <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => (context.dialogOpen = nextOpen)}>
-          <DensityProvider density='fine'>
-            <Dialog.Overlay blockAlign={dialogBlockAlign}>
-              <Surface role='dialog' data={dialogContent} />
-            </Dialog.Overlay>
-          </DensityProvider>
+          <Dialog.Overlay blockAlign={dialogBlockAlign}>
+            <Surface role='dialog' data={dialogContent} />
+          </Dialog.Overlay>
         </Dialog.Root>
 
         {/* Global toasts. */}

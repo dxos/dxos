@@ -1,6 +1,6 @@
 {
   "name": "@dxos/teleport-extension-gossip",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "description": "Gossip extension for teleport.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

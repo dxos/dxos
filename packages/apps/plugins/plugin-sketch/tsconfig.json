@@ -1,5 +1,7 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": [
+    "../../../../tsconfig.json"
+  ],
   "compilerOptions": {
     "lib": [
       "DOM",
@@ -24,22 +26,13 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/invariant"
-    },
-    {
       "path": "../../../common/log"
     },
     {
       "path": "../../../common/random"
     },
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../core/echo/automerge"
-    },
-    {
-      "path": "../../../core/echo/echo-db"
     },
     {
       "path": "../../../core/echo/echo-schema"

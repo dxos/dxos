@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-pwa",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "description": "DXOS Surface plugin for PWA registration and update handling.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,7 +42,7 @@
   },
   "peerDependencies": {
     "@dxos/app-framework": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0"
   },
   "publishConfig": {

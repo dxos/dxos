@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-client",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "description": "React client API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -96,6 +96,7 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/echo-schema": "workspace:*",
     "@dxos/echo-signals": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -114,16 +115,14 @@
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "yjs": "^13.6.10"
+    "react-dom": "^18.2.0"
   },
   "peerDependencies": {
     "react": "*",
     "react-dom": "*"
   },
   "optionalDependencies": {
-    "@dxos/random": "workspace:*",
-    "yjs": "^13.6.10"
+    "@dxos/random": "workspace:*"
   },
   "publishConfig": {
     "access": "public"

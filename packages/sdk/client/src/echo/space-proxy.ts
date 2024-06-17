@@ -5,14 +5,14 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space, type SpaceInternal, Properties } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
@@ -78,6 +78,8 @@ export class SpaceProxy implements Space {
   private readonly _membersUpdate = new Event<SpaceMember[]>();
   private readonly _members = MulticastObservable.from(this._membersUpdate, []);
 
+  private readonly _dbSpaceRootSet = new Event();
+
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
   private _properties?: EchoReactiveObject<any> = undefined;
@@ -98,7 +100,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -116,6 +118,10 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+  }
+
+  get id(): SpaceId {
+    return this._data.id as SpaceId;
   }
 
   @trace.info()
@@ -233,8 +239,10 @@ export class SpaceProxy implements Space {
       // Transition onto new automerge root.
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
+        log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
         await this._db.setSpaceRoot(automergeRoot);
+        this._dbSpaceRootSet.emit();
       }
     }
 
@@ -295,7 +303,7 @@ export class SpaceProxy implements Space {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.schema(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {
@@ -408,8 +416,15 @@ export class SpaceProxy implements Space {
     };
   }
 
-  private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
-    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
+  private async _createEpoch({
+    migration,
+    automergeRootUrl,
+  }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
+    log('create epoch', { migration, automergeRootUrl });
+    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration, automergeRootUrl });
+    if (this._db.rootUrl !== automergeRootUrl) {
+      await this._dbSpaceRootSet.waitForCount(1);
+    }
   }
 
   private async _removeMember(memberKey: PublicKey) {

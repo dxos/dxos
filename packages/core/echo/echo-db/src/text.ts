@@ -6,7 +6,7 @@ import get from 'lodash.get';
 
 import { next as A } from '@dxos/automerge/automerge';
 
-import { type DocAccessor } from './automerge';
+import { type DocAccessor } from './core-db';
 
 export const toCursor = (accessor: DocAccessor, pos: number) => {
   const doc = accessor.handle.docSync();
@@ -21,6 +21,10 @@ export const toCursor = (accessor: DocAccessor, pos: number) => {
 
   // NOTE: Slice is needed because getCursor mutates the array.
   return A.getCursor(doc, accessor.path.slice(), pos);
+};
+
+export const toCursorRange = (accessor: DocAccessor, start: number, end: number) => {
+  return `${toCursor(accessor, start)}:${toCursor(accessor, end)}`;
 };
 
 export const fromCursor = (accessor: DocAccessor, cursor: string) => {

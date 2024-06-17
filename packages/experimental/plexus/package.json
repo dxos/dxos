@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plexus",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "private": true,
   "description": "Graph navigator.",
   "homepage": "https://dxos.org",
@@ -48,6 +48,6 @@
     "workbox-window": "^7.0.0"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5"
+    "@phosphor-icons/react": "^2.1.5"
   }
 }

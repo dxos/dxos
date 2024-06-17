@@ -5,6 +5,7 @@
 import get from 'lodash.get';
 import { useEffect, useState } from 'react';
 
+import { type NetworkStatus } from '@dxos/client/mesh';
 import { type FilterParams, type QueryMetrics } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { type Resource } from '@dxos/protocols/proto/dxos/tracing';
@@ -54,6 +55,7 @@ export type Stats = {
   database?: DatabaseInfo;
   queries?: QueryInfo[];
   memory?: MemoryInfo;
+  network?: NetworkStatus;
 };
 
 /**
@@ -154,6 +156,21 @@ export const useStats = (): [Stats, () => void] => {
     },
     [update],
   );
+
+  useEffect(() => {
+    const stream = client.services.services.NetworkService!.queryStatus();
+    stream.subscribe((network) => {
+      setStats((stats) =>
+        Object.assign({}, stats, {
+          network,
+        }),
+      );
+    });
+
+    return () => {
+      void stream.close();
+    };
+  });
 
   return [stats, () => forceUpdate({})];
 };

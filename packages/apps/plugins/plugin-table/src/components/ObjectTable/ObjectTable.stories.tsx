@@ -29,7 +29,7 @@ const useTable = () => {
     generator.addSchemas();
     void generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
-    client.addSchema(TableType);
+    client.addTypes([TableType]);
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.
@@ -49,7 +49,7 @@ const Story = ({ table }: { table?: TableType }) => {
 
   return (
     <Table.Root>
-      <Table.Viewport classNames={'inset-0 overflow-auto'}>
+      <Table.Viewport classNames={'inset-0'}>
         <ObjectTable table={table} stickyHeader />
       </Table.Viewport>
     </Table.Root>

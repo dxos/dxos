@@ -1,5 +1,5 @@
 # Type `IntentResolver`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts:96](https://github.com/dxos/dxos/blob/f2f84db18/packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts#L96)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts:96](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/IntentPlugin/intent.ts#L96)</sub>
 
 
 Resolves an intent that was dispatched.

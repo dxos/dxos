@@ -53,7 +53,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
     download(file, fileName);
 
     if (fileManagerPlugin?.provides.file.upload) {
-      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName));
+      const info = await fileManagerPlugin.provides.file.upload(new File([file], fileName), client.spaces.default);
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;
@@ -72,7 +72,6 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
     try {
       const info = await client.repair();
       setStorageConfig(await Storage());
-
       handleToast({ title: t('settings repair success'), description: JSON.stringify(info, undefined, 2) });
     } catch (err: any) {
       handleToast({ title: t('settings repair failed'), description: err.message });

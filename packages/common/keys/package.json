@@ -1,6 +1,6 @@
 {
   "name": "@dxos/keys",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "description": "Key utils and definitions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -24,6 +24,10 @@
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/node-std": "workspace:*"
+  },
+  "devDependencies": {
+    "base32-decode": "^1.0.0",
+    "base32-encode": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"

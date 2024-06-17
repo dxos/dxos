@@ -43,6 +43,7 @@ export interface SignalMethods {
   /**
    * Start receiving messages from peer.
    */
+  // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
   subscribeMessages: (peerId: PublicKey) => Promise<void>;
 
   /**

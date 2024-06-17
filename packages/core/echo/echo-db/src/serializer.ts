@@ -8,8 +8,8 @@ import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 
-import { AutomergeObjectCore, getAutomergeObjectCore } from './automerge';
-import { type EchoDatabase } from './database';
+import { ObjectCore, getObjectCore } from './core-db';
+import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
@@ -91,11 +91,11 @@ export class Serializer {
   static version = 1;
 
   async export(database: EchoDatabase): Promise<SerializedSpace> {
-    const ids = database.automerge.getAllObjectIds();
+    const ids = database.coreDatabase.getAllObjectIds();
 
     const loadedObjects: Array<EchoReactiveObject<any> | undefined> = [];
     for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
-      loadedObjects.push(...(await database.automerge.batchLoadObjects(chunk)));
+      loadedObjects.push(...(await database.batchLoadObjects(chunk)));
     }
 
     const data = {
@@ -141,7 +141,7 @@ export class Serializer {
   }
 
   private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
-    const core = getAutomergeObjectCore(object);
+    const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
     const typeRef = core.getType();
@@ -163,7 +163,7 @@ export class Serializer {
     const { '@id': id, '@type': type, '@deleted': deleted, '@meta': meta, ...data } = object;
     const dataProperties = Object.fromEntries(Object.entries(data).filter(([key]) => !key.startsWith('@')));
 
-    const core = new AutomergeObjectCore();
+    const core = new ObjectCore();
     core.id = id;
     // TODO(dmaretskyi): Can't pass type in opts.
     core.initNewObject(dataProperties, {
@@ -174,7 +174,7 @@ export class Serializer {
       core.setDeleted(deleted);
     }
 
-    database.automerge.addCore(core);
+    database.coreDatabase.addCore(core);
   }
 }
 

@@ -19,7 +19,13 @@ import React, { type PropsWithChildren, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { Button, Main } from '@dxos/react-ui';
-import { AttentionProvider, PlankHeading, plankHeadingIconProps, Deck as NaturalDeck } from '@dxos/react-ui-deck';
+import {
+  AttentionProvider,
+  PlankHeading,
+  plankHeadingIconProps,
+  Deck as NaturalDeck,
+  Plank,
+} from '@dxos/react-ui-deck';
 import { Mosaic, type MosaicDataItem } from '@dxos/react-ui-mosaic';
 import { withTheme } from '@dxos/storybook-utils';
 import { arrayMove } from '@dxos/util';
@@ -90,7 +96,14 @@ const StackPlank = ({ label, items, id, children }: PropsWithChildren<PlankProps
 
 const DemoStackPlank = () => {
   const [props] = useState(rollStackPlank(12));
-  return <StackPlank {...props} />;
+  return (
+    <Plank.Root>
+      <Plank.Content>
+        <StackPlank {...props} />
+      </Plank.Content>
+      <Plank.ResizeHandle />
+    </Plank.Root>
+  );
 };
 
 export default {
@@ -110,27 +123,13 @@ export const StaticBasicStacks = {
         <AttentionProvider attended={attended}>
           <Mosaic.DragOverlay />
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
-            <NaturalDeck.Plank>
-              <DemoStackPlank />
-            </NaturalDeck.Plank>
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
+            <DemoStackPlank />
           </NaturalDeck.Root>
         </AttentionProvider>
       </Mosaic.Root>
@@ -317,31 +316,37 @@ export const DynamicBasicStacks = () => {
           <NaturalDeck.Root classNames='fixed inset-0 z-0'>
             {openPlanksInDeck.map((id, index, arr) =>
               id === MENU ? (
-                <NaturalDeck.Plank key={MENU}>{menuChildren}</NaturalDeck.Plank>
+                <Plank.Root key={MENU}>
+                  <Plank.Content>{menuChildren}</Plank.Content>
+                  <Plank.ResizeHandle />
+                </Plank.Root>
               ) : (
-                <NaturalDeck.Plank key={id}>
-                  <StackPlank {...planks[id]}>
-                    <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(id)}>
-                      <CaretLineLeft />
-                    </Button>
-                    <IncrementButtons {...{ index, setOpenPlanks, openPlanks: openPlanksInDeck }} />
-                    <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(id)}>
-                      <CaretLineRight />
-                    </Button>
-                    <Button
-                      variant='ghost'
-                      classNames='p-1'
-                      onClick={() =>
-                        setOpenPlanks((prev) => {
-                          prev.delete(id);
-                          return new Set(Array.from(prev));
-                        })
-                      }
-                    >
-                      <X />
-                    </Button>
-                  </StackPlank>
-                </NaturalDeck.Plank>
+                <Plank.Root key={id}>
+                  <Plank.Content>
+                    <StackPlank {...planks[id]}>
+                      <Button variant='ghost' classNames='p-1' onClick={() => setNavContent(id)}>
+                        <CaretLineLeft />
+                      </Button>
+                      <IncrementButtons {...{ index, setOpenPlanks, openPlanks: openPlanksInDeck }} />
+                      <Button variant='ghost' classNames='p-1' onClick={() => setC11yContent(id)}>
+                        <CaretLineRight />
+                      </Button>
+                      <Button
+                        variant='ghost'
+                        classNames='p-1'
+                        onClick={() =>
+                          setOpenPlanks((prev) => {
+                            prev.delete(id);
+                            return new Set(Array.from(prev));
+                          })
+                        }
+                      >
+                        <X />
+                      </Button>
+                    </StackPlank>
+                  </Plank.Content>
+                  <Plank.ResizeHandle />
+                </Plank.Root>
               ),
             )}
           </NaturalDeck.Root>

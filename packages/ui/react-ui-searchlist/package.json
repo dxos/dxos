@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-searchlist",
-  "version": "0.5.4",
+  "version": "0.5.8",
   "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -33,7 +33,7 @@
     "vite": "^5.2.9"
   },
   "peerDependencies": {
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -13,7 +13,7 @@ import { Keyring } from '@dxos/keyring';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
-import { MemoryTransportFactory, NetworkManager } from '@dxos/network-manager';
+import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { createStorage, StorageType, type Storage } from '@dxos/random-access-storage';
 import { BlobStore } from '@dxos/teleport-extension-object-sync';
@@ -42,7 +42,7 @@ export const createServiceContext = async ({
   storage?: Storage;
 } = {}) => {
   const signalManager = new MemorySignalManager(signalContext);
-  const networkManager = new NetworkManager({
+  const networkManager = new SwarmNetworkManager({
     signalManager,
     transportFactory: MemoryTransportFactory,
   });
@@ -96,7 +96,7 @@ export type TestPeerProps = {
   feedStore?: FeedStore<any>;
   metadataStore?: MetadataStore;
   keyring?: Keyring;
-  networkManager?: NetworkManager;
+  networkManager?: SwarmNetworkManager;
   spaceManager?: SpaceManager;
   dataSpaceManager?: DataSpaceManager;
   snapshotStore?: SnapshotStore;
@@ -155,7 +155,7 @@ export class TestPeer {
   }
 
   get networkManager() {
-    return (this._props.networkManager ??= new NetworkManager({
+    return (this._props.networkManager ??= new SwarmNetworkManager({
       signalManager: new MemorySignalManager(this.signalContext),
       transportFactory: MemoryTransportFactory,
     }));
