@@ -27,5 +27,8 @@
   "devDependencies": {
     "eslint": "^8.56.0",
     "typescript": "^5.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
