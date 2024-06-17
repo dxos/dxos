@@ -31,6 +31,11 @@ export interface SpaceInternal {
   createEpoch(options?: CreateEpochOptions): Promise<void>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
+
+  /**
+   * Migrate space data to the latest version.
+   */
+  migrate(): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).

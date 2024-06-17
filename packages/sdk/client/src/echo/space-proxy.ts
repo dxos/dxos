@@ -16,9 +16,9 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
+  CreateEpochRequest,
   Invitation,
   SpaceState,
-  type CreateEpochRequest,
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
@@ -110,6 +110,7 @@ export class SpaceProxy implements Space {
       },
       createEpoch: this._createEpoch.bind(this),
       removeMember: this._removeMember.bind(this),
+      migrate: this._migrate.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -432,6 +433,12 @@ export class SpaceProxy implements Space {
       spaceKey: this.key,
       memberKey,
       newRole: HaloSpaceMember.Role.REMOVED,
+    });
+  }
+
+  private async _migrate() {
+    await this._createEpoch({
+      migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
     });
   }
 }
