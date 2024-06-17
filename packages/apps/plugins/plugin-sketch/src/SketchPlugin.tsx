@@ -151,8 +151,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(SketchType, {
-                  // TODO(wittjosiah): Default canvas content.
-                  data: create(CanvasType, {}),
+                  canvas: create(CanvasType, { content: {} }),
                 }),
               };
             }

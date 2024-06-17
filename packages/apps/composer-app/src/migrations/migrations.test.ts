@@ -179,7 +179,7 @@ describe('Composer migrations', () => {
     doc1.comments?.push({ cursor, thread: thread1 });
     expect(doc1.comments![0].thread instanceof LegacyTypes.ThreadType).to.be.true;
     const sketch1 = space.db.add(
-      create(LegacyTypes.SketchType, { title: 'My Sketch', data: create(Expando, { content: 'test string' }) }),
+      create(LegacyTypes.SketchType, { title: 'My Sketch', data: create(Expando, { content: { id: 'test string' } }) }),
     );
     const file1 = space.db.add(
       create(LegacyTypes.FileType, { filename: 'file1.jpeg', type: 'image/jpeg', title: 'My File' }),
@@ -225,7 +225,7 @@ describe('Composer migrations', () => {
     const migratedSketch1 = space.db.getObjectById<SketchType>(sketch1.id);
     expect(migratedSketch1 instanceof SketchType).to.be.true;
     expect(migratedSketch1?.name).to.equal('My Sketch');
-    expect(migratedSketch1?.canvas?.content).to.equal('test string');
+    expect(migratedSketch1?.canvas?.content?.id).to.equal('test string');
 
     const migratedFile1 = space.db.getObjectById<FileType>(file1.id);
     expect(migratedFile1 instanceof FileType).to.be.true;

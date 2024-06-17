@@ -13,8 +13,7 @@ import { Button, Toolbar } from '@dxos/react-ui';
 
 import SketchComponent from './Sketch';
 
-// TODO(wittjosiah): Default canvas content.
-const createSketch = () => create(SketchType, { data: create(CanvasType, {}) });
+const createSketch = () => create(SketchType, { canvas: create(CanvasType, { content: {} }) });
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(createSketch());
