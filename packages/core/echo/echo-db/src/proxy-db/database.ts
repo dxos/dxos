@@ -13,6 +13,7 @@ import {
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { type QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { defaultMap } from '@dxos/util';
 
@@ -149,6 +150,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   @synchronized
   async setSpaceRoot(rootUrl: string) {
+    log('setSpaceRoot', { rootUrl });
     const firstTime = this._rootUrl === undefined;
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
