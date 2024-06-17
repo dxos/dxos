@@ -49,7 +49,10 @@ export type IdentityPanelHeadingProps = Pick<
   title: string;
 };
 
-export type IdentityPanelStepProps = Pick<IdentityPanelImplProps, 'send' | 'onDone' | 'doneActionParent'> & {
+export type IdentityPanelStepProps = Pick<
+  IdentityPanelImplProps,
+  'send' | 'onDone' | 'doneActionParent' | 'connectionState'
+> & {
   active?: boolean;
   agentHostingEnabled?: boolean;
   devices: Device[];
