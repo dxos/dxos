@@ -101,7 +101,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all documents to the graph.
                 // TODO(burdon): Factor out common action.
@@ -145,7 +145,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <Envelope {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -159,7 +159,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <AddressBook {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -173,7 +173,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
                             icon: (props: IconProps) => <Calendar {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

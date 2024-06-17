@@ -19,8 +19,9 @@ import { type SegmentTelemetry, type EventOptions, type PageOptions } from './se
 import { type InitOptions, type captureException as SentryCaptureException } from './sentry';
 import { SentryLogProcessor } from './sentry/sentry-log-processor';
 
-const SPACE_METRICS_MIN_INTERVAL = 1000 * 60;
-const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 5;
+const SPACE_METRICS_MIN_INTERVAL = 1000 * 60; // 1 minute
+const SPACE_TELEMETRY_MIN_INTERVAL = 1000 * 60 * 60; // 1 hour
+const NETWORK_METRICS_MIN_INTERVAL = 1000 * 60 * 5; // 5 minutes
 
 // Secrets? EnvironmentConfig?
 
@@ -325,15 +326,19 @@ export class Observability {
 
     const updateSpaceMetrics = new Event<Space>().debounce(SPACE_METRICS_MIN_INTERVAL);
     updateSpaceMetrics.on(this._ctx, async () => {
-      log('send space update');
+      log('send space metrics');
       for (const data of mapSpaces(spaces, { truncateKeys: true })) {
-        // Metrics
         this.gauge('dxos.client.space.members', data.members, { key: data.key });
         this.gauge('dxos.client.space.objects', data.objects, { key: data.key });
         this.gauge('dxos.client.space.epoch', data.epoch, { key: data.key });
         this.gauge('dxos.client.space.currentDataMutations', data.currentDataMutations, { key: data.key });
+      }
+    });
 
-        // Telemetry
+    const updateSpaceTelemetry = new Event<Space>().debounce(SPACE_TELEMETRY_MIN_INTERVAL);
+    updateSpaceTelemetry.on(this._ctx, async () => {
+      log('send space telemetry');
+      for (const data of mapSpaces(spaces, { truncateKeys: true })) {
         this.event({
           identityId: getTelemetryIdentifier(client),
           name: `${namespace}.space.update`,
@@ -346,6 +351,7 @@ export class Observability {
       space.pipeline.subscribe({
         next: () => {
           updateSpaceMetrics.emit();
+          updateSpaceTelemetry.emit();
         },
       });
 
