@@ -4,10 +4,10 @@
 import { FilePlus } from '@phosphor-icons/react';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { FolderType, type StackType, SectionType, FileType } from '@braneframe/types';
+import { FileType, StackViewType, type CollectionType } from '@braneframe/types';
 import { usePlugin, useIntent, LayoutAction, useResolvePlugin, parseFileManagerPlugin } from '@dxos/app-framework';
-import { create } from '@dxos/echo-schema';
-import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type EchoReactiveObject, create } from '@dxos/echo-schema';
+import { getSpace } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Path } from '@dxos/react-ui-mosaic';
 import { SearchList } from '@dxos/react-ui-searchlist';
@@ -18,7 +18,7 @@ import { nonNullable } from '@dxos/util';
 import { STACK_PLUGIN } from '../meta';
 import { type StackPluginProvides } from '../types';
 
-type AddSectionDialogProps = { path?: string; position: AddSectionPosition; stack: StackType };
+type AddSectionDialogProps = { path?: string; position: AddSectionPosition; collection: CollectionType };
 
 export const dataHasAddSectionDialogProps = (data: any): data is { subject: AddSectionDialogProps } => {
   return (
@@ -27,36 +27,37 @@ export const dataHasAddSectionDialogProps = (data: any): data is { subject: AddS
     !!data.subject &&
     'position' in data.subject &&
     typeof data.subject.position === 'string' &&
-    'stack' in data.subject
+    'collection' in data.subject
   );
 };
 
-export const AddSectionDialog = ({ path, position, stack }: AddSectionDialogProps) => {
+export const AddSectionDialog = ({ path, position, collection }: AddSectionDialogProps) => {
   const { t } = useTranslation(STACK_PLUGIN);
   const stackPlugin = usePlugin<StackPluginProvides>(STACK_PLUGIN);
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const { dispatch } = useIntent();
-  const space = getSpace(stack);
-  const [folder] = useQuery(space, Filter.schema(FolderType));
+  const space = getSpace(collection);
   const [pending, setPending] = useState<boolean>(false);
 
   const handleAdd = useCallback(
-    (sectionObject: SectionType['object']) => {
+    (sectionObject: EchoReactiveObject<any>) => {
       const index =
         position === 'beforeAll'
           ? 0
           : position === 'afterAll'
-            ? stack.sections.length
-            : stack.sections.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
+            ? collection.objects.length
+            : collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path!));
 
-      stack.sections.splice(index + (position === 'after' ? 1 : 0), 0, create(SectionType, { object: sectionObject }));
-      // TODO(wittjosiah): Remove once stack items can be added to folders separately.
-      folder?.objects.push(sectionObject);
+      collection.objects.splice(index + (position === 'after' ? 1 : 0), 0, sectionObject);
+      const stack = collection.views[StackViewType.typename];
+      if (stack) {
+        stack.sections[sectionObject.id] = {};
+      }
       setPending(false);
       void dispatch?.({ action: LayoutAction.SET_LAYOUT, data: { element: 'dialog', state: false } });
     },
-    [stack, stack.sections, path, position, dispatch],
+    [collection, path, position, dispatch],
   );
 
   const handleFileUpload =

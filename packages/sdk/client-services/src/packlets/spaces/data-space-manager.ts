@@ -5,7 +5,7 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { defaultKey, PropertiesSchema } from '@dxos/client-protocol';
+import { defaultKey, PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -210,7 +210,7 @@ export class DataSpaceManager {
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
       system: {
-        type: encodeReference(getTypeReference(PropertiesSchema)!),
+        type: encodeReference(getTypeReference(PropertiesType)!),
       },
       data: {
         [defaultKey]: identity.identityKey.toHex(),

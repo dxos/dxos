@@ -66,7 +66,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all maps to the graph.
                 const query = space.db.query(Filter.schema(MapType));
@@ -89,7 +89,7 @@ export const MapPlugin = (): PluginDefinition<MapPluginProvides> => {
                             icon: (props: IconProps) => <Compass {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

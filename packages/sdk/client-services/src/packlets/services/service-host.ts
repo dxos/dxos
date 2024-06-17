@@ -3,7 +3,11 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
+<<<<<<< HEAD
 import { clientServiceBundle, type ClientServices } from '@dxos/client-protocol';
+=======
+import { clientServiceBundle, defaultKey, type ClientServices, PropertiesType } from '@dxos/client-protocol';
+>>>>>>> main
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';

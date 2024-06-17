@@ -17,6 +17,7 @@ import {
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { createIdFromSpaceKey } from '../space';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
@@ -72,8 +73,9 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   const setupTest = async () => {
+    const spaceId = await createIdFromSpaceKey(SPACE_KEY);
     const repo = new Repo({ network: [] });
-    const loader = new AutomergeDocumentLoaderImpl(SPACE_KEY, repo);
+    const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
     const spaceRootDocHandle = repo.create<SpaceDoc>();
     await loader.loadSpaceRootDocHandle(ctx, {
       rootUrl: spaceRootDocHandle.url,

@@ -6,7 +6,7 @@ import { Flags, ux } from '@oclif/core';
 
 import { FLAG_SPACE_KEYS } from '@dxos/cli-base';
 import { table, type TableFlags, TABLE_FLAGS } from '@dxos/cli-base';
-import { effectToJsonSchema, type StaticSchema } from '@dxos/echo-schema';
+import { type StaticSchema } from '@dxos/echo-schema';
 
 import { BaseCommand } from '../../../base';
 
@@ -47,20 +47,17 @@ const createTypenameFilter = (typenameFilter?: string) => {
 
 // TODO(burdon): Static vs. dynamic.
 const printSchema = (schemas: StaticSchema[], flags: TableFlags = {}) => {
-  const format = {
-    id: {
-      truncate: true,
-    },
-    typename: {},
-    version: {},
-  };
-
-  if (flags.extended) {
-    for (const schema of schemas) {
-      ux.stdout(table([schema], format, flags));
-      console.log(effectToJsonSchema(schema.schema));
-    }
-  } else {
-    ux.stdout(table(schemas, format, flags));
-  }
+  ux.stdout(
+    table(
+      schemas,
+      {
+        id: {
+          truncate: true,
+        },
+        typename: {},
+        version: {},
+      },
+      flags,
+    ),
+  );
 };

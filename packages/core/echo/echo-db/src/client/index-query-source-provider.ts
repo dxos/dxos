@@ -160,6 +160,7 @@ export class IndexQuerySource implements QuerySource {
     const core = getObjectCore(object);
     const queryResult: QueryResult = {
       id: object.id,
+      spaceId: core.database!.spaceId,
       spaceKey: core.database!.spaceKey,
       object,
       match: { rank: result.rank },

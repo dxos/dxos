@@ -1,6 +1,6 @@
 {
   "name": "@dxos/codemods",
-  "version": "0.5.6",
+  "version": "0.5.8",
   "private": true,
   "description": "Code analyzer.",
   "homepage": "https://dxos.org",

@@ -15,7 +15,9 @@ export interface ShellRuntime {
   layoutUpdate: Event<LayoutRequest>;
   invitationUrlUpdate: Event<InvitationUrlRequest>;
   layout: ShellLayout;
+  /** @deprecated Use spaceId. */
   spaceKey?: PublicKey;
+  spaceId?: string;
   target?: string;
   invitationCode?: string;
   invitationUrl: string;

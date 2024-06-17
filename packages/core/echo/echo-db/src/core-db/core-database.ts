@@ -24,7 +24,7 @@ import { type SpaceDoc, type SpaceState } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeContext } from './automerge-context';
@@ -48,7 +48,7 @@ export class CoreDatabase {
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
-  private _isOpen = false;
+  private _state = CoreDatabaseState.CLOSED;
 
   private _ctx = new Context();
 
@@ -65,19 +65,20 @@ export class CoreDatabase {
   constructor(
     public readonly graph: Hypergraph,
     public readonly automerge: AutomergeContext,
+    public readonly spaceId: SpaceId,
     public readonly spaceKey: PublicKey,
   ) {
-    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceKey, automerge.repo);
+    this._automergeDocLoader = new AutomergeDocumentLoaderImpl(this.spaceId, automerge.repo, this.spaceKey);
   }
 
   @synchronized
   async open(spaceState: SpaceState) {
     const start = performance.now();
-    if (this._isOpen) {
+    if (this._state !== CoreDatabaseState.CLOSED) {
       log.info('Already open');
       return;
     }
-    this._isOpen = true;
+    this._state = CoreDatabaseState.OPENING;
     this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
@@ -102,16 +103,17 @@ export class CoreDatabase {
       log.warn('slow AM open', { docId: spaceState.rootUrl, duration: elapsed });
     }
 
+    this._state = CoreDatabaseState.OPEN;
     this.opened.wake();
   }
 
   // TODO(dmaretskyi): Cant close while opening.
   @synchronized
   async close() {
-    if (!this._isOpen) {
+    if (this._state === CoreDatabaseState.CLOSED) {
       return;
     }
-    this._isOpen = false;
+    this._state = CoreDatabaseState.CLOSED;
 
     this.opened.throw(new ContextDisposedError());
     this.opened.reset();
@@ -132,6 +134,10 @@ export class CoreDatabase {
    * Returns ids for loaded and not loaded objects.
    */
   getAllObjectIds(): string[] {
+    if (this._state !== CoreDatabaseState.OPEN) {
+      return [];
+    }
+
     const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
     if (!hasLoadedHandles) {
       return [];
@@ -371,7 +377,7 @@ export class CoreDatabase {
 
     compositeRuntime.batch(() => {
       this._updateEvent.emit({
-        spaceKey: this.spaceKey,
+        spaceId: this.spaceId,
         itemsUpdated: itemsUpdated.map((id) => ({ id })),
       });
       for (const id of itemsUpdated) {
@@ -493,7 +499,7 @@ export class CoreDatabase {
 }
 
 export interface ItemsUpdatedEvent {
-  spaceKey: PublicKey;
+  spaceId: SpaceId;
   itemsUpdated: Array<{ id: string }>;
 }
 
@@ -541,3 +547,9 @@ export const loadObjectReferences = async <
   const result = await Promise.all(tasks);
   return (Array.isArray(objOrArray) ? result : result[0]) as any;
 };
+
+enum CoreDatabaseState {
+  CLOSED,
+  OPENING,
+  OPEN,
+}

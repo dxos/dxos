@@ -24,7 +24,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(TableType);
+      clientPlugin?.provides.client.addTypes([TableType]);
     },
     provides: {
       metadata: {
@@ -68,7 +68,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all tables to the graph.
                 const query = space.db.query(Filter.schema(TableType));
@@ -91,7 +91,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                             icon: (props: IconProps) => <Table {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

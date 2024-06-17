@@ -6,11 +6,10 @@ import * as S from '@effect/schema/Schema';
 import { type Mutable } from 'effect/Types';
 
 import { Reference } from '@dxos/echo-protocol';
-import { requireTypeReference, EXPANDO_TYPENAME } from '@dxos/echo-schema';
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { requireTypeReference, EXPANDO_TYPENAME, type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type SpaceId, type PublicKey } from '@dxos/keys';
 import { QueryOptions, type Filter as FilterProto } from '@dxos/protocols/proto/dxos/echo/filter';
 
 import { type ObjectCore } from '../core-db';
@@ -79,11 +78,13 @@ export class Filter<T extends {} = any> {
     }
   }
 
+  // TODO(burdon): Tighten to AbstractTypedObject.
   static schema<T extends {} = any>(
     schema: S.Schema<T>,
     filter?: Record<string, any> | OperatorFilter<T>,
   ): Filter<Mutable<T>>;
 
+  // TODO(burdon): Tighten to AbstractTypedObject.
   static schema(schema: S.Schema<any>, filter?: Record<string, any> | OperatorFilter): Filter {
     const typeReference = S.isSchema(schema) ? requireTypeReference(schema) : getReferenceWithSpaceKey(schema);
     invariant(typeReference, 'Invalid schema; check persisted in the database.');
@@ -172,6 +173,10 @@ export class Filter<T extends {} = any> {
 
   get spaceKeys(): PublicKey[] | undefined {
     return this.options.spaces;
+  }
+
+  get spaceIds(): SpaceId[] | undefined {
+    return this.options.spaceIds as SpaceId[] | undefined;
   }
 
   toProto(): FilterProto {
