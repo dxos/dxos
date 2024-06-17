@@ -8509,6 +8509,9 @@ importers:
 
   packages/gravity/proto-guard:
     dependencies:
+      '@braneframe/types':
+        specifier: workspace:*
+        version: link:../../apps/types
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

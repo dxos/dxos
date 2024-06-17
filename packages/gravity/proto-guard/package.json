@@ -7,6 +7,7 @@
   "bugs": "https://github.com/dxos/dxos/issues",
   "license": "MIT",
   "author": "DXOS.org",
+  "main": "dist/lib/node/index.cjs",
   "files": [
     "dist",
     "src"
@@ -14,8 +15,8 @@
   "scripts": {
     "snapshot": "pnpm -w nx build proto-guard && ts-node ./src/generate-snapshot"
   },
-  "main": "dist/lib/node/index.cjs",
   "dependencies": {
+    "@braneframe/types": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/context": "workspace:*",
