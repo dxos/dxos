@@ -3,11 +3,13 @@
 //
 
 import {
+  CanvasType,
   ChannelType,
   CollectionType,
   DocumentType,
   FileType,
   MessageType,
+  SketchType,
   TableType,
   TextType,
   ThreadType,
@@ -160,7 +162,25 @@ export const migrations: Migration[] = [
       // Sketches
       //
 
-      // TODO
+      const { objects: sketches } = await space.db.query(Filter.schema(LegacyTypes.SketchType)).run();
+
+      for (const sketch of sketches) {
+        const data = await loadObjectReferences(sketch, (s) => s.data);
+        await builder.migrateObject(data.id, ({ data }) => ({
+          schema: CanvasType,
+          props: {
+            content: data.content,
+          },
+        }));
+
+        await builder.migrateObject(sketch.id, ({ data }) => ({
+          schema: SketchType,
+          props: {
+            name: data.name,
+            canvas: data.data,
+          },
+        }));
+      }
 
       //
       // Tables

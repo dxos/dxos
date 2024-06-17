@@ -112,10 +112,12 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             testId: 'sketchPlugin.createSectionSpaceSketch',
             label: ['create stack section label', { ns: SKETCH_PLUGIN }],
             icon: (props: any) => <CompassTool {...props} />,
-            intent: {
-              plugin: SKETCH_PLUGIN,
-              action: SketchAction.CREATE,
-            },
+            intent: [
+              {
+                plugin: SKETCH_PLUGIN,
+                action: SketchAction.CREATE,
+              },
+            ],
           },
         ],
       },
@@ -149,7 +151,8 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(SketchType, {
-                  data: create(CanvasType, { content: '' }),
+                  // TODO(wittjosiah): Default canvas content.
+                  data: create(CanvasType, {}),
                 }),
               };
             }

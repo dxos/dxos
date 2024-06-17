@@ -2,6 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import './theme.css';
+import '@tldraw/tldraw/tldraw.css';
+
 import { type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
@@ -11,11 +14,7 @@ import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-// TODO(burdon): Vite config: https://github.com/tldraw/examples/tree/main/tldraw-vite-example
-// TODO(burdon): Self-hosted: https://docs.tldraw.dev/usage#Self-hosting-static-assets
-
-import '@tldraw/tldraw/tldraw.css';
-
+import { CustomGrid, CustomStylePanel } from './custom';
 import { useStoreAdapter } from '../hooks';
 
 // NOTE(Zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
@@ -28,59 +27,56 @@ export type SketchComponentProps = {
   maxZoom?: number;
 };
 
-const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly, className }) => {
+// TODO(burdon): Remove outline when focused (from tabster?)
+const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly = false, className }) => {
   const { themeMode } = useThemeContext();
-
+  const adapter = useStoreAdapter(sketch.canvas);
+  const [active] = useState(true);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
-      editor.setDarkMode(themeMode === 'dark');
-      editor.setReadOnly(!!readonly);
-      editor.setSnapMode(!readonly);
-      editor.setGridMode(!readonly);
+      editor.user.updateUserPreferences({
+        isDarkMode: themeMode === 'dark',
+        isSnapMode: true,
+      });
+      editor.updateInstanceState({
+        isGridMode: active,
+        isReadonly: !active,
+      });
     }
-  }, [editor, themeMode]);
-
-  // TODO(dmaretskyi): Handle nullability.
-  const store = useStoreAdapter(sketch.data!);
+  }, [editor, active, themeMode]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
   const [ready, setReady] = useState(!autoZoom);
-
-  const zoomToContent = (animate = true) => {
-    const commonBounds = editor?.allShapesCommonBounds;
-    if (editor && width && height && commonBounds?.width && commonBounds?.height) {
-      const padding = 40;
-      // NOTE: Objects culled (unstyled) if outside of bounds.
-      const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
-      if (zoom <= 0) {
-        throw new Error('Sketch has non-positive size.');
-      }
-      const center = {
-        x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
-        y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
-      };
-      editor.animateCamera(center.x, center.y, zoom, animate ? { duration: 250 } : undefined);
-      setReady(true);
-    }
-  };
-
   useEffect(() => {
-    if (!autoZoom || width < 1 || (height ?? 0) < 1) {
+    if (!editor || !adapter || width === undefined || height === undefined) {
       return;
     }
 
-    editor?.updateViewportScreenBounds();
-    zoomToContent(false);
+    editor.zoomToFit({ animation: { duration: 0 } });
+    editor.resetZoom();
 
-    const onUpdate = debounce(zoomToContent, 200);
-    const subscription = store.listen(() => onUpdate(true), { scope: 'document' });
-    return () => subscription();
-  }, [editor, width, height]);
+    setReady(true);
+    if (!autoZoom) {
+      return;
+    }
 
-  // https://github.com/tldraw/tldraw/blob/main/packages/ui/src/lib/TldrawUi.tsx
-  // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+    const zoom = (animate = true) => {
+      zoomToContent(editor, width, height, maxZoom, animate);
+    };
+
+    zoom(false);
+    const onUpdate = debounce(zoom, 200);
+    const subscription = readonly ? adapter.store!.listen(() => onUpdate(true), { scope: 'document' }) : undefined;
+    return () => subscription?.();
+  }, [editor, adapter, width, height, autoZoom]);
+
+  if (!adapter) {
+    return null;
+  }
+
+  // https://tldraw.dev/docs/user-interface
   return (
     <div
       role='none'
@@ -98,9 +94,52 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       )}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
-      <Tldraw key={sketch.id} store={store} hideUi={readonly} onMount={setEditor} />
+      <Tldraw
+        // Setting the key forces re-rendering when the content changes.
+        key={sketch.id}
+        store={adapter.store}
+        hideUi={!active}
+        // TODO(burdon): Customize assets: https://tldraw.dev/docs/assets
+        maxAssetSize={1024 * 1024}
+        components={{
+          DebugPanel: null,
+          Grid: CustomGrid,
+          HelpMenu: null,
+          MenuPanel: null,
+          NavigationPanel: null,
+          StylePanel: CustomStylePanel,
+          TopPanel: null,
+          ZoomMenu: null,
+        }}
+        onMount={setEditor}
+      />
     </div>
   );
 };
+
+/**
+ * Zoom to fit content.
+ */
+const zoomToContent = (editor: Editor, width: number, height: number, maxZoom: number, animate = true) => {
+  const commonBounds = editor.getCurrentPageBounds();
+  if (width && height && commonBounds?.width && commonBounds?.height) {
+    const padding = 60;
+    // NOTE: Objects are culled (un-styled) if outside of bounds.
+    const zoom = Math.min(maxZoom, (width - padding) / commonBounds.width, (height - padding) / commonBounds.height);
+    const center = {
+      x: (width - commonBounds.width * zoom) / 2 / zoom - commonBounds.minX,
+      y: (height - commonBounds.height * zoom) / 2 / zoom - commonBounds.minY,
+      z: zoom,
+    };
+
+    editor.setCamera(center, animate ? { animation: { duration: 250 } } : undefined);
+  }
+};
+
+// TODO(burdon): Check new zoomToContent works in 2.1.4
+// const zoomToContent = (animate = true) => {
+//   editor?.zoomToContent({ duration: animate ? 250 : 0 });
+//   setReady(true);
+// };
 
 export default SketchComponent;

@@ -12,5 +12,5 @@ export class CanvasType extends TypedObject({ typename: 'dxos.org/type/Canvas', 
 
 export class SketchType extends TypedObject({ typename: 'dxos.org/type/Sketch', version: '0.1.0' })({
   name: S.optional(S.String),
-  data: ref(CanvasType),
+  canvas: ref(CanvasType),
 }) {}

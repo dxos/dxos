@@ -26,6 +26,11 @@ export class FileType extends TypedObject({ typename: 'braneframe.File', version
   cid: S.optional(S.String),
 }) {}
 
+export class SketchType extends TypedObject({ typename: 'braneframe.Sketch', version: '0.1.0' })({
+  title: S.optional(S.String),
+  data: ref(Expando),
+}) {}
+
 //
 // Documents
 //

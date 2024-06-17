@@ -2,24 +2,25 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type TLStore } from '@tldraw/tlschema';
 import { useEffect, useState } from 'react';
 
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { createDocAccessor } from '@dxos/react-client/echo';
 
-import { AutomergeStoreAdapter } from './automerge';
+import { AutomergeStoreAdapter, type StoreAdapter } from './adapter';
 
-export const useStoreAdapter = (data: EchoReactiveObject<any>, options = { timeout: 250 }): TLStore => {
+export const useStoreAdapter = (object?: EchoReactiveObject<any>, options = { timeout: 250 }): StoreAdapter => {
   const [adapter] = useState(() => new AutomergeStoreAdapter(options));
-
   useEffect(() => {
-    adapter.open(createDocAccessor(data, ['content']));
-    return () => {
-      // TODO(burdon): Throws error if still mounted.
-      // adapter.close();
-    };
-  }, [data]);
+    if (!object) {
+      return;
+    }
 
-  return adapter.store;
+    adapter.open(createDocAccessor(object, ['content']));
+    return () => {
+      adapter.close();
+    };
+  }, [object]);
+
+  return adapter;
 };
