@@ -5,13 +5,24 @@
 import { expect } from 'chai';
 import waitForExpect from 'wait-for-expect';
 
-import { asyncTimeout, sleep, Event } from '@dxos/async';
-import { type Heads, change, clone, equals, from, getBackend, getHeads } from '@dxos/automerge/automerge';
+import { asyncTimeout, sleep } from '@dxos/async';
+import {
+  next as A,
+  type Heads,
+  change,
+  clone,
+  equals,
+  from,
+  getBackend,
+  getHeads,
+  type Change,
+  save,
+  saveSince,
+} from '@dxos/automerge/automerge';
 import { type Message, Repo, type PeerId, type DocumentId, type HandleState } from '@dxos/automerge/automerge-repo';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
-import { log } from '@dxos/log';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { afterTest, describe, openAndClose, test } from '@dxos/test';
 
@@ -94,7 +105,7 @@ describe('AutomergeRepo', () => {
   });
 
   describe('network', () => {
-    test.only('basic networking', async () => {
+    test('basic networking', async () => {
       const hostAdapter: TestAdapter = new TestAdapter({
         send: (message: Message) => clientAdapter.receive(message),
       });
@@ -515,27 +526,74 @@ describe('AutomergeRepo', () => {
         await asyncTimeout(docB.whenReady(), 1_000);
       }
     });
-  });
-});
 
-describe.only('Syncing Repo with docs collection', () => {
-  test('sync doc outside of repo', async () => {
-    const messageEvent = new Event<Message>();
-    messageEvent.on((message) => {
-      log.info('message', { message });
+    test('client cold-starts and syncs doc from a Repo', async () => {
+      const repo = new Repo({ network: [] });
+      const serverHandle = repo.create<{ field?: string }>();
+
+      let clientDoc = A.from<{ field?: string }>({});
+      const sendChanges = (blob: Uint8Array) => {
+        clientDoc = A.loadIncremental(clientDoc, blob);
+      };
+
+      // Sync handshake.
+      let syncedHeads = getHeads(serverHandle.docSync());
+      // TODO(mykola): `save`.
+      sendChanges(save(serverHandle.docSync()));
+
+      serverHandle.on('change', ({ doc }) => {
+        // Note: This is mock of a sync protocol between client and server.
+        // TODO(mykola): `saveSince`.
+        const changes = saveSince(doc, syncedHeads);
+        syncedHeads = getHeads(doc);
+        sendChanges(changes);
+      });
+
+      {
+        const value = 'text to test if sync works';
+        serverHandle.change((doc: any) => {
+          doc.field = value;
+        });
+        expect(clientDoc.field).to.deep.equal(value);
+      }
+
+      {
+        const value = 'test if updates propagate';
+        serverHandle.change((doc: any) => {
+          doc.field = value;
+        });
+        expect(clientDoc.field).to.deep.equal(value);
+      }
     });
-    const dumbNetwork = new TestAdapter({
-      send: (message: Message) => messageEvent.emit(message),
-    });
 
-    const repo = new Repo({ network: [dumbNetwork] });
-    const handle = repo.create<{ field?: string }>();
+    test('client creates doc and syncs with a Repo', async () => {
+      const repo = new Repo({ network: [] });
+      const receiveChanges = (changes: Change[], docId?: DocumentId) => {
+        const serverHandle = docId ? repo.find(docId) : repo.create();
+        serverHandle.change((doc: any) => {
+          A.applyChanges(doc, changes);
+        });
+        return serverHandle.documentId;
+      };
 
-    dumbNetwork.ready();
-    dumbNetwork.peerCandidate('peer' as PeerId);
+      let clientDoc = A.from<{ field?: string }>({});
+      // Sync handshake.
+      let sentHeads = getHeads(clientDoc);
+      const docId = receiveChanges([save(clientDoc)]);
+      const sendDoc = (doc: A.Doc<any>) => {
+        receiveChanges([saveSince(doc, sentHeads)], docId);
+        sentHeads = getHeads(doc);
+      };
 
-    handle.change((doc: any) => {
-      doc.field = 'value';
+      {
+        // Change doc and send changes to server.
+        const value = 'text to test if sync works';
+        clientDoc = A.change(clientDoc, (doc: any) => {
+          doc.field = value;
+        });
+        sendDoc(clientDoc);
+        expect(repo.find(docId).docSync().field).to.deep.equal(value);
+      }
     });
   });
 });
