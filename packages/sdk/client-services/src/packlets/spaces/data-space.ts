@@ -2,22 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Event, asyncTimeout, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
+import { Event, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { convertLegacyReferences, convertLegacySpaceRootDoc, findPropertiesObject, type EchoHost } from '@dxos/echo-db';
+import { type EchoHost } from '@dxos/echo-db';
 import {
-  AutomergeDocumentLoaderImpl,
-  createIdFromSpaceKey,
   createMappedFeedWriter,
   type MetadataStore,
-  type Space,
+  type Space
 } from '@dxos/echo-pipeline';
-import { SpaceDocVersion, decodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
+import { SpaceDocVersion } from '@dxos/echo-protocol';
 import { type FeedStore } from '@dxos/feed-store';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -36,12 +33,13 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 import { type Gossip, type Presence } from '@dxos/teleport-extension-gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, assignDeep } from '@dxos/util';
+import { ComplexSet } from '@dxos/util';
 
+import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
+import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
-import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
@@ -424,140 +422,28 @@ export class DataSpace {
   }
 
   async createEpoch(options?: CreateEpochOptions) {
-    let epoch: Epoch | undefined;
-    switch (options?.migration) {
-      case undefined:
-      case CreateEpochRequest.Migration.NONE:
-        {
-          // TODO(dmaretskyi): Unify epoch construction.
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: this._automergeSpaceState.lastEpoch?.subject.assertion?.automergeRoot,
-          };
-        }
-        break;
-      case CreateEpochRequest.Migration.INIT_AUTOMERGE:
-        {
-          const document = this._echoHost.automergeRepo.create();
-          // TODO(dmaretskyi): Unify epoch construction.
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: document.url,
-          };
-        }
-        break;
-      case CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY:
-        {
-          const currentRootUrl = this._automergeSpaceState.rootUrl;
-          const rootHandle = this._echoHost.automergeRepo.find(currentRootUrl as any);
-          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
-          const newRoot = this._echoHost.automergeRepo.create(rootHandle.docSync());
-          invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
-          // TODO(dmaretskyi): Unify epoch construction.
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: newRoot.url,
-          };
-        }
-        break;
-      case CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT:
-        {
-          log.info('Fragmenting');
+    const ctx = this._ctx.derive();
 
-          const currentRootUrl = this._automergeSpaceState.rootUrl;
-          const rootHandle = this._echoHost.automergeRepo.find<SpaceDoc>(currentRootUrl as any);
-          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
-
-          // Find properties object.
-          const objects = Object.entries((rootHandle.docSync() as SpaceDoc).objects!);
-          const properties = findPropertiesObject(rootHandle.docSync() as SpaceDoc, TYPE_PROPERTIES);
-          const otherObjects = objects.filter(([key]) => key !== properties?.[0]);
-          invariant(properties, 'Properties not found');
-
-          // Create a new space doc with the properties object.
-          const newSpaceDoc: SpaceDoc = { ...rootHandle.docSync(), objects: Object.fromEntries([properties]) };
-          const newRoot = this._echoHost.automergeRepo.create(newSpaceDoc);
-          invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
-
-          // Create new automerge documents for all objects.
-          const docLoader = new AutomergeDocumentLoaderImpl(
-            await createIdFromSpaceKey(this.key),
-            this._echoHost.automergeRepo,
-            this.key,
-          );
-          await docLoader.loadSpaceRootDocHandle(this._ctx, { rootUrl: newRoot.url });
-
-          otherObjects.forEach(([key, value]) => {
-            const handle = docLoader.createDocumentForObject(key);
-            handle.change((doc: any) => {
-              assignDeep(doc, ['objects', key], value);
-            });
-          });
-
-          // TODO(mykola): Delete old root.
-
-          // TODO(dmaretskyi): Unify epoch construction.
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: newRoot.url,
-          };
-        }
-        break;
-      case CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN:
-        {
-          const currentRootUrl = this._automergeSpaceState.rootUrl;
-          const rootHandle = this._echoHost.automergeRepo.find<SpaceDoc>(currentRootUrl as any);
-          await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
-          invariant(rootHandle.docSync(), 'Root doc not found');
-
-          const newRootContent = await convertLegacySpaceRootDoc(structuredClone(rootHandle.docSync()!));
-
-          for (const [id, url] of Object.entries(newRootContent.links ?? {})) {
-            const handle = this._echoHost.automergeRepo.find(url as any);
-            await cancelWithContext(this._ctx, asyncTimeout(handle.whenReady(), 10_000));
-            invariant(handle.docSync(), 'Doc not found');
-            const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
-            const newHandle = this._echoHost.automergeRepo.create(newDoc);
-            newRootContent.links![id] = newHandle.url;
-          }
-
-          const newRoot = this._echoHost.automergeRepo.create(newRootContent);
-
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: newRoot.url,
-          };
-        }
-        break;
-      case CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT:
-        {
-          invariant(options.newAutomergeRoot);
-          // TODO(dmaretskyi): Unify epoch construction.
-          epoch = {
-            previousId: this._automergeSpaceState.lastEpoch?.id,
-            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
-            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
-            automergeRoot: options.newAutomergeRoot,
-          };
-        }
-        break;
-    }
-
-    // TODO(dmaretskyi): Flush.
-
-    if (!epoch) {
+    // Preserving existing behavior.
+    if (!options?.migration) {
       return;
     }
+
+    const { newRoot } = await runEpochMigration(ctx, {
+      repo: this._echoHost.automergeRepo,
+      spaceId: this.id,
+      spaceKey: this.key,
+      migration: options.migration,
+      currentRoot: this._automergeSpaceState.rootUrl ?? null,
+      newAutomergeRoot: options.newAutomergeRoot,
+    });
+
+    const epoch: Epoch = {
+      previousId: this._automergeSpaceState.lastEpoch?.id,
+      number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+      timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+      automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
+    };
 
     const receipt = await this.inner.controlPipeline.writer.write({
       credential: {

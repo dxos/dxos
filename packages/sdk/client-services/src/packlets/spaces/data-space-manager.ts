@@ -12,7 +12,7 @@ import {
   getCredentialAssertion,
   type MemberInfo,
 } from '@dxos/credentials';
-import { type EchoHost } from '@dxos/echo-db';
+import { findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
   type MetadataStore,
@@ -39,10 +39,11 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace, findPropertiesObject } from './data-space';
+import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
@@ -117,7 +118,7 @@ export class DataSpaceManager {
           const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
           const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
 
-          const properties = rootDoc && findPropertiesObject(rootDoc);
+          const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
           return {
             key: space.key.toHex(),

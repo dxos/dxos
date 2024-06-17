@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createEchoObject, getObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
+import { createEchoObject, getObjectCore, getMeta, deprecated_getTypeRef } from '@dxos/client/echo';
 import { create, Expando, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
+import { decodeReference } from '../../../../../core/echo/echo-protocol/src';
 
 export type Filename = { name?: string; extension: string };
 
@@ -78,7 +79,7 @@ const deserializeEchoObject = (parsed: any): Expando => {
   const core = getObjectCore(deserializedObject);
   core.id = id;
   getMeta(core).keys.push(...(meta?.keys ?? []));
-  const typeRef = getTypeRef(type);
+  const typeRef = deprecated_getTypeRef(type);
   if (typeRef) {
     core.setType(typeRef);
   }

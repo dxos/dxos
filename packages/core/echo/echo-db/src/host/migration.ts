@@ -10,7 +10,7 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { LEGACY_TYPE_PROPERTIES } from '@dxos/echo-protocol/src';
+import { LEGACY_TYPE_PROPERTIES } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { deepMapValuesAsync } from '@dxos/util';

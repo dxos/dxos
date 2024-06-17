@@ -26,7 +26,6 @@ export {
   createSubscription,
   fromCursor,
   getRangeFromCursor,
-  decodeSerializedReference as getTypeRef,
   getObjectCore,
   getTextInRange,
   hasType,
@@ -46,6 +45,8 @@ export {
   type SubscriptionHandle,
   type Hypergraph,
 } from '@dxos/echo-db';
+
+export { decodeReference as deprecated_getTypeRef } from '@dxos/echo-protocol';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

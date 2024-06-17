@@ -5604,6 +5604,9 @@ importers:
 
   packages/core/echo/echo-protocol:
     dependencies:
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -8680,6 +8683,9 @@ importers:
       '@dxos/echo-pipeline':
         specifier: workspace:*
         version: link:../../core/echo/echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-protocol
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
