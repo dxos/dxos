@@ -1,6 +1,6 @@
 {
-  "BGNEO4ABHP6M5NBGB23BY532YTCXKEOES": {
-    "098269a5b447066748b1d8d764e137eec45e26d4d3b806649b9b9c9fc5a58ea8": {
+  "BOR4XGYY6VAPQSIWB5XG675JOJTRPFFVS": {
+    "18a8bbad4ddd0c76fda210f4d58f5ac24b7cb5d4382dbb51100527ce196ffc2c": {
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
@@ -10,12 +10,12 @@
       "@meta": {
         "keys": []
       },
-      "@id": "098269a5b447066748b1d8d764e137eec45e26d4d3b806649b9b9c9fc5a58ea8",
-      "__DEFAULT__": "0470da1d95b0825a51c5d610b0ca043e61261aa2425ba02d138ece6a54a8e6cf1edcfedb99a02cbeded3ec011ced23927f686fa3f3fa7efdcec8e46ed0fde43c77"
+      "@id": "18a8bbad4ddd0c76fda210f4d58f5ac24b7cb5d4382dbb51100527ce196ffc2c",
+      "__DEFAULT__": "045e2cb98694094f757c81bf5baffcca21ebb6def7264790afd35243ef9293e5315eadcb203bf8eac5faa0cf93c933374b7ee987af0060979816b67ed5e7b37a1a"
     }
   },
-  "BQBDCIGO3VD6ZND5DSRJ5JWFHQCB4IPVC": {
-    "01J0KESPFCSCE6T199NK1HH5NV": {
+  "BZZXQ52TCMI5QLD4V7UQWJ3ML2EPXHWJC": {
+    "01J0KF0W4M48S69XMTT6PM8XW6": {
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
@@ -25,14 +25,14 @@
       "@meta": {
         "keys": []
       },
-      "@id": "01J0KESPFCSCE6T199NK1HH5NV",
+      "@id": "01J0KF0W4M48S69XMTT6PM8XW6",
       "name": "first-space"
     },
-    "01J0KESPJKZYCN85Q0044EN09J": {
+    "01J0KF0W7X2M12T0X3SHSHE4C1": {
       "@meta": {
         "keys": []
       },
-      "@id": "01J0KESPJKZYCN85Q0044EN09J",
+      "@id": "01J0KF0W7X2M12T0X3SHSHE4C1",
       "array": [
         "one",
         "two",
@@ -41,24 +41,24 @@
       "string": "hello world!",
       "value": 100
     },
-    "01J0KESPYWH5EE50KCEAYGPWVW": {
+    "01J0KF0WM99QAKVKCTRM350V79": {
       "@meta": {
         "keys": []
       },
-      "@id": "01J0KESPYWH5EE50KCEAYGPWVW",
+      "@id": "01J0KF0WM99QAKVKCTRM350V79",
       "value": [
         1,
         2,
         3,
         {
           "@type": "dxos.echo.model.document.Reference",
-          "itemId": "01J0KESPZBKXHC1KNJPJFJ4TG8",
+          "itemId": "01J0KF0WMVFD4ANRE2K27J0XH3",
           "protocol": null,
           "host": null
         }
       ]
     },
-    "01J0KESPZBKXHC1KNJPJFJ4TG8": {
+    "01J0KF0WMVFD4ANRE2K27J0XH3": {
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "example.test.Task.Todo",
@@ -68,12 +68,12 @@
       "@meta": {
         "keys": []
       },
-      "@id": "01J0KESPZBKXHC1KNJPJFJ4TG8",
+      "@id": "01J0KF0WMVFD4ANRE2K27J0XH3",
       "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
     }
   },
-  "BUJ3XIJ3U5EDPHQDG3AQHGY2ODHZSVPC2": {
-    "01J0KESQEJBXN20TX4HNMTFDF9": {
+  "BXL3JCLTP7U3YQ5VU53CYIFD24PDC6LJE": {
+    "01J0KF0X3V7WBXGFKSZ42R8YXR": {
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
@@ -83,7 +83,7 @@
       "@meta": {
         "keys": []
       },
-      "@id": "01J0KESQEJBXN20TX4HNMTFDF9",
+      "@id": "01J0KF0X3V7WBXGFKSZ42R8YXR",
       "name": "first-space"
     }
   }
