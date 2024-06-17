@@ -12,8 +12,8 @@ export type SpaceState = {
 
 // TODO(dmaretskyi): Rename DatabaseRootDoc.
 export interface SpaceDoc {
-  version?: SpaceDocVersion,
-  
+  version?: SpaceDocVersion;
+
   access?: {
     spaceKey: string;
   };

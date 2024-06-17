@@ -22,6 +22,7 @@ import {
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
 import { type SpaceDoc } from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -43,7 +44,6 @@ import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
-import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;

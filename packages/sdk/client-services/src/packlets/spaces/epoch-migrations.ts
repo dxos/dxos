@@ -1,8 +1,12 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { asyncTimeout } from '@dxos/async';
 import type { Repo, AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { convertLegacyReferences, convertLegacySpaceRootDoc, findInlineObjectOfType } from '@dxos/echo-db';
-import { AutomergeDocumentLoaderImpl, createIdFromSpaceKey } from '@dxos/echo-pipeline';
+import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -31,7 +35,7 @@ export type MigrationResult = {
   newRoot?: string;
 };
 
-export async function runEpochMigration(ctx: Context, context: MigrationContext): Promise<MigrationResult> {
+export const runEpochMigration = async (ctx: Context, context: MigrationContext): Promise<MigrationResult> => {
   switch (context.migration) {
     case CreateEpochRequest.Migration.INIT_AUTOMERGE: {
       const document = context.repo.create();
@@ -120,4 +124,4 @@ export async function runEpochMigration(ctx: Context, context: MigrationContext)
   }
 
   return {};
-}
+};

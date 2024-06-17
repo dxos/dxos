@@ -5,7 +5,7 @@
 import type * as A from '@dxos/automerge/automerge';
 import type { DocHandle } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
-import { SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 
 import { measureDocMetrics, type DocMetrics } from './automerge-metrics';
 

@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import {
   Reference,

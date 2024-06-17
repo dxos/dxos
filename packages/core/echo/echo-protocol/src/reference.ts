@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 import { type ItemID } from '@dxos/protocols';
 import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/echo/model/document';
-import { DXN, LOCAL_SPACE_TAG } from '@dxos/keys';
 
 // TODO(burdon): Comment.
 export class Reference {

@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { invariant } from '@dxos/invariant';
 
 export class DXN {
@@ -11,9 +15,15 @@ export class DXN {
 
   static parse(dxn: string): DXN {
     const [prefix, kind, ...parts] = dxn.split(':');
-    if (!(prefix === 'dxn')) throw new Error('Invalid DXN');
-    if (!(typeof kind === 'string' && kind.length > 0)) throw new Error('Invalid DXN');
-    if (!(parts.length > 0)) throw new Error('Invalid DXN');
+    if (!(prefix === 'dxn')) {
+      throw new Error('Invalid DXN');
+    }
+    if (!(typeof kind === 'string' && kind.length > 0)) {
+      throw new Error('Invalid DXN');
+    }
+    if (!(parts.length > 0)) {
+      throw new Error('Invalid DXN');
+    }
     return new DXN(kind, parts);
   }
 
@@ -35,7 +45,7 @@ export class DXN {
   }
 
   isTypeDXNOf(typename: string) {
-    return this.#kind == DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
+    return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
   }
 
   toString() {

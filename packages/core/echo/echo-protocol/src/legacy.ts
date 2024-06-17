@@ -1,3 +1,7 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 export const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
 /**

@@ -46,7 +46,8 @@ export {
   type Hypergraph,
 } from '@dxos/echo-db';
 
-export { decodeReference as deprecated_getTypeRef } from '@dxos/echo-protocol';
+// TODO(dmaretskyi): Remove this export.
+export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';

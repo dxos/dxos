@@ -9,7 +9,6 @@ import type { SpaceDoc } from '@dxos/echo-protocol';
 import { create, Expando, getSchema } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
-import { inspect } from 'node:util';
 
 import { AutomergeContext } from './core-db';
 import { Hypergraph } from './hypergraph';

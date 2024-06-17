@@ -15,7 +15,11 @@ import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { CancelledError, SystemError } from '@dxos/protocols';
-import { CreateEpochRequest, SpaceState, type Space as SpaceProto } from '@dxos/protocols/proto/dxos/client/services';
+import {
+  type CreateEpochRequest,
+  SpaceState,
+  type Space as SpaceProto,
+} from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceCache } from '@dxos/protocols/proto/dxos/echo/metadata';
 import {
@@ -31,11 +35,11 @@ import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexSet } from '@dxos/util';
 
-import { TrustedKeySetAuthVerifier } from '../identity';
 import { AutomergeSpaceState } from './automerge-space-state';
 import { type SigningContext } from './data-space-manager';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
+import { TrustedKeySetAuthVerifier } from '../identity';
 
 export type DataSpaceCallbacks = {
   /**
