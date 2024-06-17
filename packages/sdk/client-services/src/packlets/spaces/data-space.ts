@@ -76,6 +76,7 @@ export type DataSpaceParams = {
 
 export type CreateEpochOptions = {
   migration?: CreateEpochRequest.Migration;
+  newAutomergeRoot?: string;
 };
 
 @trackLeaks('open', 'close')
@@ -530,9 +531,6 @@ export class DataSpace {
 
           const newRoot = this._echoHost.automergeRepo.create(newRootContent);
 
-          // TODO(dmaretskyi): Flush.
-
-          // TODO(dmaretskyi): Unify epoch construction.
           epoch = {
             previousId: this._automergeSpaceState.lastEpoch?.id,
             number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
@@ -541,7 +539,21 @@ export class DataSpace {
           };
         }
         break;
+      case CreateEpochRequest.Migration.REPLACE_AUTOMERGE_ROOT:
+        {
+          invariant(options.newAutomergeRoot);
+          // TODO(dmaretskyi): Unify epoch construction.
+          epoch = {
+            previousId: this._automergeSpaceState.lastEpoch?.id,
+            number: (this._automergeSpaceState.lastEpoch?.subject.assertion.number ?? -1) + 1,
+            timeframe: this._automergeSpaceState.lastEpoch?.subject.assertion.timeframe ?? new Timeframe(),
+            automergeRoot: options.newAutomergeRoot,
+          };
+        }
+        break;
     }
+
+    // TODO(dmaretskyi): Flush.
 
     if (!epoch) {
       return;
@@ -560,6 +572,7 @@ export class DataSpace {
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this._echoHost.updateIndexes();
   }
 
   @synchronized

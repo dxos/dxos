@@ -95,6 +95,9 @@
       "path": "../plugin-metadata"
     },
     {
+      "path": "../plugin-observability"
+    },
+    {
       "path": "../plugin-settings"
     }
   ]

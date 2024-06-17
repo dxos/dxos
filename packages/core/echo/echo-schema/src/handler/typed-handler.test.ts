@@ -9,6 +9,9 @@ import { describe, test } from '@dxos/test';
 
 import { create } from './object';
 import { getMeta } from '../getter';
+import { ref } from '../ref-annotation';
+import { TEST_SCHEMA_TYPE } from '../testing';
+import { TypedObject } from '../typed-object-class';
 import { foreignKey } from '../types';
 
 describe('complex schema validations', () => {
@@ -33,6 +36,19 @@ describe('complex schema validations', () => {
     const schema = S.Struct({ field: S.optional(S.Object) });
     const object = create(schema, { field: { nested: { value: 100 } } });
     expect(() => setValue(object, 'field', { any: 'value' })).not.to.throw();
+  });
+
+  test('references', () => {
+    class Foo extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.String }) {}
+
+    class Bar extends TypedObject(TEST_SCHEMA_TYPE)({ fooRef: ref(Foo) }) {}
+
+    const field = 'hello';
+    expect(() => create(Bar, { fooRef: { id: '1', field } })).to.throw();
+    // unresolved reference
+    expect(() => create(Bar, { fooRef: undefined as any })).not.to.throw();
+    const bar = create(Bar, { fooRef: create(Foo, { field }) });
+    expect(bar.fooRef?.field).to.eq(field);
   });
 
   test('index signatures', () => {

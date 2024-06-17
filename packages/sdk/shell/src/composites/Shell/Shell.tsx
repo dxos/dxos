@@ -21,10 +21,11 @@ import { SpaceDialog } from '../SpaceDialog';
 import { StatusDialog } from '../StatusDialog';
 
 export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
-  const [{ layout, invitationCode, spaceKey, target }, setLayout] = useState<LayoutRequest>({
+  const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>({
     layout: runtime.layout,
     invitationCode: runtime.invitationCode,
     spaceKey: runtime.spaceKey,
+    spaceId: runtime.spaceId,
     target: runtime.target,
   });
   const [{ invitationUrl, deviceInvitationParam, spaceInvitationParam }, setInvitationUrl] =
@@ -35,7 +36,7 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     });
 
   const client = useClient();
-  const space = useSpace(spaceKey);
+  const space = useSpace(spaceKey ?? spaceId);
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
