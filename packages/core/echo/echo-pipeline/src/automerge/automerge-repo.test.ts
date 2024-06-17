@@ -15,7 +15,6 @@ import {
   from,
   getBackend,
   getHeads,
-  type Change,
   save,
   saveSince,
 } from '@dxos/automerge/automerge';
@@ -532,21 +531,19 @@ describe('AutomergeRepo', () => {
       const serverHandle = repo.create<{ field?: string }>();
 
       let clientDoc = A.from<{ field?: string }>({});
-      const sendChanges = (blob: Uint8Array) => {
+      const receiveByClient = (blob: Uint8Array) => {
         clientDoc = A.loadIncremental(clientDoc, blob);
       };
 
       // Sync handshake.
       let syncedHeads = getHeads(serverHandle.docSync());
-      // TODO(mykola): `save`.
-      sendChanges(save(serverHandle.docSync()));
+      receiveByClient(save(serverHandle.docSync()));
 
       serverHandle.on('change', ({ doc }) => {
         // Note: This is mock of a sync protocol between client and server.
-        // TODO(mykola): `saveSince`.
-        const changes = saveSince(doc, syncedHeads);
+        const blob = saveSince(doc, syncedHeads);
         syncedHeads = getHeads(doc);
-        sendChanges(changes);
+        receiveByClient(blob);
       });
 
       {
@@ -568,10 +565,10 @@ describe('AutomergeRepo', () => {
 
     test('client creates doc and syncs with a Repo', async () => {
       const repo = new Repo({ network: [] });
-      const receiveChanges = (changes: Change[], docId?: DocumentId) => {
+      const receiveByServer = (blob: Uint8Array, docId?: DocumentId) => {
         const serverHandle = docId ? repo.find(docId) : repo.create();
-        serverHandle.change((doc: any) => {
-          A.applyChanges(doc, changes);
+        serverHandle.update(() => {
+          return A.loadIncremental(serverHandle.docSync(), blob);
         });
         return serverHandle.documentId;
       };
@@ -579,9 +576,9 @@ describe('AutomergeRepo', () => {
       let clientDoc = A.from<{ field?: string }>({});
       // Sync handshake.
       let sentHeads = getHeads(clientDoc);
-      const docId = receiveChanges([save(clientDoc)]);
+      const docId = receiveByServer(save(clientDoc));
       const sendDoc = (doc: A.Doc<any>) => {
-        receiveChanges([saveSince(doc, sentHeads)], docId);
+        receiveByServer(saveSince(doc, sentHeads), docId);
         sentHeads = getHeads(doc);
       };
 

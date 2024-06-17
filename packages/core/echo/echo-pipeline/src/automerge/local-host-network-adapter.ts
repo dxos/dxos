@@ -89,7 +89,7 @@ export class LocalHostNetworkAdapter extends NetworkAdapter {
 
       invariant(this._isConnected);
       this.emit('peer-candidate', {
-        peerMetadata: {},
+        peerMetadata: { isEphemeral: true },
         peerId,
       });
     });
