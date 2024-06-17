@@ -1,0 +1,12 @@
+[
+  {
+    "name": "hypergraph",
+    "version": "1",
+    "dataRoot": "data/1"
+  },
+  {
+    "name": "automerge",
+    "version": "2",
+    "dataRoot": "data/2"
+  }
+]
