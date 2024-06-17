@@ -289,6 +289,8 @@ export class SpaceProxy implements Space {
 
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
+      } else {
+        log.warn('no automerge root found for space', { spaceId: this.id });
       }
       await this._db.open();
     }
