@@ -12,19 +12,25 @@
     "src"
   ],
   "scripts": {
-    "snapshot": "ts-node ./src/generate-snapshot"
+    "snapshot": "pnpm -w nx build proto-guard && ts-node ./src/generate-snapshot"
   },
+  "main": "dist/lib/node/index.cjs",
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/credentials": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/protocols": "workspace:*"
+    "@dxos/protocols": "workspace:*",
+    "lodash.isequal": "^4.5.0",
+    "yargs": "~16.2.0"
   },
   "devDependencies": {
+    "@types/lodash.isequal": "^4.5.0",
     "@types/node": "^18.11.9",
+    "@types/yargs": "~16.0.1",
     "ts-node": "10.9.1",
     "typescript": "^5.4.5"
   },
