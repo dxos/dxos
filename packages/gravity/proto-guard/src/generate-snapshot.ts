@@ -7,15 +7,16 @@ import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { TextV0Type, DocumentType } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SnapshotsRegistry } from './snapshots-registry';
 import { type SnapshotDescription } from './snapshots-registry';
 import { dumpSpaces } from './space-json-dump';
+import { Todo } from './types';
 import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
 
 /**
@@ -23,12 +24,6 @@ import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseD
  */
 // TODO(burdon): Create space with different object model types.
 const main = async () => {
-  {
-    // Check if storage for current version does not already exist.
-    if (!(STORAGE_VERSION > SnapshotsRegistry.getLatestSnapshot().version)) {
-      throw new Error(`Snapshot already exists for current version: ${STORAGE_VERSION}`);
-    }
-  }
   const baseDir = getBaseDataDir();
 
   let snapshot: SnapshotDescription;
@@ -50,16 +45,17 @@ const main = async () => {
     // Init client.
     client = new Client({ config: createConfig({ dataRoot: path.join(baseDir, snapshot.dataRoot) }) });
     await client.initialize();
-    client.addTypes([DocumentType, TextV0Type]);
+    client.addTypes([Todo]);
     await client.halo.createIdentity();
+    await client.spaces.isReady.wait();
   }
 
   log.break();
 
   {
-    // Create Space and data.
+    // Create first space and data.
     const space = await client.spaces.create({ name: 'first-space' });
-    // await space.waitUntilReady();
+    await space.waitUntilReady();
 
     space.db.add(
       create({
@@ -71,22 +67,26 @@ const main = async () => {
     await space.db.flush();
 
     // Generate epoch.
-    await space.internal.createEpoch();
+    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
 
-    // TODO(burdon): Add mutations.
-    const expando = space.db.add(create(Expando, { value: 100 }));
+    const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
     await space.db.flush();
-    const document = space.db.add(
-      create(
-        create(DocumentType, {
-          content: create(TextV0Type, { content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }),
-        }),
-      ),
+    const todo = space.db.add(
+      create(Todo, {
+        name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      }),
     );
-    expando.content = document.content;
-
-    log.info('created spaces');
+    expando.value.push(todo);
+    await space.db.flush();
   }
+
+  {
+    // Create second space and data.
+    const space = await client.spaces.create({ name: 'first-space' });
+    await space.waitUntilReady();
+    // space.db.add(create(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
+  }
+  log.info('created spaces');
 
   {
     // Register snapshot.

@@ -12,7 +12,7 @@ describe('SnapshotRegistry', () => {
     expect(SnapshotsRegistry.snapshots).to.deep.contains({
       name: 'hypergraph',
       version: '1',
-      dataRoot: 'data/1',
+      dataRoot: 'snapshots/1',
     });
   });
 });

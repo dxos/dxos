@@ -52,6 +52,10 @@ export class SnapshotsRegistry {
     return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.version === version) ?? failUndefined();
   }
 
+  static getSnapshotByName(name: string): SnapshotDescription {
+    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name) ?? failUndefined();
+  }
+
   static getLatestSnapshot(): SnapshotDescription {
     return SnapshotsRegistry.snapshots.reduce((latest, snapshot) =>
       snapshot.version > latest.version ? snapshot : latest,

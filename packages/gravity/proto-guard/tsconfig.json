@@ -19,9 +19,6 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -35,6 +32,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../core/echo/echo-schema"
     },
     {
       "path": "../../core/halo/credentials"

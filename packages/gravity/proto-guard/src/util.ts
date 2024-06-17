@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
 import fs from 'node:fs';
 import path from 'node:path';
 import pkgUp from 'pkg-up';
@@ -30,16 +29,6 @@ export const createConfig = ({ dataRoot }: { dataRoot: string }) =>
     version: 1,
     runtime: { client: { storage: { persistent: true, dataRoot } } },
   });
-
-export const contains = (container: Record<string, any>, contained: Record<string, any>): boolean => {
-  for (const [key, value] of Object.entries(contained)) {
-    if (!isEqual(value, container[key])) {
-      return false;
-    }
-  }
-
-  return true;
-};
 
 export const copyDirSync = (src: string, dest: string) => {
   const files = fs.readdirSync(src);
