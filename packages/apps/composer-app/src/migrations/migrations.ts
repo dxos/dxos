@@ -112,8 +112,8 @@ export const migrations: Migration[] = [
               schema: MessageType,
               props: {
                 from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
-                date: data.blocks[0].timestamp,
-                content,
+                timestamp: data.blocks[0].timestamp,
+                text: content,
               },
             }));
           }
@@ -176,7 +176,7 @@ export const migrations: Migration[] = [
         await builder.migrateObject(sketch.id, ({ data }) => ({
           schema: SketchType,
           props: {
-            name: data.name,
+            name: data.title,
             canvas: data.data,
           },
         }));
@@ -217,8 +217,8 @@ export const migrations: Migration[] = [
             schema: MessageType,
             props: {
               from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
-              date: data.blocks[0].timestamp,
-              content,
+              timestamp: data.blocks[0].timestamp,
+              text: content,
             },
           }));
         }

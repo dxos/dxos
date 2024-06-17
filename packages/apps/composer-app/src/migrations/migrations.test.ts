@@ -39,6 +39,7 @@ describe('Composer migrations', () => {
       LegacyTypes.FolderType,
       LegacyTypes.MessageType,
       LegacyTypes.SectionType,
+      LegacyTypes.SketchType,
       LegacyTypes.StackType,
       LegacyTypes.TableType,
       LegacyTypes.TextType,
@@ -49,6 +50,7 @@ describe('Composer migrations', () => {
       DocumentType,
       FileType,
       MessageType,
+      SketchType,
       TableType,
       ThreadType,
     ]);
@@ -87,7 +89,7 @@ describe('Composer migrations', () => {
       cursor: toCursorRange(createDocAccessor(doc1.content!, ['content']), 0, 3),
       thread: thread1,
     });
-    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
+    expect(doc1.comments![0].thread instanceof LegacyTypes.ThreadType).to.be.true;
 
     const folder1 = space.db.add(
       create(LegacyTypes.FolderType, {
@@ -109,7 +111,7 @@ describe('Composer migrations', () => {
         ],
       }),
     );
-    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
+    expect(doc1.comments![0].thread instanceof LegacyTypes.ThreadType).to.be.true;
     assignDeep(space.properties, LegacyTypes.FolderType.typename.split('.'), folder1);
 
     const folderQuery = space.db.query(Filter.schema(LegacyTypes.FolderType));
@@ -133,8 +135,9 @@ describe('Composer migrations', () => {
     expect(rootCollection.objects[0]?.objects[0] instanceof CollectionType).to.be.true;
     expect(rootCollection.objects[0]?.objects[1] instanceof CollectionType).to.be.true;
     expect(rootCollection.objects[0]?.objects[1]?.objects).to.have.lengthOf(2);
-    expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof DocumentType).to.be.true;
-    expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof LegacyTypes.DocumentType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof LegacyTypes.ThreadType).to
+      .be.true;
   });
 
   test(migrations[1].version.toString(), async () => {
