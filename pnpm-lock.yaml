@@ -8710,6 +8710,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../common/random-access-storage
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -8747,9 +8750,6 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../common/random-access-storage
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
