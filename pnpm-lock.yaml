@@ -3199,6 +3199,9 @@ importers:
 
   packages/apps/plugins/plugin-space:
     dependencies:
+      '@braneframe/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@braneframe/plugin-settings':
         specifier: workspace:*
         version: link:../plugin-settings

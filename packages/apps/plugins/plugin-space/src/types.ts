@@ -72,7 +72,7 @@ export type PluginState = {
    * @deprecated Temporary action to help with composer performance.
    */
   // TODO(wittjosiah): Move state into space?
-  enabled: PublicKey[];
+  enabled: string[];
 };
 
 export type SpaceSettingsProps = { showHidden?: boolean };

@@ -14,6 +14,7 @@ export {
   getMeta,
   getSchema,
   getType,
+  getTypename,
   Expando,
   type EchoReactiveObject,
   type ReactiveObject,

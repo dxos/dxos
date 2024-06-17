@@ -56,7 +56,7 @@ const getCollectionGraphNodePartials = ({
 }) => {
   return {
     acceptPersistenceClass: new Set(['echo']),
-    acceptPersistenceKey: new Set([space.key.toHex()]),
+    acceptPersistenceKey: new Set([space.id]),
     role: 'branch',
     onRearrangeChildren: (nextOrder: unknown[]) => {
       // Change on disk.
@@ -128,7 +128,7 @@ export const updateGraphWithSpace = ({
   dispatch: IntentDispatcher;
   resolve: MetadataResolver;
 }): UnsubscribeCallback => {
-  const getId = (id: string) => `${id}/${space.key.toHex()}`;
+  const getId = (id: string) => `${id}/${space.id}`;
 
   const unsubscribeSpace = effect(() => {
     const hasPendingMigration =
@@ -148,7 +148,7 @@ export const updateGraphWithSpace = ({
         removeEdges: true,
         nodes: [
           {
-            id: space.key.toHex(),
+            id: space.id,
             data: space,
             properties: {
               ...partials,
@@ -177,7 +177,7 @@ export const updateGraphWithSpace = ({
               disposition: 'default',
               hidden: true,
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -199,7 +199,7 @@ export const updateGraphWithSpace = ({
               menuType: 'searchList',
               testId: 'spacePlugin.createObject',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -247,7 +247,7 @@ export const updateGraphWithSpace = ({
               mainAreaDisposition: 'in-flow',
               disabled: Migrations.running(space),
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -270,12 +270,11 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'absent',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.SHARE),
-            data: () =>
-              dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.key.toHex() } }),
+            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.id } }),
             properties: {
               label: ['share space', { ns: SPACE_PLUGIN }],
               icon: (props) => <Users {...props} />,
@@ -285,7 +284,7 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'absent',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.CLOSE),
@@ -295,7 +294,7 @@ export const updateGraphWithSpace = ({
               icon: (props: IconProps) => <X {...props} />,
               mainAreaDisposition: 'menu',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.SAVE),
@@ -309,7 +308,7 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
           {
             id: getId(SpaceAction.LOAD),
@@ -323,7 +322,7 @@ export const updateGraphWithSpace = ({
               },
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -342,7 +341,7 @@ export const updateGraphWithSpace = ({
               disposition: 'toolbar',
               mainAreaDisposition: 'in-flow',
             },
-            edges: [[space.key.toHex(), 'inbound']],
+            edges: [[space.id, 'inbound']],
           },
         ],
       });
@@ -380,9 +379,9 @@ const updateGraphWithSpaceObjects = ({
     const collectionObjects = collection?.objects ?? [];
     const removedObjects =
       previousObjects
-        .get(space.key.toHex())
+        .get(space.id)
         ?.filter((object) => !(query.objects as EchoReactiveObject<any>[]).includes(object)) ?? [];
-    previousObjects.set(space.key.toHex(), [...query.objects]);
+    previousObjects.set(space.id, [...query.objects]);
     const unsortedObjects = query.objects.filter((object) => !collectionObjects.includes(object));
     const objects = [...collectionObjects, ...unsortedObjects].filter((object) => object !== collection);
 
@@ -395,7 +394,7 @@ const updateGraphWithSpaceObjects = ({
           graph.removeNode(getId(SpaceAction.ADD_OBJECT));
           graph.removeNode(getId(SpaceAction.ADD_OBJECT.replace('object', 'collection')));
         }
-        graph.removeEdge({ source: space.key.toHex(), target: getId() });
+        graph.removeEdge({ source: space.id, target: getId() });
         [SpaceAction.RENAME_OBJECT, SpaceAction.REMOVE_OBJECT].forEach((action) => {
           graph.removeNode(getId(action));
         });
@@ -419,7 +418,7 @@ const updateGraphWithSpaceObjects = ({
               icon: (props: IconProps) => <CardsThree {...props} />,
               testId: 'spacePlugin.object',
               persistenceClass: 'echo',
-              persistenceKey: space.key.toHex(),
+              persistenceKey: space.id,
             },
           });
 
@@ -480,7 +479,7 @@ const updateGraphWithSpaceObjects = ({
         }
 
         // Add an edge for every object. Depends on other presentation plugins to add the node itself.
-        graph.addEdge({ source: space.key.toHex(), target: getId() });
+        graph.addEdge({ source: space.id, target: getId() });
 
         // Add basic rename and delete actions to every object.
         // TODO(wittjosiah): Rename should be customizable.
@@ -534,7 +533,7 @@ const updateGraphWithSpaceObjects = ({
 
       // Set order of objects in space.
       graph.sortEdges(
-        space.key.toHex(),
+        space.id,
         'outbound',
         collectionObjects.filter(nonNullable).map((o) => fullyQualifiedId(o)),
       );
@@ -589,7 +588,7 @@ export const updateGraphWithAddObjectAction = ({
         condition: space.state.get() === SpaceState.READY && condition,
         nodes: [
           {
-            id: `${plugin}/create/${space.key.toHex()}`,
+            id: `${plugin}/create/${space.id}`,
             data: () =>
               dispatch([
                 {
@@ -605,7 +604,7 @@ export const updateGraphWithAddObjectAction = ({
                 },
               ]),
             properties,
-            edges: [[`${SpaceAction.ADD_OBJECT}/${space.key.toHex()}`, 'inbound']],
+            edges: [[`${SpaceAction.ADD_OBJECT}/${space.id}`, 'inbound']],
           },
         ],
       });
