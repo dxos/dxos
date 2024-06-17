@@ -53,6 +53,7 @@ export const IdentityActionChooserImpl = ({
   send,
   onCreateInvitationClick,
   devices,
+  connectionState,
   onAgentDestroy,
   onAgentCreate,
   agentStatus,
@@ -63,6 +64,7 @@ export const IdentityActionChooserImpl = ({
     <>
       <DeviceList
         devices={devices}
+        connectionState={connectionState}
         onClickAdd={onCreateInvitationClick}
         onClickJoinExisting={() => send?.({ type: 'chooseJoinNewIdentity' })}
         onClickReset={() => send?.({ type: 'chooseResetStorage' })}
