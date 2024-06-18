@@ -178,7 +178,11 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooserComponent active={activeView === 'identity action chooser'} {...rest} />
+            <IdentityActionChooserComponent
+              active={activeView === 'identity action chooser'}
+              {...rest}
+              connectionState={connectionState}
+            />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
             <InvitationManagerComponent

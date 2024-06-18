@@ -824,7 +824,7 @@
         },
         {
           "type": "json",
-          "path": "tools/eslint-rules/package.json",
+          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {
