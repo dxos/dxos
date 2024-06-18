@@ -19,8 +19,6 @@ async () => {
     objects.forEach(object => {
       if (object.type === 'task') {
         console.log('Do something with this task');
-      } else {
-        throw new Error('Non-task object returned (this will never happen)');
       }
     });
   });

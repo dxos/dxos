@@ -4,11 +4,12 @@ order: 3
 
 # Subscriptions
 
-Use subscriptions to listen for changes within a [space](./README.md).
+Use subscriptions to listen for changes to objects in a [space](./README.md).
 
 ## Subscribe to a query
 
-For example:
+Use the [`subscribe`](/api/@dxos/client/classes/Query#subscribe-callback-opts) method on a query to listen for changes to objects in a space. The callback will be called with an object containing the new objects that match the query. The return value of `subscribe` is a function that can be called to stop the subscription.
+
 ```ts{12,14} file=./snippets/subscription.ts#L5-
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
@@ -27,8 +28,6 @@ async () => {
     objects.forEach(object => {
       if (object.type === 'task') {
         console.log('Do something with this task');
-      } else {
-        throw new Error('Non-task object returned (this will never happen)');
       }
     });
   });
@@ -44,9 +43,11 @@ async () => {
 };
 ```
 
-## Do something when an object changes
+## Subscribe to an object
 
-Objects returned by ECHO queries are [ReactiveObject](../../../api/@dxos/client/types/ReactiveObject.md)s, which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+Objects returned from ECHO queries are based on [ReactiveObject](../../../api/@dxos/client/types/ReactiveObject.md), which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+
+You can use the `effect` closure from `@preact/signals-core` to re-run code whenever the object changes. Any properties of ECHO objects accessed inside `effect` closures will be tracked and re-run the closure when they change.
 
 ```ts{22} file=./snippets/on-object-change.ts#L5-
 import { Client } from '@dxos/client';
