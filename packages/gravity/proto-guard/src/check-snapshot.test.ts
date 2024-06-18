@@ -8,7 +8,6 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
-import { TestBuilder } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
@@ -37,13 +36,9 @@ describe('Load client from storage snapshot', () => {
     log.info('Testing snapshot', { snapshot });
 
     const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
-
     const tmp = copySnapshotToTmp(snapshot);
-    const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
-    afterTest(() => builder.destroy());
-    const services = builder.createLocalClientServices();
 
-    const client = new Client({ services });
+    const client = new Client({ config: createConfig({ dataRoot: tmp }) });
     await asyncTimeout(client.initialize(), 1_000);
     afterTest(() => client.destroy());
     await client.spaces.isReady.wait();
@@ -57,13 +52,9 @@ describe('Load client from storage snapshot', () => {
     log.info('Testing snapshot', { snapshot });
 
     const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
-
     const tmp = copySnapshotToTmp(snapshot);
-    const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
-    afterTest(() => builder.destroy());
-    const services = builder.createLocalClientServices();
 
-    const client = new Client({ services });
+    const client = new Client({ config: createConfig({ dataRoot: tmp }) });
     await asyncTimeout(client.initialize(), 1_000);
     afterTest(() => client.destroy());
     await client.spaces.isReady.wait();
