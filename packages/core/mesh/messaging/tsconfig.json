@@ -29,6 +29,9 @@
       "path": "../../../common/node-std"
     },
     {
+      "path": "../../../common/tracing"
+    },
+    {
       "path": "../../../common/util"
     },
     {
