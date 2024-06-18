@@ -9,7 +9,7 @@ import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
-import { S, TypedObject } from '@dxos/echo-schema';
+import { S, TypedObject, ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -106,7 +106,7 @@ const main = async () => {
 
   {
     // Create second space and data.
-    const space = await client.spaces.create({ name: 'first-space' });
+    const space = await client.spaces.create({ name: 'second-space' });
     await space.waitUntilReady();
 
     // Create dynamic schema.
@@ -115,8 +115,9 @@ const main = async () => {
     const dynamicSchema = space.db.schema.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
-    dynamicSchema.addColumns({ name: S.String });
+    dynamicSchema.addColumns({ name: S.String, todo: ref(Todo) });
     object.name = 'Test';
+    object.todo = create(Todo, { name: 'Test todo' });
     await space.db.flush();
 
     // space.db.add(create(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
