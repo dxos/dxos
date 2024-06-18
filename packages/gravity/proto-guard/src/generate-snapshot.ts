@@ -89,14 +89,13 @@ const main = async () => {
       }),
     );
     await space.db.flush();
+    await sleep(1000);
 
     // Generate epoch.
     const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
     await space.db.flush();
-    // Seems like we need to wait for the epoch to be created.
-    await sleep(1000);
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(

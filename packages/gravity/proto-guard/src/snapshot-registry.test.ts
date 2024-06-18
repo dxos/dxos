@@ -10,9 +10,10 @@ import { SnapshotsRegistry } from './snapshots-registry';
 describe('SnapshotRegistry', () => {
   test('loads correctly', async () => {
     expect(SnapshotsRegistry.snapshots).to.deep.contains({
-      name: 'hypergraph',
-      version: '1',
-      dataRoot: 'snapshots/1',
+      name: 'automerge-nodeFS',
+      version: 2,
+      dataRoot: 'snapshots/2/snapshot',
+      jsonDataPath: 'snapshots/2/expected.json',
     });
   });
 });
