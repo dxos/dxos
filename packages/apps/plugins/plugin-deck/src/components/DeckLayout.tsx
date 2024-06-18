@@ -434,6 +434,7 @@ export const DeckLayout = ({
                             <Tooltip.Root>
                               <Tooltip.Trigger asChild>
                                 <Button
+                                  data-testid='plankHeading.open'
                                   variant='ghost'
                                   classNames='p-1'
                                   onClick={() =>

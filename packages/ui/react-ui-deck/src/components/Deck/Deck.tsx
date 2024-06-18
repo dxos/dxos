@@ -107,6 +107,7 @@ const DeckPlankContent = forwardRef<HTMLDivElement, ScopedProps<DeckPlankProps>>
         style={{ inlineSize: isSm ? `${size}${unit}` : '100dvw', ...style }}
         className={mx('snap-normal snap-start grid row-span-3 grid-rows-subgrid group', classNames)}
         ref={ref}
+        data-testid='deckPlugin.plank'
       >
         {children}
       </article>

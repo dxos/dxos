@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Page } from '@playwright/test';
+import { type Locator, type Page } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the markdown plugin.
 export const Markdown = {
@@ -18,9 +18,14 @@ export const Markdown = {
 
   getMarkdownTextbox: (page: Page) => page.getByTestId('composer.markdownRoot').getByRole('textbox'),
 
+  getMarkdownTextboxWithLocator: (locator: Locator) =>
+    locator.getByTestId('composer.markdownRoot').getByRole('textbox'),
+
   waitForMarkdownTextbox: (page: Page) => Markdown.getMarkdownTextbox(page).waitFor(),
+  waitForMarkdownTextboxWithLocator: (locator: Locator) => Markdown.getMarkdownTextboxWithLocator(locator).waitFor(),
 
   getCollaboratorCursors: (page: Page) => page.locator('.cm-collab-selectionInfo'),
+  getCollaboratorCursorsWithLocator: (locator: Locator) => locator.locator('.cm-collab-selectionInfo'),
 
   getMarkdownLineText: (page: Page) =>
     Markdown.getMarkdownTextbox(page)
