@@ -59,22 +59,14 @@ const IdentityHeading = ({
   const identityHex = identity.identityKey.toHex();
   const copied = textValue === identityHex;
 
-  const handleUpdateProfile = async () => {
-    const nextProfile = {
-      ...(displayName && { displayName }),
-      ...((emoji || hue) && { data: { ...(emoji && { emoji }), ...(hue && { hue }) } }),
-    };
-    return onUpdateProfile?.(nextProfile);
-  };
-
   const setEmoji = (nextEmoji: string) => {
     setEmojiDirectly(nextEmoji);
-    void handleUpdateProfile();
+    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, emoji: nextEmoji } });
   };
 
   const setHue = (nextHue: string) => {
     setHueDirectly(nextHue);
-    void handleUpdateProfile();
+    void onUpdateProfile?.({ ...identity.profile, data: { ...identity.profile?.data, hue: nextHue } });
   };
 
   const isConnected = connectionState === ConnectionState.ONLINE;
@@ -143,7 +135,7 @@ const IdentityHeading = ({
             onChange={({ target: { value } }) => {
               setDisplayName(value);
             }}
-            onBlur={handleUpdateProfile}
+            onBlur={({ target: { value } }) => onUpdateProfile?.({ ...identity.profile, displayName: value })}
           />
         </Input.Root>
       </Avatar.Root>
@@ -186,7 +178,11 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
       <Viewport.Root activeView={activeView}>
         <Viewport.Views>
           <Viewport.View id='identity action chooser' classNames={viewStyles}>
-            <IdentityActionChooserComponent active={activeView === 'identity action chooser'} {...rest} />
+            <IdentityActionChooserComponent
+              active={activeView === 'identity action chooser'}
+              {...rest}
+              connectionState={connectionState}
+            />
           </Viewport.View>
           <Viewport.View id='device invitation manager' classNames={viewStyles}>
             <InvitationManagerComponent

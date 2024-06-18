@@ -12,14 +12,14 @@ import {
 } from '@dxos/echo-schema';
 
 import { isEchoObject } from './create';
-import { getObjectCoreFromEchoTarget } from './echo-handler';
-import type { EchoDatabase } from '../database';
+import { symbolInternals, type ProxyTarget } from './echo-proxy-target';
+import type { EchoDatabase } from '../proxy-db';
 
 export const getDatabaseFromObject = (obj: ReactiveObject<any>): EchoDatabase | undefined => {
   if (isEchoObject(obj)) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const core = getObjectCoreFromEchoTarget(getProxyHandlerSlot(obj).target as any);
-    return core?.database?._dbApi;
+    const target = getProxyHandlerSlot(obj).target as ProxyTarget;
+    return target[symbolInternals].database;
   }
   return undefined;
 };

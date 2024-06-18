@@ -6,12 +6,11 @@ import { Args, Flags, ux } from '@oclif/core';
 import { chromium } from '@playwright/test';
 import chalk from 'chalk';
 
-import { type Client } from '@dxos/client';
+import { hostInvitation } from '@dxos/cli-base';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { range } from '@dxos/util';
 
 import { BaseCommand } from '../../base';
-import { hostInvitation } from '../../util';
 
 /**
  * @deprecated
@@ -42,7 +41,7 @@ export default class Open extends BaseCommand<typeof Open> {
   };
 
   async run(): Promise<any> {
-    await this.execWithClient(async (client: Client) => {
+    await this.execWithClient(async ({ client }) => {
       if (!client.halo.identity.get()) {
         this.log(chalk`{red Profile not initialized.}`);
         return {};

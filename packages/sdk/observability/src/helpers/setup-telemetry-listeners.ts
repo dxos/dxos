@@ -11,7 +11,12 @@ let lastFocusEvent = new Date();
 let totalTime = 0;
 
 export const setupTelemetryListeners = (namespace: string, client: Client, observability: Observability) => {
-  const clickCallback = (event: any) => {
+  const clickCallback = (event: Event) => {
+    const id = (event.target as HTMLElement)?.id;
+    if (!id) {
+      return;
+    }
+
     setTimeout(() =>
       observability.event({
         identityId: getTelemetryIdentifier(client),
@@ -19,8 +24,8 @@ export const setupTelemetryListeners = (namespace: string, client: Client, obser
         properties: {
           href: window.location.href,
           id: (event.target as HTMLElement)?.id,
-          path: (event.path as HTMLElement[])
-            ?.filter((el) => Boolean(el.tagName))
+          path: (event.composedPath() as HTMLElement[])
+            .filter((el) => Boolean(el.tagName))
             .map((el) => `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}`)
             .reverse()
             .join('>'),

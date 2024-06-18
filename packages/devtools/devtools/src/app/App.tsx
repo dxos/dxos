@@ -8,7 +8,7 @@ import { createClientServices } from '@dxos/client/services';
 import { log } from '@dxos/log';
 import { type Observability, initializeAppObservability } from '@dxos/observability';
 import { useAsyncEffect } from '@dxos/react-async';
-import { Client, type ClientServices, Config, Defaults, DEFAULT_VAULT_ORIGIN, Remote } from '@dxos/react-client';
+import { Client, type ClientServices, Config, Defaults, Remote } from '@dxos/react-client';
 
 import { Devtools } from './Devtools';
 import { namespace } from '../hooks';
@@ -19,7 +19,7 @@ export const App = () => {
   useAsyncEffect(async () => {
     try {
       const searchParams = new URLSearchParams(window.location.search);
-      const target = searchParams.get('target') ?? DEFAULT_VAULT_ORIGIN;
+      const target = searchParams.get('target') ?? undefined;
       // TODO(nf): read wsAuthToken from localStorage?
       const config = new Config(Remote(target, searchParams.get('wsAuthToken') ?? undefined), Defaults());
       const services = await createClientServices(config);

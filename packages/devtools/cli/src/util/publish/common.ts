@@ -4,6 +4,7 @@
 
 import { ux } from '@oclif/core';
 
+import { table, type TableOptions } from '@dxos/cli-base';
 import type { ConfigProto } from '@dxos/config';
 
 export type PackageModule = NonNullable<NonNullable<ConfigProto['package']>['modules']>[0];
@@ -19,19 +20,19 @@ export const mapModules = async (modules: PackageModule[]) => {
   }));
 };
 
-export const printModules = async (modules: PackageModule[], flags = {}) => {
-  ux.table(
-    await mapModules(modules),
-    {
-      key: {
-        header: 'name',
+export const printModules = async (modules: PackageModule[], flags: TableOptions = {}) => {
+  ux.stdout(
+    table(
+      await mapModules(modules),
+      {
+        key: {
+          header: 'name',
+        },
+        bundle: {
+          header: 'bundle',
+        },
       },
-      bundle: {
-        header: 'bundle',
-      },
-    },
-    {
-      ...flags,
-    },
+      flags,
+    ),
   );
 };

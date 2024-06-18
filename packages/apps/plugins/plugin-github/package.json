@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-github",
-  "version": "0.5.5",
+  "version": "0.5.8",
   "description": "DXOS Surface plugin for integrating with GitHub",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -66,7 +66,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

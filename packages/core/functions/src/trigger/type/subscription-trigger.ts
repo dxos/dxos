@@ -6,7 +6,7 @@ import { TextV0Type } from '@braneframe/types';
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
-import { createSubscription, getAutomergeObjectCore, type Query } from '@dxos/echo-db';
+import { createSubscription, getObjectCore, type Query } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 import type { SubscriptionTrigger } from '../../types';
@@ -62,9 +62,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
       for (const object of objects) {
         const content = object.content;
         if (content instanceof TextV0Type) {
-          subscriptions.push(
-            getAutomergeObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)),
-          );
+          subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
         }
       }
     }

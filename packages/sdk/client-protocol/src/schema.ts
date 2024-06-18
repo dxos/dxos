@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { echoObject, S } from '@dxos/echo-schema';
+import { S, TypedObject } from '@dxos/echo-schema';
 
-const _Properties = S.Struct({ name: S.optional(S.String) }, { key: S.String, value: S.Any }).pipe(
-  echoObject('dxos.sdk.client.Properties', '0.1.0'),
-);
-export interface Properties extends S.Schema.Type<typeof _Properties> {}
-export const Properties = _Properties;
+export class PropertiesType extends TypedObject({ typename: 'dxos.sdk.client.Properties', version: '0.1.0' })(
+  {
+    name: S.optional(S.String),
+  },
+  { record: true },
+) {}
 
-export type PropertiesProps = {
-  name?: string;
-};
+// TODO(burdon): Rename?
+export type PropertiesTypeProps = Pick<PropertiesType, 'name'>;

@@ -4,11 +4,9 @@
 
 import { type ClientServicesProvider } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
-import { log } from '@dxos/log';
 
 import { fromHost } from './local-client-services';
 import { fromSocket } from './socket';
-import { fromIFrame } from './utils';
 import { type WorkerClientServicesParams, fromWorker } from './worker-client-services';
 
 /**
@@ -25,7 +23,6 @@ export const createClientServices = (
   signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
   const remote = config.values.runtime?.client?.remoteSource;
-
   if (remote) {
     const url = new URL(remote);
     const protocol = url.protocol.slice(0, -1);
@@ -37,8 +34,7 @@ export const createClientServices = (
 
       case 'http':
       case 'https': {
-        log.warn('IFrame services deprecated.');
-        return fromIFrame(config);
+        throw new Error('IFrame services deprecated.');
       }
     }
   }

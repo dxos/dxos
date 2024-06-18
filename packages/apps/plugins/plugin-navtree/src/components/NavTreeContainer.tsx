@@ -15,7 +15,6 @@ import {
   SLUG_PATH_SEPARATOR,
   SLUG_COLLECTION_INDICATOR,
 } from '@dxos/app-framework';
-import { isSpace } from '@dxos/react-client/echo';
 import { ElevationProvider, useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { Path, type MosaicDropEvent, type MosaicMoveEvent } from '@dxos/react-ui-mosaic';
 import {
@@ -65,7 +64,7 @@ export const NavTreeContainer = ({
   const isDeckModel = navPlugin?.meta.id === 'dxos.org/plugin/deck';
 
   const handleSelect: NavTreeContextType['onSelect'] = async ({ node }: { node: TreeNode }) => {
-    if (!node.data || isSpace(node.data)) {
+    if (!node.data) {
       return;
     }
 

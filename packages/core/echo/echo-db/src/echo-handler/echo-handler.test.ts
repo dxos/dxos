@@ -7,12 +7,14 @@ import { effect } from '@preact/signals-core';
 import { expect } from 'chai';
 import { inspect } from 'util';
 
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { encodeReference, Reference, type SpaceDoc } from '@dxos/echo-protocol';
 import {
-  create,
-  echoObject,
+  EchoObject,
   type EchoReactiveObject,
   Expando,
+  TypedObject,
+  create,
   foreignKey,
   getMeta,
   getSchema,
@@ -20,14 +22,14 @@ import {
   getTypeReference,
   isDeleted,
   ref,
-  TypedObject,
 } from '@dxos/echo-schema';
 import {
   TEST_OBJECT,
   TEST_SCHEMA_TYPE,
   TestClass,
   TestSchema,
-  TestSchemaClass,
+  TestSchemaType,
+  TestType,
   type TestSchemaWithClass,
 } from '@dxos/echo-schema/testing';
 import { registerSignalRuntime } from '@dxos/echo-signals';
@@ -36,22 +38,22 @@ import { describe, test } from '@dxos/test';
 import { defer } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
-import { AutomergeContext, getAutomergeObjectCore } from '../automerge';
-import { EchoDatabaseImpl } from '../database';
+import { getDatabaseFromObject } from './util';
+import { AutomergeContext, getObjectCore } from '../core-db';
 import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
 import { Filter } from '../query';
 import { Contact, EchoTestBuilder, Task, TestBuilder } from '../testing';
 
 registerSignalRuntime();
-
-const TypedObjectSchema = TestSchema.pipe(echoObject('TestSchema', '1.0.0'));
 
 test('id property name is reserved', () => {
   const invalidSchema = S.Struct({ id: S.Number });
   expect(() => createEchoObject(create(invalidSchema, { id: 42 }))).to.throw();
 });
 
-for (const schema of [undefined, TypedObjectSchema, TestSchemaClass]) {
+// Pass undefined to test untyped proxy.
+for (const schema of [undefined, TestType, TestSchemaType]) {
   const createObject = (props: Partial<TestSchemaWithClass> = {}): EchoReactiveObject<TestSchemaWithClass> => {
     return createEchoObject(schema ? create(schema as any, props) : create(props));
   };
@@ -110,30 +112,30 @@ describe('Reactive Object with ECHO database', () => {
 
   test('throws if schema was not annotated as echo object', async () => {
     const { graph } = await builder.createDatabase();
-    expect(() => graph.runtimeSchemaRegistry.registerSchema(TestSchema)).to.throw();
+    expect(() => graph.schemaRegistry.addSchema([TestSchema])).to.throw();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
     const { db } = await builder.createDatabase();
-    expect(() => db.add(create(TypedObjectSchema, { string: 'foo' }))).to.throw();
+    expect(() => db.add(create(TestType, { string: 'foo' }))).to.throw();
   });
 
   test('existing proxy objects can be added to the database', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
+    graph.schemaRegistry.addSchema([TestType]);
 
-    const obj = create(TypedObjectSchema, { string: 'foo' });
+    const obj = create(TestType, { string: 'foo' });
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(getSchema(returnObj)).to.eq(TypedObjectSchema);
+    expect(getSchema(returnObj)).to.eq(TestType);
     expect(returnObj === obj).to.be.true;
   });
 
   test('existing proxy objects can be passed to create', async () => {
     const { db, graph } = await builder.createDatabase();
     class Schema extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Any }) {}
-    graph.runtimeSchemaRegistry.registerSchema(Schema);
+    graph.schemaRegistry.addSchema([Schema]);
     const objectHost = db.add(create(Schema, { field: [] }));
     const object = db.add(create(Schema, { field: 'foo' }));
     objectHost.field?.push({ hosted: object });
@@ -152,7 +154,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('instantiating reactive objects after a restart', async () => {
     const graph = new Hypergraph();
-    graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
+    graph.schemaRegistry.addSchema([TestType]);
 
     const automergeContext = new AutomergeContext();
     const doc = automergeContext.repo.create<SpaceDoc>();
@@ -160,24 +162,34 @@ describe('Reactive Object with ECHO database', () => {
 
     let id: string;
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      const db = new EchoDatabaseImpl({
+        automergeContext,
+        graph,
+        spaceKey,
+        spaceId: await createIdFromSpaceKey(spaceKey),
+      });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
-      const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
+      const obj = db.add(create(TestType, { string: 'foo' }));
       id = obj.id;
     }
 
     // Create a new DB instance to simulate a restart
     {
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      const db = new EchoDatabaseImpl({
+        automergeContext,
+        graph,
+        spaceKey,
+        spaceId: await createIdFromSpaceKey(spaceKey),
+      });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      expect(getSchema(obj)).to.eq(TypedObjectSchema);
+      expect(getSchema(obj)).to.eq(TestType);
     }
   });
 
@@ -189,58 +201,76 @@ describe('Reactive Object with ECHO database', () => {
     let id: string;
     {
       const graph = new Hypergraph();
-      graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      graph.schemaRegistry.addSchema([TestType]);
+      const db = new EchoDatabaseImpl({
+        automergeContext,
+        graph,
+        spaceKey,
+        spaceId: await createIdFromSpaceKey(spaceKey),
+      });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
-      const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
+      const obj = db.add(create(TestType, { string: 'foo' }));
       id = obj.id;
     }
 
     // Create a new DB instance to simulate a restart
     {
       const graph = new Hypergraph();
-      const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-      await db._automerge.open({ rootUrl: doc.url });
+      const db = new EchoDatabaseImpl({
+        automergeContext,
+        graph,
+        spaceKey,
+        spaceId: await createIdFromSpaceKey(spaceKey),
+      });
+      await db.coreDatabase.open({ rootUrl: doc.url });
 
       const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-      expect(getSchema(obj)).to.eq(TypedObjectSchema);
+      graph.schemaRegistry.addSchema([TestType]);
+      expect(getSchema(obj)).to.eq(TestType);
     }
+  });
+
+  test('id is persisted after adding object to DB', async () => {
+    const { db } = await builder.createDatabase();
+    const reactiveObj = create(Expando, { string: 'foo' });
+    const echoObj = db.add(reactiveObj);
+
+    expect(echoObj.id).to.eq(reactiveObj.id);
   });
 
   describe('queries', () => {
     test('filter by schema or typename', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
+      graph.schemaRegistry.addSchema([TestType]);
 
-      db.add(create(TypedObjectSchema, { string: 'foo' }));
+      db.add(create(TestType, { string: 'foo' }));
 
       {
-        const queryResult = await db.query(Filter.typename('TestSchema')).run();
+        const queryResult = await db.query(Filter.typename(TEST_SCHEMA_TYPE.typename)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const queryResult = await db.query(Filter.schema(TypedObjectSchema)).run();
+        const queryResult = await db.query(Filter.schema(TestType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
 
       {
-        const queryResult = await db.query(Filter.schema(TestSchemaClass)).run();
+        const queryResult = await db.query(Filter.schema(TestSchemaType)).run();
         expect(queryResult.objects.length).to.eq(1);
       }
     });
 
     test('does not return deleted objects', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-      const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
-      const query = db.query(Filter.schema(TypedObjectSchema));
+      graph.schemaRegistry.addSchema([TestType]);
+      const obj = db.add(create(TestType, { string: 'foo' }));
+      const query = db.query(Filter.schema(TestType));
 
       expect((await query.run()).objects.length).to.eq(1);
 
@@ -250,10 +280,10 @@ describe('Reactive Object with ECHO database', () => {
 
     test('deleted objects are returned when re-added', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-      const obj = db.add(create(TypedObjectSchema, { string: 'foo' }));
+      graph.schemaRegistry.addSchema([TestType]);
+      const obj = db.add(create(TestType, { string: 'foo' }));
       db.remove(obj);
-      const query = await db.query(Filter.schema(TypedObjectSchema));
+      const query = await db.query(Filter.schema(TestType));
       expect((await query.run()).objects.length).to.eq(0);
 
       db.add(obj);
@@ -263,14 +293,14 @@ describe('Reactive Object with ECHO database', () => {
 
   test('data symbol', async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.runtimeSchemaRegistry.registerSchema(TypedObjectSchema);
-    const objects = [db.add(create(TypedObjectSchema, TEST_OBJECT)), db.add(create(TestSchemaClass, TEST_OBJECT))];
+    graph.schemaRegistry.addSchema([TestType]);
+    const objects = [db.add(create(TestType, TEST_OBJECT)), db.add(create(TestSchemaType, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         '@id': obj.id,
         '@meta': { keys: [] },
-        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(TypedObjectSchema) },
+        '@type': { '@type': 'dxos.echo.model.document.Reference', ...getTypeReference(TestType) },
         ...TEST_OBJECT,
       });
     }
@@ -294,17 +324,17 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Org = S.Struct({
       name: S.String,
-    }).pipe(echoObject('example.Org', '1.0.0'));
+    }).pipe(EchoObject('example.Org', '1.0.0'));
 
     const Person = S.Struct({
       name: S.String,
       worksAt: ref(Org),
       previousEmployment: S.optional(S.Array(ref(Org))),
-    }).pipe(echoObject('example.Person', '1.0.0'));
+    }).pipe(EchoObject('example.Person', '1.0.0'));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Org).registerSchema(Person);
+      graph.schemaRegistry.addSchema([Org, Person]);
 
       const orgName = 'DXOS';
       const org = db.add(create(Org, { name: orgName }));
@@ -324,7 +354,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('adding object with nested objects to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Org).registerSchema(Person);
+      graph.schemaRegistry.addSchema([Org, Person]);
 
       const person = db.add(create(Person, { name: 'John', worksAt: create(Org, { name: 'DXOS' }) }));
 
@@ -334,7 +364,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('adding objects with nested arrays to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(Org).registerSchema(Person);
+      graph.schemaRegistry.addSchema([Org, Person]);
 
       const dxos = create(Org, { name: 'DXOS' });
       const braneframe = create(Org, { name: 'Braneframe' });
@@ -361,7 +391,7 @@ describe('Reactive Object with ECHO database', () => {
     test('cross reference', async () => {
       const testBuilder = new TestBuilder();
       const { db } = await testBuilder.createPeer();
-      db.graph.runtimeSchemaRegistry.registerSchema(Contact, Task);
+      db.graph.schemaRegistry.addSchema([Contact, Task]);
 
       const contact = create(Contact, { name: 'Contact', tasks: [] });
       db.add(contact);
@@ -447,7 +477,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TestType, NestedType);
+      graph.schemaRegistry.addSchema([TestType, NestedType]);
       const obj = db.add(create(TestType, { objects: [] }));
       const objectWithMeta = create(NestedType, { field: 42 }, { keys: [key] });
       obj.objects.push(objectWithMeta);
@@ -457,7 +487,7 @@ describe('Reactive Object with ECHO database', () => {
     test('push key to object created with', async () => {
       class TestType extends TypedObject(TEST_SCHEMA_TYPE)({ field: S.Number }) {}
       const { db, graph } = await builder.createDatabase();
-      graph.runtimeSchemaRegistry.registerSchema(TestType);
+      graph.schemaRegistry.addSchema([TestType]);
       const obj = db.add(create(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
       getMeta(obj).keys.push(foreignKey('example.com', '456'));
       expect(getMeta(obj).keys.length).to.eq(2);
@@ -467,7 +497,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(create({ field: 1 }));
       const typeReference = getTypeReference(TestSchema)!;
-      getAutomergeObjectCore(obj).setType(typeReference);
+      getObjectCore(obj).setType(typeReference);
       expect(getType(obj)).to.deep.eq(typeReference);
     });
 
@@ -480,16 +510,26 @@ describe('Reactive Object with ECHO database', () => {
 
       let id: string;
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-        await db._automerge.open({ rootUrl: doc.url });
+        const db = new EchoDatabaseImpl({
+          automergeContext,
+          graph,
+          spaceKey,
+          spaceId: await createIdFromSpaceKey(spaceKey),
+        });
+        await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.add({ string: 'foo' });
         id = obj.id;
         getMeta(obj).keys.push(metaKey);
       }
 
       {
-        const db = new EchoDatabaseImpl({ automergeContext, graph, spaceKey });
-        await db._automerge.open({ rootUrl: doc.url });
+        const db = new EchoDatabaseImpl({
+          automergeContext,
+          graph,
+          spaceKey,
+          spaceId: await createIdFromSpaceKey(spaceKey),
+        });
+        await db.coreDatabase.open({ rootUrl: doc.url });
         const obj = db.getObjectById(id) as EchoReactiveObject<TestSchema>;
         expect(getMeta(obj).keys).to.deep.eq([metaKey]);
       }
@@ -512,8 +552,6 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('rebind', async () => {
-    registerSignalRuntime();
-
     const { db } = await builder.createDatabase();
 
     const obj1 = db.add(create(Expando, { title: 'Object 1' }));
@@ -531,10 +569,10 @@ describe('Reactive Object with ECHO database', () => {
     expect(updateCount).to.eq(1);
 
     // Rebind obj2 to obj1
-    getAutomergeObjectCore(obj2).bind({
-      db: getAutomergeObjectCore(obj1).database!,
-      docHandle: getAutomergeObjectCore(obj1).docHandle!,
-      path: getAutomergeObjectCore(obj1).mountPath,
+    getObjectCore(obj2).bind({
+      db: getObjectCore(obj1).database!,
+      docHandle: getObjectCore(obj1).docHandle!,
+      path: getObjectCore(obj1).mountPath,
       assignFromLocalState: false,
     });
 
@@ -543,16 +581,23 @@ describe('Reactive Object with ECHO database', () => {
   });
 
   test('assign a non-echo reactive object', async () => {
-    registerSignalRuntime();
-
     const { db } = await builder.createDatabase();
 
     const obj = db.add(create(Expando, { title: 'Object 1' }));
-
     obj.ref = create(Expando, { title: 'Object 2' });
-
     obj.refs = [create(Expando, { title: 'Object 2' })];
-
     obj.refMap = { ref: create(Expando, { title: 'Object 3' }) };
+  });
+
+  test('typed object is linked with the database on assignment to another db-linked object', async () => {
+    const { db, graph } = await builder.createDatabase();
+
+    graph.schemaRegistry.addSchema([TestSchemaType]);
+
+    const obj = db.add(create(TestSchemaType, { string: 'Object 1' }));
+    const another = create(TestSchemaType, { string: 'Object 2' });
+    obj.other = another;
+
+    expect(getDatabaseFromObject(another)).not.to.be.undefined;
   });
 });

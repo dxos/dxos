@@ -208,14 +208,15 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch({ spaceKey, migration }: CreateEpochRequest) {
+  async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest) {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.createEpoch({ migration });
+    await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
   }
 
   private _serializeSpace(space: DataSpace): Space {
     return {
+      id: space.id,
       spaceKey: space.key,
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
