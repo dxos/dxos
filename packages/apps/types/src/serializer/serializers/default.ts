@@ -20,8 +20,15 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
    * @param params.object Deserializing into an existing object. If not provided, a new object is created.
    * @param params.file File metadata.
    * @param params.serializers
+   * @param params.preserveId Preserve the object id. @default true
    */
-  deserialize(params: { content: string; file?: SerializedObject; object?: T; serializers: SerializerMap }): Promise<T>;
+  deserialize(params: {
+    content: string;
+    file?: SerializedObject;
+    object?: T;
+    preserveId?: boolean;
+    serializers: SerializerMap;
+  }): Promise<T>;
 }
 
 export type SerializerMap = Record<string, TypedObjectSerializer>;
@@ -42,23 +49,23 @@ export const jsonSerializer: TypedObjectSerializer = {
     return JSON.stringify(object.toJSON(), null, 2);
   },
 
-  deserialize: async ({ content, object }) => {
+  deserialize: async ({ content, object, preserveId }) => {
     const parsed = JSON.parse(content);
     if (!object) {
-      return deserializeEchoObject(parsed);
+      return deserializeEchoObject(parsed, preserveId);
     } else {
       const { '@id': _, '@type': __, '@meta': ___, ...data } = parsed;
       Object.entries(data)
         .filter(([key]) => !key.startsWith('@'))
         .forEach(([key, value]: any) => {
-          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value) : value;
+          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value, preserveId) : value;
         });
       return object;
     }
   },
 };
 
-const deserializeEchoObject = (parsed: any): Expando => {
+const deserializeEchoObject = (parsed: any, preserveId = true): Expando => {
   const { '@id': id, '@type': type, '@meta': meta, ...data } = parsed;
   const entries = Object.entries(data)
     .filter(([key]) => !key.startsWith('@'))
@@ -76,8 +83,10 @@ const deserializeEchoObject = (parsed: any): Expando => {
   );
 
   const core = getObjectCore(deserializedObject);
-  core.id = id;
-  getMeta(core).keys.push(...(meta?.keys ?? []));
+  if (preserveId) {
+    core.id = id;
+  }
+  getMeta(deserializedObject).keys.push(...(meta?.keys ?? []));
   const typeRef = getTypeRef(type);
   if (typeRef) {
     core.setType(typeRef);

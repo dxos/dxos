@@ -45,14 +45,14 @@ export const serializer: TypedObjectSerializer<DocumentType> = {
     return `${text}\n\n${footnote}`;
   },
 
-  deserialize: async ({ content, file, object: existingDoc }) => {
+  deserialize: async ({ content, file, object: existingDoc, preserveId }) => {
     if (existingDoc instanceof DocumentType) {
       existingDoc.content!.content = content;
       return existingDoc;
     } else {
       const doc = createEchoObject(create(DocumentType, { content: create(TextV0Type, { content }), comments: [] }));
 
-      if (file) {
+      if (file && preserveId) {
         const core = getObjectCore(doc);
         core.id = file.id;
       }
