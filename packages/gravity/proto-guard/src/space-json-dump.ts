@@ -13,11 +13,11 @@ export type SpacesDump = {
   /**
    * SpaceIds mapped to JSON dump of all objects in the space.
    */
-  [key: string]: {
+  [spaceId: string]: {
     /**
      * ObjectIds mapped to JSON dump of the object.
      */
-    [key: string]: any;
+    [objectId: string]: any;
   };
 };
 
