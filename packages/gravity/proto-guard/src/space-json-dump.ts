@@ -65,12 +65,12 @@ export class SpacesDumper {
   }
 }
 
-export const equals = (container: Record<string, any>, contained: Record<string, any>): boolean => {
-  for (const [key, value] of Object.entries(contained)) {
+export const equals = (actual: Record<string, any>, expected: Record<string, any>): boolean => {
+  for (const [key, value] of Object.entries(expected)) {
     if (key === '@timestamp') {
       continue;
     }
-    if (!isEqual(value, container[key])) {
+    if (!isEqual(value, actual[key])) {
       return false;
     }
   }
