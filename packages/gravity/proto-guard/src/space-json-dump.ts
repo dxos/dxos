@@ -42,12 +42,12 @@ export class SpacesDumper {
     return dump;
   };
 
-  static checkIfSpacesMatchExpectedData = async (client: Client, dump: SpacesDump) => {
-    const serializer = new Serializer();
-    for (const space of client.spaces.get()) {
-      const { objects } = await space.db.query().run();
-      for (const object of objects) {
-        if (!equals(serializer.exportObject(object), dump[space.id][object.id])) {
+  static checkIfSpacesMatchExpectedData = async (client: Client, expected: SpacesDump) => {
+    const received = await SpacesDumper.dumpSpaces(client);
+
+    for (const [spaceId, space] of Object.entries(expected)) {
+      for (const [objectId, object] of Object.entries(space)) {
+        if (!equals(object, received[spaceId][objectId])) {
           return false;
         }
       }
