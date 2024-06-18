@@ -64,10 +64,10 @@ export const createInitializedClientsWithContext = async (
       new Client({ config: options?.config, services: testBuilder.createLocalClientServices(options?.serviceConfig) }),
   );
   const initialized = await Promise.all(
-    clients.map(async (c, index) => {
-      await c.initialize();
-      await c.halo.createIdentity({ displayName: `Peer ${index}` });
-      return c;
+    clients.map(async (client, index) => {
+      await client.initialize();
+      await client.halo.createIdentity({ displayName: `Peer ${index}` });
+      return client;
     }),
   );
   ctx.onDispose(() => Promise.all(initialized.map((c) => c.destroy())));

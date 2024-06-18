@@ -252,10 +252,10 @@ export class ClientServicesHost {
     );
 
     const identityService = new IdentityServiceImpl(
-      (params) => this._createIdentity(params),
-      () => this._serviceContext.dataSpaceManager!,
       this._serviceContext.identityManager,
       this._serviceContext.keyring,
+      () => this._serviceContext.dataSpaceManager!,
+      (params) => this._createIdentity(params),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
 

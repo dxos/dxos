@@ -119,9 +119,9 @@ describe('open', () => {
 
 const createIdentityService = (serviceContext: ServiceContext) => {
   return new IdentityServiceImpl(
-    (options) => serviceContext.createIdentity(options),
-    () => serviceContext.dataSpaceManager!,
     serviceContext.identityManager,
     serviceContext.keyring,
+    () => serviceContext.dataSpaceManager!,
+    (options) => serviceContext.createIdentity(options),
   );
 };

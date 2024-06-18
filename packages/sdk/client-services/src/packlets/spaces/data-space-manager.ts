@@ -202,15 +202,8 @@ export class DataSpaceManager {
 
   async isDefaultSpace(space: DataSpace): Promise<boolean> {
     const rootDoc = await this._getSpaceRootDocument(space);
-    for (const object of Object.values(rootDoc.docSync()?.objects ?? {}) as ObjectStructure[]) {
-      if (object.system?.type?.itemId !== PropertiesType.typename) {
-        continue;
-      }
-      if (object.data?.[defaultKey] === this._signingContext.identityKey.toHex()) {
-        return true;
-      }
-    }
-    return false;
+    const [_, properties] = findPropertiesObject(rootDoc.docSync()) ?? [];
+    return properties?.data?.[defaultKey] === this._signingContext.identityKey.toHex();
   }
 
   async createDefaultSpace() {

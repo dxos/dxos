@@ -60,16 +60,6 @@ export class Presence extends Resource {
     this._params.gossip.listen(PRESENCE_CHANNEL_ID, (message) => {
       this._receiveAnnounces(message);
     });
-
-    // Remove peer state when connection is closed.
-    this._params.gossip.connectionClosed.on((peerId) => {
-      const peerState = this._peerStates.get(peerId);
-      if (peerState != null) {
-        this._peerStates.delete(peerId);
-        this._removePeerFromIdentityKeyIndex(peerState);
-        this.updated.emit();
-      }
-    });
   }
 
   protected override async _open(): Promise<void> {
@@ -95,6 +85,16 @@ export class Presence extends Resource {
       },
       this._params.offlineTimeout,
     );
+
+    // Remove peer state when connection is closed.
+    this._params.gossip.connectionClosed.on(this._ctx, (peerId) => {
+      const peerState = this._peerStates.get(peerId);
+      if (peerState != null) {
+        this._peerStates.delete(peerId);
+        this._removePeerFromIdentityKeyIndex(peerState);
+        this.updated.emit();
+      }
+    });
   }
 
   protected override async _catch(err: Error): Promise<void> {

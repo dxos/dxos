@@ -212,6 +212,6 @@ describe('DataSpaceManager', () => {
   };
 
   const getFirstSpace = (peer: TestPeer) => {
-    return [...peer.dataSpaceManager.spaces.values()][0];
+    return Array.from(peer.dataSpaceManager.spaces.values())[0];
   };
 });

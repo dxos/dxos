@@ -3,6 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
+import { Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -22,16 +23,18 @@ import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
 import { type DataSpaceManager } from '../spaces';
 
-export class IdentityServiceImpl implements IdentityService {
+export class IdentityServiceImpl extends Resource implements IdentityService {
   constructor(
-    private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
-    private readonly _dataSpaceManagerProvider: () => DataSpaceManager,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
+    private readonly _dataSpaceManagerProvider: () => DataSpaceManager,
+    private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
-  ) {}
+  ) {
+    super();
+  }
 
-  async open() {
+  protected override async _open() {
     const identity = this._identityManager.identity;
     if (identity && !identity.defaultSpaceKey) {
       await this._fixIdentityWithoutDefaultSpace(identity);

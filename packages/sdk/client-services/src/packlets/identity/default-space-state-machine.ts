@@ -7,7 +7,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-export type ProfileStateMachineParams = {
+type DefaultSpaceStateMachineParams = {
   identityKey: PublicKey;
   onUpdate?: () => void;
 };
@@ -18,7 +18,7 @@ export type ProfileStateMachineParams = {
 export class DefaultSpaceStateMachine implements CredentialProcessor {
   private _spaceKey: PublicKey | undefined;
 
-  constructor(private readonly _params: ProfileStateMachineParams) {}
+  constructor(private readonly _params: DefaultSpaceStateMachineParams) {}
 
   public get spaceKey(): PublicKey | undefined {
     return this._spaceKey;
