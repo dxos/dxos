@@ -16,7 +16,7 @@ import { type Signer } from '@dxos/crypto';
 import { type Space } from '@dxos/echo-pipeline';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import {
@@ -95,8 +95,8 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
-  get defaultSpaceKey(): PublicKey | undefined {
-    return this._defaultSpaceStateMachine.spaceKey;
+  get defaultSpaceId(): SpaceId | undefined {
+    return this._defaultSpaceStateMachine.spaceId;
   }
 
   @trace.span()
@@ -171,10 +171,10 @@ export class Identity {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async updateDefaultSpace(spaceKey: PublicKey) {
+  async updateDefaultSpace(spaceId: SpaceId) {
     const credential = await this.getDeviceCredentialSigner().createCredential({
       subject: this.identityKey,
-      assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceKey },
+      assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
     await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));

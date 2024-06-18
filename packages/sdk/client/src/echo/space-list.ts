@@ -40,7 +40,7 @@ import { InvitationsProxy } from '../invitations';
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
-  private _defaultSpaceKey?: PublicKey;
+  private _defaultSpaceId?: SpaceId;
   private readonly _defaultSpaceAvailable = new PushStream<boolean>();
   private _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
@@ -197,11 +197,14 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (defaultSpaceAssertion?.['@type'] !== 'dxos.halo.credentials.DefaultSpace') {
       return false;
     }
-    this._defaultSpaceKey = defaultSpaceAssertion.spaceKey;
-    const defaultSpace = this._spaces.find((s) => s.key.equals(defaultSpaceAssertion.spaceKey));
+    if (!SpaceId.isValid(defaultSpaceAssertion.spaceId)) {
+      return false;
+    }
+    this._defaultSpaceId = defaultSpaceAssertion.spaceId;
+    const defaultSpace = this._spaces.find((s) => s.id === defaultSpaceAssertion.spaceId);
     log('defaultSpaceKey read from a credential', {
       openSpace: defaultSpace?.isOpen,
-      key: this._defaultSpaceKey?.truncate(),
+      spaceId: this._defaultSpaceId,
     });
     if (defaultSpace && defaultSpace.state.get() === SpaceState.CLOSED) {
       this._openSpaceAsync(defaultSpace);
@@ -221,7 +224,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
       return true;
     }
     // Only open the default space if lazySpaceOpen is set.
-    return this._defaultSpaceKey ? space.spaceKey.equals(this._defaultSpaceKey) : false;
+    return space.id === this._defaultSpaceId;
   }
 
   async setConfig(config: IndexConfig) {
@@ -239,7 +242,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
-    this._defaultSpaceKey = undefined;
+    this._defaultSpaceId = undefined;
   }
 
   get isReady() {

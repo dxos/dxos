@@ -36,7 +36,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
 
   protected override async _open() {
     const identity = this._identityManager.identity;
-    if (identity && !identity.defaultSpaceKey) {
+    if (identity && !identity.defaultSpaceId) {
       await this._fixIdentityWithoutDefaultSpace(identity);
     }
   }
@@ -52,7 +52,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     const space = await dataSpaceManager!.createDefaultSpace();
     const identity = this._identityManager.identity;
     invariant(identity);
-    await identity.updateDefaultSpace(space.key);
+    await identity.updateDefaultSpace(space.id);
   }
 
   async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
@@ -108,7 +108,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
         await space.initializeDataPipeline();
       }
       if (await dataSpaceManager.isDefaultSpace(space)) {
-        await identity.updateDefaultSpace(space.key);
+        await identity.updateDefaultSpace(space.id);
         hasDefaultSpace = true;
         break;
       }

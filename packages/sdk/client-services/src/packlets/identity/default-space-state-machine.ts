@@ -3,7 +3,7 @@
 //
 
 import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credentials';
-import { type PublicKey } from '@dxos/keys';
+import { SpaceId, type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
@@ -16,12 +16,12 @@ type DefaultSpaceStateMachineParams = {
  * Processes device invitation credentials.
  */
 export class DefaultSpaceStateMachine implements CredentialProcessor {
-  private _spaceKey: PublicKey | undefined;
+  private _spaceId: SpaceId | undefined;
 
   constructor(private readonly _params: DefaultSpaceStateMachineParams) {}
 
-  public get spaceKey(): PublicKey | undefined {
-    return this._spaceKey;
+  public get spaceId(): SpaceId | undefined {
+    return this._spaceId;
   }
 
   async processCredential(credential: Credential) {
@@ -32,7 +32,11 @@ export class DefaultSpaceStateMachine implements CredentialProcessor {
           log.warn('Invalid default space credential', { expectedIdentity: this._params.identityKey, credential });
           return;
         }
-        this._spaceKey = assertion.spaceKey;
+        if (!SpaceId.isValid(assertion.spaceId)) {
+          log.warn('Invalid default space id', { id: assertion.spaceId });
+          return;
+        }
+        this._spaceId = assertion.spaceId;
         break;
       }
     }
