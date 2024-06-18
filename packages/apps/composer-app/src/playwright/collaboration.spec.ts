@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { test } from '@playwright/test';
+import { test, expect as playwrightExpect } from '@playwright/test';
 import { expect } from 'chai';
 import { platform } from 'node:os';
 import waitForExpect from 'wait-for-expect';
@@ -39,25 +39,45 @@ test.describe('Collaboration tests', () => {
   });
 
   test('guest joins host’s space', async () => {
+    // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject('markdownPlugin');
+
+    // Focus new editor before space invitation.
+    const markdownPlanks = await getPlanks(host.page, { filter: 'markdown' });
+    expect(markdownPlanks.length).to.equal(2);
+    const newDocumentLocator = markdownPlanks[0].locator;
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(newDocumentLocator);
+    await hostTextbox.focus();
+    await hostTextbox.fill('Hello from the host');
+
+    // Perform invitation to the guest.
     await perfomInvitation(host, guest);
 
+    // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
 
+    // Guest opens the shared markdown plank.
     await guest.getObjectLinks().last().click();
 
-    // TODO(Zan): This is borked, update to plank locator
-    await Markdown.waitForMarkdownTextbox(guest.page);
-    await waitForExpect(async () => {
-      expect(await host.page.url()).to.equal(await guest.page.url());
+    // Update to use plank locator
+    const guestMarkdownPlanks = await getPlanks(guest.page, { filter: 'markdown' });
+    const guestSharedMarkdownLocator = guestMarkdownPlanks[0].locator;
+    const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(guestSharedMarkdownLocator);
 
-      const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
-      const guestLink = await guest.getObjectLinks().last().getAttribute('data-itemid');
-      expect(hostLink).to.equal(guestLink);
+    await waitForExpect(async () => {
+      await playwrightExpect(guestMarkdownDoc).toHaveText('Hello from the host');
+
+      // TODO(Zan): How should we handle URL comparisons now that we're in decklandia?
+
+      // Verify URLs and object links match between host and guest.
+      // expect(await host.page.url()).to.equal(await guest.page.url());
+      // const hostLink = await host.getObjectLinks().last().getAttribute('data-itemid');
+      // const guestLink = await guest.getObjectLinks().last().getAttribute('data-itemid');
+      // expect(hostLink).to.equal(guestLink);
     });
   });
 
