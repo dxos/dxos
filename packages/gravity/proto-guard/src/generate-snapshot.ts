@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { rmSync, writeFileSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -16,7 +16,7 @@ import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SnapshotsRegistry } from './snapshots-registry';
 import { type SnapshotDescription } from './snapshots-registry';
-import { dumpSpaces } from './space-json-dump';
+import { SpacesDumper } from './space-json-dump';
 import { Todo } from './types';
 import { EXPECTED_JSON_DATA, SNAPSHOTS_DIR, SNAPSHOT_DIR, createConfig, getBaseDataDir } from './util';
 
@@ -128,7 +128,7 @@ const main = async () => {
     // Register snapshot.
     SnapshotsRegistry.registerSnapshot(snapshot);
     // Dump data.
-    writeFileSync(join(baseDir, snapshot.jsonDataPath), JSON.stringify(await dumpSpaces(client), null, 2), 'utf-8');
+    await SpacesDumper.dumpSpaces(client, path.join(baseDir, snapshot.jsonDataPath));
   }
 
   {

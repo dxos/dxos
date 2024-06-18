@@ -14,10 +14,10 @@ import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
-import { checkIfSpacesMatchDump } from './space-json-dump';
+import { SpacesDumper } from './space-json-dump';
 import { copyDirSync, createConfig, getBaseDataDir } from './util';
 
-describe('Tests against storage', () => {
+describe('Load client from storage snapshot', () => {
   const baseDir = getBaseDataDir();
 
   const copySnapshotToTmp = (snapshot: SnapshotDescription) => {
@@ -36,7 +36,7 @@ describe('Tests against storage', () => {
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
-    const expectedData = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
+    const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
 
     const tmp = copySnapshotToTmp(snapshot);
     const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
@@ -45,11 +45,10 @@ describe('Tests against storage', () => {
 
     const client = new Client({ services });
     await asyncTimeout(client.initialize(), 1_000);
-    await client.spaces.isReady.wait();
-    afterTest(() => services.close());
     afterTest(() => client.destroy());
+    await client.spaces.isReady.wait();
 
-    expect(await checkIfSpacesMatchDump(client, expectedData)).to.be.true;
+    expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
   });
 
   test('check if space loads for LevelDb snapshot', async () => {
@@ -57,7 +56,7 @@ describe('Tests against storage', () => {
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
-    const expectedData = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
+    const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
 
     const tmp = copySnapshotToTmp(snapshot);
     const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
@@ -66,9 +65,9 @@ describe('Tests against storage', () => {
 
     const client = new Client({ services });
     await asyncTimeout(client.initialize(), 1_000);
-    await client.spaces.isReady.wait();
     afterTest(() => client.destroy());
+    await client.spaces.isReady.wait();
 
-    expect(await checkIfSpacesMatchDump(client, expectedData)).to.be.true;
+    expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
   });
 });
