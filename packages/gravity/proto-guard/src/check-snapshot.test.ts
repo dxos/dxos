@@ -31,26 +31,6 @@ describe('Tests against storage', () => {
     return testStoragePath;
   };
 
-  test('check if space loads for LevelDb snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('levelDB');
-    invariant(snapshot, 'Snapshot not found');
-    log.info('Testing snapshot', { snapshot });
-
-    const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
-
-    const tmp = copySnapshotToTmp(snapshot);
-    const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
-    afterTest(() => builder.destroy());
-    const services = builder.createLocalClientServices();
-
-    const client = new Client({ services });
-    await asyncTimeout(client.initialize(), 1_000);
-    await client.spaces.isReady.wait();
-    afterTest(() => client.destroy());
-
-    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
-  });
-
   test('check if space loads for Automerge on nodeFS snapshot', async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('automerge');
     invariant(snapshot, 'Snapshot not found');
@@ -67,6 +47,26 @@ describe('Tests against storage', () => {
     await asyncTimeout(client.initialize(), 1_000);
     await client.spaces.isReady.wait();
     afterTest(() => services.close());
+    afterTest(() => client.destroy());
+
+    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
+  });
+
+  test('check if space loads for LevelDb snapshot', async () => {
+    const snapshot = SnapshotsRegistry.getSnapshot('levelDB');
+    invariant(snapshot, 'Snapshot not found');
+    log.info('Testing snapshot', { snapshot });
+
+    const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
+
+    const tmp = copySnapshotToTmp(snapshot);
+    const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
+    afterTest(() => builder.destroy());
+    const services = builder.createLocalClientServices();
+
+    const client = new Client({ services });
+    await asyncTimeout(client.initialize(), 1_000);
+    await client.spaces.isReady.wait();
     afterTest(() => client.destroy());
 
     expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
