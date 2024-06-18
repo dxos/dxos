@@ -13,7 +13,6 @@ import { Expando, create } from '@dxos/client/echo';
 import { S, TypedObject, ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
-import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SnapshotsRegistry } from './snapshots-registry';
 import { type SnapshotDescription } from './snapshots-registry';
@@ -92,9 +91,7 @@ const main = async () => {
     await sleep(1000);
 
     // Generate epoch.
-    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
-    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT });
-    await promise;
+    await space.internal.createEpoch({});
     await space.db.flush();
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
