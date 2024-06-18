@@ -93,7 +93,7 @@ const main = async () => {
 
     // Generate epoch.
     const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
-    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT });
     await promise;
     await space.db.flush();
 
