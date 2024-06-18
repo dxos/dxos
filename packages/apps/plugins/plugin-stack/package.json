@@ -34,6 +34,7 @@
     "@dxos/react-ui-searchlist": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@fluentui/react-tabster": "^9.19.0",
     "@preact/signals-core": "^1.6.0",
     "node-fetch": "^2.6.0",
     "react-is": "^18.2.0"
