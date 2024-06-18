@@ -1,17 +1,12 @@
 [
   {
-    "name": "hypergraph",
-    "version": 1,
-    "dataRoot": "snapshots/1"
-  },
-  {
-    "name": "automerge",
+    "name": "automerge-nodeFS",
     "version": 2,
     "dataRoot": "snapshots/2/snapshot",
     "jsonDataPath": "snapshots/2/expected.json"
   },
   {
-    "name": "levelDB",
+    "name": "echo-levelDB-transition",
     "version": 2,
     "dataRoot": "snapshots/levelDB/snapshot",
     "jsonDataPath": "snapshots/levelDB/expected.json",

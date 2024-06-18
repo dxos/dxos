@@ -32,7 +32,7 @@ describe('Tests against storage', () => {
   };
 
   test('check if space loads for Automerge on nodeFS snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('automerge');
+    const snapshot = SnapshotsRegistry.getSnapshot('automerge-nodeFS');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
