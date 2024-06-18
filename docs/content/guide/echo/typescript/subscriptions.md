@@ -45,7 +45,7 @@ async () => {
 
 ## Subscribe to an object
 
-Objects returned from ECHO queries are based on [ReactiveObject](../../../api/@dxos/client/types/ReactiveObject.md), which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
+Objects returned from ECHO queries are based on [ReactiveObject](/api/@dxos/client/types/ReactiveObject.md), which are a kind of [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object that will trigger reactivity and subscriptions like a Preact signal. Unlike signals, the values are read and modified directly rather than through `.value`.
 
 You can use the `effect` closure from `@preact/signals-core` to re-run code whenever the object changes. Any properties of ECHO objects accessed inside `effect` closures will be tracked and re-run the closure when they change.
 
