@@ -214,10 +214,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   private _shouldOpenSpace(space: SerializedSpace): boolean {
-    if (this._ctx.disposed) {
-      return false;
-    }
-    if (space.state === SpaceState.INACTIVE) {
+    if (this._ctx.disposed || space.state === SpaceState.INACTIVE) {
       return false;
     }
     if (!this._config?.values?.runtime?.client?.lazySpaceOpen) {

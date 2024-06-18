@@ -251,15 +251,17 @@ export class ClientServicesHost {
       this._runtimeParams,
     );
 
+    const identityService = new IdentityServiceImpl(
+      (params) => this._createIdentity(params),
+      () => this._serviceContext.dataSpaceManager!,
+      this._serviceContext.identityManager,
+      this._serviceContext.keyring,
+      (profile) => this._serviceContext.broadcastProfileUpdate(profile),
+    );
+
     this._serviceRegistry.setServices({
       SystemService: this._systemService,
-
-      IdentityService: new IdentityServiceImpl(
-        (params) => this._createIdentity(params),
-        this._serviceContext.identityManager,
-        this._serviceContext.keyring,
-        (profile) => this._serviceContext.broadcastProfileUpdate(profile),
-      ),
+      IdentityService: identityService,
 
       InvitationsService: new InvitationsServiceImpl(this._serviceContext.invitationsManager),
 
@@ -291,6 +293,7 @@ export class ClientServicesHost {
     });
 
     await this._serviceContext.open(ctx);
+    await identityService.open();
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {
@@ -347,7 +350,6 @@ export class ClientServicesHost {
   private async _createIdentity(params: CreateIdentityOptions) {
     const identity = await this._serviceContext.createIdentity(params);
     await this._serviceContext.initialized.wait();
-    await this._serviceContext.dataSpaceManager!.createDefaultSpace(identity);
     return identity;
   }
 }

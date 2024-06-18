@@ -40,6 +40,7 @@ describe('Spaces/member-management', () => {
     const space1 = await client1.spaces.create();
     await inviteMember(space1, client2, HaloSpaceMember.Role.ADMIN);
     const space2 = getClientSpace(client2, space1);
+    await space2.waitUntilReady();
     await waitHasRole(space2, client2, HaloSpaceMember.Role.ADMIN);
     await inviteMember(space2, client3, HaloSpaceMember.Role.ADMIN);
     await waitHasRole(space1, client3, HaloSpaceMember.Role.ADMIN);
@@ -50,6 +51,7 @@ describe('Spaces/member-management', () => {
     const space1 = await client1.spaces.create();
     await inviteMember(space1, client2, HaloSpaceMember.Role.EDITOR);
     const space2 = getClientSpace(client2, space1);
+    await space2.waitUntilReady();
     const { error } = await performInvitation({ host: space2, guest: client3.spaces })[0];
     expect(error).to.be.instanceof(AuthorizationError);
   });

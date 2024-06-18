@@ -4,7 +4,7 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { defaultKey, PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import {
@@ -37,13 +37,13 @@ import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protoc
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
-import { Timeframe } from '@dxos/timeframe';
+import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { assignDeep, ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace, findPropertiesObject } from './data-space';
 import { spaceGenesis } from './genesis';
-import { createAuthProvider, type Identity } from '../identity';
+import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
@@ -200,12 +200,22 @@ export class DataSpaceManager {
     return space;
   }
 
-  async createDefaultSpace(identity: Identity) {
+  async isDefaultSpace(space: DataSpace): Promise<boolean> {
+    const rootDoc = await this._getSpaceRootDocument(space);
+    for (const object of Object.values(rootDoc.docSync()?.objects ?? {}) as ObjectStructure[]) {
+      if (object.system?.type?.itemId !== PropertiesType.typename) {
+        continue;
+      }
+      if (object.data?.[defaultKey] === this._signingContext.identityKey.toHex()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  async createDefaultSpace() {
     const space = await this.createSpace();
-    const automergeIndex = space.automergeSpaceState.rootUrl;
-    invariant(automergeIndex);
-    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
-    await document.whenReady();
+    const document = await this._getSpaceRootDocument(space);
 
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
@@ -213,7 +223,7 @@ export class DataSpaceManager {
         type: encodeReference(getTypeReference(PropertiesType)!),
       },
       data: {
-        [defaultKey]: identity.identityKey.toHex(),
+        [defaultKey]: this._signingContext.identityKey.toHex(),
       },
       meta: {
         keys: [],
@@ -225,18 +235,16 @@ export class DataSpaceManager {
       assignDeep(doc, ['objects', propertiesId], properties);
     });
 
-    const credential = await identity.getDeviceCredentialSigner().createCredential({
-      subject: identity.identityKey,
-      assertion: {
-        '@type': 'dxos.halo.credentials.DefaultSpace',
-        spaceKey: space.key,
-      },
-    });
-    const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
-    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
-
     await this._echoHost.flush();
     return space;
+  }
+
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
+    const automergeIndex = space.automergeSpaceState.rootUrl;
+    invariant(automergeIndex);
+    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    await document.whenReady();
+    return document;
   }
 
   // TODO(burdon): Rename join space.

@@ -9,30 +9,50 @@ import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import {
   type CreateIdentityRequest,
-  type Identity,
+  type Identity as IdentityProto,
   type IdentityService,
   type QueryIdentityResponse,
   type RecoverIdentityRequest,
   type SignPresentationRequest,
+  SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Presentation, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 
+import { type Identity } from './identity';
 import { type CreateIdentityOptions, type IdentityManager } from './identity-manager';
+import { type DataSpaceManager } from '../spaces';
 
 export class IdentityServiceImpl implements IdentityService {
   constructor(
     private readonly _createIdentity: (params: CreateIdentityOptions) => Promise<Identity>,
+    private readonly _dataSpaceManagerProvider: () => DataSpaceManager,
     private readonly _identityManager: IdentityManager,
     private readonly _keyring: Keyring,
     private readonly _onProfileUpdate?: (profile: ProfileDocument | undefined) => Promise<void>,
   ) {}
 
-  async createIdentity(request: CreateIdentityRequest): Promise<Identity> {
+  async open() {
+    const identity = this._identityManager.identity;
+    if (identity && !identity.defaultSpaceKey) {
+      await this._fixIdentityWithoutDefaultSpace(identity);
+    }
+  }
+
+  async createIdentity(request: CreateIdentityRequest): Promise<IdentityProto> {
     await this._createIdentity({ displayName: request.profile?.displayName, deviceProfile: request.deviceProfile });
+    const dataSpaceManager = this._dataSpaceManagerProvider();
+    await this._createDefaultSpace(dataSpaceManager);
     return this._getIdentity()!;
   }
 
-  async recoverIdentity(request: RecoverIdentityRequest): Promise<Identity> {
+  private async _createDefaultSpace(dataSpaceManager: DataSpaceManager) {
+    const space = await dataSpaceManager!.createDefaultSpace();
+    const identity = this._identityManager.identity;
+    invariant(identity);
+    await identity.updateDefaultSpace(space.key);
+  }
+
+  async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
     return todo();
   }
 
@@ -45,7 +65,7 @@ export class IdentityServiceImpl implements IdentityService {
     });
   }
 
-  private _getIdentity(): Identity | undefined {
+  private _getIdentity(): IdentityProto | undefined {
     if (!this._identityManager.identity) {
       return undefined;
     }
@@ -57,7 +77,7 @@ export class IdentityServiceImpl implements IdentityService {
     };
   }
 
-  async updateProfile(profile: ProfileDocument): Promise<Identity> {
+  async updateProfile(profile: ProfileDocument): Promise<IdentityProto> {
     invariant(this._identityManager.identity, 'Identity not initialized.');
     await this._identityManager.updateProfile(profile);
     await this._onProfileUpdate?.(this._identityManager.identity.profileDocument);
@@ -74,5 +94,24 @@ export class IdentityServiceImpl implements IdentityService {
       chain: this._identityManager.identity.deviceCredentialChain,
       nonce,
     });
+  }
+
+  private async _fixIdentityWithoutDefaultSpace(identity: Identity) {
+    let hasDefaultSpace = false;
+    const dataSpaceManager = this._dataSpaceManagerProvider();
+    for (const space of dataSpaceManager.spaces.values()) {
+      if (space.state === SpaceState.CLOSED) {
+        await space.open();
+        await space.initializeDataPipeline();
+      }
+      if (await dataSpaceManager.isDefaultSpace(space)) {
+        await identity.updateDefaultSpace(space.key);
+        hasDefaultSpace = true;
+        break;
+      }
+    }
+    if (!hasDefaultSpace) {
+      await this._createDefaultSpace(dataSpaceManager);
+    }
   }
 }

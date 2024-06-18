@@ -26,10 +26,12 @@ import {
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DeviceAdmissionRequest } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type Presence } from '@dxos/teleport-extension-gossip';
+import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { type ComplexMap, ComplexSet } from '@dxos/util';
 
 import { TrustedKeySetAuthVerifier } from './authenticator';
+import { DefaultSpaceStateMachine } from './default-space-state-machine';
 
 export type IdentityParams = {
   identityKey: PublicKey;
@@ -49,6 +51,7 @@ export class Identity {
   private readonly _presence?: Presence;
   private readonly _deviceStateMachine: DeviceStateMachine;
   private readonly _profileStateMachine: ProfileStateMachine;
+  private readonly _defaultSpaceStateMachine: DefaultSpaceStateMachine;
   public readonly authVerifier: TrustedKeySetAuthVerifier;
 
   public readonly identityKey: PublicKey;
@@ -75,6 +78,10 @@ export class Identity {
       identityKey: this.identityKey,
       onUpdate: () => this.stateUpdate.emit(),
     });
+    this._defaultSpaceStateMachine = new DefaultSpaceStateMachine({
+      identityKey: this.identityKey,
+      onUpdate: () => this.stateUpdate.emit(),
+    });
 
     this.authVerifier = new TrustedKeySetAuthVerifier({
       trustedKeysProvider: () => new ComplexSet(PublicKey.hash, this.authorizedDeviceKeys.keys()),
@@ -88,11 +95,16 @@ export class Identity {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }
 
+  get defaultSpaceKey(): PublicKey | undefined {
+    return this._defaultSpaceStateMachine.spaceKey;
+  }
+
   @trace.span()
   async open(ctx: Context) {
     await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
+    await this.space.spaceState.addCredentialProcessor(this._defaultSpaceStateMachine);
     await this.space.open(ctx);
   }
 
@@ -100,6 +112,7 @@ export class Identity {
   async close(ctx: Context) {
     await this._presence?.close();
     await this.authVerifier.close();
+    await this.space.spaceState.removeCredentialProcessor(this._defaultSpaceStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
     await this.space.spaceState.removeCredentialProcessor(this._deviceStateMachine);
     await this.space.close();
@@ -156,6 +169,15 @@ export class Identity {
    */
   getDeviceCredentialSigner(): CredentialSigner {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
+  }
+
+  async updateDefaultSpace(spaceKey: PublicKey) {
+    const credential = await this.getDeviceCredentialSigner().createCredential({
+      subject: this.identityKey,
+      assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceKey },
+    });
+    const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
+    await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
   async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest) {
