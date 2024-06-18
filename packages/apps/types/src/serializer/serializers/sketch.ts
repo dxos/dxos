@@ -15,11 +15,12 @@ export const serializer: TypedObjectSerializer<SketchType> = {
 
   serialize: async ({ object }): Promise<string> => {
     // TODO(wittjosiah): Implement `toJSON` method?
-    const sketch = { ...object, data: { ...object.data } };
+    const data = await loadObjectReferences(object, (s) => s.data);
+    const sketch = { ...object, data: { ...data } };
     return JSON.stringify(sketch, null, 2);
   },
 
-  deserialize: async ({ content, object: existingSketch, preserveId }) => {
+  deserialize: async ({ content, object: existingSketch, newId }) => {
     const parsed = JSON.parse(content);
 
     if (existingSketch instanceof SketchType) {
@@ -31,7 +32,7 @@ export const serializer: TypedObjectSerializer<SketchType> = {
       const data = create(Expando, {});
       const sketch = createEchoObject(create(SketchType, { title: parsed.title, data }));
 
-      if (preserveId) {
+      if (!newId) {
         const core = getObjectCore(sketch);
         core.id = parsed.id;
 

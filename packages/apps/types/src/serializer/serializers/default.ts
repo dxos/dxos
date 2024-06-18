@@ -20,13 +20,13 @@ export interface TypedObjectSerializer<T extends Expando = Expando> {
    * @param params.object Deserializing into an existing object. If not provided, a new object is created.
    * @param params.file File metadata.
    * @param params.serializers
-   * @param params.preserveId Preserve the object id. @default true
+   * @param params.newId Generate new ID for deserialized object.
    */
   deserialize(params: {
     content: string;
     file?: SerializedObject;
     object?: T;
-    preserveId?: boolean;
+    newId?: boolean;
     serializers: SerializerMap;
   }): Promise<T>;
 }
@@ -49,29 +49,29 @@ export const jsonSerializer: TypedObjectSerializer = {
     return JSON.stringify(object.toJSON(), null, 2);
   },
 
-  deserialize: async ({ content, object, preserveId }) => {
+  deserialize: async ({ content, object, newId }) => {
     const parsed = JSON.parse(content);
     if (!object) {
-      return deserializeEchoObject(parsed, preserveId);
+      return deserializeEchoObject(parsed, newId);
     } else {
       const { '@id': _, '@type': __, '@meta': ___, ...data } = parsed;
       Object.entries(data)
         .filter(([key]) => !key.startsWith('@'))
         .forEach(([key, value]: any) => {
-          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value, preserveId) : value;
+          object[key] = isSerializedEchoObject(value) ? deserializeEchoObject(value, newId) : value;
         });
       return object;
     }
   },
 };
 
-const deserializeEchoObject = (parsed: any, preserveId = true): Expando => {
+const deserializeEchoObject = (parsed: any, newId?: boolean): Expando => {
   const { '@id': id, '@type': type, '@meta': meta, ...data } = parsed;
   const entries = Object.entries(data)
     .filter(([key]) => !key.startsWith('@'))
     .map(([key, value]) => {
       if (isSerializedEchoObject(value)) {
-        return [key, deserializeEchoObject(value)];
+        return [key, deserializeEchoObject(value, newId)];
       }
 
       return [key, value];
@@ -83,7 +83,7 @@ const deserializeEchoObject = (parsed: any, preserveId = true): Expando => {
   );
 
   const core = getObjectCore(deserializedObject);
-  if (preserveId) {
+  if (!newId) {
     core.id = id;
   }
   getMeta(deserializedObject).keys.push(...(meta?.keys ?? []));

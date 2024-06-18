@@ -18,5 +18,5 @@ export const cloneObject = async (object: Expando): Promise<Expando> => {
   const serializer = serializers[typename] ?? serializers.default;
   invariant(serializer, `No serializer for type: ${typename}`);
   const content = await serializer.serialize({ object, serializers });
-  return serializer.deserialize({ content, serializers, preserveId: false });
+  return serializer.deserialize({ content, serializers, newId: true });
 };
