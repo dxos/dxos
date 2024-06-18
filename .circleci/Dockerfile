@@ -15,5 +15,5 @@ RUN curl -L -o node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NOD
 # NOTE: Keep playwright version in sync with the one in package.json
 RUN sudo apt-get update \
   && sudo apt-get install -y libxtst-dev libpng++-dev libenchant-2-2 lsof \
-  && npx playwright@1.27.1 install-deps \ 
+  && npx playwright@1.44.1 install-deps \ 
   && npm install -g pnpm@8.15.8
