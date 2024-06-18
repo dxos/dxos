@@ -1,12 +1,12 @@
 [
   {
     "name": "hypergraph",
-    "version": "1",
+    "version": 1,
     "dataRoot": "snapshots/1"
   },
   {
     "name": "automerge",
-    "version": "2",
+    "version": 2,
     "dataRoot": "snapshots/2/snapshot",
     "jsonDataPath": "snapshots/2/expected.json"
   },
