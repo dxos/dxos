@@ -90,7 +90,9 @@ const main = async () => {
     await space.db.flush();
 
     // Generate epoch.
+    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await promise;
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(

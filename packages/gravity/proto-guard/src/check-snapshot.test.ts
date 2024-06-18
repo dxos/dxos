@@ -21,7 +21,7 @@ describe('Tests against storage', () => {
   const baseDir = getBaseDataDir();
 
   const copySnapshotToTmp = (snapshot: SnapshotDescription) => {
-    const testStoragePath = path.join('tmp', `proto-guard-${PublicKey.random().toHex()}`);
+    const testStoragePath = path.join('/', 'tmp', `proto-guard-${PublicKey.random().toHex()}`);
 
     const storagePath = path.join(baseDir, snapshot.dataRoot);
     log.info('Copy storage', { src: storagePath, dest: testStoragePath });
@@ -46,7 +46,6 @@ describe('Tests against storage', () => {
     const client = new Client({ services });
     await asyncTimeout(client.initialize(), 1_000);
     await client.spaces.isReady.wait();
-    afterTest(() => services.close());
     afterTest(() => client.destroy());
 
     expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
