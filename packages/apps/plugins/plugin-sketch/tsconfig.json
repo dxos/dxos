@@ -27,6 +27,9 @@
       "path": "../../../common/invariant"
     },
     {
+      "path": "../../../common/local-storage"
+    },
+    {
       "path": "../../../common/log"
     },
     {
@@ -64,6 +67,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-settings"
     },
     {
       "path": "../plugin-space"

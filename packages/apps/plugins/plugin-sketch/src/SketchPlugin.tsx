@@ -12,14 +12,17 @@ import { CanvasType, SketchType } from '@braneframe/types';
 import { parseIntentPlugin, type PluginDefinition, resolvePlugin } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
+import { LocalStorageStore } from '@dxos/local-storage';
 import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 
-import { SketchComponent, SketchMain } from './components';
+import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchPluginProvides } from './types';
+import { SketchAction, type SketchSettingsProps, type SketchPluginProvides } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
+  const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
+
   return {
     meta,
     provides: {
@@ -31,6 +34,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
           },
         },
       },
+      settings: settings.values,
       translations,
       echo: {
         schema: [SketchType, CanvasType],
@@ -125,10 +129,24 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main':
-              return data.active instanceof SketchType ? <SketchMain sketch={data.active} /> : null;
+              return data.active instanceof SketchType ? (
+                <SketchMain
+                  sketch={data.active}
+                  showControlsOnHover={settings.values.showControlsOnHover}
+                  customGrid={settings.values.customGrid}
+                />
+              ) : null;
             case 'slide':
               return data.slide instanceof SketchType ? (
-                <SketchComponent sketch={data.slide} readonly autoZoom maxZoom={1.5} className='p-16' />
+                <SketchComponent
+                  sketch={data.slide}
+                  readonly
+                  autoZoom
+                  maxZoom={1.5}
+                  className='p-16'
+                  showControlsOnHover={settings.values.showControlsOnHover}
+                  customGrid={settings.values.customGrid}
+                />
               ) : null;
             case 'article':
             case 'section':
@@ -138,8 +156,13 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   autoZoom={role === 'section'}
                   readonly={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'bs-96'}
+                  showControlsOnHover={settings.values.showControlsOnHover}
+                  customGrid={settings.values.customGrid}
                 />
               ) : null;
+            case 'settings': {
+              return data.plugin === meta.id ? <SketchSettings settings={settings.values} /> : null;
+            }
             default:
               return null;
           }

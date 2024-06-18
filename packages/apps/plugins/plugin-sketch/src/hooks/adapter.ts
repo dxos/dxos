@@ -6,13 +6,13 @@ import { transact } from '@tldraw/state';
 import { createTLStore, defaultShapeUtils, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
+import { type UnsubscribeCallback } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
 
 import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
-import { type Unsubscribe } from '../types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -32,7 +32,7 @@ export type TLDrawStoreData = {
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
 export class AutomergeStoreAdapter implements StoreAdapter {
-  private readonly _subscriptions: Unsubscribe[] = [];
+  private readonly _subscriptions: UnsubscribeCallback[] = [];
   private _store?: TLStore;
   private _readonly = false;
   private _lastHeads: A.Heads | undefined = undefined;

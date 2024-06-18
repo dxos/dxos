@@ -10,6 +10,7 @@ import type {
   GraphBuilderProvides,
   IntentResolverProvides,
   MetadataRecordsProvides,
+  SettingsProvides,
   SurfaceProvides,
   TranslationsProvides,
 } from '@dxos/app-framework';
@@ -27,6 +28,7 @@ export type SketchPluginProvides = SurfaceProvides &
   GraphBuilderProvides &
   MetadataRecordsProvides &
   TranslationsProvides &
+  SettingsProvides<SketchSettingsProps> &
   SchemaProvides &
   StackProvides;
 
@@ -34,5 +36,7 @@ export interface SketchModel {
   store: TLStore;
 }
 
-// TODO(burdon): Factor out.
-export type Unsubscribe = () => void;
+export type SketchSettingsProps = {
+  showControlsOnHover?: boolean;
+  customGrid?: boolean;
+};

@@ -5,7 +5,7 @@
 import './theme.css';
 import '@tldraw/tldraw/tldraw.css';
 
-import { type Editor, Tldraw } from '@tldraw/tldraw';
+import { type Editor, Tldraw, DefaultGrid } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -25,13 +25,23 @@ export type SketchComponentProps = {
   className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
+  showControlsOnHover?: boolean;
+  customGrid?: boolean;
 };
 
 // TODO(burdon): Remove outline when focused (from tabster?)
-const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom = 1, readonly = false, className }) => {
+const SketchComponent: FC<SketchComponentProps> = ({
+  sketch,
+  autoZoom,
+  maxZoom = 1,
+  readonly = false,
+  className,
+  showControlsOnHover,
+  customGrid,
+}) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
-  const [active] = useState(true);
+  const [active, setActive] = useState(!showControlsOnHover);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
@@ -45,6 +55,13 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
       });
     }
   }, [editor, active, themeMode]);
+
+  // Ensure controls are visible when not in hover mode.
+  useEffect(() => {
+    if (!showControlsOnHover && !active) {
+      setActive(true);
+    }
+  }, [showControlsOnHover]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -92,6 +109,16 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         'attention-within',
         className,
       )}
+      onPointerEnter={() => {
+        if (showControlsOnHover) {
+          setActive(!readonly && !adapter.readonly);
+        }
+      }}
+      onPointerLeave={() => {
+        if (showControlsOnHover) {
+          setActive(false);
+        }
+      }}
     >
       {/* NOTE: Key forces unmount; otherwise throws error. */}
       <Tldraw
@@ -103,7 +130,7 @@ const SketchComponent: FC<SketchComponentProps> = ({ sketch, autoZoom, maxZoom =
         maxAssetSize={1024 * 1024}
         components={{
           DebugPanel: null,
-          Grid: CustomGrid,
+          Grid: customGrid ? CustomGrid : DefaultGrid,
           HelpMenu: null,
           MenuPanel: null,
           NavigationPanel: null,

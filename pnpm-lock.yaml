@@ -3105,6 +3105,9 @@ importers:
 
   packages/apps/plugins/plugin-sketch:
     dependencies:
+      '@braneframe/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@braneframe/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -3126,6 +3129,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/local-storage':
+        specifier: workspace:*
+        version: link:../../../common/local-storage
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log

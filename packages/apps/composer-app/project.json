@@ -114,6 +114,6 @@
       "options": {
         "configDir": "packages/apps/composer-app/.storybook"
       }
-    },
+    }
   }
 }
