@@ -36,7 +36,7 @@ describe('Tests against storage', () => {
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
-    const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
+    const expectedData = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
 
     const tmp = copySnapshotToTmp(snapshot);
     const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
@@ -49,7 +49,7 @@ describe('Tests against storage', () => {
     afterTest(() => services.close());
     afterTest(() => client.destroy());
 
-    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
+    expect(await checkIfSpacesMatchDump(client, expectedData)).to.be.true;
   });
 
   test('check if space loads for LevelDb snapshot', async () => {
@@ -57,7 +57,7 @@ describe('Tests against storage', () => {
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
-    const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
+    const expectedData = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
 
     const tmp = copySnapshotToTmp(snapshot);
     const builder = new TestBuilder(createConfig({ dataRoot: tmp }));
@@ -69,6 +69,6 @@ describe('Tests against storage', () => {
     await client.spaces.isReady.wait();
     afterTest(() => client.destroy());
 
-    expect(await checkIfSpacesMatchDump(client, spacesDump)).to.be.true;
+    expect(await checkIfSpacesMatchDump(client, expectedData)).to.be.true;
   });
 });
