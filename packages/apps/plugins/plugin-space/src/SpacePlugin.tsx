@@ -108,8 +108,9 @@ export const SpacePlugin = ({
   spaceInvitationParam = 'spaceInvitationCode',
 }: SpacePluginOptions = {}): PluginDefinition<SpacePluginProvides> => {
   const settings = new LocalStorageStore<SpaceSettingsProps>(SPACE_PLUGIN);
-  const state = create<PluginState>({
+  const state = new LocalStorageStore<PluginState>(SPACE_PLUGIN, {
     awaiting: undefined,
+    spaceNames: {},
     viewersByObject: {},
     viewersByIdentity: new ComplexMap(PublicKey.hash),
     enabled: [],
@@ -130,6 +131,12 @@ export const SpacePlugin = ({
         key: 'showHidden',
         storageKey: 'show-hidden',
         type: LocalStorageStore.bool({ allowUndefined: true }),
+      });
+
+      state.prop({
+        key: 'spaceNames',
+        storageKey: 'space-names',
+        type: LocalStorageStore.json<Record<string, string>>(),
       });
 
       intentPlugin = resolvePlugin(plugins, parseIntentPlugin);
@@ -154,8 +161,19 @@ export const SpacePlugin = ({
         await onFirstRun?.({ client, dispatch });
       }
 
+      // Cache space names.
+      subscriptions.add(
+        client.spaces.subscribe((spaces) => {
+          spaces
+            .filter((space) => space.state.get() === SpaceState.READY)
+            .forEach((space) => {
+              state.values.spaceNames[space.id] = space.properties.name;
+            });
+        }).unsubscribe,
+      );
+
       // Enable spaces.
-      state.enabled.push(client.spaces.default.id);
+      state.values.enabled.push(client.spaces.default.id);
       subscriptions.add(
         effect(() => {
           Array.from(activeIds(location.active)).forEach((part) => {
@@ -165,9 +183,9 @@ export const SpacePlugin = ({
             }
 
             const [spaceId] = part.split(':');
-            const index = state.enabled.findIndex((id) => spaceId === id);
+            const index = state.values.enabled.findIndex((id) => spaceId === id);
             if (spaceId && index === -1) {
-              state.enabled.push(spaceId);
+              state.values.enabled.push(spaceId);
             }
           });
         }),
@@ -240,7 +258,7 @@ export const SpacePlugin = ({
           spaceSubscriptions.clear();
           client.spaces
             .get()
-            .filter((space) => !!state.enabled.find((id) => id === space.id))
+            .filter((space) => !!state.values.enabled.find((id) => id === space.id))
             .forEach((space) => {
               spaceSubscriptions.add(
                 space.listen('viewing', (message) => {
@@ -249,20 +267,20 @@ export const SpacePlugin = ({
                   if (identityKey && Array.isArray(added) && Array.isArray(removed)) {
                     added.forEach((id) => {
                       if (typeof id === 'string') {
-                        if (!(id in state.viewersByObject)) {
-                          state.viewersByObject[id] = new ComplexMap(PublicKey.hash);
+                        if (!(id in state.values.viewersByObject)) {
+                          state.values.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                         }
-                        state.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
-                        if (!state.viewersByIdentity.has(identityKey)) {
-                          state.viewersByIdentity.set(identityKey, new Set());
+                        state.values.viewersByObject[id]!.set(identityKey, { lastSeen: Date.now() });
+                        if (!state.values.viewersByIdentity.has(identityKey)) {
+                          state.values.viewersByIdentity.set(identityKey, new Set());
                         }
-                        state.viewersByIdentity.get(identityKey)!.add(id);
+                        state.values.viewersByIdentity.get(identityKey)!.add(id);
                       }
                     });
                     removed.forEach((id) => {
                       if (typeof id === 'string') {
-                        state.viewersByObject[id]?.delete(identityKey);
-                        state.viewersByIdentity.get(identityKey)?.delete(id);
+                        state.values.viewersByObject[id]?.delete(identityKey);
+                        state.values.viewersByIdentity.get(identityKey)?.delete(id);
                         // It’s okay for these to be empty sets/maps, reduces churn.
                       }
                     });
@@ -281,10 +299,10 @@ export const SpacePlugin = ({
       graphSubscriptions.clear();
     },
     provides: {
-      space: state,
+      space: state.values,
       settings: settings.values,
       translations: [...translations, osTranslations],
-      root: () => (state.awaiting ? <AwaitingObject id={state.awaiting} /> : null),
+      root: () => (state.values.awaiting ? <AwaitingObject id={state.values.awaiting} /> : null),
       metadata: {
         records: {
           [CollectionType.typename]: {
@@ -358,7 +376,7 @@ export const SpacePlugin = ({
             case 'presence--glyph': {
               return isReactiveObject(data.object) ? (
                 <SmallPresenceLive
-                  viewers={state.viewersByObject[data.object.id]}
+                  viewers={state.values.viewersByObject[data.object.id]}
                   onCloseClick={() => {
                     const objectId = fullyQualifiedId(data.object as ReactiveObject<any>);
                     return intentPlugin?.provides.intent.dispatch({
@@ -431,7 +449,7 @@ export const SpacePlugin = ({
           graphSubscriptions.get(client.spaces.default.id)?.();
           graphSubscriptions.set(
             client.spaces.default.id,
-            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch, resolve }),
+            updateGraphWithSpace({ graph, space: client.spaces.default, isPersonalSpace: true, dispatch }),
           );
 
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
@@ -527,11 +545,11 @@ export const SpacePlugin = ({
                 updateGraphWithSpace({
                   graph,
                   space,
-                  enabled: !!state.enabled.find((id) => id === space.id),
+                  namesCache: state.values.spaceNames,
+                  enabled: !!state.values.enabled.find((id) => id === space.id),
                   hidden: settings.values.showHidden,
                   isPersonalSpace: space === client.spaces.default,
                   dispatch,
-                  resolve,
                 }),
               );
             });
@@ -556,7 +574,7 @@ export const SpacePlugin = ({
           const client = clientPlugin?.provides.client;
           switch (intent.action) {
             case SpaceAction.WAIT_FOR_OBJECT: {
-              state.awaiting = intent.data?.id;
+              state.values.awaiting = intent.data?.id;
               return { data: true };
             }
 
@@ -574,7 +592,7 @@ export const SpacePlugin = ({
 
               const collection = create(CollectionType, { objects: [], views: {} });
               space.properties[CollectionType.typename] = collection;
-              state.enabled.push(space.id);
+              state.values.enabled.push(space.id);
 
               sharedSpacesCollection?.objects.push(collection);
               if (Migrations.versionProperty) {
@@ -604,7 +622,7 @@ export const SpacePlugin = ({
               if (client) {
                 const { space } = await client.shell.joinSpace();
                 if (space) {
-                  state.enabled.push(space.id);
+                  state.values.enabled.push(space.id);
                   return {
                     data: { space, id: space.id, activeParts: { main: [space.id] } },
 
@@ -901,7 +919,7 @@ export const SpacePlugin = ({
             case SpaceAction.ENABLE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                state.enabled.push(space.id);
+                state.values.enabled.push(space.id);
                 return { data: true };
               }
               break;
