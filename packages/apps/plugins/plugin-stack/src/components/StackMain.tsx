@@ -12,7 +12,7 @@ import {
   NavigationAction,
   Surface,
   parseMetadataResolverPlugin,
-  useIntent,
+  useIntentDispatcher,
   useResolvePlugin,
 } from '@dxos/app-framework';
 import { create, isReactiveObject, getType } from '@dxos/echo-schema';
@@ -28,6 +28,7 @@ import {
 } from '@dxos/react-ui-stack';
 import { nonNullable } from '@dxos/util';
 
+import { AddSection } from './AddSection';
 import { SECTION_IDENTIFIER, STACK_PLUGIN } from '../meta';
 
 const SectionContent: StackProps['SectionContent'] = ({ data }) => {
@@ -41,7 +42,7 @@ type StackMainProps = {
 };
 
 const StackMain = ({ collection, separation }: StackMainProps) => {
-  const { dispatch } = useIntent();
+  const dispatch = useIntentDispatcher();
   const { graph } = useGraph();
   const { t } = useTranslation(STACK_PLUGIN);
   const metadataPlugin = useResolvePlugin(parseMetadataResolverPlugin);
@@ -114,7 +115,9 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   const handleDelete = (path: string) => {
-    const index = collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
+    const index = collection.objects
+      .filter(nonNullable)
+      .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
     if (index >= 0) {
       collection.objects.splice(index, 1);
       delete stack.sections[Path.last(path)];
@@ -172,25 +175,29 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         onCollapseSection={handleCollapseSection}
       />
 
-      <div role='none' className='mlb-2 pli-2'>
-        <Button
-          data-testid='stack.createSection'
-          classNames='is-full gap-2'
-          onClick={() =>
-            dispatch?.({
-              action: LayoutAction.SET_LAYOUT,
-              data: {
-                element: 'dialog',
-                component: 'dxos.org/plugin/stack/AddSectionDialog',
-                subject: { position: 'afterAll', collection },
-              },
-            })
-          }
-        >
-          <Plus />
-          <span className='sr-only'>{t('add section label')}</span>
-        </Button>
-      </div>
+      {items.length === 0 ? (
+        <AddSection collection={collection} />
+      ) : (
+        <div role='none' className='mlb-2 pli-2'>
+          <Button
+            data-testid='stack.createSection'
+            classNames='is-full gap-2'
+            onClick={() =>
+              dispatch?.({
+                action: LayoutAction.SET_LAYOUT,
+                data: {
+                  element: 'dialog',
+                  component: 'dxos.org/plugin/stack/AddSectionDialog',
+                  subject: { position: 'afterAll', collection },
+                },
+              })
+            }
+          >
+            <Plus />
+            <span className='sr-only'>{t('add section label')}</span>
+          </Button>
+        </div>
+      )}
     </>
   );
 };

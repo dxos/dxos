@@ -274,7 +274,7 @@ export const updateGraphWithSpace = ({
           },
           {
             id: getId(SpaceAction.SHARE),
-            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceKey: space.id } }),
+            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.SHARE, data: { spaceId: space.id } }),
             properties: {
               label: ['share space', { ns: SPACE_PLUGIN }],
               icon: (props) => <Users {...props} />,
