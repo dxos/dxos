@@ -328,7 +328,6 @@ export class Messenger {
     const elapsed = performance.now() - start;
     if (elapsed > 100) {
       log.warn('GC took too long', { elapsed });
-      this._monitor.recordLongGc();
     }
   }
 }

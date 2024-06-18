@@ -5,10 +5,6 @@
 import { trace } from '@dxos/tracing';
 
 export class MessengerMonitor {
-  public recordLongGc() {
-    trace.metrics.increment('mesh.signal.messenger.long-gc', 1);
-  }
-
   public recordMessageAckFailed() {
     trace.metrics.increment('mesh.signal.messenger.failed-ack', 1);
   }
