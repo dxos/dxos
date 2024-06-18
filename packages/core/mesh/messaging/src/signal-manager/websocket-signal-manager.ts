@@ -157,7 +157,7 @@ export class WebsocketSignalManager implements SignalManager {
             log.info('WSS sendMessage timeout', { err });
             void this.checkServerFailure(serverName, index);
           } else {
-            log.info(`error sending to ${serverName}`, { err });
+            log.warn(`error sending to ${serverName}`, { err });
             void this.checkServerFailure(serverName, index);
           }
         });
