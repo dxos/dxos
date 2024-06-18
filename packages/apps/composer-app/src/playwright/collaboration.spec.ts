@@ -61,7 +61,7 @@ test.describe('Collaboration tests', () => {
     });
   });
 
-  test.only('host and guest can see each others’ presence when same document is in focus', async () => {
+  test('host and guest can see each others’ presence when same document is in focus', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
 
