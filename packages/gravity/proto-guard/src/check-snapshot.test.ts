@@ -9,6 +9,7 @@ import path from 'node:path';
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
 
@@ -31,7 +32,8 @@ describe('Tests against storage', () => {
   };
 
   test('check if space loads for LevelDb snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshotByName('levelDB');
+    const snapshot = SnapshotsRegistry.getSnapshot('levelDB');
+    invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
     const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));
@@ -51,7 +53,8 @@ describe('Tests against storage', () => {
   });
 
   test('check if space loads for Automerge on nodeFS snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshotByName('automerge');
+    const snapshot = SnapshotsRegistry.getSnapshot('automerge');
+    invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
     const spacesDump = JSON.parse(fs.readFileSync(path.join(baseDir, snapshot.jsonDataPath), 'utf-8'));

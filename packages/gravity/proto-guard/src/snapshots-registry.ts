@@ -5,8 +5,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { failUndefined } from '@dxos/debug';
-
 import { getBaseDataDir } from './util';
 
 const REGISTRY_FILE = join(getBaseDataDir(), 'registry.json');
@@ -45,20 +43,21 @@ export class SnapshotsRegistry {
 
   static registerSnapshot(snapshot: SnapshotDescription) {
     SnapshotsRegistry.snapshots.push(snapshot);
-    writeFileSync(REGISTRY_FILE, JSON.stringify(SnapshotsRegistry.snapshots, null, 2));
+    SnapshotsRegistry._save();
   }
 
-  static getSnapshot(version: number): SnapshotDescription {
-    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.version === version) ?? failUndefined();
-  }
-
-  static getSnapshotByName(name: string): SnapshotDescription {
-    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name) ?? failUndefined();
-  }
-
-  static getLatestSnapshot(): SnapshotDescription {
-    return SnapshotsRegistry.snapshots.reduce((latest, snapshot) =>
-      snapshot.version > latest.version ? snapshot : latest,
+  static removeSnapshot(snapshotToRemove: { name?: string; version?: number }) {
+    SnapshotsRegistry.snapshots = SnapshotsRegistry.snapshots.filter((snapshot) =>
+      Object.keys(snapshotToRemove).every((key) => (snapshot as any)[key] !== (snapshotToRemove as any)[key]),
     );
+    SnapshotsRegistry._save();
+  }
+
+  static getSnapshot(name: string): SnapshotDescription | undefined {
+    return SnapshotsRegistry.snapshots.find((snapshot) => snapshot.name === name);
+  }
+
+  private static _save() {
+    writeFileSync(REGISTRY_FILE, JSON.stringify(SnapshotsRegistry.snapshots, null, 2));
   }
 }

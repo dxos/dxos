@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { writeFileSync } from 'node:fs';
+import { rmSync, writeFileSync } from 'node:fs';
 import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
+import { S, TypedObject } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -27,8 +28,19 @@ const main = async () => {
   const baseDir = getBaseDataDir();
 
   let snapshot: SnapshotDescription;
+  let argv: yargs.Arguments<{ force: boolean }>;
   {
-    const argv = yargs(hideBin(process.argv)).demandCommand(1, 'need the name for snapshot').help().argv;
+    argv = yargs(hideBin(process.argv))
+      .option({
+        force: {
+          type: 'boolean',
+          alias: 'f',
+          describe: 'if `true` overrides existing snapshot with same name',
+          default: false,
+        },
+      })
+      .demandCommand(1, 'need the name for snapshot')
+      .help().argv;
     const name = argv._[0] as string;
     snapshot = {
       name,
@@ -38,6 +50,17 @@ const main = async () => {
       timestamp: new Date().toISOString(),
     };
     log.info('creating snapshot', { snapshot });
+  }
+
+  {
+    // Check if snapshot already exists.
+    const existingSnapshot = SnapshotsRegistry.getSnapshot(snapshot.name);
+    if (existingSnapshot && !argv.force) {
+      log.warn('snapshot already exists', { existingSnapshot, newSnapshot: snapshot });
+      return;
+    }
+    rmSync(join(baseDir, snapshot.dataRoot), { recursive: true, force: true });
+    SnapshotsRegistry.removeSnapshot({ name: snapshot.name });
   }
 
   let client: Client;
@@ -70,7 +93,6 @@ const main = async () => {
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
-    await space.db.flush();
     const todo = space.db.add(
       create(Todo, {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
@@ -84,6 +106,17 @@ const main = async () => {
     // Create second space and data.
     const space = await client.spaces.create({ name: 'first-space' });
     await space.waitUntilReady();
+
+    // Create dynamic schema.
+
+    class TestType extends TypedObject({ typename: 'dx:type:example.org/type/TestType', version: '0.1.0' })({}) {}
+    const dynamicSchema = space.db.schema.addSchema(TestType);
+    client.addTypes([TestType]);
+    const object = space.db.add(create(dynamicSchema, {}));
+    dynamicSchema.addColumns({ name: S.String });
+    object.name = 'Test';
+    await space.db.flush();
+
     // space.db.add(create(Expando, { crossSpaceReference: obj, explanation: 'this tests cross-space references' }));
   }
   log.info('created spaces');
