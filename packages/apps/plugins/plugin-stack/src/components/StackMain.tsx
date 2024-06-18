@@ -115,7 +115,9 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
   };
 
   const handleDelete = (path: string) => {
-    const index = collection.objects.filter(nonNullable).findIndex((section) => section.id === Path.last(path));
+    const index = collection.objects
+      .filter(nonNullable)
+      .findIndex((section) => fullyQualifiedId(section) === Path.last(path));
     if (index >= 0) {
       collection.objects.splice(index, 1);
       delete stack.sections[Path.last(path)];
