@@ -2,15 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import { __COMPOSER_MIGRATIONS__ } from '@braneframe/types';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 
 import { appKey } from './constants';
-import { migrations } from './migrations';
 
-Migrations.define(appKey, migrations);
+Migrations.define(appKey, __COMPOSER_MIGRATIONS__);
 
 /**
  * Fragment space content into separate automerge documents.

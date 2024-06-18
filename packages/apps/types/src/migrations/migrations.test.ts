@@ -4,6 +4,15 @@
 
 import { expect } from 'chai';
 
+import { Client, PublicKey } from '@dxos/client';
+import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
+import { TestBuilder } from '@dxos/client/testing';
+import { MigrationBuilder } from '@dxos/migrations';
+import { afterEach, beforeEach, describe, test } from '@dxos/test';
+import { assignDeep } from '@dxos/util';
+
+import * as LegacyTypes from './legacy-types';
+import { __COMPOSER_MIGRATIONS__ } from './migrations';
 import {
   ChannelType,
   CollectionType,
@@ -13,16 +22,7 @@ import {
   SketchType,
   TableType,
   ThreadType,
-} from '@braneframe/types';
-import { Client, PublicKey } from '@dxos/client';
-import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
-import { TestBuilder } from '@dxos/client/testing';
-import { MigrationBuilder } from '@dxos/migrations';
-import { afterEach, beforeEach, describe, test } from '@dxos/test';
-import { assignDeep } from '@dxos/util';
-
-import * as LegacyTypes from './legacy-types';
-import { migrations } from './migrations';
+} from '../schema';
 
 const testBuilder = new TestBuilder();
 
@@ -63,7 +63,7 @@ describe('Composer migrations', () => {
     await client.destroy();
   });
 
-  test(migrations[0].version.toString(), async () => {
+  test(__COMPOSER_MIGRATIONS__[0].version.toString(), async () => {
     const doc1 = space.db.add(
       create(LegacyTypes.DocumentType, {
         content: create(LegacyTypes.TextType, { content: 'object1' }),
@@ -122,7 +122,7 @@ describe('Composer migrations', () => {
     expect((await collectionQuery.run()).objects).to.have.lengthOf(0);
 
     const builder = new MigrationBuilder(space);
-    await migrations[0].next({ space, builder });
+    await __COMPOSER_MIGRATIONS__[0].next({ space, builder });
     await (builder as any)._commit();
 
     expect((await folderQuery.run()).objects).to.have.lengthOf(0);
@@ -140,7 +140,7 @@ describe('Composer migrations', () => {
       .be.true;
   });
 
-  test(migrations[1].version.toString(), async () => {
+  test(__COMPOSER_MIGRATIONS__[1].version.toString(), async () => {
     const doc1 = space.db.add(
       create(LegacyTypes.DocumentType, {
         content: create(LegacyTypes.TextType, { content: 'object1' }),
@@ -205,7 +205,7 @@ describe('Composer migrations', () => {
     );
 
     const builder = new MigrationBuilder(space);
-    await migrations[1].next({ space, builder });
+    await __COMPOSER_MIGRATIONS__[1].next({ space, builder });
     await (builder as any)._commit();
 
     const migratedDoc1 = space.db.getObjectById<DocumentType>(doc1.id);

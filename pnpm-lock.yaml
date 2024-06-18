@@ -4249,6 +4249,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/migrations':
+        specifier: workspace:*
+        version: link:../../sdk/migrations
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std

@@ -2,6 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Filter, loadObjectReferences } from '@dxos/client/echo';
+import { type MigrationBuilder, type Migration, type ObjectStructure } from '@dxos/migrations';
+import { getDeep, nonNullable } from '@dxos/util';
+
+import * as LegacyTypes from './legacy-types';
 import {
   CanvasType,
   ChannelType,
@@ -13,15 +18,9 @@ import {
   TableType,
   TextType,
   ThreadType,
-} from '@braneframe/types';
-import { loadObjectReferences } from '@dxos/echo-db';
-import { type MigrationBuilder, type Migration, type ObjectStructure } from '@dxos/migrations';
-import { Filter } from '@dxos/react-client/echo';
-import { getDeep, nonNullable } from '@dxos/util';
+} from '../schema';
 
-import * as LegacyTypes from './legacy-types';
-
-export const migrations: Migration[] = [
+export const __COMPOSER_MIGRATIONS__: Migration[] = [
   {
     version: '2024-06-10-collections',
     next: async ({ space, builder }) => {

@@ -46,7 +46,7 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
-import { DocumentType, TextType, CollectionType } from '@braneframe/types';
+import { DocumentType, TextType, CollectionType, LegacyTypes } from '@braneframe/types';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -64,7 +64,6 @@ import { ResetDialog } from './components';
 import { setupConfig } from './config';
 import { appKey, INITIAL_CONTENT, INITIAL_TITLE } from './constants';
 import { steps } from './help';
-import { LegacyTypes } from './migrations';
 import translations from './translations';
 
 import './globals';

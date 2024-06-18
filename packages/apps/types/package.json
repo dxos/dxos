@@ -38,6 +38,7 @@
     "@dxos/echo-schema": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/migrations": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
     "lodash.get": "^4.4.2",
