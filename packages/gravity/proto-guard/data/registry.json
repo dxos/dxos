@@ -8,15 +8,8 @@
   {
     "name": "echo-levelDB-transition",
     "version": 2,
-    "dataRoot": "snapshots/levelDB/snapshot",
-    "jsonDataPath": "snapshots/levelDB/expected.json",
-    "timestamp": "2024-06-18T10:05:18.840Z"
-  },
-  {
-    "name": "levelDB",
-    "version": 2,
-    "dataRoot": "snapshots/levelDB/snapshot",
-    "jsonDataPath": "snapshots/levelDB/expected.json",
-    "timestamp": "2024-06-18T10:44:06.880Z"
+    "dataRoot": "snapshots/echo-levelDB-transition/snapshot",
+    "jsonDataPath": "snapshots/echo-levelDB-transition/expected.json",
+    "timestamp": "2024-06-18T11:12:58.668Z"
   }
 ]

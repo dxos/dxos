@@ -52,7 +52,7 @@ describe('Load client from storage snapshot', () => {
   });
 
   test('check if space loads for LevelDb snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('levelDB');
+    const snapshot = SnapshotsRegistry.getSnapshot('echo-levelDB-transition');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 

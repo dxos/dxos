@@ -1,0 +1,191 @@
+{
+  "BWNY36B77YU3YCTN7IYYQWR5PHXUKCSY7": {
+    "3d856ff9e9680c0fee9c637e9a6f11a885d415a773ff03472cfbd6118e66d129": {
+      "@id": "3d856ff9e9680c0fee9c637e9a6f11a885d415a773ff03472cfbd6118e66d129",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "__DEFAULT__": "04abb0d04829709ac985e565f12b65eb284a48105a0fb2db822266c75c8020cf8d16fc04767e9815d6f320384558f03b0e77f673944d15d5a116f8b724dd7f2182",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    }
+  },
+  "BGTFJAFPEWXFJMWN4QH733EFWZL3NKSKI": {
+    "01J0NGSNBEMAGKTC11CW5PSMQW": {
+      "@id": "01J0NGSNBEMAGKTC11CW5PSMQW",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "name": "first-space",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSNENSXJP2AT2PZE369GA": {
+      "@id": "01J0NGSNENSXJP2AT2PZE369GA",
+      "array": [
+        "one",
+        "two",
+        "three"
+      ],
+      "string": "hello world!",
+      "value": 100,
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSPTDPDPR541FFKXFEZ95": {
+      "@id": "01J0NGSPTDPDPR541FFKXFEZ95",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "@type": "dxos.echo.model.document.Reference",
+          "itemId": "01J0NGSPTHBM6N4X356NSCYX27",
+          "protocol": null,
+          "host": null
+        }
+      ],
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSPTHBM6N4X356NSCYX27": {
+      "@id": "01J0NGSPTHBM6N4X356NSCYX27",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dx:type:example.org/type/Todo",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    }
+  },
+  "B2CW2KJAJCT64DJXXZXAGOIDBRQTQQR6E": {
+    "01J0NGSPVE3BM8Z4XWXSP3SJTS": {
+      "@id": "01J0NGSPVE3BM8Z4XWXSP3SJTS",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.sdk.client.Properties",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "name": "second-space",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSPYM867XB6BB61DRR05T": {
+      "@id": "01J0NGSPYM867XB6BB61DRR05T",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dxos.echo.StoredSchema",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "jsonSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "a string",
+            "title": "string"
+          },
+          "todo": {
+            "$id": "/schemas/any",
+            "title": "any",
+            "$echo": {
+              "reference": {
+                "typename": "dx:type:example.org/type/Todo",
+                "version": "0.1.0"
+              }
+            }
+          }
+        },
+        "additionalProperties": false,
+        "$echo": {
+          "type": {
+            "schemaId": "01J0NGSPYM867XB6BB61DRR05T",
+            "typename": "dx:type:example.org/type/TestType",
+            "version": "0.1.0"
+          }
+        }
+      },
+      "typename": "dx:type:example.org/type/TestType",
+      "version": "0.1.0",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSPYWPG3AZEWAA34M6ZE6": {
+      "@id": "01J0NGSPYWPG3AZEWAA34M6ZE6",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "01J0NGSPYM867XB6BB61DRR05T",
+        "protocol": null,
+        "host": null
+      },
+      "name": "Test",
+      "todo": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "01J0NGSPZ25EX9XWV903S2F52G",
+        "protocol": null,
+        "host": null
+      },
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    },
+    "01J0NGSPZ25EX9XWV903S2F52G": {
+      "@id": "01J0NGSPZ25EX9XWV903S2F52G",
+      "@type": {
+        "@type": "dxos.echo.model.document.Reference",
+        "itemId": "dx:type:example.org/type/Todo",
+        "protocol": "protobuf",
+        "host": "dxos.org"
+      },
+      "name": "Test todo",
+      "@version": 1,
+      "@meta": {
+        "keys": []
+      },
+      "@timestamp": "Tue, 18 Jun 2024 11:13:01 GMT"
+    }
+  }
+}

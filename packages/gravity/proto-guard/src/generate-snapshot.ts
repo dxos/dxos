@@ -7,6 +7,7 @@ import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
 import { S, TypedObject, ref } from '@dxos/echo-schema';
@@ -93,6 +94,9 @@ const main = async () => {
     const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
     await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
     await promise;
+    await space.db.flush();
+    // Seems like we need to wait for the epoch to be created.
+    await sleep(1000);
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
     const todo = space.db.add(
