@@ -39,9 +39,13 @@ export class SignalClientMonitor {
     this._connectionStarted = new Date();
   }
 
-  public recordReconnect() {
+  public recordReconnect(params: { success: boolean }) {
     this._performance.reconnectCounter++;
-    trace.metrics.increment('mesh.signal.signal-client.reconnect', 1);
+    trace.metrics.increment('mesh.signal.signal-client.reconnect', 1, {
+      tags: {
+        success: params.success,
+      },
+    });
   }
 
   public recordJoin() {

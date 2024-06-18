@@ -113,7 +113,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
     );
 
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
-      await this._reconnect();
+      try {
+        await this._reconnect();
+        this._monitor.recordReconnect({ success: true });
+      } catch (err) {
+        this._monitor.recordReconnect({ success: false });
+        throw err;
+      }
     });
 
     this._createClient();
@@ -246,7 +252,6 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
   private async _reconnect() {
     log(`reconnecting in ${this._reconnectAfter}ms`, { state: this._state });
-    this._monitor.recordReconnect();
 
     if (this._state === SignalState.RECONNECTING) {
       log.info('Signal api already reconnecting.');
