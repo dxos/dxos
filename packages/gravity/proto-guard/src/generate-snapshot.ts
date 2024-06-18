@@ -7,12 +7,12 @@ import path, { join } from 'node:path';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
-import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { Expando, create } from '@dxos/client/echo';
 import { S, TypedObject, ref } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 import { STORAGE_VERSION } from '@dxos/protocols';
+import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
 
 import { SnapshotsRegistry } from './snapshots-registry';
 import { type SnapshotDescription } from './snapshots-registry';
@@ -88,10 +88,11 @@ const main = async () => {
       }),
     );
     await space.db.flush();
-    await sleep(1000);
 
     // Generate epoch.
-    await space.internal.createEpoch({});
+    const promise = space.db.coreDatabase.rootChanged.waitForCount(1);
+    await space.internal.createEpoch({ migration: CreateEpochRequest.Migration.PRUNE_AUTOMERGE_ROOT_HISTORY });
+    await promise;
     await space.db.flush();
 
     const expando = space.db.add(create(Expando, { value: [1, 2, 3] }));
