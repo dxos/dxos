@@ -15,9 +15,25 @@ A collaborative, real-time, offline-first rich-text editor with `dxos`.
 ![composer-app](../assets/images/composer-app-light.png#light)
 ![composer-app](../assets/images/composer-app-dark.png#dark)
 
+## Contacts
+
+Simple contacts manager built with `dxos`.
+
+* Code on [Github](https://github.com/dxos/contacts-app)
+* Run [Contacts](http://contacts.dxos.network) on `dxos.network`
+  ![Contacts app demo shot](../assets/images/contacts-app-demo.png)
+
+## Game Arena
+
+Collaborative game arena featuring Chess and 3D Connect 4.
+
+* Code on [Github](https://github.com/dxos/arena-app)
+* Play [Arena](http://arena.dxos.network) on `dxos.network`
+  ![Arena app demo shot](../assets/images/arena-demo-app.png)
+
 ## Tasks
 
-A simple todo list app build with `dxos`.
+A simple todo list app built with `dxos`.
 
 * Code on [Github](https://github.com/dxos/dxos/tree/main/packages/apps/tasks)
 * Run [Tasks](http://tasks.dxos.network) on `dxos.network`

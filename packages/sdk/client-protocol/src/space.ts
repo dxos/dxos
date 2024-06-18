@@ -5,8 +5,9 @@
 import { type MulticastObservable, type UnsubscribeCallback } from '@dxos/async';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import {
+  type CreateEpochRequest,
   type Invitation,
   type Space as SpaceData,
   type SpaceMember,
@@ -18,17 +19,30 @@ import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gos
 
 import { type CancellableInvitation } from './invitations';
 
+export type CreateEpochOptions = {
+  migration?: CreateEpochRequest.Migration;
+  automergeRootUrl?: string;
+};
+
 export interface SpaceInternal {
   get data(): SpaceData;
 
   // TODO(dmaretskyi): Return epoch info.
-  createEpoch(): Promise<void>;
+  createEpoch(options?: CreateEpochOptions): Promise<void>;
 
   removeMember(memberKey: PublicKey): Promise<void>;
 }
 
 // TODO(burdon): Separate public API form implementation (move comments here).
 export interface Space {
+  /**
+   * Unique space identifier.
+   */
+  get id(): SpaceId;
+
+  /**
+   * @deprecated Use `id`.
+   */
   get key(): PublicKey;
 
   /**
@@ -81,14 +95,13 @@ export interface Space {
    */
   waitUntilReady(): Promise<this>;
 
-  // TODO(wittjosiah): Gather into messaging abstraction?
-  postMessage: (channel: string, message: any) => Promise<void>;
+  createSnapshot(): Promise<SpaceSnapshot>;
 
-  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
-
+  // TODO(burdon): Create invitation?
   share(options?: Partial<Invitation>): CancellableInvitation;
-
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void>;
 
-  createSnapshot(): Promise<SpaceSnapshot>;
+  // TODO(wittjosiah): Gather into messaging abstraction?
+  postMessage: (channel: string, message: any) => Promise<void>;
+  listen: (channel: string, callback: (message: GossipMessage) => void) => UnsubscribeCallback;
 }

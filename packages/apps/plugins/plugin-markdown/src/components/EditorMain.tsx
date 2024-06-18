@@ -7,11 +7,11 @@ import React, { useMemo, useEffect } from 'react';
 
 import {
   LayoutAction,
-  parseFileManagerPlugin,
   useResolvePlugin,
   useIntentResolver,
   parseNavigationPlugin,
   parseLayoutPlugin,
+  type FileInfo,
 } from '@dxos/app-framework';
 import { useThemeContext, useTranslation, useRefCallback } from '@dxos/react-ui';
 import {
@@ -53,15 +53,25 @@ export type EditorMainProps = {
   readonly?: boolean;
   toolbar?: boolean;
   comments?: Comment[];
+  onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
 } & Pick<TextEditorProps, 'doc' | 'selection' | 'scrollTo' | 'extensions'>;
 
-export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _extensions, ...props }: EditorMainProps) => {
+export const EditorMain = ({
+  id,
+  onFileUpload,
+  readonly,
+  toolbar,
+  comments,
+  extensions: _extensions,
+  ...props
+}: EditorMainProps) => {
   const { t } = useTranslation(MARKDOWN_PLUGIN);
   const { themeMode } = useThemeContext();
-  const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
   const navigationPlugin = useResolvePlugin(parseNavigationPlugin);
   const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
-  const isAttended = navigationPlugin?.provides.attention?.attended?.has(id) ?? false;
+  const isDeckModel = navigationPlugin?.meta.id === 'dxos.org/plugin/deck';
+  const attended = Array.from(navigationPlugin?.provides.attention?.attended ?? []);
+  const isDirectlyAttended = attended.length === 1 && attended[0] === id;
   const idParts = id.split(':');
   const docId = idParts[idParts.length - 1];
 
@@ -74,9 +84,13 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   useIntentResolver(MARKDOWN_PLUGIN, ({ action, data }) => {
     switch (action) {
       case LayoutAction.SCROLL_INTO_VIEW: {
-        const id = data?.id;
         if (editorView) {
-          scrollThreadIntoView(editorView, id);
+          scrollThreadIntoView(editorView, data?.id);
+          if (data?.id === id) {
+            editorView.scrollDOM
+              .closest('[data-attendable-id]')
+              ?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'start' });
+          }
           return undefined;
         }
         break;
@@ -89,7 +103,9 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const [formattingState, formattingObserver] = useFormattingState();
 
   const handleDrop: DNDOptions['onDrop'] = async (view, { files }) => {
-    const info = await fileManagerPlugin?.provides.file.upload?.(files[0]);
+    const file = files[0];
+    const info = file && onFileUpload ? await onFileUpload(file) : undefined;
+
     if (info) {
       processAction(view, { type: 'image', data: info.url });
     }
@@ -98,7 +114,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   const extensions = useMemo(() => {
     return [
       _extensions,
-      fileManagerPlugin && dropFile({ onDrop: handleDrop }),
+      onFileUpload && dropFile({ onDrop: handleDrop }),
       formattingObserver,
       createBasicExtensions({ readonly, placeholder: t('editor placeholder'), scrollPastEnd: true }),
       createMarkdownExtensions({ themeMode }),
@@ -116,7 +132,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
   }, [_extensions, formattingObserver, readonly, themeMode]);
 
   return (
-    <div role='none' className='contents group/editor' {...(isAttended && { 'aria-current': 'location' })}>
+    <div role='none' className='contents group/editor' {...(isDirectlyAttended && { 'aria-current': 'location' })}>
       {toolbar && (
         <Toolbar.Root
           classNames='max-is-[60rem] justify-self-center border-be border-transparent group-focus-within/editor:separator-separator group-[[aria-current]]/editor:separator-separator'
@@ -124,14 +140,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           onAction={handleAction}
         >
           <Toolbar.Markdown />
-          {fileManagerPlugin?.provides.file.upload && (
-            <Toolbar.Custom
-              onUpload={async (file) => {
-                const info = await fileManagerPlugin.provides.file.upload!(file);
-                return { url: info?.url };
-              }}
-            />
-          )}
+          {onFileUpload && <Toolbar.Custom onUpload={onFileUpload} />}
           <Toolbar.Separator />
           <Toolbar.Actions />
         </Toolbar.Root>
@@ -146,7 +155,7 @@ export const EditorMain = ({ id, readonly, toolbar, comments, extensions: _exten
           id={docId}
           extensions={extensions}
           autoFocus={
-            layoutPlugin?.provides.layout.scrollIntoView ? layoutPlugin?.provides.layout.scrollIntoView === id : true
+            isDeckModel && layoutPlugin?.provides.layout ? layoutPlugin?.provides.layout.scrollIntoView === id : true
           }
           moveToEndOfLine
           className={mx(

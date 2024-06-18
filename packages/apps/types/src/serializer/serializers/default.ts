@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createEchoObject, getAutomergeObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
+import { createEchoObject, getObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
 import { create, Expando, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
@@ -75,7 +75,7 @@ const deserializeEchoObject = (parsed: any): Expando => {
     create(Expando, Object.fromEntries(entries)),
   );
 
-  const core = getAutomergeObjectCore(deserializedObject);
+  const core = getObjectCore(deserializedObject);
   core.id = id;
   getMeta(core).keys.push(...(meta?.keys ?? []));
   const typeRef = getTypeRef(type);

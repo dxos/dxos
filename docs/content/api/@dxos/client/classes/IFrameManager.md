@@ -1,11 +1,11 @@
 # Class `IFrameManager`
-<sub>Declared in [packages/sdk/client/src/services/iframe-manager.ts:9](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L9)</sub>
+<sub>Declared in [packages/sdk/client/src/services/iframe-manager.ts:9](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L9)</sub>
 
 
 
 
 ## Constructors
-### [constructor(options)](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L15)
+### [constructor(options)](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L15)
 
 
 
@@ -19,19 +19,19 @@ Arguments:
 
 
 ## Properties
-### [iframe](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L34)
+### [iframe](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L34)
 Type: <code>undefined | HTMLIFrameElement</code>
 
 
 
-### [source](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L30)
+### [source](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L30)
 Type: <code>URL</code>
 
 
 
 
 ## Methods
-### [close()](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L50)
+### [close()](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L50)
 
 
 
@@ -43,7 +43,7 @@ Arguments: none
 
 
 
-### [open()](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/services/iframe-manager.ts#L38)
+### [open()](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/services/iframe-manager.ts#L38)
 
 
 

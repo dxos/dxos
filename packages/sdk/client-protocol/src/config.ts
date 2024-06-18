@@ -8,8 +8,10 @@ export const DEFAULT_INTERNAL_CHANNEL = 'dxos:vault';
 export const DEFAULT_CLIENT_CHANNEL = 'dxos:app';
 export const DEFAULT_SHELL_CHANNEL = 'dxos:shell';
 
-export const DEFAULT_VAULT_ORIGIN = 'https://halo.dxos.org';
-export const DEFAULT_VAULT_URL = DEFAULT_VAULT_ORIGIN + '/vault.html';
+/**
+ * @deprecated
+ */
+export const DEFAULT_VAULT_URL = 'https://halo.dxos.org/vault.html';
 
 export const EXPECTED_CONFIG_VERSION = 1;
 export const defaultConfig: ConfigProto = { version: 1 };

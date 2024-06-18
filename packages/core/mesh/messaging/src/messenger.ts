@@ -12,6 +12,7 @@ import { TimeoutError as ProtocolTimeoutError, schema, trace } from '@dxos/proto
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
 
+import { MessengerMonitor } from './messenger-monitor';
 import { type SignalManager } from './signal-manager';
 import { type Message } from './signal-methods';
 import { MESSAGE_TIMEOUT } from './timeouts';
@@ -32,6 +33,7 @@ const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
  * Reliable messenger that works trough signal network.
  */
 export class Messenger {
+  private readonly _monitor = new MessengerMonitor();
   private readonly _signalManager: SignalManager;
   // { peerId, payloadType } => listeners set
   private readonly _listeners = new ComplexMap<{ peerId: PublicKey; payloadType: string }, Set<OnMessage>>(
@@ -111,6 +113,7 @@ export class Messenger {
 
     let messageReceived: () => void;
     let timeoutHit: (err: Error) => void;
+    let sendAttempts = 0;
 
     const promise = new Promise<void>((resolve, reject) => {
       messageReceived = resolve;
@@ -122,6 +125,7 @@ export class Messenger {
       messageContext,
       async () => {
         log('retrying message', { messageId: reliablePayload.messageId });
+        sendAttempts++;
         await this._encodeAndSend({ author, recipient, reliablePayload }).catch((err) =>
           log('failed to send message', { err }),
         );
@@ -141,6 +145,7 @@ export class Messenger {
           ),
         );
         void messageContext.dispose();
+        this._monitor.recordReliableMessage({ sendAttempts, sent: false });
       },
       MESSAGE_TIMEOUT,
     );
@@ -149,6 +154,7 @@ export class Messenger {
       messageReceived();
       this._onAckCallbacks.delete(reliablePayload.messageId!);
       void messageContext.dispose();
+      this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
 
     await this._encodeAndSend({ author, recipient, reliablePayload });
@@ -234,12 +240,18 @@ export class Messenger {
 
     log('handling message', { messageId: reliablePayload.messageId });
 
-    await this._sendAcknowledgement({
-      author,
-      recipient,
-      messageId: reliablePayload.messageId,
-    });
+    try {
+      await this._sendAcknowledgement({
+        author,
+        recipient,
+        messageId: reliablePayload.messageId,
+      });
+    } catch (err) {
+      this._monitor.recordMessageAckFailed();
+      throw err;
+    }
 
+    // Ignore message if it was already received, i.e. from multiple signal servers.
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
       return;
     }

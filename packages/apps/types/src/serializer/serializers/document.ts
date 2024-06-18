@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createDocAccessor, getRangeFromCursor, getAutomergeObjectCore, createEchoObject } from '@dxos/client/echo';
+import { createDocAccessor, getRangeFromCursor, getObjectCore, createEchoObject } from '@dxos/client/echo';
 import { create } from '@dxos/echo-schema';
 
 import { type TypedObjectSerializer, validFilename } from './default';
@@ -53,7 +53,7 @@ export const serializer: TypedObjectSerializer<DocumentType> = {
       const doc = createEchoObject(create(DocumentType, { content: create(TextV0Type, { content }), comments: [] }));
 
       if (file) {
-        const core = getAutomergeObjectCore(doc);
+        const core = getObjectCore(doc);
         core.id = file.id;
       }
 

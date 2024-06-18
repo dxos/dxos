@@ -15,8 +15,8 @@ import { type EmailMessage, SOURCE_ID, text } from './types';
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    account: S.optional(S.string),
+  S.Struct({
+    account: S.optional(S.String),
   }),
 );
 
@@ -37,14 +37,7 @@ export const handler: FunctionHandler<{ spaceKey: string; data: { messages: Emai
   if (!space) {
     return;
   }
-
-  // TODO(burdon): Register schema (part of function metadata).
-  try {
-    const { client } = context;
-    client.addSchema(TextV0Type, MailboxType, MessageType);
-  } catch (err) {
-    log.catch(err);
-  }
+  context.client.addTypes([MailboxType, MessageType, TextV0Type]);
 
   // Create mailbox if doesn't exist.
   const { objects: mailboxes } = await space.db.query(Filter.schema(MailboxType)).run();

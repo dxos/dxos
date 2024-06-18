@@ -30,6 +30,16 @@ export class FunctionRegistry extends Resource {
     return this._functionBySpaceKey.get(space.key) ?? [];
   }
 
+  public getUniqueByUri(): FunctionDef[] {
+    const uniqueByUri = [...this._functionBySpaceKey.values()]
+      .flatMap((defs) => defs)
+      .reduce((acc, v) => {
+        acc.set(v.uri, v);
+        return acc;
+      }, new Map<string, FunctionDef>());
+    return [...uniqueByUri.values()];
+  }
+
   /**
    * Loads function definitions from the manifest into the space.
    * We first load all the definitions from the space to deduplicate by functionId.
@@ -39,8 +49,8 @@ export class FunctionRegistry extends Resource {
     if (!functions?.length) {
       return;
     }
-    if (!space.db.graph.runtimeSchemaRegistry.hasSchema(FunctionDef)) {
-      space.db.graph.runtimeSchemaRegistry.registerSchema(FunctionDef);
+    if (!space.db.graph.schemaRegistry.hasSchema(FunctionDef)) {
+      space.db.graph.schemaRegistry.addSchema([FunctionDef]);
     }
 
     // Sync definitions.

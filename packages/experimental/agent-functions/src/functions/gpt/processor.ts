@@ -2,26 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
-import { StringOutputParser } from '@langchain/core/output_parsers';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { type Runnable, type RunnableLike, RunnablePassthrough, RunnableSequence } from '@langchain/core/runnables';
-import { JsonOutputFunctionsParser } from 'langchain/output_parsers';
-import { formatDocumentsAsString } from 'langchain/util/document';
+import { type Runnable, RunnablePassthrough } from '@langchain/core/runnables';
 import get from 'lodash.get';
 
 import {
   type BlockType,
   type ChainInput,
   ChainInputType,
-  type ChainPromptType,
-  ChainType,
+  ChainPromptType,
   type MessageType,
   TextV0Type,
   type ThreadType,
 } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { todo } from '@dxos/debug';
-import { Filter, loadObjectReferences } from '@dxos/echo-db';
+import { Filter } from '@dxos/echo-db';
 import { create, type JsonSchema } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
@@ -31,10 +26,12 @@ import { type ResolverMap } from './resolvers';
 import { ResponseBuilder } from './response';
 import { createStatusNotifier } from './status';
 import { type ChainResources } from '../../chain';
+import { type ModelInvocationArgs, type ModelInvoker } from '../../chain/model-invoker';
 
 export type SequenceOptions = {
   prompt?: ChainPromptType;
   command?: string;
+  content?: string;
   noVectorStore?: boolean;
   noTrainingData?: boolean;
 };
@@ -64,6 +61,7 @@ export type ProcessThreadResult = {
 
 export class RequestProcessor {
   constructor(
+    private readonly _modelInvoker: ModelInvoker,
     private readonly _resources: ChainResources,
     private readonly _resolvers?: ResolverMap,
   ) {}
@@ -85,9 +83,9 @@ export class RequestProcessor {
         const context = await createContext(space, message, thread);
 
         log.info('processing', { command, content, context });
-        const sequence = await this.createSequence(space, context, { prompt, command });
-        if (sequence) {
-          const response = await sequence.invoke(content);
+        const modelArgs = await this._createModelArgs(space, context, { prompt, command, content });
+        if (modelArgs) {
+          const response = await this._modelInvoker.invoke(modelArgs);
           const result = parseMessage(response);
 
           const builder = new ResponseBuilder(space, context);
@@ -116,11 +114,11 @@ export class RequestProcessor {
     return { success: true };
   }
 
-  async createSequence(
+  private async _createModelArgs(
     space: Space,
     context: RequestContext,
     options: SequenceOptions,
-  ): Promise<RunnableSequence | undefined> {
+  ): Promise<ModelInvocationArgs | undefined> {
     log.info('create sequence', {
       context: {
         object: { space: space.key, id: context.object?.id, schema: context.object?.__typename },
@@ -130,19 +128,17 @@ export class RequestProcessor {
 
     // Find prompt matching command.
     if (options.command) {
-      const { objects: chains = [] } = await space.db.query(Filter.schema(ChainType)).run();
-      // TODO(burdon): API Issue: Why is loadObjectReferences required?
-      const allPrompts = (await loadObjectReferences(chains, (chain) => chain.prompts)).flatMap((prompt) => prompt);
+      const { objects: allPrompts = [] } = await space.db.query(Filter.schema(ChainPromptType)).run();
       for (const prompt of allPrompts) {
         if (prompt.command === options.command) {
-          return await this.createSequenceFromPrompt(space, prompt, context);
+          return await this._createModelArgsFromPrompt(space, prompt, context, options);
         }
       }
     }
 
     // Use the given prompt as a fallback.
     if (options.prompt) {
-      return await this.createSequenceFromPrompt(space, options.prompt, context);
+      return await this._createModelArgsFromPrompt(space, options.prompt, context, options);
     }
 
     return undefined;
@@ -151,18 +147,18 @@ export class RequestProcessor {
   /**
    * Create a runnable sequence from a stored prompt.
    */
-  async createSequenceFromPrompt(
+  private async _createModelArgsFromPrompt(
     space: Space,
     prompt: ChainPromptType,
     context: RequestContext,
-  ): Promise<RunnableSequence> {
-    const inputs: Record<string, any> = {};
+    options: SequenceOptions,
+  ): Promise<ModelInvocationArgs> {
+    const templateSubstitutions: Record<string, any> = {};
     if (prompt.inputs?.length) {
       for (const input of prompt.inputs) {
-        inputs[input.name] = await this.getTemplateInput(space, input, context);
+        templateSubstitutions[input.name] = await this.getTemplateInput(space, input, context);
       }
     }
-
     // TODO(burdon): Test using JSON schema.
     // TODO(burdon): OpenAI-specific kwargs.
     const withSchema = false;
@@ -187,19 +183,14 @@ export class RequestProcessor {
       ],
     };
 
-    // TODO(burdon): Factor out.
-    const promptLogger: RunnableLike = (input) => {
-      log.info('prompt', { prompt: input.value });
-      return input;
-    };
-
-    return RunnableSequence.from([
-      inputs,
-      PromptTemplate.fromTemplate(prompt.template),
-      promptLogger,
-      this._resources.model.bind(customArgs),
-      withSchema ? new JsonOutputFunctionsParser() : new StringOutputParser(),
-    ]);
+    return {
+      space,
+      sequenceInput: options.content ?? '',
+      template: prompt.template,
+      templateSubstitutions,
+      modelArgs: customArgs,
+      outputFormat: withSchema ? 'json' : 'text',
+    } satisfies ModelInvocationArgs;
   }
 
   private async getTemplateInput(
@@ -226,8 +217,7 @@ export class RequestProcessor {
       // Embeddings vector store.
       //
       case ChainInputType.RETRIEVER: {
-        const retriever = this._resources.store.vectorStore.asRetriever({});
-        return retriever.pipe(formatDocumentsAsString);
+        return this._resources.createStringRetriever();
       }
 
       //
@@ -254,7 +244,7 @@ export class RequestProcessor {
         }
 
         // TODO(dmaretskyi): Convert to the new dynamic schema API.
-        const schemas = await space.db.schemaRegistry.getAll();
+        const schemas = await space.db.schema.list();
         const schema = schemas.find((schema) => schema.typename === type);
         if (schema) {
           // TODO(burdon): Use effect schema to generate JSON schema.

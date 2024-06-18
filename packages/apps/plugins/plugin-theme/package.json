@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-theme",
-  "version": "0.5.3",
+  "version": "0.5.8",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

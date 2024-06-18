@@ -10,11 +10,9 @@
 [![NPM](https://img.shields.io/npm/v/@dxos/client/latest)](https://www.npmjs.com/package/@dxos/client)
 [![Discord](https://img.shields.io/discord/837138313172353095?label=discord)](https://discord.com/channels/837138313172353095)
 
-We build [Composer](https://composer.space): an extensible app platform where developers can extend their intelligence. Open-source. Multiplayer. Local-first. Private.
+We build [Composer](https://composer.space): an extensible app platform where developers can organize and sync their knowledge across their devices, and collaborate with others real-time or offline. Open-source. Multiplayer. Local-first. Private.
 
 The DXOS SDK takes care of peer-to-peer collaboration for local-first apps without central sync servers.
-
-Learn more about the [the mission](https://docs.dxos.org/guide/why).
 
 ## SDK Demo
 

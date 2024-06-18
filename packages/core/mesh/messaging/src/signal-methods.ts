@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Any } from '@dxos/codec-protobuf';
 import { type PublicKey } from '@dxos/keys';
 import { type SignalState } from '@dxos/protocols/proto/dxos/mesh/signal';
 
 export interface Message {
   author: PublicKey;
   recipient: PublicKey;
-  payload: Any;
+  payload: {
+    type_url: string;
+    value: Uint8Array;
+  };
 }
 
 export type SignalStatus = {
@@ -43,6 +45,7 @@ export interface SignalMethods {
   /**
    * Start receiving messages from peer.
    */
+  // TODO(burdon): Return unsubscribe function. Encapsulate callback/routing here.
   subscribeMessages: (peerId: PublicKey) => Promise<void>;
 
   /**
@@ -55,7 +58,7 @@ export interface SignalMethods {
  * Signaling client.
  */
 export interface SignalClientMethods extends SignalMethods {
-  open(): Promise<void>;
-  close(): Promise<void>;
+  open(): Promise<this>;
+  close(): Promise<this>;
   getStatus(): SignalStatus;
 }

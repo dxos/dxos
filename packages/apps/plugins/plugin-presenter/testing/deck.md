@@ -37,7 +37,6 @@ Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 2. Access control
 3. Networking
 4. Compute
-5. Shell
 
 notes:
 - more difficult when decentralized; online/offline
@@ -56,8 +55,8 @@ ECHO
 
 - Federated graph database
 - Effect Schema
-- Queries + subscriptions
-- Rich text search
+- Realtime subscriptions
+- Structured and text queries
 - Automerge FTW
 
 ## Distributed Data
@@ -72,9 +71,9 @@ HALO
 
 - Decentralized identity
 - Access control
+- Credentials + key management
 - Device management
 - Account recovery
-- Credentials + key management
 
 ## Identity & Security
 
@@ -87,7 +86,7 @@ MESH
 # MESH
 
 - P2P networks
-- WebRTC + Web socket
+- WebSockets + WebRTC
 - Signaling + Discovery
 - Private key exchange
 - Encrypted data sync
@@ -100,12 +99,12 @@ KUBE
 .slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
-# KUBE
+# EDGE
 
 - Decentralized Functions
 - Triggers (cron, query, WS)
 - Universal indexing and search
-- Modular ETL pipelines
+- Modular ETL data pipelines
 - Local-first AI agents
 
 ## Decentralized Compute

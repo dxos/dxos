@@ -6,65 +6,25 @@ import { expect } from 'chai';
 import { Chess } from 'chess.js';
 import { join } from 'path';
 
-import { FunctionsPlugin } from '@dxos/agent';
 import { Trigger } from '@dxos/async';
 import { GameType } from '@dxos/chess-app/types';
-import { Client, Config } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { getObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
-import { DevServer, type FunctionManifest, FunctionRegistry, Scheduler, TriggerRegistry } from '@dxos/functions';
-import { afterTest, openAndClose, test } from '@dxos/test';
+import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
+import { startFunctionsHost } from '@dxos/functions/testing';
+import { afterTest, test } from '@dxos/test';
 
-const FUNCTIONS_PORT = 8757;
+import { initFunctionsPlugin } from '../setup';
 
-describe('Chess', () => {
+describe.only('Chess', () => {
   test('chess function', async () => {
-    const testBuilder = new TestBuilder(
-      new Config({
-        runtime: {
-          agent: {
-            plugins: [
-              {
-                id: 'dxos.org/agent/plugin/functions',
-                config: {
-                  port: FUNCTIONS_PORT,
-                },
-              },
-            ],
-          },
-        },
-      }),
-    );
-    const services = testBuilder.createLocalClientServices();
-    afterTest(() => testBuilder.destroy());
-
-    const client = new Client({ config: testBuilder.config, services });
-    await client.initialize();
-    await client.halo.createIdentity();
-    await client.spaces.isReady.wait();
-    afterTest(() => client.destroy());
-
-    const functionsPlugin = new FunctionsPlugin();
-    await functionsPlugin.initialize({ client, clientServices: services });
-    await openAndClose(functionsPlugin);
-
-    const functionRegistry = new FunctionRegistry(client);
-    const server = new DevServer(client, functionRegistry, {
+    const testBuilder = new TestBuilder();
+    const functions = await startFunctionsHost(testBuilder, initFunctionsPlugin, {
       baseDir: join(__dirname, '../../functions'),
     });
 
-    const triggerRegistry = new TriggerRegistry(client);
-    const scheduler = new Scheduler(functionRegistry, triggerRegistry, {
-      endpoint: `http://localhost:${FUNCTIONS_PORT}/dev`,
-    });
-
-    await server.start();
-    await scheduler.start();
-    afterTest(async () => {
-      await scheduler?.stop();
-      await server?.stop();
-    });
+    afterTest(() => testBuilder.destroy());
 
     const manifest: FunctionManifest = {
       functions: [
@@ -89,18 +49,17 @@ describe('Chess', () => {
       ],
     };
 
-    // Create data.
-    client.addSchema(GameType);
-    const space = client.spaces.default;
+    const space = await functions.client.spaces.create();
+    functions.client.addTypes([GameType, FunctionDef, FunctionTrigger]);
     const game = space.db.add(create(GameType, {}));
-    await client.spaces.default.db.flush();
+    await space.db.flush();
 
     // Create trigger.
-    await triggerRegistry.register(space, manifest);
+    await functions.scheduler.triggers.register(space, manifest);
 
     // Trigger.
     const done = new Trigger();
-    const cleanup = getAutomergeObjectCore(game).updates.on(async () => {
+    const cleanup = getObjectCore(game).updates.on(async () => {
       await doMove(game, 'b');
       done.wake();
     });

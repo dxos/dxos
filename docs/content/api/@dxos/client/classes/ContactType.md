@@ -1,5 +1,5 @@
 # Class `ContactType`
-<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L19)</sub>
+<sub>Declared in [packages/sdk/client/src/testing/data.ts:19](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/testing/data.ts#L19)</sub>
 
 
 
@@ -24,13 +24,23 @@ Type: <code>string</code>
 
 
 
-### [identifiers](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L21)
+### [identifiers](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/testing/data.ts#L21)
 Type: <code>object[]</code>
 
 
 
-### [name](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/client/src/testing/data.ts#L20)
+### [name](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/client/src/testing/data.ts#L20)
 Type: <code>string</code>
+
+
+
+### [Encoded]()
+Type: <code>object & object</code>
+
+
+
+### [Type]()
+Type: <code>object & object</code>
 
 
 

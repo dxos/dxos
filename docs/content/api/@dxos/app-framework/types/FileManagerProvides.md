@@ -1,11 +1,11 @@
 # Type `FileManagerProvides`
-<sub>Declared in [packages/sdk/app-framework/src/plugins/common/file.ts:25](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/app-framework/src/plugins/common/file.ts#L25)</sub>
+<sub>Declared in [packages/sdk/app-framework/src/plugins/common/file.ts:27](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/file.ts#L27)</sub>
 
 
 Generic interface provided by file plugins (e.g., IPFS, WNFS).
 
 ## Properties
-### [file](https://github.com/dxos/dxos/blob/3ca6d230f/packages/sdk/app-framework/src/plugins/common/file.ts#L26)
+### [file](https://github.com/dxos/dxos/blob/175437b91/packages/sdk/app-framework/src/plugins/common/file.ts#L28)
 Type: <code>object</code>
 
 

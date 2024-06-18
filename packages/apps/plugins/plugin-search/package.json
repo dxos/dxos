@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-search",
-  "version": "0.5.3",
+  "version": "0.5.8",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -25,12 +25,15 @@
   "dependencies": {
     "@dxos/debug": "workspace:*",
     "@dxos/echo-schema": "workspace:*",
-    "@dxos/react-client": "workspace:*"
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-searchlist": "workspace:*",
+    "main-thread-scheduling": "^14.1.1"
   },
   "devDependencies": {
     "@braneframe/plugin-space": "workspace:*",
     "@braneframe/types": "workspace:*",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
@@ -52,7 +55,7 @@
     "@dxos/react-ui-card": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

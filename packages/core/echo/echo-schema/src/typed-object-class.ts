@@ -9,31 +9,42 @@ import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations
 import { schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
 
-type EchoClassOptions = {
+type TypedObjectOptions = {
   partial?: true;
+  record?: true;
 };
 
-export interface EchoSchemaClass<Fields> extends S.Schema<Fields> {
+/**
+ * Marker interface for typed objects (for type inference).
+ */
+export interface AbstractTypedObject<Fields> extends S.Schema<Fields> {
+  // Type constructor.
   new (): Fields;
-
+  // Fully qualified type name.
   readonly typename: string;
 }
 
-// TODO(burdon): Not a good name for schema.
+/**
+ * Base class factory for typed objects.
+ */
+// TODO(burdon): Rename ObjectType.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
   return <
-    Options extends EchoClassOptions,
+    Options extends TypedObjectOptions,
     SchemaFields extends Struct.Fields,
     SimplifiedFields = Options['partial'] extends boolean
       ? SimplifyMutable<Partial<Struct.Type<SchemaFields>>>
       : SimplifyMutable<Struct.Type<SchemaFields>>,
-    Fields = SimplifiedFields & { id: string },
+    Fields = SimplifiedFields & { id: string } & (Options['record'] extends boolean
+        ? SimplifyMutable<S.IndexSignature.Type<S.IndexSignature.Records>>
+        : {}),
   >(
     fields: SchemaFields,
     options?: Options,
-  ): EchoSchemaClass<Fields> => {
-    const fieldsSchema = S.mutable(options?.partial ? S.partial(S.struct(fields)) : S.struct(fields));
-    const typeSchema = S.extend(fieldsSchema, S.struct({ id: S.string }));
+  ): AbstractTypedObject<Fields> => {
+    const fieldsSchema = options?.record ? S.Struct(fields, { key: S.String, value: S.Any }) : S.Struct(fields);
+    const schemaWithModifiers = S.mutable(options?.partial ? S.partial(fieldsSchema) : fieldsSchema);
+    const typeSchema = S.extend(schemaWithModifiers, S.Struct({ id: S.String }));
     const annotatedSchema = typeSchema.annotations({
       [EchoObjectAnnotationId]: { typename: args.typename, version: args.version },
     });
@@ -50,7 +61,7 @@ export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
       static readonly pipe = annotatedSchema.pipe.bind(annotatedSchema);
 
       private constructor() {
-        throw new Error('use create(MyClass, fields) to instantiate an object');
+        throw new Error('Use create(MyClass, fields) to instantiate an object.');
       }
     } as any;
   };

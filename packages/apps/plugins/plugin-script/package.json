@@ -1,6 +1,6 @@
 {
   "name": "@braneframe/plugin-script",
-  "version": "0.5.3",
+  "version": "0.5.8",
   "description": "Braneframe notebook plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -80,7 +80,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-theme": "workspace:*",
-    "@phosphor-icons/react": "^2.0.5",
+    "@phosphor-icons/react": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

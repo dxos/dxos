@@ -4,7 +4,7 @@
 
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { LifecycleState, Resource } from '@dxos/context';
-import { type AutomergeHost, getSpaceKeyFromDoc } from '@dxos/echo-pipeline';
+import { type AutomergeHost, getSpaceKeyFromDoc, createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { type Indexer, type IndexQuery } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -75,7 +75,8 @@ export class QueryState extends Resource {
     return this._results;
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/attributes-registry/db.md#generic-database-attributes
+  @trace.span({ showInBrowserTimeline: true, op: 'db.query', attributes: { 'db.system': 'echo' } })
   async execQuery(): Promise<QueryRunResult> {
     const filter = Filter.fromProto(this._params.request.filter);
     const beginQuery = performance.now();
@@ -137,6 +138,7 @@ export class QueryState extends Resource {
 
           return {
             id: objectId,
+            spaceId: await createIdFromSpaceKey(PublicKey.from(spaceKey)),
             spaceKey: PublicKey.from(spaceKey),
             rank: result.rank,
           };

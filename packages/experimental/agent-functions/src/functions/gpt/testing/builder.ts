@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { ChainPromptType, ChainType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
@@ -28,6 +29,7 @@ export class TestProcessorBuilder {
     await this._client.halo.createIdentity();
 
     this._space = await this._client.spaces.create();
+    this._client.addTypes([TextV0Type, MessageType, ThreadType, ChainPromptType, ChainType]);
 
     this._resources = createChainResources((process.env.DX_AI_MODEL as ChainVariant) ?? 'ollama', {
       baseDir: '/tmp/dxos/testing/agent/functions/embedding',

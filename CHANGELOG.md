@@ -1,5 +1,76 @@
 # Changelog
 
+## [0.5.8](https://github.com/dxos/dxos/compare/v0.5.7...v0.5.8) (2024-06-14)
+
+
+### Bug Fixes
+
+* bump web auth ([4b7fabd](https://github.com/dxos/dxos/commit/4b7fabde51ae31f5746e5363bac538ac8977bf9f))
+
+## [0.5.7](https://github.com/dxos/dxos/compare/v0.5.6...v0.5.7) (2024-06-11)
+
+
+### Bug Fixes
+
+* **composer-app:** bump web-auth ([#6965](https://github.com/dxos/dxos/issues/6965)) ([3828245](https://github.com/dxos/dxos/commit/382824573da505d2a8eda49ce1778416d8eb4cc5))
+
+## [0.5.6](https://github.com/dxos/dxos/compare/v0.5.5...v0.5.6) (2024-06-10)
+
+
+### Features
+
+* Add connection info to network panel  ([#6948](https://github.com/dxos/dxos/issues/6948)) ([90905e0](https://github.com/dxos/dxos/commit/90905e0b1df02661c40cdd1baae96bf4a1a27361))
+* **composer:** autofocus new document added to a stack ([#6907](https://github.com/dxos/dxos/issues/6907)) ([97acb7f](https://github.com/dxos/dxos/commit/97acb7f7fc0b91a3975313193921aa11075259f4))
+* Fetch button in console diagnostics ([#6916](https://github.com/dxos/dxos/issues/6916)) ([b2f4cd2](https://github.com/dxos/dxos/commit/b2f4cd2217fe224672ec24b7a637f62bf48924d1))
+* Pass space ref to file.upload provider ([#6789](https://github.com/dxos/dxos/issues/6789)) ([777211f](https://github.com/dxos/dxos/commit/777211fa3558b982c50c985624ad2f3b4331db33))
+* Plank heading menu detail section ([#6930](https://github.com/dxos/dxos/issues/6930)) ([c4185e0](https://github.com/dxos/dxos/commit/c4185e04ac2a9d9015654f492f8fbadb963b1f11))
+* TextTooltip ([#6927](https://github.com/dxos/dxos/issues/6927)) ([a77ceba](https://github.com/dxos/dxos/commit/a77cebae96eb6cc4af526e3dd0020d5cfa8abb3b))
+
+
+### Bug Fixes
+
+* agentmanager expired access token ([#6922](https://github.com/dxos/dxos/issues/6922)) ([dc713d5](https://github.com/dxos/dxos/commit/dc713d53221749fc98b57081d64f7e2cdf32f947))
+* **composer-app:** include wasm files in service worker cache ([#6912](https://github.com/dxos/dxos/issues/6912)) ([ffd017e](https://github.com/dxos/dxos/commit/ffd017e919489b9d04ee960688d8dc7b6559e0da))
+* Fix devtools-extension ([#6949](https://github.com/dxos/dxos/issues/6949)) ([742c1dc](https://github.com/dxos/dxos/commit/742c1dc8dd9dac6b69f615380b19f232a857d9cd))
+* **functions:** email-worker missing schema registration ([#6898](https://github.com/dxos/dxos/issues/6898)) ([c30b711](https://github.com/dxos/dxos/commit/c30b711a9f5a58e29e62d49d048e82638c1252f6))
+* **functions:** fix websocket reconnects ([#6906](https://github.com/dxos/dxos/issues/6906)) ([6a9d10e](https://github.com/dxos/dxos/commit/6a9d10e4a9931e884a5d7d14179d5aa72feb1ee5))
+* **functions:** fixed the logic for determining whose turn is next ([#6899](https://github.com/dxos/dxos/issues/6899)) ([288794c](https://github.com/dxos/dxos/commit/288794ce02b64f7774f5aadc1381a7d1a79cb547))
+* honor signaling telemetry for host mode ([#6903](https://github.com/dxos/dxos/issues/6903)) ([23d7ea6](https://github.com/dxos/dxos/commit/23d7ea6928b8cb45063807191e6438ef1bf78645))
+* Narrow down space order query ([#6936](https://github.com/dxos/dxos/issues/6936)) ([c9f6fbd](https://github.com/dxos/dxos/commit/c9f6fbda50fe86573883c4b6af57b9fd4ec54b96))
+* peer dependencies ([#6924](https://github.com/dxos/dxos/issues/6924)) ([9071bf4](https://github.com/dxos/dxos/commit/9071bf40255bd50d58731140c38e085a3cff87c8))
+* Stack add section menu ([#6943](https://github.com/dxos/dxos/issues/6943)) ([e11ff5d](https://github.com/dxos/dxos/commit/e11ff5d24cf267f84c1ebc2b34c4a8f4d32eae65))
+
+## [0.5.5](https://github.com/dxos/dxos/compare/v0.5.4...v0.5.5) (2024-05-30)
+
+
+### Bug Fixes
+
+* brand updates ([#6886](https://github.com/dxos/dxos/issues/6886)) ([bf4f69b](https://github.com/dxos/dxos/commit/bf4f69bfcc415440f0d5ea53899371acc962c55e))
+* Demo docs ([#6887](https://github.com/dxos/dxos/issues/6887)) ([f022b2e](https://github.com/dxos/dxos/commit/f022b2ec8e69c08672966e21f0965c6b7c6b62ee))
+* notes ([#6889](https://github.com/dxos/dxos/issues/6889)) ([971f8a3](https://github.com/dxos/dxos/commit/971f8a323c7ba3bdc71f10a3e80ec116d85f6e47))
+* **react-ui-deck:** Support minification of sidebars as a variation of close ([#6894](https://github.com/dxos/dxos/issues/6894)) ([c7fff6a](https://github.com/dxos/dxos/commit/c7fff6ae5a5e12e0a6cb28f7dafbb3b6ba7c6ad0))
+* Scroll plank into view when navigating from a Stack section ([#6890](https://github.com/dxos/dxos/issues/6890)) ([a7f191d](https://github.com/dxos/dxos/commit/a7f191de8b3bd78fac9aa8c993c4080902a9eb2b))
+* Update links ([#6891](https://github.com/dxos/dxos/issues/6891)) ([5627562](https://github.com/dxos/dxos/commit/56275622285d55fb4309a0b2383b393e6fc7a3bc))
+
+## [0.5.4](https://github.com/dxos/dxos/compare/v0.5.3...v0.5.4) (2024-05-29)
+
+
+### Features
+
+* **demo:** Chess player selector ([#6882](https://github.com/dxos/dxos/issues/6882)) ([8757cee](https://github.com/dxos/dxos/commit/8757ceea6a739f6dc703805d87ea15ee711ef12b))
+* **demo:** Provide context object to standalone thread messages in deck ([#6865](https://github.com/dxos/dxos/issues/6865)) ([c4fdd2f](https://github.com/dxos/dxos/commit/c4fdd2f9d21b682142cc822bbd2e8d2eba92f37b))
+
+
+### Bug Fixes
+
+* CLI fixes ([#6879](https://github.com/dxos/dxos/issues/6879)) ([8f486ad](https://github.com/dxos/dxos/commit/8f486ad40d467113d5e3bdcb1aac0baadba46173))
+* Complementary sidebar opening behavior ([#6877](https://github.com/dxos/dxos/issues/6877)) ([7998a3b](https://github.com/dxos/dxos/commit/7998a3b500ebdff4aa735ddbe56ebf3cd3d4b8c2))
+* **composer-app:** read cloudflare env properly in worker ([#6870](https://github.com/dxos/dxos/issues/6870)) ([fb3ef83](https://github.com/dxos/dxos/commit/fb3ef834b585fb8cbbd6debd393718aaf8981107))
+* Halo button signals appropriate status color when intentionally disconnected ([#6878](https://github.com/dxos/dxos/issues/6878)) ([1335b4b](https://github.com/dxos/dxos/commit/1335b4beae71a6546c288f7d255ff2d41b9220f7))
+* **plugin-markdown:** Auto-focus the document when it receives attention in Deck ([#6881](https://github.com/dxos/dxos/issues/6881)) ([79e046c](https://github.com/dxos/dxos/commit/79e046c6d05dcbfb23881788dc1097c3e74f45fe))
+* **plugin-presenter:** Only emit close intent when in Deck ([#6880](https://github.com/dxos/dxos/issues/6880)) ([e051d1b](https://github.com/dxos/dxos/commit/e051d1b61d2e3e4308749b66678530bb571d507c))
+* update release please job with newer pnpm ([#6868](https://github.com/dxos/dxos/issues/6868)) ([056e7da](https://github.com/dxos/dxos/commit/056e7da983a3971b71803e1fdc80dd8fb25159a2))
+
 ## [0.5.3](https://github.com/dxos/dxos/compare/v0.5.2...v0.5.3) (2024-05-28)
 
 

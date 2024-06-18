@@ -4,14 +4,15 @@
 
 import { expect } from 'chai';
 
-import { getSpaceProperty, setSpaceProperty, FolderType } from '@braneframe/types';
+import { CollectionType, DocumentType, MessageType, TextV0Type, ThreadType } from '@braneframe/types';
 import { Client, PublicKey } from '@dxos/client';
-import { type Space, Filter } from '@dxos/client/echo';
+import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { create, Expando } from '@dxos/echo-schema';
+import { MigrationBuilder } from '@dxos/migrations';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
+import { assignDeep } from '@dxos/util';
 
-import { migrations } from './migrations';
+import { FolderType, SectionType, StackType, migrations } from './migrations';
 
 const testBuilder = new TestBuilder();
 
@@ -22,7 +23,17 @@ describe('Composer migrations', () => {
   beforeEach(async () => {
     client = new Client({ services: testBuilder.createLocalClientServices() });
     await client.initialize();
-    client.addSchema(FolderType, Expando);
+    client.addTypes([
+      FolderType,
+      Expando,
+      SectionType,
+      StackType,
+      CollectionType,
+      DocumentType,
+      TextV0Type,
+      ThreadType,
+      MessageType,
+    ]);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
     space = client.spaces.default;
@@ -33,38 +44,78 @@ describe('Composer migrations', () => {
   });
 
   test(migrations[0].version.toString(), async () => {
-    const query = space.db.query(Filter.schema(FolderType));
-    expect((await query.run({ timeout: 100 })).objects).to.have.lengthOf(0);
+    const doc1 = space.db.add(
+      create(DocumentType, {
+        content: create(TextV0Type, { content: 'object1' }),
+        comments: [],
+      }),
+    );
+    const thread1 = space.db.add(
+      create(ThreadType, {
+        messages: [
+          create(MessageType, {
+            from: { identityKey: PublicKey.random().toHex() },
+            blocks: [
+              // {
+              //   timestamp: new Date().toISOString(),
+              //   content: create(TextV0Type, { content: 'comment1' }),
+              // },
+            ],
+          }),
+        ],
+      }),
+    );
+    doc1.comments?.push({
+      cursor: toCursorRange(createDocAccessor(doc1.content!, ['content']), 0, 3),
+      thread: thread1,
+    });
+    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
 
-    await migrations[0].up({ space });
-    const afterMigration = await query.run();
-    expect(afterMigration.objects).to.have.lengthOf(1);
-    expect(afterMigration.objects[0].name).to.equal(space.key.toHex());
-    expect(getSpaceProperty(space, FolderType.typename)).to.equal(afterMigration.objects[0]);
-  });
+    const folder1 = space.db.add(
+      create(FolderType, {
+        name: 'folder1',
+        objects: [
+          create(FolderType, {
+            name: 'folder2',
+            objects: [
+              create(FolderType, { name: 'folder3', objects: [] }),
+              create(StackType, {
+                title: 'stack1',
+                sections: [
+                  create(SectionType, { object: doc1 }),
+                  create(SectionType, { object: create(Expando, { key: 'object2' }) }),
+                ],
+              }),
+            ],
+          }),
+        ],
+      }),
+    );
+    expect(doc1.comments![0].thread instanceof ThreadType).to.be.true;
+    assignDeep(space.properties, FolderType.typename.split('.'), folder1);
 
-  test(migrations[1].version.toString(), async () => {
-    const folder1 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
-    const folder2 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
-    const folder3 = space.db.add(create(FolderType, { name: space.key.toHex(), objects: [] }));
-    setSpaceProperty(space, FolderType.typename, folder3);
+    const folderQuery = space.db.query(Filter.schema(FolderType));
+    const stackQuery = space.db.query(Filter.schema(StackType));
+    const collectionQuery = space.db.query(Filter.schema(CollectionType));
+    expect((await folderQuery.run()).objects).to.have.lengthOf(3);
+    expect((await stackQuery.run()).objects).to.have.lengthOf(1);
+    expect((await collectionQuery.run()).objects).to.have.lengthOf(0);
 
-    const keys = [...Array(9)].map(() => PublicKey.random().toHex());
-    folder1.objects = keys.slice(0, 3).map((key) => create(Expando, { key }));
-    folder2.objects = keys.slice(3, 6).map((key) => create(Expando, { key }));
-    folder3.objects = keys.slice(6, 9).map((key) => create(Expando, { key }));
+    const builder = new MigrationBuilder(space);
+    await migrations[0].next({ space, builder });
+    await (builder as any)._commit();
 
-    const query = space.db.query(Filter.schema(FolderType));
-    const beforeMigration = await query.run();
-    expect(beforeMigration.objects).to.have.lengthOf(3);
-    expect(beforeMigration.objects[0].name).to.equal(space.key.toHex());
-    expect(beforeMigration.objects[0].objects).to.have.lengthOf(3);
+    expect((await folderQuery.run()).objects).to.have.lengthOf(0);
+    expect((await stackQuery.run()).objects).to.have.lengthOf(0);
+    expect((await collectionQuery.run()).objects).to.have.lengthOf(4);
 
-    await migrations[1].up({ space });
-    const afterMigration = await query.run();
-    expect(afterMigration.objects).to.have.lengthOf(1);
-    expect(afterMigration.objects[0].name).to.equal('');
-    expect(afterMigration.objects[0].objects).to.have.lengthOf(9);
-    expect(getSpaceProperty(space, FolderType.typename)).to.equal(afterMigration.objects[0]);
+    const rootCollection = space.properties[CollectionType.typename] as CollectionType;
+    expect(rootCollection instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0] instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[0] instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1] instanceof CollectionType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1]?.objects).to.have.lengthOf(2);
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0] instanceof DocumentType).to.be.true;
+    expect(rootCollection.objects[0]?.objects[1]?.objects[0]?.comments?.[0].thread instanceof ThreadType).to.be.true;
   });
 });
