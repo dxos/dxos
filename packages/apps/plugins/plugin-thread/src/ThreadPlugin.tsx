@@ -183,7 +183,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
       },
       translations: [...translations, ...threadTranslations],
       echo: {
-        schema: [ThreadType, MessageType],
+        schema: [ChannelType, ThreadType, MessageType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -205,7 +205,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   plugin: THREAD_PLUGIN,
                   action: ThreadAction.CREATE,
                   properties: {
-                    label: ['create thread label', { ns: THREAD_PLUGIN }],
+                    label: ['create channel label', { ns: THREAD_PLUGIN }],
                     icon: (props: IconProps) => <Chat {...props} />,
                     testId: 'threadPlugin.createObject',
                   },
@@ -259,7 +259,9 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         component: ({ data, role }) => {
           switch (role) {
             case 'main': {
-              return data.active instanceof ThreadType ? <ThreadMain thread={data.active} /> : null;
+              return data.active instanceof ChannelType && data.active.threads[0] ? (
+                <ThreadMain thread={data.active.threads[0]} />
+              ) : null;
             }
 
             case 'settings': {
@@ -271,7 +273,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               const dispatch = intentPlugin?.provides.intent.dispatch;
               const location = navigationPlugin?.provides.location;
 
-              if (data.object instanceof ThreadType) {
+              if (data.object instanceof ChannelType && data.object.threads[0]) {
                 // TODO(Zan): Maybe we should have utility for positional main object ids.
                 if (isActiveParts(location?.active) && Array.isArray(location.active.main)) {
                   const objectIdParts = location.active.main
@@ -289,11 +291,11 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
                   if (currentPosition > 0) {
                     const objectToTheLeft = objectIdParts[currentPosition - 1];
                     const context = getSpace(data.object)?.db.getObjectById(objectToTheLeft);
-                    return <ThreadArticle thread={data.object} context={context} />;
+                    return <ThreadArticle thread={data.object.threads[0]} context={context} />;
                   }
                 }
 
-                return <ThreadArticle thread={data.object} />;
+                return <ThreadArticle thread={data.object.threads[0]} />;
               }
 
               // TODO(burdon): Hack to detect comments.
@@ -365,7 +367,7 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ThreadAction.CREATE: {
-              return { data: create(ThreadType, { messages: [] }) };
+              return { data: create(ChannelType, { threads: [create(ThreadType, { messages: [] })] }) };
             }
 
             case ThreadAction.SELECT: {
