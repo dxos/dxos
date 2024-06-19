@@ -9,6 +9,7 @@ import { DynamicSchema, StoredSchema } from './dynamic';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
+import { EXPANDO_TYPENAME } from './expando';
 
 export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
   const annotation = getEchoObjectAnnotation(schema);
@@ -20,7 +21,7 @@ export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T
 
 export const createEchoReferenceSchema = (annotation: EchoObjectAnnotation): S.Schema<any> => {
   const typePredicate =
-    annotation.typename === 'Expando'
+    annotation.typename === EXPANDO_TYPENAME
       ? () => true
       : (obj: object) => getTypename(obj) === (annotation.schemaId ?? annotation.typename);
   return S.Any.pipe(

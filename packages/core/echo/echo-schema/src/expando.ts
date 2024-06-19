@@ -6,7 +6,7 @@ import * as S from '@effect/schema/Schema';
 
 import { EchoObject } from './annotations';
 
-export const EXPANDO_TYPENAME = 'Expando';
+export const EXPANDO_TYPENAME = 'dxos.org/type/Expando';
 
 /**
  * Marker value to be passed to `object` constructor to create an ECHO object with a generated ID.
