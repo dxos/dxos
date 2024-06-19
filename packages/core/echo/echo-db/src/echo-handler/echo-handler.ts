@@ -22,7 +22,6 @@ import {
   type ReactiveHandler,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
@@ -202,7 +201,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
-    log.info('getDecodedValueAtPath', { dataPath, fullPath, targetId: target[symbolInternals].core.id });
     let value = target[symbolInternals].core.getDecoded(fullPath);
 
     if (value instanceof Reference) {
