@@ -479,7 +479,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   linkObject(target: ProxyTarget, proxy: any): Reference {
-    const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy, ) : proxy;
+    const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 
