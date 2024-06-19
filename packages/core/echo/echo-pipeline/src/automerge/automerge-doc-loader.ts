@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type DocHandle, type AutomergeUrl, type DocumentId, type Repo } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import { warnAfterTimeout } from '@dxos/debug';
-import { type SpaceState, type SpaceDoc } from '@dxos/echo-protocol';
+import { type SpaceState, type SpaceDoc, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -129,6 +129,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._initDocAccess(spaceDocHandle);
     this.onObjectBoundToDocument(spaceDocHandle, objectId);
     this._spaceRootDocHandle.change((newDoc: SpaceDoc) => {
+      newDoc.version = SpaceDocVersion.CURRENT;
       newDoc.links ??= {};
       newDoc.links[objectId] = spaceDocHandle.url;
     });
