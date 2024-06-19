@@ -695,7 +695,10 @@ export const SpacePlugin = ({
             case SpaceAction.MIGRATE: {
               const space = intent.data?.space;
               if (isSpace(space)) {
-                const result = Migrations.migrate(space, intent.data?.version);
+                if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+                  await space.internal.migrate();
+                }
+                const result = await Migrations.migrate(space, intent.data?.version);
                 return {
                   data: result,
                   intents: [
