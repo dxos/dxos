@@ -377,6 +377,11 @@ message CreateEpochRequest {
   optional string automerge_root_url = 3;
 }
 
+message CreateEpochResponse {
+  /// Credential of the new epoch.
+  optional dxos.halo.credentials.Credential epoch_credential = 1;
+}
+
 message UpdateMemberRoleRequest {
   dxos.keys.PublicKey space_key = 1;
   dxos.keys.PublicKey member_key = 2;
@@ -400,7 +405,7 @@ service SpacesService {
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
-  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
+  rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
 }
 
 //

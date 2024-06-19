@@ -41,6 +41,7 @@ import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
 import type { DatabaseRoot } from '@dxos/echo-db';
+import type { SpecificCredential } from '@dxos/credentials';
 
 export type DataSpaceCallbacks = {
   /**
@@ -445,12 +446,12 @@ export class DataSpace {
     await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
-  async createEpoch(options?: CreateEpochOptions) {
+  async createEpoch(options?: CreateEpochOptions): Promise<SpecificCredential<Epoch> | null> {
     const ctx = this._ctx.derive();
 
     // Preserving existing behavior.
     if (!options?.migration) {
-      return;
+      return null;
     }
 
     const { newRoot } = await runEpochMigration(ctx, {
@@ -469,20 +470,22 @@ export class DataSpace {
       automergeRoot: newRoot ?? this._automergeSpaceState.rootUrl,
     };
 
-    const receipt = await this.inner.controlPipeline.writer.write({
-      credential: {
-        credential: await this._signingContext.credentialSigner.createCredential({
-          subject: this.key,
-          assertion: {
-            '@type': 'dxos.halo.credentials.Epoch',
-            ...epoch,
-          },
-        }),
+    const credential = (await this._signingContext.credentialSigner.createCredential({
+      subject: this.key,
+      assertion: {
+        '@type': 'dxos.halo.credentials.Epoch',
+        ...epoch,
       },
+    })) as SpecificCredential<Epoch>;
+
+    const receipt = await this.inner.controlPipeline.writer.write({
+      credential: { credential },
     });
 
     await this.inner.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
     await this._echoHost.updateIndexes();
+
+    return credential;
   }
 
   @synchronized
