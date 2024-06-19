@@ -49,6 +49,18 @@ export class DXN {
 
   constructor(kind: string, parts: string[]) {
     invariant(parts.length > 0);
+    invariant(parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1));
+
+    // Per-type validation.
+    switch (kind) {
+      case DXN.kind.ECHO:
+        invariant(parts.length === 2);
+        break;
+      case DXN.kind.TYPE:
+        invariant(parts.length === 1);
+        break;
+    }
+
     this.#kind = kind;
     this.#parts = parts;
   }
