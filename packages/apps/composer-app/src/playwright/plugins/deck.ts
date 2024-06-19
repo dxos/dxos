@@ -4,13 +4,17 @@
 
 import { type Page, type Locator } from '@playwright/test';
 
-export const getPlankArticles = async (page: Page): Promise<Locator[]> => page.getByTestId('deckPlugin.plank').all();
+// NOTE: `.all` returns a set of locators chained with `.nth()` calls.
+const getPlankArticles = async (page: Page): Promise<Locator[]> => page.getByTestId('deckPlugin.plank').all();
 
 // TODO(Zan): Extend this with other plank types.
 type PlankKind = 'markdown' | 'collection' | 'unknown';
 
-// TODO(Zan): This might be better as a class, since we can track if it's been closed?
-type Plank = { kind: PlankKind; locator: Locator; close: () => Promise<void>; open: () => Promise<void> };
+type Plank = {
+  kind: PlankKind;
+  locator: Locator;
+  qualifiedId?: string;
+};
 
 const classifyArticleElement = async (locator: Locator): Promise<PlankKind> => {
   // NOTE: Stack should be checked first since stacks can contain many types.
@@ -21,25 +25,86 @@ const classifyArticleElement = async (locator: Locator): Promise<PlankKind> => {
   if ((await locator.getByTestId('composer.markdownRoot').count()) === 1) {
     return 'markdown';
   }
+
   // When you need to support a certain kind of plank, add a classifier here.
 
   return 'unknown';
 };
 
-type GetPlanksOptions = { filter?: PlankKind };
+type GetPlanksOptions = Partial<{ filter: PlankKind }>;
 
-export const getPlanks = async (page: Page, options: GetPlanksOptions): Promise<Plank[]> => {
-  const articles = await getPlankArticles(page);
+/**
+ * NOTE(Zan): With the way `.all()` works, it builds a set of locators based on `.nth()` calls.
+ * - This means that if planks are opened or closed, the locators *may* become invalid.
+ * - I'm not sure how to model this yet, I wonder if there's a more elegant way to handle this.
+ * - For now: calling `getPlanks` is a real POINT IN TIME snapshot.
+ */
+const getPlanks = async (page: Page): Promise<Plank[]> => {
+  const locators = await getPlankArticles(page);
   const results: Plank[] = [];
 
-  for (const articleLocator of articles) {
+  for (const articleLocator of locators) {
     results.push({
       kind: await classifyArticleElement(articleLocator),
       locator: articleLocator,
-      close: () => articleLocator.getByTestId('plankHeading.close').click(),
-      open: () => articleLocator.getByTestId('plankHeading.open').click(),
+      qualifiedId: (await articleLocator.getAttribute('data-attendable-id')) ?? undefined,
     });
   }
 
-  return options?.filter ? results.filter((plank) => plank.kind === options.filter) : results;
+  return results;
 };
+
+const closePlank = async (locator: Locator) => locator.getByTestId('plankHeading.close').click();
+
+const getPlankPresence = (locator: Locator) => {
+  return locator.getByTestId('plankHeading.presence').evaluateAll((element) => {
+    const viewing = element.getAttribute('data-status') === 'current';
+    const active = element.getAttribute('data-status') === 'active';
+
+    return {
+      viewing,
+      active,
+    };
+  });
+};
+
+// Define a plank manager that takes a page and provides a way to interact with planks.
+export class PlankManager {
+  planks: Plank[] = [];
+
+  constructor(private readonly _page: Page) {}
+
+  private async updatePlanks() {
+    this.planks = await getPlanks(this._page);
+  }
+
+  async getPlanks(options?: GetPlanksOptions): Promise<Plank[]> {
+    await this.updatePlanks();
+    return options?.filter ? this.planks.filter((plank) => plank.kind === options.filter) : this.planks;
+  }
+
+  async getPlankPresence(plankId: string | undefined) {
+    if (!plankId) {
+      return undefined;
+    }
+
+    await this.updatePlanks();
+    const plank = this.planks.find((plank) => plank.qualifiedId === plankId);
+
+    if (plank) {
+      return await getPlankPresence(plank.locator);
+    }
+
+    return undefined;
+  }
+
+  async closePlank(plankId: string) {
+    await this.updatePlanks();
+    const plank = this.planks.find((plank) => plank.qualifiedId === plankId);
+    if (plank) {
+      await closePlank(plank.locator);
+    }
+
+    await this.updatePlanks();
+  }
+}
