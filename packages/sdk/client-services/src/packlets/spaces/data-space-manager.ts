@@ -205,7 +205,7 @@ export class DataSpaceManager {
 
   async isDefaultSpace(space: DataSpace): Promise<boolean> {
     const rootDoc = await this._getSpaceRootDocument(space);
-    const [_, properties] = findPropertiesObject(rootDoc.docSync()) ?? [];
+    const [_, properties] = findInlineObjectOfType(rootDoc.docSync(), TYPE_PROPERTIES) ?? [];
     return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
   }
 
