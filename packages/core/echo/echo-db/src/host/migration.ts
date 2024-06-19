@@ -4,6 +4,7 @@
 
 import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import {
+  LEGACY_TYPE_PROPERTIES,
   Reference,
   SpaceDocVersion,
   decodeReference,
@@ -14,12 +15,16 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { LEGACY_TYPE_PROPERTIES } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { deepMapValuesAsync } from '@dxos/util';
 
 const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReferenceObject> => {
+  if (reference.protocol === Reference.TYPE_PROTOCOL) {
+    const res = encodeReference(Reference.fromLegacyTypename(reference.itemId));
+    return res;
+  }
+
   const spaceKey = reference.host;
   const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
 
@@ -52,7 +57,7 @@ export const convertLegacySpaceRootDoc = async (root: SpaceDoc): Promise<SpaceDo
   if (!properties) {
     throw new Error('Properties object not found');
   }
-  properties[1].system.type = encodeReference(new Reference(TYPE_PROPERTIES));
+  properties[1].system.type = encodeReference(Reference.fromLegacyTypename(TYPE_PROPERTIES));
 
   return newDoc;
 };
