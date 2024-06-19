@@ -112,6 +112,7 @@ export class Context {
    * This function never throws.
    * It is safe to ignore the returned promise if the caller does not wish to wait for callbacks to complete.
    * Disposing context means that onDispose will throw an error and any errors raised will be logged and not propagated.
+   * @returns true if there were no errors during the dispose process.
    */
   async dispose(throwOnError = false): Promise<boolean> {
     if (this.#disposePromise) {
@@ -224,5 +225,9 @@ export class Context {
 
   toString() {
     return `Context(${this.#isDisposed ? 'disposed' : 'active'})`;
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    await this.dispose();
   }
 }
