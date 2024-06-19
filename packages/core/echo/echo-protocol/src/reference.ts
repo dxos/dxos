@@ -8,6 +8,11 @@ import { type Reference as ReferenceValue } from '@dxos/protocols/proto/dxos/ech
 
 // TODO(burdon): Comment.
 export class Reference {
+  /**
+   * Protocol references to runtime registered types.
+   */
+  static TYPE_PROTOCOL = 'protobuf';
+
   static fromValue(value: ReferenceValue): Reference {
     return new Reference(value.itemId, value.protocol, value.host);
   }
@@ -17,7 +22,7 @@ export class Reference {
    */
   // TODO(burdon): Document/remove?
   static fromLegacyTypename(type: string): Reference {
-    return new Reference(type, 'protobuf', 'dxos.org');
+    return new Reference(type, Reference.TYPE_PROTOCOL, 'dxos.org');
   }
 
   static fromDXN(dxn: DXN): Reference {
@@ -48,7 +53,7 @@ export class Reference {
   }
 
   toDXN(): DXN {
-    if (this.protocol === 'protobuf') {
+    if (this.protocol === Reference.TYPE_PROTOCOL) {
       return new DXN(DXN.kind.TYPE, [this.itemId]);
     } else {
       if (this.host) {

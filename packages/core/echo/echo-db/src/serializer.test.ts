@@ -15,7 +15,7 @@ import { Hypergraph } from './hypergraph';
 import { EchoDatabaseImpl, type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import { type SerializedSpace, Serializer } from './serializer';
-import { Contact, EchoTestBuilder } from './testing';
+import { Contact, EchoTestBuilder, Task, Todo } from './testing';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;
@@ -28,180 +28,200 @@ describe('Serializer', () => {
     await builder.close();
   });
 
-  // TODO(dmaretskyi): Test with unloaded objects.
-  test('Basic', async () => {
-    const serializer = new Serializer();
+  describe('Objects', () => {
+    test('export typed object', async () => {
+      const serializer = new Serializer();
+      const { db, graph } = await builder.createDatabase();
+      graph.schemaRegistry.addSchema([Todo]);
 
-    let data: SerializedSpace;
+      const todo = db.add(create(Todo, { name: 'Testing' }));
+      const data = serializer.exportObject(todo);
 
-    {
-      const { db } = await builder.createDatabase();
-      const obj = create({} as any);
-      obj.title = 'Test';
-      db.add(obj);
-      await db.flush();
-      expect(db.objects).to.have.length(1);
-
-      data = await serializer.export(db);
-      expect(data.objects).to.have.length(1);
-      expect(data.objects[0]).to.deep.include({
-        '@id': obj.id,
+      expect(data).to.deep.include({
+        '@id': todo.id,
         '@meta': { keys: [] },
-        title: 'Test',
+        '@type': { '/': `dxn:type:${Todo.typename}` },
+        name: 'Testing',
       });
-    }
-
-    // Simulate JSON serialization.
-    data = JSON.parse(JSON.stringify(data));
-
-    {
-      const { db } = await builder.createDatabase();
-      await serializer.import(db, data);
-
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(1);
-      expect(objects[0].title).to.eq('Test');
-    }
+    });
   });
 
-  test('Deleted objects', async () => {
-    const serializer = new Serializer();
-    const objValue = { value: 42 };
-    let data: SerializedSpace;
+  describe('Spaces', () => {
+    // TODO(dmaretskyi): Test with unloaded objects.
+    test('basic', async () => {
+      const serializer = new Serializer();
 
-    {
-      const { db } = await builder.createDatabase();
-      const preserved = db.add(create(objValue));
-      const deleted = db.add(create({ value: objValue.value + 1 }));
-      db.remove(deleted);
-      await db.flush();
+      let data: SerializedSpace;
 
-      data = await serializer.export(db);
-      expect(data.objects).to.have.length(1);
-      expect(data.objects[0]).to.deep.include({
-        '@id': preserved.id,
-        '@meta': { keys: [] },
-        ...objValue,
-      });
-    }
+      {
+        const { db } = await builder.createDatabase();
+        const obj = create({} as any);
+        obj.title = 'Test';
+        db.add(obj);
+        await db.flush();
+        expect(db.objects).to.have.length(1);
 
-    // Simulate JSON serialization.
-    data = JSON.parse(JSON.stringify(data));
+        data = await serializer.export(db);
+        expect(data.objects).to.have.length(1);
+        expect(data.objects[0]).to.deep.include({
+          '@id': obj.id,
+          '@meta': { keys: [] },
+          title: 'Test',
+        });
+      }
 
-    {
-      const { db } = await builder.createDatabase();
-      await serializer.import(db, data);
+      // Simulate JSON serialization.
+      data = JSON.parse(JSON.stringify(data));
 
-      const { objects } = await db.query().run();
-      expect(objects).to.have.length(1);
-      expect(objects[0].value).to.eq(42);
-    }
-  });
+      {
+        const { db } = await builder.createDatabase();
+        await serializer.import(db, data);
 
-  test('Nested objects', async () => {
-    const serializer = new Serializer();
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(1);
+        expect(objects[0].title).to.eq('Test');
+      }
+    });
 
-    let data: SerializedSpace;
+    test('deleted objects', async () => {
+      const serializer = new Serializer();
+      const objValue = { value: 42 };
+      let data: SerializedSpace;
 
-    {
-      const { db } = await builder.createDatabase();
-      const obj = create({
-        title: 'Main task',
-        subtasks: [
-          create(Expando, {
-            title: 'Subtask 1',
+      {
+        const { db } = await builder.createDatabase();
+        const preserved = db.add(create(objValue));
+        const deleted = db.add(create({ value: objValue.value + 1 }));
+        db.remove(deleted);
+        await db.flush();
+
+        data = await serializer.export(db);
+        expect(data.objects).to.have.length(1);
+        expect(data.objects[0]).to.deep.include({
+          '@id': preserved.id,
+          '@meta': { keys: [] },
+          ...objValue,
+        });
+      }
+
+      // Simulate JSON serialization.
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db } = await builder.createDatabase();
+        await serializer.import(db, data);
+
+        const { objects } = await db.query().run();
+        expect(objects).to.have.length(1);
+        expect(objects[0].value).to.eq(42);
+      }
+    });
+
+    test('nested objects', async () => {
+      const serializer = new Serializer();
+
+      let data: SerializedSpace;
+
+      {
+        const { db } = await builder.createDatabase();
+        const obj = create({
+          title: 'Main task',
+          subtasks: [
+            create(Expando, {
+              title: 'Subtask 1',
+            }),
+            create(Expando, {
+              title: 'Subtask 2',
+            }),
+          ],
+          previous: create(Expando, {
+            title: 'Previous task',
           }),
-          create(Expando, {
-            title: 'Subtask 2',
-          }),
-        ],
-        previous: create(Expando, {
-          title: 'Previous task',
-        }),
-      });
-      db.add(obj);
-      await db.flush();
+        });
+        db.add(obj);
+        await db.flush();
 
-      data = await serializer.export(db);
-      expect(data.objects).to.have.length(4);
-    }
+        data = await serializer.export(db);
+        expect(data.objects).to.have.length(4);
+      }
 
-    // Simulate JSON serialization.
-    data = JSON.parse(JSON.stringify(data));
+      // Simulate JSON serialization.
+      data = JSON.parse(JSON.stringify(data));
 
-    {
+      {
+        const { db } = await builder.createDatabase();
+        await serializer.import(db, data);
+
+        await assertNestedObjects(db);
+      }
+    });
+
+    test('serialize object with schema', async () => {
+      let data: SerializedSpace;
+      const name = 'Rich Burton';
+
+      {
+        const { db, graph } = await builder.createDatabase();
+        graph.schemaRegistry.addSchema([Contact]);
+        const contact = create(Contact, { name });
+        db.add(contact);
+        await db.flush();
+        data = await new Serializer().export(db);
+      }
+
+      // Simulate JSON serialization.
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db, graph } = await builder.createDatabase();
+        graph.schemaRegistry.addSchema([Contact]);
+
+        await new Serializer().import(db, data);
+        expect((await db.query().run()).objects).to.have.length(1);
+
+        const {
+          objects: [contact],
+        } = await db.query(Filter.schema(Contact)).run();
+        expect(contact.name).to.eq(name);
+        expect(contact instanceof Contact).to.be.true;
+        expect(getSchema(contact)).to.eq(Contact);
+      }
+    });
+
+    test('loading many objects on db restart chunk load', async () => {
+      const totalObjects = 123;
+      const serializer = new Serializer();
+      let data: SerializedSpace;
+
+      const spaceKey = PublicKey.random();
+      const spaceId = await createIdFromSpaceKey(spaceKey);
+      const graph = new Hypergraph();
+      const automergeContext = new AutomergeContext();
+      const doc = automergeContext.repo.create<SpaceDoc>();
+      {
+        const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
+        await db.coreDatabase.open({ rootUrl: doc.url });
+        for (let i = 0; i < totalObjects; i++) {
+          db.add(create({ value: i }));
+        }
+        await db.flush();
+      }
+      {
+        const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
+        await db.coreDatabase.open({ rootUrl: doc.url });
+        data = await serializer.export(db);
+        expect(data.objects.length).to.eq(totalObjects);
+      }
+    });
+
+    test('loads v1 pre-dxn data', async () => {
+      const serializer = new Serializer();
+
       const { db } = await builder.createDatabase();
-      await serializer.import(db, data);
+      await serializer.import(db, V1_PRE_DXN_DATA);
 
       await assertNestedObjects(db);
-    }
-  });
-
-  test('Serialize object with schema', async () => {
-    let data: SerializedSpace;
-    const name = 'Rich Burton';
-
-    {
-      const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Contact]);
-      const contact = create(Contact, { name });
-      db.add(contact);
-      await db.flush();
-      data = await new Serializer().export(db);
-    }
-
-    // Simulate JSON serialization.
-    data = JSON.parse(JSON.stringify(data));
-
-    {
-      const { db, graph } = await builder.createDatabase();
-      graph.schemaRegistry.addSchema([Contact]);
-
-      await new Serializer().import(db, data);
-      expect((await db.query().run()).objects).to.have.length(1);
-
-      const {
-        objects: [contact],
-      } = await db.query(Filter.schema(Contact)).run();
-      expect(contact.name).to.eq(name);
-      expect(contact instanceof Contact).to.be.true;
-      expect(getSchema(contact)).to.eq(Contact);
-    }
-  });
-
-  test('Loading many objects on db restart chunk load', async () => {
-    const totalObjects = 123;
-    const serializer = new Serializer();
-    let data: SerializedSpace;
-
-    const spaceKey = PublicKey.random();
-    const spaceId = await createIdFromSpaceKey(spaceKey);
-    const graph = new Hypergraph();
-    const automergeContext = new AutomergeContext();
-    const doc = automergeContext.repo.create<SpaceDoc>();
-    {
-      const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
-      await db.coreDatabase.open({ rootUrl: doc.url });
-      for (let i = 0; i < totalObjects; i++) {
-        db.add(create({ value: i }));
-      }
-      await db.flush();
-    }
-    {
-      const db = new EchoDatabaseImpl({ spaceId, graph, automergeContext, spaceKey });
-      await db.coreDatabase.open({ rootUrl: doc.url });
-      data = await serializer.export(db);
-      expect(data.objects.length).to.eq(totalObjects);
-    }
-  });
-
-  test('loads v1 pre-dxn data', async () => {
-    const serializer = new Serializer();
-
-    const { db } = await builder.createDatabase();
-    await serializer.import(db, V1_PRE_DXN_DATA);
-
-    await assertNestedObjects(db);
+    });
   });
 });
 
