@@ -63,7 +63,7 @@ describe('Load client from storage snapshot', () => {
 
     log.break();
 
-    await client.spaces.defaultSpaceLocated;
+    await client.spaces.isReady.wait();
 
     log.info('Preparing for migration');
 
@@ -72,8 +72,6 @@ describe('Load client from storage snapshot', () => {
     }
 
     log.info('Default space migration completed');
-
-    await client.spaces.isReady.wait();
 
     for (const space of client.spaces.get()) {
       if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {

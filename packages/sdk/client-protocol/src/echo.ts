@@ -42,12 +42,6 @@ export interface Echo extends MulticastObservable<Space[]> {
   get(spaceKey: PublicKey): Space | undefined;
 
   /**
-   * After this resolves, it's safe to call `this.default`.
-   * @deprecated Pending API review.
-   */
-  get defaultSpaceLocated(): Promise<void>;
-
-  /**
    * Returns the default space.
    */
   get default(): Space;

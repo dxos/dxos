@@ -36,6 +36,7 @@ describe('Composer migrations', () => {
     ]);
     await client.halo.createIdentity();
     await client.spaces.isReady.wait();
+    await client.spaces.default.waitUntilReady();
     space = client.spaces.default;
   });
 

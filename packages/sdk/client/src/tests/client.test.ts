@@ -44,6 +44,7 @@ describe('Client', () => {
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
     await asyncTimeout(client.spaces.isReady.wait(), 2_000);
+    await asyncTimeout(client.spaces.default.waitUntilReady(), 2_000);
   });
 
   test('initialize and destroy multiple times', async () => {

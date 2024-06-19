@@ -45,7 +45,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
-  private readonly _defaultSpaceLocated = new Trigger();
 
   @trace.info()
   private get _isReadyState() {
@@ -134,17 +133,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
           });
-          void spaceProxy
-            .waitUntilReady()
-            .then(() => {
-              if (spaceProxy && spaceProxy.state.get() === SpaceState.READY && spaceProxy.id === this._defaultSpaceId) {
-                this._onDefaultSpaceReady();
-              }
-            })
-            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
+
+          if (this._defaultSpaceId && spaceProxy.id === this._defaultSpaceId) {
+            this._onDefaultSpaceAvailable();
+          }
 
           emitUpdate = true;
         }
@@ -203,11 +198,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (defaultSpace) {
       if (defaultSpace.state.get() === SpaceState.CLOSED) {
         this._openSpaceAsync(defaultSpace);
-      } else if (defaultSpace.state.get() === SpaceState.READY) {
-        this._onDefaultSpaceReady();
       }
+      this._onDefaultSpaceAvailable();
     }
-    this._defaultSpaceLocated.wake();
     return true;
   }
 
@@ -279,11 +272,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return space;
   }
 
-  // TODO(dmaretskyi): Should this just be resolved as a part of `open`.
-  get defaultSpaceLocated(): Promise<void> {
-    return this._defaultSpaceLocated.wait();
-  }
-
   async create(meta?: PropertiesType): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
@@ -343,7 +331,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._echoClient.graph.query(filter, options);
   }
 
-  private _onDefaultSpaceReady() {
+  private _onDefaultSpaceAvailable() {
     this._defaultSpaceAvailable.next(true);
     this._defaultSpaceAvailable.complete();
   }
