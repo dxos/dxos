@@ -45,14 +45,16 @@ export const waitForSpace = async (
   return space;
 };
 
+export type CreateInitializedClientsOptions = {
+  config?: Config;
+  storage?: boolean;
+  serviceConfig?: { fastPeerPresenceUpdate?: boolean };
+};
+
 export const createInitializedClientsWithContext = async (
   ctx: Context,
   count: number,
-  options?: {
-    config?: Config;
-    storage?: boolean;
-    serviceConfig?: { fastPeerPresenceUpdate?: boolean };
-  },
+  options?: CreateInitializedClientsOptions,
 ): Promise<Client[]> => {
   const testBuilder = new TestBuilder(options?.config);
   testBuilder.storage = options?.storage ? createStorage({ type: StorageType.RAM }) : undefined;
