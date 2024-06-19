@@ -27,7 +27,6 @@ import {
   type SyncRepoRequest,
   type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
-import { type Directory } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
@@ -35,17 +34,12 @@ import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { levelMigration } from './migrations';
 
 // TODO: Remove
 export type { DocumentId };
 
 export type AutomergeHostParams = {
   db: SublevelDB;
-  /**
-   * For migration purposes.
-   */
-  directory?: Directory;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -54,8 +48,6 @@ export type AutomergeHostParams = {
 export class AutomergeHost {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _ctx = new Context();
-  private readonly _directory?: Directory;
-  private readonly _db: SublevelDB;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -69,9 +61,14 @@ export class AutomergeHost {
 
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, db, indexMetadataStore }: AutomergeHostParams) {
-    this._directory = directory;
-    this._db = db;
+  constructor({ db, indexMetadataStore }: AutomergeHostParams) {
+    this._storage = new LevelDBStorageAdapter({
+      db,
+      callbacks: {
+        beforeSave: async (params) => this._beforeSave(params),
+        afterSave: async () => this._afterSave(),
+      },
+    });
     this._indexMetadataStore = indexMetadataStore;
   }
 
@@ -79,17 +76,7 @@ export class AutomergeHost {
     // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
-    // TODO(mykola): remove this before 0.6 release.
-    this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
-    this._storage = new LevelDBStorageAdapter({
-      db: this._db,
-      callbacks: {
-        beforeSave: async (params) => this._beforeSave(params),
-        afterSave: async () => this._afterSave(),
-      },
-    });
     await this._storage.open?.();
-
     this._clientNetwork = new LocalHostNetworkAdapter();
 
     // Construct the automerge repo.

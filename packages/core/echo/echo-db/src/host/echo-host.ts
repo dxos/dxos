@@ -12,7 +12,6 @@ import { type PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { type IndexConfig, IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type Storage } from '@dxos/random-access-storage';
 import { type TeleportExtension } from '@dxos/teleport';
 import { trace } from '@dxos/tracing';
 
@@ -27,7 +26,6 @@ const INDEXER_CONFIG: IndexConfig = {
 
 export type EchoHostParams = {
   kv: LevelDB;
-  storage?: Storage;
 };
 
 /**
@@ -47,7 +45,7 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Extract from this class.
   private readonly _meshEchoReplicator: MeshEchoReplicator;
 
-  constructor({ kv, storage }: EchoHostParams) {
+  constructor({ kv }: EchoHostParams) {
     super();
 
     this._indexMetadataStore = new IndexMetadataStore({ db: kv.sublevel('index-metadata') });
@@ -55,8 +53,6 @@ export class EchoHost extends Resource {
     this._automergeHost = new AutomergeHost({
       db: kv.sublevel('automerge'),
       indexMetadataStore: this._indexMetadataStore,
-      // TODO(dmaretskyi): Still needed for data migration -- remove before the next release.
-      directory: storage?.createDirectory('automerge'),
     });
 
     this._indexer = new Indexer({
