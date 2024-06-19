@@ -22,18 +22,19 @@ import {
   type ReactiveHandler,
 } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { assignDeep, deepMapValues, defaultMap, getDeep } from '@dxos/util';
 
 import { createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
+  type ObjectInternals,
   TargetKey,
   symbolHandler,
   symbolInternals,
   symbolNamespace,
   symbolPath,
-  type ObjectInternals,
   type ProxyTarget,
 } from './echo-proxy-target';
 import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
@@ -201,6 +202,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       dataPath.push(prop);
     }
     const fullPath = [getNamespace(target), ...dataPath];
+    log.info('getDecodedValueAtPath', { dataPath, fullPath, targetId: target[symbolInternals].core.id });
     let value = target[symbolInternals].core.getDecoded(fullPath);
 
     if (value instanceof Reference) {
@@ -472,24 +474,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   /**
    * Store referenced object.
+   * Used when `set` and other mutating methods are called with a proxy.
+   * @param target - self
+   * @param proxy - the proxy that was passed to the method
    */
-  linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
+  linkObject(target: ProxyTarget, proxy: any): Reference {
+    const otherEchoObj = !isEchoObject(proxy) ? createEchoObject(proxy, ) : proxy;
+    const otherObjId = otherEchoObj.id;
+    invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
+
     const database = target[symbolInternals].database;
     if (database) {
-      // TODO(dmaretskyi): Fix this.
-      if (isReactiveObject(obj) && !isEchoObject(obj)) {
-        database.add(obj);
-      }
-
-      const foreignDatabase = (getProxyHandlerSlot(obj).target as ProxyTarget)[symbolInternals].database;
+      const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
       if (!foreignDatabase) {
-        database.add(obj);
-        return new Reference(obj.id);
+        database.add(otherEchoObj);
+        return new Reference(otherObjId);
       } else {
         if (foreignDatabase !== database) {
-          return new Reference(obj.id, undefined, foreignDatabase.spaceKey.toHex());
+          return new Reference(otherObjId, undefined, foreignDatabase.spaceKey.toHex());
         } else {
-          return new Reference(obj.id);
+          return new Reference(otherObjId);
         }
       }
     } else {
@@ -497,10 +501,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
       // Can be caused not using `object(Expando, { ... })` constructor.
       // TODO(dmaretskyi): Add better validation.
-      invariant(obj.id != null);
+      invariant(otherObjId != null);
 
-      target[symbolInternals].linkCache.set(obj.id, obj as EchoReactiveObject<any>);
-      return new Reference(obj.id);
+      target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
+      return new Reference(otherObjId);
     }
   }
 
