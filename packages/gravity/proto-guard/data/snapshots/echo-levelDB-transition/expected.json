@@ -1,24 +1,24 @@
 {
-  "BWBDOWKV54XKVIOVKPXMZ5B5KLA5TGS53": {
-    "b451944d20faff94a478da6e0abe0a81d7efaeabefeea58253604810cc44ed71": {
-      "@id": "b451944d20faff94a478da6e0abe0a81d7efaeabefeea58253604810cc44ed71",
+  "BLTSPNH2Q5WV3KTEP7JZKTUBEUH7W4XOP": {
+    "9cb79d0ab4f83f2da95f920f56a9e2ce89359e45d7a3bf37d9199fdecd6ca033": {
+      "@id": "9cb79d0ab4f83f2da95f920f56a9e2ce89359e45d7a3bf37d9199fdecd6ca033",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
         "protocol": "protobuf",
         "host": "dxos.org"
       },
-      "__DEFAULT__": "0483bc7048c0c96473c32f6b33fb5bc1f2dd830a0ac44e419d35bdfc61701a95f863cafedd7e2835d8918fcb17268102de0adcd9a0594d5d1d6bf6d49a13ef424a",
+      "__DEFAULT__": "041563825be4789854d6f7e85ba926e059857c49bbd1b1a536344420514e571727c30d996f911f1d0607f754f150ab033a551d2d830e4a5f1dae2513ff5ba17e90",
       "@version": 1,
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     }
   },
-  "B6DVZVLNBR6BEZTWBG3DFCI4ROETUT4KZ": {
-    "01J0NWHJQAYD1SC8ZSCTXYK6V0": {
-      "@id": "01J0NWHJQAYD1SC8ZSCTXYK6V0",
+  "BWSSTJFPUZ5NAGQW6NFOMKL64ASAICUBL": {
+    "01J0RBDJZAWZMG4DX99BFY1VKP": {
+      "@id": "01J0RBDJZAWZMG4DX99BFY1VKP",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
@@ -30,10 +30,10 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHJTJNQJ3T8W4CPDASCFV": {
-      "@id": "01J0NWHJTJNQJ3T8W4CPDASCFV",
+    "01J0RBDK2HX3E3JYBJB3XSEBX2": {
+      "@id": "01J0RBDK2HX3E3JYBJB3XSEBX2",
       "array": [
         "one",
         "two",
@@ -45,17 +45,17 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHK6WARX204EV8TWCYWZ1": {
-      "@id": "01J0NWHK6WARX204EV8TWCYWZ1",
+    "01J0RBDKESJS8RC8Z4XB2P2T95": {
+      "@id": "01J0RBDKESJS8RC8Z4XB2P2T95",
       "value": [
         1,
         2,
         3,
         {
           "@type": "dxos.echo.model.document.Reference",
-          "itemId": "01J0NWHK71Q8CECK60V24PMGFP",
+          "itemId": "01J0RBDKEW7W04HX64FYGJSKAQ",
           "protocol": null,
           "host": null
         }
@@ -64,13 +64,13 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHK71Q8CECK60V24PMGFP": {
-      "@id": "01J0NWHK71Q8CECK60V24PMGFP",
+    "01J0RBDKEW7W04HX64FYGJSKAQ": {
+      "@id": "01J0RBDKEW7W04HX64FYGJSKAQ",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "dx:type:example.org/type/Todo",
+        "itemId": "example.org/type/Todo",
         "protocol": "protobuf",
         "host": "dxos.org"
       },
@@ -79,12 +79,12 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     }
   },
-  "BGNKDD4BIHXPOGZAHCIBM5UWB4MAYRG4O": {
-    "01J0NWHKPH7KGZ6VHDGFX84RAV": {
-      "@id": "01J0NWHKPH7KGZ6VHDGFX84RAV",
+  "BFN47IOD4JXM4PJPGU27UWCZ3ALQN6HMJ": {
+    "01J0RBDKYHAPNQY33K9PCDPEQC": {
+      "@id": "01J0RBDKYHAPNQY33K9PCDPEQC",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.sdk.client.Properties",
@@ -96,10 +96,10 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHKSR4TADKX9FKKBR70NS": {
-      "@id": "01J0NWHKSR4TADKX9FKKBR70NS",
+    "01J0RBDM1Q53NQDW8TFG9EBA72": {
+      "@id": "01J0RBDM1Q53NQDW8TFG9EBA72",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
         "itemId": "dxos.echo.StoredSchema",
@@ -128,7 +128,7 @@
             "title": "any",
             "$echo": {
               "reference": {
-                "typename": "dx:type:example.org/type/Todo",
+                "typename": "example.org/type/Todo",
                 "version": "0.1.0"
               }
             }
@@ -137,32 +137,32 @@
         "additionalProperties": false,
         "$echo": {
           "type": {
-            "schemaId": "01J0NWHKSR4TADKX9FKKBR70NS",
-            "typename": "dx:type:example.org/type/TestType",
+            "schemaId": "01J0RBDM1Q53NQDW8TFG9EBA72",
+            "typename": "example.org/type/TestType",
             "version": "0.1.0"
           }
         }
       },
-      "typename": "dx:type:example.org/type/TestType",
+      "typename": "example.org/type/TestType",
       "version": "0.1.0",
       "@version": 1,
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHKSYDSD2839ANH1F1SDH": {
-      "@id": "01J0NWHKSYDSD2839ANH1F1SDH",
+    "01J0RBDM1WMGAHVRKDS84XS4TT": {
+      "@id": "01J0RBDM1WMGAHVRKDS84XS4TT",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "01J0NWHKSR4TADKX9FKKBR70NS",
+        "itemId": "01J0RBDM1Q53NQDW8TFG9EBA72",
         "protocol": null,
         "host": null
       },
       "name": "Test",
       "todo": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "01J0NWHKT3H9HD9DKZPQQGDQT9",
+        "itemId": "01J0RBDM217BM0256JMF93MGRE",
         "protocol": null,
         "host": null
       },
@@ -170,13 +170,13 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     },
-    "01J0NWHKT3H9HD9DKZPQQGDQT9": {
-      "@id": "01J0NWHKT3H9HD9DKZPQQGDQT9",
+    "01J0RBDM217BM0256JMF93MGRE": {
+      "@id": "01J0RBDM217BM0256JMF93MGRE",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "dx:type:example.org/type/Todo",
+        "itemId": "example.org/type/Todo",
         "protocol": "protobuf",
         "host": "dxos.org"
       },
@@ -185,7 +185,7 @@
       "@meta": {
         "keys": []
       },
-      "@timestamp": "Tue, 18 Jun 2024 14:38:19 GMT"
+      "@timestamp": "Wed, 19 Jun 2024 13:36:45 GMT"
     }
   }
 }
