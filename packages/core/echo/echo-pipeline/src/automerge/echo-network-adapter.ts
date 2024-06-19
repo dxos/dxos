@@ -147,6 +147,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   /**
    * Trigger doc-synchronizer shared documents set recalculation. Happens on peer-candidate.
+   * TODO(y): replace with a proper API call when sharePolicy update becomes supported by automerge-repo
    */
   private _onConnectionAuthScopeChanged(connection: ReplicatorConnection) {
     log('Connection auth scope changed', { peerId: connection.peerId });
