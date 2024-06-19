@@ -32,8 +32,6 @@ export class SpacesDumper {
 
       dump[space.id] = {};
       for (const object of objects) {
-        log.info('object type', { typw: getObjectCore(object).getType(), doc: getObjectCore(object).getDoc() });
-
         dump[space.id][object.id] = serializer.exportObject(object);
       }
     }
@@ -47,8 +45,6 @@ export class SpacesDumper {
 
   static checkIfSpacesMatchExpectedData = async (client: Client, expected: SpacesDump) => {
     const received = await SpacesDumper.dumpSpaces(client);
-
-    log.info('actual', { received });
 
     for (const [spaceId, space] of Object.entries(expected)) {
       for (const [objectId, object] of Object.entries(space)) {
