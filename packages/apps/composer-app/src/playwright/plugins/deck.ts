@@ -57,9 +57,9 @@ const getPlanks = async (page: Page): Promise<Plank[]> => {
 const closePlank = async (locator: Locator) => locator.getByTestId('plankHeading.close').click();
 
 const getPlankPresence = (locator: Locator) => {
-  return locator.getByTestId('plankHeading.presence').evaluateAll((element) => {
-    const viewing = element.getAttribute('data-status') === 'current';
-    const active = element.getAttribute('data-status') === 'active';
+  return locator.getByTestId('spacePlugin.presence.member').evaluateAll((elements) => {
+    const viewing = elements.filter((element) => element.getAttribute('data-status') === 'current').length;
+    const active = elements.filter((element) => element.getAttribute('data-status') === 'active').length;
 
     return {
       viewing,
@@ -98,6 +98,9 @@ export class PlankManager {
     return undefined;
   }
 
+  /**
+   * @deprecated Marking this as deprecated for now. We don't want to break plank references.
+   */
   async closePlank(plankId: string) {
     await this.updatePlanks();
     const plank = this.planks.find((plank) => plank.qualifiedId === plankId);
