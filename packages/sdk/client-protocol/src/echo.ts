@@ -61,6 +61,8 @@ export interface Echo extends MulticastObservable<Space[]> {
    */
   join(invitation: Invitation | string): AuthenticatingInvitation;
 
+  joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
+
   /**
    * Query all spaces.
    * @param filter

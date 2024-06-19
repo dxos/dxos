@@ -286,7 +286,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(space.spaceKey));
     });
-    const spaceProxy = (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
+    const spaceProxy = this._findProxy(space);
 
     await spaceProxy._databaseInitialized.wait({ timeout: CREATE_SPACE_TIMEOUT });
     spaceProxy.db.add(create(PropertiesType, meta ?? {}));
@@ -327,6 +327,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._invitationProxy.join(invitation);
   }
 
+  async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey });
+    return this._findProxy(response.space);
+  }
+
   /**
    * Query all spaces.
    * @param filter
@@ -339,5 +344,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _onDefaultSpaceReady() {
     this._defaultSpaceAvailable.next(true);
     this._defaultSpaceAvailable.complete();
+  }
+
+  private _findProxy(space: SerializedSpace): SpaceProxy {
+    return (this.get().find(({ key }) => key.equals(space.spaceKey)) as SpaceProxy) ?? failUndefined();
   }
 }

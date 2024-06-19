@@ -186,12 +186,18 @@ service DevicesService {
 //
 
 message Contact {
-  halo.credentials.ProfileDocument profile = 1;
+  dxos.keys.PublicKey identityKey = 2;
+  optional halo.credentials.ProfileDocument profile = 1;
+  repeated dxos.keys.PublicKey commonSpaces = 3;
+}
+
+message ContactBook {
+  repeated Contact contacts = 1;
 }
 
 service ContactsService {
-  rpc UpdateContact(google.protobuf.Empty) returns (Contact);
-  rpc QueryContacts(google.protobuf.Empty) returns (stream Contact);
+  rpc GetContacts(google.protobuf.Empty) returns (ContactBook);
+  rpc QueryContacts(google.protobuf.Empty) returns (stream ContactBook);
 }
 
 //
@@ -377,12 +383,33 @@ message UpdateMemberRoleRequest {
   dxos.halo.credentials.SpaceMember.Role new_role = 3;
 }
 
+message AdmitContactRequest {
+  Contact contact = 1;
+  dxos.halo.credentials.SpaceMember.Role role = 2;
+  dxos.keys.PublicKey space_key = 3;
+}
+
+message ContactAdmission {
+  dxos.halo.credentials.Credential credential = 1;
+}
+
+message JoinSpaceResponse {
+  Space space = 1;
+}
+
+message JoinBySpaceKeyRequest {
+  dxos.keys.PublicKey space_key = 1;
+}
+
 service SpacesService {
   rpc CreateSpace(google.protobuf.Empty) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 
   rpc UpdateMemberRole(UpdateMemberRoleRequest) returns (google.protobuf.Empty);
+
+  rpc AdmitContact(AdmitContactRequest) returns (google.protobuf.Empty);
+  rpc JoinBySpaceKey(JoinBySpaceKeyRequest) returns (JoinSpaceResponse);
 
   /// Broadcast an ephemeral message to the space swarm.
   rpc PostMessage(PostMessageRequest) returns (google.protobuf.Empty);

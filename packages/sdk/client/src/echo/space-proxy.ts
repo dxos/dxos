@@ -22,6 +22,7 @@ import {
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
+  type Contact,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
@@ -387,6 +388,14 @@ export class SpaceProxy implements Space {
     this._throwIfNotInitialized();
     log('create invitation', options);
     return this._invitationsProxy.share({ ...options, spaceKey: this.key });
+  }
+
+  async admitContact(contact: Contact): Promise<void> {
+    this._clientServices.services.SpacesService!.admitContact({
+      spaceKey: this.key,
+      role: HaloSpaceMember.Role.ADMIN,
+      contact,
+    });
   }
 
   /**
