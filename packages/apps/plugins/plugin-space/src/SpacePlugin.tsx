@@ -167,7 +167,11 @@ export const SpacePlugin = ({
           spaces
             .filter((space) => space.state.get() === SpaceState.READY)
             .forEach((space) => {
-              state.values.spaceNames[space.id] = space.properties.name;
+              subscriptions.add(
+                effect(() => {
+                  state.values.spaceNames[space.id] = space.properties.name;
+                }),
+              );
             });
         }).unsubscribe,
       );
