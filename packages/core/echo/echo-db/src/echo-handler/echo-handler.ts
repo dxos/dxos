@@ -331,7 +331,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // TODO(y): Make reactive.
     // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
-      return undefined;''
+      return undefined;
+      ('');
     }
 
     const typeReference = target[symbolInternals].core.getType();

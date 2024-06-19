@@ -6,10 +6,10 @@ import * as S from '@effect/schema/Schema';
 
 import { type EchoObjectAnnotation, getEchoObjectAnnotation, ReferenceAnnotation } from './annotations';
 import { DynamicSchema, StoredSchema } from './dynamic';
+import { EXPANDO_TYPENAME } from './expando';
 import { getTypename } from './getter';
 import { isReactiveObject } from './proxy';
 import type { Identifiable, Ref } from './types';
-import { EXPANDO_TYPENAME } from './expando';
 
 export const ref = <T extends Identifiable>(schema: S.Schema<T>): S.Schema<Ref<T>> => {
   const annotation = getEchoObjectAnnotation(schema);

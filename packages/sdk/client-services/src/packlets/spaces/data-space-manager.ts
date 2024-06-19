@@ -41,10 +41,10 @@ import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
 
-import { createAuthProvider } from '../identity';
-import { type InvitationsManager } from '../invitations';
 import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
+import { createAuthProvider } from '../identity';
+import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
