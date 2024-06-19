@@ -4,6 +4,6 @@
     "version": 2,
     "dataRoot": "snapshots/echo-levelDB-transition/snapshot",
     "jsonDataPath": "snapshots/echo-levelDB-transition/expected.json",
-    "timestamp": "2024-06-18T14:38:16.733Z"
+    "timestamp": "2024-06-19T13:36:43.418Z"
   }
 ]
