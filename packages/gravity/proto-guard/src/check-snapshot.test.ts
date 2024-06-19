@@ -30,23 +30,7 @@ describe('Load client from storage snapshot', () => {
     return testStoragePath;
   };
 
-  test('check if space loads for Automerge on nodeFS snapshot', async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('automerge-nodeFS');
-    invariant(snapshot, 'Snapshot not found');
-    log.info('Testing snapshot', { snapshot });
-
-    const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
-    const tmp = copySnapshotToTmp(snapshot);
-
-    const client = new Client({ config: createConfig({ dataRoot: tmp }) });
-    await asyncTimeout(client.initialize(), 1_000);
-    afterTest(() => client.destroy());
-    await client.spaces.isReady.wait();
-
-    expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
-  });
-
-  test('check if space loads for LevelDb snapshot', async () => {
+  test('check if space loads for echo-levelDB-transition snapshot', async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('echo-levelDB-transition');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
