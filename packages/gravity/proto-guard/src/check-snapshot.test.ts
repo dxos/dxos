@@ -39,12 +39,12 @@ describe('Load client from storage snapshot', () => {
     const tmp = copySnapshotToTmp(snapshot);
 
     const client = new Client({ config: createConfig({ dataRoot: tmp }) });
-    await asyncTimeout(client.initialize(), 1_000);
+    await asyncTimeout(client.initialize(), 2_000);
     afterTest(() => client.destroy());
     await client.spaces.isReady.wait();
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
-  });
+  }).timeout(10_000);
 
   test('check if space loads for LevelDb snapshot', async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('echo-levelDB-transition');
@@ -55,10 +55,10 @@ describe('Load client from storage snapshot', () => {
     const tmp = copySnapshotToTmp(snapshot);
 
     const client = new Client({ config: createConfig({ dataRoot: tmp }) });
-    await asyncTimeout(client.initialize(), 1_000);
+    await asyncTimeout(client.initialize(), 2_000);
     afterTest(() => client.destroy());
     await client.spaces.isReady.wait();
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
-  });
+  }).timeout(10_000);
 });

@@ -112,7 +112,7 @@ const main = async () => {
 
     // Create dynamic schema.
 
-    class TestType extends TypedObject({ typename: 'dx:type:example.org/type/TestType', version: '0.1.0' })({}) {}
+    class TestType extends TypedObject({ typename: 'example.org/type/TestType', version: '0.1.0' })({}) {}
     const dynamicSchema = space.db.schema.addSchema(TestType);
     client.addTypes([TestType]);
     const object = space.db.add(create(dynamicSchema, {}));
