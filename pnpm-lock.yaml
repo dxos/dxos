@@ -134,8 +134,8 @@ importers:
         specifier: 19.1.0
         version: 19.1.0(@swc-node/register@1.9.1)(@swc/core@1.5.7)
       '@playwright/test':
-        specifier: ^1.42.1
-        version: 1.42.1
+        specifier: ^1.44.1
+        version: 1.44.1
       '@rollup/plugin-inject':
         specifier: ^5.0.5
         version: 5.0.5(rollup@3.23.0)
@@ -6050,6 +6050,9 @@ importers:
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../rpc
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../../common/tracing
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
@@ -6888,6 +6891,9 @@ importers:
       platform:
         specifier: ^1.3.6
         version: 1.3.6
+      undici:
+        specifier: '*'
+        version: 6.13.0
       uuid:
         specifier: ^8.3.2
         version: 8.3.2(patch_hash=rxfbstxgb7ip2ka7npjixuqpye)
@@ -8521,12 +8527,21 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
       '@dxos/credentials':
         specifier: workspace:*
         version: link:../../core/halo/credentials
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/echo-db':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-db
+      '@dxos/echo-schema':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-schema
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -8536,10 +8551,22 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      lodash.isequal:
+        specifier: ^4.5.0
+        version: 4.5.0
+      yargs:
+        specifier: ~16.2.0
+        version: 16.2.0
     devDependencies:
+      '@types/lodash.isequal':
+        specifier: ^4.5.0
+        version: 4.5.6
       '@types/node':
         specifier: ^18.11.9
         version: 18.11.9
+      '@types/yargs':
+        specifier: ~16.0.1
+        version: 16.0.4
       ts-node:
         specifier: 10.9.1
         version: 10.9.1(patch_hash=rke3py7up3u364r7wwqfla7cdm)(@swc/core@1.5.7)(@types/node@18.11.9)(typescript@5.4.5)
@@ -8719,6 +8746,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
+      '@dxos/random-access-storage':
+        specifier: workspace:*
+        version: link:../../common/random-access-storage
       '@dxos/rpc':
         specifier: workspace:*
         version: link:../../core/mesh/rpc
@@ -8756,9 +8786,6 @@ importers:
       '@dxos/automerge':
         specifier: workspace:*
         version: link:../../core/echo/automerge
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../common/random-access-storage
       '@types/lodash.get':
         specifier: ^4.4.7
         version: 4.4.7
@@ -21810,12 +21837,12 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: false
 
-  /@playwright/test@1.42.1:
-    resolution: {integrity: sha512-Gq9rmS54mjBL/7/MvBaNOBwbfnh7beHvS6oS4srqXFcQHpQCV1+c8JXWE8VLPyRDhgS3H8x8A7hztqI9VnwrAQ==}
+  /@playwright/test@1.44.1:
+    resolution: {integrity: sha512-1hZ4TNvD5z9VuhNJ/walIjvMVvYkZKf71axoF/uiAqpntQJXpG64dlXhoDXE3OczPuTuvjf/M5KWFg5VAVUS3Q==}
     engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      playwright: 1.42.1
+      playwright: 1.44.1
     dev: true
 
   /@polka/url@1.0.0-next.24:
@@ -43926,6 +43953,13 @@ packages:
     resolution: {integrity: sha512-mxz6zclokgrke9p1vtdy/COWBH+eOZgYUVVU34C73M+4j4HLlQJHtfcqiqqxpP0o8HhMkflvfbquLX5dg6wlfA==}
     engines: {node: '>=16'}
     hasBin: true
+    dev: false
+
+  /playwright-core@1.44.1:
+    resolution: {integrity: sha512-wh0JWtYTrhv1+OSsLPgFzGzt67Y7BE/ZS3jEqgGBlp2ppp1ZDj8c+9IARNW4dwf1poq5MgHreEM2KV/GuR4cFA==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dev: true
 
   /playwright@1.42.1:
     resolution: {integrity: sha512-PgwB03s2DZBcNRoW+1w9E+VkLBxweib6KTXM0M3tkiT4jVxKSi6PmVJ591J+0u10LUrgxB7dLRbiJqO5s2QPMg==}
@@ -43935,6 +43969,17 @@ packages:
       playwright-core: 1.42.1
     optionalDependencies:
       fsevents: 2.3.2
+    dev: false
+
+  /playwright@1.44.1:
+    resolution: {integrity: sha512-qr/0UJ5CFAtloI3avF95Y0L1xQo6r3LQArLIg/z/PoGJ6xa+EwzrwO5lpNr/09STxdHuUoP2mvuELJS+hLdtgg==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      playwright-core: 1.44.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
 
   /plotly.js-dist-min@2.27.1:
     resolution: {integrity: sha512-fFPFityhOkDtjoIVd/9IJQbEEuKEjfmNALBVLZyHwLIkry5ygE4ZC/XENRqLnWR3rNJdTtEaxhM5zflcWTRlDA==}

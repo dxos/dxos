@@ -68,8 +68,9 @@ const StackMain = ({ collection, separation }: StackMainProps) => {
         ) as StackSectionItem['metadata'];
         const view = {
           ...stack.sections[object.id],
-          collapsed: collapsedSections[object.id],
-          title: (object as any)?.title ?? toLocalizedString(graph.findNode(object.id)?.properties.label, t),
+          collapsed: collapsedSections[fullyQualifiedId(object)],
+          title:
+            (object as any)?.title ?? toLocalizedString(graph.findNode(fullyQualifiedId(object))?.properties.label, t),
         } as StackSectionItem['view'];
         return { id: fullyQualifiedId(object), object, metadata, view };
       }) ?? [];

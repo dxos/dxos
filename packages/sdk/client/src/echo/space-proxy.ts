@@ -141,9 +141,7 @@ export class SpaceProxy implements Space {
 
   @trace.info({ depth: 2 })
   get properties(): EchoReactiveObject<any> {
-    if (!this._initialized) {
-      throw new Error('Space is not initialized');
-    }
+    this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
   }
@@ -389,6 +387,7 @@ export class SpaceProxy implements Space {
    * Creates a delegated or interactive invitation.
    */
   share(options?: Partial<Invitation>) {
+    this._throwIfNotInitialized();
     log('create invitation', options);
     return this._invitationsProxy.share({ ...options, spaceKey: this.key });
   }
@@ -397,6 +396,7 @@ export class SpaceProxy implements Space {
    * Requests member role update.
    */
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>) {
+    this._throwIfNotInitialized();
     return this._clientServices.services.SpacesService!.updateMemberRole({
       spaceKey: this.key,
       memberKey: request.memberKey,
@@ -442,6 +442,12 @@ export class SpaceProxy implements Space {
     await this._createEpoch({
       migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
     });
+  }
+
+  private _throwIfNotInitialized() {
+    if (!this._initialized) {
+      throw new Error('Space is not initialized.');
+    }
   }
 }
 

@@ -112,7 +112,7 @@ export class Serializer {
 
     const data = {
       objects: loadedObjects.filter(nonNullable).map((object) => {
-        return this._exportObject(object as any);
+        return this.exportObject(object as any);
       }),
 
       version: Serializer.version,
@@ -151,7 +151,7 @@ export class Serializer {
     await database.flush();
   }
 
-  private _exportObject(object: EchoReactiveObject<any>): SerializedObject {
+  exportObject(object: EchoReactiveObject<any>): SerializedObject {
     const core = getObjectCore(object);
 
     // TODO(dmaretskyi): Unify JSONinfication with echo-handler.
