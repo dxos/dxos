@@ -5,7 +5,7 @@
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
 import { type DocHandle, type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { defaultKey, PropertiesType } from '@dxos/client-protocol';
+import { PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -48,6 +48,9 @@ import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
+// Space properties key for default metadata.
+const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 export interface SigningContext {
   identityKey: PublicKey;
@@ -203,7 +206,7 @@ export class DataSpaceManager {
   async isDefaultSpace(space: DataSpace): Promise<boolean> {
     const rootDoc = await this._getSpaceRootDocument(space);
     const [_, properties] = findPropertiesObject(rootDoc.docSync()) ?? [];
-    return properties?.data?.[defaultKey] === this._signingContext.identityKey.toHex();
+    return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
   }
 
   async createDefaultSpace() {
@@ -216,7 +219,7 @@ export class DataSpaceManager {
         type: encodeReference(getTypeReference(PropertiesType)!),
       },
       data: {
-        [defaultKey]: this._signingContext.identityKey.toHex(),
+        [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
       },
       meta: {
         keys: [],

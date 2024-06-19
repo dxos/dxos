@@ -8,7 +8,6 @@ import { Event, MulticastObservable, PushStream, scheduleTask, Trigger } from '@
 import {
   type ClientServicesProvider,
   CREATE_SPACE_TIMEOUT,
-  defaultKey,
   type Echo,
   PropertiesType,
   type Space,
@@ -137,15 +136,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           void spaceProxy
             .waitUntilReady()
             .then(() => {
-              const identityKeyHex = this._getIdentityKey()?.toHex();
-              if (
-                spaceProxy &&
-                spaceProxy.state.get() === SpaceState.READY &&
-                identityKeyHex &&
-                spaceProxy.properties[defaultKey] === identityKeyHex
-              ) {
-                this._defaultSpaceAvailable.next(true);
-                this._defaultSpaceAvailable.complete();
+              if (spaceProxy && spaceProxy.state.get() === SpaceState.READY && spaceProxy.id === this._defaultSpaceId) {
+                this._onDefaultSpaceReady();
               }
             })
             .catch((err) => err.message === 'Context disposed.' || log.catch(err));
@@ -203,11 +195,16 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._defaultSpaceId = defaultSpaceAssertion.spaceId;
     const defaultSpace = this._spaces.find((s) => s.id === defaultSpaceAssertion.spaceId);
     log('defaultSpaceKey read from a credential', {
-      openSpace: defaultSpace?.isOpen,
+      spaceExists: defaultSpace != null,
+      spaceOpen: defaultSpace?.isOpen,
       spaceId: this._defaultSpaceId,
     });
-    if (defaultSpace && defaultSpace.state.get() === SpaceState.CLOSED) {
-      this._openSpaceAsync(defaultSpace);
+    if (defaultSpace) {
+      if (defaultSpace.state.get() === SpaceState.CLOSED) {
+        this._openSpaceAsync(defaultSpace);
+      } else if (defaultSpace.state.get() === SpaceState.READY) {
+        this._onDefaultSpaceReady();
+      }
     }
     return true;
   }
@@ -274,11 +271,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
   @trace.info()
   get default(): Space {
-    const identityKey = this._getIdentityKey();
-    invariant(identityKey, 'Identity must be set.');
-    const space = this.get().find(
-      (space) => space.state.get() === SpaceState.READY && space.properties[defaultKey] === identityKey.toHex(),
-    );
+    invariant(this._defaultSpaceId, 'Default space ID not set.');
+    const space = this.get().find((space) => space.id === this._defaultSpaceId);
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
   }
@@ -342,7 +336,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._echoClient.graph.query(filter, options);
   }
 
-  private _getIdentityKey() {
-    return this._halo.identity.get()?.identityKey;
+  private _onDefaultSpaceReady() {
+    this._defaultSpaceAvailable.next(true);
+    this._defaultSpaceAvailable.complete();
   }
 }
