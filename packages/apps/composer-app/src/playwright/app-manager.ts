@@ -9,6 +9,8 @@ import { OBSERVABILITY_PLUGIN } from '@braneframe/plugin-observability/meta';
 import { ShellManager } from '@dxos/shell/testing';
 import { setupPage } from '@dxos/test/playwright';
 
+import { PlankManager } from './plugins/deck';
+
 // TODO(wittjosiah): Normalize data-testids between snake and camel case.
 // TODO(wittjosiah): Consider structuring tests in such that they could be run with different sets of plugins enabled.
 
@@ -19,6 +21,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
   initialUrl!: string;
+  planks: PlankManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;
@@ -48,6 +51,7 @@ export class AppManager {
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
+    this.planks = new PlankManager(this.page);
   }
 
   //
