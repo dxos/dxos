@@ -3,7 +3,7 @@
 //
 
 /**
- * Denotes the data version of the space document.
+ * Denotes the data version of the space automerge document as well as the leaf documents for each individual ECHO object.
  */
 export type SpaceDocVersion = number & { __type: 'SpaceDocVersion' };
 
