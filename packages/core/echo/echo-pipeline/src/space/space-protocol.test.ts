@@ -25,11 +25,13 @@ describe('space/space-protocol', () => {
     const peer1 = await builder.createPeer();
     const gossip1 = peer1.createGossip();
     const presence1 = peer1.createPresence(gossip1);
+    await presence1.open();
     const protocol1 = peer1.createSpaceProtocol(topic, gossip1);
 
     const peer2 = await builder.createPeer();
     const gossip2 = peer2.createGossip();
     const presence2 = peer2.createPresence(gossip2);
+    await presence2.open();
     const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
     await protocol1.start();
