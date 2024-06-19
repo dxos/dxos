@@ -2,7 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EncodedReferenceObject, encodeReference, Reference, decodeReference } from '@dxos/echo-protocol';
+import {
+  type EncodedReferenceObject,
+  encodeReference,
+  Reference,
+  decodeReference,
+  type LegacyEncodedReferenceObject,
+} from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -16,16 +22,6 @@ import type { SerializedObject, SerializedSpace } from './serialized-space';
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
 
 const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
-
-/**
- * Reference as it is stored in Automerge document.
- */
-type LegacyEncodedReferenceObject = {
-  '@type': typeof LEGACY_REFERENCE_TYPE_TAG;
-  itemId: string | null;
-  protocol: string | null;
-  host: string | null;
-};
 
 // TODO(burdon): Schema not present when reloaded from persistent store.
 // TODO(burdon): Option to decode JSON/protobuf.
