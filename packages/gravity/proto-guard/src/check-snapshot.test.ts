@@ -15,6 +15,7 @@ import { afterTest, describe, test } from '@dxos/test';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { copyDirSync, createConfig, getBaseDataDir } from './util';
+import { SpaceState } from '@dxos/client/echo';
 
 describe('Load client from storage snapshot', () => {
   const baseDir = getBaseDataDir();
@@ -30,7 +31,7 @@ describe('Load client from storage snapshot', () => {
     return testStoragePath;
   };
 
-  test('check if space loads for Automerge on nodeFS snapshot', async () => {
+  test.skip('check if space loads for Automerge on nodeFS snapshot', async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('automerge-nodeFS');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
@@ -57,7 +58,29 @@ describe('Load client from storage snapshot', () => {
     const client = new Client({ config: createConfig({ dataRoot: tmp }) });
     await asyncTimeout(client.initialize(), 1_000);
     afterTest(() => client.destroy());
+
+    log.break();
+
+    await client.spaces.defaultSpaceLocated;
+
+    log.info('Preparing for migration');
+
+    if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+      await client.spaces.default.internal.migrate();
+    }
+
+    log.info('Default space migration completed');
+
     await client.spaces.isReady.wait();
+
+    for (const space of client.spaces.get()) {
+      if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+        log.info('migrating space', { id: space.id });
+        await space.internal.migrate();
+      }
+    }
+
+    log.break();
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
   });

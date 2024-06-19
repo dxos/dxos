@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { type Client } from '@dxos/client';
 import { Serializer } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 
 export type SpacesDump = {
   /**
@@ -48,6 +49,7 @@ export class SpacesDumper {
     for (const [spaceId, space] of Object.entries(expected)) {
       for (const [objectId, object] of Object.entries(space)) {
         if (!equals(object, received[spaceId][objectId])) {
+          log.warn('data mismatch', { spaceId, objectId, expected: object, received: received[spaceId][objectId] });
           return false;
         }
       }
