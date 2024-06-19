@@ -296,12 +296,6 @@ export class CoreDatabase {
     });
   }
 
-  add(obj: EchoReactiveObject<any>) {
-    const core = getObjectCore(obj);
-    this.addCore(core);
-    return obj;
-  }
-
   remove(obj: EchoReactiveObject<any>) {
     const core = getObjectCore(obj);
     invariant(this._objects.has(core.id));
