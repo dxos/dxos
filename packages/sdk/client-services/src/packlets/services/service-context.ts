@@ -120,10 +120,7 @@ export class ServiceContext extends Resource {
       this._runtimeParams as IdentityManagerRuntimeParams,
     );
 
-    this.echoHost = new EchoHost({
-      kv: this.level,
-      storage: this.storage,
-    });
+    this.echoHost = new EchoHost({ kv: this.level });
 
     this.invitations = new InvitationsHandler(this.networkManager, _runtimeParams?.invitationConnectionDefaultParams);
     this.invitationsManager = new InvitationsManager(
