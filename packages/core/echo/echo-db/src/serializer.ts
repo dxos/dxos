@@ -12,78 +12,9 @@ import { ObjectCore, getObjectCore } from './core-db';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
 import { log } from '@dxos/log';
+import type { SerializedObject, SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;
-
-/**
- * Archive of echo objects.
- *
- * ## Encoding and file format
- *
- * The data is serialized to JSON.
- * Preferred file extensions are `.dx.json`.
- * The file might be compressed with gzip (`.dx.json.gz`).
- */
-export type SerializedSpace = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  version: number;
-
-  /**
-   * Human-readable date of creation.
-   */
-  timestamp?: string;
-
-  /**
-   * Space key.
-   */
-  // TODO(mykola): Maybe remove this?
-  spaceKey?: string;
-
-  /**
-   * List of objects included in the archive.
-   */
-  objects: SerializedObject[];
-};
-
-export type SerializedObject = {
-  /**
-   * Format version number.
-   *
-   * Current version: 1.
-   */
-  '@version': number;
-
-  /**
-   * Human-readable date of creation.
-   */
-  '@timestamp'?: string;
-
-  /**
-   * Unique object identifier.
-   */
-  '@id': string;
-
-  /**
-   * Reference to a type.
-   */
-  '@type'?: EncodedReferenceObject | LegacyEncodedReferenceObject | string;
-
-  /**
-   * Flag to indicate soft-deleted objects.
-   */
-  '@deleted'?: boolean;
-
-  /**
-   * @deprecated
-   *
-   * Model name for the objects backed by a legacy ECHO model.
-   */
-  '@model'?: string;
-} & Record<string, any>;
 
 const LEGACY_REFERENCE_TYPE_TAG = 'dxos.echo.model.document.Reference';
 
