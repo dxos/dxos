@@ -19,7 +19,9 @@ import { TYPE_PROPERTIES } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { deepMapValuesAsync } from '@dxos/util';
 
-const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReferenceObject> => {
+export const convertLegacyReference = async (
+  reference: LegacyEncodedReferenceObject,
+): Promise<EncodedReferenceObject> => {
   if (reference.protocol === Reference.TYPE_PROTOCOL) {
     const res = encodeReference(Reference.fromLegacyTypename(reference.itemId));
     return res;

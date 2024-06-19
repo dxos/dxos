@@ -95,11 +95,15 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
 
       const newRootContent = await convertLegacySpaceRootDoc(structuredClone(rootHandle.docSync()!));
 
+      log.info('converted', { newRootContent });
+
       for (const [id, url] of Object.entries(newRootContent.links ?? {})) {
         const handle = context.repo.find(url as any);
         await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), 10_000));
         invariant(handle.docSync(), 'Doc not found');
+        log.info('will convert', { source: structuredClone(handle.docSync()!) });
         const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
+        log.info('converted', { newDoc });
         const newHandle = context.repo.create(newDoc);
         newRootContent.links![id] = newHandle.url;
       }

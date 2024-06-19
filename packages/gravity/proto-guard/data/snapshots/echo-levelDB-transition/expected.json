@@ -4,7 +4,7 @@
       "@id": "9cb79d0ab4f83f2da95f920f56a9e2ce89359e45d7a3bf37d9199fdecd6ca033",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "dxos.sdk.client.Properties",
+        "itemId": "dxos.org/type/Properties",
         "protocol": "protobuf",
         "host": "dxos.org"
       },
@@ -21,7 +21,7 @@
       "@id": "01J0RBDJZAWZMG4DX99BFY1VKP",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "dxos.sdk.client.Properties",
+        "itemId": "dxos.org/type/Properties",
         "protocol": "protobuf",
         "host": "dxos.org"
       },
@@ -87,7 +87,7 @@
       "@id": "01J0RBDKYHAPNQY33K9PCDPEQC",
       "@type": {
         "@type": "dxos.echo.model.document.Reference",
-        "itemId": "dxos.sdk.client.Properties",
+        "itemId": "dxos.org/type/Properties",
         "protocol": "protobuf",
         "host": "dxos.org"
       },

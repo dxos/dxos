@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { Serializer } from '@dxos/echo-db';
+import { Serializer, getObjectCore, normalizeSerializedObjectData } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -32,6 +32,8 @@ export class SpacesDumper {
 
       dump[space.id] = {};
       for (const object of objects) {
+        log.info('object type', { typw: getObjectCore(object).getType(), doc: getObjectCore(object).getDoc() });
+
         dump[space.id][object.id] = serializer.exportObject(object);
       }
     }
@@ -46,9 +48,16 @@ export class SpacesDumper {
   static checkIfSpacesMatchExpectedData = async (client: Client, expected: SpacesDump) => {
     const received = await SpacesDumper.dumpSpaces(client);
 
+    log.info('actual', { received });
+
     for (const [spaceId, space] of Object.entries(expected)) {
       for (const [objectId, object] of Object.entries(space)) {
-        if (!equals(object, received[spaceId][objectId])) {
+        if (!received[spaceId][objectId]) {
+          log.warn('object not found', { spaceId, objectId });
+          return false;
+        }
+
+        if (!equals(received[spaceId][objectId], object)) {
           log.warn('data mismatch', { spaceId, objectId, expected: object, received: received[spaceId][objectId] });
           return false;
         }
@@ -62,8 +71,15 @@ export class SpacesDumper {
     fs.writeFileSync(path.join(filePath), JSON.stringify(dump, null, 2));
   }
 
-  static load(filePath: string): SpacesDump {
-    return JSON.parse(fs.readFileSync(path.join(filePath), 'utf-8'));
+  static async load(filePath: string): Promise<SpacesDump> {
+    const data: SpacesDump = JSON.parse(fs.readFileSync(path.join(filePath), 'utf-8'));
+    for (const spaceId in data) {
+      for (const objectId in data[spaceId]) {
+        data[spaceId][objectId] = await normalizeSerializedObjectData(data[spaceId][objectId]);
+      }
+    }
+
+    return data;
   }
 }
 
@@ -73,6 +89,7 @@ export const equals = (actual: Record<string, any>, expected: Record<string, any
       continue;
     }
     if (!isEqual(value, actual[key])) {
+      log.warn('value mismatch', { key, expected: value, actual: actual[key] });
       return false;
     }
   }
