@@ -68,8 +68,6 @@ export const Message = ({ timestamp, children, ...messageMeta }: MessageProps) =
       </p>
       <div role='none' className='grid gap-y-1 grid-cols-[min-content_1fr_min-content]'>
         {children}
-        {/* <MessageTextComponent message={message} onDelete={() => onDelete?.(message.id)} />
-        {message.parts?.map((part, i) => <MessagePartComponent key={i} part={part} />)} */}
       </div>
     </MessageMeta>
   );

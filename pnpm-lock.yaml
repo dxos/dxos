@@ -661,9 +661,6 @@ importers:
       '@dxos/devtools':
         specifier: workspace:*
         version: link:../../devtools/devtools
-      '@dxos/echo-db':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-db
       '@dxos/echo-schema':
         specifier: workspace:*
         version: link:../../core/echo/echo-schema
@@ -3165,9 +3162,6 @@ importers:
       '@tldraw/utils':
         specifier: ^2.1.4
         version: 2.2.0
-      classnames:
-        specifier: ^2.3.2
-        version: 2.3.2
       react-resize-detector:
         specifier: ^7.1.2
         version: 7.1.2(react-dom@18.2.0)(react@18.2.0)
