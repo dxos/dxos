@@ -45,6 +45,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
+  private readonly _defaultSpaceLocated = new Trigger();
 
   @trace.info()
   private get _isReadyState() {
@@ -206,6 +207,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
         this._onDefaultSpaceReady();
       }
     }
+    this._defaultSpaceLocated.wake();
     return true;
   }
 
@@ -275,6 +277,11 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     const space = this.get().find((space) => space.id === this._defaultSpaceId);
     invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
     return space;
+  }
+
+  // TODO(dmaretskyi): Should this just be resolved as a part of `open`.
+  get defaultSpaceLocated(): Promise<void> {
+    return this._defaultSpaceLocated.wait();
   }
 
   async create(meta?: PropertiesType): Promise<Space> {
