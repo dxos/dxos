@@ -1,0 +1,23 @@
+//
+// Copyright 2022 DXOS.org
+//
+
+syntax = "proto3";
+
+import "dxos/halo/credentials.proto";
+import "dxos/keys.proto";
+
+package dxos.mesh.teleport;
+
+message GetAdmissionCredentialRequest {
+  dxos.keys.PublicKey space_key = 1;
+  dxos.keys.PublicKey member_key = 2;
+}
+
+message GetAdmissionCredentialResponse {
+  dxos.halo.credentials.Credential admission_credential = 1;
+}
+
+service AdmissionDiscoveryService {
+  rpc GetAdmissionCredential(GetAdmissionCredentialRequest) returns (GetAdmissionCredentialResponse);
+}
