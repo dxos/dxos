@@ -3,7 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
@@ -105,7 +105,12 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     for (const space of dataSpaceManager.spaces.values()) {
       if (space.state === SpaceState.CLOSED) {
         await space.open();
-        await space.initializeDataPipeline();
+
+        // Wait until the space is either READY or REQUIRES_MIGRATION.
+        const requiresMigration = space.stateUpdate.waitForCondition(
+          () => space.state === SpaceState.REQUIRES_MIGRATION,
+        );
+        await Promise.race([space.initializeDataPipeline(), requiresMigration]);
       }
       if (await dataSpaceManager.isDefaultSpace(space)) {
         await identity.updateDefaultSpace(space.id);

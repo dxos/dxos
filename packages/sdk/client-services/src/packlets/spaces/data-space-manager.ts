@@ -13,7 +13,12 @@ import {
   type DelegateInvitationCredential,
   type MemberInfo,
 } from '@dxos/credentials';
-import { findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
+import {
+  convertLegacyReferences,
+  convertLegacySpaceRootDoc,
+  findInlineObjectOfType,
+  type EchoHost,
+} from '@dxos/echo-db';
 import {
   AuthStatus,
   type MetadataStore,
@@ -22,7 +27,13 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import { encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import {
+  LEGACY_TYPE_PROPERTIES,
+  SpaceDocVersion,
+  encodeReference,
+  type ObjectStructure,
+  type SpaceDoc,
+} from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES, getTypeReference } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
@@ -204,9 +215,24 @@ export class DataSpaceManager {
   }
 
   async isDefaultSpace(space: DataSpace): Promise<boolean> {
-    const rootDoc = await this._getSpaceRootDocument(space);
-    const [_, properties] = findInlineObjectOfType(rootDoc.docSync(), TYPE_PROPERTIES) ?? [];
-    return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+    if (!space.databaseRoot) {
+      return false;
+    }
+    switch (space.databaseRoot.getVersion()) {
+      case SpaceDocVersion.CURRENT: {
+        const [_, properties] = findInlineObjectOfType(space.databaseRoot.docSync()!, TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+      case SpaceDocVersion.LEGACY: {
+        const convertedDoc = await convertLegacyReferences(space.databaseRoot.docSync()!);
+        const [_, properties] = findInlineObjectOfType(convertedDoc, LEGACY_TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+
+      default:
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
+        return false;
+    }
   }
 
   async createDefaultSpace() {

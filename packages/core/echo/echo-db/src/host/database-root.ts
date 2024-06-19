@@ -20,8 +20,12 @@ export class DatabaseRoot {
     return !!this._rootHandle.docSync();
   }
 
+  docSync(): A.Doc<SpaceDoc> | null {
+    return this._rootHandle.docSync();
+  }
+
   getVersion(): SpaceDocVersion | null {
-    const doc = this._docSync();
+    const doc = this.docSync();
     if (!doc) {
       return null;
     }
@@ -30,7 +34,7 @@ export class DatabaseRoot {
   }
 
   getSpaceKey(): string | null {
-    const doc = this._docSync();
+    const doc = this.docSync();
     if (!doc) {
       return null;
     }
@@ -39,7 +43,7 @@ export class DatabaseRoot {
   }
 
   getInlineObjectCount(): number | null {
-    const doc = this._docSync();
+    const doc = this.docSync();
     if (!doc) {
       return null;
     }
@@ -48,7 +52,7 @@ export class DatabaseRoot {
   }
 
   getLinkedObjectCount(): number | null {
-    const doc = this._docSync();
+    const doc = this.docSync();
     if (!doc) {
       return null;
     }
@@ -57,14 +61,10 @@ export class DatabaseRoot {
   }
 
   measureMetrics(): DocMetrics | null {
-    const doc = this._docSync();
+    const doc = this.docSync();
     if (!doc) {
       return null;
     }
     return measureDocMetrics(doc);
-  }
-
-  private _docSync(): A.Doc<SpaceDoc> | null {
-    return this._rootHandle.docSync();
   }
 }

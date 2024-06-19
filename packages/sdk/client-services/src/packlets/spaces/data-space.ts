@@ -40,6 +40,7 @@ import { type SigningContext } from './data-space-manager';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
+import type { DatabaseRoot } from '@dxos/echo-db';
 
 export type DataSpaceCallbacks = {
   /**
@@ -101,6 +102,8 @@ export class DataSpace {
   private readonly _epochProcessingMutex = new Mutex();
 
   private _state = SpaceState.CLOSED;
+
+  private _databaseRoot: DatabaseRoot | null = null;
 
   /**
    * Error for _state === SpaceState.ERROR.
@@ -181,6 +184,10 @@ export class DataSpace {
 
   get automergeSpaceState() {
     return this._automergeSpaceState;
+  }
+
+  get databaseRoot(): DatabaseRoot | null {
+    return this._databaseRoot;
   }
 
   @trace.info({ depth: null })
@@ -288,6 +295,7 @@ export class DataSpace {
 
     this._automergeSpaceState.startProcessingRootDocs();
 
+    // TODO(dmaretskyi): Change so `initializeDataPipeline` doesn't wait for the space to be READY, but rather any state with a valid root.
     await ready;
   }
 
@@ -407,6 +415,7 @@ export class DataSpace {
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
         const root = await this._echoHost.openSpaceRoot(handle.url);
+        this._databaseRoot = root;
         if (root.getVersion() !== SpaceDocVersion.CURRENT) {
           this._state = SpaceState.REQUIRES_MIGRATION;
           this.stateUpdate.emit();
