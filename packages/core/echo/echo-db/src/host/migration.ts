@@ -21,7 +21,7 @@ import { deepMapValuesAsync } from '@dxos/util';
 
 const convertLegacyReference = async (reference: LegacyEncodedReferenceObject): Promise<EncodedReferenceObject> => {
   const spaceKey = reference.host;
-  const spaceId = spaceKey !== undefined ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
+  const spaceId = spaceKey != null ? await createIdFromSpaceKey(PublicKey.fromHex(spaceKey)) : undefined;
 
   if (!reference.itemId) {
     throw new Error('Invalid reference');
