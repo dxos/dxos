@@ -193,10 +193,13 @@ export class DataSpace {
 
   @synchronized
   async open() {
-    await this._open();
+    if (this._state === SpaceState.CLOSED) {
+      await this._open();
+    }
   }
 
   private async _open() {
+    await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
     await this._inner.spaceState.addCredentialProcessor(this._notarizationPlugin);
@@ -228,7 +231,7 @@ export class DataSpace {
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
     await this._notarizationPlugin.close();
 
-    await this._presence.destroy();
+    await this._presence.close();
     await this._gossip.close();
   }
 
@@ -545,7 +548,7 @@ export class DataSpace {
 
   @synchronized
   async activate() {
-    if (this._state !== SpaceState.INACTIVE) {
+    if (![SpaceState.CLOSED, SpaceState.INACTIVE].includes(this._state)) {
       return;
     }
 
@@ -559,10 +562,11 @@ export class DataSpace {
     if (this._state === SpaceState.INACTIVE) {
       return;
     }
-
     // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.INACTIVE);
-    await this._close();
+    if (this._state !== SpaceState.CLOSED) {
+      await this._close();
+    }
     this._state = SpaceState.INACTIVE;
     log('new state', { state: SpaceState[this._state] });
     this.stateUpdate.emit();
