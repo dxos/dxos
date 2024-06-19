@@ -109,6 +109,7 @@ const main = async () => {
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
   const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
+  const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -145,7 +146,6 @@ const main = async () => {
       SpaceMeta,
       DebugMeta,
       FilesMeta,
-      GithubMeta,
       IpfsMeta,
       GptMeta,
 
@@ -162,14 +162,10 @@ const main = async () => {
       ExplorerMeta,
       FunctionMeta,
       InboxMeta,
-      GridMeta,
-      KanbanMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
-      OutlinerMeta,
       PresenterMeta,
-      ScriptMeta,
       SketchMeta,
       StackMeta,
       TableMeta,
@@ -178,6 +174,8 @@ const main = async () => {
 
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
+
+      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
       [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),

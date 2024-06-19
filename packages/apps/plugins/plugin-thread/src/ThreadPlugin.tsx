@@ -302,8 +302,13 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
               if (data.subject instanceof DocumentType) {
                 // Sort threads by y-position.
                 // TODO(burdon): Should just use document position?
-                const threads = data.subject.threads.toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
-                const detached = data.subject.threads.filter(({ anchor }) => !anchor).map((thread) => thread.id);
+                const threads = data.subject.threads
+                  .filter(nonNullable)
+                  .toSorted((a, b) => state.threads[a.id] - state.threads[b.id]);
+                const detached = data.subject.threads
+                  .filter(nonNullable)
+                  .filter(({ anchor }) => !anchor)
+                  .map((thread) => thread.id);
 
                 const attention =
                   navigationPlugin?.provides.attention?.attended ?? new Set([fullyQualifiedId(data.subject)]);
@@ -420,8 +425,8 @@ export const ThreadPlugin = (): PluginDefinition<ThreadPluginProvides> => {
           return [
             listener({
               onChange: () => {
-                doc.threads?.forEach((thread) => {
-                  if (thread.anchor) {
+                doc.threads.forEach((thread) => {
+                  if (thread?.anchor) {
                     const [start, end] = thread.anchor.split(':');
                     const name = doc.content && getTextInRange(createDocAccessor(doc.content, ['content']), start, end);
                     // TODO(burdon): This seems unsafe; review.
