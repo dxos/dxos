@@ -1,6 +1,11 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { isLegacyReference, type EncodedReferenceObject, type LegacyEncodedReferenceObject } from '@dxos/echo-protocol';
 import { deepMapValuesAsync } from '@dxos/util';
-import { convertLegacyReference, convertLegacyReferences } from './host';
+
+import { convertLegacyReference } from './host';
 
 /**
  * Archive of echo objects.

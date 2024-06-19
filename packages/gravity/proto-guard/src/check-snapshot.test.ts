@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
+import { SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
@@ -15,7 +16,6 @@ import { afterTest, describe, test } from '@dxos/test';
 import { type SnapshotDescription, SnapshotsRegistry } from './snapshots-registry';
 import { SpacesDumper } from './space-json-dump';
 import { copyDirSync, createConfig, getBaseDataDir } from './util';
-import { SpaceState } from '@dxos/client/echo';
 
 describe('Load client from storage snapshot', () => {
   const baseDir = getBaseDataDir();

@@ -11,7 +11,6 @@ import { deepMapValues, nonNullable, stripUndefinedValues } from '@dxos/util';
 import { ObjectCore, getObjectCore } from './core-db';
 import { type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
-import { log } from '@dxos/log';
 import type { SerializedObject, SerializedSpace } from './serialized-space';
 
 const MAX_LOAD_OBJECT_CHUNK_SIZE = 30;

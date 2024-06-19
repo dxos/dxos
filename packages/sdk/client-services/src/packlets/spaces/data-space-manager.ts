@@ -13,12 +13,7 @@ import {
   type DelegateInvitationCredential,
   type MemberInfo,
 } from '@dxos/credentials';
-import {
-  convertLegacyReferences,
-  convertLegacySpaceRootDoc,
-  findInlineObjectOfType,
-  type EchoHost,
-} from '@dxos/echo-db';
+import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
   type MetadataStore,

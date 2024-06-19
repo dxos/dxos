@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { type Client } from '@dxos/client';
-import { Serializer, getObjectCore, normalizeSerializedObjectData } from '@dxos/echo-db';
+import { Serializer, normalizeSerializedObjectData } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {

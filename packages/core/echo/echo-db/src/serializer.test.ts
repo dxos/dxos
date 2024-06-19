@@ -14,9 +14,9 @@ import { AutomergeContext } from './core-db';
 import { Hypergraph } from './hypergraph';
 import { EchoDatabaseImpl, type EchoDatabase } from './proxy-db';
 import { Filter } from './query';
+import type { SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { Contact, EchoTestBuilder, Todo } from './testing';
-import type { SerializedSpace } from './serialized-space';
 
 describe('Serializer', () => {
   let builder: EchoTestBuilder;

@@ -5,8 +5,9 @@
 import { Event, Mutex, scheduleTask, sleep, synchronized, trackLeaks } from '@dxos/async';
 import { AUTH_TIMEOUT } from '@dxos/client-protocol';
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import type { SpecificCredential } from '@dxos/credentials';
 import { timed, warnAfterTimeout } from '@dxos/debug';
-import { type EchoHost } from '@dxos/echo-db';
+import { type EchoHost, type DatabaseRoot } from '@dxos/echo-db';
 import { createMappedFeedWriter, type MetadataStore, type Space } from '@dxos/echo-pipeline';
 import { SpaceDocVersion } from '@dxos/echo-protocol';
 import { type FeedStore } from '@dxos/feed-store';
@@ -40,8 +41,6 @@ import { type SigningContext } from './data-space-manager';
 import { runEpochMigration } from './epoch-migrations';
 import { NotarizationPlugin } from './notarization-plugin';
 import { TrustedKeySetAuthVerifier } from '../identity';
-import type { DatabaseRoot } from '@dxos/echo-db';
-import type { SpecificCredential } from '@dxos/credentials';
 
 export type DataSpaceCallbacks = {
   /**

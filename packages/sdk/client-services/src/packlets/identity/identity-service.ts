@@ -3,7 +3,7 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf';
-import { Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { signPresentation } from '@dxos/credentials';
 import { todo } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';

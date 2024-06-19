@@ -5,10 +5,11 @@
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 import * as S from '@effect/schema/Schema';
 
+import { invariant } from '@dxos/invariant';
+
 import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
 import { schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
-import { invariant } from '@dxos/invariant';
 
 type TypedObjectOptions = {
   partial?: true;
