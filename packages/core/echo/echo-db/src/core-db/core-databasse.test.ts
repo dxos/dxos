@@ -16,8 +16,8 @@ import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
-import { loadObjectReferences } from './core-database';
 import { getObjectCore } from './doc-accessor';
+import { loadObjectReferences } from './load-object-references';
 import { TestBuilder, TestPeer } from '../testing';
 
 describe('CoreDatabase', () => {

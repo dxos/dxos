@@ -247,7 +247,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   remove<T extends EchoReactiveObject<any>>(obj: T): void {
     invariant(isEchoObject(obj));
-    return this._coreDatabase.remove(obj);
+    return this._coreDatabase.removeCore(getObjectCore(obj));
   }
 
   query(): Query<EchoReactiveObject<any>>;
