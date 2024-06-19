@@ -4,7 +4,8 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { type DocHandle, type AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -21,7 +22,8 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { getTypeReference } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -37,7 +39,7 @@ import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
+import { assignDeep, ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { DataSpace, findPropertiesObject } from './data-space';
 import { spaceGenesis } from './genesis';
@@ -46,6 +48,9 @@ import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
+// Space properties key for default metadata.
+const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 export interface SigningContext {
   identityKey: PublicKey;
@@ -88,8 +93,6 @@ export class DataSpaceManager {
 
   private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
-  private readonly _spaceMemberPresenceAnnounceInterval: number;
-  private readonly _spaceMemberPresenceOfflineTimeout: number;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -99,15 +102,8 @@ export class DataSpaceManager {
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
-    params?: DataSpaceManagerRuntimeParams,
+    private readonly _params?: DataSpaceManagerRuntimeParams,
   ) {
-    const {
-      spaceMemberPresenceAnnounceInterval = PRESENCE_ANNOUNCE_INTERVAL,
-      spaceMemberPresenceOfflineTimeout = PRESENCE_OFFLINE_TIMEOUT,
-    } = params ?? {};
-    this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
-    this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
-
     trace.diagnostic({
       id: 'spaces',
       name: 'Spaces',
@@ -157,12 +153,6 @@ export class DataSpaceManager {
     this._isOpen = true;
     this.updated.emit();
 
-    for (const space of this._spaces.values()) {
-      if (space.state !== SpaceState.INACTIVE) {
-        space.initializeDataPipelineAsync();
-      }
-    }
-
     log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
@@ -174,6 +164,7 @@ export class DataSpaceManager {
     for (const space of this._spaces.values()) {
       await space.close();
     }
+    this._spaces.clear();
   }
 
   /**
@@ -197,6 +188,7 @@ export class DataSpaceManager {
 
     const root = await this._echoHost.createSpaceRoot(spaceKey);
     const space = await this._constructSpace(metadata);
+    await space.open();
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -209,6 +201,46 @@ export class DataSpaceManager {
 
     this.updated.emit();
     return space;
+  }
+
+  async isDefaultSpace(space: DataSpace): Promise<boolean> {
+    const rootDoc = await this._getSpaceRootDocument(space);
+    const [_, properties] = findPropertiesObject(rootDoc.docSync()) ?? [];
+    return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+  }
+
+  async createDefaultSpace() {
+    const space = await this.createSpace();
+    const document = await this._getSpaceRootDocument(space);
+
+    // TODO(dmaretskyi): Better API for low-level data access.
+    const properties: ObjectStructure = {
+      system: {
+        type: encodeReference(getTypeReference(PropertiesType)!),
+      },
+      data: {
+        [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
+      },
+      meta: {
+        keys: [],
+      },
+    };
+
+    const propertiesId = PublicKey.random().toHex();
+    document.change((doc: SpaceDoc) => {
+      assignDeep(doc, ['objects', propertiesId], properties);
+    });
+
+    await this._echoHost.flush();
+    return space;
+  }
+
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
+    const automergeIndex = space.automergeSpaceState.rootUrl;
+    invariant(automergeIndex);
+    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    await document.whenReady();
+    return document;
   }
 
   // TODO(burdon): Rename join space.
@@ -226,6 +258,7 @@ export class DataSpaceManager {
     };
 
     const space = await this._constructSpace(metadata);
+    await space.open();
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
 
@@ -254,8 +287,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._spaceMemberPresenceAnnounceInterval,
-      offlineTimeout: this._spaceMemberPresenceOfflineTimeout,
+      announceInterval: this._params?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._params?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -335,10 +368,6 @@ export class DataSpaceManager {
         this._handleNewPeerConnected(space, peerState);
       }
     });
-
-    if (metadata.state !== SpaceState.INACTIVE) {
-      await dataSpace.open();
-    }
 
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);

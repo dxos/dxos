@@ -1,0 +1,15 @@
+[
+  {
+    "name": "automerge-nodeFS",
+    "version": 2,
+    "dataRoot": "snapshots/2/snapshot",
+    "jsonDataPath": "snapshots/2/expected.json"
+  },
+  {
+    "name": "echo-levelDB-transition",
+    "version": 2,
+    "dataRoot": "snapshots/echo-levelDB-transition/snapshot",
+    "jsonDataPath": "snapshots/echo-levelDB-transition/expected.json",
+    "timestamp": "2024-06-19T13:36:43.418Z"
+  }
+]
