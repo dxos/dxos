@@ -133,7 +133,17 @@ test.describe('Collaboration tests', () => {
   test('host and guest can see each others’ changes in same document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    await Markdown.waitForMarkdownTextbox(host.page);
+
+    // Get host's markdown planks and find the locator for the new document
+    const hostMarkdownPlanks = await getPlanks(host.page, { filter: 'markdown' });
+    expect(hostMarkdownPlanks.length).to.equal(2);
+    const hostSharedMarkdownLocator = hostMarkdownPlanks[0].locator;
+
+    // Focus on host's textbox and wait for it to be ready
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostSharedMarkdownLocator);
+    await hostTextbox.focus();
+
+    // Perform invitation to the guest
     await perfomInvitation(host, guest);
 
     const parts = [
@@ -143,39 +153,70 @@ test.describe('Collaboration tests', () => {
     ];
     const allParts = parts.join('');
 
+    // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
     await waitForExpect(async () => {
       expect(await guest.getObjectsCount()).to.equal(2);
     });
 
+    // Guest opens the shared markdown plank
     await guest.getObjectLinks().last().click();
-    await Markdown.waitForMarkdownTextbox(guest.page);
-    await Markdown.getMarkdownTextbox(host.page).type(parts[0]);
-    await Markdown.getMarkdownTextbox(guest.page).getByText(parts[0]).waitFor();
-    await Markdown.getMarkdownTextbox(guest.page).press('End');
-    await Markdown.getMarkdownTextbox(guest.page).type(parts[1]);
-    await Markdown.getMarkdownTextbox(host.page).getByText([parts[0], parts[1]].join('')).waitFor();
-    await Markdown.getMarkdownTextbox(host.page).press('End');
-    await Markdown.getMarkdownTextbox(host.page).type(parts[2]);
-    await Markdown.getMarkdownTextbox(guest.page).getByText(allParts).waitFor();
-    await Promise.all([
-      Markdown.getMarkdownTextbox(host.page).press('End'),
-      Markdown.getMarkdownTextbox(guest.page).press('End'),
-    ]);
-    await Promise.all([
-      Markdown.getMarkdownTextbox(host.page).press('ArrowDown'),
-      Markdown.getMarkdownTextbox(guest.page).press('ArrowDown'),
-    ]);
-    await Markdown.getMarkdownTextbox(host.page).getByText(allParts).waitFor();
 
-    const hostContent = await Markdown.getMarkdownLineText(host.page);
-    const guestContent = await Markdown.getMarkdownLineText(guest.page);
-    expect(hostContent).to.equal(guestContent);
+    // Get guest's markdown planks and find the locator for the shared document
+    const guestMarkdownPlanks = await getPlanks(guest.page, { filter: 'markdown' });
+    expect(guestMarkdownPlanks.length).to.equal(2);
+    const guestSharedMarkdownLocator = guestMarkdownPlanks[0].locator;
+
+    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guestSharedMarkdownLocator);
+    await guestTextbox.focus();
+
+    // Host types the first part.
+    await hostTextbox.focus();
+    await host.page.keyboard.insertText(parts[0]);
+
+    // Guest waits for the first part to appear.
+    await waitForExpect(async () => {
+      await playwrightExpect(guestTextbox).toContainText(parts[0]);
+    });
+
+    // Guest appends the second part.
+    await guestTextbox.focus();
+    await guest.page.keyboard.press('End');
+    await guest.page.keyboard.insertText(parts[1]);
+
+    // Host waits for the combined first and second parts to appear
+    await waitForExpect(async () => {
+      await playwrightExpect(hostTextbox).toContainText([parts[0], parts[1]].join(''));
+    });
+
+    // Host appends the third part
+    await hostTextbox.focus();
+    await host.page.keyboard.press('End');
+    await host.page.keyboard.insertText(parts[2]);
+
+    // Guest waits for the complete text
+    await waitForExpect(async () => {
+      await playwrightExpect(guestTextbox).toContainText(allParts);
+    });
+
+    // Move cursor to the end in both host and guest
+    await Promise.all([host.page.keyboard.press('End'), guest.page.keyboard.press('End')]);
+
+    // Move down the lines in both host and guest
+    await Promise.all([host.page.keyboard.press('ArrowDown'), guest.page.keyboard.press('ArrowDown')]);
+
+    // Verify final content is the same
+    await waitForExpect(async () => {
+      await playwrightExpect(hostTextbox).toContainText(allParts);
+      await playwrightExpect(guestTextbox).toContainText(allParts);
+    });
   });
 
   test('guest can jump to document host is viewing', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
+
+    // TODO(Zan): This isn't going to work
     await Markdown.waitForMarkdownTextbox(host.page);
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
