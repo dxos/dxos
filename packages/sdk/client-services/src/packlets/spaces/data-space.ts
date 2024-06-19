@@ -453,6 +453,7 @@ export class DataSpace {
           const rootHandle = this._echoHost.automergeRepo.find(currentRootUrl as any);
           await cancelWithContext(this._ctx, asyncTimeout(rootHandle.whenReady(), 10_000));
           const newRoot = this._echoHost.automergeRepo.create(rootHandle.docSync());
+          await this._echoHost.automergeRepo.flush([newRoot.documentId]);
           invariant(typeof newRoot.url === 'string' && newRoot.url.length > 0);
           // TODO(dmaretskyi): Unify epoch construction.
           epoch = {
