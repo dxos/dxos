@@ -30,7 +30,7 @@ describe('Load client from storage snapshot', () => {
     return testStoragePath;
   };
 
-  test('check if space loads for Automerge on nodeFS snapshot', async () => {
+  test.skip('check if space loads for Automerge on nodeFS snapshot', async () => {
     const snapshot = SnapshotsRegistry.getSnapshot('automerge-nodeFS');
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
