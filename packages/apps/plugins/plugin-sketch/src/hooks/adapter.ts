@@ -77,12 +77,14 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       // Replace the store records with the automerge doc records.
       transact(() => {
         store.clear();
-        const currentVersion = accessor.handle.docSync()?.schema;
-        if (currentVersion === undefined) {
-          saveStore(store, accessor);
-        }
+        store.put(Object.values(contentRecords ?? {}).map((record) => decode(record)));
 
         // TODO(wittjosiah): Automatic migrations are disabled for now.
+        // const currentVersion = accessor.handle.docSync()?.schema;
+        // if (currentVersion === undefined) {
+        //   saveStore(store, accessor);
+        // }
+
         // const version = maybeMigrateSnapshot(
         //   store,
         //   Object.values(contentRecords ?? {}).map((record) => decode(record)),
@@ -300,15 +302,15 @@ const encode = (value: any): any => {
 };
 
 // Automerge -> TLDraw
-const _decode = (value: any): any => {
+const decode = (value: any): any => {
   if (Array.isArray(value)) {
-    return value.map(_decode);
+    return value.map(decode);
   }
   if (value instanceof A.RawString) {
     return value.toString();
   }
   if (typeof value === 'object' && value !== null) {
-    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, _decode(value)]));
+    return Object.fromEntries(Object.entries(value).map(([key, value]) => [key, decode(value)]));
   }
 
   return value;

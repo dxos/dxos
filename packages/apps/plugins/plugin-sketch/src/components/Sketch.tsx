@@ -89,7 +89,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
     return () => subscription?.();
   }, [editor, adapter, width, height, autoZoom]);
 
-  if (!adapter) {
+  if (!adapter.store) {
     return null;
   }
 
