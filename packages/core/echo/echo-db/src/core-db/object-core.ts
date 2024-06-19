@@ -14,7 +14,7 @@ import {
   Reference,
 } from '@dxos/echo-protocol';
 import { generateEchoId, isReactiveObject, type ObjectMeta } from '@dxos/echo-schema';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log'; // Keep type-only.
 import { assignDeep, defer, getDeep, throwUnhandledError } from '@dxos/util';
 
@@ -114,7 +114,7 @@ export class ObjectCore {
   }
 
   getDoc() {
-    return this.doc ?? this.docHandle?.docSync() ?? failedInvariant('Invalid state');
+    return this.doc ?? this.docHandle?.docSync();
   }
 
   /**
