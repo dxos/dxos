@@ -132,9 +132,10 @@ export const updateGraphWithSpace = ({
 
   const unsubscribeSpace = effect(() => {
     const hasPendingMigration =
-      space.state.get() === SpaceState.READY &&
-      !!Migrations.versionProperty &&
-      space.properties[Migrations.versionProperty] !== Migrations.targetVersion;
+      space.state.get() === SpaceState.REQUIRES_MIGRATION ||
+      (space.state.get() === SpaceState.READY &&
+        !!Migrations.versionProperty &&
+        space.properties[Migrations.versionProperty] !== Migrations.targetVersion);
     const collection = space.state.get() === SpaceState.READY && space.properties[CollectionType.typename];
     const partials =
       space.state.get() === SpaceState.READY && collection instanceof CollectionType
