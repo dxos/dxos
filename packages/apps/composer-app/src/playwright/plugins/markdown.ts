@@ -6,8 +6,8 @@ import { type Locator, type Page } from '@playwright/test';
 
 // TODO(wittjosiah): If others find this useful, factor out the markdown plugin.
 export const Markdown = {
-  select: (page: Page, text: string) =>
-    page.evaluate((text) => {
+  select: (page: Locator, text: string) =>
+    page.evaluate((_element, text) => {
       const composer = (window as any).composer;
       const doc = composer.editorView.state.doc.text.join('\n');
       const pos = doc.indexOf(text);

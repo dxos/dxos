@@ -25,10 +25,14 @@ test.describe('Comments tests', () => {
   test('create', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
-    await editor.fill('Hello wold!');
-    await Markdown.select(host.page, 'wold');
-    await Thread.createComment(host.page, 'world');
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+
+    const editorTextBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+
+    await editorTextBox.fill('Hello wold!');
+    await Markdown.select(editorTextBox, 'wold');
+    await Thread.createComment(host.page, editorPlank, 'world');
     await waitForExpect(async () => {
       expect(await Thread.getComments(host.page).count()).to.equal(1);
       expect(await Thread.getThreads(host.page).count()).to.equal(1);
