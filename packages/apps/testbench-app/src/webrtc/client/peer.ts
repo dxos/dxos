@@ -157,7 +157,7 @@ export class Peer {
         }
       },
 
-      // When ICE candidate identified (should be send to remote peer) and when ICE gathering finalized.
+      // When ICE candidate identified (should be sent to remote peer) and when ICE gathering finalized.
       // https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/icecandidate_event
       onicecandidate: (event) => {
         log.info('connection.onicecandidate', { event });
