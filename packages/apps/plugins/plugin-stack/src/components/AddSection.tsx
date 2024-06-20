@@ -13,7 +13,17 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { STACK_PLUGIN } from '../meta';
 import { type StackSectionCreator, type StackPluginProvides } from '../types';
 
-const CreatorTile = ({ Icon, label, handleAdd }: { Icon: React.FC<any>; label: string; handleAdd: () => void }) => {
+const CreatorTile = ({
+  Icon,
+  label,
+  testId,
+  handleAdd,
+}: {
+  Icon: React.FC<any>;
+  testId: string;
+  label: string;
+  handleAdd: () => void;
+}) => {
   const onClick = useCallback((_: React.MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -35,7 +45,15 @@ const CreatorTile = ({ Icon, label, handleAdd }: { Icon: React.FC<any>; label: s
 
   return (
     // TODO(Zan): We should have a pure component for these large buttons?
-    <div role='button' aria-label={label} tabIndex={0} className={classes} onClick={onClick} onKeyDown={onKeyDown}>
+    <div
+      role='button'
+      aria-label={label}
+      tabIndex={0}
+      className={classes}
+      onClick={onClick}
+      onKeyDown={onKeyDown}
+      data-testid={testId}
+    >
       {Icon && <Icon className={mx(getSize(6), 'shrink-0')} />}
       <span className='text-xs'>{label}</span>
     </div>
@@ -73,10 +91,18 @@ export const AddSection = ({ collection }: { collection: CollectionType }) => {
       className='grid items-center gap-2 [grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]'
     >
       {stackCreators.map((creator) => {
-        const { label, icon } = creator;
+        const { label, icon, testId } = creator;
         const localizedLabel = toLocalizedString(label, t);
 
-        return <CreatorTile key={creator.id} label={localizedLabel} Icon={icon} handleAdd={() => handleAdd(creator)} />;
+        return (
+          <CreatorTile
+            key={creator.id}
+            label={localizedLabel}
+            testId={testId}
+            Icon={icon}
+            handleAdd={() => handleAdd(creator)}
+          />
+        );
       })}
     </div>
   );

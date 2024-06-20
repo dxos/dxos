@@ -101,13 +101,16 @@ export class PlankManager {
   /**
    * @deprecated Marking this as deprecated for now. We don't want to break plank references.
    */
-  async closePlank(plankId: string) {
+  async closePlank(plankId: string | undefined) {
     await this.updatePlanks();
+    if (!plankId) {
+      return;
+    }
+
     const plank = this.planks.find((plank) => plank.qualifiedId === plankId);
     if (plank) {
       await closePlank(plank.locator);
     }
-
     await this.updatePlanks();
   }
 }

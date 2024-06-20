@@ -63,7 +63,7 @@ test.describe('Collaboration tests', () => {
     await guest.getObjectLinks().last().click();
 
     // Update to use plank locator
-    const guestMarkdownPlanks = guest.planks.getPlanks({ filter: 'markdown' });
+    const guestMarkdownPlanks = await guest.planks.getPlanks({ filter: 'markdown' });
     const guestSharedMarkdownLocator = guestMarkdownPlanks[0].locator;
     const guestMarkdownDoc = Markdown.getMarkdownTextboxWithLocator(guestSharedMarkdownLocator);
 
@@ -97,8 +97,8 @@ test.describe('Collaboration tests', () => {
     });
 
     // Close the space collection in guest.
-    const guestCollectionPlanks = guest.planks.getPlanks({ filter: 'collection' });
-    await guestCollectionPlanks[0].close();
+    const guestSpaceCollectionPlank = (await guest.planks.getPlanks({ filter: 'collection' }))[0];
+    await guest.planks.closePlank(guestSpaceCollectionPlank.qualifiedId);
 
     // Open the shared markdown plank in the guest.
     await guest.getObjectLinks().last().click();

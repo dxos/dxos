@@ -21,7 +21,7 @@ export class AppManager {
   page!: Page;
   shell!: ShellManager;
   initialUrl!: string;
-  planks: PlankManager;
+  planks!: PlankManager;
 
   private readonly _inIframe: boolean | undefined = undefined;
   private _initialized = false;

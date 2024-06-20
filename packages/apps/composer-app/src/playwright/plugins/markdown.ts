@@ -16,6 +16,9 @@ export const Markdown = {
 
   getDocumentTitleInput: (page: Page) => page.getByTestId('composer.documentTitle'),
 
+  /**
+   * @deprecated This method is deprecated and will be removed in future versions.
+   */
   getMarkdownTextbox: (page: Page) => page.getByTestId('composer.markdownRoot').getByRole('textbox'),
 
   getMarkdownTextboxWithLocator: (locator: Locator) =>
