@@ -2,13 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useEditor } from '@tldraw/editor';
-import { DefaultStylePanelContent, type TLUiStylePanelProps, useRelevantStyles } from '@tldraw/tldraw';
+import { getDefaultColorTheme, useEditor, useIsDarkMode } from '@tldraw/editor';
+import {
+  DefaultStylePanelContent,
+  TextStylePickerSet,
+  type TLUiStylePanelProps,
+  useRelevantStyles,
+} from '@tldraw/tldraw';
 import React, { memo, useCallback } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
 export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
+  const isDarkMode = useIsDarkMode();
+  const theme = getDefaultColorTheme({ isDarkMode });
   const editor = useEditor();
   const styles = useRelevantStyles();
 
@@ -17,6 +24,10 @@ export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
       editor.updateInstanceState({ isChangingStyle: false });
     }
   }, [editor, isMobile]);
+
+  if (!styles) {
+    return null;
+  }
 
   // TODO(burdon): Currently the global STYLES (fonts, colors, etc.) are not pluggable.
   // TODO(burdon): Implement custom style panel to replace fonts.
@@ -28,6 +39,7 @@ export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
       onPointerLeave={handlePointerLeave}
     >
       <DefaultStylePanelContent styles={styles} />
+      <TextStylePickerSet theme={theme} styles={styles} />
     </div>
   );
 });
