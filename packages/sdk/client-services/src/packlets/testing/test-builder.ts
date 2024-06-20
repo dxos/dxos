@@ -180,10 +180,7 @@ export class TestPeer {
   }
 
   get echoHost() {
-    return (this._props.echoHost ??= new EchoHost({
-      kv: this.level,
-      storage: this.storage,
-    }));
+    return (this._props.echoHost ??= new EchoHost({ kv: this.level }));
   }
 
   get dataSpaceManager(): DataSpaceManager {
