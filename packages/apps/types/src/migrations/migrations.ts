@@ -51,7 +51,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       // Migrate stacks to collections.
       for (const stack of stacks) {
-        const sections = await loadObjectReferences(stack, (s) => s.sections, { timeout: 30_000 });
+        const sections = await loadObjectReferences(stack, (s) => s.sections);
         const sectionStructures: ObjectStructure[] = [];
         for (const section of sections) {
           builder.deleteObject(section.id);
@@ -92,7 +92,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       const { objects: docs } = await space.db.query(Filter.schema(LegacyTypes.DocumentType)).run();
 
       for (const doc of docs) {
-        const content = await loadObjectReferences(doc, (d) => d.content, { timeout: 30_000 });
+        const content = await loadObjectReferences(doc, (d) => d.content);
         await builder.migrateObject(content.id, ({ data }) => ({
           schema: TextType,
           props: {
@@ -100,7 +100,8 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
           },
         }));
 
-        await loadObjectReferences(doc, (d) => d.comments?.map((comment) => comment.thread), { timeout: 30_000 });
+        // NOTE: Catching errors because some documents may not have comments.
+        await loadObjectReferences(doc, (d) => d.comments?.map((comment) => comment.thread)).catch();
         const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
         for (const comment of doc.comments ?? []) {
           const thread = comment.thread;
@@ -108,11 +109,12 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             continue;
           }
 
-          const messages = await loadObjectReferences(thread, (t) => t.messages, { timeout: 30_000 });
+          const messages = await loadObjectReferences(thread, (t) => t.messages);
           for (const message of messages) {
-            const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content, {
-              timeout: 30_000,
-            })) ?? { content: '' };
+            // NOTE: Catching errors because some messages may not have block content.
+            const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content).catch(() => null)) ?? {
+              content: '',
+            };
             await builder.migrateObject(message.id, ({ data }) => ({
               schema: MessageType,
               props: {
@@ -177,7 +179,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       }
 
       for (const sketch of sketches) {
-        const data = await loadObjectReferences(sketch, (s) => s.data, { timeout: 30_000 });
+        const data = await loadObjectReferences(sketch, (s) => s.data);
         await builder.migrateObject(data.id, async ({ data }) => {
           return {
             schema: CanvasType,
@@ -225,11 +227,12 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       const standaloneThreads = threads.filter((thread) => !documentThreads.includes(thread.id));
 
       for (const thread of standaloneThreads) {
-        const messages = await loadObjectReferences(thread, (t) => t.messages, { timeout: 30_000 });
+        const messages = await loadObjectReferences(thread, (t) => t.messages);
         for (const message of messages) {
-          const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content, {
-            timeout: 30_000,
-          })) ?? { content: '' };
+          // NOTE: Catching errors because some messages may not have block content.
+          const { content } = (await loadObjectReferences(message, (m) => m.blocks[0].content).catch(() => null)) ?? {
+            content: '',
+          };
           await builder.migrateObject(message.id, ({ data }) => ({
             schema: MessageType,
             props: {
