@@ -42,12 +42,15 @@ test.describe('Comments tests', () => {
   test('edit message', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+
     const editorText = 'Hello world!';
     const messageText = 'Example';
-    await editor.fill(editorText);
-    await Markdown.select(host.page, editorText);
-    await Thread.createComment(host.page, messageText);
+    await editorTextBox.fill(editorText);
+    await Markdown.select(editorTextBox, editorText);
+    await Thread.createComment(host.page, editorPlank, messageText);
     const thread = Thread.getThread(host.page, editorText);
     const message = Thread.getMessage(thread, messageText).getByRole('textbox');
     await waitForExpect(async () => {
@@ -66,12 +69,15 @@ test.describe('Comments tests', () => {
   test('delete message', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+
     const editorText = faker.lorem.paragraph();
-    await editor.fill(editorText);
-    await Markdown.select(host.page, editorText);
+    await editorTextBox.fill(editorText);
+    await Markdown.select(editorTextBox, editorText);
     const firstMessage = faker.lorem.sentence();
-    await Thread.createComment(host.page, firstMessage);
+    await Thread.createComment(host.page, editorPlank, firstMessage);
     const thread = Thread.getThread(host.page, editorText);
     await waitForExpect(async () => {
       expect(await Thread.getComments(host.page).count()).to.equal(1);
@@ -103,12 +109,14 @@ test.describe('Comments tests', () => {
   test('delete thread', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
     const editorText = faker.lorem.paragraph();
-    await editor.fill(editorText);
-    await Markdown.select(host.page, editorText);
+    await editorTextBox.fill(editorText);
+    await Markdown.select(editorTextBox, editorText);
     const firstMessage = faker.lorem.sentence();
-    await Thread.createComment(host.page, firstMessage);
+    await Thread.createComment(host.page, editorPlank, firstMessage);
     await waitForExpect(async () => {
       expect(await Thread.getComments(host.page).count()).to.equal(1);
       expect(await Thread.getThreads(host.page).count()).to.equal(1);
@@ -125,12 +133,13 @@ test.describe('Comments tests', () => {
   test('undo delete thread', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextbox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
     const editorText = faker.lorem.paragraph();
-    await editor.fill(editorText);
-    await Markdown.select(host.page, editorText);
+    await editorTextbox.fill(editorText);
+    await Markdown.select(editorTextbox, editorText);
     const firstMessage = faker.lorem.sentence();
-    await Thread.createComment(host.page, firstMessage);
+    await Thread.createComment(host.page, editorPlank, firstMessage);
     await waitForExpect(async () => {
       expect(await Thread.getComments(host.page).count()).to.equal(1);
       expect(await Thread.getThreads(host.page).count()).to.equal(1);
@@ -154,18 +163,21 @@ test.describe('Comments tests', () => {
   test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextbox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+
     const editorText = faker.lorem.paragraphs(3);
     const firstMessage = editorText.slice(0, 10);
     const secondMessage = editorText.slice(100, 115);
     const thirdMessage = editorText.slice(-20);
-    await editor.fill(editorText);
-    await Markdown.select(host.page, firstMessage);
-    await Thread.createComment(host.page, faker.lorem.sentence());
-    await Markdown.select(host.page, secondMessage);
-    await Thread.createComment(host.page, faker.lorem.sentence());
-    await Markdown.select(host.page, thirdMessage);
-    await Thread.createComment(host.page, faker.lorem.sentence());
+    await editorTextbox.fill(editorText);
+    await Markdown.select(editorTextbox, firstMessage);
+    await Thread.createComment(host.page, editorPlank, faker.lorem.sentence());
+    await Markdown.select(editorTextbox, secondMessage);
+    await Thread.createComment(host.page, editorPlank, faker.lorem.sentence());
+    await Markdown.select(editorTextbox, thirdMessage);
+    await Thread.createComment(host.page, editorPlank, faker.lorem.sentence());
     await waitForExpect(async () => {
       expect(await Thread.getComment(host.page, thirdMessage).getAttribute('class')).to.equal('cm-comment-current');
       expect(await Thread.getThread(host.page, thirdMessage).getAttribute('aria-current')).to.equal('location');
@@ -190,12 +202,15 @@ test.describe('Comments tests', () => {
   test.skip('cut & paste comment', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
-    const editor = Markdown.getMarkdownTextbox(host.page);
+
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const editorTextBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
+
     const editorText = faker.lorem.paragraphs(3);
     const messageText = editorText.slice(10, 20);
-    await editor.fill(editorText);
-    await Markdown.select(host.page, messageText);
-    await Thread.createComment(host.page, faker.lorem.sentence());
+    await editorTextBox.fill(editorText);
+    await Markdown.select(editorTextBox, messageText);
+    await Thread.createComment(host.page, editorPlank, faker.lorem.sentence());
     await waitForExpect(async () => {
       expect(await Thread.getComment(host.page, messageText).getAttribute('class')).to.equal('cm-comment-current');
       expect(await Thread.getThread(host.page, messageText).getAttribute('aria-current')).to.equal('location');
@@ -203,7 +218,7 @@ test.describe('Comments tests', () => {
 
     await Markdown.getMarkdownTextbox(host.page).focus();
     const cut = editorText.slice(0, 50);
-    await Markdown.select(host.page, cut);
+    await Markdown.select(editorTextBox, cut);
     await host.cut();
     await waitForExpect(async () => {
       expect(await Thread.getComments(host.page).count()).to.equal(0);
