@@ -8,7 +8,8 @@ import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
-import { CanvasType, migrateCanvas, SketchType } from '@braneframe/types';
+import { CanvasType, SketchType } from '@braneframe/types';
+import { migrateCanvas } from '@braneframe/types/migrations';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
