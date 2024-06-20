@@ -27,7 +27,6 @@ const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(createSketch());
 
   const handleCreate = () => {
-    console.log(JSON.stringify(data.v2, null, 2));
     setSketch(createSketch(data.v2));
   };
 

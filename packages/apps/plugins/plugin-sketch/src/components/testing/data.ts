@@ -111,14 +111,22 @@ export const data = {
         fill: 'none',
         color: 'blue',
         labelColor: 'black',
-        bend: -118.87115471648073,
+        bend: 0,
         start: {
+          // x: 0,
+          // y: 0,
+
+          // Incompatible with v2.
           type: 'binding',
           boundShapeId: 'shape:_-1kyVBGSUAeNrcxiGAbw',
           normalizedAnchor: { x: 0.5, y: 0.5 },
           isExact: false,
         },
         end: {
+          // x: 320,
+          // y: 0,
+
+          // Incompatible with v2.
           type: 'binding',
           boundShapeId: 'shape:kXmGpjXqyzlg1savamgn8',
           normalizedAnchor: { x: 0.5, y: 0.5 },
@@ -228,6 +236,57 @@ export const data = {
       parentId: 'page:4erp5FF7mts21Njur5UKw',
       index: 'a4',
       typeName: 'shape',
+    },
+    // 'shape:yq68k_F35o8izbE4b4MdY': {
+    //   x: 0,
+    //   y: 320,
+    //   rotation: 0,
+    //   isLocked: false,
+    //   opacity: 1,
+    //   meta: {},
+    //   id: 'shape:yq68k_F35o8izbE4b4MdY',
+    //   type: 'arrow',
+    //   parentId: 'page:4erp5FF7mts21Njur5UKw',
+    //   index: 'a5',
+    //   fromId: 'shape:eYiyZDA7Iwoi16QjTkJUE',
+    //   props: {
+    //     dash: 'draw',
+    //     size: 'm',
+    //     fill: 'none',
+    //     color: 'black',
+    //     bend: 0,
+    //     start: {
+    //       x: 0,
+    //       y: 0,
+    //     },
+    //     end: {
+    //       x: 320,
+    //       y: 0,
+    //     },
+    //     arrowheadStart: 'none',
+    //     arrowheadEnd: 'arrow',
+    //     text: '',
+    //     labelPosition: 0.5,
+    //     font: 'draw',
+    //   },
+    //   typeName: 'shape',
+    // },
+    'binding:2zKKPVMgaqs5NnrorOaWA': {
+      meta: {},
+      id: 'binding:2zKKPVMgaqs5NnrorOaWA',
+      type: 'arrow',
+      fromId: 'shape:eYiyZDA7Iwoi16QjTkJUE',
+      toId: 'shape:_-1kyVBGSUAeNrcxiGAbw',
+      props: {
+        isPrecise: true,
+        isExact: false,
+        normalizedAnchor: {
+          x: 0,
+          y: 0,
+        },
+        terminal: 'end',
+      },
+      typeName: 'binding',
     },
   },
 };

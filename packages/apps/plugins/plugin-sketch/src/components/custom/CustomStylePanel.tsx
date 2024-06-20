@@ -2,20 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getDefaultColorTheme, useEditor, useIsDarkMode } from '@tldraw/editor';
-import {
-  DefaultStylePanelContent,
-  TextStylePickerSet,
-  type TLUiStylePanelProps,
-  useRelevantStyles,
-} from '@tldraw/tldraw';
+import { useEditor } from '@tldraw/editor';
+import { DefaultStylePanelContent, type TLUiStylePanelProps, useRelevantStyles } from '@tldraw/tldraw';
 import React, { memo, useCallback } from 'react';
 
 import { mx } from '@dxos/react-ui-theme';
 
 export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
-  const isDarkMode = useIsDarkMode();
-  const theme = getDefaultColorTheme({ isDarkMode });
+  // const isDarkMode = useIsDarkMode();
+  // const theme = getDefaultColorTheme({ isDarkMode });
   const editor = useEditor();
   const styles = useRelevantStyles();
 
@@ -29,6 +24,9 @@ export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
     return null;
   }
 
+  // const font = styles.get(DefaultFontStyle);
+  // const hideText = font === undefined;
+
   // TODO(burdon): Currently the global STYLES (fonts, colors, etc.) are not pluggable.
   // TODO(burdon): Implement custom style panel to replace fonts.
   // https://github.com/tldraw/tldraw/blob/main/apps/examples/src/examples/custom-style-panel/CustomStylePanelExample.tsx
@@ -38,8 +36,9 @@ export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
       data-ismobile={isMobile}
       onPointerLeave={handlePointerLeave}
     >
+      {/* <CommonStylePickerSet theme={theme} styles={styles} /> */}
+      {/* {!hideText && <TextStylePickerSet theme={theme} styles={styles} />} */}
       <DefaultStylePanelContent styles={styles} />
-      <TextStylePickerSet theme={theme} styles={styles} />
     </div>
   );
 });

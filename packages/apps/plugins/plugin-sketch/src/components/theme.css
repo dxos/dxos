@@ -6,9 +6,19 @@
 :root {
   .tl-theme__dark {
     --color-background: #252529;
+
+    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+      box-shadow: none;
+      border: 1px solid #444444;
+    }
   }
 
   .tl-theme__light {
     --color-background: #ffffff;
+
+    .tlui-toolbar__tools, .tlui-menu, .tlui-style-panel__wrapper {
+      box-shadow: none;
+      border: 1px solid #cccccc;
+    }
   }
 }
