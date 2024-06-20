@@ -1,10 +1,14 @@
+//
+// Copyright 2024 DXOS.org
+//
+
 import { type Doc, next as am } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 
 /**
  * This function will clone the source document while preserving history and then patch it in one change so it matches the target data.
  */
-export function migrateDocument<T>(source: Doc<T>, targetData: T): Doc<T> {
+export const migrateDocument = <T>(source: Doc<T>, targetData: T): Doc<T> => {
   const clonedDoc = am.clone(source);
 
   const changedDoc = am.change(clonedDoc, (applyTo) => {
@@ -39,4 +43,4 @@ export function migrateDocument<T>(source: Doc<T>, targetData: T): Doc<T> {
   });
 
   return changedDoc;
-}
+};

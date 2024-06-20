@@ -3,8 +3,8 @@
 //
 
 import { asyncTimeout } from '@dxos/async';
-import type { Repo, AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { next as am } from '@dxos/automerge/automerge';
+import type { Repo, AutomergeUrl } from '@dxos/automerge/automerge-repo';
 import { cancelWithContext, type Context } from '@dxos/context';
 import {
   convertLegacyReferences,
