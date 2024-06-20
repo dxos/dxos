@@ -62,6 +62,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
+    // Note: This call is recursively linking all nested objects
+    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not set prior to this call.
+    //       Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
@@ -135,6 +138,8 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (value instanceof DynamicSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
+      } else if (isEchoObject(value)) {
+        continue;
       } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
