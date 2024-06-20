@@ -22,8 +22,11 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
         />
       </SettingsValue>
 
-      <SettingsValue label={t('settings custom grid label')}>
-        <Input.Switch checked={settings.customGrid} onCheckedChange={(checked) => (settings.customGrid = !!checked)} />
+      <SettingsValue label={t('settings grid type label')}>
+        <Input.Switch
+          checked={settings.gridType === 'dotted'}
+          onCheckedChange={(checked) => (settings.gridType = checked ? 'dotted' : 'mesh')}
+        />
       </SettingsValue>
     </>
   );

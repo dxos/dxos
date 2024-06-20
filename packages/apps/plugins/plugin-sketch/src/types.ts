@@ -36,7 +36,9 @@ export interface SketchModel {
   store: TLStore;
 }
 
+export type SketchGridType = 'mesh' | 'dotted';
+
 export type SketchSettingsProps = {
   showControlsOnHover?: boolean;
-  customGrid?: boolean;
+  gridType?: SketchGridType;
 };

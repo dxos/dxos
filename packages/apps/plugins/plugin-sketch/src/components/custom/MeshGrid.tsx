@@ -14,7 +14,7 @@ export const GRID_STEPS = [
   { min: 0.7, mid: 2.5, step: 1 },
 ];
 
-export const CustomGrid = ({ x, y, z, size }: TLGridProps) => {
+export const MeshGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
 
   return (

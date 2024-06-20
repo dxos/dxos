@@ -13,7 +13,7 @@ export default [
         'create object label': 'Create sketch',
         'create stack section label': 'Create sketch',
         'settings hover tools label': 'Show controls on hover',
-        'settings custom grid label': 'Enable custom grid',
+        'settings grid type label': 'Dotted grid',
       },
     },
   },

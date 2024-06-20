@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import './theme.css';
 import '@tldraw/tldraw/tldraw.css';
 
-import { type Editor, Tldraw, DefaultGrid } from '@tldraw/tldraw';
+import './theme.css';
+
+import { type TLGridProps } from '@tldraw/editor';
+import { DefaultGrid as DottedGrid, type Editor, Tldraw } from '@tldraw/tldraw';
 import React, { type FC, useEffect, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -14,10 +16,16 @@ import { debounce } from '@dxos/async';
 import { useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
 
-import { CustomGrid, CustomStylePanel } from './custom';
+import { CustomStylePanel, MeshGrid } from './custom';
 import { useStoreAdapter } from '../hooks';
+import { type SketchGridType } from '../types';
 
-// NOTE(Zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
+// NOTE(zan): Color overrides can be found in `/layers/tldraw.css` in `react-ui-theme`.
+
+const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
+  mesh: MeshGrid,
+  dotted: DottedGrid,
+};
 
 export type SketchComponentProps = {
   sketch: SketchType;
@@ -26,7 +34,7 @@ export type SketchComponentProps = {
   autoZoom?: boolean;
   maxZoom?: number;
   showControlsOnHover?: boolean;
-  customGrid?: boolean;
+  grid?: SketchGridType;
 };
 
 // TODO(burdon): Remove outline when focused (from tabster?)
@@ -37,7 +45,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
   readonly = false,
   className,
   showControlsOnHover,
-  customGrid,
+  grid,
 }) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
@@ -99,16 +107,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx(
-        'is-full bs-full',
-        '[&>div>span>div]:z-0',
-        '[&_.tlui-menu-zone]:hidden',
-        '[&_.tlui-navigation-zone]:hidden',
-        '[&_.tlui-help-menu]:hidden',
-        '[&_.tlui-debug-panel]:hidden',
-        'attention-within',
-        className,
-      )}
+      className={mx('is-full bs-full', className)}
       onPointerEnter={() => {
         if (showControlsOnHover) {
           setActive(!readonly && !adapter.readonly);
@@ -130,7 +129,7 @@ const SketchComponent: FC<SketchComponentProps> = ({
         maxAssetSize={1024 * 1024}
         components={{
           DebugPanel: null,
-          Grid: customGrid ? CustomGrid : DefaultGrid,
+          Grid: gridComponents[grid ?? 'mesh'],
           HelpMenu: null,
           MenuPanel: null,
           NavigationPanel: null,

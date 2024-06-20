@@ -4,3 +4,4 @@
 
 export * from './migrations';
 export * as LegacyTypes from './legacy-types';
+export { migrateCanvas } from './tldraw';
