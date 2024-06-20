@@ -5,7 +5,7 @@
 import { asyncTimeout } from '@dxos/async';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 
-import { getObjectCore } from './doc-accessor';
+import { getObjectCore } from '../core-db';
 
 /**
  * EXPERIMENTAL - the API is subject to change.
