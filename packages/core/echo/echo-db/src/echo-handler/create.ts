@@ -135,6 +135,8 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
       if (value instanceof DynamicSchema) {
         target[key] = value.serializedSchema;
         validateInitialProps(value.serializedSchema, seen);
+      } else if (isEchoObject(value)) {
+        continue;
       } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
