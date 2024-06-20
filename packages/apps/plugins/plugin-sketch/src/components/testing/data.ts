@@ -93,6 +93,14 @@ export const data = {
       index: 'a4',
       typeName: 'shape',
     },
+
+    'binding:F_o1eH6pS_ABcU3': {
+      type: 'arrow',
+      id: 'binding:F_o1eH6pS_ABcU3',
+      fromId: 'shape:_-1kyVBGSUAeNrcxiGAbw',
+      toId: 'shape:kXmGpjXqyzlg1savamgn8',
+    },
+
     // NOTE: This record will fail to be migrated.
     'shape:F_o1eH6pS_ABcU3-JPadv': {
       x: 0,
@@ -113,24 +121,22 @@ export const data = {
         labelColor: 'black',
         bend: 0,
         start: {
-          // x: 0,
-          // y: 0,
-
+          x: 0,
+          y: 0,
           // Incompatible with v2.
-          type: 'binding',
-          boundShapeId: 'shape:_-1kyVBGSUAeNrcxiGAbw',
-          normalizedAnchor: { x: 0.5, y: 0.5 },
-          isExact: false,
+          // type: 'binding',
+          // boundShapeId: 'shape:_-1kyVBGSUAeNrcxiGAbw',
+          // normalizedAnchor: { x: 0.5, y: 0.5 },
+          // isExact: false,
         },
         end: {
-          // x: 320,
-          // y: 0,
-
+          x: 320,
+          y: 0,
           // Incompatible with v2.
-          type: 'binding',
-          boundShapeId: 'shape:kXmGpjXqyzlg1savamgn8',
-          normalizedAnchor: { x: 0.5, y: 0.5 },
-          isExact: false,
+          // type: 'binding',
+          // boundShapeId: 'shape:kXmGpjXqyzlg1savamgn8',
+          // normalizedAnchor: { x: 0.5, y: 0.5 },
+          // isExact: false,
         },
         arrowheadStart: 'none',
         arrowheadEnd: 'arrow',
