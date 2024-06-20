@@ -30,6 +30,10 @@ test.describe('Invitations', () => {
     await manager.init();
   });
 
+  test.afterEach(async () => {
+    await manager.closePage();
+  });
+
   test.describe('device', () => {
     test('happy path', async () => {
       await manager.createIdentity(0);
