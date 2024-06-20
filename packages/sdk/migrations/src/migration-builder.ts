@@ -7,7 +7,7 @@ import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/a
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
-import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
@@ -110,6 +110,7 @@ export class MigrationBuilder {
     }
 
     this._newRoot = this._repo.create<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
@@ -134,6 +135,7 @@ export class MigrationBuilder {
     core.initNewObject(props);
     core.setType(requireTypeReference(schema));
     const newHandle = this._repo.create<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
