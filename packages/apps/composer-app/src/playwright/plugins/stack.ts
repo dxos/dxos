@@ -11,8 +11,9 @@ export const Stack = {
   getStack: (page: Page) => new StackManager(page.getByTestId('main.stack')),
 
   createSection: async (page: Page, plugin: string) => {
-    if (await page.getByTestId('state.createSection').isVisible()) {
-      await page.getByTestId('state.createSection').click();
+    const dialogTrigger = await page.$('[data-testid="stack.createSection"]');
+    if (dialogTrigger) {
+      await dialogTrigger.click();
     }
     return page.getByTestId(`${plugin}.createSection`).click();
   },

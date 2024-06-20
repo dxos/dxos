@@ -47,6 +47,7 @@ test.describe('Stack tests', () => {
   test('create section from existing document', async () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
+    await host.planks.closeAll();
     await host.createCollection(1);
     const stack = Stack.getStack(host.page);
     const doc = await host.getObjectLinks().nth(1);
@@ -65,6 +66,7 @@ test.describe('Stack tests', () => {
 
   test('reorder sections', async () => {
     await host.createSpace();
+    await host.planks.closeAll();
     await host.createCollection(1);
     await Stack.createSection(host.page, 'markdownPlugin');
     await Stack.createSection(host.page, 'markdownPlugin');
