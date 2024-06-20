@@ -4,8 +4,14 @@
 
 import { asyncTimeout } from '@dxos/async';
 import type { Repo, AutomergeUrl } from '@dxos/automerge/automerge-repo';
+import { next as am } from '@dxos/automerge/automerge';
 import { cancelWithContext, type Context } from '@dxos/context';
-import { convertLegacyReferences, convertLegacySpaceRootDoc, findInlineObjectOfType } from '@dxos/echo-db';
+import {
+  convertLegacyReferences,
+  convertLegacySpaceRootDoc,
+  findInlineObjectOfType,
+  migrateDocument,
+} from '@dxos/echo-db';
 import { AutomergeDocumentLoaderImpl } from '@dxos/echo-pipeline';
 import type { SpaceDoc } from '@dxos/echo-protocol';
 import { TYPE_PROPERTIES } from '@dxos/echo-schema';
@@ -100,11 +106,13 @@ export const runEpochMigration = async (ctx: Context, context: MigrationContext)
         await cancelWithContext(ctx, asyncTimeout(handle.whenReady(), 10_000));
         invariant(handle.docSync(), 'Doc not found');
         const newDoc = await convertLegacyReferences(structuredClone(handle.docSync()!));
-        const newHandle = context.repo.create(newDoc);
+        const migratedDoc = migrateDocument(handle.docSync(), newDoc);
+        const newHandle = context.repo.import(am.save(migratedDoc));
         newRootContent.links![id] = newHandle.url;
       }
 
-      const newRoot = context.repo.create(newRootContent);
+      const migratedRoot = migrateDocument(rootHandle.docSync(), newRootContent);
+      const newRoot = context.repo.import(am.save(migratedRoot));
 
       await context.repo.flush();
       return {

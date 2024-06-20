@@ -1,0 +1,23 @@
+import { describe, test } from '@dxos/test';
+import { next as am } from '@dxos/automerge/automerge';
+import { expect } from 'chai';
+import { migrateDocument } from './migrate-document';
+
+describe('migrateDocument', () => {
+  test('migrates nested objects', () => {
+    const source = { content: { text: 'Hello, world!', done: false }, version: 1 };
+    const target = { content: { text: 'Hello, world!', done: true }, version: 2 };
+
+    const migrated = migrateDocument(am.from(source), target);
+    expect(migrated).to.deep.eq(target);
+  });
+
+  test('preserves text cursors', () => {
+    const source = am.from({ content: { text: 'Hello, world!' }, version: 1 });
+    const cursor = am.getCursor(source, ['content', 'text'], 7);
+    expect(am.getCursorPosition(source, ['content', 'text'], cursor)).to.eq(7);
+
+    const migrated = migrateDocument(source, { content: { text: 'Hello, world!' }, version: 2 });
+    expect(am.getCursorPosition(migrated, ['content', 'text'], cursor)).to.eq(7);
+  });
+});
