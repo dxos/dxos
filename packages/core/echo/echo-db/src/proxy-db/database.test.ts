@@ -257,7 +257,7 @@ describe('Database', () => {
 
     console.log(task.todos![0]);
     expect(getType(task.todos![0] as any)?.itemId).to.eq('example.test.Task.Todo');
-    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type'].itemId).to.eq('example.test.Task.Todo');
+    expect(JSON.parse(JSON.stringify(task.todos![0]))['@type']['/']).to.eq('dxn:type:example.test.Task.Todo');
   });
 
   describe('object collections', () => {

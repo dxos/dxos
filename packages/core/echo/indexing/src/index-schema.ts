@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Resource } from '@dxos/context';
-import { type ObjectStructure } from '@dxos/echo-protocol';
+import { decodeReference, type ObjectStructure } from '@dxos/echo-protocol';
 import { EXPANDO_TYPENAME } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { type ObjectPointerEncoded } from '@dxos/protocols';
@@ -105,4 +105,5 @@ export class IndexSchema extends Resource implements Index {
   }
 }
 
-const getTypeFromObject = (object: Partial<ObjectStructure>): string | null => object.system?.type?.itemId ?? null;
+const getTypeFromObject = (object: Partial<ObjectStructure>): string | null =>
+  object.system?.type ? decodeReference(object.system.type).itemId ?? null : null;

@@ -20,7 +20,7 @@ export {
   createSubscription,
   fromCursor,
   getRangeFromCursor,
-  getTypeRef,
+  decodeSerializedReference as getTypeRef,
   getObjectCore,
   getTextInRange,
   hasType,

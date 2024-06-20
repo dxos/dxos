@@ -38,6 +38,7 @@ import {
 } from './echo-proxy-target';
 import { META_NAMESPACE, type ObjectCore, type KeyPath } from '../core-db';
 import { type EchoDatabase } from '../proxy-db';
+import { log } from '@dxos/log';
 
 export const PROPERTY_ID = 'id';
 
@@ -252,7 +253,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else {
       const withLinks = deepMapValues(validatedValue, (value, recurse) => {
         if (isReactiveObject(value) as boolean) {
-          return this._linkReactiveHandler(target, value);
+          return this.linkObject(target, value);
         } else {
           return recurse(value);
         }
@@ -261,38 +262,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     return true;
-  }
-
-  /**
-   * Used when `set` and other mutating methods are called with a proxy.
-   * @param target - self
-   * @param proxy - the proxy that was passed to the method
-   * @param internals - internals of the proxy
-   */
-  private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
-    const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
-    const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
-
-    const objectId = echoObject.id;
-    invariant(typeof objectId === 'string' && objectId.length > 0);
-
-    if (target[symbolInternals].database) {
-      const anotherDb = otherInternals?.database;
-      if (!anotherDb) {
-        target[symbolInternals].database.add(echoObject);
-        return new Reference(objectId);
-      } else {
-        if (anotherDb !== target[symbolInternals].database) {
-          return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
-        } else {
-          return new Reference(objectId);
-        }
-      }
-    } else {
-      invariant(target[symbolInternals].linkCache);
-      target[symbolInternals].linkCache.set(objectId, echoObject);
-      return new Reference(objectId);
-    }
   }
 
   private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
@@ -471,36 +440,39 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Store referenced object.
+   * Used when `set` and other mutating methods are called with a proxy.
+   * @param target - self
+   * @param proxy - the proxy that was passed to the method
    */
-  linkObject(target: ProxyTarget, obj: EchoReactiveObject<any>): Reference {
-    const database = target[symbolInternals].database;
-    if (database) {
-      // TODO(dmaretskyi): Fix this.
-      if (isReactiveObject(obj) && !isEchoObject(obj)) {
-        database.add(obj);
-      }
+  linkObject(target: ProxyTarget, proxy: any): Reference {
+    const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
+    const internals = target[symbolInternals];
+    const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
+    const otherDb = otherInternals?.database;
 
-      const foreignDatabase = (getProxyHandlerSlot(obj).target as ProxyTarget)[symbolInternals].database;
-      if (!foreignDatabase) {
-        database.add(obj);
-        return new Reference(obj.id);
-      } else {
-        if (foreignDatabase !== database) {
-          return new Reference(obj.id, undefined, foreignDatabase.spaceKey.toHex());
-        } else {
-          return new Reference(obj.id);
-        }
-      }
+    const objectId = echoObject.id;
+    invariant(typeof objectId === 'string' && objectId.length > 0);
+
+
+    if (otherDb && otherDb !== internals.database) {
+      // Object is already saved to another database.
+      return new Reference(objectId, undefined, otherDb.spaceKey.toHex());
+    }
+
+    if (!internals.database) {
+      // Our object is not bound to the database.
+      invariant(internals.linkCache);
+      internals.linkCache.set(objectId, echoObject);
+      return new Reference(objectId);
+    }
+
+    if (!otherDb) {
+      // The object is not bound to the database -- save it to ours.
+      internals.database.add(echoObject);
+      return new Reference(objectId);
     } else {
-      invariant(target[symbolInternals].linkCache);
-
-      // Can be caused not using `object(Expando, { ... })` constructor.
-      // TODO(dmaretskyi): Add better validation.
-      invariant(obj.id != null);
-
-      target[symbolInternals].linkCache.set(obj.id, obj as EchoReactiveObject<any>);
-      return new Reference(obj.id);
+      invariant(otherDb === internals.database);
+      return new Reference(objectId);
     }
   }
 
