@@ -39,6 +39,6 @@ export interface SketchModel {
 export type SketchGridType = 'mesh' | 'dotted';
 
 export type SketchSettingsProps = {
-  showControlsOnHover?: boolean;
+  autoHideControls?: boolean;
   gridType?: SketchGridType;
 };

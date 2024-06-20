@@ -18,13 +18,26 @@ import { Filter, fullyQualifiedId } from '@dxos/react-client/echo';
 import { SketchComponent, SketchMain, SketchSettings } from './components';
 import meta, { SKETCH_PLUGIN } from './meta';
 import translations from './translations';
-import { SketchAction, type SketchSettingsProps, type SketchPluginProvides } from './types';
+import { SketchAction, type SketchGridType, type SketchPluginProvides, type SketchSettingsProps } from './types';
 
 export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
   const settings = new LocalStorageStore<SketchSettingsProps>(SKETCH_PLUGIN, {});
 
   return {
     meta,
+    ready: async () => {
+      settings
+        .prop({
+          key: 'autoHideControls',
+          storageKey: 'auto-hide-controls',
+          type: LocalStorageStore.bool({ allowUndefined: true }),
+        })
+        .prop({
+          key: 'gridType',
+          storageKey: 'grid-type',
+          type: LocalStorageStore.enum<SketchGridType>({ allowUndefined: true }),
+        });
+    },
     provides: {
       metadata: {
         records: {
@@ -132,7 +145,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
               return data.active instanceof SketchType ? (
                 <SketchMain
                   sketch={data.active}
-                  showControlsOnHover={settings.values.showControlsOnHover}
+                  autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
               ) : null;
@@ -144,7 +157,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   autoZoom
                   maxZoom={1.5}
                   className='p-16'
-                  showControlsOnHover={settings.values.showControlsOnHover}
+                  autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
               ) : null;
@@ -156,7 +169,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   autoZoom={role === 'section'}
                   readonly={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'bs-96'}
-                  showControlsOnHover={settings.values.showControlsOnHover}
+                  autoHideControls={settings.values.autoHideControls}
                   grid={settings.values.gridType}
                 />
               ) : null;

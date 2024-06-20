@@ -33,7 +33,7 @@ export type SketchComponentProps = {
   className?: string;
   autoZoom?: boolean;
   maxZoom?: number;
-  showControlsOnHover?: boolean;
+  autoHideControls?: boolean;
   grid?: SketchGridType;
 };
 
@@ -44,12 +44,12 @@ const SketchComponent: FC<SketchComponentProps> = ({
   maxZoom = 1,
   readonly = false,
   className,
-  showControlsOnHover,
+  autoHideControls,
   grid,
 }) => {
   const { themeMode } = useThemeContext();
   const adapter = useStoreAdapter(sketch.canvas);
-  const [active, setActive] = useState(!showControlsOnHover);
+  const [active, setActive] = useState(!autoHideControls);
   const [editor, setEditor] = useState<Editor>();
   useEffect(() => {
     if (editor) {
@@ -66,10 +66,10 @@ const SketchComponent: FC<SketchComponentProps> = ({
 
   // Ensure controls are visible when not in hover mode.
   useEffect(() => {
-    if (!showControlsOnHover && !active) {
+    if (!autoHideControls && !active) {
       setActive(true);
     }
-  }, [showControlsOnHover]);
+  }, [autoHideControls]);
 
   // Zoom to fit.
   const { ref: containerRef, width = 0, height } = useResizeDetector();
@@ -109,12 +109,12 @@ const SketchComponent: FC<SketchComponentProps> = ({
       style={{ visibility: ready ? 'visible' : 'hidden' }}
       className={mx('is-full bs-full', className)}
       onPointerEnter={() => {
-        if (showControlsOnHover) {
+        if (autoHideControls) {
           setActive(!readonly && !adapter.readonly);
         }
       }}
       onPointerLeave={() => {
-        if (showControlsOnHover) {
+        if (autoHideControls) {
           setActive(false);
         }
       }}

@@ -17,8 +17,8 @@ export const SketchSettings = ({ settings }: { settings: SketchSettingsProps }) 
     <>
       <SettingsValue label={t('settings hover tools label')}>
         <Input.Switch
-          checked={settings.showControlsOnHover}
-          onCheckedChange={(checked) => (settings.showControlsOnHover = !!checked)}
+          checked={settings.autoHideControls}
+          onCheckedChange={(checked) => (settings.autoHideControls = !!checked)}
         />
       </SettingsValue>
 

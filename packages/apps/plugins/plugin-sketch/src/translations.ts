@@ -12,7 +12,7 @@ export default [
         'object title placeholder': 'New sketch',
         'create object label': 'Create sketch',
         'create stack section label': 'Create sketch',
-        'settings hover tools label': 'Show controls on hover',
+        'settings hover tools label': 'Auto hide controls',
         'settings grid type label': 'Dotted grid',
       },
     },
