@@ -219,6 +219,9 @@
       "path": "../plugins/plugin-wildcard"
     },
     {
+      "path": "../plugins/plugin-wnfs"
+    },
+    {
       "path": "../types"
     }
   ]

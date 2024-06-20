@@ -25,8 +25,8 @@ export const definitions = ({
   env,
 }: ConfigPluginOpts) => {
   const KEYS_TO_FILE = {
-    __CONFIG_DEFAULTS__: configPath ?? resolve(CWD, 'dx.yml'),
-    __CONFIG_ENVS__: envPath ?? resolve(CWD, 'dx-env.yml'),
+    __CONFIG_DEFAULTS__: configPath && configPath.length ? configPath : resolve(CWD, 'dx.yml'),
+    __CONFIG_ENVS__: envPath && envPath.length ? envPath : resolve(CWD, 'dx-env.yml'),
   } as { [key: string]: string };
 
   if (mode !== 'production') {
