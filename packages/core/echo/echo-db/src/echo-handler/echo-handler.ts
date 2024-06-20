@@ -449,19 +449,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
 
     const database = target[symbolInternals].database;
-    if (database) {
-      const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
-      if (!foreignDatabase) {
-        database.add(otherEchoObj);
-        return new Reference(otherObjId);
-      } else {
-        if (foreignDatabase !== database) {
-          return new Reference(otherObjId, undefined, foreignDatabase.spaceKey.toHex());
-        } else {
-          return new Reference(otherObjId);
-        }
-      }
-    } else {
+
+    // Note: Save proxy in `.linkCache` if the object is not yet saved in the database.
+    if (!database) {
       invariant(target[symbolInternals].linkCache);
 
       // Can be caused not using `object(Expando, { ... })` constructor.
@@ -471,6 +461,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as EchoReactiveObject<any>);
       return new Reference(otherObjId);
     }
+
+    const foreignDatabase = (getProxyHandlerSlot(otherEchoObj).target as ProxyTarget)[symbolInternals].database;
+
+    if (!foreignDatabase) {
+      database.add(otherEchoObj);
+      return new Reference(otherObjId);
+    }
+
+    // Note: If the object is in a different database, return a reference to a foreign database.
+    if (foreignDatabase !== database) {
+      return new Reference(otherObjId, undefined, foreignDatabase.spaceKey.toHex());
+    }
+
+    return new Reference(otherObjId);
   }
 
   /**
