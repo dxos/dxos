@@ -87,6 +87,7 @@ const deserializeEchoObject = (parsed: any, newId?: boolean): Expando => {
     core.id = id;
   }
   getMeta(deserializedObject).keys.push(...(meta?.keys ?? []));
+  // TODO(dmaretskyi): Remove usage of this internal method.
   const typeRef = internalDecodeReference(type);
   if (typeRef) {
     core.setType(typeRef);
