@@ -17,7 +17,7 @@ export const Markdown = {
   getDocumentTitleInput: (page: Page) => page.getByTestId('composer.documentTitle'),
 
   /**
-   * @deprecated This method is deprecated and will be removed in future versions.
+   * @deprecated This method is deprecated. Try to use the plank scoped version instead.
    */
   getMarkdownTextbox: (page: Page) => page.getByTestId('composer.markdownRoot').getByRole('textbox'),
 
