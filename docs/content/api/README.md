@@ -1,6 +1,6 @@
 # DXOS API Documentation
 
-This reference documentation was [generated automatically](/guide/contributing/documentation#generated-documentation) from source.
+This reference documentation was [generated automatically](https://github.com/dxos/dxos/tree/main/docs#dxos-documentation-site) from source.
 
 To get started with DXOS components and learn how to use them, check out the [guide](/guide/).
 
