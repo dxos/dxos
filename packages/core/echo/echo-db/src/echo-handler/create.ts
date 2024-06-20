@@ -62,6 +62,9 @@ export const createEchoObject = <T extends {}>(init: T): EchoReactiveObject<T> =
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, proxy);
 
+    // Note: This call is recursively linking all nested objects
+    //       which can cause recursive loops of `createEchoObject` if `EchoReactiveHandler` is not save prior to this call.
+    //       Do not change order.
     initCore(core, target);
     slot.handler.init(target);
 
