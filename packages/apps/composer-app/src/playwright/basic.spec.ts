@@ -10,7 +10,6 @@ import { log } from '@dxos/log';
 
 import { AppManager } from './app-manager';
 import { Markdown } from './plugins';
-import { getPlanks } from './plugins/deck';
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
@@ -42,11 +41,8 @@ test.describe('Basic tests', () => {
     await host.createSpace();
     await host.createObject('markdownPlugin');
 
-    const markdownPlanks = await getPlanks(host.page, { filter: 'markdown' });
-    expect(markdownPlanks.length).to.equal(2);
-    const [{ locator: newEditorLocator }, _readme] = markdownPlanks;
-
-    const textBox = Markdown.getMarkdownTextboxWithLocator(newEditorLocator);
+    const editorPlank = (await host.planks.getPlanks({ filter: 'markdown' }))[0].locator;
+    const textBox = Markdown.getMarkdownTextboxWithLocator(editorPlank);
 
     await waitForExpect(async () => {
       expect(await host.getObjectsCount()).to.equal(2);
