@@ -20,7 +20,7 @@ test.describe('Basic tests', () => {
   let host: AppManager;
 
   test.beforeEach(async ({ browser }) => {
-    host = new AppManager(browser, false);
+    host = new AppManager(browser, true);
     await host.init();
   });
 
