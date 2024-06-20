@@ -12,7 +12,13 @@ export const CustomStylePanel = memo(({ isMobile }: TLUiStylePanelProps) => {
   // const isDarkMode = useIsDarkMode();
   // const theme = getDefaultColorTheme({ isDarkMode });
   const editor = useEditor();
+
   const styles = useRelevantStyles();
+
+  // NOTE: UX seems to depend on specific value DefaultFontStyle.
+  // const s2 = Array.from(s1?.entries() ?? []);
+  // const s3 = s2.map(([key, value]) => (key.id === 'tldraw:font' ? [CustomFontStyle, value] : [key, value]));
+  // const styles = new ReadonlySharedStyleMap(s3);
 
   const handlePointerLeave = useCallback(() => {
     if (!isMobile) {

@@ -17,6 +17,9 @@ export const GRID_STEPS = [
 export const MeshGrid = ({ x, y, z, size }: TLGridProps) => {
   const theme = useDefaultColorTheme();
 
+  // TODO(burdon): Color option.
+  const stroke = theme.grey.solid;
+
   return (
     <svg className='tl-grid' version='1.1' xmlns='http://www.w3.org/2000/svg'>
       <defs>
@@ -26,26 +29,12 @@ export const MeshGrid = ({ x, y, z, size }: TLGridProps) => {
           const yo = 0.5 + y * z;
           const gxo = xo > 0 ? xo % s : s + (xo % s);
           const gyo = yo > 0 ? yo % s : s + (yo % s);
-          const opacity = (z < mid ? modulate(z, [min, mid], [0, 1]) : 1) * 0.25;
+          const opacity = (z < mid ? modulate(z, [min, mid], [0, 1]) : 1) * 0.15;
 
           return (
             <pattern key={`grid-pattern-${i}`} id={`grid-${step}`} width={s} height={s} patternUnits='userSpaceOnUse'>
-              <line
-                style={{ stroke: theme.grey.solid }}
-                x1={gxo - s}
-                y1={gyo}
-                x2={gxo + s}
-                y2={gyo}
-                opacity={opacity}
-              />
-              <line
-                style={{ stroke: theme.grey.solid }}
-                x1={gxo}
-                y1={gyo - s}
-                x2={gxo}
-                y2={gyo + s}
-                opacity={opacity}
-              />
+              <line style={{ stroke }} x1={gxo - s} y1={gyo} x2={gxo + s} y2={gyo} opacity={opacity} />
+              <line style={{ stroke }} x1={gxo} y1={gyo - s} x2={gxo} y2={gyo + s} opacity={opacity} />
             </pattern>
           );
         })}
