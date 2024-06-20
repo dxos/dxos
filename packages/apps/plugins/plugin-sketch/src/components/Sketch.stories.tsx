@@ -8,12 +8,14 @@ import React, { useState } from 'react';
 
 import { CanvasType, SketchType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
+import { createEchoObject } from '@dxos/react-client/echo';
 import { FullscreenDecorator } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 
 import SketchComponent from './Sketch';
 
-const createSketch = () => create(SketchType, { canvas: create(CanvasType, { content: {} }) });
+const createSketch = () =>
+  createEchoObject(create(SketchType, { canvas: createEchoObject(create(CanvasType, { content: {} })) }));
 
 const Story = () => {
   const [sketch, setSketch] = useState<SketchType>(createSketch());
