@@ -9,6 +9,6 @@ const client = new Client();
 (async () => {
   await client.initialize();
   const identity = await client.halo.createIdentity({
-    displayName: 'Alice'
+    displayName: 'Alice',
   });
 })();

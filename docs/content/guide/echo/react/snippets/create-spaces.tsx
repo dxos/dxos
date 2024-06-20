@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
 import { ClientProvider, useClient } from '@dxos/react-client';
 
 export const App = () => {
@@ -21,5 +22,5 @@ const root = createRoot(document.getElementById('root')!);
 root.render(
   <ClientProvider>
     <App />
-  </ClientProvider>
+  </ClientProvider>,
 );
