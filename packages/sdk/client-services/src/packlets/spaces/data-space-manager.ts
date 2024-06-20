@@ -29,7 +29,7 @@ import {
   type ObjectStructure,
   type SpaceDoc,
 } from '@dxos/echo-protocol';
-import { TYPE_PROPERTIES, getTypeReference } from '@dxos/echo-schema';
+import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -247,7 +247,7 @@ export class DataSpaceManager {
       },
     };
 
-    const propertiesId = PublicKey.random().toHex();
+    const propertiesId = generateEchoId();
     document.change((doc: SpaceDoc) => {
       assignDeep(doc, ['objects', propertiesId], properties);
     });
