@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getHeads, type Doc } from '@dxos/automerge/automerge';
+import { type Doc, getHeads } from '@dxos/automerge/automerge';
 import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
-import { Reference, encodeReference } from '@dxos/echo-protocol';
-import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { encodeReference, type ObjectStructure, Reference, type SpaceDoc } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
   private readonly _repo: Repo;
@@ -48,14 +48,14 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => { schema: S.Schema<any>; props: any },
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema<any>; props: any }>,
   ) {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = migrate(objectStructure);
+    const { schema, props } = await migrate(objectStructure);
     this._createObject({ id, schema, props });
   }
 

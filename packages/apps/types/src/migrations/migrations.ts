@@ -2,8 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+import type { SerializedStore } from '@tldraw/store';
+import type { TLRecord } from '@tldraw/tldraw';
+
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
-import { type MigrationBuilder, type Migration, type ObjectStructure } from '@dxos/migrations';
+import { type Migration, type MigrationBuilder, type ObjectStructure } from '@dxos/migrations';
 import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
@@ -15,10 +18,10 @@ import {
   FileType,
   MessageType,
   SketchType,
-  TLDRAW_SCHEMA_VERSION,
   TableType,
   TextType,
   ThreadType,
+  TLDRAW_SCHEMA_VERSION,
 } from '../schema';
 
 export const __COMPOSER_MIGRATIONS__: Migration[] = [
@@ -80,7 +83,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
     },
   },
   {
-    version: '2024-06-12-fully-qualified-typenames',
+    version: '2024-06-12/fully-qualified-typenames',
     next: async ({ space, builder }) => {
       //
       // Documents
@@ -165,7 +168,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
       const { objects: sketches } = await space.db.query(Filter.schema(LegacyTypes.SketchType)).run();
 
       // TODO(wittjosiah): Only attempting to migrate canvas content in the browser due to current esm/testing setup.
-      let migrateCanvas = (records: any) => records;
+      let migrateCanvas = async (records: SerializedStore<TLRecord>) => records;
       if (!isNode()) {
         const { migrateCanvas: migrateCanvasBrowser } = await import('./tldraw');
         migrateCanvas = migrateCanvasBrowser;
@@ -173,11 +176,11 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       for (const sketch of sketches) {
         const data = await loadObjectReferences(sketch, (s) => s.data);
-        await builder.migrateObject(data.id, ({ data }) => {
+        await builder.migrateObject(data.id, async ({ data }) => {
           return {
             schema: CanvasType,
             props: {
-              content: migrateCanvas(data.content),
+              content: await migrateCanvas(data.content),
               schema: TLDRAW_SCHEMA_VERSION,
             },
           };
@@ -243,7 +246,6 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         }));
 
         const threadRef = builder.createReference(thread.id);
-
         await builder.addObject(ChannelType, { name: thread.title, threads: [threadRef] });
       }
     },
