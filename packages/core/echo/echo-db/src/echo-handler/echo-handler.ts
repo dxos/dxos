@@ -28,7 +28,6 @@ import { createEchoObject, isEchoObject } from './create';
 import { getBody, getHeader } from './devtools-formatter';
 import { EchoArray } from './echo-array';
 import {
-  type ObjectInternals,
   TargetKey,
   symbolHandler,
   symbolInternals,
@@ -252,7 +251,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else {
       const withLinks = deepMapValues(validatedValue, (value, recurse) => {
         if (isReactiveObject(value) as boolean) {
-          return this._linkReactiveHandler(target, value);
+          return this.linkObject(target, value);
         } else {
           return recurse(value);
         }
@@ -261,38 +260,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     return true;
-  }
-
-  /**
-   * Used when `set` and other mutating methods are called with a proxy.
-   * @param target - self
-   * @param proxy - the proxy that was passed to the method
-   * @param internals - internals of the proxy
-   */
-  private _linkReactiveHandler(target: ProxyTarget, proxy: any): Reference {
-    const echoObject = !isEchoObject(proxy) ? createEchoObject(proxy) : proxy;
-    const otherInternals = (echoObject as any)[symbolInternals] as ObjectInternals;
-
-    const objectId = echoObject.id;
-    invariant(typeof objectId === 'string' && objectId.length > 0);
-
-    if (target[symbolInternals].database) {
-      const anotherDb = otherInternals?.database;
-      if (!anotherDb) {
-        target[symbolInternals].database.add(echoObject);
-        return new Reference(objectId);
-      } else {
-        if (anotherDb !== target[symbolInternals].database) {
-          return new Reference(objectId, undefined, anotherDb.spaceKey.toHex());
-        } else {
-          return new Reference(objectId);
-        }
-      }
-    } else {
-      invariant(target[symbolInternals].linkCache);
-      target[symbolInternals].linkCache.set(objectId, echoObject);
-      return new Reference(objectId);
-    }
   }
 
   private validateValue(target: ProxyTarget, path: KeyPath, value: any): any {
