@@ -20,6 +20,7 @@ import {
   FileType,
   MessageType,
   SketchType,
+  TLDRAW_SCHEMA_VERSION,
   TableType,
   ThreadType,
 } from '../schema';
@@ -228,6 +229,7 @@ describe('Composer migrations', () => {
     const migratedSketch1 = space.db.getObjectById<SketchType>(sketch1.id);
     expect(migratedSketch1 instanceof SketchType).to.be.true;
     expect(migratedSketch1?.name).to.equal('My Sketch');
+    expect(migratedSketch1?.canvas?.schema).to.equal(TLDRAW_SCHEMA_VERSION);
     expect(migratedSketch1?.canvas?.content?.id).to.equal('test string');
 
     const migratedFile1 = space.db.getObjectById<FileType>(file1.id);

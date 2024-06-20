@@ -41,6 +41,7 @@
     "@dxos/migrations": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tldraw/tldraw": "2.2.1",
     "lodash.get": "^4.4.2",
     "md5": "^2.3.0"
   },

@@ -25,6 +25,7 @@ export const InboxPlugin = (): PluginDefinition<InboxPluginProvides> => {
     provides: {
       metadata: {
         records: {
+          // TODO(wittjosiah): Reconcile with ChannelType.
           // [MailboxType.typename]: {
           //   placeholder: ['mailbox title placeholder', { ns: INBOX_PLUGIN }],
           //   icon: (props: IconProps) => <Envelope {...props} />,

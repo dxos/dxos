@@ -4,7 +4,7 @@
 
 import { Filter, loadObjectReferences } from '@dxos/client/echo';
 import { type MigrationBuilder, type Migration, type ObjectStructure } from '@dxos/migrations';
-import { getDeep, nonNullable } from '@dxos/util';
+import { getDeep, isNode, nonNullable } from '@dxos/util';
 
 import * as LegacyTypes from './legacy-types';
 import {
@@ -15,6 +15,7 @@ import {
   FileType,
   MessageType,
   SketchType,
+  TLDRAW_SCHEMA_VERSION,
   TableType,
   TextType,
   ThreadType,
@@ -163,14 +164,24 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
 
       const { objects: sketches } = await space.db.query(Filter.schema(LegacyTypes.SketchType)).run();
 
+      // TODO(wittjosiah): Only attempting to migrate canvas content in the browser due to current esm/testing setup.
+      let migrateCanvas = (records: any) => records;
+      if (!isNode()) {
+        const { migrateCanvas: migrateCanvasBrowser } = await import('./tldraw');
+        migrateCanvas = migrateCanvasBrowser;
+      }
+
       for (const sketch of sketches) {
         const data = await loadObjectReferences(sketch, (s) => s.data);
-        await builder.migrateObject(data.id, ({ data }) => ({
-          schema: CanvasType,
-          props: {
-            content: data.content,
-          },
-        }));
+        await builder.migrateObject(data.id, ({ data }) => {
+          return {
+            schema: CanvasType,
+            props: {
+              content: migrateCanvas(data.content),
+              schema: TLDRAW_SCHEMA_VERSION,
+            },
+          };
+        });
 
         await builder.migrateObject(sketch.id, ({ data }) => ({
           schema: SketchType,
