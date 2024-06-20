@@ -133,7 +133,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                 <SketchMain
                   sketch={data.active}
                   showControlsOnHover={settings.values.showControlsOnHover}
-                  customGrid={settings.values.customGrid}
+                  grid={settings.values.gridType}
                 />
               ) : null;
             case 'slide':
@@ -145,7 +145,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   maxZoom={1.5}
                   className='p-16'
                   showControlsOnHover={settings.values.showControlsOnHover}
-                  customGrid={settings.values.customGrid}
+                  grid={settings.values.gridType}
                 />
               ) : null;
             case 'article':
@@ -157,7 +157,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
                   readonly={role === 'section'}
                   className={role === 'article' ? 'row-span-2' : 'bs-96'}
                   showControlsOnHover={settings.values.showControlsOnHover}
-                  customGrid={settings.values.customGrid}
+                  grid={settings.values.gridType}
                 />
               ) : null;
             case 'settings': {
