@@ -3142,25 +3142,25 @@ importers:
         specifier: ^1.6.0
         version: 1.6.0
       '@tldraw/assets':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1
       '@tldraw/editor':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/state':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(react@18.2.0)
       '@tldraw/store':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@tldraw/tlschema':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(react@18.2.0)
       '@tldraw/utils':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1
       react-resize-detector:
         specifier: ^7.1.2
@@ -4262,10 +4262,10 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       '@tldraw/store':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(react@18.2.0)
       '@tldraw/tldraw':
-        specifier: 2.2.1
+        specifier: ^2.2.1
         version: 2.2.1(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       lodash.get:
         specifier: ^4.4.2
@@ -21647,7 +21647,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/primitive': 1.0.1
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
@@ -21779,7 +21779,7 @@ packages:
       '@types/react':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@types/react': 18.0.21
       react: 18.2.0
 
@@ -21837,7 +21837,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-compose-refs': 1.0.1(@types/react@18.0.21)(react@18.2.0)
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-use-callback-ref': 1.0.1(@types/react@18.0.21)(react@18.2.0)
@@ -22267,7 +22267,7 @@ packages:
       '@types/react-dom':
         optional: true
     dependencies:
-      '@babel/runtime': 7.23.9
+      '@babel/runtime': 7.24.5
       '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.0.6)(@types/react@18.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@types/react': 18.0.21
       '@types/react-dom': 18.0.6
