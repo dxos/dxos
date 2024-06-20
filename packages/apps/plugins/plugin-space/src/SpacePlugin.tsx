@@ -240,6 +240,7 @@ export const SpacePlugin = ({
           spaceSubscriptions.clear();
           client.spaces
             .get()
+            // TODO(burdon): Load all?
             .filter((space) => !!state.enabled.find((id) => id === space.id))
             .forEach((space) => {
               spaceSubscriptions.add(
@@ -259,6 +260,7 @@ export const SpacePlugin = ({
                         state.viewersByIdentity.get(identityKey)!.add(id);
                       }
                     });
+
                     removed.forEach((id) => {
                       if (typeof id === 'string') {
                         state.viewersByObject[id]?.delete(identityKey);

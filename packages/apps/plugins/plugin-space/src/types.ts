@@ -68,7 +68,6 @@ export type PluginState = {
 
   /**
    * Spaces which have been touched by the user and should have queries run against them.
-   *
    * @deprecated Temporary action to help with composer performance.
    */
   // TODO(wittjosiah): Move state into space?
