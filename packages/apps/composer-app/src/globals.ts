@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { __COMPOSER_MIGRATIONS__ } from '@braneframe/types';
+import { __COMPOSER_MIGRATIONS__ } from '@braneframe/types/migrations';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { Migrations } from '@dxos/migrations';
 import type { Client } from '@dxos/react-client';

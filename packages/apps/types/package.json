@@ -13,18 +13,18 @@
       "require": "./dist/lib/node/index.cjs",
       "node": "./dist/lib/node/index.cjs"
     },
-    "./proto": {
-      "browser": "./dist/lib/browser/proto/index.mjs",
-      "import": "./dist/lib/browser/proto/index.mjs",
-      "require": "./dist/lib/node/proto/index.cjs",
-      "node": "./dist/lib/node/proto/index.cjs"
+    "./migrations": {
+      "browser": "./dist/lib/browser/migrations/index.mjs",
+      "import": "./dist/lib/browser/migrations/index.mjs",
+      "require": "./dist/lib/node/migrations/index.cjs",
+      "node": "./dist/lib/node/migrations/index.cjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "proto": [
-        "dist/types/src/proto/index.d.ts"
+      "migrations": [
+        "dist/types/src/migrations/index.d.ts"
       ]
     }
   },

@@ -111,7 +111,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
             await builder.migrateObject(message.id, ({ data }) => ({
               schema: MessageType,
               props: {
-                from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
+                sender: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
                 timestamp: data.blocks[0].timestamp,
                 text: content,
               },
@@ -226,7 +226,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
           await builder.migrateObject(message.id, ({ data }) => ({
             schema: MessageType,
             props: {
-              from: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
+              sender: data.from ?? space.members.get()[0].identity.identityKey.toHex(),
               timestamp: data.blocks[0].timestamp,
               text: content,
             },
