@@ -26,6 +26,11 @@ test.describe('HALO tests', () => {
     await guest.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+    await guest.closePage();
+  });
+
   test('join new identity', async () => {
     await host.createSpace();
 

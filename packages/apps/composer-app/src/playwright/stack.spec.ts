@@ -17,6 +17,10 @@ test.describe('Stack tests', () => {
     await host.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
   test('create', async () => {
     await host.createSpace();
     await host.createCollection(1);

@@ -54,6 +54,12 @@ export class AppManager {
     this.planks = new PlankManager(this.page);
   }
 
+  async closePage() {
+    if (this.page !== undefined) {
+      await this.page.close();
+    }
+  }
+
   //
   // Page
   //

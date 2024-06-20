@@ -37,6 +37,11 @@ test.describe('Collaboration tests', () => {
     await guest.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+    await guest.closePage();
+  });
+
   test('guest joins host’s space', async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();

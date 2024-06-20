@@ -24,6 +24,10 @@ test.describe('Basic tests', () => {
     await host.init();
   });
 
+  test.afterEach(async () => {
+    await host.closePage();
+  });
+
   test('create identity, space is created by default', async () => {
     expect(await host.page.getByTestId('spacePlugin.personalSpace').isVisible()).to.be.true;
     expect(await host.page.getByTestId('spacePlugin.sharedSpaces').isVisible()).to.be.true;
