@@ -33,7 +33,7 @@ export const DebugSettings = ({ settings }: { settings: DebugSettingsProps }) =>
   const client = useClient();
   const download = useFileDownload();
   // TODO(mykola): Get updates from other places that change Config.
-  const [storageConfig, setStorageConfig] = React.useState<ConfigProto>({});
+  const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
   const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
 
   useEffect(() => {
