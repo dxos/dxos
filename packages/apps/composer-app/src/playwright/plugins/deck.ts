@@ -5,7 +5,7 @@
 import { type Page, type Locator } from '@playwright/test';
 
 // NOTE: `.all` returns a set of locators chained with `.nth()` calls.
-const getPlankArticles = async (page: Page): Promise<Locator[]> => page.getByTestId('deckPlugin.plank').all();
+const getPlankArticles = async (page: Page): Promise<Locator[]> => page.getByTestId('deck.plank').all();
 
 // TODO(Zan): Extend this with other plank types.
 type PlankKind = 'markdown' | 'collection' | 'unknown';
