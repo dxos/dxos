@@ -2,15 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import { getHeads, type Doc } from '@dxos/automerge/automerge';
+import { type Doc, next as am } from '@dxos/automerge/automerge';
 import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/automerge-repo';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
-import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
-import { type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
+import { type AutomergeContext, ObjectCore, migrateDocument } from '@dxos/echo-db';
+import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
+import { type MaybePromise } from '@dxos/util';
 
 export class MigrationBuilder {
   private readonly _repo: Repo;
@@ -47,20 +48,48 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => { schema: S.Schema<any>; props: any },
+    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: S.Schema<any>; props: any }>,
   ) {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = migrate(objectStructure);
-    this._createObject({ id, schema, props });
+    const { schema, props } = await migrate(objectStructure);
+
+    const oldHandle = await this._findObjectContainingHandle(id);
+    invariant(oldHandle);
+
+    const newState: SpaceDoc = {
+      version: SpaceDocVersion.CURRENT,
+      access: {
+        spaceKey: this._space.key.toHex(),
+      },
+      objects: {
+        [id]: {
+          system: {
+            type: encodeReference(requireTypeReference(schema)),
+          },
+          data: props,
+          meta: {
+            keys: [],
+          },
+        },
+      },
+    };
+    const migratedDoc = migrateDocument(oldHandle.docSync() as Doc<SpaceDoc>, newState);
+    const newHandle = this._repo.import<SpaceDoc>(am.save(migratedDoc));
+    this._newLinks[id] = newHandle.url;
+    this._addHandleToFlushList(newHandle);
   }
 
-  addObject(schema: S.Schema<any>, props: any) {
+  async addObject(schema: S.Schema<any>, props: any) {
     const core = this._createObject({ schema, props });
     return core.id;
+  }
+
+  createReference(id: string) {
+    return encodeReference(new Reference(id));
   }
 
   deleteObject(id: string) {
@@ -77,10 +106,7 @@ export class MigrationBuilder {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    this._flushStates.push({
-      documentId: this._newRoot.documentId,
-      heads: getHeads(this._newRoot.docSync()),
-    });
+    this._addHandleToFlushList(this._newRoot);
   }
 
   /**
@@ -103,6 +129,17 @@ export class MigrationBuilder {
     });
   }
 
+  private async _findObjectContainingHandle(id: string): Promise<DocHandle<SpaceDoc> | undefined> {
+    const documentId = (this._rootDoc.links?.[id] || this._newLinks[id]) as AnyDocumentId | undefined;
+    const docHandle = documentId && this._repo.find(documentId);
+    if (!docHandle) {
+      return undefined;
+    }
+
+    await docHandle.whenReady();
+    return docHandle;
+  }
+
   private _buildNewRoot() {
     const previousLinks = { ...(this._rootDoc.links ?? {}) };
     for (const id of this._deleteObjects) {
@@ -110,6 +147,7 @@ export class MigrationBuilder {
     }
 
     this._newRoot = this._repo.create<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
@@ -119,10 +157,7 @@ export class MigrationBuilder {
         ...this._newLinks,
       },
     });
-    this._flushStates.push({
-      documentId: this._newRoot.documentId,
-      heads: getHeads(this._newRoot.docSync()),
-    });
+    this._addHandleToFlushList(this._newRoot);
   }
 
   private _createObject({ id, schema, props }: { id?: string; schema: S.Schema<any>; props: any }) {
@@ -134,6 +169,7 @@ export class MigrationBuilder {
     core.initNewObject(props);
     core.setType(requireTypeReference(schema));
     const newHandle = this._repo.create<SpaceDoc>({
+      version: SpaceDocVersion.CURRENT,
       access: {
         spaceKey: this._space.key.toHex(),
       },
@@ -142,11 +178,15 @@ export class MigrationBuilder {
       },
     });
     this._newLinks[core.id] = newHandle.url;
-    this._flushStates.push({
-      documentId: newHandle.documentId,
-      heads: getHeads(newHandle.docSync()),
-    });
+    this._addHandleToFlushList(newHandle);
 
     return core;
+  }
+
+  private _addHandleToFlushList(handle: DocHandle<any>) {
+    this._flushStates.push({
+      documentId: handle.documentId,
+      heads: am.getHeads(handle.docSync()),
+    });
   }
 }

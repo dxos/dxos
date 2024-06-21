@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { asyncTimeout } from '@dxos/async';
 import { Client, PublicKey } from '@dxos/client';
+import { SpaceState } from '@dxos/client/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { afterTest, describe, test } from '@dxos/test';
@@ -35,13 +36,33 @@ describe('Load client from storage snapshot', () => {
     invariant(snapshot, 'Snapshot not found');
     log.info('Testing snapshot', { snapshot });
 
-    const expectedData = SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
+    const expectedData = await SpacesDumper.load(path.join(baseDir, snapshot.jsonDataPath));
     const tmp = copySnapshotToTmp(snapshot);
 
     const client = new Client({ config: createConfig({ dataRoot: tmp }) });
     await asyncTimeout(client.initialize(), 2_000);
     afterTest(() => client.destroy());
+
+    log.break();
+
     await client.spaces.isReady.wait();
+
+    log.info('Preparing for migration');
+
+    if (client.spaces.default.state.get() === SpaceState.REQUIRES_MIGRATION) {
+      await client.spaces.default.internal.migrate();
+    }
+
+    log.info('Default space migration completed');
+
+    for (const space of client.spaces.get()) {
+      if (space.state.get() === SpaceState.REQUIRES_MIGRATION) {
+        log.info('migrating space', { id: space.id });
+        await space.internal.migrate();
+      }
+    }
+
+    log.break();
 
     expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
   }).timeout(10_000);

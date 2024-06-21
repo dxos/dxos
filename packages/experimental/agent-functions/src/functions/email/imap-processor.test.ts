@@ -40,11 +40,11 @@ describe.skip('IMAP processor', () => {
 
     const mapped = messages
       .map((message) => ({
-        date: message.date,
-        to: message.to?.[0]?.email,
-        from: message.from?.email,
-        subject: message.subject,
-        body: message.blocks[0].content?.content?.length,
+        date: message.timestamp,
+        to: message.properties?.to?.[0]?.email,
+        from: message.sender?.email,
+        subject: message.properties?.subject,
+        body: message.text?.length,
       }))
       .sort(({ date: a }, { date: b }) => {
         if (a == null || b == null) {

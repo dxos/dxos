@@ -12,8 +12,7 @@ import { getMeta } from './getter';
 
 export const data = Symbol.for('dxos.echo.data');
 
-// TODO(burdon): Breaking change.
-export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
+export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
