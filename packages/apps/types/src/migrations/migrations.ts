@@ -104,7 +104,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         await loadObjectReferences(
           doc,
           (d) => d.comments?.map((comment) => comment.thread).filter((thread) => !!thread) ?? [],
-        ).catch();
+        ).catch(() => {});
         const threads: ReturnType<MigrationBuilder['createReference']>[] = [];
         for (const comment of doc.comments ?? []) {
           const thread = comment.thread;
