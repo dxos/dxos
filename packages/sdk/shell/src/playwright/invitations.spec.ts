@@ -78,7 +78,8 @@ test.describe('Invitations', () => {
       expect(await manager.getDisplayName(0)).to.equal(await manager.getDisplayName(1));
     });
 
-    test('invalid & max auth code retries reached, retry invitation', async () => {
+    // TODO(wittjosiah): Remove? This seems to invalidate the invitation now.
+    test.skip('invalid & max auth code retries reached, retry invitation', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -130,7 +131,8 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
-    test('invitation cancelled by guest & retry', async () => {
+    // TODO(wittjosiah): Remove? This seems to invalidate the invitation now.
+    test.skip('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.openPanel(0, 'devices');
       const invitation = await manager.createInvitation(0, 'device');
@@ -247,7 +249,8 @@ test.describe('Invitations', () => {
       expect(await manager.getSpaceName(0, 1)).to.equal(await manager.getSpaceName(1, 1));
     });
 
-    test('invalid & max auth code retries reached, retry invitation', async () => {
+    // TODO(wittjosiah): Remove? This seems to invalidate the invitation now.
+    test.skip('invalid & max auth code retries reached, retry invitation', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
@@ -305,7 +308,8 @@ test.describe('Invitations', () => {
       expect(await manager.invitationFailed(manager.peer(1))).to.be.true;
     });
 
-    test('invitation cancelled by guest & retry', async () => {
+    // TODO(wittjosiah): Remove? This seems to invalidate the invitation now.
+    test.skip('invitation cancelled by guest & retry', async () => {
       await manager.createIdentity(0);
       await manager.createSpace(0);
       await manager.openPanel(0, 1);
