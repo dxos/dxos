@@ -19,6 +19,8 @@ import { trace } from '@dxos/tracing';
 import { DatabaseRoot } from './database-root';
 import { createSelectedDocumentsIterator } from './documents-iterator';
 import { QueryServiceImpl } from '../query';
+import { EchoHostMetrics } from './echo-host-metrics';
+import { scheduleTaskInterval } from '@dxos/async';
 
 const INDEXER_CONFIG: IndexConfig = {
   enabled: true,
@@ -36,6 +38,7 @@ export type EchoHostParams = {
  * Can sync with pluggable data replicators.
  */
 export class EchoHost extends Resource {
+  private readonly _metrics = new EchoHostMetrics();
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _indexer: Indexer;
   private readonly _automergeHost: AutomergeHost;
@@ -124,6 +127,8 @@ export class EchoHost extends Resource {
     await this._indexer.open(ctx);
     await this._queryService.open(ctx);
     await this._automergeHost.addReplicator(this._meshEchoReplicator);
+
+    scheduleTaskInterval(this._ctx, async () => this._updateMetrics(), 10_000);
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -224,5 +229,9 @@ export class EchoHost extends Resource {
   // TODO(dmaretskyi): Extract from this class.
   createReplicationExtension(): TeleportExtension {
     return this._meshEchoReplicator.createExtension();
+  }
+
+  private _updateMetrics() {
+    this._metrics.updateDocumentCount(Object.keys(this._automergeHost.repo.handles).length);
   }
 }
