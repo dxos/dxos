@@ -77,7 +77,6 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
     this._redisSub.on('error', (err) => log.info('Redis Client Error', err));
 
     this.perfettoEventsStream = new ReadableMuxer();
-    this._ctx.onDispose(() => this.perfettoEventsStream.close());
   }
 
   getReplicantsSummary(): ReplicantsSummary {
@@ -105,6 +104,8 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
   }
 
   override async _close() {
+    await this.perfettoEventsStream.close();
+
     for (const replicant of this.replicants) {
       // Kill all replicants.
       replicant.kill('SIGTERM');
