@@ -14,6 +14,7 @@ import { trace } from '@dxos/tracing';
 import { nonNullable } from '@dxos/util';
 
 import { filterMatch, type Filter } from './filter';
+import { QueryMetrics } from './query-metrics';
 import { getObjectCore } from '../core-db';
 import { prohibitSignalActions } from '../guarded-scope';
 
@@ -164,6 +165,8 @@ export class Query<T extends {} = any> {
     };
     QUERIES.add(this._diagnostic);
 
+    QUERY_METRICS.recordNewQuery(filter);
+
     log('construct', { filter: this._filter.toProto() });
   }
 
@@ -257,6 +260,7 @@ export class Query<T extends {} = any> {
             Array.from(this._sources).flatMap((source) => source.getResults()),
           );
           this._objectCache = this._uniqueObjects(this._resultCache);
+          QUERY_METRICS.recordQueryObjectCount(this._filter, this._objectCache.length);
         });
       });
     }
@@ -360,3 +364,5 @@ trace.diagnostic({
     });
   },
 });
+
+const QUERY_METRICS = new QueryMetrics();
