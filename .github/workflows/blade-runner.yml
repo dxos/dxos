@@ -20,7 +20,6 @@ jobs:
         image: redis
         # Set health checks to wait until redis has started
         options: >-
-          --port 6379
           --health-cmd "redis-cli ping"
           --health-interval 10s
           --health-timeout 5s
