@@ -130,6 +130,7 @@
     "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/random-access-storage": "workspace:*",
     "@dxos/rpc": "workspace:*",
     "@dxos/rpc-tunnel": "workspace:*",
     "@dxos/timeframe": "workspace:*",
@@ -144,7 +145,6 @@
   },
   "devDependencies": {
     "@dxos/automerge": "workspace:*",
-    "@dxos/random-access-storage": "workspace:*",
     "@types/lodash.get": "^4.4.7",
     "@types/lodash.isequal": "^4.5.0",
     "@types/lodash.isequalwith": "^4.4.0",

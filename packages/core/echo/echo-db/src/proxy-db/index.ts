@@ -4,3 +4,4 @@
 
 export * from './database';
 export * from './dynamic-schema-registry';
+export * from './load-object-references';

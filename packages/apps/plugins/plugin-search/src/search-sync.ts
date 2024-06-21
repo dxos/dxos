@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { getSchema, type S } from '@dxos/echo-schema';
 import { AST } from '@dxos/echo-schema';
 
@@ -51,7 +51,7 @@ export const filterObjectsSync = <T extends Record<string, any>>(objects: T[], m
 
   return objects.reduce<SearchResult[]>((results, object) => {
     // TODO(burdon): Hack to ignore Text objects.
-    if (object instanceof TextV0Type) {
+    if (object instanceof TextType) {
       return results;
     }
 
@@ -117,7 +117,7 @@ const getKeys = (object: Record<string, unknown>): string[] => {
 export const mapObjectToTextFields = <T extends Record<string, unknown>>(object: T): TextFields => {
   return getKeys(object).reduce<TextFields>((fields, key) => {
     const value = object[key] as any;
-    if (typeof value === 'string' || value instanceof TextV0Type) {
+    if (typeof value === 'string' || value instanceof TextType) {
       try {
         fields[key] = String(value);
       } catch (err) {

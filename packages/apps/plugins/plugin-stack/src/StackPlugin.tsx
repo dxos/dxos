@@ -70,17 +70,18 @@ export const StackPlugin = (): PluginDefinition<StackPluginProvides> => {
             case `${STACK_PLUGIN}/AddSectionDialog`:
               return dataHasAddSectionDialogProps(data) ? <AddSectionDialog {...data.subject} /> : null;
           }
+          const primary = data.active ?? data.object;
           switch (role) {
             case 'main':
-              return data.active instanceof CollectionType ? (
+              return primary instanceof CollectionType ? (
                 <Main.Content bounce classNames={[baseSurface, topbarBlockPaddingStart, bottombarBlockPaddingEnd]}>
-                  <StackMain collection={data.active} separation={settings.values.separation} />
+                  <StackMain collection={primary} separation={settings.values.separation} />
                 </Main.Content>
               ) : null;
             case 'article':
-              return data.object instanceof CollectionType ? (
+              return primary instanceof CollectionType ? (
                 <div role='none' className='row-span-2 overflow-auto'>
-                  <StackMain collection={data.object} separation={settings.values.separation} />
+                  <StackMain collection={primary} separation={settings.values.separation} />
                 </div>
               ) : null;
             case 'settings': {

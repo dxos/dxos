@@ -11,9 +11,11 @@ import { log } from '@dxos/log';
 import { RateLimitExceededError, TimeoutError, trace } from '@dxos/protocols';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type SwarmEvent } from '@dxos/protocols/proto/dxos/mesh/signal';
+import { BitField, safeAwaitAll } from '@dxos/util';
 
 import { type SignalManager } from './signal-manager';
-import { type CommandTrace, SignalClient } from '../signal-client';
+import { WebsocketSignalManagerMonitor } from './websocket-signal-manager-monitor';
+import { SignalClient } from '../signal-client';
 import { type SignalClientMethods, type SignalMethods, type SignalStatus } from '../signal-methods';
 
 const MAX_SERVER_FAILURES = 5;
@@ -24,13 +26,18 @@ const WSS_SIGNAL_SERVER_REBOOT_DELAY = 3_000;
  */
 export class WebsocketSignalManager implements SignalManager {
   private readonly _servers = new Map<string, SignalClientMethods>();
+  private readonly _monitor = new WebsocketSignalManagerMonitor();
+
+  /**
+   * Used to avoid logging failed server restarts more than once until the server actually recovers.
+   */
+  private readonly _failedServersBitfield: Uint8Array;
 
   private _ctx!: Context;
   private _opened = false;
 
   readonly failureCount = new Map<string, number>();
   readonly statusChanged = new Event<SignalStatus[]>();
-  readonly commandTrace = new Event<CommandTrace>();
   readonly swarmEvent = new Event<{
     topic: PublicKey;
     swarmEvent: SwarmEvent;
@@ -66,8 +73,8 @@ export class WebsocketSignalManager implements SignalManager {
 
       this._servers.set(host.server, server);
       this.failureCount.set(host.server, 0);
-      server.commandTrace.on((trace) => this.commandTrace.emit(trace));
     }
+    this._failedServersBitfield = BitField.zeros(this._hosts.length);
   }
 
   @synchronized
@@ -80,8 +87,7 @@ export class WebsocketSignalManager implements SignalManager {
 
     this._initContext();
 
-    // TODO(burdon): Await.
-    [...this._servers.values()].forEach((server) => server.open());
+    await safeAwaitAll(this._servers.values(), (server) => server.open());
 
     this._opened = true;
     log.trace('dxos.mesh.websocket-signal-manager.open', trace.end({ id: this._instanceId }));
@@ -93,10 +99,8 @@ export class WebsocketSignalManager implements SignalManager {
       return;
     }
     this._opened = false;
-
     await this._ctx.dispose();
-
-    await Promise.all(Array.from(this._servers.values()).map((server) => server.close()));
+    await safeAwaitAll(this._servers.values(), (server) => server.close());
   }
 
   async restartServer(serverName: string) {
@@ -126,7 +130,6 @@ export class WebsocketSignalManager implements SignalManager {
   async leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('leaving', { topic, peerId });
     invariant(this._opened, 'Closed');
-
     await this._forEachServer((server) => server.leave({ topic, peerId }));
   }
 
@@ -142,32 +145,49 @@ export class WebsocketSignalManager implements SignalManager {
     log('signal', { recipient });
     invariant(this._opened, 'Closed');
 
-    void this._forEachServer(async (server, serverName) => {
-      void server.sendMessage({ author, recipient, payload }).catch((err) => {
-        if (err instanceof RateLimitExceededError) {
-          log.info('WSS rate limit exceeded', { err });
-        } else if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
-          log.info('WSS sendMessage timeout', { err });
-          void this.checkServerFailure(serverName);
-        } else {
-          log.info(`error sending to ${serverName}`, { err });
-          void this.checkServerFailure(serverName);
-        }
-      });
+    void this._forEachServer(async (server, serverName, index) => {
+      void server
+        .sendMessage({ author, recipient, payload })
+        .then(() => this._clearServerFailedFlag(serverName, index))
+        .catch((err) => {
+          if (err instanceof RateLimitExceededError) {
+            log.info('WSS rate limit exceeded', { err });
+            this._monitor.recordRateLimitExceeded();
+          } else if (err instanceof TimeoutError || err.constructor.name === 'TimeoutError') {
+            log.info('WSS sendMessage timeout', { err });
+            void this.checkServerFailure(serverName, index);
+          } else {
+            log.warn(`error sending to ${serverName}`, { err });
+            void this.checkServerFailure(serverName, index);
+          }
+        });
     });
   }
 
   @synchronized
-  async checkServerFailure(serverName: string) {
+  async checkServerFailure(serverName: string, index: number) {
     const failureCount = this.failureCount.get(serverName!) ?? 0;
-    if (failureCount > MAX_SERVER_FAILURES) {
-      log.warn(`too many failures sending to ${serverName} (${failureCount} > ${MAX_SERVER_FAILURES}), restarting`);
+    const isRestartRequired = failureCount > MAX_SERVER_FAILURES;
+    this._monitor.recordServerFailure({ serverName, willRestart: isRestartRequired });
+    if (isRestartRequired) {
+      if (!BitField.get(this._failedServersBitfield, index)) {
+        log.warn('too many failures for ws-server, restarting', { serverName, failureCount });
+        BitField.set(this._failedServersBitfield, index, true);
+      }
       await this.restartServer(serverName!);
       this.failureCount.set(serverName!, 0);
       return;
     }
 
     this.failureCount.set(serverName!, (this.failureCount.get(serverName!) ?? 0) + 1);
+  }
+
+  private _clearServerFailedFlag(serverName: string, index: number) {
+    if (BitField.get(this._failedServersBitfield, index)) {
+      log.info('server connection restored', { serverName });
+      BitField.set(this._failedServersBitfield, index, false);
+      this.failureCount.set(serverName!, 0);
+    }
   }
 
   async subscribeMessages(peerId: PublicKey) {
@@ -191,8 +211,10 @@ export class WebsocketSignalManager implements SignalManager {
   }
 
   private async _forEachServer<ReturnType>(
-    fn: (server: SignalMethods, serverName: string) => Promise<ReturnType>,
+    fn: (server: SignalMethods, serverName: string, index: number) => Promise<ReturnType>,
   ): Promise<ReturnType[]> {
-    return Promise.all(Array.from(this._servers.entries()).map(([serverName, server]) => fn(server, serverName)));
+    return Promise.all(
+      Array.from(this._servers.entries()).map(([serverName, server], idx) => fn(server, serverName, idx)),
+    );
   }
 }

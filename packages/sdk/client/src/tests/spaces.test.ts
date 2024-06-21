@@ -10,29 +10,28 @@ import { type Space } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { getObjectCore } from '@dxos/echo-db';
-import { Expando, TYPE_PROPERTIES, type ReactiveObject } from '@dxos/echo-schema';
+import { Expando, TYPE_PROPERTIES, type ReactiveObject, type Identifiable } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
 import { SpaceId } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
-import { StorageType, createStorage } from '@dxos/random-access-storage';
 import { afterTest, describe, test } from '@dxos/test';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
 import { SpaceState, getSpace } from '../echo';
-import { DocumentType, TextV0Type, TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
+import {
+  DocumentType,
+  TextV0Type,
+  TestBuilder,
+  testSpaceAutomerge,
+  waitForSpace,
+  createInitializedClientsWithContext,
+  type CreateInitializedClientsOptions,
+} from '../testing';
 
 describe('Spaces', () => {
   test('creates a default space', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     await waitForExpect(() => {
       expect(client.spaces.get()).not.to.be.undefined;
@@ -44,14 +43,7 @@ describe('Spaces', () => {
   }).tag('flaky');
 
   test('creates a space', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     // TODO(burdon): Extend basic queries.
     const space = await client.spaces.create();
@@ -91,14 +83,7 @@ describe('Spaces', () => {
   });
 
   test('creates a space re-opens the client', async () => {
-    const testBuilder = new TestBuilder();
-    afterTest(() => testBuilder.destroy());
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-    testBuilder.level = createTestLevel();
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     let objectId: string;
     {
@@ -136,19 +121,9 @@ describe('Spaces', () => {
   });
 
   test('post and listen to messages', async () => {
-    const testBuilder = new TestBuilder();
-
-    const client1 = new Client({ services: testBuilder.createLocalClientServices() });
-    const client2 = new Client({ services: testBuilder.createLocalClientServices() });
-    await client1.initialize();
-    await client2.initialize();
-    await client1.halo.createIdentity({ displayName: 'Peer 1' });
-    await client2.halo.createIdentity({ displayName: 'Peer 2' });
+    const [client1, client2] = await createInitializedClients(2);
 
     log('initialized');
-
-    afterTest(() => Promise.all([client1.destroy()]));
-    afterTest(() => Promise.all([client2.destroy()]));
 
     const space1 = await client1.spaces.create();
     log('spaces.create', { key: space1.key });
@@ -221,7 +196,6 @@ describe('Spaces', () => {
     await Promise.all(performInvitation({ host: space1, guest: client2.spaces }));
 
     await waitForSpace(client2, space1.key, { ready: true });
-    const _dataSpace2 = services2.host!.context.dataSpaceManager?.spaces.get(space1.key);
     const feed2 = services2.host!.context.feedStore.getFeed(feedKey!)!;
 
     // log.info('check instance', { feed: getPrototypeSpecificInstanceId(feed2), coreKey: Buffer.from(feed2.core.key).toString('hex') })
@@ -244,14 +218,7 @@ describe('Spaces', () => {
   });
 
   test('space properties are reactive', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     const space = await client.spaces.create();
     await space.waitUntilReady();
@@ -267,14 +234,7 @@ describe('Spaces', () => {
   });
 
   test('objects are owned by spaces', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     const space = await client.spaces.create();
 
@@ -283,12 +243,7 @@ describe('Spaces', () => {
   });
 
   test('spaces can be opened and closed', async () => {
-    const testBuilder = new TestBuilder();
-    const services = testBuilder.createLocalClientServices();
-    const client = new Client({ services });
-    await client.initialize();
-    afterTest(() => client.destroy());
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1);
 
     const space = await client.spaces.create();
 
@@ -297,15 +252,11 @@ describe('Spaces', () => {
 
     await space.close();
     // Since updates are throttled we need to wait for the state to change.
-    await waitForExpect(() => {
-      expect(space.state.get()).to.equal(SpaceState.INACTIVE);
-    }, 1000);
+    await waitForSpaceState(space, SpaceState.INACTIVE, 1000);
 
     await space.open();
     await space.waitUntilReady();
-    await waitForExpect(() => {
-      expect(space.state.get()).to.equal(SpaceState.READY);
-    }, 1000);
+    await waitForSpaceState(space, SpaceState.READY, 1000);
     expect(space.db.getObjectById(id)).to.exist;
 
     space.db.getObjectById(id)!.data = 'test2';
@@ -316,7 +267,9 @@ describe('Spaces', () => {
     const testBuilder = new TestBuilder();
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
+
     log.info('host opened');
+
     const [client1, server1] = testBuilder.createClientServer(host);
     void server1.open();
     await client1.initialize();
@@ -337,22 +290,15 @@ describe('Spaces', () => {
     await space1.db.flush();
 
     const space2 = await waitForSpace(client2, space1.key, { ready: true });
-    await waitForExpect(() => {
-      expect(space2.db.getObjectById(id)).to.exist;
-    });
+    await waitForObject(space2, { id });
 
     await space1.close();
     // Since updates are throttled we need to wait for the state to change.
-    await waitForExpect(() => {
-      expect(space1.state.get()).to.equal(SpaceState.INACTIVE);
-    }, 1000);
+    await waitForSpaceState(space2, SpaceState.INACTIVE, 1000);
 
     await space1.open();
 
-    await space2.waitUntilReady();
-    await waitForExpect(() => {
-      expect(space2.state.get()).to.equal(SpaceState.READY);
-    }, 1000);
+    await waitForSpaceState(space2, SpaceState.READY, 1000);
     expect(space2.db.getObjectById(id)).to.exist;
 
     space2.db.getObjectById(id)!.data = 'test2';
@@ -360,30 +306,15 @@ describe('Spaces', () => {
   });
 
   test('text replicates between clients', async () => {
-    const testBuilder = new TestBuilder();
+    const [host, guest] = await createInitializedClients(2);
 
-    const host = new Client({ services: testBuilder.createLocalClientServices() });
-    const guest = new Client({ services: testBuilder.createLocalClientServices() });
-
-    await host.initialize();
-    await guest.initialize();
-    afterTest(() => host.destroy());
-    afterTest(() => guest.destroy());
     [host, guest].forEach(registerTypes);
 
-    await host.halo.createIdentity({ displayName: 'host' });
-    await guest.halo.createIdentity({ displayName: 'guest' });
-
-    const hostSpace = await host.spaces.create();
-    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    const [hostSpace, guestSpace] = await createSharedSpace(host, guest);
 
     const hostDocument = hostSpace.db.add(createDocument());
     await hostSpace.db.flush();
-
-    await waitForExpect(() => {
-      expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
-    });
+    await waitForObject(guestSpace, hostDocument);
 
     (hostDocument.content as any).content = 'Hello, world!';
 
@@ -392,32 +323,37 @@ describe('Spaces', () => {
     });
   });
 
-  test('share two spaces between clients', async () => {
-    const testBuilder = new TestBuilder();
+  test('peer gains access to new documents', async () => {
+    const [host, guest] = await createInitializedClients(2);
 
-    const host = new Client({ services: testBuilder.createLocalClientServices() });
-    const guest = new Client({ services: testBuilder.createLocalClientServices() });
-
-    await host.initialize();
-    await guest.initialize();
-    afterTest(() => host.destroy());
-    afterTest(() => guest.destroy());
     [host, guest].forEach(registerTypes);
 
-    await host.halo.createIdentity({ displayName: 'host' });
-    await guest.halo.createIdentity({ displayName: 'guest' });
+    // Create a shared space to have an active connection.
+    await createSharedSpace(host, guest);
+
+    // Create a document in a space to which guest doesn't yet have access.
+    const hostSpace2 = await host.spaces.create();
+    const hostDocument = hostSpace2.db.add(createDocument());
+    await hostSpace2.db.flush();
+
+    // Grant the access.
+    await Promise.all(performInvitation({ host: hostSpace2, guest: guest.spaces }));
+    const guestSpace = await waitForSpace(guest, hostSpace2.key, { ready: true });
+
+    await waitForObject(guestSpace, hostDocument);
+  });
+
+  test('share two spaces between clients', async () => {
+    const [host, guest] = await createInitializedClients(2);
+
+    [host, guest].forEach(registerTypes);
 
     {
-      const hostSpace = await host.spaces.create();
-      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+      const [hostSpace, guestSpace] = await createSharedSpace(host, guest);
 
       const hostDocument = hostSpace.db.add(createDocument());
       await hostSpace.db.flush();
-
-      await waitForExpect(() => {
-        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
-      });
+      await waitForObject(guestSpace, hostDocument);
 
       (hostDocument.content as any).content = 'Hello, world!';
 
@@ -427,17 +363,11 @@ describe('Spaces', () => {
     }
 
     {
-      const hostSpace = await host.spaces.create();
-
-      await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-      const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+      const [hostSpace, guestSpace] = await createSharedSpace(host, guest);
 
       const hostDocument = hostSpace.db.add(createDocument());
       await hostSpace.db.flush();
-
-      await waitForExpect(() => {
-        expect(guestSpace.db.getObjectById(hostDocument.id)).not.to.be.undefined;
-      });
+      await waitForObject(guestSpace, hostDocument);
 
       (hostDocument.content as any).content = 'Hello, world!';
 
@@ -448,14 +378,7 @@ describe('Spaces', () => {
   });
 
   test('queries respect space boundaries', async () => {
-    const testBuilder = new TestBuilder();
-    testBuilder.storage = createStorage({ type: StorageType.RAM });
-
-    const client = new Client({ services: testBuilder.createLocalClientServices() });
-    await client.initialize();
-    afterTest(() => client.destroy());
-
-    await client.halo.createIdentity({ displayName: 'test-user' });
+    const [client] = await createInitializedClients(1, { storage: true });
 
     const spaceA = await client.spaces.create();
     const spaceB = await client.spaces.create();
@@ -492,35 +415,18 @@ describe('Spaces', () => {
   });
 
   test('object receives updates from another peer', async () => {
-    const testBuilder = new TestBuilder();
-
-    const host = new Client({ services: testBuilder.createLocalClientServices() });
-    const guest = new Client({ services: testBuilder.createLocalClientServices() });
-
-    await host.initialize();
-    await guest.initialize();
-
-    afterTest(() => host.destroy());
-    afterTest(() => guest.destroy());
-
-    await host.halo.createIdentity({ displayName: 'host' });
-    await guest.halo.createIdentity({ displayName: 'guest' });
+    const [host, guest] = await createInitializedClients(2);
 
     const hostSpace = await host.spaces.create();
     await hostSpace.waitUntilReady();
     const hostRoot = hostSpace.db.add(createEchoObject({ entries: [createEchoObject({ name: 'first' })] }));
 
     await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
-
     const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
-    await guestSpace.waitUntilReady();
 
     {
       const done = new Trigger();
-
-      await waitForExpect(async () => {
-        expect(await guestSpace.db.loadObjectById(hostRoot.id)).not.to.be.undefined;
-      });
+      await waitForObject(guestSpace, hostRoot);
       const guestRoot: Expando = guestSpace.db.getObjectById(hostRoot.id)!;
 
       const unsub = getObjectCore(guestRoot).updates.on(() => {
@@ -535,6 +441,22 @@ describe('Spaces', () => {
       await done.wait({ timeout: 1000 });
     }
   });
+
+  const createInitializedClients = async (
+    count: number,
+    options?: CreateInitializedClientsOptions,
+  ): Promise<Client[]> => {
+    const context = new Context();
+    afterTest(() => context.dispose());
+    return createInitializedClientsWithContext(context, count, options);
+  };
+
+  const createSharedSpace = async (host: Client, guest: Client) => {
+    const hostSpace = await host.spaces.create();
+    await Promise.all(performInvitation({ host: hostSpace, guest: guest.spaces }));
+    const guestSpace = await waitForSpace(guest, hostSpace.key, { ready: true });
+    return [hostSpace, guestSpace];
+  };
 
   const getDocumentText = (space: Space, documentId: string): string => {
     return (space.db.getObjectById(documentId) as DocumentType).content!.content;
@@ -552,5 +474,17 @@ describe('Spaces', () => {
 
   const createEchoObject = <T extends {}>(props: T): ReactiveObject<Expando> => {
     return create(Expando, props);
+  };
+
+  const waitForObject = async (space: Space, object: Identifiable) => {
+    await waitForExpect(() => {
+      expect(space.db.getObjectById(object.id)).not.to.be.undefined;
+    });
+  };
+
+  const waitForSpaceState = async (space: Space, state: SpaceState, timeout: number) => {
+    await waitForExpect(() => {
+      expect(space.state.get()).to.equal(state);
+    }, timeout);
   };
 });

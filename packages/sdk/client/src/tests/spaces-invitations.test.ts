@@ -6,18 +6,17 @@ import { expect } from 'chai';
 
 import { sleep, Trigger } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { afterTest, describe, test } from '@dxos/test';
-import { range } from '@dxos/util';
 
-import { Client } from '../client';
-import { TestBuilder, testSpaceAutomerge, waitForSpace } from '../testing';
+import { type Client } from '../client';
+import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
   test('creates a space and invites a peer', async () => {
     const [client1, client2] = await createInitializedClients(2);
-    afterTest(() => destroyClients([client1, client2]));
 
     log('initialized');
 
@@ -39,7 +38,6 @@ describe('Spaces/invitations', () => {
   describe('delegated', () => {
     test('single-use', async () => {
       const clients = await createInitializedClients(3);
-      afterTest(() => destroyClients(clients));
       const [alice, bob, fred] = clients;
 
       // Alice invites Bob
@@ -70,7 +68,6 @@ describe('Spaces/invitations', () => {
 
     test('multi-use', async () => {
       const clients = await createInitializedClients(4);
-      afterTest(() => destroyClients(clients));
       const [alice, bob, fred, charlie] = clients;
 
       // Alice invites Bob
@@ -145,20 +142,10 @@ describe('Spaces/invitations', () => {
       },
     };
   };
+
+  const createInitializedClients = (count: number): Promise<Client[]> => {
+    const context = new Context();
+    afterTest(() => context.dispose());
+    return createInitializedClientsWithContext(context, count);
+  };
 });
-
-const createInitializedClients = (count: number): Promise<Client[]> => {
-  const testBuilder = new TestBuilder();
-  const clients = range(count).map(() => new Client({ services: testBuilder.createLocalClientServices() }));
-  return Promise.all(
-    clients.map(async (c, index) => {
-      await c.initialize();
-      await c.halo.createIdentity({ displayName: `Peer ${index}` });
-      return c;
-    }),
-  );
-};
-
-const destroyClients = async (clients: Client[]): Promise<void> => {
-  await Promise.all(clients.map((c) => c.destroy()));
-};

@@ -2,9 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
+type TagType = number | string | boolean | null | undefined;
+
 export interface MetricData {
   unit?: string;
-  tags?: Record<string, string>;
+  tags?: Record<string, TagType>;
   timestamp?: number;
 }
 

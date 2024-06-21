@@ -46,9 +46,9 @@ export const KanbanCardComponent: FC<{
 
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({
-      doc: item.title?.content,
+      doc: item.name,
       extensions: [
-        createDataExtensions({ id: item.id, text: item.title && createDocAccessor(item.title, ['content']) }),
+        createDataExtensions({ id: item.id, text: createDocAccessor(item, ['name']) }),
         createBasicExtensions({ placeholder: t('item title placeholder') }),
         createThemeExtensions({ themeMode }),
       ],

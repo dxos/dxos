@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { debounce, UpdateScheduler } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { type Context } from '@dxos/context';
@@ -61,7 +61,7 @@ export const createSubscriptionTrigger: TriggerFactory<SubscriptionTrigger> = as
     if (deep) {
       for (const object of objects) {
         const content = object.content;
-        if (content instanceof TextV0Type) {
+        if (content instanceof TextType) {
           subscriptions.push(getObjectCore(content).updates.on(debounce(() => subscription.update([object]), 1_000)));
         }
       }
