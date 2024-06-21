@@ -3,7 +3,7 @@
 //
 
 import { Code, SquareSplitHorizontal, Eye } from '@phosphor-icons/react';
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import { ToggleGroup, ToggleGroupItem, Toolbar } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/react-ui-theme';
@@ -13,7 +13,7 @@ export type View = 'editor' | 'preview' | 'split';
 export type SplitterProps = {
   view?: View;
   className?: string;
-  children?: React.ReactNode[];
+  children?: ReactNode[];
 };
 
 // TODO(burdon): Surfaces?
