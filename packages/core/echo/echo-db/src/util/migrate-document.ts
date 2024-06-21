@@ -22,10 +22,8 @@ export const migrateDocument = <T>(source: Doc<T>, targetData: T): Doc<T> => {
           if (typeof targetData[key] === 'object' && targetData[key] !== null) {
             applyTo[key] ??= {};
             coalesce(applyTo[key], targetData[key]);
-          } else if (typeof applyTo[key] === 'string' && typeof targetData[key] === 'string') {
-            // Special case for strings: update that preserves history
-            am.updateText(applyTo, [key], targetData[key]);
           } else {
+            // TODO(dmaretskyi): It's possible to provide a special case for string migrations with `am.updateText`.
             applyTo[key] = targetData[key];
           }
         }
