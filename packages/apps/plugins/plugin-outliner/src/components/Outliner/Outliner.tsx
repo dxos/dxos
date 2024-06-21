@@ -244,7 +244,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
 
   const { parentRef, view } = useTextEditor(
     () => ({
-      doc: item.text?.content,
+      doc: item.content,
       extensions: [
         EditorView.updateListener.of(({ view }) => setFocus(view.hasFocus)),
         createBasicExtensions({ placeholder }),
@@ -252,7 +252,7 @@ const OutlinerItem = (props: OutlinerItemProps) => {
         createThemeExtensions({ themeMode }),
         decorateMarkdown({ renderLinkButton: onRenderLink }),
         formattingKeymap(),
-        ...(item.text ? [automerge(createDocAccessor(item.text, ['content']))] : []),
+        automerge(createDocAccessor(item, ['content'])),
         keymap,
       ],
     }),
@@ -342,7 +342,7 @@ const OutlinerBranch = ({
   return (
     <div className={className}>
       {root.items
-        ?.filter((item): item is TreeItemType => item?.text != null)
+        ?.filter((item): item is TreeItemType => item?.content != null)
         .map((item) => (
           <div key={item.id}>
             <OutlinerItem
@@ -448,8 +448,8 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
     // Join to previous line.
     if (idx - 1 >= 0) {
       const active = getLastDescendent(items[idx - 1]!);
-      if (active.text) {
-        const text = active.text.content!;
+      if (active.content) {
+        const text = active.content;
         const from = text.length;
 
         // TODO(dmaretskyi): Line joining.
@@ -462,7 +462,7 @@ const OutlinerRoot = ({ className, root, onCreate, onDelete, ...props }: Outline
         items.splice(items.length, 0, ...(children ?? []));
       }
     } else {
-      const text = parent.text!.content;
+      const text = parent.content;
       const from = text.length;
       setActive({ itemId: parent.id, anchor: from });
     }

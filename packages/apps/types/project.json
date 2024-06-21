@@ -11,12 +11,20 @@
     "compile": {
       "options": {
         "entryPoints": [
-          "packages/apps/types/src/index.ts"
+          "packages/apps/types/src/index.ts",
+          "packages/apps/types/src/migrations/index.ts"
         ],
         "injectGlobals": true
       }
     },
     "lint": {},
-    "test": {}
-  }
+    "test": {
+      "options": {
+        "forceExit": true
+      }
+    }
+  },
+  "implicitDependencies": [
+    "test"
+  ]
 }
