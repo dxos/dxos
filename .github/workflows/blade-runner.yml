@@ -1,0 +1,83 @@
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+name: blade-runner
+
+jobs:
+  blade-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install system dependencies
+        run: sudo apt-get install libxtst-dev libpng++-dev
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: 8.15.8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm nx run-many --target=build --parallel 3
+
+      - name: Run simulations
+        run: |
+          pushd packages/gravity/blade-runner
+          pnpm run-tests empty
+          popd
+
+      - name: Gather Artifacts
+        run: |
+          ROOT_CWD="$(pwd)"
+          mkdir artifacts
+          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
+          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
+
+      - name: Upload
+        uses: fnkr/github-action-ghr@v1
+        env:
+          GHR_PATH: artifacts/
+          GITHUB_TOKEN: ${{ secrets.CREATE_PR_TOKEN }}
