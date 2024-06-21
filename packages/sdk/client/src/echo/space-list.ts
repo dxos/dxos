@@ -133,17 +133,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           spaceProxy._stateUpdate.on(this._ctx, () => {
             this._spacesStream.next([...this.get()]);
           });
-          void spaceProxy
-            .waitUntilReady()
-            .then(() => {
-              if (spaceProxy && spaceProxy.state.get() === SpaceState.READY && spaceProxy.id === this._defaultSpaceId) {
-                this._onDefaultSpaceReady();
-              }
-            })
-            .catch((err) => err.message === 'Context disposed.' || log.catch(err));
 
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
+
+          if (this._defaultSpaceId && spaceProxy.id === this._defaultSpaceId) {
+            this._onDefaultSpaceAvailable();
+          }
 
           emitUpdate = true;
         }
@@ -202,9 +198,8 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (defaultSpace) {
       if (defaultSpace.state.get() === SpaceState.CLOSED) {
         this._openSpaceAsync(defaultSpace);
-      } else if (defaultSpace.state.get() === SpaceState.READY) {
-        this._onDefaultSpaceReady();
       }
+      this._onDefaultSpaceAvailable();
     }
     return true;
   }
@@ -336,7 +331,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._echoClient.graph.query(filter, options);
   }
 
-  private _onDefaultSpaceReady() {
+  private _onDefaultSpaceAvailable() {
     this._defaultSpaceAvailable.next(true);
     this._defaultSpaceAvailable.complete();
   }
