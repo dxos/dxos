@@ -36,11 +36,8 @@ export class RemoteTracing {
     }
 
     if (!span.endTs) {
-      const resource = span.getResourceEntry();
-      const name = resource ? `${resource.sanitizedClassName}.${span.methodName}` : span.methodName;
-
       const remoteSpan = this._tracing.startSpan({
-        name,
+        name: span.nameWithoutInstanceNumber,
         op: span.op ?? 'function',
         attributes: span.attributes,
       });
