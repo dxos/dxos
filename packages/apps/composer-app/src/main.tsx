@@ -98,9 +98,9 @@ const main = async () => {
   const worker: SharedWorker | undefined = config.values.runtime?.app?.env?.DX_HOST
     ? undefined
     : new SharedWorker(new URL('./shared-worker', import.meta.url), {
-          type: 'module',
-          name: 'dxos-client-worker',
-        })
+        type: 'module',
+        name: 'dxos-client-worker',
+      });
 
   const services = await createClientServices(
     config,

@@ -20,7 +20,6 @@ import {
   type PluginDefinition,
 } from '@dxos/app-framework';
 import { EventSubscriptions, Timer } from '@dxos/async';
-
 import { changeStorageVersionInMetadata } from '@dxos/echo-pipeline/testing';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { type Client } from '@dxos/react-client';

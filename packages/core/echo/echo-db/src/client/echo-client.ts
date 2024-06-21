@@ -8,12 +8,12 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
-
 import { trace } from '@dxos/tracing';
+
+import { IndexQuerySourceProvider } from './index-query-source-provider';
 import { AutomergeContext } from '../core-db';
 import { Hypergraph } from '../hypergraph';
 import { EchoDatabaseImpl } from '../proxy-db';
-import { IndexQuerySourceProvider } from './index-query-source-provider';
 
 export type EchoClientParams = {};
 

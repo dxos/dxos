@@ -10,9 +10,9 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace as Trace } from '@dxos/protocols';
 import { type NetworkStatus, ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
+import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
-import { trace } from '@dxos/tracing';
 
 /**
  * Public API for MESH services.

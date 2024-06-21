@@ -3,7 +3,6 @@
 //
 
 import React, { type FC, type HTMLAttributes, useState } from 'react';
-
 // Importing light & async version directly from dist to avoid any chance of the heavy one being loaded.
 // https://www.npmjs.com/package/react-syntax-highlighter#async-build
 // eslint-disable-next-line no-restricted-imports
