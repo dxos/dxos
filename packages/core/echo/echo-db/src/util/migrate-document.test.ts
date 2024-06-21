@@ -10,9 +10,9 @@ import { describe, test } from '@dxos/test';
 import { migrateDocument } from './migrate-document';
 
 describe('migrateDocument', () => {
-  test('migrates nested objects', () => {
-    const source = { content: { text: 'Hello, world!', done: false }, version: 1 };
-    const target = { content: { text: 'Hello, world!', done: true }, version: 2 };
+  test('migrates strings', () => {
+    const source = { text: 'Hello, world!', version: 1 };
+    const target = { text: 'Hello, DXOS!', version: 2 };
 
     const migrated = migrateDocument(am.from(source), target);
     expect(migrated).to.deep.eq(target);
@@ -25,5 +25,34 @@ describe('migrateDocument', () => {
 
     const migrated = migrateDocument(source, { content: { text: 'Hello, world!' }, version: 2 });
     expect(am.getCursorPosition(migrated, ['content', 'text'], cursor)).to.eq(7);
+  });
+
+  test('migrates nested objects', () => {
+    const source = { content: { text: 'Hello, world!', done: false }, version: 1 };
+    const target = { content: { text: 'Hello, world!', done: true }, version: 2 };
+
+    const migrated = migrateDocument(am.from(source), target);
+    expect(migrated).to.deep.eq(target);
+  });
+
+  test('migrates arrays', () => {
+    const source = {
+      content: [
+        { text: 'Hello, world!', done: false },
+        { text: 'Lorem ipsum', done: true },
+      ],
+      version: 1,
+    };
+    const target = {
+      content: [
+        { text: 'Hello, world!', done: true },
+        { text: 'Lorem ipsum', done: false },
+      ],
+      version: 2,
+    };
+
+    const migrated = migrateDocument(am.from(source), target);
+    expect(migrated).to.deep.eq(target);
+    expect(migrated.content.length).to.eq(2);
   });
 });
