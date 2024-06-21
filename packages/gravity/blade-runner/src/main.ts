@@ -56,7 +56,8 @@ const start = async () => {
 
   const argv = yargs(hideBin(process.argv))
     .options({
-      specfile: { type: 'string', alias: 's', describe: 'read this YAML file for the test spec' },
+      spec: { type: 'string', describe: 'JSON spec for a test' },
+      specfile: { type: 'string', describe: 'read this YAML file for the test spec' },
       repeatAnalysis: {
         type: 'string',
         alias: 'r',

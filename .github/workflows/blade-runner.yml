@@ -72,8 +72,7 @@ jobs:
         run: |
           ROOT_CWD="$(pwd)"
           mkdir artifacts
-          pushd packages/devtools/devtools-extension/out/devtools-extension && zip -r $ROOT_CWD/artifacts/devtools.zip . && popd
-          pushd packages/apps/composer-extension/out/composer-extension && zip -r $ROOT_CWD/artifacts/composer.zip . && popd
+          pushd packages/gravity/blade-runner/out/results && zip -r $ROOT_CWD/artifacts/blade-runner-results.zip . && popd
 
       - name: Upload
         uses: fnkr/github-action-ghr@v1

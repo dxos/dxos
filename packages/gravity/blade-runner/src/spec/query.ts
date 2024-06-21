@@ -32,6 +32,11 @@ type QueryTestSpec = {
   queryResolution: Exclude<QueryResult<any>['resolution'], undefined>['source'];
 };
 
+/**
+ * Spec for the Query test.
+ *
+ * Note: it is being used on CI in blade-runner job. Change with caution.
+ */
 type QueryTestResult = {
   /**
    * Time to create all objects in [ms].
