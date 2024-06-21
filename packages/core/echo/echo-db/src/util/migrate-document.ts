@@ -4,11 +4,14 @@
 
 import { type Doc, next as am } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 /**
  * This function will clone the source document while preserving history and then patch it in one change so it matches the target data.
  */
-export const migrateDocument = <T>(source: Doc<T>, targetData: T): Doc<T> => {
+export const migrateDocument = <T>(source: Doc<any>, targetData: T): Doc<T> => {
+  log('begin migration', { source, targetData });
+
   const clonedDoc = am.clone(source);
 
   const changedDoc = am.change(clonedDoc, (applyTo) => {
@@ -20,7 +23,11 @@ export const migrateDocument = <T>(source: Doc<T>, targetData: T): Doc<T> => {
       for (const key in targetData) {
         if (targetData[key] !== applyTo[key]) {
           if (typeof targetData[key] === 'object' && targetData[key] !== null) {
-            applyTo[key] ??= {};
+            if (Array.isArray(targetData[key]) && !Array.isArray(applyTo[key])) {
+              applyTo[key] = [];
+            } else if (typeof applyTo[key] !== 'object' || applyTo[key] === null) {
+              applyTo[key] = {};
+            }
             coalesce(applyTo[key], targetData[key]);
           } else {
             // TODO(dmaretskyi): It's possible to provide a special case for string migrations with `am.updateText`.
@@ -39,6 +46,8 @@ export const migrateDocument = <T>(source: Doc<T>, targetData: T): Doc<T> => {
 
     coalesce(applyTo, targetData);
   });
+
+  log('end migration', { changedDoc });
 
   return changedDoc;
 };
