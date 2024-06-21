@@ -241,6 +241,9 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
+
+  /// Data migration is required.
+  REQUIRES_MIGRATION = 8;
 }
 
 // TODO(burdon): Rename SpaceInfo?
@@ -361,6 +364,9 @@ message CreateEpochRequest {
 
     /// Replace the current automerge root with a new one specified by the user.
     REPLACE_AUTOMERGE_ROOT = 4;
+
+    /// Upgrade references data strucutre 
+    MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
   dxos.keys.PublicKey space_key = 1;
@@ -369,6 +375,11 @@ message CreateEpochRequest {
 
   /// For REPLACE_AUTOMERGE_ROOT migration.
   optional string automerge_root_url = 3;
+}
+
+message CreateEpochResponse {
+  /// Credential of the new epoch.
+  optional dxos.halo.credentials.Credential epoch_credential = 1;
 }
 
 message UpdateMemberRoleRequest {
@@ -394,7 +405,7 @@ service SpacesService {
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
-  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
+  rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
 }
 
 //
