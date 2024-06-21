@@ -20,8 +20,8 @@ import { batch, effect } from '@preact/signals-core';
 import React from 'react';
 
 import { actionGroupSymbol, type InvokeParams, type Graph, type Node, manageNodes } from '@braneframe/plugin-graph';
-import { cloneObject, CollectionType, TextV0Type } from '@braneframe/types';
-import { NavigationAction, type IntentDispatcher, type MetadataResolver } from '@dxos/app-framework';
+import { CanvasType, cloneObject, CollectionType, TextType } from '@braneframe/types';
+import { NavigationAction, type IntentDispatcher } from '@dxos/app-framework';
 import { type UnsubscribeCallback } from '@dxos/async';
 import { type EchoReactiveObject, isReactiveObject, Expando } from '@dxos/echo-schema';
 import { create } from '@dxos/echo-schema';
@@ -35,14 +35,15 @@ import { SpaceAction } from './types';
 export const SHARED = 'shared-spaces';
 export const HIDDEN = 'hidden-spaces';
 
-export const getSpaceDisplayName = (space: Space): string | [string, { ns: string }] => {
+export const getSpaceDisplayName = (
+  space: Space,
+  namesCache: Record<string, string> = {},
+): string | [string, { ns: string }] => {
   return space.state.get() === SpaceState.READY && (space.properties.name?.length ?? 0) > 0
     ? space.properties.name
-    : space.state.get() === SpaceState.CLOSED || space.state.get() === SpaceState.INACTIVE
-      ? ['closed space label', { ns: SPACE_PLUGIN }]
-      : space.state.get() !== SpaceState.READY
-        ? ['loading space label', { ns: SPACE_PLUGIN }]
-        : ['unnamed space label', { ns: SPACE_PLUGIN }];
+    : namesCache[space.id]
+      ? namesCache[space.id]
+      : ['unnamed space label', { ns: SPACE_PLUGIN }];
 };
 
 const getCollectionGraphNodePartials = ({
@@ -114,19 +115,19 @@ const getCollectionGraphNodePartials = ({
 export const updateGraphWithSpace = ({
   graph,
   space,
+  namesCache,
   enabled,
   hidden,
   isPersonalSpace,
   dispatch,
-  resolve,
 }: {
   graph: Graph;
   space: Space;
+  namesCache?: Record<string, string>;
   enabled?: boolean;
   hidden?: boolean;
   isPersonalSpace?: boolean;
   dispatch: IntentDispatcher;
-  resolve: MetadataResolver;
 }): UnsubscribeCallback => {
   const getId = (id: string) => `${id}/${space.id}`;
 
@@ -153,7 +154,9 @@ export const updateGraphWithSpace = ({
             data: space,
             properties: {
               ...partials,
-              label: isPersonalSpace ? ['personal space label', { ns: SPACE_PLUGIN }] : getSpaceDisplayName(space),
+              label: isPersonalSpace
+                ? ['personal space label', { ns: SPACE_PLUGIN }]
+                : getSpaceDisplayName(space, namesCache),
               description: space.state.get() === SpaceState.READY && space.properties.description,
               icon: (props: IconProps) => <Planet {...props} />,
               disabled: space.state.get() !== SpaceState.READY || hasPendingMigration,
@@ -330,6 +333,24 @@ export const updateGraphWithSpace = ({
 
       manageNodes({
         graph,
+        condition: !isPersonalSpace && space.state.get() !== SpaceState.CLOSED && !hasPendingMigration,
+        removeEdges: true,
+        nodes: [
+          {
+            id: getId(SpaceAction.CLOSE),
+            data: () => dispatch({ plugin: SPACE_PLUGIN, action: SpaceAction.CLOSE, data: { space } }),
+            properties: {
+              label: ['close space label', { ns: SPACE_PLUGIN }],
+              icon: (props: IconProps) => <X {...props} />,
+              mainAreaDisposition: 'menu',
+            },
+            edges: [[space.id, 'inbound']],
+          },
+        ],
+      });
+
+      manageNodes({
+        graph,
         condition: space.state.get() === SpaceState.INACTIVE,
         removeEdges: true,
         nodes: [
@@ -367,10 +388,10 @@ const updateGraphWithSpaceObjects = ({
   space: Space;
   dispatch: IntentDispatcher;
 }) => {
-  // TODO(burdon): HACK: Skip loading sketches (filter Expandos also?)
-  // TODO(wittjosiah): Option not to trigger queries if content of document updates (otherwise each keystroke triggers change).
-  // const query = space.db.query(Filter.not(Filter.schema(TextV0Type)));
-  const query = space.db.query(Filter.not(Filter.or(Filter.schema(TextV0Type), Filter.schema(Expando))));
+  // TODO(wittjosiah): Space plugin should not be aware of these types.
+  const query = space.db.query(
+    Filter.not(Filter.or(Filter.schema(TextType), Filter.schema(CanvasType), Filter.schema(Expando))),
+  );
   const previousObjects = new Map<string, EchoReactiveObject<any>[]>();
   const unsubscribeQuery = query.subscribe();
 
