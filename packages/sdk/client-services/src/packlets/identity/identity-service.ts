@@ -105,7 +105,12 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     for (const space of dataSpaceManager.spaces.values()) {
       if (space.state === SpaceState.CLOSED) {
         await space.open();
-        await space.initializeDataPipeline();
+
+        // Wait until the space is either READY or REQUIRES_MIGRATION.
+        const requiresMigration = space.stateUpdate.waitForCondition(
+          () => space.state === SpaceState.REQUIRES_MIGRATION,
+        );
+        await Promise.race([space.initializeDataPipeline(), requiresMigration]);
       }
       if (await dataSpaceManager.isDefaultSpace(space)) {
         await identity.updateDefaultSpace(space.id);

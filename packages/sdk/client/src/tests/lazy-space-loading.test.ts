@@ -139,6 +139,7 @@ describe('Lazy Space Loading', () => {
     log('restarted');
     await client.initialize();
     await client.spaces.isReady.wait();
+    await client.spaces.default.waitUntilReady();
   };
 });
 

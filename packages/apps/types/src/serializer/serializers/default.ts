@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { createEchoObject, getObjectCore, getMeta, getTypeRef } from '@dxos/client/echo';
+import { createEchoObject, getObjectCore, getMeta, internalDecodeReference } from '@dxos/client/echo';
 import { create, Expando, type ReactiveObject } from '@dxos/echo-schema';
 
 import { type SerializedObject } from '../types';
@@ -87,7 +87,8 @@ const deserializeEchoObject = (parsed: any, newId?: boolean): Expando => {
     core.id = id;
   }
   getMeta(deserializedObject).keys.push(...(meta?.keys ?? []));
-  const typeRef = getTypeRef(type);
+  // TODO(dmaretskyi): Remove usage of this internal method.
+  const typeRef = internalDecodeReference(type);
   if (typeRef) {
     core.setType(typeRef);
   }

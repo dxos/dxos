@@ -34,8 +34,8 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
       <Input.Root>
         <Input.TextInput
           placeholder={t('table name placeholder')}
-          value={table.title ?? ''}
-          onChange={(event) => (table.title = event.target.value)}
+          value={table.name ?? ''}
+          onChange={(event) => (table.name = event.target.value)}
         />
       </Input.Root>
       <Input.Root>

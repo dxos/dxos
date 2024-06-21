@@ -6,7 +6,7 @@ import '@dxosTheme';
 
 import React, { type FC, useState } from 'react';
 
-import { TextV0Type } from '@braneframe/types';
+import { TextType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { faker } from '@dxos/random';
@@ -37,7 +37,7 @@ faker.seed(101);
 
 const Story: FC<{ content: string }> = ({ content }) => {
   const { themeMode } = useThemeContext();
-  const [text] = useState(create(TextV0Type, { content }));
+  const [text] = useState(create(TextType, { content }));
   const [formattingState, formattingObserver] = useFormattingState();
   const { parentRef, view } = useTextEditor(() => {
     return {
