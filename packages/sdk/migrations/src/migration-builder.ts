@@ -7,13 +7,7 @@ import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/a
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type AutomergeContext, ObjectCore, migrateDocument } from '@dxos/echo-db';
-import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc } from '@dxos/echo-protocol';
-import { type Doc, getHeads } from '@dxos/automerge/automerge';
-import { type AnyDocumentId, type DocHandle, type Repo } from '@dxos/automerge/automerge-repo';
-import { type Space } from '@dxos/client/echo';
-import { CreateEpochRequest } from '@dxos/client/halo';
-import { type AutomergeContext, ObjectCore } from '@dxos/echo-db';
-import { encodeReference, type ObjectStructure, Reference, type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, encodeReference, type ObjectStructure, type SpaceDoc, Reference } from '@dxos/echo-protocol';
 import { requireTypeReference, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
