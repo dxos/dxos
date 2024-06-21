@@ -285,7 +285,7 @@ const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
 type TriggerSpecProps<T = TriggerSpec> = { space: Space; spec: T };
 
 const triggerRenderers: {
-  [key in FunctionTriggerType]: React.FC<TriggerSpecProps<any>>;
+  [key in FunctionTriggerType]: FC<TriggerSpecProps<any>>;
 } = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,

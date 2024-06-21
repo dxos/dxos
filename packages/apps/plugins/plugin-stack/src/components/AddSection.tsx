@@ -3,7 +3,7 @@
 //
 
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
-import React, { useCallback } from 'react';
+import React, { type FC, type KeyboardEvent, type MouseEvent, useCallback } from 'react';
 
 import { StackViewType, type CollectionType } from '@braneframe/types';
 import { usePlugin, useIntentDispatcher } from '@dxos/app-framework';
@@ -13,12 +13,12 @@ import { getSize, mx } from '@dxos/react-ui-theme';
 import { STACK_PLUGIN } from '../meta';
 import { type StackSectionCreator, type StackPluginProvides } from '../types';
 
-const CreatorTile = ({ Icon, label, handleAdd }: { Icon: React.FC<any>; label: string; handleAdd: () => void }) => {
-  const onClick = useCallback((_: React.MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
+const CreatorTile = ({ Icon, label, handleAdd }: { Icon: FC<any>; label: string; handleAdd: () => void }) => {
+  const onClick = useCallback((_: MouseEvent<HTMLDivElement>) => handleAdd(), [handleAdd]);
   const onKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
         handleAdd();
       }
     },

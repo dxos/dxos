@@ -1,9 +1,10 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { Slot } from '@radix-ui/react-slot';
-import React, { forwardRef, type ReactNode } from 'react';
+import React, { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -17,7 +18,7 @@ const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNa
 ));
 
 type StatusBarButtonProps = ThemedClassName<{ children: ReactNode; asChild?: boolean }> &
-  React.HTMLAttributes<HTMLButtonElement>;
+  HTMLAttributes<HTMLButtonElement>;
 
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
@@ -43,7 +44,7 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
 
 export default StatusBarButton;
 
-type StatusBarItemProps = ThemedClassName<{ children: ReactNode }> & React.HTMLAttributes<HTMLDivElement>;
+type StatusBarItemProps = ThemedClassName<{ children: ReactNode }> & HTMLAttributes<HTMLDivElement>;
 
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
   ({ classNames, children, ...props }, forwardedRef) => (

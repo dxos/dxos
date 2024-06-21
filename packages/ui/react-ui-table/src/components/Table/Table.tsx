@@ -14,7 +14,16 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import React, { type ComponentPropsWithoutRef, Fragment, useCallback, useEffect, useState, useContext } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  Fragment,
+  useCallback,
+  useEffect,
+  useState,
+  useContext,
+  type ReactNode,
+  memo,
+} from 'react';
 
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { mx } from '@dxos/react-ui-theme';
@@ -28,7 +37,7 @@ import { type TableProps } from './props';
 import { useColumnResizing, useColumnSorting, usePinLastRow, useRowSelection } from '../../hooks';
 import { groupTh, tableRoot } from '../../theme';
 
-type TableRootProps = { children: React.ReactNode };
+type TableRootProps = { children: ReactNode };
 
 const TableRoot = ({ children }: TableRootProps) => {
   const contextValue = useTableRootContext();
@@ -179,7 +188,7 @@ const TableImpl = <TData extends RowData>(props: TableProps<TData>) => {
 
   const isResizingColumn = table.getState().columnSizingInfo.isResizingColumn;
 
-  const TableComponent = isResizingColumn ? MemoizedVirtualisedTableContent : VirtualizedTableContent;
+  const TableComponent = isResizingColumn ? MemoizedVirtualizedTableContent : VirtualizedTableContent;
 
   return (
     <table
@@ -248,7 +257,7 @@ const VirtualizedTableContent = () => {
   );
 };
 
-export const MemoizedVirtualisedTableContent = React.memo(VirtualizedTableContent);
+export const MemoizedVirtualizedTableContent = memo(VirtualizedTableContent);
 
 const GroupedTableContent = () => {
   const {
