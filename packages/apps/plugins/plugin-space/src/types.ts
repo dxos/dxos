@@ -67,6 +67,11 @@ export type PluginState = {
   awaiting: string | undefined;
 
   /**
+   * Cached space names, used when spaces are closed or loading.
+   */
+  spaceNames: Record<string, string>;
+
+  /**
    * Spaces which have been touched by the user and should have queries run against them.
    *
    * @deprecated Temporary action to help with composer performance.
