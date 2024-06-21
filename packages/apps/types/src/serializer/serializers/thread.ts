@@ -10,7 +10,7 @@ import { type ThreadType } from '../../schema';
 // TODO(burdon): Implement.
 export const serializer: TypedObjectSerializer<ThreadType> = {
   filename: (object) => ({
-    name: validFilename(object.title),
+    name: validFilename(object.name),
     extension: 'md',
   }),
 
@@ -18,7 +18,7 @@ export const serializer: TypedObjectSerializer<ThreadType> = {
     return (
       object.messages
         .filter(nonNullable)
-        .map((message) => message.blocks.map((block) => `${(block.content as any)?.text}`).join(' - '))
+        .map((message) => message.text)
         .join(' | ') ?? ''
     );
   },

@@ -9,12 +9,12 @@ export default [
     'en-US': {
       [THREAD_PLUGIN]: {
         'plugin name': 'Threads',
-        'thread title placeholder': 'New thread',
-        'thread title label': 'Title',
-        'delete thread label': 'Delete thread',
-        'create thread label': 'Create thread',
+        'channel name placeholder': 'New channel',
+        'channel title label': 'Title',
+        'delete channel label': 'Delete channel',
+        'create channel label': 'Create channel',
         'message placeholder': 'Reply…',
-        'settings standalone label': 'Enable standalone thread creation (experimental)',
+        'settings standalone label': 'Enable channel creation (experimental)',
         'activity message': 'Processing…',
         'anonymous label': 'Anonymous',
         'delete message block label': 'Delete message block',

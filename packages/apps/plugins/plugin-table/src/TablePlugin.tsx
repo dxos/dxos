@@ -30,7 +30,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
       metadata: {
         records: {
           [TableType.typename]: {
-            label: (object: any) => (object instanceof TableType ? object.title : undefined),
+            label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
@@ -87,7 +87,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
+                            label: object.name || ['object placeholder', { ns: TABLE_PLUGIN }],
                             icon: (props: IconProps) => <Table {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
@@ -139,7 +139,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { title: '', props: [] }),
+                data: create(TableType, { name: '', props: [] }),
               };
             }
           }

@@ -41,6 +41,9 @@
           "env": "DX_ENVIRONMENT"
         },
         {
+          "env": "DX_EXPERIMENTAL"
+        },
+        {
           "env": "DX_IPDATA_API_KEY"
         },
         {
@@ -114,14 +117,6 @@
       "options": {
         "configDir": "packages/apps/composer-app/.storybook"
       }
-    },
-    "test": {
-      "options": {
-        "forceExit": true
-      }
     }
-  },
-  "implicitDependencies": [
-    "test"
-  ]
+  }
 }
