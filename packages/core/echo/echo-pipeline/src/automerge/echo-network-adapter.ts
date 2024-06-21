@@ -10,6 +10,7 @@ import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type EchoReplicator, type ReplicatorConnection, type ShouldAdvertizeParams } from './echo-replicator';
+import { EchoNetworkMetrics } from './echo-network-metrics';
 
 export type EchoNetworkAdapterParams = {
   getContainingSpaceForDocument: (documentId: string) => Promise<PublicKey | null>;
@@ -19,6 +20,7 @@ export type EchoNetworkAdapterParams = {
  * Manages a set of {@link EchoReplicator} instances.
  */
 export class EchoNetworkAdapter extends NetworkAdapter {
+  private readonly _metrics = new EchoNetworkMetrics();
   private readonly _replicators = new Set<EchoReplicator>();
   /**
    * Remote peer id -> connection.
@@ -42,6 +44,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     if (!connectionEntry) {
       throw new Error('Connection not found.');
     }
+
+    this._metrics.recordMessageSent(message);
 
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
     connectionEntry.writer.write(message).catch((err) => {
@@ -131,6 +135,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
           if (done) {
             break;
           }
+
+          this._metrics.recordMessageReceived(value);
 
           this.emit('message', value);
         }
