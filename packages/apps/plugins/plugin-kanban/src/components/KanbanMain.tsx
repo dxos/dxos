@@ -4,7 +4,7 @@
 
 import React, { type FC } from 'react';
 
-import { type KanbanType, KanbanColumnType, KanbanItemType, TextV0Type } from '@braneframe/types';
+import { type KanbanType, KanbanColumnType, KanbanItemType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace } from '@dxos/react-client/echo';
 import { Main } from '@dxos/react-ui';
@@ -25,7 +25,7 @@ const KanbanMain: FC<{ kanban: KanbanType }> = ({ kanban }) => {
     root: kanban, // TODO(burdon): How to keep pure?
     createColumn: () => space.db.add(create(KanbanColumnType, { items: [] })),
     // TODO(burdon): Add metadata from column in the case of projections.
-    createItem: (column) => space.db.add(create(KanbanItemType, { title: create(TextV0Type, { content: '' }) })),
+    createItem: (column) => space.db.add(create(KanbanItemType, { name: '' })),
   };
 
   return (

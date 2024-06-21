@@ -2,13 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { DocumentType, type BlockType, TextV0Type, CollectionType } from '@braneframe/types';
+import { DocumentType, CollectionType, TextType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
-import { AST, create } from '@dxos/echo-schema';
+import { AST, type EchoReactiveObject, create } from '@dxos/echo-schema';
 import { log } from '@dxos/log';
 
 import { type RequestContext } from './context';
 import { type ParseResult } from './parser';
+
+type BlockType = {
+  timestamp: string;
+  content?: string;
+  object?: EchoReactiveObject<any>;
+};
 
 // TODO(burdon): Create variant of StringOutputParser.
 //  https://js.langchain.com/docs/modules/model_io/output_parsers/json_functions
@@ -24,7 +30,7 @@ export class ResponseBuilder {
     log('build', { result });
 
     if (pre) {
-      blocks.push({ timestamp, content: create(TextV0Type, { content: pre }) });
+      blocks.push({ timestamp, content: pre });
     }
 
     const processed = this.processResult(result);
@@ -33,7 +39,7 @@ export class ResponseBuilder {
     }
 
     if (post) {
-      blocks.push({ timestamp, content: create(TextV0Type, { content: post }) });
+      blocks.push({ timestamp, content: post });
     }
 
     return blocks;
@@ -62,7 +68,8 @@ export class ResponseBuilder {
 
       this._context.object.objects.push(
         create(DocumentType, {
-          content: create(TextV0Type, { content: formattedContent }),
+          content: create(TextType, { content: formattedContent }),
+          threads: [],
         }),
       );
 
@@ -83,7 +90,7 @@ export class ResponseBuilder {
             for (const { name, type } of schema.getProperties()) {
               const value = obj[name];
               if (value !== undefined && value !== null && AST.isStringKeyword(type)) {
-                data[name.toString()] = create(TextV0Type, { content: value });
+                data[name.toString()] = create(TextType, { content: value });
               }
             }
 
@@ -104,7 +111,7 @@ export class ResponseBuilder {
     return [
       {
         timestamp,
-        content: create(TextV0Type, { content }),
+        content,
       },
     ];
   }

@@ -8,7 +8,7 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { DocumentType, TextV0Type } from '@braneframe/types';
+import { DocumentType, TextType } from '@braneframe/types';
 import {
   LayoutAction,
   isObject,
@@ -21,7 +21,7 @@ import {
   parseFileManagerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, Filter, type Query, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -108,7 +108,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         records: {
           [DocumentType.typename]: {
             label: (object: any) =>
-              object instanceof DocumentType ? object.title ?? getFallbackTitle(object) : undefined,
+              object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -116,7 +116,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       echo: {
-        schema: [DocumentType, TextV0Type],
+        schema: [DocumentType, TextType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -171,7 +171,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                             // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
                             get label() {
                               return (
-                                object.title ||
+                                object.name ||
                                 getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
                               );
                             },
@@ -355,9 +355,9 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
           switch (action) {
             case MarkdownAction.CREATE: {
               const doc = create(DocumentType, {
-                content: create(TextV0Type, { content: '' }), // TODO(burdon): Simplify.
-                comments: [],
-              }) satisfies ReactiveObject<DocumentType>;
+                content: create(TextType, { content: '' }),
+                threads: [],
+              });
 
               return {
                 data: doc,
