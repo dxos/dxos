@@ -170,7 +170,7 @@ export const TablePrimitive = <TData extends RowData>(props: TableProps<TData>) 
   );
 };
 
-// TODO(Zan): Smush this into the Table component.
+// TODO(zan): Smush this into the Table component.
 /**
  * Pure implementation of table outside of context set-up.
  */

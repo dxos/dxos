@@ -25,7 +25,7 @@ import { descriptionText, mx } from '@dxos/react-ui-theme';
 import { SEARCH_PLUGIN } from '../meta';
 import { useSearchResults } from '../search';
 
-// TODO(Zan): Move to common if this is found to be useful.
+// TODO(zan): Move to common if this is found to be useful.
 type GuardedType<T> = T extends (value: any) => value is infer R ? R : never;
 
 type SearchListResultProps = {
