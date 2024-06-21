@@ -27,9 +27,8 @@ export class ReadableMuxer<T> {
     this._ctx.onDispose(() => this._readableController.close());
   }
 
-  pushStream(stream: ReadableStream<T>) {
+  pushStream(stream: ReadableStream<T>): { cancel: () => void } {
     const reader = stream.getReader();
-    this._ctx.onDispose(() => reader.cancel());
     scheduleMicroTask(this._ctx, async () => {
       while (true) {
         const { done, value } = await reader.read();
@@ -40,6 +39,9 @@ export class ReadableMuxer<T> {
       }
     });
     log.info('done');
+    return {
+      cancel: () => reader.cancel(),
+    };
   }
 
   async close() {

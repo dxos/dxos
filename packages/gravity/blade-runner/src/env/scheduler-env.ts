@@ -174,7 +174,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
     const requestQueue = `replicant-${replicantId}:requests:${this.params.testId}`;
     const responseQueue = `replicant-${replicantId}:responses:${this.params.testId}`;
-    const { tracingQueue, tracingStream } = this._setupTracingStream(replicantId);
+    const { tracingQueue, close: closeTracingStream } = this._setupTracingStream(replicantId);
 
     /**
      * Redis client for submitting RPC requests.
@@ -236,7 +236,7 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
         rpcRequests.disconnect();
         rpcResponses.disconnect();
         processHandle.kill(signal);
-        void tracingStream.cancel();
+        void closeTracingStream();
         void rpcHandle[close]().catch((err) => log.catch(err));
       },
       params: replicantParams,
@@ -253,8 +253,14 @@ export class SchedulerEnvImpl<S> extends Resource implements SchedulerEnv {
 
     const tracingQueue = `replicant-${replicantId}:tracing:${this.params.testId}`;
     const tracingStream = createRedisReadableStream({ client: tracingRedis, queue: tracingQueue });
-    this.perfettoEventsStream.pushStream(tracingStream);
+    const { cancel } = this.perfettoEventsStream.pushStream(tracingStream);
 
-    return { tracingQueue, tracingStream };
+    return {
+      tracingQueue,
+      close: async () => {
+        cancel();
+        tracingRedis.disconnect();
+      },
+    };
   }
 }
