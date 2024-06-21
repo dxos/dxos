@@ -5,17 +5,16 @@
 import { IndexedDBStorageAdapter } from '@dxos/automerge/automerge-repo-storage-indexeddb';
 import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { AutomergeStorageAdapter, LevelDBStorageAdapter } from '@dxos/echo-pipeline';
+import { LevelDBStorageAdapter } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { createStorage, StorageType } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
-export type AdaptorKind = 'idb' | 'opfs' | 'node' | 'leveldb';
+export type AdaptorKind = 'idb' | 'leveldb';
 
 export type RunResults = {
   saveDuration: number;
@@ -117,11 +116,6 @@ export class StorageReplicant {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();
-      case 'opfs': {
-        const storage = createStorage({ type: StorageType.WEBFS });
-        this._storageCtx.onDispose(() => storage.close());
-        return new AutomergeStorageAdapter(storage.createDirectory('automerge'));
-      }
       case 'leveldb': {
         const level = await createLevel({ persistent: true, dataRoot: `/tmp/dxos/${this.env.params.testId}` });
         this._storageCtx.onDispose(() => level.close());

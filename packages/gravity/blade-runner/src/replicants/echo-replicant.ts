@@ -98,9 +98,9 @@ export class EchoReplicant {
         accessor.handle.change((doc) => {
           A.splice(doc, accessor.path.slice(), 0, size >= length ? 0 : mutationsSize, randomText(mutationsSize));
         });
-        if (mutationIdx % 1000 === 0) {
-          log.info('insertion iteration', { objIdx, mutationIdx });
-        }
+        // if (mutationIdx % 1000 === 0 && objIdx !== 0) {
+        //   log.info('insertion iteration', { objIdx, mutationIdx });
+        // }
       }
 
       if (objIdx % 100 === 0) {
