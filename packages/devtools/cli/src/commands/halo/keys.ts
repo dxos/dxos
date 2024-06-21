@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type Client } from '@dxos/client';
-
 import { BaseCommand } from '../../base';
 
 export default class Keys extends BaseCommand<typeof Keys> {
@@ -11,7 +9,7 @@ export default class Keys extends BaseCommand<typeof Keys> {
   static override description = 'Show HALO keys.';
 
   async run(): Promise<any> {
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       console.log(client.halo);
     });
   }

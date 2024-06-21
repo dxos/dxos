@@ -5,20 +5,20 @@
 import isEqualWith from 'lodash.isequalwith';
 
 import { Event, MulticastObservable, scheduleMicroTask, synchronized, Trigger } from '@dxos/async';
-import { type ClientServicesProvider, type Space, type SpaceInternal, Properties } from '@dxos/client-protocol';
+import { type ClientServicesProvider, type Space, type SpaceInternal, PropertiesType } from '@dxos/client-protocol';
 import { cancelWithContext, Context } from '@dxos/context';
 import { checkCredentialType } from '@dxos/credentials';
 import { loadashEqualityFn, todo, warnAfterTimeout } from '@dxos/debug';
 import { type EchoDatabaseImpl, type EchoDatabase, Filter, type EchoClient } from '@dxos/echo-db';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { decodeError } from '@dxos/protocols';
 import {
+  CreateEpochRequest,
   Invitation,
   SpaceState,
-  type CreateEpochRequest,
   type Space as SpaceData,
   type SpaceMember,
   type UpdateMemberRoleRequest,
@@ -38,10 +38,15 @@ export class SpaceProxy implements Space {
   private readonly _ctx = new Context();
 
   /**
+   * Sent whenever any space data changes.
+   */
+  private readonly _anySpaceUpdate = new Event<SpaceData>();
+
+  /**
    * @internal
    * To update the space query when a space changes.
    */
-  // TODO(wittjosiah): Remove this? Should be consistent w/ ECHO query.
+  // TODO(dmaretskyi): Make private.
   public readonly _stateUpdate = new Event<SpaceState>();
 
   private readonly _pipelineUpdate = new Event<SpaceData.PipelineState>();
@@ -98,7 +103,7 @@ export class SpaceProxy implements Space {
       }),
     );
 
-    this._db = echoClient.constructDatabase({ spaceKey: this.key, owningObject: this });
+    this._db = echoClient.constructDatabase({ spaceId: this.id, spaceKey: this.key, owningObject: this });
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -108,6 +113,7 @@ export class SpaceProxy implements Space {
       },
       createEpoch: this._createEpoch.bind(this),
       removeMember: this._removeMember.bind(this),
+      migrate: this._migrate.bind(this),
     };
 
     this._error = this._data.error ? decodeError(this._data.error) : undefined;
@@ -116,6 +122,10 @@ export class SpaceProxy implements Space {
     this._stateUpdate.emit(this._currentState);
     this._pipelineUpdate.emit(_data.pipeline ?? {});
     this._membersUpdate.emit(_data.members ?? []);
+  }
+
+  get id(): SpaceId {
+    return this._data.id as SpaceId;
   }
 
   @trace.info()
@@ -134,9 +144,7 @@ export class SpaceProxy implements Space {
 
   @trace.info({ depth: 2 })
   get properties(): EchoReactiveObject<any> {
-    if (!this._initialized) {
-      throw new Error('Space is not initialized');
-    }
+    this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
   }
@@ -233,11 +241,13 @@ export class SpaceProxy implements Space {
       // Transition onto new automerge root.
       const automergeRoot = space.pipeline?.currentEpoch?.subject.assertion.automergeRoot;
       if (automergeRoot) {
+        log('set space root', { spaceKey: this.key, automergeRoot });
         // NOOP if the root is the same.
         await this._db.setSpaceRoot(automergeRoot);
       }
     }
 
+    this._anySpaceUpdate.emit(space);
     if (emitEvent) {
       this._stateUpdate.emit(this._currentState);
     }
@@ -280,6 +290,8 @@ export class SpaceProxy implements Space {
 
       if (automergeRoot !== undefined) {
         await this._db.setSpaceRoot(automergeRoot);
+      } else {
+        log.warn('no automerge root found for space', { spaceId: this.id });
       }
       await this._db.open();
     }
@@ -295,7 +307,7 @@ export class SpaceProxy implements Space {
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
       const unsubscribe = this._db
-        .query(Filter.schema(Properties), { dataLocation: QueryOptions.DataLocation.LOCAL })
+        .query(Filter.schema(PropertiesType), { dataLocation: QueryOptions.DataLocation.LOCAL })
         .subscribe(
           (query) => {
             if (query.objects.length === 1) {
@@ -378,6 +390,7 @@ export class SpaceProxy implements Space {
    * Creates a delegated or interactive invitation.
    */
   share(options?: Partial<Invitation>) {
+    this._throwIfNotInitialized();
     log('create invitation', options);
     return this._invitationsProxy.share({ ...options, spaceKey: this.key });
   }
@@ -386,6 +399,7 @@ export class SpaceProxy implements Space {
    * Requests member role update.
    */
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>) {
+    this._throwIfNotInitialized();
     return this._clientServices.services.SpacesService!.updateMemberRole({
       spaceKey: this.key,
       memberKey: request.memberKey,
@@ -408,8 +422,25 @@ export class SpaceProxy implements Space {
     };
   }
 
-  private async _createEpoch({ migration }: { migration?: CreateEpochRequest.Migration } = {}) {
-    await this._clientServices.services.SpacesService!.createEpoch({ spaceKey: this.key, migration });
+  private async _createEpoch({
+    migration,
+    automergeRootUrl,
+  }: { migration?: CreateEpochRequest.Migration; automergeRootUrl?: string } = {}) {
+    log('create epoch', { migration, automergeRootUrl });
+    const { epochCredential } = await this._clientServices.services.SpacesService!.createEpoch({
+      spaceKey: this.key,
+      migration,
+      automergeRootUrl,
+    });
+
+    if (epochCredential) {
+      // TODO(dmaretskyi): This has a chance to deadlock if another epoch was applied in parallel with the one we just created.
+      await warnAfterTimeout(5_000, 'Waiting for the created epoch to be applied', async () => {
+        await this._anySpaceUpdate.waitForCondition(
+          () => !!this._data.pipeline?.currentEpoch?.id?.equals(epochCredential.id!),
+        );
+      });
+    }
   }
 
   private async _removeMember(memberKey: PublicKey) {
@@ -418,6 +449,18 @@ export class SpaceProxy implements Space {
       memberKey,
       newRole: HaloSpaceMember.Role.REMOVED,
     });
+  }
+
+  private async _migrate() {
+    await this._createEpoch({
+      migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
+    });
+  }
+
+  private _throwIfNotInitialized() {
+    if (!this._initialized) {
+      throw new Error('Space is not initialized.');
+    }
   }
 }
 

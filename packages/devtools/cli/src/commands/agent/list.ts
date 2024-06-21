@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Flags, ux } from '@oclif/core';
+import { Flags } from '@oclif/core';
+
+import { TABLE_FLAGS, printAgents } from '@dxos/cli-base';
 
 import { BaseCommand } from '../../base';
-import { printAgents } from '../../util';
 
 export default class List extends BaseCommand<typeof List> {
   static override enableJsonFlag = true;
   static override description = 'List agents.';
   static override flags = {
     ...BaseCommand.flags,
-    ...ux.table.flags(),
+    ...TABLE_FLAGS,
     live: Flags.boolean({
       description: 'Live update.',
       default: false,
@@ -36,7 +37,7 @@ export default class List extends BaseCommand<typeof List> {
             const result = await daemon.list();
             console.clear();
             printAgents(result, this.flags);
-          }, 1000);
+          }, 1_000);
         } else {
           printAgents(result, this.flags);
         }

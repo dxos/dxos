@@ -20,6 +20,8 @@ export default [
         'add section before dialog title': 'Add a section',
         'add section after dialog title': 'Add a section',
         'add section input placeholder': 'Find the type of section to add',
+        'upload file label': 'Add file',
+        'add section label': 'Add section',
       },
     },
   },

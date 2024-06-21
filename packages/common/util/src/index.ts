@@ -35,3 +35,4 @@ export * from './defer';
 export * from './circular-buffer';
 export * from './join-tables';
 export * from './throw-unhandled-error';
+export * from './safe-await';

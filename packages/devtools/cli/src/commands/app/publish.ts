@@ -8,7 +8,8 @@ import os from 'os';
 import { invariant } from '@dxos/invariant';
 
 import { BaseCommand } from '../../base';
-import { build, loadConfig, publish, type PublisherRpcPeer } from '../../util';
+import { loadConfig, publish, type PublisherRpcPeer } from '../../util';
+import { build } from '../../util';
 
 /**
  * @deprecated

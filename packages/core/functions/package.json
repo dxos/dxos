@@ -1,6 +1,6 @@
 {
   "name": "@dxos/functions",
-  "version": "0.5.5",
+  "version": "0.5.8",
   "description": "Functions API and runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

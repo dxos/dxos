@@ -9,15 +9,15 @@ import { type Reference } from '@dxos/echo-protocol';
 import { type EchoReactiveObject } from '@dxos/echo-schema';
 import { compositeRuntime } from '@dxos/echo-signals/runtime';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { trace } from '@dxos/tracing';
 import { ComplexMap, entry } from '@dxos/util';
 
-import { type AutomergeDb, type ItemsUpdatedEvent } from './automerge';
-import { type EchoDatabase, type EchoDatabaseImpl } from './database';
+import { type ItemsUpdatedEvent } from './core-db';
 import { prohibitSignalActions } from './guarded-scope';
+import { type EchoDatabase, type EchoDatabaseImpl } from './proxy-db';
 import {
   Filter,
   filterMatch,
@@ -33,38 +33,52 @@ import { RuntimeSchemaRegistry } from './runtime-schema-registry';
  * Manages cross-space database interactions.
  */
 export class Hypergraph {
-  private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
+  /**
+   * Used for References resolution.
+   * @deprecated use SpaceId.
+   * TODO(mykola): Delete on References migration.
+   */
+  private readonly _spaceKeyToId = new ComplexMap<PublicKey, SpaceId>(PublicKey.hash);
+  private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   // TODO(burdon): Comment/rename?
-  private readonly _owningObjects = new ComplexMap<PublicKey, unknown>(PublicKey.hash);
-  private readonly _runtimeSchemaRegistry = new RuntimeSchemaRegistry();
+  private readonly _owningObjects = new Map<SpaceId, unknown>();
+  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
-  private readonly _resolveEvents = new ComplexMap<PublicKey, Map<string, Event<EchoReactiveObject<any>>>>(
-    PublicKey.hash,
-  );
+  private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<EchoReactiveObject<any>>>>();
 
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get runtimeSchemaRegistry(): RuntimeSchemaRegistry {
-    return this._runtimeSchemaRegistry;
+  get schemaRegistry(): RuntimeSchemaRegistry {
+    return this._schemaRegistry;
   }
 
   /**
    * Register a database.
+   * @param spaceId Space id.
+   * @param spaceKey Space key.
+   * @param database Database backend.
    * @param owningObject Database owner, usually a space.
    */
   // TODO(burdon): When is the owner not a space?
-  _register(spaceKey: PublicKey, database: EchoDatabaseImpl, owningObject?: unknown) {
-    this._databases.set(spaceKey, database);
-    this._owningObjects.set(spaceKey, owningObject);
-    database.automerge._updateEvent.on(this._onUpdate.bind(this));
+  _register(
+    spaceId: SpaceId,
+    /** @deprecated Use spaceId */
+    spaceKey: PublicKey,
+    database: EchoDatabaseImpl,
+    owningObject?: unknown,
+  ) {
+    this._spaceKeyToId.set(spaceKey, spaceId);
+    this._databases.set(spaceId, database);
+    this._owningObjects.set(spaceId, owningObject);
+    database.coreDatabase._updateEvent.on(this._onUpdate.bind(this));
 
-    const map = this._resolveEvents.get(spaceKey);
+    const map = this._resolveEvents.get(spaceId);
     if (map) {
       for (const [id, event] of map) {
         const obj = database.getObjectById(id);
         if (obj) {
-          log('resolve', { spaceKey, itemId: id });
+          log('resolve', { spaceId, itemId: id });
           event.emit(obj);
           map.delete(id);
         }
@@ -76,13 +90,13 @@ export class Hypergraph {
     }
   }
 
-  _unregister(spaceKey: PublicKey) {
+  _unregister(spaceId: SpaceId) {
     // TODO(dmaretskyi): Remove db from query contexts.
-    this._databases.delete(spaceKey);
+    this._databases.delete(spaceId);
   }
 
-  _getOwningObject(spaceKey: PublicKey): unknown | undefined {
-    return this._owningObjects.get(spaceKey);
+  _getOwningObject(spaceId: SpaceId): unknown | undefined {
+    return this._owningObjects.get(spaceId);
   }
 
   /**
@@ -100,7 +114,7 @@ export class Hypergraph {
    */
   _lookupLink(
     ref: Reference,
-    from: EchoDatabase | AutomergeDb,
+    from: EchoDatabase,
     onResolve: (obj: EchoReactiveObject<any>) => void,
   ): EchoReactiveObject<any> | undefined {
     if (ref.host === undefined) {
@@ -111,9 +125,10 @@ export class Hypergraph {
     }
 
     const spaceKey = ref.host ? PublicKey.from(ref.host) : from?.spaceKey;
-
+    const spaceId = this._spaceKeyToId.get(spaceKey);
+    invariant(spaceId, 'No spaceId for spaceKey.');
     if (ref.host) {
-      const remoteDb = this._databases.get(spaceKey);
+      const remoteDb = this._databases.get(spaceId);
       if (remoteDb) {
         // Resolve remote reference.
         const remote = remoteDb.getObjectById(ref.itemId);
@@ -133,7 +148,7 @@ export class Hypergraph {
     }
 
     log('trap', { spaceKey, itemId: ref.itemId });
-    entry(this._resolveEvents, spaceKey)
+    entry(this._resolveEvents, spaceId)
       .orInsert(new Map())
       .deep(ref.itemId)
       .orInsert(new Event())
@@ -158,7 +173,7 @@ export class Hypergraph {
   }
 
   private _onUpdate(updateEvent: ItemsUpdatedEvent) {
-    const listenerMap = this._resolveEvents.get(updateEvent.spaceKey);
+    const listenerMap = this._resolveEvents.get(updateEvent.spaceId);
     if (listenerMap) {
       compositeRuntime.batch(() => {
         // TODO(dmaretskyi): We only care about created items.
@@ -167,7 +182,7 @@ export class Hypergraph {
           if (!listeners) {
             continue;
           }
-          const db = this._databases.get(updateEvent.spaceKey);
+          const db = this._databases.get(updateEvent.spaceId);
           if (!db) {
             continue;
           }
@@ -175,7 +190,7 @@ export class Hypergraph {
           if (!obj) {
             continue;
           }
-          log('resolve', { spaceKey: updateEvent.spaceKey, itemId: obj.id });
+          log('resolve', { spaceId: updateEvent.spaceId, itemId: obj.id });
           listeners.emit(obj);
           listenerMap.delete(item.id);
         }
@@ -249,6 +264,10 @@ class SpaceQuerySource implements QuerySource {
 
   constructor(private readonly _database: EchoDatabaseImpl) {}
 
+  get spaceId() {
+    return this._database.spaceId;
+  }
+
   get spaceKey() {
     return this._database.spaceKey;
   }
@@ -264,8 +283,13 @@ class SpaceQuerySource implements QuerySource {
         return (
           !this._results ||
           this._results.find((result) => result.id === object.id) ||
-          (this._database.automerge._objects.has(object.id) &&
-            filterMatch(this._filter!, this._database.automerge.getObjectCoreById(object.id)!))
+          (this._database.coreDatabase._objects.has(object.id) &&
+            !this._database.coreDatabase.getObjectCoreById(object.id)!.isDeleted() &&
+            filterMatch(
+              this._filter!, //
+              this._database.coreDatabase.getObjectCoreById(object.id),
+              object,
+            ))
         );
       });
 
@@ -312,7 +336,7 @@ class SpaceQuerySource implements QuerySource {
     this._filter = filter;
 
     // TODO(dmaretskyi): Allow to specify a retainer.
-    this._database.automerge._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
+    this._database.coreDatabase._updateEvent.on(this._ctx, this._onUpdate, { weak: true });
 
     this._results = undefined;
     this.changed.emit();
@@ -326,14 +350,15 @@ class SpaceQuerySource implements QuerySource {
 
   private _query(filter: Filter): QueryResult<EchoReactiveObject<any>>[] {
     return (
-      this._database.automerge
+      this._database.coreDatabase
         .allObjectCores()
         // TODO(dmaretskyi): Cleanup proxy <-> core.
-        .filter((core) => filterMatch(filter, core))
+        .filter((core) => filterMatch(filter, core, this._database.getObjectById(core.id, { deleted: true })))
         .map((core) => ({
           id: core.id,
+          spaceId: this.spaceId,
           spaceKey: this.spaceKey,
-          object: core.rootProxy as EchoReactiveObject<any>,
+          object: this._database.getObjectById(core.id, { deleted: true }),
           resolution: {
             source: 'local',
             time: 0,

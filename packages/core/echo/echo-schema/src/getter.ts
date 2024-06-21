@@ -34,8 +34,8 @@ export const getTypeReference = (schema: S.Schema<any> | undefined): Reference |
   if (annotation == null) {
     return undefined;
   }
-  if (annotation.storedSchemaId) {
-    return new Reference(annotation.storedSchemaId);
+  if (annotation.schemaId) {
+    return new Reference(annotation.schemaId);
   }
 
   return Reference.fromLegacyTypename(annotation.typename);
@@ -67,13 +67,14 @@ export const getType = <T extends {}>(obj: T | undefined): Reference | undefined
   return undefined;
 };
 
+// TODO(burdon): AbstractTypedObject?
 export const getTypename = <T extends {}>(obj: T): string | undefined => getType(obj)?.itemId;
 
 export const requireTypeReference = (schema: S.Schema<any>): Reference => {
   const typeReference = getTypeReference(schema);
   if (typeReference == null) {
     // TODO(burdon): Catalog user-facing errors (this is too verbose).
-    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(R.echoObject("MyType", "1.0.0"))');
+    throw new Error('Schema must have a valid annotation: MyTypeSchema.pipe(echoObject("MyType", "1.0.0"))');
   }
 
   return typeReference;

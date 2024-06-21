@@ -4,7 +4,6 @@
 
 import { Args } from '@oclif/core';
 
-import { type Client } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { schema } from '@dxos/protocols';
 
@@ -23,7 +22,7 @@ export default class Add extends BaseCommand<typeof Add> {
     }
 
     invariant(credentialHex, 'Invalid credential.');
-    return await this.execWithClient(async (client: Client) => {
+    return await this.execWithClient(async ({ client }) => {
       const identity = client.halo.identity;
       if (!identity) {
         throw new Error('Profile not initialized.');

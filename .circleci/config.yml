@@ -199,7 +199,7 @@ jobs:
       - *store_test_results
 
   #
-  # Publish applications.
+  # Publish extension.
   #
   publish:
     docker:
@@ -210,15 +210,12 @@ jobs:
       - *cache_restore
       - run: pnpm install
       - *cache_save
-      - run: pnpm nx build cli
-      - run:
-          command: ./.circleci/scripts/publish.sh
-          environment:
-            NODE_ENV: production
       - run:
           command: ./.circleci/scripts/publish-extension.sh
           environment:
+            DX_ENVIRONMENT: production
             NODE_ENV: production
+
   clean_pnpm_cache:
     docker:
       - *docker_image_default
@@ -312,11 +309,10 @@ workflows:
           filters:
             branches:
               only:
-                - main
                 - production
-                - staging
           context:
             - Github
+
   clear_pnpm_cache:
     when:
       and:

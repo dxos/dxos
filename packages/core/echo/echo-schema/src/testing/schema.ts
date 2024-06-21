@@ -4,10 +4,13 @@
 
 import * as S from '@effect/schema/Schema';
 
+import { EchoObject } from '../annotations';
 import { TypedObject } from '../typed-object-class';
 
+// TODO(burdon): Clean up.
+
 export const TEST_SCHEMA_TYPE = {
-  typename: 'TestSchema',
+  typename: 'example.com/type/TestSchema',
   version: '1.0.0',
 };
 
@@ -15,7 +18,6 @@ export class GeneratedEmptySchema extends TypedObject(TEST_SCHEMA_TYPE)({}) {}
 
 export class TestClass {
   field = 'value';
-
   toJSON() {
     return { field: this.field };
   }
@@ -41,10 +43,12 @@ const fields = {
   other: S.Any,
 };
 
-export class TestSchemaClass extends TypedObject<TestSchemaClass>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
+// TODO(burdon): Reconcile test classes.
+export class TestSchemaType extends TypedObject<TestSchemaType>(TEST_SCHEMA_TYPE)(fields, { partial: true }) {}
 
 export const TestSchema = S.mutable(S.partial(S.Struct(fields)));
 export type TestSchema = S.Schema.Type<typeof TestSchema>;
+export const TestType = TestSchema.pipe(EchoObject('example.com/type/TestSchema', '1.0.0'));
 
 // TODO(dmaretskyi): Another top-level S.mutable call as a workaround for the regression in the last minor.
 export const TestSchemaWithClass = S.mutable(

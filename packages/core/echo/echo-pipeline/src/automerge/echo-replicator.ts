@@ -27,6 +27,8 @@ export interface EchoReplicatorContext {
 
   onConnectionClosed(connection: ReplicatorConnection): void;
 
+  onConnectionAuthScopeChanged(connection: ReplicatorConnection): void;
+
   getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null>;
 }
 

@@ -8,7 +8,7 @@ import { type AxisOptions, Chart } from 'react-charts';
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 
 import { ResourceName } from './Resource';
-import { JsonTreeView } from '../../../components';
+import { JsonView } from '../../../components';
 
 export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
   if (!resource) {
@@ -21,7 +21,7 @@ export const MetricsView: FC<{ resource?: Resource }> = ({ resource }) => {
 
       <div>
         <h4 className='text-md border-b'>Info</h4>
-        <JsonTreeView data={resource.info} />
+        <JsonView data={resource.info} />
       </div>
 
       <div>
@@ -91,7 +91,7 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
     const records = metric.multiCounter.records ?? [];
     records.sort((a, b) => a.key.localeCompare(b.key));
     return (
-      <JsonTreeView
+      <JsonView
         data={{
           [metric.name]: Object.fromEntries(
             records.map(({ key, value }) => [key, `${value.toString()} ${metric.multiCounter?.units ?? ''}`]),
@@ -102,8 +102,8 @@ const MetricComponent: FC<{ metric: Metric }> = ({ metric }) => {
   }
 
   if (metric.custom) {
-    return <JsonTreeView data={{ [metric.name]: metric.custom.payload }} />;
+    return <JsonView data={{ [metric.name]: metric.custom.payload }} />;
   }
 
-  return <JsonTreeView data={metric} />;
+  return <JsonView data={metric} />;
 };

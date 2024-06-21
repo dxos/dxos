@@ -5,7 +5,7 @@
 import React, { type FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TableType } from '@braneframe/types';
-import { create, type DynamicEchoSchema, S, TypedObject } from '@dxos/echo-schema';
+import { create, type DynamicSchema, S, TypedObject } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { Filter, getSpace, useQuery } from '@dxos/react-client/echo';
 import { type ColumnProps, Table, type TableProps } from '@dxos/react-ui-table';
@@ -40,7 +40,7 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
       }
 
       if (!table.schema) {
-        table.schema = space.db.schemaRegistry.add(makeStarterTableSchema());
+        table.schema = space.db.schema.addSchema(makeStarterTableSchema());
         updateTableProp(table.props, 'title', { id: 'title', label: 'Title' });
       }
 
@@ -49,10 +49,10 @@ export const ObjectTable = ({ table, role, stickyHeader }: ObjectTableProps) => 
     [space, table.schema, setShowSettings],
   );
 
-  const [schemas, setSchemas] = useState<DynamicEchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<DynamicSchema[]>([]);
   useEffect(() => {
     if (space) {
-      void space.db.schemaRegistry.getAll().then(setSchemas).catch();
+      void space.db.schema.list().then(setSchemas).catch();
     }
   }, [showSettings, space]);
 

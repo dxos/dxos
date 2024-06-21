@@ -77,7 +77,7 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all grids to the graph.
                 const query = space.db.query(Filter.schema(GridType));
@@ -96,11 +96,11 @@ export const GridPlugin = (): PluginDefinition<GridPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['grid title placeholder', { ns: GRID_PLUGIN }],
+                            label: object.name || ['grid title placeholder', { ns: GRID_PLUGIN }],
                             icon: (props: IconProps) => <SquaresFour {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

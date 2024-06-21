@@ -5,7 +5,7 @@
 import * as A from '@dxos/automerge/automerge';
 import { type DocumentId } from '@dxos/automerge/automerge-repo';
 import { getSpaceKeyFromDoc, type AutomergeHost } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import { SpaceDocVersion, type SpaceDoc } from '@dxos/echo-protocol';
 import { type ObjectSnapshot, type IdToHeads } from '@dxos/indexing';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -53,8 +53,12 @@ export const createSelectedDocumentsIterator = (automergeHost: AutomergeHost) =>
           }
         }
 
+        // Skip outdated docs.
+        if (doc.version !== SpaceDocVersion.CURRENT) {
+          continue;
+        }
+
         if (!doc.objects?.[objectId]) {
-          yield [];
           continue;
         }
 

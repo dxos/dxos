@@ -26,7 +26,7 @@ export const EventList = ({ events = [], selected, onSelect }: EventListProps) =
             classNames={mx('flex flex-col cursor-pointer', ghostHover, selected === event.id && styles.selected)}
             onClick={() => onSelect?.(event)}
           >
-            {event.title && <ListItem.Heading classNames='p-2'>{event.title}</ListItem.Heading>}
+            {event.name && <ListItem.Heading classNames='p-2'>{event.name}</ListItem.Heading>}
             <div className='flex flex-col p-2'>
               {event.attendees.map(({ email }) => (
                 <div key='value' className='text-sm text-neutral-500'>

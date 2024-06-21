@@ -32,9 +32,6 @@
       "path": "../../apps/templates/tasks-template"
     },
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
@@ -48,6 +45,9 @@
     },
     {
       "path": "../../common/log"
+    },
+    {
+      "path": "../../common/node-std"
     },
     {
       "path": "../../common/plate"
@@ -93,6 +93,12 @@
     },
     {
       "path": "../../sdk/observability"
+    },
+    {
+      "path": "../cli-base"
+    },
+    {
+      "path": "../cli-composer"
     }
   ],
   "ts-node": {

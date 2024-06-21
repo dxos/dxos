@@ -2,8 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { FriendlyError } from '@dxos/cli-base';
+
 import { BaseCommand } from '../../base';
-import { FriendlyError } from '../../errors';
 
 export default class Error extends BaseCommand<typeof Error> {
   static override description = 'Throw error for debugging.';

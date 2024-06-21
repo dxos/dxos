@@ -55,6 +55,12 @@ export type ReplicantParams = {
   redisPortSendQueue: string;
   redisPortReceiveQueue: string;
 
+  /**
+   * Queue for serialized JSON perfetto traces.
+   * Used to pipe through the perfetto events from the replicant to the orchestrator.
+   */
+  redisTracingQueue: string;
+
   runtime: ReplicantRuntimeParams;
   testId: string;
 };

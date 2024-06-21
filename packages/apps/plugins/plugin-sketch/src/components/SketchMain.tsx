@@ -7,12 +7,12 @@ import React, { type FC } from 'react';
 import { Main } from '@dxos/react-ui';
 import {
   baseSurface,
+  bottombarBlockPaddingEnd,
   fixedInsetFlexLayout,
   topbarBlockPaddingStart,
-  bottombarBlockPaddingEnd,
 } from '@dxos/react-ui-theme';
 
-import SketchComponent, { type SketchComponentProps } from './Sketch';
+import SketchComponent, { type SketchComponentProps } from './SketchComponent';
 
 const SketchMain: FC<SketchComponentProps> = (props) => {
   return (

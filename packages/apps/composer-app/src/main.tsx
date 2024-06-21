@@ -46,6 +46,8 @@ import TableMeta from '@braneframe/plugin-table/meta';
 import ThemeMeta from '@braneframe/plugin-theme/meta';
 import ThreadMeta from '@braneframe/plugin-thread/meta';
 import WildcardMeta from '@braneframe/plugin-wildcard/meta';
+import { DocumentType, TextType, CollectionType } from '@braneframe/types';
+import { LegacyTypes } from '@braneframe/types/migrations';
 import { createApp, NavigationAction, Plugin } from '@dxos/app-framework';
 import { createStorageObjects } from '@dxos/client-services';
 import { defs, SaveConfig } from '@dxos/config';
@@ -110,6 +112,7 @@ const main = async () => {
   const isPwa = config.values.runtime?.app?.env?.DX_PWA !== 'false';
   const isDeck = localStorage.getItem('dxos.org/settings/layout/deck') === 'true';
   const isDev = config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production';
+  const isExperimental = config.values.runtime?.app?.env?.DX_EXPERIMENTAL === 'true';
 
   const App = createApp({
     fallback: ({ error }) => (
@@ -146,7 +149,6 @@ const main = async () => {
       SpaceMeta,
       DebugMeta,
       FilesMeta,
-      GithubMeta,
       IpfsMeta,
       GptMeta,
 
@@ -163,14 +165,10 @@ const main = async () => {
       ExplorerMeta,
       FunctionMeta,
       InboxMeta,
-      GridMeta,
-      KanbanMeta,
       MapMeta,
       MarkdownMeta,
       MermaidMeta,
-      OutlinerMeta,
       PresenterMeta,
-      ScriptMeta,
       SketchMeta,
       StackMeta,
       TableMeta,
@@ -179,6 +177,8 @@ const main = async () => {
 
       // TODO(burdon): Currently last so that the search action is added at end of dropdown menu.
       SearchMeta,
+
+      ...(isExperimental ? [GithubMeta, GridMeta, KanbanMeta, OutlinerMeta, ScriptMeta] : []),
     ],
     plugins: {
       [BetaMeta.id]: Plugin.lazy(() => import('./beta/BetaPlugin')),
@@ -190,6 +190,18 @@ const main = async () => {
         services,
         shell: './shell.html',
         onClientInitialized: async (client) => {
+          client.addTypes([
+            LegacyTypes.DocumentType,
+            LegacyTypes.FileType,
+            LegacyTypes.FolderType,
+            LegacyTypes.MessageType,
+            LegacyTypes.SectionType,
+            LegacyTypes.StackType,
+            LegacyTypes.TableType,
+            LegacyTypes.TextType,
+            LegacyTypes.ThreadType,
+          ]);
+
           const url = new URL(window.location.href);
           // Match CF only.
           // TODO(burdon): Check for Server: cloudflare header.
@@ -263,13 +275,13 @@ const main = async () => {
       [SettingsMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-settings')),
       [SketchMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-sketch')),
       [SpaceMeta.id]: Plugin.lazy(() => import('@braneframe/plugin-space'), {
-        onFirstRun: async ({ personalSpaceFolder, dispatch }) => {
-          const { DocumentType, TextV0Type } = await import('@braneframe/types');
+        onFirstRun: async ({ client, dispatch }) => {
           const { create } = await import('@dxos/echo-schema');
           const { fullyQualifiedId } = await import('@dxos/react-client/echo');
-          const content = create(TextV0Type, { content: INITIAL_CONTENT });
-          const document = create(DocumentType, { title: INITIAL_TITLE, content });
-          personalSpaceFolder.objects.push(document);
+          const personalSpaceCollection = client.spaces.default.properties[CollectionType.typename] as CollectionType;
+          const content = create(TextType, { content: INITIAL_CONTENT });
+          const document = create(DocumentType, { name: INITIAL_TITLE, content, threads: [] });
+          personalSpaceCollection?.objects.push(document);
           void dispatch({
             action: NavigationAction.OPEN,
             data: { activeParts: { main: [fullyQualifiedId(document)] } },

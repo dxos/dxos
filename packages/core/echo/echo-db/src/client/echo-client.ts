@@ -2,18 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, LifecycleState, Resource, ContextDisposedError } from '@dxos/context';
+import { ContextDisposedError, LifecycleState, Resource, type Context } from '@dxos/context';
+import { createIdFromSpaceKey } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService } from '@dxos/protocols/proto/dxos/echo/service';
-import { ComplexMap } from '@dxos/util';
 
-import { IndexQuerySourceProvider } from './index-query-source-provider';
-import { AutomergeContext } from '../automerge';
-import { EchoDatabaseImpl } from '../database';
-import { Hypergraph } from '../hypergraph';
 import { trace } from '@dxos/tracing';
+import { AutomergeContext } from '../core-db';
+import { Hypergraph } from '../hypergraph';
+import { EchoDatabaseImpl } from '../proxy-db';
+import { IndexQuerySourceProvider } from './index-query-source-provider';
 
 export type EchoClientParams = {};
 
@@ -23,7 +23,9 @@ export type ConnectToServiceParams = {
 };
 
 export type ConstructDatabaseParams = {
-  // TODO(dmaretskyi): Consider changing to string id.
+  spaceId: SpaceId;
+
+  /** @deprecated Use spaceId */
   spaceKey: PublicKey;
 
   /**
@@ -40,7 +42,7 @@ export type ConstructDatabaseParams = {
  */
 export class EchoClient extends Resource {
   private readonly _graph: Hypergraph;
-  private readonly _databases = new ComplexMap<PublicKey, EchoDatabaseImpl>(PublicKey.hash);
+  private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
 
   private _dataService: DataService | undefined = undefined;
   private _queryService: QueryService | undefined = undefined;
@@ -93,7 +95,7 @@ export class EchoClient extends Resource {
       this._graph.unregisterQuerySourceProvider(this._indexQuerySourceProvider);
     }
     for (const db of this._databases.values()) {
-      this._graph._unregister(db.spaceKey);
+      this._graph._unregister(db.spaceId);
       await db.close();
     }
     this._databases.clear();
@@ -102,21 +104,22 @@ export class EchoClient extends Resource {
   }
 
   // TODO(dmaretskyi): Make async?
-  constructDatabase({ spaceKey, owningObject }: ConstructDatabaseParams) {
+  constructDatabase({ spaceId, owningObject, spaceKey }: ConstructDatabaseParams) {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    invariant(!this._databases.has(spaceKey), 'Database already exists.');
+    invariant(!this._databases.has(spaceId), 'Database already exists.');
     const db = new EchoDatabaseImpl({
       automergeContext: this._automergeContext!,
       graph: this._graph,
+      spaceId,
       spaceKey,
     });
-    this._graph._register(spaceKey, db, owningObject);
-    this._databases.set(spaceKey, db);
+    this._graph._register(spaceId, spaceKey, db, owningObject);
+    this._databases.set(spaceId, db);
     return db;
   }
 
   private async _loadObject(spaceKey: PublicKey, objectId: string) {
-    const db = this._databases.get(spaceKey);
+    const db = this._databases.get(await createIdFromSpaceKey(spaceKey));
     if (!db) {
       return undefined;
     }
@@ -124,7 +127,7 @@ export class EchoClient extends Resource {
     // Waiting for the database to open since the query can run before the database is ready.
     // TODO(dmaretskyi): Refactor this.
     try {
-      await db.automerge.opened.wait();
+      await db.coreDatabase.opened.wait();
     } catch (err) {
       if (err instanceof ContextDisposedError) {
         return undefined;
@@ -132,7 +135,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const object = await db.automerge.loadObjectById(objectId);
+    const object = await db.loadObjectById(objectId);
     return object;
   }
 }

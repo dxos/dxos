@@ -9,10 +9,9 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
+import { BIN_PATH, runCommand } from '@dxos/cli-base';
 import { log } from '@dxos/log';
 import { describe, test } from '@dxos/test';
-
-import { BIN_PATH, runCommand } from '../../util';
 
 describe('agent', () => {
   const TEST_FOLDER = '/tmp/dxos/testing/cli';

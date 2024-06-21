@@ -43,13 +43,15 @@ describe('EchoObject class dsl', () => {
       {
         name: S.String,
       },
-      { partial: true },
+      { partial: true, record: true },
     ) {}
 
     test('can assign undefined to partial fields', async () => {
       const person = create(Person, { name: 'John' });
       person.name = undefined;
+      person.recordField = 'hello';
       expect(person.name).to.be.undefined;
+      expect(person.recordField).to.eq('hello');
     });
   });
 });

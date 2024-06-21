@@ -65,7 +65,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => space.id === id))
               .forEach((space) => {
                 // Add all games to the graph.
                 const query = space.db.query(Filter.schema(GameType));
@@ -88,7 +88,7 @@ export const ChessPlugin = (): PluginDefinition<ChessPluginProvides> => {
                             icon: (props: IconProps) => <ShieldChevron {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });

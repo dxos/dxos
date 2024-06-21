@@ -19,16 +19,13 @@
   ],
   "references": [
     {
-      "path": "../../apps/types"
-    },
-    {
       "path": "../../common/async"
     },
     {
-      "path": "../../common/context"
+      "path": "../../common/codec-protobuf"
     },
     {
-      "path": "../../common/debug"
+      "path": "../../common/context"
     },
     {
       "path": "../../common/keys"
@@ -83,9 +80,6 @@
     },
     {
       "path": "../../sdk/react-client"
-    },
-    {
-      "path": "../../sdk/shell"
     },
     {
       "path": "../../ui/react-ui"
