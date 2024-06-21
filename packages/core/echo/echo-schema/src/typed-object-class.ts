@@ -5,6 +5,8 @@
 import type { SimplifyMutable, Struct } from '@effect/schema/Schema';
 import * as S from '@effect/schema/Schema';
 
+import { invariant } from '@dxos/invariant';
+
 import { type EchoObjectAnnotation, EchoObjectAnnotationId } from './annotations';
 import { schemaVariance } from './ast';
 import { getSchema, getTypeReference } from './getter';
@@ -29,6 +31,11 @@ export interface AbstractTypedObject<Fields> extends S.Schema<Fields> {
  */
 // TODO(burdon): Rename ObjectType.
 export const TypedObject = <Klass>(args: EchoObjectAnnotation) => {
+  invariant(
+    typeof args.typename === 'string' && args.typename.length > 0 && !args.typename.includes(':'),
+    'Invalid typename.',
+  );
+
   return <
     Options extends TypedObjectOptions,
     SchemaFields extends Struct.Fields,
