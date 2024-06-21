@@ -4,7 +4,7 @@
 
 import '@dxosTheme';
 
-import React from 'react';
+import React, { type FC } from 'react';
 
 import { withTheme } from '@dxos/storybook-utils';
 
@@ -16,7 +16,7 @@ const getComponentNames = (module: any): string[] =>
   module?.__namedExportsOrder ??
   Object.getOwnPropertyNames(module).filter((name) => !(name === 'default' || name.startsWith('__')));
 
-const getComponents = (module: any): React.FC[] => {
+const getComponents = (module: any): FC[] => {
   return getComponentNames(module).map((name) => module[name]);
 };
 
@@ -24,7 +24,7 @@ const camelCaseToSpacedName = (camelCase: string) => {
   return camelCase.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
 };
 
-const StoryRow = ({ components }: { components: React.FC[] }) => {
+const StoryRow = ({ components }: { components: FC[] }) => {
   return (
     <tr style={{ whiteSpace: 'nowrap' }}>
       {components?.map((Comp) => (
