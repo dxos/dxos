@@ -314,9 +314,9 @@ const main = async () => {
       WildcardMeta.id,
     ],
     defaults: [
-      // prettier-ignore
       ...(isDev ? [DebugMeta.id] : []),
       MarkdownMeta.id,
+      PresenterMeta.id,
       StackMeta.id,
       ThreadMeta.id,
       SketchMeta.id,
