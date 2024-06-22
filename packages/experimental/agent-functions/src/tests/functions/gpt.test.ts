@@ -18,11 +18,11 @@ import { test } from '@dxos/test';
 
 import { type ChainResources } from '../../chain';
 import { ModelInvokerFactory } from '../../chain/model-invoker';
+import { StubModelInvoker } from '../../functions/gpt/testing';
 import { initFunctionsPlugin } from '../setup';
-import { StubModelInvoker } from '../stub-invoker';
 import { createTestChain, type CreateTestChainInput } from '../test-chain-builder';
 
-describe.only('Gpt', () => {
+describe.only('GPT', () => {
   let modelStub: StubModelInvoker;
   let testBuilder: TestBuilder;
   beforeEach(async () => {

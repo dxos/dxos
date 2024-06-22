@@ -9,8 +9,7 @@ import { create } from '@dxos/echo-schema';
 import { afterTest, describe, test } from '@dxos/test';
 
 import { RequestProcessor } from './processor';
-import { TestProcessorBuilder } from './testing';
-import { StubModelInvoker } from '../../tests/stub-invoker';
+import { TestProcessorBuilder, StubModelInvoker } from './testing';
 import { str } from '../../util';
 
 describe.only('RequestProcessor', () => {

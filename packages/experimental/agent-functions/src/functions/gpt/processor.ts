@@ -75,6 +75,10 @@ export class RequestProcessor {
         .filter(Boolean)
         .join('\n');
 
+      console.log('\n\n\n>>>', JSON.stringify(message));
+      console.log('===', text);
+      console.log('\n\n\n');
+
       // Match prompt, and include content over multiple lines.
       const match = text.match(/\/([\w-]+)\s*(.*)/s);
       const [command, content] = match ? match.slice(1) : [undefined, text];

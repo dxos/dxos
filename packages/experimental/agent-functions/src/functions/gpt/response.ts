@@ -46,7 +46,8 @@ export class ResponseBuilder {
     //
     // Add to stack.
     //
-    if (this._context.object && getTypename(this._context.object) === StackType.typename) {
+    const stack = false;
+    if (stack && this._context.object && getTypename(this._context.object) === StackType.typename) {
       // TODO(burdon): Insert based on prompt config.
       log.info('adding section to stack', { stack: this._context.object.id });
 
