@@ -4,7 +4,7 @@
 
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
-import { ArrowCounterClockwise, CaretDown, Smiley } from '@phosphor-icons/react';
+import { ArrowCounterClockwise, CaretDown, UserCircle } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
 
@@ -75,7 +75,7 @@ export const EmojiPickerToolbarButton = ({
           <Popover.Trigger asChild>
             <Toolbar.Button classNames={['gap-2 text-2xl plb-1', classNames]} disabled={disabled}>
               <span className='sr-only'>{t('select emoji label')}</span>
-              <Smiley className={getSize(5)} />
+              <UserCircle className={getSize(5)} />
             </Toolbar.Button>
           </Popover.Trigger>
         </Tooltip.Trigger>

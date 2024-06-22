@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import { ArrowCounterClockwise, CaretDown, Check, Palette } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { useRef, useState } from 'react';
