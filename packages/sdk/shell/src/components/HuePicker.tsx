@@ -19,9 +19,10 @@ import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
+  const size = 16;
   return (
-    <svg width={12} height={12} viewBox='0 0 12 12'>
-      <rect x={0} y={0} width={12} height={12} className={tx('hue.fill', 'select--hue__preview', { hue })} />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <rect x={0} y={0} width={size} height={size} className={tx('hue.fill', 'select--hue__preview', { hue })} />
     </svg>
   );
 };
@@ -33,6 +34,8 @@ export type HuePickerProps = {
   onChangeHue?: (nextHue: string) => void;
   onClickClear?: ButtonProps['onClick'];
 };
+
+const hueTokens = [...Object.keys(hueTokenThemes)].slice(0, 16);
 
 /**
  * A toolbar button for picking hue. Use only in `role=toolbar` elements. Unable to unset the value.
@@ -92,19 +95,16 @@ export const HuePickerToolbarButton = ({
           </Tooltip.Content>
         </Tooltip.Portal>
         <DropdownMenu.Content side='bottom'>
-          <DropdownMenu.Viewport>
-            {Object.keys(hueTokenThemes).map((hue) => {
+          <DropdownMenu.Viewport classNames='grid grid-cols-4'>
+            {hueTokens.map((hue) => {
               return (
                 <DropdownMenu.CheckboxItem
                   key={hue}
                   checked={hue === hueValue}
                   onCheckedChange={() => setHueValue(hue)}
+                  classNames={'py-4 items-center justify-center'}
                 >
                   <HuePreview hue={hue} />
-                  <span className='grow'>{t(`${hue} label`)}</span>
-                  <DropdownMenu.ItemIndicator>
-                    <Check />
-                  </DropdownMenu.ItemIndicator>
                 </DropdownMenu.CheckboxItem>
               );
             })}

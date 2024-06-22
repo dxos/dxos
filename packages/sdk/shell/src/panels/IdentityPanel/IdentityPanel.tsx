@@ -104,48 +104,46 @@ const IdentityHeading = ({
           <EmojiPickerToolbarButton emoji={emoji} onChangeEmoji={setEmoji} classNames='bs-[--rail-action]' />
           <HuePickerToolbarButton hue={hue} onChangeHue={setHue} classNames='bs-[--rail-action]' />
           {debug && (
-            <>
+            <Tooltip.Root>
+              <Tooltip.Trigger asChild>
+                <Toolbar.Button
+                  classNames='bs-[--rail-action] justify-self-start'
+                  data-testid='update-profile-form-copy-key'
+                  onClick={() => setTextValue(identityHex)}
+                >
+                  <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
+                  <Key className={getSize(5)} />
+                </Toolbar.Button>
+              </Tooltip.Trigger>
+              <Tooltip.Portal>
+                <Tooltip.Content side='bottom' classNames='z-50'>
+                  {t(copied ? 'copy success label' : 'copy self public key label')}
+                  <Tooltip.Arrow />
+                </Tooltip.Content>
+              </Tooltip.Portal>
               <Tooltip.Root>
                 <Tooltip.Trigger asChild>
                   <Toolbar.Button
-                    classNames='bs-[--rail-action] justify-self-start'
-                    data-testid='update-profile-form-copy-key'
-                    onClick={() => setTextValue(identityHex)}
+                    classNames={[
+                      'bs-[--rail-action] is-[--rail-action] justify-self-end',
+                      !isConnected && 'text-error-500',
+                    ]}
+                    onClick={() =>
+                      onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
+                    }
                   >
-                    <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
-                    <Key className={getSize(5)} />
+                    <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
+                    {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
                   </Toolbar.Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
                   <Tooltip.Content side='bottom' classNames='z-50'>
-                    {t(copied ? 'copy success label' : 'copy self public key label')}
+                    {t(isConnected ? 'disconnect label' : 'connect label')}
                     <Tooltip.Arrow />
                   </Tooltip.Content>
                 </Tooltip.Portal>
-                <Tooltip.Root>
-                  <Tooltip.Trigger asChild>
-                    <Toolbar.Button
-                      classNames={[
-                        'bs-[--rail-action] is-[--rail-action] justify-self-end',
-                        !isConnected && 'text-error-500',
-                      ]}
-                      onClick={() =>
-                        onChangeConnectionState?.(isConnected ? ConnectionState.OFFLINE : ConnectionState.ONLINE)
-                      }
-                    >
-                      <span className='sr-only'>{t(isConnected ? 'disconnect label' : 'connect label')}</span>
-                      {isConnected ? <PlugsConnected className={getSize(5)} /> : <Plugs className={getSize(5)} />}
-                    </Toolbar.Button>
-                  </Tooltip.Trigger>
-                  <Tooltip.Portal>
-                    <Tooltip.Content side='bottom' classNames='z-50'>
-                      {t(isConnected ? 'disconnect label' : 'connect label')}
-                      <Tooltip.Arrow />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
               </Tooltip.Root>
-            </>
+            </Tooltip.Root>
           )}
         </Toolbar.Root>
       </Avatar.Root>
