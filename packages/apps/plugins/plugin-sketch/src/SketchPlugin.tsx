@@ -187,7 +187,7 @@ export const SketchPlugin = (): PluginDefinition<SketchPluginProvides> => {
             case SketchAction.CREATE: {
               return {
                 data: create(DiagramType, {
-                  canvas: create(CanvasType, { content: {}, schema: TLDRAW_SCHEMA_VERSION }),
+                  canvas: create(CanvasType, { schema: TLDRAW_SCHEMA_VERSION, content: {} }),
                 }),
               };
             }

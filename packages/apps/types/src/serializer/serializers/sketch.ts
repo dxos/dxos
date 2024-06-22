@@ -30,10 +30,10 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
       return existingSketch;
     } else {
       const canvas = create(CanvasType, { content: {} });
-      const sketch = createEchoObject(create(DiagramType, { name: parsed.title, canvas }));
+      const diagram = createEchoObject(create(DiagramType, { name: parsed.title, canvas }));
 
       if (!newId) {
-        const core = getObjectCore(sketch);
+        const core = getObjectCore(diagram);
         core.id = parsed.id;
 
         const canvasCore = getObjectCore(canvas);
@@ -41,8 +41,7 @@ export const serializer: TypedObjectSerializer<DiagramType> = {
       }
 
       setCanvasContent(canvas, parsed.data.content);
-
-      return sketch;
+      return diagram;
     }
   },
 };
