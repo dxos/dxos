@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { CopySimple, Plugs, PlugsConnected } from '@phosphor-icons/react';
+import { Key, Plugs, PlugsConnected } from '@phosphor-icons/react';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { generateName } from '@dxos/display-name';
@@ -113,7 +113,7 @@ const IdentityHeading = ({
                     onClick={() => setTextValue(identityHex)}
                   >
                     <span className='sr-only'>{t(copied ? 'copy success label' : 'copy self public key label')}</span>
-                    <CopySimple className={getSize(5)} />
+                    <Key className={getSize(5)} />
                   </Toolbar.Button>
                 </Tooltip.Trigger>
                 <Tooltip.Portal>
