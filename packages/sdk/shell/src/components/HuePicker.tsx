@@ -19,7 +19,7 @@ import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
 const HuePreview = ({ hue }: { hue: string }) => {
   const { tx } = useThemeContext();
-  const size = 16;
+  const size = 20;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <rect x={0} y={0} width={size} height={size} className={tx('hue.fill', 'select--hue__preview', { hue })} />
