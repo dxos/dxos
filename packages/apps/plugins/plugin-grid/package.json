@@ -31,6 +31,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",
     "@preact/signals-core": "^1.6.0",
+    "grid": "^4.10.8",
+    "gridstack": "^10.2.0",
     "lodash.defaultsdeep": "^4.6.1",
     "react-markdown": "^8.0.5",
     "react-resize-detector": "^7.1.2"

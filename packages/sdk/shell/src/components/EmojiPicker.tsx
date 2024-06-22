@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { ArrowCounterClockwise, CaretDown, ImageSquare } from '@phosphor-icons/react';
@@ -9,13 +10,14 @@ import React, { useRef, useState } from 'react';
 
 import {
   Button,
-  Popover,
-  useTranslation,
-  Tooltip,
   type ButtonProps,
+  Popover,
+  Tooltip,
   Toolbar,
-  useMediaQuery,
   type ThemedClassName,
+  useMediaQuery,
+  useTranslation,
+  useThemeContext,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -38,6 +40,7 @@ export const EmojiPickerToolbarButton = ({
   classNames,
 }: ThemedClassName<Omit<EmojiPickerProps, 'onClickClear'>>) => {
   const { t } = useTranslation('os');
+  const { themeMode } = useThemeContext();
 
   const [_emojiValue, setEmojiValue] = useControllableState<string>({
     prop: emoji,
@@ -46,7 +49,6 @@ export const EmojiPickerToolbarButton = ({
   });
 
   const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
-
   const suppressNextTooltip = useRef<boolean>(false);
   const [triggerTooltipOpen, setTriggerTooltipOpen] = useState(false);
 
@@ -93,6 +95,7 @@ export const EmojiPickerToolbarButton = ({
             }
           }}
         >
+          {/* https://www.npmjs.com/package/emoji-mart */}
           <EmojiMart
             data={emojiData}
             onEmojiSelect={({ native }: { native?: string }) => {
@@ -104,6 +107,7 @@ export const EmojiPickerToolbarButton = ({
             autoFocus={true}
             maxFrequentRows={0}
             noCountryFlags={true}
+            theme={themeMode}
           />
           <Popover.Arrow />
         </Popover.Content>
