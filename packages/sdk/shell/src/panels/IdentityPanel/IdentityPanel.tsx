@@ -8,10 +8,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { generateName } from '@dxos/display-name';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
-import { type Identity, useIdentity, useDevices, useHaloInvitations } from '@dxos/react-client/halo';
-import { useInvitationStatus } from '@dxos/react-client/invitations';
-import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
-import { useNetworkStatus, ConnectionState } from '@dxos/react-client/mesh';
+import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
+import { type CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
+import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { Avatar, DensityProvider, Input, Toolbar, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
@@ -25,12 +24,12 @@ import { useIdentityMachine } from './identityMachine';
 import { IdentityActionChooser } from './steps';
 import { useAgentHandlers } from './useAgentHandlers';
 import {
-  Viewport,
   CloseButton,
   EmojiPickerToolbarButton,
   Heading,
   HuePickerToolbarButton,
   useClipboardContext,
+  Viewport,
 } from '../../components';
 import { ConfirmReset, InvitationManager } from '../../steps';
 
@@ -72,6 +71,8 @@ const IdentityHeading = ({
 
   const isConnected = connectionState === ConnectionState.ONLINE;
 
+  // TODO(burdon): Move avatar/color controls to separate section.
+  // TODO(burdon): Move key/offline controls to separate section.
   const debug = true;
 
   return (

@@ -2,6 +2,7 @@
  * https://github.com/missive/emoji-mart/blob/main/packages/emoji-mart-website/example-custom-styles.html
  */
 html.dark em-emoji-picker {
+  /* TODO(burdon): Get from TW defs: modal-surface? */
   --background-rgb: #3B3B3F;
   --rgb-background: #3B3B3F;
 
