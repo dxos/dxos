@@ -14,10 +14,10 @@ import {
   CanvasType,
   ChannelType,
   CollectionType,
+  DiagramType,
   DocumentType,
   FileType,
   MessageType,
-  SketchType,
   TableType,
   TextType,
   ThreadType,
@@ -195,7 +195,7 @@ export const __COMPOSER_MIGRATIONS__: Migration[] = [
         });
 
         await builder.migrateObject(sketch.id, ({ data }) => ({
-          schema: SketchType,
+          schema: DiagramType,
           props: {
             name: data.title,
             canvas: data.data,

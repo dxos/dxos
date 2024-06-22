@@ -8,7 +8,7 @@ import { type SerializedStore } from '@tldraw/store';
 import { type TLRecord } from '@tldraw/tldraw';
 import React, { useState } from 'react';
 
-import { CanvasType, SketchType } from '@braneframe/types';
+import { CanvasType, DiagramType } from '@braneframe/types';
 import { migrateCanvas } from '@braneframe/types/migrations';
 import { createEchoObject } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
@@ -20,11 +20,11 @@ import SketchComponent from './SketchComponent';
 import { data } from './testing';
 
 const createSketch = (content: SerializedStore<TLRecord> = {}) => {
-  return createEchoObject(create(SketchType, { canvas: createEchoObject(create(CanvasType, { content })) }));
+  return createEchoObject(create(DiagramType, { canvas: createEchoObject(create(CanvasType, { content })) }));
 };
 
 const Story = () => {
-  const [sketch, setSketch] = useState<SketchType>(createSketch());
+  const [sketch, setSketch] = useState<DiagramType>(createSketch());
 
   const handleCreate = () => {
     setSketch(createSketch(data.v2));

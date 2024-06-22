@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { loadObjectReferences, createEchoObject, create, getObjectCore } from '@dxos/client/echo';
+import { create, createEchoObject, getObjectCore, loadObjectReferences } from '@dxos/client/echo';
 
 import { type TypedObjectSerializer, validFilename } from './default';
-import { CanvasType, SketchType } from '../../schema';
+import { CanvasType, DiagramType } from '../../schema';
 
-export const serializer: TypedObjectSerializer<SketchType> = {
+export const serializer: TypedObjectSerializer<DiagramType> = {
   filename: (object) => ({
     name: validFilename(object.name),
     extension: 'json',
@@ -23,14 +23,14 @@ export const serializer: TypedObjectSerializer<SketchType> = {
   deserialize: async ({ content, object: existingSketch, newId }) => {
     const parsed = JSON.parse(content);
 
-    if (existingSketch instanceof SketchType) {
+    if (existingSketch instanceof DiagramType) {
       existingSketch.name = parsed.title;
       const data = await loadObjectReferences(existingSketch, (s) => s.canvas);
       setCanvasContent(data, parsed.data.content);
       return existingSketch;
     } else {
       const canvas = create(CanvasType, { content: {} });
-      const sketch = createEchoObject(create(SketchType, { name: parsed.title, canvas }));
+      const sketch = createEchoObject(create(DiagramType, { name: parsed.title, canvas }));
 
       if (!newId) {
         const core = getObjectCore(sketch);

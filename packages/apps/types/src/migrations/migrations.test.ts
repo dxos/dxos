@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 
 import { Client, PublicKey } from '@dxos/client';
-import { type Space, Filter, toCursorRange, createDocAccessor, Expando, create } from '@dxos/client/echo';
+import { create, createDocAccessor, Expando, Filter, type Space, toCursorRange } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { MigrationBuilder } from '@dxos/migrations';
 import { afterEach, beforeEach, describe, test } from '@dxos/test';
@@ -16,13 +16,13 @@ import { __COMPOSER_MIGRATIONS__ } from './migrations';
 import {
   ChannelType,
   CollectionType,
+  DiagramType,
   DocumentType,
   FileType,
   MessageType,
-  SketchType,
-  TLDRAW_SCHEMA_VERSION,
   TableType,
   ThreadType,
+  TLDRAW_SCHEMA_VERSION,
 } from '../schema';
 
 const testBuilder = new TestBuilder();
@@ -51,7 +51,7 @@ describe('Composer migrations', () => {
       DocumentType,
       FileType,
       MessageType,
-      SketchType,
+      DiagramType,
       TableType,
       ThreadType,
     ]);
@@ -226,8 +226,8 @@ describe('Composer migrations', () => {
     expect(migratedThread2?.messages?.[0] instanceof MessageType).to.be.true;
     expect(migratedThread2?.messages?.[0]?.text).to.equal('hello world');
 
-    const migratedSketch1 = space.db.getObjectById<SketchType>(sketch1.id);
-    expect(migratedSketch1 instanceof SketchType).to.be.true;
+    const migratedSketch1 = space.db.getObjectById<DiagramType>(sketch1.id);
+    expect(migratedSketch1 instanceof DiagramType).to.be.true;
     expect(migratedSketch1?.name).to.equal('My Sketch');
     expect(migratedSketch1?.canvas?.schema).to.equal(TLDRAW_SCHEMA_VERSION);
     expect(migratedSketch1?.canvas?.content?.id).to.equal('test string');
