@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type FC } from 'react';
+import React, { useEffect, type FC } from 'react';
 
 import { type DocumentType } from '@braneframe/types';
+import { useResolvePlugin, parseLayoutPlugin } from '@dxos/app-framework';
 import { createDocAccessor, getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -61,6 +62,16 @@ const DocumentSection: FC<{
     [document, extensions, themeMode],
   );
   const handleAction = useActionHandler(editorView);
+
+  const layoutPlugin = useResolvePlugin(parseLayoutPlugin);
+  const autoFocus = layoutPlugin?.provides?.layout?.scrollIntoView === document.id;
+
+  // Set focus
+  useEffect(() => {
+    if (autoFocus && editorView) {
+      editorView.focus();
+    }
+  }, [autoFocus, editorView]);
 
   return (
     <div role='none' className='flex flex-col'>

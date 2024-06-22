@@ -15,6 +15,7 @@ export default [
         'increment start label': 'Move to the left',
         'increment end label': 'Move to the right',
         'close label': 'Close',
+        'minify label': 'Minify',
       },
     },
   },

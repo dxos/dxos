@@ -73,9 +73,9 @@ export const RevealPlayer = ({ content, slide, onExit }: RevealProps) => {
         showNotes: false,
 
         center: true,
-        margin: 0.02,
+        margin: 0.01,
         minScale: 0.2,
-        maxScale: 1.5,
+        maxScale: 1.4,
 
         // https://revealjs.com/markdown
         plugins: [

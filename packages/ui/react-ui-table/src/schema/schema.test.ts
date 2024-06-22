@@ -11,9 +11,9 @@ import { classifySchemaProperties } from './schema';
 
 describe('schema->column-type', () => {
   test('basic', () => {
-    const simpleSchema = S.struct({
-      field1: S.string,
-      field2: S.number,
+    const simpleSchema = S.Struct({
+      field1: S.String,
+      field2: S.Number,
     });
 
     const columns = classifySchemaProperties(simpleSchema);
@@ -25,9 +25,9 @@ describe('schema->column-type', () => {
   });
 
   test('optional properties', () => {
-    const simpleSchema = S.struct({
-      field1: S.optional(S.string),
-      field2: S.optional(S.number),
+    const simpleSchema = S.Struct({
+      field1: S.optional(S.String),
+      field2: S.optional(S.Number),
     });
 
     const columns = classifySchemaProperties(simpleSchema);
@@ -39,7 +39,7 @@ describe('schema->column-type', () => {
   });
 
   test('dates', () => {
-    const simpleSchema = S.struct({
+    const simpleSchema = S.Struct({
       field1: S.Date,
       field2: S.optional(S.Date),
     });
@@ -53,9 +53,9 @@ describe('schema->column-type', () => {
   });
 
   test('Piped validators', () => {
-    const simpleSchema = S.struct({
-      name: S.optional(S.string.pipe(S.nonEmpty(), S.maxLength(10))),
-      age: S.number.pipe(S.negative()),
+    const simpleSchema = S.Struct({
+      name: S.optional(S.String.pipe(S.nonEmpty(), S.maxLength(10))),
+      age: S.Number.pipe(S.negative()),
     });
 
     const columns = classifySchemaProperties(simpleSchema);
@@ -67,12 +67,12 @@ describe('schema->column-type', () => {
   });
 
   test('nested schema', () => {
-    const simpleSchema = S.struct({
-      name: S.string,
-      nested: S.struct({
-        age: S.number,
+    const simpleSchema = S.Struct({
+      name: S.String,
+      nested: S.Struct({
+        age: S.Number,
       }),
-      someUnion: S.union(S.string, S.number),
+      someUnion: S.Union(S.String, S.Number),
     });
 
     const columns = classifySchemaProperties(simpleSchema);
@@ -85,12 +85,12 @@ describe('schema->column-type', () => {
   });
 
   test('deeply nested schema', () => {
-    const simpleSchema = S.struct({
-      name: S.string,
-      nested: S.struct({
-        age: S.number,
-        deeplyNested: S.struct({
-          height: S.number,
+    const simpleSchema = S.Struct({
+      name: S.String,
+      nested: S.Struct({
+        age: S.Number,
+        deeplyNested: S.Struct({
+          height: S.Number,
         }),
       }),
     });
@@ -105,13 +105,13 @@ describe('schema->column-type', () => {
   });
 
   test('even more deeply nested schema with optionals', () => {
-    const simpleSchema = S.struct({
-      name: S.string,
-      nested: S.struct({
-        age: S.number,
+    const simpleSchema = S.Struct({
+      name: S.String,
+      nested: S.Struct({
+        age: S.Number,
         deeplyNested: S.optional(
-          S.struct({
-            height: S.optional(S.number),
+          S.Struct({
+            height: S.optional(S.Number),
           }),
         ),
       }),
@@ -127,13 +127,13 @@ describe('schema->column-type', () => {
   });
 
   test('multiple-nested schemata as sibblings', () => {
-    const simpleSchema = S.struct({
-      name: S.string,
-      nested: S.struct({
-        age: S.number,
+    const simpleSchema = S.Struct({
+      name: S.String,
+      nested: S.Struct({
+        age: S.Number,
       }),
-      nested2: S.struct({
-        height: S.number,
+      nested2: S.Struct({
+        height: S.Number,
       }),
     });
 

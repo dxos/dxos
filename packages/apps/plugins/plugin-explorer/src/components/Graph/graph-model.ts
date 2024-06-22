@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { FolderType } from '@braneframe/types';
+import { CollectionType } from '@braneframe/types';
 import { getSchema, type S, getType } from '@dxos/echo-schema';
-import { AST, DynamicEchoSchema, StoredEchoSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
+import { AST, DynamicSchema, StoredSchema, SchemaValidator, ReferenceAnnotation } from '@dxos/echo-schema';
 import { type GraphData, type GraphLink, GraphModel } from '@dxos/gem-spore';
 import { log } from '@dxos/log';
 import { type Subscription, type Space, type EchoReactiveObject } from '@dxos/react-client/echo';
@@ -54,14 +54,14 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
   open(space: Space, objectId?: string) {
     if (!this._subscription) {
       // TODO(burdon): Filter.
-      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof FolderType));
+      const query = space.db.query((object: EchoReactiveObject<any>) => !(object instanceof CollectionType));
 
       this._subscription = query.subscribe(
         ({ objects }) => {
           this._objects = objects;
           this._graph.nodes = objects.map((object) => {
-            if (object instanceof StoredEchoSchema) {
-              const effectSchema = space.db.schemaRegistry.getById(object.id)!;
+            if (object instanceof StoredSchema) {
+              const effectSchema = space.db.schema.getSchemaById(object.id)!;
               return { type: 'schema', id: object.id, schema: effectSchema.schema };
             }
             return { type: 'echo-object', id: object.id, object };
@@ -74,7 +74,7 @@ export class SpaceGraphModel extends GraphModel<EchoGraphNode> {
               return links;
             }
 
-            if (!(objectSchema instanceof DynamicEchoSchema)) {
+            if (!(objectSchema instanceof DynamicSchema)) {
               const idx = objects.findIndex((obj) => obj.id === typename);
               if (idx === -1) {
                 this._graph.nodes.push({

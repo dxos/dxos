@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-schema",
-  "version": "0.5.3",
+  "version": "0.5.8",
   "description": "ECHO database.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,12 +42,18 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/schema": "^0.64.20",
     "@preact/signals-core": "^1.6.0",
-    "effect": "^2.4.19",
-    "lodash.get": "^4.4.2"
+    "lodash.get": "^4.4.2",
+    "ulidx": "^2.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@effect/schema": "^0.67.16",
+    "effect": "^3.2.7"
+  },
+  "peerDependencies": {
+    "@effect/schema": "^0.67.16",
+    "effect": "^3.2.7"
+  },
   "publishConfig": {
     "access": "public"
   },

@@ -6,13 +6,11 @@ import { transact } from '@tldraw/state';
 import { createTLStore, defaultShapeUtils, type TLRecord } from '@tldraw/tldraw';
 import { type TLStore } from '@tldraw/tlschema';
 
+import { type UnsubscribeCallback } from '@dxos/async';
 import { next as A } from '@dxos/automerge/automerge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type DocAccessor } from '@dxos/react-client/echo';
-
-import { CURRENT_VERSION, DEFAULT_VERSION, schema } from './schema';
-import { type Unsubscribe } from '../types';
 
 // Strings longer than this will have collaborative editing disabled for performance reasons.
 const STRING_CRDT_LIMIT = 300_000;
@@ -32,7 +30,7 @@ export type TLDrawStoreData = {
  * Ref: https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx.
  */
 export class AutomergeStoreAdapter implements StoreAdapter {
-  private readonly _subscriptions: Unsubscribe[] = [];
+  private readonly _subscriptions: UnsubscribeCallback[] = [];
   private _store?: TLStore;
   private _readonly = false;
   private _lastHeads: A.Heads | undefined = undefined;
@@ -77,20 +75,7 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       // Replace the store records with the automerge doc records.
       transact(() => {
         store.clear();
-        const currentVersion = accessor.handle.docSync()?.schema;
-        const version = maybeMigrateSnapshot(
-          store,
-          Object.values(contentRecords ?? {}).map((record) => decode(record)),
-          currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-        );
-
-        if (version !== undefined) {
-          if (version === -1) {
-            this._readonly = true;
-          } else {
-            saveStore(store, accessor);
-          }
-        }
+        store.put(Object.values(contentRecords ?? {}).map((record) => decode(record)));
       });
     }
 
@@ -156,18 +141,6 @@ export class AutomergeStoreAdapter implements StoreAdapter {
       store.mergeRemoteChanges(() => {
         if (removed.size) {
           store.remove(Array.from(removed));
-        }
-
-        if (updated.size) {
-          const currentVersion = accessor.handle.docSync()?.schema;
-          const version = maybeMigrateSnapshot(
-            store,
-            Object.values(Array.from(updated).map((id) => decode(contentRecords[id]))),
-            currentVersion !== undefined ? parseInt(currentVersion) : undefined,
-          );
-          if (version === -1) {
-            this._readonly = true;
-          }
         }
       });
 
@@ -308,54 +281,13 @@ const decode = (value: any): any => {
   return value;
 };
 
-/**
- * Insert records into the store catching possible schema errors.
- * @returns The new schema version; undefined if no migration was needed; -1 if error.
- */
-// TODO(burdon): Make readonly if we are behind the records. Need to inform user.
-const maybeMigrateSnapshot = (store: TLStore, records: any[], version?: number): number | undefined => {
-  try {
-    log('loading', { records: records.length, schema: version });
-    store.put(records);
-  } catch (err) {
-    log.info('migrating schema...', err);
-    const serialized = records.reduce<Record<string, any>>((acc, record) => {
-      acc[record.id] = record;
-      return acc;
-    }, {});
-
-    const snapshot = store.migrateSnapshot({ schema: schema[version ?? DEFAULT_VERSION], store: serialized });
-    try {
-      log('loading', { records: Object.keys(snapshot.store).length, schema: snapshot.schema.schemaVersion });
-      store.loadSnapshot(snapshot);
-      log.info('migrated schema', { version: CURRENT_VERSION });
-      return CURRENT_VERSION;
-    } catch (err) {
-      // Fallback.
-      // TODO(burdon): Notify user shapes missing. Make readonly.
-      log.info('loading records...');
-      for (const record of Object.values(serialized)) {
-        try {
-          store.put([record]);
-        } catch (err) {
-          log.catch(err, { record });
-        }
-      }
-
-      return -1;
-    }
-  }
-};
-
 // TODO(burdon): Need unit test and check that records are duplicated.
-const saveStore = (store: TLStore, accessor: DocAccessor<TLDrawStoreData>, version = CURRENT_VERSION) => {
+const saveStore = (store: TLStore, accessor: DocAccessor<TLDrawStoreData>) => {
   accessor.handle.change((doc) => {
     // TODO(burdon): Why isn't path just "content"?
     const content: Record<string, TLRecord> = getAndInit(doc, accessor.path, {});
     const records = store.allRecords();
     log('saving records...', { records: records.length });
-    // TODO(burdon): Do we need to construct a different path?
-    doc.schema = String(version);
     for (const record of records) {
       content[record.id] = encode(record);
     }

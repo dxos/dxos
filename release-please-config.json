@@ -24,16 +24,6 @@
         },
         {
           "type": "json",
-          "path": "packages/apps/composer-extension/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/apps/halo-app/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/apps/plugins/plugin-chain/package.json",
           "jsonpath": "$.version"
         },
@@ -554,6 +544,16 @@
         },
         {
           "type": "json",
+          "path": "packages/devtools/cli-base/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/devtools/cli-composer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/devtools/devtools/package.json",
           "jsonpath": "$.version"
         },
@@ -774,6 +774,11 @@
         },
         {
           "type": "json",
+          "path": "packages/ui/react-ui-text-tooltip/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/ui/react-ui-theme/package.json",
           "jsonpath": "$.version"
         },
@@ -819,7 +824,7 @@
         },
         {
           "type": "json",
-          "path": "tools/eslint-rules/package.json",
+          "path": "tools/eslint-plugin-rules/package.json",
           "jsonpath": "$.version"
         },
         {

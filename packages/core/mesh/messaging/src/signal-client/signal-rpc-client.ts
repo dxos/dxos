@@ -4,7 +4,7 @@
 
 import WebSocket from 'isomorphic-ws';
 
-import { scheduleTaskInterval, Trigger } from '@dxos/async';
+import { scheduleTaskInterval, TimeoutError, Trigger } from '@dxos/async';
 import { type Any, type Stream } from '@dxos/codec-protobuf';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -13,6 +13,8 @@ import { log } from '@dxos/log';
 import { schema, trace } from '@dxos/protocols';
 import { type Message as SignalMessage, type Signal } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { createProtoRpcPeer, type ProtoRpcPeer } from '@dxos/rpc';
+
+import { SignalRpcClientMonitor } from './signal-rpc-client-monitor';
 
 const SIGNAL_KEEPALIVE_INTERVAL = 10000;
 
@@ -39,9 +41,10 @@ export type SignalRPCClientParams = {
 };
 
 export class SignalRPCClient {
-  private _socket?: WebSocket;
-  private _rpc?: ProtoRpcPeer<Services>;
+  private readonly _socket: WebSocket;
+  private readonly _rpc: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
+
   private _keepaliveCtx?: Context;
 
   private _closed = false;
@@ -49,6 +52,8 @@ export class SignalRPCClient {
   private readonly _url: string;
   private readonly _callbacks: SignalCallbacks;
   private readonly _closeComplete = new Trigger();
+
+  private readonly _monitor = new SignalRpcClientMonitor();
 
   constructor({ url, callbacks = {} }: SignalRPCClientParams) {
     const traceId = PublicKey.random().toHex();
@@ -92,6 +97,10 @@ export class SignalRPCClient {
     this._socket.onopen = async () => {
       try {
         await this._rpc!.open();
+        if (this._closed) {
+          await this._safeCloseRpc();
+          return;
+        }
         log(`RPC open ${this._url}`);
         this._callbacks.onConnected?.();
         this._connectTrigger.wake();
@@ -109,6 +118,8 @@ export class SignalRPCClient {
         );
       } catch (err: any) {
         this._callbacks.onError?.(err);
+        this._socket.close();
+        this._closed = true;
       }
     };
 
@@ -121,47 +132,46 @@ export class SignalRPCClient {
 
     this._socket.onerror = async (event: WebSocket.ErrorEvent) => {
       if (this._closed) {
-        // Ignore errors after close.
+        this._socket.close();
         return;
-      }
-
-      this._callbacks.onError?.(event.error ?? new Error(event.message));
-      this._connectTrigger.reset();
-
-      try {
-        await this._rpc?.close();
-      } catch (err) {
-        log.catch(err);
       }
       this._closed = true;
 
-      log.warn(event.message ?? 'Socket error', { url: this._url });
+      this._callbacks.onError?.(event.error ?? new Error(event.message));
+      await this._safeCloseRpc();
+
+      log.warn(`Socket ${event.type ?? 'unknown'} error`, { message: event.message, url: this._url });
     };
 
     log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
   }
 
   async close() {
-    await this._keepaliveCtx?.dispose();
+    if (this._closed) {
+      return;
+    }
     this._closed = true;
-    try {
-      await this._rpc?.close();
 
-      if (this._socket?.readyState === WebSocket.OPEN || this._socket?.readyState === WebSocket.CONNECTING) {
+    await this._keepaliveCtx?.dispose();
+    try {
+      await this._safeCloseRpc();
+
+      if (this._socket.readyState === WebSocket.OPEN || this._socket.readyState === WebSocket.CONNECTING) {
         // close() only starts the closing handshake.
         this._socket.close();
       }
+
       await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
-      log.warn('close error', err);
+      const failureReason = err instanceof TimeoutError ? 'timeout' : err?.constructor?.name ?? 'unknown';
+      this._monitor.recordClientCloseFailure({ failureReason });
     }
   }
 
   async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
-    log('join', { topic, peerId });
-    await this._connectTrigger.wait();
+    log('join', { topic, peerId, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
-    invariant(this._rpc, 'Rpc is not initialized');
+    await this._connectTrigger.wait();
     const swarmStream = this._rpc.rpc.Signal.join({
       swarm: topic.asUint8Array(),
       peer: peerId.asUint8Array(),
@@ -175,7 +185,6 @@ export class SignalRPCClient {
     log('receiveMessages', { peerId });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
-    invariant(this._rpc, 'Rpc is not initialized');
     const messageStream = this._rpc.rpc.Signal.receiveMessages({
       peer: peerId.asUint8Array(),
     });
@@ -184,15 +193,23 @@ export class SignalRPCClient {
   }
 
   async sendMessage({ author, recipient, payload }: { author: PublicKey; recipient: PublicKey; payload: Any }) {
-    log('sendMessage', { author, recipient, payload });
+    log('sendMessage', { author, recipient, payload, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
-    invariant(this._rpc, 'Rpc is not initialized');
     await this._rpc.rpc.Signal.sendMessage({
       author: author.asUint8Array(),
       recipient: recipient.asUint8Array(),
       payload,
       metadata: this._callbacks?.getMetadata?.(),
     });
+  }
+
+  private async _safeCloseRpc() {
+    try {
+      this._connectTrigger.reset();
+      await this._rpc.close();
+    } catch (err) {
+      log.catch(err);
+    }
   }
 }

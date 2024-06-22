@@ -59,10 +59,10 @@ export default defineConfig({
     ThemePlugin({
       root: __dirname,
       content: [
-        resolve(__dirname, './*.html'),
+        resolve(__dirname, './index.html'),
         resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
+        resolve(__dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
       ],
-      extensions: []
     }),
     TopLevelAwaitPlugin(),
     WasmPlugin(),

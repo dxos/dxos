@@ -6,10 +6,10 @@ import { ArrowClockwise } from '@phosphor-icons/react';
 import React from 'react';
 
 import { SettingsValue } from '@braneframe/plugin-settings';
-import { Button, Input, useTranslation } from '@dxos/react-ui';
+import { Button, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { DECK_PLUGIN } from '../meta';
-import { type DeckSettingsProps } from '../types';
+import { type NewPlankPositioning, NewPlankPositions, type DeckSettingsProps } from '../types';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -27,6 +27,25 @@ export const LayoutSettings = ({ settings }: { settings: DeckSettingsProps }) =>
           <p className='text-sm font-medium'>{t('reload required message')}</p>
         </Button>
       )}
+      <SettingsValue label={t('select new plank positioning label')}>
+        <Select.Root
+          value={settings.newPlankPositioning ?? 'start'}
+          onValueChange={(value) => (settings.newPlankPositioning = value as NewPlankPositioning)}
+        >
+          <Select.TriggerButton placeholder={t('select new plank positioning placeholder')} />
+          <Select.Portal>
+            <Select.Content>
+              <Select.Viewport>
+                {NewPlankPositions.map((position) => (
+                  <Select.Option key={position} value={position}>
+                    {t(`settings new plank position ${position} label`)}
+                  </Select.Option>
+                ))}
+              </Select.Viewport>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </SettingsValue>
       <SettingsValue label={t('settings show footer label')}>
         <Input.Switch checked={settings.showFooter} onCheckedChange={(checked) => (settings.showFooter = !!checked)} />
       </SettingsValue>

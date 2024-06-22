@@ -55,6 +55,7 @@ export class QueryPlugin extends Plugin {
         queryResults.map((result) => {
           return {
             id: result.id,
+            spaceId: result.spaceId,
             spaceKey: result.spaceKey,
             rank: result.match?.rank ?? 0,
           };

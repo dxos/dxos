@@ -9,7 +9,7 @@ import { createDocAccessor } from '@dxos/react-client/echo';
 
 import { AutomergeStoreAdapter, type StoreAdapter } from './adapter';
 
-export const useStoreAdapter = (object: EchoReactiveObject<any>, options = { timeout: 250 }): StoreAdapter => {
+export const useStoreAdapter = (object?: EchoReactiveObject<any>, options = { timeout: 250 }): StoreAdapter => {
   const [adapter] = useState(() => new AutomergeStoreAdapter(options));
   useEffect(() => {
     if (!object) {

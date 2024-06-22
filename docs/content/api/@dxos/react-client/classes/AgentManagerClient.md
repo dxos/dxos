@@ -113,6 +113,18 @@ Arguments:
 `predicate`: <code>function</code>
 
 
+### [_validAuthToken()]()
+
+
+
+
+Returns: <code>"null" | JwtPayload</code>
+
+Arguments: none
+
+
+
+
 ### [checkEligibility(authToken)]()
 
 

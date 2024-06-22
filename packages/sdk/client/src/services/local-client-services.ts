@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { setIdentityTags, type SignalManager } from '@dxos/messaging';
 import {
   createLibDataChannelTransportFactory,
-  type NetworkManagerOptions,
+  type SwarmNetworkManagerOptions,
   type TransportFactory,
 } from '@dxos/network-manager';
 import { type ServiceBundle } from '@dxos/rpc';
@@ -29,12 +29,16 @@ export const fromHost = async (
   config = new Config(),
   params?: ClientServicesHostParams,
   observabilityGroup?: string,
-  signalTelemetryEnabled?: boolean, // TODO(burdon): Not used?
+  signalTelemetryEnabled?: boolean,
 ): Promise<ClientServicesProvider> => {
-  const networking = await setupNetworking(config, {}, () => ({
-    ...services.signalMetadataTags,
-    ...(observabilityGroup ? { group: observabilityGroup } : {}),
-  }));
+  const networking = await setupNetworking(config, {}, () =>
+    signalTelemetryEnabled
+      ? {
+          ...services.signalMetadataTags,
+          ...(observabilityGroup ? { group: observabilityGroup } : {}),
+        }
+      : {},
+  );
 
   const services = new LocalClientServices({ config, ...networking, ...params });
   return services;
@@ -46,7 +50,7 @@ export const fromHost = async (
  */
 const setupNetworking = async (
   config: Config,
-  options: Partial<NetworkManagerOptions> = {},
+  options: Partial<SwarmNetworkManagerOptions> = {},
   signalMetadata?: () => void,
 ): Promise<{
   signalManager?: SignalManager;

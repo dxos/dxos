@@ -2,9 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { Flags, ux } from '@oclif/core';
+import { Flags } from '@oclif/core';
 import chalk from 'chalk';
 import fs from 'fs';
+import inquirer from 'inquirer';
 
 import { DX_CACHE, DX_CONFIG, DX_DATA, DX_RUNTIME, DX_STATE, getProfilePath } from '@dxos/client-protocol';
 
@@ -51,9 +52,16 @@ export default class Reset extends BaseCommand<typeof Reset> {
       );
     }
 
-    const dryRun =
-      this.flags['dry-run'] ||
-      !(this.flags.force || (await ux.confirm(chalk`\n{red Delete all data? {white (Profile: ${profile})}}`)));
+    let dryRun = this.flags['dry-run'];
+    if (!dryRun && !this.flags.force) {
+      const { confirm } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'confirm',
+        default: false,
+        message: chalk`{red Delete all data? {white (Profile: ${profile})}}`,
+      });
+      dryRun = !confirm;
+    }
 
     if (!dryRun) {
       await this.execWithDaemon(async (daemon) => {

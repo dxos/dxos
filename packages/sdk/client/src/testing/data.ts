@@ -8,57 +8,57 @@ import { Expando, ref, S, TypedObject } from '@dxos/echo-schema';
 //  Better to simplify tests and remove dependency completely.
 
 export class TextV0Type extends TypedObject({ typename: 'dxos.Text.v0', version: '0.1.0' })({
-  content: S.string,
+  content: S.String,
 }) {}
 
 export class DocumentType extends TypedObject({ typename: 'braneframe.Document', version: '0.1.0' })({
-  title: S.optional(S.string),
+  title: S.optional(S.String),
   content: ref(TextV0Type),
 }) {}
 
 export class ContactType extends TypedObject({ typename: 'braneframe.Contact', version: '0.1.0' })({
-  name: S.optional(S.string),
+  name: S.optional(S.String),
   identifiers: S.mutable(
-    S.array(
-      S.struct({
-        type: S.string,
-        value: S.string,
+    S.Array(
+      S.Struct({
+        type: S.String,
+        value: S.String,
       }),
     ),
   ),
 }) {}
 
-const _BlockSchema = S.struct({
-  timestamp: S.string,
+const _BlockSchema = S.Struct({
+  timestamp: S.String,
   content: S.optional(ref(TextV0Type)),
   object: S.optional(ref(Expando)),
 });
 export interface BlockType extends S.Schema.Type<typeof _BlockSchema> {}
 
 export class MessageType extends TypedObject({ typename: 'braneframe.Message', version: '0.1.0' })({
-  type: S.optional(S.string),
-  date: S.optional(S.string),
-  subject: S.optional(S.string),
-  blocks: S.mutable(S.array(_BlockSchema)),
-  links: S.optional(S.array(ref(Expando))),
-  read: S.optional(S.boolean),
+  type: S.optional(S.String),
+  date: S.optional(S.String),
+  subject: S.optional(S.String),
+  blocks: S.mutable(S.Array(_BlockSchema)),
+  links: S.optional(S.Array(ref(Expando))),
+  read: S.optional(S.Boolean),
   context: S.optional(
-    S.struct({
-      space: S.optional(S.string),
-      schema: S.optional(S.string),
-      object: S.optional(S.string),
+    S.Struct({
+      space: S.optional(S.String),
+      schema: S.optional(S.String),
+      object: S.optional(S.String),
     }),
   ),
 }) {}
 
 export class ThreadType extends TypedObject({ typename: 'braneframe.Thread', version: '0.1.0' })({
-  title: S.optional(S.string),
-  messages: S.mutable(S.array(ref(MessageType))),
+  title: S.optional(S.String),
+  messages: S.mutable(S.Array(ref(MessageType))),
   context: S.optional(
-    S.struct({
-      space: S.optional(S.string),
-      schema: S.optional(S.string),
-      object: S.optional(S.string),
+    S.Struct({
+      space: S.optional(S.String),
+      schema: S.optional(S.String),
+      object: S.optional(S.String),
     }),
   ),
 }) {}

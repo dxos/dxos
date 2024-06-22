@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useFilteredObjects } from '@braneframe/plugin-search';
+import { useGlobalFilteredObjects } from '@braneframe/plugin-search';
 import { type EchoReactiveObject, type S } from '@dxos/echo-schema';
 import { type Space, useQuery, Filter } from '@dxos/react-client/echo';
 
@@ -31,5 +31,5 @@ export const useTableObjects = (space?: Space, schema?: S.Schema<any>) => {
     [schema],
   );
 
-  return useFilteredObjects(objects);
+  return useGlobalFilteredObjects(objects);
 };

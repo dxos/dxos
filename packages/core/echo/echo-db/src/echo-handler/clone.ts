@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type EchoReactiveObject } from '@dxos/echo-schema';
+import { generateEchoId, type EchoReactiveObject } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
 
 import { initEchoReactiveObjectRootProxy, isEchoObject } from './create';
-import { AutomergeObjectCore, getAutomergeObjectCore } from '../automerge';
+import { symbolInternals } from './echo-proxy-target';
+import { ObjectCore, getObjectCore } from '../core-db';
 
 export type CloneOptions = {
   /**
@@ -22,7 +22,7 @@ export type CloneOptions = {
 };
 
 const requireAutomergeCore = (obj: EchoReactiveObject<any>) => {
-  const core = getAutomergeObjectCore(obj);
+  const core = getObjectCore(obj);
   invariant(core, 'object is not an EchoObject');
   return core;
 };
@@ -39,15 +39,12 @@ export const clone = <T extends {}>(
     throw new Error('Updating ids is not supported when cloning with nested objects.');
   }
 
-  const core = requireAutomergeCore(obj);
-
-  const clone = cloneInner(core, retainId ? obj.id : PublicKey.random().toHex());
+  const clone = cloneInner(obj, retainId ? obj.id : generateEchoId());
 
   const clones: EchoReactiveObject<any>[] = [clone];
   for (const innerObj of additional) {
     if (innerObj) {
-      const innerCore = requireAutomergeCore(innerObj);
-      clones.push(cloneInner(innerCore, retainId ? innerCore.id : PublicKey.random().toHex()));
+      clones.push(cloneInner(innerObj, retainId ? innerObj.id : generateEchoId()));
     }
   }
 
@@ -63,28 +60,29 @@ export const clone = <T extends {}>(
         continue;
       }
 
-      getAutomergeObjectCore(clone).linkCache!.set(ref.id, ref);
+      clone[symbolInternals as any].linkCache!.set(ref.id, ref);
     }
   }
 
   return clone;
 };
 
-const cloneInner = (core: AutomergeObjectCore, id: string): EchoReactiveObject<any> => {
-  const coreClone = new AutomergeObjectCore();
+const cloneInner = <T>(obj: EchoReactiveObject<T>, id: string): EchoReactiveObject<T> => {
+  const core = requireAutomergeCore(obj);
+  const coreClone = new ObjectCore();
   coreClone.initNewObject();
   coreClone.id = id;
-  initEchoReactiveObjectRootProxy(coreClone);
+  const proxy = initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
   coreClone.change((doc: any) => {
     for (const key of Object.keys(automergeSnapshot)) {
       doc[key] = automergeSnapshot[key];
     }
   });
-  return coreClone.rootProxy as any;
+  return proxy as any;
 };
 
-const getObjectDoc = (core: AutomergeObjectCore): any => {
+const getObjectDoc = (core: ObjectCore): any => {
   let value = core.doc ?? core.docHandle!.docSync();
   for (const key of core.mountPath) {
     value = value?.[key];

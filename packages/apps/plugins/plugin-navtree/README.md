@@ -6,7 +6,7 @@ DXOS Surface plugin for a tree view visualization of the graph.
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+- Talk to us on [Discord](https://dxos.org/discord)
 
 ## Contributions
 

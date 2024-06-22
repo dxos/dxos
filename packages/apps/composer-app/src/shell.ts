@@ -10,7 +10,7 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { setupConfig } from './config';
 
 const main = async () => {
-  TRACE_PROCESSOR.setInstanceTag('app');
+  TRACE_PROCESSOR.setInstanceTag('shell');
 
   const config = await setupConfig();
   await runShell(config);

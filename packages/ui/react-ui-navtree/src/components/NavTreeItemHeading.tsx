@@ -6,6 +6,7 @@ import { CaretDown, CaretRight, type IconProps } from '@phosphor-icons/react';
 import React, { type FC, forwardRef } from 'react';
 
 import { Button, TreeItem } from '@dxos/react-ui';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
 import { getSize, type HuePalette, hueTokens, mx, valenceColorText } from '@dxos/react-ui-theme';
 
 import { navTreeHeading, topLevelText, treeItemText } from './navtree-fragments';
@@ -78,9 +79,11 @@ export const NavTreeItemHeading = forwardRef<HTMLButtonElement, NavTreeItemHeadi
             ref={forwardedRef}
           >
             {Icon && <Icon className={mx('shrink-0 text-[--icons-color]', getSize(4))} />}
-            <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
-              {label}
-            </span>
+            <TextTooltip onlyWhenTruncating text={label} side='bottom' sideOffset={8}>
+              <span className={mx(navTreeHeading, modified && 'italic', level < 1 ? topLevelText : treeItemText)}>
+                {label}
+              </span>
+            </TextTooltip>
           </Button>
         </TreeItem.Heading>
       </div>

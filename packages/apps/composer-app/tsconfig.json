@@ -11,7 +11,8 @@
     "module": "ESNext",
     "outDir": "dist",
     "types": [
-      "node"
+      "node",
+      "sharedworker"
     ]
   },
   "exclude": [

@@ -8,17 +8,20 @@ import React, { useMemo, type Ref } from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { DocumentType, TextV0Type } from '@braneframe/types';
+import { DocumentType, TextType } from '@braneframe/types';
 import {
+  LayoutAction,
   isObject,
   parseIntentPlugin,
   resolvePlugin,
   type IntentPluginProvides,
   type Plugin,
   type PluginDefinition,
+  useResolvePlugin,
+  parseFileManagerPlugin,
 } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
-import { create, type ReactiveObject } from '@dxos/echo-schema';
+import { create } from '@dxos/echo-schema';
 import { LocalStorageStore } from '@dxos/local-storage';
 import { getSpace, Filter, type Query, fullyQualifiedId } from '@dxos/react-client/echo';
 import { type EditorMode, translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -105,7 +108,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         records: {
           [DocumentType.typename]: {
             label: (object: any) =>
-              object instanceof DocumentType ? object.title ?? getFallbackTitle(object) : undefined,
+              object instanceof DocumentType ? object.name ?? getFallbackTitle(object) : undefined,
             placeholder: ['document title placeholder', { ns: MARKDOWN_PLUGIN }],
             icon: (props: IconProps) => <TextAa {...props} />,
           },
@@ -113,7 +116,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
       },
       translations: [...translations, ...editorTranslations],
       echo: {
-        schema: [DocumentType],
+        schema: [DocumentType, TextType],
       },
       graph: {
         builder: (plugins, graph) => {
@@ -146,7 +149,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all documents to the graph.
                 const query = space.db.query(Filter.schema(DocumentType));
@@ -168,7 +171,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                             // Provide the label as a getter so we don't have to rebuild the graph node when the title changes while editing the document.
                             get label() {
                               return (
-                                object.title ||
+                                object.name ||
                                 getFallbackTitle(object) || ['document title placeholder', { ns: MARKDOWN_PLUGIN }]
                               );
                             },
@@ -176,11 +179,11 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                             icon: (props: IconProps) => <TextAa {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                           nodes: [
                             {
-                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.key.toHex()}/${object.id}`,
+                              id: `${MARKDOWN_PLUGIN}/toggle-readonly/${space.id}/${object.id}`,
                               data: () =>
                                 intentPlugin?.provides.intent.dispatch([
                                   {
@@ -244,6 +247,21 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
             return getCustomExtensions(doc /*, query */);
           }, [doc, space, settings.values.editorMode]);
 
+          const fileManagerPlugin = useResolvePlugin(parseFileManagerPlugin);
+          const onFileUpload = useMemo(() => {
+            if (space === undefined) {
+              return undefined;
+            }
+
+            if (fileManagerPlugin?.provides.file.upload === undefined) {
+              return undefined;
+            }
+
+            return async (file: File) => {
+              return await fileManagerPlugin?.provides?.file?.upload?.(file, space);
+            };
+          }, [fileManagerPlugin, space]);
+
           switch (role) {
             // TODO(burdon): Normalize layout (reduce variants).
             case 'article': {
@@ -254,6 +272,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                     toolbar={settings.values.toolbar}
                     document={doc}
                     extensions={extensions}
+                    onFileUpload={onFileUpload}
                   />
                 );
               } else {
@@ -270,6 +289,7 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
                       toolbar={settings.values.toolbar}
                       document={data.active}
                       extensions={extensions}
+                      onFileUpload={onFileUpload}
                     />
                   </MainLayout>
                 );
@@ -334,11 +354,14 @@ export const MarkdownPlugin = (): PluginDefinition<MarkdownPluginProvides> => {
         resolver: ({ action, data }) => {
           switch (action) {
             case MarkdownAction.CREATE: {
+              const doc = create(DocumentType, {
+                content: create(TextType, { content: '' }),
+                threads: [],
+              });
+
               return {
-                data: create(DocumentType, {
-                  content: create(TextV0Type, { content: '' }),
-                  comments: [],
-                }) satisfies ReactiveObject<DocumentType>,
+                data: doc,
+                intents: [[{ action: LayoutAction.SCROLL_INTO_VIEW, data: { id: doc.id } }]],
               };
             }
 

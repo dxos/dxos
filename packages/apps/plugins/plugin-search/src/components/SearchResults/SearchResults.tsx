@@ -11,7 +11,7 @@ import { type MosaicTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { ghostHover, mx } from '@dxos/react-ui-theme';
 
 import { SEARCH_RESULT } from '../../meta';
-import type { SearchResult } from '../../search';
+import type { SearchResult } from '../../search-sync';
 
 // TODO(burdon): Factor out.
 const styles = {

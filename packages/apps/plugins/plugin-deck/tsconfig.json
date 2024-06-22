@@ -53,6 +53,9 @@
       "path": "../../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../../ui/react-ui-text-tooltip"
+    },
+    {
       "path": "../../../ui/react-ui-theme"
     },
     {

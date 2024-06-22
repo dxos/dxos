@@ -5,7 +5,7 @@
 import { Chat } from '@phosphor-icons/react';
 import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { MessageType, TextV0Type } from '@braneframe/types';
+import { MessageType } from '@braneframe/types';
 import { create } from '@dxos/echo-schema';
 import { getSpace, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -79,14 +79,10 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
 
     thread.messages.push(
       create(MessageType, {
-        from: { identityKey: identity.identityKey.toHex() },
+        sender: { identityKey: identity.identityKey.toHex() },
+        timestamp: new Date().toISOString(),
+        text: messageRef.current,
         context,
-        blocks: [
-          {
-            timestamp: new Date().toISOString(),
-            content: create(TextV0Type, { content: messageRef.current }),
-          },
-        ],
       }),
     );
 
@@ -97,14 +93,10 @@ export const ChatContainer = ({ thread, context, current, autoFocusTextbox }: Th
     return true;
   };
 
-  const handleDelete = (id: string, index: number) => {
+  const handleDelete = (id: string) => {
     const messageIndex = thread.messages.filter(nonNullable).findIndex((message) => message.id === id);
     if (messageIndex !== -1) {
-      const message = thread.messages[messageIndex];
-      message?.blocks.splice(index, 1);
-      if (message?.blocks.length === 0) {
-        thread.messages.splice(messageIndex, 1);
-      }
+      thread.messages.splice(messageIndex, 1);
     }
   };
 

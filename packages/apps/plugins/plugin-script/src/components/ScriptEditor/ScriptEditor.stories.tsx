@@ -31,9 +31,9 @@ const examples: string[] = [
   ].join('\n'),
   [
     '// Example schema.',
-    'S.struct({',
+    'S.Struct({',
     '  timestamp: S.Date,',
-    '  title: S.string,',
+    '  title: S.String,',
     '  content: R.Text,',
     "}).pipe(S.identifier('dxos.org/schema/Test'))",
     '',

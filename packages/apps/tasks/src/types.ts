@@ -10,6 +10,6 @@ export type TaskProps = {
 };
 
 export class TaskType extends TypedObject({ typename: 'dxos.app.tasks.Task', version: '0.1.0' })({
-  title: S.string,
-  completed: S.boolean,
+  title: S.String,
+  completed: S.Boolean,
 }) {}

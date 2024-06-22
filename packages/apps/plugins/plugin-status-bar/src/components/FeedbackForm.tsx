@@ -15,7 +15,7 @@ import { STATUS_BAR_PLUGIN } from '../meta';
 import { mkTranslation } from '../translations';
 import { validate } from '../util';
 
-const Email = S.string.pipe(
+const Email = S.String.pipe(
   S.nonEmpty({ message: () => 'Email is required.' }),
   S.pattern(/^(?!\.)(?!.*\.\.)([A-Z0-9_+-.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-9-]*\.)+[A-Z]{2,}$/i, {
     message: () => 'Invalid email address.',
@@ -26,10 +26,10 @@ const nonEmpty = (field: string) => S.nonEmpty({ message: () => `${field} is req
 const maxLength = (field: string, length: number) => S.maxLength(length, { message: () => `${field} is too long.` });
 
 // -- Types and validation.
-const FeedbackFormSchema = S.struct({
-  name: S.string.pipe(nonEmpty('Name'), maxLength('Name', 256)),
+const FeedbackFormSchema = S.Struct({
+  name: S.String.pipe(nonEmpty('Name'), maxLength('Name', 256)),
   email: Email.pipe(maxLength('Email', 256)),
-  message: S.string.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
+  message: S.String.pipe(nonEmpty('Feedback'), maxLength('Feedback', 32_768)),
 });
 
 type FeedbackFormState = S.Schema.Type<typeof FeedbackFormSchema>;

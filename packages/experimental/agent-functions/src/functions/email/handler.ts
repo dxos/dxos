@@ -4,7 +4,7 @@
 
 import type { Config as ImapConfig } from 'imap';
 
-import { MailboxType, MessageType } from '@braneframe/types';
+import { ChannelType, MessageType, TextType } from '@braneframe/types';
 import { getSpace, type Space } from '@dxos/client/echo';
 import { Filter, hasType, matchKeys } from '@dxos/echo-db';
 import { getMeta } from '@dxos/echo-schema';
@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { ImapProcessor } from './imap-processor';
 import { getKey } from '../../util';
 
-const types = [MailboxType, MessageType];
+const types = [TextType, ChannelType, MessageType];
 
 export const handler = subscriptionHandler(async ({ event, context, response }) => {
   const { client } = context;
@@ -40,9 +40,10 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 
   let code = 200;
   try {
-    const mailboxes: MailboxType[] = objects?.filter(hasType(MailboxType)) ?? [];
+    const mailboxes: ChannelType[] = objects?.filter(hasType(ChannelType)) ?? [];
     if (!space) {
-      const { objects } = await client.experimental.graph.query(Filter.schema(MailboxType)).run();
+      // Query across all spaces.
+      const { objects } = await client.graph.query(Filter.schema(ChannelType)).run();
       mailboxes.push(...objects);
     }
 
@@ -69,7 +70,7 @@ export const handler = subscriptionHandler(async ({ event, context, response }) 
 }, types);
 
 // TODO(burdon): Util.
-const processMailbox = async (space: Space, mailbox: MailboxType, messages: MessageType[]) => {
+const processMailbox = async (space: Space, mailbox: ChannelType, messages: MessageType[]) => {
   const { objects: current = [] } = (await space.db.query(Filter.schema(MessageType)).run()) ?? {};
 
   // Merge messages.
@@ -78,7 +79,7 @@ const processMailbox = async (space: Space, mailbox: MailboxType, messages: Mess
   for (const message of messages) {
     const exists = current.find((m) => matchKeys(getMeta(m).keys, getMeta(message).keys));
     if (!exists) {
-      (mailbox.messages ??= []).push(message);
+      (mailbox.threads[0]!.messages ??= []).push(message);
       added++;
     }
   }

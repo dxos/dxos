@@ -4,15 +4,16 @@
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { type Doc } from '@dxos/automerge/automerge';
-import { type AutomergeUrl } from '@dxos/automerge/automerge-repo';
-import { cancelWithContext, Context } from '@dxos/context';
+import { type AutomergeUrl, type DocHandle } from '@dxos/automerge/automerge-repo';
+import { PropertiesType } from '@dxos/client-protocol';
+import { Context, cancelWithContext } from '@dxos/context';
 import {
+  getCredentialAssertion,
   type CredentialSigner,
   type DelegateInvitationCredential,
-  getCredentialAssertion,
   type MemberInfo,
 } from '@dxos/credentials';
-import { type EchoHost } from '@dxos/echo-db';
+import { convertLegacyReferences, findInlineObjectOfType, type EchoHost } from '@dxos/echo-db';
 import {
   AuthStatus,
   type MetadataStore,
@@ -21,7 +22,14 @@ import {
   type SpaceProtocol,
   type SpaceProtocolSession,
 } from '@dxos/echo-pipeline';
-import { type SpaceDoc } from '@dxos/echo-protocol';
+import {
+  LEGACY_TYPE_PROPERTIES,
+  SpaceDocVersion,
+  encodeReference,
+  type ObjectStructure,
+  type SpaceDoc,
+} from '@dxos/echo-protocol';
+import { TYPE_PROPERTIES, generateEchoId, getTypeReference } from '@dxos/echo-schema';
 import { type FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -31,21 +39,24 @@ import { trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { SpaceMember, type Credential, type ProfileDocument } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, assignDeep, deferFunction, forEachAsync } from '@dxos/util';
 
-import { DataSpace, findPropertiesObject } from './data-space';
+import { DataSpace } from './data-space';
 import { spaceGenesis } from './genesis';
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
+
+// Space properties key for default metadata.
+const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 export interface SigningContext {
   identityKey: PublicKey;
@@ -88,8 +99,6 @@ export class DataSpaceManager {
 
   private _isOpen = false;
   private readonly _instanceId = PublicKey.random().toHex();
-  private readonly _spaceMemberPresenceAnnounceInterval: number;
-  private readonly _spaceMemberPresenceOfflineTimeout: number;
 
   constructor(
     private readonly _spaceManager: SpaceManager,
@@ -99,15 +108,8 @@ export class DataSpaceManager {
     private readonly _feedStore: FeedStore<FeedMessage>,
     private readonly _echoHost: EchoHost,
     private readonly _invitationsManager: InvitationsManager,
-    params?: DataSpaceManagerRuntimeParams,
+    private readonly _params?: DataSpaceManagerRuntimeParams,
   ) {
-    const {
-      spaceMemberPresenceAnnounceInterval = PRESENCE_ANNOUNCE_INTERVAL,
-      spaceMemberPresenceOfflineTimeout = PRESENCE_OFFLINE_TIMEOUT,
-    } = params ?? {};
-    this._spaceMemberPresenceAnnounceInterval = spaceMemberPresenceAnnounceInterval;
-    this._spaceMemberPresenceOfflineTimeout = spaceMemberPresenceOfflineTimeout;
-
     trace.diagnostic({
       id: 'spaces',
       name: 'Spaces',
@@ -117,7 +119,7 @@ export class DataSpaceManager {
           const rootHandle = rootUrl ? this._echoHost.automergeRepo.find(rootUrl as AutomergeUrl) : undefined;
           const rootDoc = rootHandle?.docSync() as Doc<SpaceDoc> | undefined;
 
-          const properties = rootDoc && findPropertiesObject(rootDoc);
+          const properties = rootDoc && findInlineObjectOfType(rootDoc, TYPE_PROPERTIES);
 
           return {
             key: space.key.toHex(),
@@ -157,12 +159,6 @@ export class DataSpaceManager {
     this._isOpen = true;
     this.updated.emit();
 
-    for (const space of this._spaces.values()) {
-      if (space.state !== SpaceState.INACTIVE) {
-        space.initializeDataPipelineAsync();
-      }
-    }
-
     log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
@@ -174,6 +170,7 @@ export class DataSpaceManager {
     for (const space of this._spaces.values()) {
       await space.close();
     }
+    this._spaces.clear();
   }
 
   /**
@@ -197,6 +194,7 @@ export class DataSpaceManager {
 
     const root = await this._echoHost.createSpaceRoot(spaceKey);
     const space = await this._constructSpace(metadata);
+    await space.open();
 
     const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
     await this._metadataStore.addSpace(metadata);
@@ -209,6 +207,61 @@ export class DataSpaceManager {
 
     this.updated.emit();
     return space;
+  }
+
+  async isDefaultSpace(space: DataSpace): Promise<boolean> {
+    if (!space.databaseRoot) {
+      return false;
+    }
+    switch (space.databaseRoot.getVersion()) {
+      case SpaceDocVersion.CURRENT: {
+        const [_, properties] = findInlineObjectOfType(space.databaseRoot.docSync()!, TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+      case SpaceDocVersion.LEGACY: {
+        const convertedDoc = await convertLegacyReferences(space.databaseRoot.docSync()!);
+        const [_, properties] = findInlineObjectOfType(convertedDoc, LEGACY_TYPE_PROPERTIES) ?? [];
+        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
+      }
+
+      default:
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
+        return false;
+    }
+  }
+
+  async createDefaultSpace() {
+    const space = await this.createSpace();
+    const document = await this._getSpaceRootDocument(space);
+
+    // TODO(dmaretskyi): Better API for low-level data access.
+    const properties: ObjectStructure = {
+      system: {
+        type: encodeReference(getTypeReference(PropertiesType)!),
+      },
+      data: {
+        [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
+      },
+      meta: {
+        keys: [],
+      },
+    };
+
+    const propertiesId = generateEchoId();
+    document.change((doc: SpaceDoc) => {
+      assignDeep(doc, ['objects', propertiesId], properties);
+    });
+
+    await this._echoHost.flush();
+    return space;
+  }
+
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<SpaceDoc>> {
+    const automergeIndex = space.automergeSpaceState.rootUrl;
+    invariant(automergeIndex);
+    const document = this._echoHost.automergeRepo.find<SpaceDoc>(automergeIndex as any);
+    await document.whenReady();
+    return document;
   }
 
   // TODO(burdon): Rename join space.
@@ -226,6 +279,7 @@ export class DataSpaceManager {
     };
 
     const space = await this._constructSpace(metadata);
+    await space.open();
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
 
@@ -254,8 +308,8 @@ export class DataSpaceManager {
       localPeerId: this._signingContext.deviceKey,
     });
     const presence = new Presence({
-      announceInterval: this._spaceMemberPresenceAnnounceInterval,
-      offlineTimeout: this._spaceMemberPresenceOfflineTimeout,
+      announceInterval: this._params?.spaceMemberPresenceAnnounceInterval ?? PRESENCE_ANNOUNCE_INTERVAL,
+      offlineTimeout: this._params?.spaceMemberPresenceOfflineTimeout ?? PRESENCE_OFFLINE_TIMEOUT,
       identityKey: this._signingContext.identityKey,
       gossip,
     });
@@ -335,10 +389,6 @@ export class DataSpaceManager {
         this._handleNewPeerConnected(space, peerState);
       }
     });
-
-    if (metadata.state !== SpaceState.INACTIVE) {
-      await dataSpace.open();
-    }
 
     if (metadata.controlTimeframe) {
       dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);

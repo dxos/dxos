@@ -27,7 +27,6 @@ import {
   type SyncRepoRequest,
   type SyncRepoResponse,
 } from '@dxos/protocols/proto/dxos/echo/service';
-import { type Directory } from '@dxos/random-access-storage';
 import { trace } from '@dxos/tracing';
 import { mapValues } from '@dxos/util';
 
@@ -35,17 +34,12 @@ import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type EchoReplicator } from './echo-replicator';
 import { LevelDBStorageAdapter, type BeforeSaveParams } from './leveldb-storage-adapter';
 import { LocalHostNetworkAdapter } from './local-host-network-adapter';
-import { levelMigration } from './migrations';
 
 // TODO: Remove
 export type { DocumentId };
 
 export type AutomergeHostParams = {
   db: SublevelDB;
-  /**
-   * For migration purposes.
-   */
-  directory?: Directory;
 
   indexMetadataStore: IndexMetadataStore;
 };
@@ -54,8 +48,6 @@ export type AutomergeHostParams = {
 export class AutomergeHost {
   private readonly _indexMetadataStore: IndexMetadataStore;
   private readonly _ctx = new Context();
-  private readonly _directory?: Directory;
-  private readonly _db: SublevelDB;
   private readonly _echoNetworkAdapter = new EchoNetworkAdapter({
     getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
   });
@@ -69,37 +61,39 @@ export class AutomergeHost {
 
   public _requestedDocs = new Set<string>();
 
-  constructor({ directory, db, indexMetadataStore }: AutomergeHostParams) {
-    this._directory = directory;
-    this._db = db;
-    this._indexMetadataStore = indexMetadataStore;
-  }
-
-  async open() {
-    // TODO(mykola): remove this before 0.6 release.
-    this._directory && (await levelMigration({ db: this._db, directory: this._directory }));
+  constructor({ db, indexMetadataStore }: AutomergeHostParams) {
     this._storage = new LevelDBStorageAdapter({
-      db: this._db,
+      db,
       callbacks: {
         beforeSave: async (params) => this._beforeSave(params),
         afterSave: async () => this._afterSave(),
       },
     });
-    await this._storage.open?.();
+    this._indexMetadataStore = indexMetadataStore;
+  }
+
+  async open() {
+    // TODO(burdon): Should this be stable?
     this._peerId = `host-${PublicKey.random().toHex()}` as PeerId;
 
+    await this._storage.open?.();
     this._clientNetwork = new LocalHostNetworkAdapter();
 
+    // Construct the automerge repo.
     this._repo = new Repo({
       peerId: this._peerId as PeerId,
-      network: [this._clientNetwork, this._echoNetworkAdapter],
-      storage: this._storage,
-
       sharePolicy: this._sharePolicy.bind(this),
+      storage: this._storage,
+      network: [
+        // Downstream client.
+        this._clientNetwork,
+        // Upstream swarm.
+        this._echoNetworkAdapter,
+      ],
     });
+
     this._clientNetwork.ready();
     await this._echoNetworkAdapter.open();
-
     await this._clientNetwork.whenConnected();
     await this._echoNetworkAdapter.whenConnected();
   }

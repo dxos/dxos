@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Space } from '@dxos/client-protocol';
+
 import { type Plugin } from '../PluginHost';
 
 // TODO(burdon): See Accept attribute (uses MIME types).
@@ -17,7 +19,7 @@ export type FileInfo = {
   cid?: string; // TODO(burdon): Meta key? Or other common properties with other file management system? (e.g., WNFS).
 };
 
-export type FileUploader = (file: File) => Promise<FileInfo | undefined>;
+export type FileUploader = (file: File, space: Space) => Promise<FileInfo | undefined>;
 
 /**
  * Generic interface provided by file plugins (e.g., IPFS, WNFS).

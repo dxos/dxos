@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useSearch } from '@braneframe/plugin-search';
+import { useGlobalSearch } from '@braneframe/plugin-search';
 import { type ViewType } from '@braneframe/types';
 import { getSpace } from '@dxos/react-client/echo';
 
@@ -12,7 +12,7 @@ import { Graph } from './Graph';
 
 const ExplorerArticle = ({ view }: { view: ViewType }) => {
   const space = getSpace(view);
-  const { match } = useSearch();
+  const { match } = useGlobalSearch();
 
   if (!space) {
     return null;

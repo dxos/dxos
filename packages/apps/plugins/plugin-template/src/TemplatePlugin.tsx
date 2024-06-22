@@ -77,7 +77,7 @@ export const TemplatePlugin = (): PluginDefinition<TemplatePluginProvides> => {
                         icon: (props: IconProps) => <Placeholder {...props} />,
                         testId: 'spacePlugin.object',
                         persistenceClass: 'echo',
-                        persistenceKey: space?.key.toHex(),
+                        persistenceKey: space?.id,
                       },
                     });
                   });

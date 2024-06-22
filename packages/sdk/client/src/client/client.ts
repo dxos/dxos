@@ -6,21 +6,22 @@ import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, synchronized, Trigger } from '@dxos/async';
 import {
+  DEFAULT_CLIENT_CHANNEL,
+  STATUS_TIMEOUT,
   clientServiceBundle,
   type ClientServices,
   type ClientServicesProvider,
-  DEFAULT_CLIENT_CHANNEL,
   type Echo,
   type Halo,
-  Properties,
-  STATUS_TIMEOUT,
+  PropertiesType,
 } from '@dxos/client-protocol';
 import { createLevel, DiagnosticsCollector } from '@dxos/client-services';
-import type { Stream } from '@dxos/codec-protobuf';
+import { type Stream } from '@dxos/codec-protobuf';
 import { Config, SaveConfig } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { inspectObject, raise } from '@dxos/debug';
 import { EchoClient } from '@dxos/echo-db';
+import { getEchoObjectTypename, type S } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -32,8 +33,7 @@ import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { ClientRuntime } from './client-runtime';
-import { type RuntimeSchemaRegistry } from '../echo';
-import type { MeshProxy } from '../mesh/mesh-proxy';
+import { type MeshProxy } from '../mesh/mesh-proxy';
 import type { IFrameManager, Shell, ShellManager } from '../services';
 import { DXOS_VERSION } from '../version';
 
@@ -123,7 +123,7 @@ export class Client {
       log.config({ filter, prefix });
     }
 
-    this._echoClient.graph.runtimeSchemaRegistry.registerSchema(Properties);
+    this._echoClient.graph.schemaRegistry.addSchema([PropertiesType]);
   }
 
   [inspect.custom]() {
@@ -205,27 +205,26 @@ export class Client {
   /**
    * @deprecated Temporary.
    */
-  get experimental() {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-    return {
-      get graph() {
-        return self._echoClient.graph;
-      },
-    };
+  get graph() {
+    return this._echoClient.graph;
   }
 
-  // TODO(dmaretskyi): Expose `graph` directly?
-  addSchema(...schemaList: Parameters<RuntimeSchemaRegistry['registerSchema']>) {
+  /**
+   * Add schema types to the client.
+   */
+  // TODO(burdon): Check if already registered (and remove downstream checks).
+  addTypes(types: S.Schema<any>[]) {
+    log('addTypes', { schema: types.map((type) => getEchoObjectTypename(type)) });
+
     // TODO(dmaretskyi): Uncomment after release.
     // if (!this._initialized) {
     //   throw new ApiError('Client not open.');
     // }
 
     // TODO(burdon): Find?
-    const exists = schemaList.filter((schema) => !this._echoClient.graph.runtimeSchemaRegistry.hasSchema(schema));
+    const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
     if (exists.length > 0) {
-      this._echoClient.graph.runtimeSchemaRegistry.registerSchema(...exists);
+      this._echoClient.graph.schemaRegistry.addSchema(exists);
     }
 
     return this;
@@ -234,7 +233,7 @@ export class Client {
   /**
    * Get client diagnostics data.
    */
-  // TODO(burdon): Type?
+  // TODO(burdon): Return type?
   async diagnostics(options: JsonKeyOptions = {}): Promise<any> {
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
     return DiagnosticsCollector.collect(this._config, this.services, options);
@@ -349,7 +348,7 @@ export class Client {
     const { SpaceList } = await import('../echo/space-list');
     const { HaloProxy } = await import('../halo/halo-proxy');
     const { MeshProxy } = await import('../mesh/mesh-proxy');
-    const { IFrameClientServicesHost, IFrameClientServicesProxy, Shell } = await import('../services');
+    const { Shell } = await import('../services');
 
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
@@ -374,20 +373,11 @@ export class Client {
 
     const mesh = new MeshProxy(this._services, this._instanceId);
     const halo = new HaloProxy(this._services, this._instanceId);
-    const spaces = new SpaceList(
-      this._services,
-      this._echoClient,
-      () => halo.identity.get()?.identityKey,
-      this._instanceId,
-    );
+    const spaces = new SpaceList(this._config, this._services, this._echoClient, halo, this._instanceId);
 
-    const shellManager =
-      this._services instanceof IFrameClientServicesProxy || this._services instanceof IFrameClientServicesHost
-        ? this._services._shellManager
-        : this._shellManager;
-    const shell = shellManager
+    const shell = this._shellManager
       ? new Shell({
-          shellManager,
+          shellManager: this._shellManager,
           identity: halo.identity,
           devices: halo.devices,
           spaces,

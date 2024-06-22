@@ -2,15 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  ChainPromptType,
-  DocumentType,
-  MessageType,
-  SectionType,
-  StackType,
-  TextV0Type,
-  ThreadType,
-} from '@braneframe/types';
+import { ChainPromptType, CollectionType, DocumentType, MessageType, TextType, ThreadType } from '@braneframe/types';
 import { Filter, loadObjectReferences } from '@dxos/echo-db';
 import { create, foreignKey, getMeta, getTypename, S } from '@dxos/echo-schema';
 import { subscriptionHandler } from '@dxos/functions';
@@ -24,14 +16,14 @@ import { ModelInvokerFactory } from '../../chain/model-invoker';
 
 const AI_SOURCE = 'dxos.org/service/ai';
 
-const types = [DocumentType, SectionType, TextV0Type, ChainPromptType, MessageType, StackType, ThreadType];
+const types = [ChainPromptType, DocumentType, MessageType, CollectionType, TextType, ThreadType];
 
 /**
  * Trigger configuration.
  */
 export const MetaSchema = S.mutable(
-  S.struct({
-    model: S.optional(S.string),
+  S.Struct({
+    model: S.optional(S.String),
     prompt: ChainPromptType,
   }),
 );
@@ -62,7 +54,7 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
       }
 
       // Skip messages older than one hour.
-      if (message.date && Date.now() - new Date(message.date).getTime() > 60 * 60 * 1_000) {
+      if (message.timestamp && Date.now() - new Date(message.timestamp).getTime() > 60 * 60 * 1_000) {
         return null;
       }
 
@@ -104,21 +96,23 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
 
     await Promise.all(
       Array.from(messages).map(async ([message, thread]) => {
-        const { success, blocks } = await processor.processThread({
+        const { success, text, parts } = await processor.processThread({
           space,
           thread,
           message,
           prompt: meta.prompt,
         });
 
-        if (blocks?.length) {
+        if (text) {
           const metaKey = foreignKey(AI_SOURCE, Date.now().toString());
           if (thread) {
             const response = create(
               MessageType,
               {
-                from: { identityKey: resources.identityKey },
-                blocks,
+                sender: { identityKey: resources.identityKey },
+                timestamp: new Date().toISOString(),
+                text,
+                parts,
               },
               {
                 keys: [metaKey],
@@ -129,8 +123,9 @@ export const handler = subscriptionHandler<Meta>(async ({ event, context }) => {
           } else if (success) {
             // Check success to avoid modifying the message with an "Error generating response" block.
             // TODO(burdon): Mark the message as "processed".
-            getMeta(message).keys.push(metaKey);
-            message.blocks.push(...blocks);
+            // TODO(wittjosiah): Needs thread.
+            // getMeta(message).keys.push(metaKey);
+            // message.blocks.push(...blocks);
           }
         }
       }),

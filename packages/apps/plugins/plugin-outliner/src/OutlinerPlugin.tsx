@@ -8,7 +8,7 @@ import React from 'react';
 
 import { parseClientPlugin } from '@braneframe/plugin-client';
 import { parseSpacePlugin, updateGraphWithAddObjectAction } from '@braneframe/plugin-space';
-import { TextV0Type, TreeItemType, TreeType } from '@braneframe/types';
+import { TreeItemType, TreeType } from '@braneframe/types';
 import { resolvePlugin, parseIntentPlugin, type PluginDefinition } from '@dxos/app-framework';
 import { EventSubscriptions } from '@dxos/async';
 import { create } from '@dxos/echo-schema';
@@ -66,7 +66,7 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all outlines to the graph.
                 const query = space.db.query(Filter.schema(TreeType));
@@ -85,11 +85,11 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: OUTLINER_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: OUTLINER_PLUGIN }],
                             icon: (props: IconProps) => <TreeStructure {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                           nodes: [
                             {
@@ -153,8 +153,8 @@ export const OutlinerPlugin = (): PluginDefinition<OutlinerPluginProvides> => {
               return {
                 data: create(TreeType, {
                   root: create(TreeItemType, {
-                    text: create(TextV0Type, { content: '' }),
-                    items: [create(TreeItemType, { text: create(TextV0Type, { content: '' }), items: [] })],
+                    content: '',
+                    items: [create(TreeItemType, { content: '', items: [] })],
                   }),
                 }),
               };

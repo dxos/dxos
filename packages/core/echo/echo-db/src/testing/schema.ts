@@ -11,17 +11,17 @@ export class Contact extends TypedObject({
   version: '0.1.0',
 })(
   {
-    name: S.string,
-    username: S.string,
-    email: S.string,
-    tasks: S.suspend((): S.Schema<Ref<Task>[]> => S.mutable(S.array(ref(Task)))),
-    address: S.struct({
-      city: S.optional(S.string),
-      state: S.optional(S.string),
-      zip: S.optional(S.string),
-      coordinates: S.struct({
-        lat: S.optional(S.number),
-        lng: S.optional(S.number),
+    name: S.String,
+    username: S.String,
+    email: S.String,
+    tasks: S.suspend((): S.Schema<Ref<Task>[]> => S.mutable(S.Array(ref(Task)))),
+    address: S.Struct({
+      city: S.optional(S.String),
+      state: S.optional(S.String),
+      zip: S.optional(S.String),
+      coordinates: S.Struct({
+        lat: S.optional(S.Number),
+        lng: S.optional(S.Number),
       }),
     }),
   },
@@ -32,20 +32,20 @@ export class Todo extends TypedObject({
   typename: 'example.test.Task.Todo',
   version: '0.1.0',
 })({
-  name: S.optional(S.string),
+  name: S.optional(S.String),
 }) {}
 
 export class Task extends TypedObject({
   typename: 'example.test.Task',
   version: '0.1.0',
 })({
-  title: S.optional(S.string),
-  completed: S.optional(S.boolean),
+  title: S.optional(S.String),
+  completed: S.optional(S.Boolean),
   assignee: S.optional(Contact),
   previous: S.optional(S.suspend((): S.Schema<Ref<Task>> => ref(Task))),
-  subTasks: S.optional(S.mutable(S.array(S.suspend((): S.Schema<Ref<Task>> => ref(Task))))),
-  description: S.optional(S.string),
-  todos: S.optional(S.array(ref(Todo))),
+  subTasks: S.optional(S.mutable(S.Array(S.suspend((): S.Schema<Ref<Task>> => ref(Task))))),
+  description: S.optional(S.String),
+  todos: S.optional(S.Array(ref(Todo))),
 }) {}
 
 export enum RecordType {
@@ -59,15 +59,15 @@ export class Container extends TypedObject({
   version: '0.1.0',
 })(
   {
-    objects: S.mutable(S.array(ref(Expando))),
+    objects: S.mutable(S.Array(ref(Expando))),
     records: S.mutable(
-      S.array(
+      S.Array(
         S.partial(
-          S.struct({
-            title: S.string,
-            description: S.string,
-            contacts: S.mutable(S.array(ref(Contact))),
-            type: S.enums(RecordType),
+          S.Struct({
+            title: S.String,
+            description: S.String,
+            contacts: S.mutable(S.Array(ref(Contact))),
+            type: S.Enums(RecordType),
           }),
         ),
       ),

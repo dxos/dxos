@@ -6,7 +6,6 @@ import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
-import { ShellRuntimeImpl } from '@dxos/client-services';
 import {
   AgentHostingProvider,
   Client,
@@ -21,6 +20,7 @@ import { defaultTx } from '@dxos/react-ui-theme';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
 import { Shell } from './Shell';
+import { ShellRuntimeImpl } from './shell-runtime';
 import { ClipboardProvider } from '../../components';
 import { osTranslations } from '../../translations';
 

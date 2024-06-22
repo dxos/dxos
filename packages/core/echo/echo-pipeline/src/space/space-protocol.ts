@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { log, logInfo } from '@dxos/log';
 import {
   MMSTTopology,
-  type NetworkManager,
+  type SwarmNetworkManager,
   type SwarmConnection,
   type WireProtocol,
   type WireProtocolParams,
@@ -37,7 +37,7 @@ export interface SwarmIdentity {
 export type SpaceProtocolOptions = {
   topic: PublicKey; // TODO(burdon): Rename?
   swarmIdentity: SwarmIdentity;
-  networkManager: NetworkManager;
+  networkManager: SwarmNetworkManager;
 
   blobStore: BlobStore;
 
@@ -54,7 +54,7 @@ export type SpaceProtocolOptions = {
  */
 @trace.resource()
 export class SpaceProtocol {
-  private readonly _networkManager: NetworkManager;
+  private readonly _networkManager: SwarmNetworkManager;
   private readonly _swarmIdentity: SwarmIdentity;
   private readonly _onSessionAuth?: (session: Teleport) => void;
   private readonly _onAuthFailure?: (session: Teleport) => void;

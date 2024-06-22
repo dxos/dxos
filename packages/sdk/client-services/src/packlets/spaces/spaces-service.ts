@@ -30,9 +30,11 @@ import {
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
   type UpdateMemberRoleRequest,
+  type CreateEpochResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
+import { trace } from '@dxos/tracing';
 import { type Provider } from '@dxos/util';
 
 import { type DataSpace } from './data-space';
@@ -50,6 +52,7 @@ export class SpacesServiceImpl implements SpacesService {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = await dataSpaceManager.createSpace();
+    await this._updateMetrics();
     return this._serializeSpace(space);
   }
 
@@ -106,6 +109,7 @@ export class SpacesServiceImpl implements SpacesService {
           const dataSpaceManager = await this._getDataSpaceManager();
           const spaces = Array.from(dataSpaceManager.spaces.values()).map((space) => this._serializeSpace(space));
           log('update', { spaces });
+          await this._updateMetrics();
           next({ spaces });
         },
         { maxFrequency: process.env.NODE_ENV === 'test' ? undefined : 2 },
@@ -205,14 +209,16 @@ export class SpacesServiceImpl implements SpacesService {
     }
   }
 
-  async createEpoch({ spaceKey, migration }: CreateEpochRequest) {
+  async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.createEpoch({ migration });
+    const credential = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
+    return { epochCredential: credential ?? undefined };
   }
 
   private _serializeSpace(space: DataSpace): Space {
     return {
+      id: space.id,
       spaceKey: space.key,
       state: space.state,
       error: space.error ? encodeError(space.error) : undefined,
@@ -262,6 +268,16 @@ export class SpacesServiceImpl implements SpacesService {
       );
     }
     return this._identityManager.identity;
+  }
+
+  private async _updateMetrics() {
+    const dataSpaceManager = await this._getDataSpaceManager();
+    const identity = this._identityManager.identity?.identityKey.truncate();
+    if (identity) {
+      trace.metrics.gauge('echo.space.count', dataSpaceManager.spaces.size, {
+        tags: { identity },
+      });
+    }
   }
 }
 

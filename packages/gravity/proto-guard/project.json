@@ -7,16 +7,7 @@
   "sourceRoot": "packages/gravity/proto-guard/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "options": {
-        "main": "packages/gravity/proto-guard/src/index.ts",
-        "outputPath": "packages/gravity/proto-guard/dist",
-        "transformers": [
-          "@dxos/log-hook/transformer"
-        ],
-        "tsConfig": "packages/gravity/proto-guard/tsconfig.json"
-      }
-    },
+    "build": {},
     "lint": {},
     "storage": {
       "dependsOn": [
@@ -28,11 +19,6 @@
       }
     },
     "test": {
-      "dependsOn": [
-        {
-          "target": "build"
-        }
-      ],
       "options": {
         "environments": [
           "nodejs"

@@ -3,7 +3,15 @@
 //
 
 import { DragOverlay } from '@dnd-kit/core';
-import React, { Component, type PropsWithChildren, useEffect, useRef, useState } from 'react';
+import React, {
+  Component,
+  type ComponentProps,
+  type PropsWithChildren,
+  type ReactNode,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { log } from '@dxos/log';
 
@@ -14,7 +22,7 @@ import { useMosaic } from './hooks';
 import { Path } from './util';
 
 export type MosaicDragOverlayProps = { delay?: number; debug?: boolean } & Omit<
-  React.ComponentProps<typeof DragOverlay>,
+  ComponentProps<typeof DragOverlay>,
   'children'
 >;
 
@@ -105,10 +113,10 @@ export const MosaicDragOverlay = ({ delay = 200, debug = false, ...overlayProps 
   );
 };
 
-type OverlayErrorBoundaryProps = PropsWithChildren<{ fallback?: React.ReactNode }>;
+type OverlayErrorBoundaryProps = PropsWithChildren<{ fallback?: ReactNode }>;
 
 class OverlayErrorBoundary extends Component<OverlayErrorBoundaryProps> {
-  private readonly fallback: React.ReactNode;
+  private readonly fallback: ReactNode;
 
   constructor(props: OverlayErrorBoundaryProps) {
     super(props);

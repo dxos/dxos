@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type TableType } from '@braneframe/types';
-import { type DynamicEchoSchema } from '@dxos/echo-schema';
+import { type DynamicSchema } from '@dxos/echo-schema';
 import { type DialogRootProps, Input, Select, useTranslation } from '@dxos/react-ui';
 
 import { TABLE_PLUGIN } from '../../meta';
@@ -15,7 +15,7 @@ const NEW_ID = '__new';
 
 export type TableSettingsProps = {
   table: TableType;
-  schemas?: DynamicEchoSchema[];
+  schemas?: DynamicSchema[];
   onClose?: (success: boolean) => void;
 } & Pick<DialogRootProps, 'open'>;
 
@@ -34,8 +34,8 @@ export const TableSettings = ({ open, onClose, table, schemas = [] }: TableSetti
       <Input.Root>
         <Input.TextInput
           placeholder={t('table name placeholder')}
-          value={table.title ?? ''}
-          onChange={(event) => (table.title = event.target.value)}
+          value={table.name ?? ''}
+          onChange={(event) => (table.name = event.target.value)}
         />
       </Input.Root>
       <Input.Root>

@@ -65,7 +65,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => space.id === id))
               .forEach((space) => {
                 // Add all views to the graph.
                 const query = space.db.query(Filter.schema(ViewType));
@@ -84,11 +84,11 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object title placeholder', { ns: EXPLORER_PLUGIN }],
+                            label: object.name || ['object title placeholder', { ns: EXPLORER_PLUGIN }],
                             icon: (props: IconProps) => <Graph {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -120,7 +120,7 @@ export const ExplorerPlugin = (): PluginDefinition<ExplorerPluginProvides> => {
         resolver: (intent) => {
           switch (intent.action) {
             case ExplorerAction.CREATE: {
-              return { data: create(ViewType, { title: '', type: '' }) };
+              return { data: create(ViewType, { name: '', type: '' }) };
             }
           }
         },

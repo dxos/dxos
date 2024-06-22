@@ -241,6 +241,9 @@ enum SpaceState {
 
   /// Space errored.
   ERROR = 5;
+
+  /// Data migration is required.
+  REQUIRES_MIGRATION = 8;
 }
 
 // TODO(burdon): Rename SpaceInfo?
@@ -299,6 +302,7 @@ message Space {
     optional dxos.echo.timeframe.TimeframeVector known_data_timeframe = 17;
   }
 
+  string id = 5;
   dxos.keys.PublicKey space_key = 1;
   SpaceState state = 2;
   optional PipelineState pipeline = 3;
@@ -357,11 +361,25 @@ message CreateEpochRequest {
 
     /// Create a new space root and move objects from the current space root to separate automerge documents and.
     FRAGMENT_AUTOMERGE_ROOT = 3;
+
+    /// Replace the current automerge root with a new one specified by the user.
+    REPLACE_AUTOMERGE_ROOT = 4;
+
+    /// Upgrade references data strucutre 
+    MIGRATE_REFERENCES_TO_DXN = 5;
   }
 
   dxos.keys.PublicKey space_key = 1;
 
   optional Migration migration = 2;
+
+  /// For REPLACE_AUTOMERGE_ROOT migration.
+  optional string automerge_root_url = 3;
+}
+
+message CreateEpochResponse {
+  /// Credential of the new epoch.
+  optional dxos.halo.credentials.Credential epoch_credential = 1;
 }
 
 message UpdateMemberRoleRequest {
@@ -387,7 +405,7 @@ service SpacesService {
   /// Query credentials from the space control feed.
   rpc QueryCredentials(QueryCredentialsRequest) returns (stream dxos.halo.credentials.Credential);
 
-  rpc CreateEpoch(CreateEpochRequest) returns (google.protobuf.Empty);
+  rpc CreateEpoch(CreateEpochRequest) returns (CreateEpochResponse);
 }
 
 //

@@ -5,7 +5,7 @@
 import OpenAI from 'openai';
 import { type Chat } from 'openai/resources';
 
-import { type DocumentType, TextV0Type } from '@braneframe/types';
+import { type DocumentType, TextType } from '@braneframe/types';
 import { type Space } from '@dxos/client/echo';
 import { AST, getSchemaTypename, create } from '@dxos/echo-schema';
 import { invariant } from '@dxos/invariant';
@@ -27,7 +27,7 @@ export class GptAnalyzer {
   }
 
   async exec(space: Space, document: DocumentType) {
-    const schemas = await space.db.schemaRegistry.getAll();
+    const schemas = await space.db.schema.list();
     const text = document.content?.content;
     log.info('analyzing...', { length: text?.length, schema: schemas.length });
     if (!text?.length || !schemas.length) {
@@ -82,7 +82,7 @@ export class GptAnalyzer {
             invariant(id);
             const value = obj[id];
             if (value != null && AST.isStringKeyword(type)) {
-              data[String(id)] = create(TextV0Type, { content: value });
+              data[String(id)] = create(TextType, { content: value });
             }
           }
 

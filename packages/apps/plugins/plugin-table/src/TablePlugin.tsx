@@ -24,13 +24,13 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
     meta,
     ready: async (plugins) => {
       const clientPlugin = resolvePlugin(plugins, parseClientPlugin);
-      clientPlugin?.provides.client.addSchema(TableType);
+      clientPlugin?.provides.client.addTypes([TableType]);
     },
     provides: {
       metadata: {
         records: {
           [TableType.typename]: {
-            label: (object: any) => (object instanceof TableType ? object.title : undefined),
+            label: (object: any) => (object instanceof TableType ? object.name : undefined),
             placeholder: ['object placeholder', { ns: TABLE_PLUGIN }],
             icon: (props: IconProps) => <Table {...props} />,
           },
@@ -68,7 +68,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
 
             client.spaces
               .get()
-              .filter((space) => !!enabled.find((key) => key.equals(space.key)))
+              .filter((space) => !!enabled.find((id) => id === space.id))
               .forEach((space) => {
                 // Add all tables to the graph.
                 const query = space.db.query(Filter.schema(TableType));
@@ -87,11 +87,11 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
                           data: object,
                           properties: {
                             // TODO(wittjosiah): Reconcile with metadata provides.
-                            label: object.title || ['object placeholder', { ns: TABLE_PLUGIN }],
+                            label: object.name || ['object placeholder', { ns: TABLE_PLUGIN }],
                             icon: (props: IconProps) => <Table {...props} />,
                             testId: 'spacePlugin.object',
                             persistenceClass: 'echo',
-                            persistenceKey: space?.key.toHex(),
+                            persistenceKey: space?.id,
                           },
                         });
                       });
@@ -139,7 +139,7 @@ export const TablePlugin = (): PluginDefinition<TablePluginProvides> => {
           switch (intent.action) {
             case TableAction.CREATE: {
               return {
-                data: create(TableType, { title: '', props: [] }),
+                data: create(TableType, { name: '', props: [] }),
               };
             }
           }

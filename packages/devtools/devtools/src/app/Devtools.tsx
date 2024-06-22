@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { type FC, useState } from 'react';
+import React, { useEffect, type FC, useState } from 'react';
 import { HashRouter } from 'react-router-dom';
 
 import { type Observability } from '@dxos/observability';
 import { type Client, ClientContext, type ClientServices } from '@dxos/react-client';
 import { DensityProvider, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTheme, bindTheme, toolbarRoot } from '@dxos/react-ui-theme';
+import { defaultTx } from '@dxos/react-ui-theme';
 
 import { ErrorBoundary } from '../components';
 import { DevtoolsContextProvider, useRoutes, namespace as observabilityNamespace } from '../hooks';
@@ -17,36 +17,27 @@ const Routes = () => {
   return useRoutes();
 };
 
+// TODO(burdon): Factor out. See copy paste in testbench-app.
+const useThemeWatcher = () => {
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+  const setTheme = ({ matches: prefersDark }: { matches?: boolean }) => {
+    document.documentElement.classList[prefersDark ? 'add' : 'remove']('dark');
+    setThemeMode(prefersDark ? 'dark' : 'light');
+  };
+
+  useEffect(() => {
+    const modeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme({ matches: modeQuery.matches });
+    modeQuery.addEventListener('change', setTheme);
+    return () => modeQuery.removeEventListener('change', setTheme);
+  }, []);
+
+  return themeMode;
+};
+
 // TODO(wittjosiah): Migrate devtools to use surface plugins.
 const Telemetry = ({ namespace, observability }: { namespace: string; observability?: Observability }) => {
-  // https://github.com/dxos/dxos/issues/6339
-  // const location = useLocation();
-  // const client = useClient();
-  //
-  // if (!observability) {
-  //   log.warn('observability not initialized, cannot initialize devtools observability');
-  //   return null;
-  // }
-  //
-  // useEffect(() => {
-  //   observability.event({
-  //     identityId: getTelemetryIdentifier(client),
-  //     name: `${namespace}.page.load`,
-  //     properties: {
-  //       href: window.location.href,
-  //       loadDuration: window.performance.timing.loadEventEnd - window.performance.timing.loadEventStart,
-  //     },
-  //   });
-  //
-  //   return setupTelemetryListeners(namespace, client, observability);
-  // }, []);
-  //
-  // useEffect(() => {
-  //   observability.page({
-  //     identityId: getTelemetryIdentifier(client),
-  //   });
-  // }, [location]);
-
+  // TODO: Add telemetry.
   return null;
 };
 
@@ -59,18 +50,9 @@ export const Devtools: FC<{
   namespace?: string;
   observability?: Observability;
 }> = ({ client, services, observability, namespace = observabilityNamespace }) => {
-  const [themeMode] = useState<ThemeMode>('dark');
-  const devtoolsTx = bindTheme({
-    ...defaultTheme,
-    toolbar: {
-      root: (props, ...etc) => {
-        return toolbarRoot(props, 'p-2', ...etc);
-      },
-    },
-  });
-
+  const themeMode = useThemeWatcher();
   return (
-    <ThemeProvider {...{ tx: devtoolsTx, themeMode }}>
+    <ThemeProvider {...{ tx: defaultTx, themeMode }}>
       <DensityProvider density='fine'>
         <ErrorBoundary>
           <ClientContext.Provider value={{ client, services }}>

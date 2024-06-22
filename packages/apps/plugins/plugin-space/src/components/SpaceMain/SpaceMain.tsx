@@ -53,6 +53,10 @@ const KeyShortcuts = () => {
 const spaceMainLayout =
   'grid gap-y-2 auto-rows-min before:bs-2 before:col-span-5 grid-cols-[var(--rail-size)_var(--rail-size)_1fr_var(--rail-size)] md:grid-cols-[var(--rail-size)_var(--rail-size)_minmax(max-content,1fr)_var(--rail-size)_var(--rail-size)_minmax(max-content,2fr)_var(--rail-size)]';
 
+/**
+ * @deprecated
+ */
+// TODO(wittjosiah): Remove this and re-use space members section as a deck column.
 export const SpaceMain = ({ space, role }: { space: Space; role: 'main' | 'article' }) => {
   // const { graph } = useGraph();
   // const _actionsMap = graph.findNode(space.key.toHex())?.actionsMap;

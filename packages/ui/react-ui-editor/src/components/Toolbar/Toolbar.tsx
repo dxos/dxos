@@ -323,7 +323,7 @@ const MarkdownStandard = () => (
 
 // TODO(burdon): Make extensible.
 export type MarkdownCustomOptions = {
-  onUpload?: (file: File) => Promise<{ url?: string }>;
+  onUpload?: (file: File) => Promise<{ url?: string } | undefined>;
 };
 
 const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
@@ -348,9 +348,9 @@ const MarkdownCustom = ({ onUpload }: MarkdownCustomOptions = {}) => {
           lastModified: f.lastModified,
         });
 
-        const { url } = await onUpload(file);
-        if (url) {
-          onAction?.({ type: 'image', data: url });
+        const info = await onUpload(file);
+        if (info) {
+          onAction?.({ type: 'image', data: info.url });
         }
       });
     }

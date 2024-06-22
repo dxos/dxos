@@ -19,7 +19,7 @@ const client = new Client();
 
 ## Documentation
 
-- [⚡️ Quick Start](https://docs.dxos.org/guide/quick-start)
+- [⚡️ Quick Start](https://docs.dxos.org/guide/getting-started.html)
 - [📖 Developer Guide](https://docs.dxos.org/guide/echo/)
 - [📚 API Reference](https://docs.dxos.org/api/@dxos/client)
 
@@ -27,7 +27,7 @@ const client = new Client();
 
 - [Website](https://dxos.org)
 - [Developer Documentation](https://docs.dxos.org)
-- Talk to us on [Discord](https://discord.gg/eXVfryv3sW)
+- Talk to us on [Discord](https://dxos.org/discord)
 
 ## Contributions
 

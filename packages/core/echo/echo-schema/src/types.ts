@@ -12,27 +12,26 @@ import { getMeta } from './getter';
 
 export const data = Symbol.for('dxos.echo.data');
 
-export const TYPE_PROPERTIES = 'dxos.sdk.client.Properties';
+export const TYPE_PROPERTIES = 'dxos.org/type/Properties';
 
 // TODO(burdon): Use consistently (with serialization utils).
 export const ECHO_ATTR_ID = '@id';
 export const ECHO_ATTR_TYPE = '@type';
 export const ECHO_ATTR_META = '@meta';
 
-export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
-
-const _ForeignKeySchema = S.struct({
-  source: S.string,
-  id: S.string,
+const _ForeignKeySchema = S.Struct({
+  source: S.String,
+  id: S.String,
 });
 export type ForeignKey = S.Schema.Type<typeof _ForeignKeySchema>;
 export const ForeignKeySchema: S.Schema<ForeignKey> = _ForeignKeySchema;
 
-export const ObjectMetaSchema = S.struct({
-  keys: S.mutable(S.array(ForeignKeySchema)),
+export const ObjectMetaSchema = S.Struct({
+  keys: S.mutable(S.Array(ForeignKeySchema)),
 });
-
 export type ObjectMeta = S.Schema.Type<typeof ObjectMetaSchema>;
+
+export type ExcludeId<T> = Simplify<Omit<T, 'id'>>;
 
 type WithMeta = { [ECHO_ATTR_META]?: ObjectMeta };
 

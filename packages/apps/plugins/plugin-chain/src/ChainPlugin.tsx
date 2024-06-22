@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Brain, type IconProps } from '@phosphor-icons/react';
+import { HeadCircuit, type IconProps } from '@phosphor-icons/react';
 import React from 'react';
 
 import { ChainPromptType, ChainType } from '@braneframe/types';
@@ -22,7 +22,7 @@ export const ChainPlugin = (): PluginDefinition<ChainPluginProvides> => {
         records: {
           [ChainType.typename]: {
             placeholder: ['object placeholder', { ns: CHAIN_PLUGIN }],
-            icon: (props: IconProps) => <Brain {...props} />,
+            icon: (props: IconProps) => <HeadCircuit {...props} />,
           },
         },
       },

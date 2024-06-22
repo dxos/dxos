@@ -13,7 +13,7 @@ import { TEST_SCHEMA_TYPE } from './testing';
 import { TypedObject } from './typed-object-class';
 
 class Organization extends TypedObject(TEST_SCHEMA_TYPE)({
-  name: S.string,
+  name: S.String,
 }) {}
 
 const DEFAULT_ORG: Omit<Organization, 'id'> = { name: 'FooCorp' };
@@ -41,15 +41,17 @@ describe('EchoObject class dsl', () => {
   describe('class options', () => {
     class Person extends TypedObject<Person>({ typename: 'Person', version: '1.0.0' })(
       {
-        name: S.string,
+        name: S.String,
       },
-      { partial: true },
+      { partial: true, record: true },
     ) {}
 
     test('can assign undefined to partial fields', async () => {
       const person = create(Person, { name: 'John' });
       person.name = undefined;
+      person.recordField = 'hello';
       expect(person.name).to.be.undefined;
+      expect(person.recordField).to.eq('hello');
     });
   });
 });

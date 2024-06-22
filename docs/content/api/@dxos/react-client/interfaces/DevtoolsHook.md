@@ -38,6 +38,11 @@ Type: <code>function</code>
 
 Import modules exposed by  `exposeModule`  from @dxos/debug.
 
+### [joinTables]()
+Type: <code>any</code>
+
+Utility function.
+
 ### [listDiagnostics]()
 Type: <code>function</code>
 

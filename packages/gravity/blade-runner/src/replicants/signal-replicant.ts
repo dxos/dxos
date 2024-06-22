@@ -7,6 +7,7 @@ import { cancelWithContext, Context } from '@dxos/context';
 import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
 import { type TraceEvent } from '../analysys';
@@ -28,11 +29,13 @@ export type ReplicantRunParams = {
   replicantWaitTime: number;
 };
 
+@trace.resource()
 export class SignalReplicant {
   builder = new TestBuilder();
   constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(mykola): Refactor to smaller methods.
+  @trace.span()
   async run({
     replicants,
     peersPerReplicant,

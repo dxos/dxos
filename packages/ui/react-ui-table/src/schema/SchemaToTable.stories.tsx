@@ -28,15 +28,15 @@ export default {
   ],
 };
 
-const exampleSchema = S.struct({
-  field1: S.string,
-  field2: S.number,
+const exampleSchema = S.Struct({
+  field1: S.String,
+  field2: S.Number,
   field3: S.Date,
-  field4: S.optional(S.string.pipe(S.length(10))),
+  field4: S.optional(S.String.pipe(S.length(10))),
   field5: S.optional(
-    S.struct({
-      innerField1: S.string,
-      innerField2: S.number,
+    S.Struct({
+      innerField1: S.String,
+      innerField2: S.Number,
     }),
   ),
 });
@@ -45,7 +45,7 @@ type ExampleSchema = S.Schema.Type<typeof exampleSchema>;
 
 const columns = schemaToColumnDefs(exampleSchema);
 
-const exampleSchemaArbitrary = Arbitrary.make(exampleSchema)(fc);
+const exampleSchemaArbitrary = Arbitrary.make(exampleSchema);
 
 const items = fc.sample(exampleSchemaArbitrary, 10);
 
@@ -53,7 +53,7 @@ export const SchemaTable = {
   render: () => {
     return (
       <Table.Root>
-        <Table.Viewport classNames='inset-0 fixed'>
+        <Table.Viewport classNames='fixed inset-0'>
           <Table.Main<ExampleSchema>
             role='grid'
             rowsSelectable='multi'

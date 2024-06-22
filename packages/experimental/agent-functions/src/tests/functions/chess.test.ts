@@ -9,7 +9,7 @@ import { join } from 'path';
 import { Trigger } from '@dxos/async';
 import { GameType } from '@dxos/chess-app/types';
 import { TestBuilder } from '@dxos/client/testing';
-import { getAutomergeObjectCore } from '@dxos/echo-db';
+import { getObjectCore } from '@dxos/echo-db';
 import { create } from '@dxos/echo-schema';
 import { FunctionDef, type FunctionManifest, FunctionTrigger } from '@dxos/functions';
 import { startFunctionsHost } from '@dxos/functions/testing';
@@ -50,7 +50,7 @@ describe.only('Chess', () => {
     };
 
     const space = await functions.client.spaces.create();
-    functions.client.addSchema(GameType, FunctionDef, FunctionTrigger);
+    functions.client.addTypes([GameType, FunctionDef, FunctionTrigger]);
     const game = space.db.add(create(GameType, {}));
     await space.db.flush();
 
@@ -59,7 +59,7 @@ describe.only('Chess', () => {
 
     // Trigger.
     const done = new Trigger();
-    const cleanup = getAutomergeObjectCore(game).updates.on(async () => {
+    const cleanup = getObjectCore(game).updates.on(async () => {
       await doMove(game, 'b');
       done.wake();
     });

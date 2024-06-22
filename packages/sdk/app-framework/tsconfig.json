@@ -40,6 +40,9 @@
     },
     {
       "path": "../app-graph"
+    },
+    {
+      "path": "../client-protocol"
     }
   ],
   "ts-node": {

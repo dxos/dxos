@@ -8,6 +8,7 @@ import { sleep } from '@dxos/async';
 import { Repo } from '@dxos/automerge/automerge-repo';
 import { Context } from '@dxos/context';
 import { type SpaceDoc } from '@dxos/echo-protocol';
+import { generateEchoId } from '@dxos/echo-schema';
 import { PublicKey } from '@dxos/keys';
 import { describe, test } from '@dxos/test';
 
@@ -16,10 +17,11 @@ import {
   AutomergeDocumentLoaderImpl,
   type ObjectDocumentLoaded,
 } from './automerge-doc-loader';
+import { createIdFromSpaceKey } from '../space';
 
 const ctx = new Context();
 const SPACE_KEY = PublicKey.random();
-const randomId = () => PublicKey.random().toHex();
+const randomId = () => generateEchoId();
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
@@ -71,8 +73,9 @@ describe('AutomergeDocumentLoader', () => {
   });
 
   const setupTest = async () => {
+    const spaceId = await createIdFromSpaceKey(SPACE_KEY);
     const repo = new Repo({ network: [] });
-    const loader = new AutomergeDocumentLoaderImpl(SPACE_KEY, repo);
+    const loader = new AutomergeDocumentLoaderImpl(spaceId, repo, SPACE_KEY);
     const spaceRootDocHandle = repo.create<SpaceDoc>();
     await loader.loadSpaceRootDocHandle(ctx, {
       rootUrl: spaceRootDocHandle.url,

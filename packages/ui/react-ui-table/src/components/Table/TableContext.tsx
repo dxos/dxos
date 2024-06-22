@@ -3,7 +3,7 @@
 //
 
 import { type RowData } from '@tanstack/react-table';
-import React, { useContext, createContext, type ReactNode } from 'react';
+import React, { useContext, createContext, type ReactNode, type FC, type Context } from 'react';
 
 import { type TableContextValue } from './props';
 
@@ -18,16 +18,11 @@ export type TypedTableProvider<TData extends RowData> = {
   displayName: string;
 };
 
-export const TableProvider: React.FC<TableContextValue<RowData> & { children: ReactNode }> = ({
-  children,
-  ...value
-}) => {
+export const TableProvider: FC<TableContextValue<RowData> & { children: ReactNode }> = ({ children, ...value }) => {
   return <TableContext.Provider value={value}>{children}</TableContext.Provider>;
 };
 
-// Create a custom hook to consume the context
+// Create a custom hook to consume the context.
 export const useTableContext = <TData extends RowData>(): TableContextValue<TData> => {
-  const context = useContext(TableContext as React.Context<TableContextValue<TData>>);
-
-  return context;
+  return useContext(TableContext as Context<TableContextValue<TData>>);
 };

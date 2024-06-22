@@ -6,6 +6,7 @@ import { useBaselimeRum } from '@baselime/react-rum';
 import React, { useEffect, useState } from 'react';
 
 import { PublicKey } from '@dxos/keys';
+import { useClient } from '@dxos/react-client';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
 
 import { Peer } from '../webrtc/client';
@@ -14,20 +15,25 @@ import { Peer } from '../webrtc/client';
  * Experimental mechanism to establish WebRTC connection between peers.
  */
 export const Connector = () => {
+  const client = useClient();
   const { setUser, sendEvent } = useBaselimeRum();
   const [, forceUpdate] = useState({});
   const [peer, setPeer] = useState<Peer>();
   const [state, setState] = useState<string>();
   const [invitation, setInvitation] = useState<string>();
+  const identity = client.halo.identity.get();
   useEffect(() => {
+    if (identity) {
+      setUser(identity.identityKey.toHex());
+    }
+
     const peer = new Peer(PublicKey.random());
-    setUser(peer.id.toHex());
     const unsubscribe = peer.update.on(({ state }) => {
       setState(state);
     });
     setPeer(peer);
     return () => unsubscribe();
-  }, []);
+  }, [identity]);
 
   const handleConnect = (initiate = false) => {
     let swarmKey = invitation;

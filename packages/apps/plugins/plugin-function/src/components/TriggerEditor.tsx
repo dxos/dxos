@@ -5,7 +5,14 @@
 import React, { type ChangeEventHandler, type FC, type PropsWithChildren, useEffect, useMemo } from 'react';
 
 import { ChainPresets, chainPresets, PromptTemplate } from '@braneframe/plugin-chain';
-import { type ChainPromptType, DocumentType, FileType, MessageType, SketchType, StackType } from '@braneframe/types';
+import {
+  type ChainPromptType,
+  DocumentType,
+  FileType,
+  MessageType,
+  SketchType,
+  CollectionType,
+} from '@braneframe/types';
 import { GameType } from '@dxos/chess-app/types';
 import { create } from '@dxos/echo-schema';
 import {
@@ -32,7 +39,7 @@ const stateInitialValues = {
     GameType,
     MessageType,
     SketchType,
-    StackType,
+    CollectionType,
   ] as any[],
   selectedSchema: {} as Record<TriggerId, any>,
 };
@@ -46,10 +53,10 @@ export const TriggerEditor = ({ space, trigger }: { space: Space; trigger: Funct
   const fn = useMemo(() => query.find((fn) => fn.uri === trigger.function), [trigger.function, query]);
 
   useEffect(() => {
-    void space.db.schemaRegistry
-      .getAll()
+    void space.db.schema
+      .list()
       .then((schemas) => {
-        // TODO(Zan): We should solve double adding of stored schemas in the schema registry.
+        // TODO(zan): We should solve double adding of stored schemas in the schema registry.
         state.schemas = distinctBy([...state.schemas, ...schemas], (schema) => schema.typename).sort((a, b) =>
           a.typename < b.typename ? -1 : 1,
         );
@@ -278,7 +285,7 @@ const TriggerSpecWebsocket = ({ spec }: TriggerSpecProps<WebsocketTrigger>) => {
 type TriggerSpecProps<T = TriggerSpec> = { space: Space; spec: T };
 
 const triggerRenderers: {
-  [key in FunctionTriggerType]: React.FC<TriggerSpecProps<any>>;
+  [key in FunctionTriggerType]: FC<TriggerSpecProps<any>>;
 } = {
   subscription: TriggerSpecSubscription,
   timer: TriggerSpecTimer,
@@ -314,7 +321,7 @@ type MetaExtension<T> = {
 
 // TODO(burdon): Possible to build form from function meta schema.
 
-type ChessMeta = { level?: number; side?: string };
+type ChessMeta = { level?: number };
 
 const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
   return (
@@ -324,7 +331,7 @@ const ChessMetaProps = ({ meta }: MetaProps<ChessMeta>) => {
           type='number'
           value={meta.level ?? 1}
           onChange={(event) => (meta.level = safeParseInt(event.target.value))}
-          placeholder='AI level.'
+          placeholder='Engine strength.'
         />
       </InputRow>
     </>

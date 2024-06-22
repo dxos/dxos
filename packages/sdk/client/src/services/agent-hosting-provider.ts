@@ -165,7 +165,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
   @synchronized
   async _ensureAuthenticated() {
-    if (this._authToken) {
+    if (this._validAuthToken()) {
       return;
     }
     const { deviceKey } = this._halo.device!;
@@ -237,8 +237,11 @@ export class AgentManagerClient implements AgentHostingProviderClient {
 
     const { token, credential } = await this._rpc.rpc.AgentManager.authenticate({ presentation });
     if (token) {
-      // (globalThis as any).agentManagerAuthToken = token;
       this._authToken = token;
+      if (!this._validAuthToken()) {
+        log('received invalid authToken', { token });
+        throw new ProviderApiError('Received invalid authToken');
+      }
     } else {
       invariant(credential, 'No credential or token received');
       log('received credential, writing to HALO', { credential });
@@ -246,6 +249,22 @@ export class AgentManagerClient implements AgentHostingProviderClient {
       // re-do authentication now that we have a credential.
       await this._agentManagerAuth(authDeviceCreds);
     }
+  }
+
+  _validAuthToken() {
+    if (!this._authToken) {
+      return null;
+    }
+    const decoded = jwtDecode(this._authToken);
+    if (!decoded.exp) {
+      log.warn('authToken missing expiry', { decoded });
+      return null;
+    }
+    if (decoded.exp * 1000 < Date.now()) {
+      log('authToken expired', { decoded });
+      return null;
+    }
+    return decoded;
   }
 
   public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean) {

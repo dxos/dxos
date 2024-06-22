@@ -2,18 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { captureConsoleIntegration } from '@sentry/integrations';
 import {
+  type Event,
   init as naturalInit,
   setTag,
   addBreadcrumb as naturalAddBreadcrumb,
   captureException as naturalCaptureException,
   captureMessage as naturalCaptureMessage,
   withScope as naturalWithScope,
+  metrics,
+  startInactiveSpan,
 } from '@sentry/node';
-import type { Event } from '@sentry/node';
 
 import { log } from '@dxos/log';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type InitOptions } from './types';
 
@@ -28,17 +30,13 @@ export { setTag, setTags, setUser } from '@sentry/node';
  */
 export const init = (options: InitOptions) => {
   try {
-    if (options.tracing) {
-      void import('@sentry/tracing');
-    }
-
     naturalInit({
       enabled: options.enable ?? true,
       dsn: options.destination,
       serverName: options.installationId,
       release: options.release,
       environment: options.environment ?? process.env.DX_ENVIRONMENT,
-      integrations: [captureConsoleIntegration({ levels: ['error', 'warn'] })],
+      integrations: [],
       tracesSampleRate: options.sampleRate,
       transport: options.transport,
       beforeSend: (event) => {
@@ -47,6 +45,11 @@ export const init = (options: InitOptions) => {
 
         return event;
       },
+    });
+
+    TRACE_PROCESSOR.remoteMetrics.registerProcessor(metrics);
+    TRACE_PROCESSOR.remoteTracing.registerProcessor({
+      startSpan: startInactiveSpan,
     });
 
     Object.entries(options.properties ?? {}).forEach(([key, value]) => {

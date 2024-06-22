@@ -29,13 +29,13 @@ const useTable = () => {
     generator.addSchemas();
     void generator.createObjects({ [TestSchemaType.project]: 6 }).catch();
 
-    client.addSchema(TableType);
+    client.addTypes([TableType]);
 
     // We need a table to reference
     // TODO(zan): Workout how to get this to not double add in debug.
-    space.db.add(create(TableType, { title: 'Other table', props: [], schema: generator.schemas[3] }));
+    space.db.add(create(TableType, { name: 'Other table', props: [], schema: generator.schemas[3] }));
 
-    const table = space.db.add(create(TableType, { title: '', props: [] }));
+    const table = space.db.add(create(TableType, { name: '', props: [] }));
     setTable(table);
   }, []);
 
@@ -49,7 +49,7 @@ const Story = ({ table }: { table?: TableType }) => {
 
   return (
     <Table.Root>
-      <Table.Viewport classNames={'inset-0 overflow-auto'}>
+      <Table.Viewport classNames={'inset-0'}>
         <ObjectTable table={table} stickyHeader />
       </Table.Viewport>
     </Table.Root>

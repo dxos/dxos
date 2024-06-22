@@ -35,6 +35,7 @@ message QueryOptions {
 
   /**
    * Query only in specific spaces.
+   * @deprecated Use `spaceIds` instead.
    */
   repeated dxos.keys.PublicKey spaces = 3;
 
@@ -49,6 +50,11 @@ message QueryOptions {
     * @default `QueryOptions.DataLocation.LOCAL`
     */
   optional DataLocation data_location = 4;
+
+  /**
+   * Query only in specific spaces.
+   */
+  repeated string spaceIds = 5;
 }
 
 /**

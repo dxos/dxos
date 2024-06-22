@@ -1,6 +1,6 @@
 {
   "name": "@dxos/create-bare",
-  "version": "0.5.3",
+  "version": "0.5.8",
   "description": "Creates an empty DXOS application",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

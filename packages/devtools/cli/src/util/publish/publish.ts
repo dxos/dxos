@@ -6,16 +6,15 @@ import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import fs from 'fs';
 import folderSize from 'get-folder-size';
-// import { type CID } from 'kubo-rpc-client';
 import { join } from 'path';
 import { promisify } from 'util';
 
+import { createIpfsClient } from '@dxos/cli-base';
 import type { Config } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 
 import { type Logger, type PackageModule } from './common';
-import { importESM, uploadToIPFS } from './ipfs-upload';
+import { uploadToIPFS } from './ipfs-upload';
 
 const DEFAULT_OUTDIR = 'out';
 
@@ -70,34 +69,4 @@ export const publish = async ({ verbose, timeout, path, pin, log, config, module
 
   log(`Published module ${chalk.bold(module.name)}. IPFS cid: ${cid.toString()}`);
   return cid;
-};
-
-// TODO(nf): make CLI support dx-env.yml
-export const createIpfsClient = async (config: Config, timeout?: string | number) => {
-  const { create } = await importESM('kubo-rpc-client');
-
-  const serverAuthSecret = process.env.IPFS_API_SECRET ?? config?.get('runtime.services.ipfs.serverAuthSecret');
-  let authorizationHeader;
-  if (serverAuthSecret) {
-    const splitSecret = serverAuthSecret.split(':');
-    switch (splitSecret[0]) {
-      case 'basic':
-        authorizationHeader = 'Basic ' + Buffer.from(splitSecret[1] + ':' + splitSecret[2]).toString('base64');
-        break;
-      case 'bearer':
-        authorizationHeader = 'Bearer ' + splitSecret[1];
-        break;
-      default:
-        throw new Error(`Unsupported authType: ${splitSecret[0]}`);
-    }
-  }
-
-  const server = config?.get('runtime.services.ipfs.server');
-  invariant(server, 'Missing IPFS Server.');
-  log('connecting to IPFS server', { server });
-  return create({
-    url: server,
-    timeout: timeout || '1m',
-    ...(authorizationHeader ? { headers: { authorization: authorizationHeader } } : {}),
-  });
 };
