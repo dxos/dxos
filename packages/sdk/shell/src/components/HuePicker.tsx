@@ -8,13 +8,13 @@ import React, { useRef, useState } from 'react';
 
 import {
   Button,
-  useTranslation,
-  Tooltip,
-  DropdownMenu,
-  useThemeContext,
   type ButtonProps,
-  Toolbar,
+  DropdownMenu,
   type ThemedClassName,
+  Toolbar,
+  Tooltip,
+  useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { getSize, hueTokenThemes, mx } from '@dxos/react-ui-theme';
 
@@ -28,6 +28,8 @@ const HuePreview = ({ hue }: { hue: string }) => {
   );
 };
 
+const hueTokens = [...Object.keys(hueTokenThemes)].slice(0, 16);
+
 export type HuePickerProps = {
   disabled?: boolean;
   defaultHue?: string;
@@ -35,8 +37,6 @@ export type HuePickerProps = {
   onChangeHue?: (nextHue: string) => void;
   onClickClear?: ButtonProps['onClick'];
 };
-
-const hueTokens = [...Object.keys(hueTokenThemes)].slice(0, 16);
 
 /**
  * A toolbar button for picking hue. Use only in `role=toolbar` elements. Unable to unset the value.
@@ -95,6 +95,7 @@ export const HuePickerToolbarButton = ({
             <Tooltip.Arrow />
           </Tooltip.Content>
         </Tooltip.Portal>
+        {/* TODO(burdon): Change from DropdownMenu (show checked). */}
         <DropdownMenu.Content side='bottom'>
           <DropdownMenu.Viewport classNames='grid grid-cols-4'>
             {hueTokens.map((hue) => {
@@ -110,7 +111,6 @@ export const HuePickerToolbarButton = ({
               );
             })}
           </DropdownMenu.Viewport>
-          <DropdownMenu.Arrow />
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     </Tooltip.Root>

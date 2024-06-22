@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import './emoji.css';
+
 import emojiData from '@emoji-mart/data';
 import EmojiMart from '@emoji-mart/react';
 import { ArrowCounterClockwise, CaretDown, UserCircle } from '@phosphor-icons/react';
@@ -12,12 +14,12 @@ import {
   Button,
   type ButtonProps,
   Popover,
-  Tooltip,
-  Toolbar,
   type ThemedClassName,
+  Toolbar,
+  Tooltip,
   useMediaQuery,
-  useTranslation,
   useThemeContext,
+  useTranslation,
 } from '@dxos/react-ui';
 import { getSize } from '@dxos/react-ui-theme';
 
@@ -95,7 +97,7 @@ export const EmojiPickerToolbarButton = ({
             }
           }}
         >
-          {/* https://www.npmjs.com/package/emoji-mart */}
+          {/* https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props */}
           <EmojiMart
             data={emojiData}
             onEmojiSelect={({ native }: { native?: string }) => {
